@@ -1,0 +1,10 @@
+FROM openmodelica/openmodelica:v1.27.0-ompython
+ARG ENGINE_UID=1000
+RUN printf 'installPackage(Modelica, "4.1.0");\ngetErrorString();\n' > /tmp/install.mos \
+    && omc /tmp/install.mos \
+    && mv /root/.openmodelica/libraries /opt/modelica \
+    && chmod -R a+rX /opt/modelica \
+    && useradd --create-home --uid "$ENGINE_UID" gradara
+ENV OPENMODELICALIBRARY=/opt/modelica
+USER gradara
+WORKDIR /work

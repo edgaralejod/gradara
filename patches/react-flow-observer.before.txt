@@ -1,0 +1,26 @@
+function useResizeObserver() {
+    const updateNodeInternals = useStore(selector$b);
+    const [resizeObserver] = useState(() => {
+        if (typeof ResizeObserver === 'undefined') {
+            return null;
+        }
+        return new ResizeObserver((entries) => {
+            const updates = new Map();
+            entries.forEach((entry) => {
+                const id = entry.target.getAttribute('data-id');
+                updates.set(id, {
+                    id,
+                    nodeElement: entry.target,
+                    force: true,
+                });
+            });
+            updateNodeInternals(updates);
+        });
+    });
+    useEffect(() => {
+        return () => {
+            resizeObserver?.disconnect();
+        };
+    }, [resizeObserver]);
+    return resizeObserver;
+}

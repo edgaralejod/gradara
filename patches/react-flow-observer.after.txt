@@ -1,0 +1,29 @@
+function useResizeObserver() {
+    const updateNodeInternals = useStore(selector$b);
+    const frame = useRef(null);
+    const pending = useRef(new Map());
+    const [resizeObserver] = useState(() => {
+        if (typeof ResizeObserver === 'undefined') return null;
+        return new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const id = entry.target.getAttribute('data-id');
+                pending.current.set(id, { id, nodeElement: entry.target, force: true });
+            }
+            if (frame.current === null) {
+                frame.current = requestAnimationFrame(() => {
+                    frame.current = null;
+                    const updates = new Map(pending.current);
+                    pending.current.clear();
+                    updateNodeInternals(updates);
+                });
+            }
+        });
+    });
+    useEffect(() => () => {
+        resizeObserver?.disconnect();
+        if (frame.current !== null) cancelAnimationFrame(frame.current);
+        frame.current = null;
+        pending.current.clear();
+    }, [resizeObserver]);
+    return resizeObserver;
+}

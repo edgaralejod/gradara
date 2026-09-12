@@ -1,0 +1,1568 @@
+{
+  "version": 1,
+  "exampleId": "foc",
+  "name": "PMSM · Field-oriented control",
+  "duration": 1.2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "reference",
+      "definition": {
+        "kind": "step",
+        "name": "Speed command",
+        "description": "A step change in the requested motor speed.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal",
+            "unit": "rpm"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Target speed",
+            "value": 1500,
+            "unit": "rpm"
+          },
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0.03,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;"
+      },
+      "position": {
+        "x": 0,
+        "y": 95
+      },
+      "size": {
+        "width": 64,
+        "height": 56
+      }
+    },
+    {
+      "id": "units",
+      "definition": {
+        "kind": "gain",
+        "name": "rpm → rad/s",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 0.10471975511965977,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 115,
+        "y": 95
+      },
+      "size": {
+        "width": 65,
+        "height": 56
+      }
+    },
+    {
+      "id": "speedError",
+      "definition": {
+        "kind": "subtract",
+        "name": "Speed error",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Subtract",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "−",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a - b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 230,
+        "y": 105
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "id": "speedKp",
+      "definition": {
+        "kind": "gain",
+        "name": "Kp · speed",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 0.16,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 330,
+        "y": 95
+      },
+      "size": {
+        "width": 68,
+        "height": 56
+      }
+    },
+    {
+      "id": "speedKi",
+      "definition": {
+        "kind": "gain",
+        "name": "Ki · speed",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 1.2,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 330,
+        "y": 235
+      },
+      "size": {
+        "width": 68,
+        "height": 56
+      }
+    },
+    {
+      "id": "speedIntegral",
+      "definition": {
+        "kind": "integrator",
+        "name": "Integral",
+        "symbol": "1/s",
+        "domain": "signal",
+        "description": "Limited integrator",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "der(x) = if (x >= limit and u > 0) or (x <= -limit and u < 0) then 0 else u;\ny = x;",
+        "parameters": [
+          {
+            "id": "limit",
+            "name": "Integral limit",
+            "value": 3,
+            "unit": "",
+            "min": 0.01
+          }
+        ],
+        "declarations": "Real x(start=0, fixed=true);"
+      },
+      "position": {
+        "x": 445,
+        "y": 233
+      },
+      "size": {
+        "width": 60,
+        "height": 60
+      }
+    },
+    {
+      "id": "speedSum",
+      "definition": {
+        "kind": "sum",
+        "name": "PI sum",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Sum",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a + b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 475,
+        "y": 105
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "id": "iqReference",
+      "definition": {
+        "kind": "saturation",
+        "name": "Current limit",
+        "description": "Clamp a signal between lower and upper limits.",
+        "domain": "signal",
+        "symbol": "sat",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "lower",
+            "name": "Lower limit",
+            "value": -8,
+            "unit": ""
+          },
+          {
+            "id": "upper",
+            "name": "Upper limit",
+            "value": 8,
+            "unit": ""
+          }
+        ],
+        "equations": "y = max(lower, min(upper, u));"
+      },
+      "position": {
+        "x": 570,
+        "y": 95
+      },
+      "size": {
+        "width": 64,
+        "height": 56
+      }
+    },
+    {
+      "id": "qError",
+      "definition": {
+        "kind": "subtract",
+        "name": "q-axis error",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Subtract",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "−",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a - b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 710,
+        "y": 105
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "id": "qPI",
+      "definition": {
+        "kind": "currentPI",
+        "name": "q-axis PI",
+        "symbol": "PI",
+        "domain": "signal",
+        "description": "Continuous PI current regulator with back-calculation anti-windup.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "e",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "v",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          }
+        ],
+        "equations": "raw = kp*u + x;\ny = max(-limit, min(limit, raw));\nder(x) = ki*u + kaw*(y-raw);",
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 700,
+            "unit": ""
+          },
+          {
+            "id": "kaw",
+            "name": "Anti-windup gain",
+            "value": 350,
+            "unit": "1/s",
+            "min": 0
+          },
+          {
+            "id": "limit",
+            "name": "Voltage limit",
+            "value": 27,
+            "unit": "V",
+            "min": 0.1
+          }
+        ],
+        "declarations": "Real x(start=0, fixed=true);\nReal raw;",
+        "controller": true
+      },
+      "position": {
+        "x": 805,
+        "y": 88
+      },
+      "size": {
+        "width": 100,
+        "height": 70
+      }
+    },
+    {
+      "id": "dReference",
+      "definition": {
+        "kind": "constant",
+        "name": "id* = 0 A",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "A"
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 575,
+        "y": 252
+      },
+      "size": {
+        "width": 54,
+        "height": 42
+      }
+    },
+    {
+      "id": "dError",
+      "definition": {
+        "kind": "subtract",
+        "name": "d-axis error",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Subtract",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "−",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a - b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 710,
+        "y": 255
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "id": "dPI",
+      "definition": {
+        "kind": "currentPI",
+        "name": "d-axis PI",
+        "symbol": "PI",
+        "domain": "signal",
+        "description": "Continuous PI current regulator with back-calculation anti-windup.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "e",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "v",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          }
+        ],
+        "equations": "raw = kp*u + x;\ny = max(-limit, min(limit, raw));\nder(x) = ki*u + kaw*(y-raw);",
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 700,
+            "unit": ""
+          },
+          {
+            "id": "kaw",
+            "name": "Anti-windup gain",
+            "value": 350,
+            "unit": "1/s",
+            "min": 0
+          },
+          {
+            "id": "limit",
+            "name": "Voltage limit",
+            "value": 27,
+            "unit": "V",
+            "min": 0.1
+          }
+        ],
+        "declarations": "Real x(start=0, fixed=true);\nReal raw;",
+        "controller": true
+      },
+      "position": {
+        "x": 805,
+        "y": 238
+      },
+      "size": {
+        "width": 100,
+        "height": 70
+      }
+    },
+    {
+      "id": "inverse",
+      "definition": {
+        "kind": "inversePark",
+        "name": "Inverse Park / Clarke",
+        "symbol": "dq→abc",
+        "domain": "signal",
+        "description": "Inverse Park and inverse Clarke transforms produce three phase-voltage commands.",
+        "ports": [
+          {
+            "id": "vd",
+            "name": "d",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "offset": 70
+          },
+          {
+            "id": "vq",
+            "name": "q",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "offset": 30
+          },
+          {
+            "id": "theta",
+            "name": "θe",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "va",
+            "name": "a",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          },
+          {
+            "id": "vb",
+            "name": "b",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          },
+          {
+            "id": "vc",
+            "name": "c",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          }
+        ],
+        "equations": "alpha = vd*cos(theta)-vq*sin(theta);\nbeta = vd*sin(theta)+vq*cos(theta);\nva = alpha;\nvb = -alpha/2 + sqrt(3)*beta/2;\nvc = -alpha/2 - sqrt(3)*beta/2;",
+        "parameters": [],
+        "declarations": "Real alpha;\nReal beta;"
+      },
+      "position": {
+        "x": 985,
+        "y": 135
+      },
+      "size": {
+        "width": 115,
+        "height": 120
+      }
+    },
+    {
+      "id": "inverter",
+      "definition": {
+        "kind": "inverter",
+        "name": "Averaged inverter",
+        "symbol": "inverter",
+        "domain": "electrical",
+        "description": "Averaged inverter with common-mode injection and DC-bus voltage clipping. No PWM switching ripple.",
+        "ports": [
+          {
+            "id": "ua",
+            "name": "a*",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "ub",
+            "name": "b*",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "uc",
+            "name": "c*",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "va",
+            "name": "a",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          },
+          {
+            "id": "vb",
+            "name": "b",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          },
+          {
+            "id": "vc",
+            "name": "c",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          }
+        ],
+        "equations": "offset = (max(ua,max(ub,uc))+min(ua,min(ub,uc)))/2;\nva = max(-Vdc/2,min(Vdc/2,ua-offset));\nvb = max(-Vdc/2,min(Vdc/2,ub-offset));\nvc = max(-Vdc/2,min(Vdc/2,uc-offset));",
+        "parameters": [
+          {
+            "id": "Vdc",
+            "name": "DC bus voltage",
+            "value": 48,
+            "unit": "V",
+            "min": 1
+          }
+        ],
+        "declarations": "Real offset;"
+      },
+      "position": {
+        "x": 1160,
+        "y": 135
+      },
+      "size": {
+        "width": 110,
+        "height": 120
+      }
+    },
+    {
+      "id": "motor",
+      "definition": {
+        "kind": "pmsm",
+        "name": "PMSM · 4 pole pairs",
+        "symbol": "pmsm",
+        "domain": "electrical",
+        "description": "Three-phase permanent-magnet synchronous motor. Sinusoidal flux, fixed d/q inductances, ideal rotor-angle and current measurements.",
+        "ports": [
+          {
+            "id": "va",
+            "name": "a",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "vb",
+            "name": "b",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "vc",
+            "name": "c",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          },
+          {
+            "id": "ia",
+            "name": "ia",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "A"
+          },
+          {
+            "id": "ib",
+            "name": "ib",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "A"
+          },
+          {
+            "id": "ic",
+            "name": "ic",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "A"
+          },
+          {
+            "id": "theta",
+            "name": "θe",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "rad"
+          },
+          {
+            "id": "wm",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "top",
+            "unit": "rad/s"
+          },
+          {
+            "id": "rpm",
+            "name": "rpm",
+            "direction": "output",
+            "domain": "signal",
+            "side": "top",
+            "unit": "rpm"
+          },
+          {
+            "id": "torque",
+            "name": "Te",
+            "direction": "output",
+            "domain": "signal",
+            "side": "top",
+            "unit": "N·m"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Stator resistance",
+            "value": 0.35,
+            "unit": "Ω",
+            "min": 0.001
+          },
+          {
+            "id": "Ld",
+            "name": "d-axis inductance",
+            "value": 0.001,
+            "unit": "H",
+            "min": 0.000001
+          },
+          {
+            "id": "Lq",
+            "name": "q-axis inductance",
+            "value": 0.001,
+            "unit": "H",
+            "min": 0.000001
+          },
+          {
+            "id": "psi",
+            "name": "PM flux linkage",
+            "value": 0.035,
+            "unit": "Wb",
+            "min": 0.0001
+          },
+          {
+            "id": "polePairs",
+            "name": "Pole pairs",
+            "value": 4,
+            "unit": "",
+            "min": 1
+          }
+        ],
+        "equations": "Ld*der(id) = vd - R*id + we*Lq*iq;\nLq*der(iq) = vq - R*iq - we*(Ld*id + psi);\ntorque = 1.5*polePairs*(psi*iq + (Ld-Lq)*id*iq);"
+      },
+      "position": {
+        "x": 1330,
+        "y": 135
+      },
+      "size": {
+        "width": 120,
+        "height": 120
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "shaftLoad",
+        "name": "Inertia + load step",
+        "symbol": "J",
+        "domain": "mechanical",
+        "description": "Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "loadTorque",
+            "name": "TL",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "N·m"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 0.002,
+            "unit": "kg·m²",
+            "min": 0.00001
+          },
+          {
+            "id": "damping",
+            "name": "Viscous friction",
+            "value": 0.001,
+            "unit": "N·m·s",
+            "min": 0
+          },
+          {
+            "id": "initialLoad",
+            "name": "Initial load torque",
+            "value": 0.05,
+            "unit": "N·m"
+          },
+          {
+            "id": "stepLoad",
+            "name": "Added load torque",
+            "value": 0.35,
+            "unit": "N·m"
+          },
+          {
+            "id": "loadTime",
+            "name": "Load step time",
+            "value": 0.45,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "loadTorque = initialLoad + (if time < loadTime then 0 else stepLoad);\nJ*der(w) = flange.tau - damping*w - loadTorque;"
+      },
+      "position": {
+        "x": 1510,
+        "y": 155
+      },
+      "size": {
+        "width": 100,
+        "height": 80
+      }
+    },
+    {
+      "id": "clarke",
+      "definition": {
+        "kind": "clarke",
+        "name": "Clarke",
+        "symbol": "abc→αβ",
+        "domain": "signal",
+        "description": "Amplitude-invariant three-phase to stationary-frame current transform.",
+        "ports": [
+          {
+            "id": "ia",
+            "name": "a",
+            "direction": "input",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "ib",
+            "name": "b",
+            "direction": "input",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "ic",
+            "name": "c",
+            "direction": "input",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "alpha",
+            "name": "α",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "A"
+          },
+          {
+            "id": "beta",
+            "name": "β",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "A"
+          }
+        ],
+        "equations": "alpha = (2*ia-ib-ic)/3;\nbeta = (ib-ic)/sqrt(3);",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 1180,
+        "y": 400
+      },
+      "size": {
+        "width": 110,
+        "height": 90
+      }
+    },
+    {
+      "id": "park",
+      "definition": {
+        "kind": "park",
+        "name": "Park",
+        "symbol": "αβ→dq",
+        "domain": "signal",
+        "description": "Rotate stationary-frame currents into the rotor d/q frame.",
+        "ports": [
+          {
+            "id": "alpha",
+            "name": "α",
+            "direction": "input",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "beta",
+            "name": "β",
+            "direction": "input",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "theta",
+            "name": "θe",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "id",
+            "name": "d",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "A"
+          },
+          {
+            "id": "iq",
+            "name": "q",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "A"
+          }
+        ],
+        "equations": "id = alpha*cos(theta) + beta*sin(theta);\niq = -alpha*sin(theta) + beta*cos(theta);",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 975,
+        "y": 400
+      },
+      "size": {
+        "width": 110,
+        "height": 90
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "w_0",
+      "source": "reference",
+      "sourceHandle": "y",
+      "target": "units",
+      "targetHandle": "u"
+    },
+    {
+      "id": "w_1",
+      "source": "units",
+      "sourceHandle": "y",
+      "target": "speedError",
+      "targetHandle": "a"
+    },
+    {
+      "id": "w_2",
+      "source": "speedError",
+      "sourceHandle": "y",
+      "target": "speedKp",
+      "targetHandle": "u"
+    },
+    {
+      "id": "w_3",
+      "source": "speedError",
+      "sourceHandle": "y",
+      "target": "speedKi",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 300,
+          "y": 123
+        },
+        {
+          "x": 300,
+          "y": 263
+        }
+      ],
+      "junctions": [
+        {
+          "x": 300,
+          "y": 123
+        }
+      ]
+    },
+    {
+      "id": "w_4",
+      "source": "speedKp",
+      "sourceHandle": "y",
+      "target": "speedSum",
+      "targetHandle": "a"
+    },
+    {
+      "id": "w_5",
+      "source": "speedKi",
+      "sourceHandle": "y",
+      "target": "speedIntegral",
+      "targetHandle": "u"
+    },
+    {
+      "id": "w_6",
+      "source": "speedIntegral",
+      "sourceHandle": "y",
+      "target": "speedSum",
+      "targetHandle": "b",
+      "waypoints": [
+        {
+          "x": 535,
+          "y": 263
+        },
+        {
+          "x": 535,
+          "y": 200
+        },
+        {
+          "x": 493,
+          "y": 200
+        }
+      ]
+    },
+    {
+      "id": "w_7",
+      "source": "speedSum",
+      "sourceHandle": "y",
+      "target": "iqReference",
+      "targetHandle": "u"
+    },
+    {
+      "id": "w_8",
+      "source": "iqReference",
+      "sourceHandle": "y",
+      "target": "qError",
+      "targetHandle": "a"
+    },
+    {
+      "id": "w_9",
+      "source": "qError",
+      "sourceHandle": "y",
+      "target": "qPI",
+      "targetHandle": "u"
+    },
+    {
+      "id": "w_10",
+      "source": "dReference",
+      "sourceHandle": "y",
+      "target": "dError",
+      "targetHandle": "a"
+    },
+    {
+      "id": "w_11",
+      "source": "dError",
+      "sourceHandle": "y",
+      "target": "dPI",
+      "targetHandle": "u"
+    },
+    {
+      "id": "w_12",
+      "source": "qPI",
+      "sourceHandle": "y",
+      "target": "inverse",
+      "targetHandle": "vq",
+      "waypoints": [
+        {
+          "x": 945,
+          "y": 123
+        },
+        {
+          "x": 945,
+          "y": 171
+        }
+      ]
+    },
+    {
+      "id": "w_13",
+      "source": "dPI",
+      "sourceHandle": "y",
+      "target": "inverse",
+      "targetHandle": "vd",
+      "waypoints": [
+        {
+          "x": 945,
+          "y": 273
+        },
+        {
+          "x": 945,
+          "y": 219
+        }
+      ]
+    },
+    {
+      "id": "w_14",
+      "source": "inverse",
+      "sourceHandle": "va",
+      "target": "inverter",
+      "targetHandle": "ua"
+    },
+    {
+      "id": "w_15",
+      "source": "inverter",
+      "sourceHandle": "va",
+      "target": "motor",
+      "targetHandle": "va"
+    },
+    {
+      "id": "w_16",
+      "source": "inverse",
+      "sourceHandle": "vb",
+      "target": "inverter",
+      "targetHandle": "ub"
+    },
+    {
+      "id": "w_17",
+      "source": "inverter",
+      "sourceHandle": "vb",
+      "target": "motor",
+      "targetHandle": "vb"
+    },
+    {
+      "id": "w_18",
+      "source": "inverse",
+      "sourceHandle": "vc",
+      "target": "inverter",
+      "targetHandle": "uc"
+    },
+    {
+      "id": "w_19",
+      "source": "inverter",
+      "sourceHandle": "vc",
+      "target": "motor",
+      "targetHandle": "vc"
+    },
+    {
+      "id": "w_20",
+      "source": "motor",
+      "sourceHandle": "flange",
+      "target": "load",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "w_21",
+      "source": "motor",
+      "sourceHandle": "ia",
+      "target": "clarke",
+      "targetHandle": "ia",
+      "waypoints": [
+        {
+          "x": 1354,
+          "y": 422.5
+        }
+      ]
+    },
+    {
+      "id": "w_22",
+      "source": "motor",
+      "sourceHandle": "ib",
+      "target": "clarke",
+      "targetHandle": "ib",
+      "waypoints": [
+        {
+          "x": 1378,
+          "y": 445
+        }
+      ]
+    },
+    {
+      "id": "w_23",
+      "source": "motor",
+      "sourceHandle": "ic",
+      "target": "clarke",
+      "targetHandle": "ic",
+      "waypoints": [
+        {
+          "x": 1402,
+          "y": 467.5
+        }
+      ]
+    },
+    {
+      "id": "w_24",
+      "source": "clarke",
+      "sourceHandle": "alpha",
+      "target": "park",
+      "targetHandle": "alpha"
+    },
+    {
+      "id": "w_25",
+      "source": "clarke",
+      "sourceHandle": "beta",
+      "target": "park",
+      "targetHandle": "beta"
+    },
+    {
+      "id": "w_26",
+      "source": "park",
+      "sourceHandle": "id",
+      "target": "dError",
+      "targetHandle": "b",
+      "waypoints": [
+        {
+          "x": 880,
+          "y": 430
+        },
+        {
+          "x": 728,
+          "y": 430
+        }
+      ]
+    },
+    {
+      "id": "w_27",
+      "source": "park",
+      "sourceHandle": "iq",
+      "target": "qError",
+      "targetHandle": "b",
+      "waypoints": [
+        {
+          "x": 925,
+          "y": 460
+        },
+        {
+          "x": 675,
+          "y": 460
+        },
+        {
+          "x": 675,
+          "y": 200
+        },
+        {
+          "x": 728,
+          "y": 200
+        }
+      ]
+    },
+    {
+      "id": "w_28",
+      "source": "motor",
+      "sourceHandle": "theta",
+      "target": "inverse",
+      "targetHandle": "theta",
+      "waypoints": [
+        {
+          "x": 1426,
+          "y": 550
+        },
+        {
+          "x": 1120,
+          "y": 550
+        },
+        {
+          "x": 1120,
+          "y": 320
+        },
+        {
+          "x": 1042.5,
+          "y": 320
+        }
+      ],
+      "junctions": [
+        {
+          "x": 1120,
+          "y": 550
+        }
+      ]
+    },
+    {
+      "id": "w_29",
+      "source": "motor",
+      "sourceHandle": "theta",
+      "target": "park",
+      "targetHandle": "theta",
+      "waypoints": [
+        {
+          "x": 1426,
+          "y": 550
+        },
+        {
+          "x": 1030,
+          "y": 550
+        }
+      ]
+    },
+    {
+      "id": "w_30",
+      "source": "motor",
+      "sourceHandle": "wm",
+      "target": "speedError",
+      "targetHandle": "b",
+      "waypoints": [
+        {
+          "x": 1360,
+          "y": 40
+        },
+        {
+          "x": 1660,
+          "y": 40
+        },
+        {
+          "x": 1660,
+          "y": 615
+        },
+        {
+          "x": 248,
+          "y": 615
+        }
+      ]
+    }
+  ],
+  "description": "1500 rpm speed command with cascaded d/q current control. A 48 V averaged inverter drives a surface PMSM and a mechanical load that increases at 0.45 s. Ideal current and rotor-position feedback; continuous controllers; no PWM ripple or sensor noise.",
+  "annotations": [
+    {
+      "x": 0,
+      "y": -25,
+      "text": "01  SPEED CONTROL",
+      "detail": "Speed error → PI → torque-producing current"
+    },
+    {
+      "x": 710,
+      "y": -25,
+      "text": "02  CURRENT CONTROL",
+      "detail": "Independent d / q regulators"
+    },
+    {
+      "x": 1160,
+      "y": -25,
+      "text": "03  POWER & MECHANICS",
+      "detail": "48 V inverter · three-phase AC motor"
+    },
+    {
+      "x": 925,
+      "y": 350,
+      "text": "CURRENT FEEDBACK",
+      "detail": "abc → αβ → dq"
+    },
+    {
+      "x": 20,
+      "y": 555,
+      "text": "ωm  ·  SPEED FEEDBACK"
+    },
+    {
+      "x": 1130,
+      "y": 565,
+      "text": "θe  ·  ELECTRICAL ANGLE"
+    }
+  ],
+  "plots": [
+    {
+      "id": "speed",
+      "label": "Speed",
+      "series": [
+        "motor.rpm",
+        "reference.y"
+      ],
+      "labels": [
+        "Rotor speed",
+        "Speed command"
+      ]
+    },
+    {
+      "id": "current",
+      "label": "d/q currents",
+      "series": [
+        "park.iq",
+        "iqReference.y",
+        "park.id"
+      ],
+      "labels": [
+        "iq · measured",
+        "iq · command",
+        "id · measured"
+      ]
+    },
+    {
+      "id": "phases",
+      "label": "Phase currents",
+      "series": [
+        "motor.ia",
+        "motor.ib",
+        "motor.ic"
+      ],
+      "labels": [
+        "Phase a",
+        "Phase b",
+        "Phase c"
+      ]
+    },
+    {
+      "id": "torque",
+      "label": "Torque",
+      "series": [
+        "motor.torque",
+        "load.loadTorque"
+      ],
+      "labels": [
+        "Motor torque",
+        "Load torque"
+      ]
+    },
+    {
+      "id": "voltage",
+      "label": "d/q voltages",
+      "series": [
+        "qPI.y",
+        "dPI.y"
+      ],
+      "labels": [
+        "vq",
+        "vd"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,372 @@
+{
+  "version": 1,
+  "name": "Motor speed control",
+  "blocks": [
+    {
+      "id": "reference",
+      "definition": {
+        "kind": "step",
+        "name": "Speed reference",
+        "description": "A step change in the requested motor speed.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Target speed",
+            "value": 100,
+            "unit": "rad/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0.2,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;"
+      },
+      "position": {
+        "x": 0,
+        "y": 85
+      }
+    },
+    {
+      "id": "controller",
+      "definition": {
+        "kind": "pi",
+        "name": "PI controller",
+        "description": "Sampled speed control with output saturation and a bounded integral state.",
+        "domain": "signal",
+        "symbol": "PI",
+        "controller": true,
+        "ports": [
+          {
+            "id": "reference",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "measured",
+            "name": "meas",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 0.6,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "limit",
+            "name": "Voltage limit",
+            "value": 24,
+            "unit": "V",
+            "min": 0.1
+          },
+          {
+            "id": "samplePeriod",
+            "name": "Sample period",
+            "value": 0.001,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
+        "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+      },
+      "position": {
+        "x": 225,
+        "y": 65
+      }
+    },
+    {
+      "id": "drive",
+      "definition": {
+        "kind": "voltage",
+        "name": "Voltage drive",
+        "description": "An ideal voltage source driven by a control signal.",
+        "domain": "electrical",
+        "symbol": "V",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "v = u;"
+      },
+      "position": {
+        "x": 470,
+        "y": 85
+      }
+    },
+    {
+      "id": "motor",
+      "definition": {
+        "kind": "motor",
+        "name": "DC motor",
+        "description": "Armature resistance and inductance coupled to a rotational shaft.",
+        "domain": "electrical",
+        "symbol": "M",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1.2,
+            "unit": "Ω",
+            "min": 0.001
+          },
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 0.02,
+            "unit": "H",
+            "min": 0.00001
+          },
+          {
+            "id": "k",
+            "name": "Motor constant",
+            "value": 0.15,
+            "unit": "N·m/A",
+            "min": 0.0001
+          }
+        ],
+        "equations": "L*der(i) = v - R*i - k*w;\ntau = k*i;"
+      },
+      "position": {
+        "x": 705,
+        "y": 85
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "inertia",
+        "name": "Inertia & load",
+        "description": "A rotating load with inertia and viscous friction.",
+        "domain": "mechanical",
+        "symbol": "J",
+        "ports": [
+          {
+            "id": "a",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "b",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "left",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 0.02,
+            "unit": "kg·m²",
+            "min": 0.00001
+          },
+          {
+            "id": "damping",
+            "name": "Viscous friction",
+            "value": 0.002,
+            "unit": "N·m·s",
+            "min": 0
+          }
+        ],
+        "equations": "J*der(w) = tau - damping*w;"
+      },
+      "position": {
+        "x": 705,
+        "y": 335
+      }
+    },
+    {
+      "id": "sensor",
+      "definition": {
+        "kind": "sensor",
+        "name": "Speed sensor",
+        "description": "Measures shaft speed without loading the mechanical system.",
+        "domain": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = der(flange.phi);\nflange.tau = 0;"
+      },
+      "position": {
+        "x": 225,
+        "y": 335
+      }
+    },
+    {
+      "id": "ground",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 495,
+        "y": 345
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "wire0",
+      "source": "reference",
+      "sourceHandle": "y",
+      "target": "controller",
+      "targetHandle": "reference"
+    },
+    {
+      "id": "wire1",
+      "source": "controller",
+      "sourceHandle": "y",
+      "target": "drive",
+      "targetHandle": "u"
+    },
+    {
+      "id": "wire2",
+      "source": "drive",
+      "sourceHandle": "p",
+      "target": "motor",
+      "targetHandle": "p"
+    },
+    {
+      "id": "wire3",
+      "source": "drive",
+      "sourceHandle": "n",
+      "target": "ground",
+      "targetHandle": "p"
+    },
+    {
+      "id": "wire4",
+      "source": "motor",
+      "sourceHandle": "n",
+      "target": "ground",
+      "targetHandle": "p"
+    },
+    {
+      "id": "wire5",
+      "source": "motor",
+      "sourceHandle": "flange",
+      "target": "load",
+      "targetHandle": "a"
+    },
+    {
+      "id": "wire6",
+      "source": "load",
+      "sourceHandle": "b",
+      "target": "sensor",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "wire7",
+      "source": "sensor",
+      "sourceHandle": "y",
+      "target": "controller",
+      "targetHandle": "measured"
+    }
+  ],
+  "duration": 4,
+  "revision": 1
+}
