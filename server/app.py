@@ -63,7 +63,7 @@ async def save_project(project:Project):
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):
-    if example_id not in {'dc','foc'}: raise HTTPException(404,'Example not found.')
+    if example_id not in {'dc','foc','wiring'}: raise HTTPException(404,'Example not found.')
     saved = PROJECT_DIR/'examples'/f'{example_id}.json'
     bundled = ROOT/'models'/'examples'/f'{example_id}.json'
     path = saved if saved.exists() else bundled
@@ -111,7 +111,7 @@ async def cancel(job_id:str):
 @app.get('/api/results/latest')
 async def latest(example: str | None = None):
     files = sorted(RUNS.glob('*/result.json'),key=lambda p:p.stat().st_mtime,reverse=True)
-    target = PROJECT_DIR/'examples'/f'{example}.json' if example in {'dc','foc'} else PROJECT_FILE
+    target = PROJECT_DIR/'examples'/f'{example}.json' if example in {'dc','foc','wiring'} else PROJECT_FILE
     wanted_hash = None
     if target.exists():
         wanted_hash = semantic_hash(Project.model_validate_json(target.read_text()))

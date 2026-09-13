@@ -127,7 +127,6 @@ class Project(BaseModel):
             raise ValueError('Node identifiers must be unique.')
         if set(blocks) & set(taps):
             raise ValueError('A node cannot reuse a component identifier.')
-        occupied = set()
         wire_ids = set()
         for wire in self.wires:
             if wire.id in wire_ids:
@@ -154,70 +153,58 @@ class Project(BaseModel):
             if a and b:
                 if a.direction == b.direction == 'physical':
                     continue
-                if {a.direction, b.direction} != {'input', 'output'}:
-                    raise ValueError('Signal connections require one input and one output.')
-            if b and b.direction == 'input':
-                key = (wire.target, b.id)
-                if key in occupied:
-                    raise ValueError('Each signal input may have only one source.')
-                occupied.add(key)
-            if a and a.direction == 'input':
-                key = (wire.source, a.id)
-                if key in occupied:
-                    raise ValueError('Each signal input may have only one source.')
-                occupied.add(key)
+                if 'physical' in {a.direction, b.direction}:
+                    raise ValueError('Physical connectors cannot join signal ports.')
+        ports = {(b.id, p.id): p for b in self.blocks for p in b.definition.ports}
+        for component in net_components(self):
+            directions = [ports[key].direction for key in component]
+            if directions.count('output') > 1:
+                raise ValueError('Each signal net may have only one source, including through junctions.')
+            if 'physical' in directions and any(d != 'physical' for d in directions):
+                raise ValueError('Physical connectors cannot join signal ports.')
         return self
 
-def flatten_connects(project: 'Project') -> list[tuple[str, str, str, str]]:
+def net_components(project: 'Project') -> list[list[tuple[str, str]]]:
     taps = {j.id for j in project.junctions}
-    blocks = {b.id: b for b in project.blocks}
-
-    def key(ident: str, handle: str) -> str:
-        return f'j:{ident}' if ident in taps else f'{ident}.{handle}'
-
-    adj: dict[str, list[str]] = {}
-    def link(a: str, b: str):
-        adj.setdefault(a, []).append(b)
-        adj.setdefault(b, []).append(a)
+    adj: dict[tuple[str, str], set[tuple[str, str]]] = {}
+    def end(ident, handle):
+        return (ident, 'node' if ident in taps else handle)
     for wire in project.wires:
-        link(key(wire.source, wire.sourceHandle), key(wire.target, wire.targetHandle))
-
-    def port_of(k: str):
-        if k.startswith('j:'):
-            return None
-        bid, _, hid = k.partition('.')
-        block = blocks.get(bid)
-        if not block:
-            return None
-        return next((p for p in block.definition.ports if p.id == hid), None)
-
-    pairs: list[tuple[str, str, str, str]] = []
-    seen: set[tuple[str, str, str, str]] = set()
-    for origin in list(adj):
-        port = port_of(origin)
-        if not port or port.direction not in {'output', 'physical'}:
+        a, b = end(wire.source, wire.sourceHandle), end(wire.target, wire.targetHandle)
+        adj.setdefault(a, set()).add(b)
+        adj.setdefault(b, set()).add(a)
+    seen = set()
+    components = []
+    for seed in sorted(adj):
+        if seed in seen:
             continue
-        stack = [origin]
-        visited = {origin}
+        stack, ports = [seed], []
         while stack:
-            cur = stack.pop()
-            for nxt in adj.get(cur, []):
-                if nxt in visited:
-                    continue
-                visited.add(nxt)
-                if nxt.startswith('j:'):
-                    stack.append(nxt)
-                    continue
-                other = port_of(nxt)
-                if not other or other.direction not in {'input', 'physical'}:
-                    continue
-                sid, _, sh = origin.partition('.')
-                tid, _, th = nxt.partition('.')
-                pair = (sid, sh, tid, th)
-                if pair not in seen:
-                    seen.add(pair)
-                    pairs.append(pair)
-    return pairs
+            current = stack.pop()
+            if current in seen:
+                continue
+            seen.add(current)
+            if current[0] not in taps:
+                ports.append(current)
+            stack.extend(adj[current] - seen)
+        components.append(sorted(ports))
+    return components
+
+
+def flatten_connects(project: 'Project') -> list[tuple[str, str, str, str]]:
+    ports = {(b.id, p.id): p for b in project.blocks for p in b.definition.ports}
+    pairs = []
+    for component in net_components(project):
+        if not component:
+            continue
+        driver = next((key for key in component if ports[key].direction == 'output'), None)
+        source = driver or component[0]
+        for target in component:
+            if target == source:
+                continue
+            if ports[target].direction == ('input' if driver else 'physical'):
+                pairs.append((*source, *target))
+    return sorted(pairs)
 
 
 class GenerateRequest(BaseModel):

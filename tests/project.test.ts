@@ -16,13 +16,6 @@ import {
   rubberBandPoints,
   wirePath,
 } from '../lib/gradara/routing';
-import {
-  attachAt,
-  branchFromWire,
-  insertVertex,
-  nearestOnPolyline,
-} from '../lib/gradara/wires';
-import { flattenWires } from '../lib/gradara/net';
 import { Position } from '@xyflow/react';
 import {
   addWire,
@@ -32,7 +25,7 @@ import {
   semanticSignature,
 } from '../lib/gradara/project';
 
-test('removing a block removes its incident wires and preserves unrelated wiring', () => {
+void test('removing a block removes its incident wires and preserves unrelated wiring', () => {
   const p = initialProject();
   const next = removeSelection(p, ['controller']);
   assert.equal(next.blocks.length, 6);
@@ -44,7 +37,7 @@ test('removing a block removes its incident wires and preserves unrelated wiring
   );
   assert.equal(p.blocks.length, 7);
 });
-test('revising a controller preserves its compatible ports and current position', () => {
+void test('revising a controller preserves its compatible ports and current position', () => {
   const p = initialProject();
   const d = structuredClone(p.blocks[1].definition);
   d.equations += '\n';
@@ -57,7 +50,7 @@ test('revising a controller preserves its compatible ports and current position'
     p.wires.length - 1,
   );
 });
-test('duplicates remap internal wires without connecting copies to the original graph', () => {
+void test('duplicates remap internal wires without connecting copies to the original graph', () => {
   const p = initialProject();
   const { project: next, ids } = duplicateBlocks(p, [
     'reference',
@@ -70,7 +63,7 @@ test('duplicates remap internal wires without connecting copies to the original 
   assert.ok(ids.includes(wire.target));
   assert.equal(new Set(next.blocks.map((b) => b.id)).size, 9);
 });
-test('reject a second source on a signal input', () => {
+void test('reject a second source on a signal input', () => {
   assert.throws(
     () =>
       addWire(initialProject(), {
@@ -83,7 +76,7 @@ test('reject a second source on a signal input', () => {
     /already has a source/,
   );
 });
-test('layout and display name edits leave result validity unchanged', () => {
+void test('layout and display name edits leave result validity unchanged', () => {
   const p = initialProject();
   const signature = semanticSignature(p);
   p.blocks[0].position.x += 100;
@@ -103,7 +96,7 @@ import {
   type CanvasNode,
 } from '../lib/gradara/canvas';
 
-test('measurements survive selection and unrelated document updates', () => {
+void test('measurements survive selection and unrelated document updates', () => {
   const p = initialProject();
   const initial = reconcileNodes([], [], p.blocks, []);
   const gestures = new CanvasGestures();
@@ -128,7 +121,7 @@ test('measurements survive selection and unrelated document updates', () => {
     selected,
   );
 });
-test('dragging preserves transient geometry and produces only one saved transaction', () => {
+void test('dragging preserves transient geometry and produces only one saved transaction', () => {
   const p = initialProject();
   const g = new CanvasGestures();
   const initial = reconcileNodes([], [], p.blocks, []);
@@ -166,7 +159,7 @@ test('dragging preserves transient geometry and produces only one saved transact
   assert.equal(semanticSignature(next), semanticSignature(p));
   assert.equal(applyLayout(next, finished.layouts), next);
 });
-test('corner resize commits size and origin together, can undo, and keeps wires', () => {
+void test('corner resize commits size and origin together, can undo, and keeps wires', () => {
   const p = initialProject();
   const g = new CanvasGestures();
   const initial = reconcileNodes([], [], p.blocks, ['reference']);
@@ -215,7 +208,7 @@ test('corner resize commits size and origin together, can undo, and keeps wires'
   assert.equal(undone[0].width, blockSize(p.blocks[0]).width);
   assert.deepEqual(undone[0].position, p.blocks[0].position);
 });
-test('multi-selection drag saves all moved blocks as one edit', () => {
+void test('multi-selection drag saves all moved blocks as one edit', () => {
   const p = initialProject();
   const g = new CanvasGestures();
   let nodes: CanvasNode[] = reconcileNodes([], [], p.blocks, [
@@ -259,7 +252,7 @@ test('multi-selection drag saves all moved blocks as one edit', () => {
   assert.equal(end.layouts.length, 2);
 });
 
-test('library kinds are unique and cover the drawing catalog', () => {
+void test('library kinds are unique and cover the drawing catalog', () => {
   const kinds = library.map((d) => d.kind);
   assert.equal(new Set(kinds).size, kinds.length);
   assert.ok(kinds.length >= 50);
@@ -276,7 +269,7 @@ test('library kinds are unique and cover the drawing catalog', () => {
     assert.ok(kinds.includes(needed), needed);
 });
 
-test('fuzzy search ranks pid above unrelated blocks', () => {
+void test('fuzzy search ranks pid above unrelated blocks', () => {
   assert.ok((fuzzyScore('pid', 'PID') ?? 0) > (fuzzyScore('pid', 'Ramp') ?? 0));
   const hits = searchLibrary('int');
   assert.ok(hits.length > 0);
@@ -285,7 +278,7 @@ test('fuzzy search ranks pid above unrelated blocks', () => {
   );
 });
 
-test('downstream placement is on the grid and to the right', () => {
+void test('downstream placement is on the grid and to the right', () => {
   const p = initialProject();
   const gain = library.find((d) => d.kind === 'gain')!;
   const at = placeDownstream(p.blocks[0], gain);
@@ -294,7 +287,7 @@ test('downstream placement is on the grid and to the right', () => {
   assert.deepEqual(snapPoint({ x: 13, y: 27 }), { x: 20, y: 20 });
 });
 
-test('a new block is placed so the connecting ports share a straight line', () => {
+void test('a new block is placed so the connecting ports share a straight line', () => {
   const p = initialProject();
   const gain = library.find((d) => d.kind === 'gain')!;
   const at = placeDownstream(p.blocks[0], gain);
@@ -305,7 +298,7 @@ test('a new block is placed so the connecting ports share a straight line', () =
   assert.ok(to.x > from.x);
 });
 
-test('a pin forces the first segment out of the block, click freezes that run', () => {
+void test('a pin forces the first segment out of the block, click freezes that run', () => {
   const pts = rubberBandPoints(
     { x: 0, y: 40 },
     { x: 80, y: 10 },
@@ -319,7 +312,7 @@ test('a pin forces the first segment out of the block, click freezes that run', 
   assert.equal(pin.origin.x, 80);
 });
 
-test('aligned ports draw a single straight segment', () => {
+void test('aligned ports draw a single straight segment', () => {
   const path = wirePath({
     sourceX: 10,
     sourceY: 40,
@@ -340,7 +333,7 @@ test('aligned ports draw a single straight segment', () => {
   assert.match(jog, /L \d+(\.\d+)? 40 L \d+(\.\d+)? 90/);
 });
 
-test('moving a block near a connected port snaps onto the straight line', () => {
+void test('moving a block near a connected port snaps onto the straight line', () => {
   const step = library.find((d) => d.kind === 'step')!;
   const gain = library.find((d) => d.kind === 'gain')!;
   const a = { id: 'a', definition: step, position: { x: 0, y: 0 } };
@@ -368,7 +361,7 @@ test('moving a block near a connected port snaps onto the straight line', () => 
   assert.ok(Math.abs(from.y - to.y) < 0.001);
 });
 
-test('resizing a block pulls its port back onto the connected line', () => {
+void test('resizing a block pulls its port back onto the connected line', () => {
   const step = library.find((d) => d.kind === 'step')!;
   const gain = library.find((d) => d.kind === 'gain')!;
   const a = { id: 'a', definition: step, position: { x: 0, y: 40 } };
@@ -395,11 +388,14 @@ test('resizing a block pulls its port back onto the connected line', () => {
   const from = portPoint(a, 'y')!;
   assert.ok(Math.abs(from.y - portPoint(b, 'u')!.y) > 1);
   const snapped = snapMovedBlocks(project, ['b']);
-  const to = portPoint(snapped.blocks.find((block) => block.id === 'b')!, 'u')!;
+  const to = portPoint(
+    snapped.blocks.find((block) => block.id === 'b')!,
+    'u',
+  )!;
   assert.ok(Math.abs(from.y - to.y) < 0.001);
 });
 
-test('a right-to-left signal is feedback and does not draw a straight line', () => {
+void test('a right-to-left signal is feedback and does not draw a straight line', () => {
   const path = wirePath({
     sourceX: 400,
     sourceY: 40,
@@ -423,7 +419,7 @@ test('a right-to-left signal is feedback and does not draw a straight line', () 
   assert.equal(physical, 'M 400 40 L 80 40');
 });
 
-test('feedback connections do not snap the loop onto one row', () => {
+void test('feedback connections do not snap the loop onto one row', () => {
   const sum = library.find((d) => d.kind === 'sum')!;
   const product = library.find((d) => d.kind === 'product')!;
   const a = { id: 'sum', definition: sum, position: { x: 0, y: 0 } };
@@ -454,130 +450,10 @@ test('feedback connections do not snap the loop onto one row', () => {
   assert.equal(next.position.y, before);
 });
 
-test('a vertex can be inserted on a polyline and a branch shares the node', () => {
-  const pts = [
-    { x: 0, y: 0 },
-    { x: 100, y: 0 },
-  ];
-  const hit = nearestOnPolyline(pts, { x: 40, y: 2 });
-  assert.ok(Math.abs(hit.point.x - 40) < 0.001);
-  const withCorner = insertVertex(pts, { x: 40, y: 0 });
-  assert.equal(withCorner.length, 3);
-  const step = library.find((d) => d.kind === 'step')!;
-  const gain = library.find((d) => d.kind === 'gain')!;
-  const sat = library.find((d) => d.kind === 'saturation')!;
-  const project = {
-    ...initialProject(),
-    blocks: [
-      { id: 'a', definition: step, position: { x: 0, y: 0 } },
-      { id: 'b', definition: gain, position: { x: 160, y: 0 } },
-      { id: 'c', definition: sat, position: { x: 160, y: 120 } },
-    ],
-    wires: [
-      {
-        id: 'w0',
-        source: 'a',
-        sourceHandle: 'y',
-        target: 'b',
-        targetHandle: 'u',
-      },
-    ],
-  };
-  const branched = branchFromWire(project, 'w0', { x: 80, y: 28 }, {
-    blockId: 'c',
-    portId: 'u',
-  });
-  assert.equal(branched.wires.length, 3);
-  assert.ok((branched.junctions?.length ?? 0) >= 1);
-  assert.ok(branched.wires.some((w) => w.target === 'c'));
-  assert.ok(branched.wires.some((w) => w.target === 'b'));
-});
+// Branch gestures and rejection of driven-net drops are exercised through NetSession
+// in wiring.test.ts, the same interaction owner used by the canvas.
 
-test('dropping an output on a driven net connects the free input on that net', () => {
-  const step = library.find((d) => d.kind === 'step')!;
-  const sum = library.find((d) => d.kind === 'sum')!;
-  const gain = library.find((d) => d.kind === 'gain')!;
-  const project = {
-    ...initialProject(),
-    blocks: [
-      { id: 'ref', definition: step, position: { x: 0, y: 40 } },
-      { id: 'sum', definition: sum, position: { x: 140, y: 40 } },
-      { id: 'gain', definition: gain, position: { x: 280, y: 40 } },
-    ],
-    wires: [
-      {
-        id: 'w0',
-        source: 'ref',
-        sourceHandle: 'y',
-        target: 'sum',
-        targetHandle: 'a',
-      },
-      {
-        id: 'w1',
-        source: 'sum',
-        sourceHandle: 'y',
-        target: 'gain',
-        targetHandle: 'u',
-      },
-    ],
-  };
-  const from = portPoint(project.blocks[0], 'y')!;
-  const to = portPoint(project.blocks[1], 'a')!;
-  const next = attachAt(
-    project,
-    { id: 'gain', handle: 'y' },
-    { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 },
-  );
-  assert.ok(next);
-  const pairs = flattenWires(next!);
-  assert.ok(
-    pairs.some(
-      (w) =>
-        w.source === 'gain' &&
-        w.sourceHandle === 'y' &&
-        w.target === 'sum' &&
-        w.targetHandle === 'b',
-    ),
-    'feedback should land on the unused sum input',
-  );
-});
-
-test('dropping an input on a wire splices a node into the net', () => {
-  const step = library.find((d) => d.kind === 'step')!;
-  const gain = library.find((d) => d.kind === 'gain')!;
-  const sat = library.find((d) => d.kind === 'saturation')!;
-  const project = {
-    ...initialProject(),
-    blocks: [
-      { id: 'a', definition: step, position: { x: 0, y: 0 } },
-      { id: 'b', definition: gain, position: { x: 200, y: 0 } },
-      { id: 'c', definition: sat, position: { x: 200, y: 120 } },
-    ],
-    wires: [
-      {
-        id: 'w0',
-        source: 'a',
-        sourceHandle: 'y',
-        target: 'b',
-        targetHandle: 'u',
-      },
-    ],
-  };
-  const start = portPoint(project.blocks[0], 'y')!;
-  const end = portPoint(project.blocks[1], 'u')!;
-  const next = attachAt(
-    project,
-    { id: 'c', handle: 'u' },
-    { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 },
-  );
-  assert.ok(next);
-  assert.ok((next!.junctions?.length ?? 0) >= 1);
-  const pairs = flattenWires(next!);
-  assert.ok(pairs.some((w) => w.target === 'c' && w.targetHandle === 'u'));
-  assert.ok(pairs.some((w) => w.target === 'b' && w.targetHandle === 'u'));
-});
-
-test('a second wire from the same output does not invent a mid-wire node', () => {
+void test('a second wire from the same output does not invent a mid-wire node', () => {
   const step = library.find((d) => d.kind === 'step')!;
   const gain = library.find((d) => d.kind === 'gain')!;
   const sat = library.find((d) => d.kind === 'saturation')!;

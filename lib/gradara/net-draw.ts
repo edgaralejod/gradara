@@ -1,19 +1,28 @@
 import { Position } from '@xyflow/react';
 import { blockSize } from './canvas';
 import type { Project } from './model';
-import { endpointPoint, isTap, TAP_HANDLE } from './net';
+import {
+  endpointPoint,
+  isTap,
+  netComponents,
+  netKeys,
+  TAP_HANDLE,
+} from './net';
 import { portPoint } from './ports';
 import {
+  routeBetween,
+  simplifyPoints,
+  segmentExit,
+  outward,
   EXIT_STUB,
   RETURN_CLEARANCE,
   RETURN_STUB,
-  STRAIGHT_EPS,
   pinRubberBand,
   pointsToPath,
   rubberBandPoints,
   type Pt,
 } from './routing';
-import { sideToPosition } from './wires';
+import { sideToPosition } from './ports';
 
 export const ANCHOR_PX = 8;
 export const PORT_HIT_PX = 16;
@@ -23,24 +32,112 @@ export const CANCEL_PX = 16;
 export { pinRubberBand, rubberBandPoints, pointsToPath };
 export type { Pt };
 
-export function nearly(a: number, b: number, eps = STRAIGHT_EPS) {
+export function nearly(a: number, b: number, eps = 0.000001) {
   return Math.abs(a - b) <= eps;
 }
 
-export function samePt(a: Pt, b: Pt, eps = STRAIGHT_EPS) {
+export function samePt(a: Pt, b: Pt, eps = 0.000001) {
   return nearly(a.x, b.x, eps) && nearly(a.y, b.y, eps);
 }
 
 export type Anchor = { axis: 'x' | 'y'; value: number; net?: string };
 
-export function polylineOfWire(project: Project, wireId: string): Pt[] {
+function rawPolyline(project: Project, wireId: string): Pt[] {
   const w = project.wires.find((x) => x.id === wireId);
   if (!w) return [];
   const from = endpointPoint(project, w.source, w.sourceHandle);
   const to = endpointPoint(project, w.target, w.targetHandle);
   if (!from || !to) return [];
-  if (w.waypoints?.length) return [from, ...w.waypoints, to];
-  return committedPoints(project, w.source, w.sourceHandle, w.target, w.targetHandle);
+  return committedPoints(
+    project,
+    w.source,
+    w.sourceHandle,
+    w.target,
+    w.targetHandle,
+    w.waypoints,
+  );
+}
+
+const routeCache = new WeakMap<Project, Map<string, Pt[]>>();
+type Run = { a: Pt; b: Pt; axis: 'h' | 'v'; coord: number; net: number };
+function overlap(a: Run, b: Run) {
+  if (a.axis !== b.axis || !nearly(a.coord, b.coord)) return false;
+  const key = a.axis === 'h' ? 'x' : 'y';
+  return (
+    Math.min(Math.max(a.a[key], a.b[key]), Math.max(b.a[key], b.b[key])) -
+      Math.max(Math.min(a.a[key], a.b[key]), Math.min(b.a[key], b.b[key])) >
+    0.001
+  );
+}
+/** Deterministic lane allocation for automatic runs; pinned routes are never rerouted. */
+export function routedPolylines(project: Project): Map<string, Pt[]> {
+  const cached = routeCache.get(project);
+  if (cached) return cached;
+  const nets = new Map<string, number>();
+  netComponents(project).forEach((keys, i) =>
+    keys.forEach((k) => nets.set(k, i)),
+  );
+  const runs: Run[] = [];
+  const routes = new Map<string, Pt[]>();
+  for (const w of project.wires) {
+    const key = isTap(project, w.source)
+      ? `j:${w.source}`
+      : `${w.source}.${w.sourceHandle}`;
+    const net = nets.get(key) ?? -1;
+    let pts = rawPolyline(project, w.id);
+    if (!w.waypoints?.length) {
+      const next: Pt[] = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i],
+          b = pts[i + 1];
+        const axis = a.y === b.y ? 'h' : 'v';
+        const run: Run = { a, b, axis, coord: axis === 'h' ? a.y : a.x, net };
+        next.push(a);
+        if (!runs.some((r) => r.net !== net && overlap(run, r))) continue;
+        let offset = 8;
+        while (
+          offset < 160 &&
+          runs.some(
+            (r) =>
+              r.net !== net &&
+              overlap({ ...run, coord: run.coord + offset }, r),
+          )
+        )
+          offset += 8;
+        const shift = (p: Pt) =>
+          axis === 'h'
+            ? { x: p.x, y: p.y + offset }
+            : { x: p.x + offset, y: p.y };
+        // Leave endpoint normals intact, shifting only the usable middle of an endpoint run.
+        const start =
+          i === 0
+            ? outward(
+                a,
+                segmentExit(a, b),
+                Math.min(20, Math.hypot(a.x - b.x, a.y - b.y) / 3),
+              )
+            : a;
+        const end =
+          i === pts.length - 2
+            ? outward(
+                b,
+                segmentExit(b, a),
+                Math.min(20, Math.hypot(a.x - b.x, a.y - b.y) / 3),
+              )
+            : b;
+        next.push(start, shift(start), shift(end), end);
+      }
+      if (pts.length) next.push(pts.at(-1)!);
+      pts = simplifyPoints(next);
+    }
+    routes.set(w.id, pts);
+    runs.push(...segmentsOf(pts).map((r) => ({ ...r, net })));
+  }
+  routeCache.set(project, routes);
+  return routes;
+}
+export function polylineOfWire(project: Project, wireId: string): Pt[] {
+  return routedPolylines(project).get(wireId) ?? [];
 }
 
 export function committedPoints(
@@ -54,21 +151,55 @@ export function committedPoints(
   const from = endpointPoint(project, source, sourceHandle);
   const to = endpointPoint(project, target, targetHandle);
   if (!from || !to) return [];
-  if (vertices.length) return [from, ...vertices, to];
-  const sourceBlock = project.blocks.find((b) => b.id === source);
+  const exit = isTap(project, source)
+    ? segmentExit(from, vertices[0] ?? to)
+    : sideToPosition(from.side);
+  const entry = isTap(project, target) ? undefined : sideToPosition(to.side);
+  if (vertices.length) {
+    const points = routeBetween(from, vertices[0], exit);
+    for (const vertex of vertices.slice(1)) {
+      const a = points.at(-1)!;
+      if (nearly(a.x, vertex.x) || nearly(a.y, vertex.y)) points.push(vertex);
+      else points.push({ x: vertex.x, y: a.y }, vertex);
+    }
+    const last = points.at(-1)!;
+    const tailExit = segmentExit(last, to);
+    return simplifyPoints([
+      ...points,
+      ...routeBetween(last, to, tailExit, entry, 0).slice(1),
+    ]);
+  }
+  const driverKeys = isTap(project, source)
+    ? netKeys(project, { id: source, handle: sourceHandle })
+    : undefined;
+  const sourceBlock =
+    project.blocks.find((b) => b.id === source) ??
+    project.blocks.find((b) =>
+      b.definition.ports.some(
+        (p) => p.direction === 'output' && driverKeys?.has(`${b.id}.${p.id}`),
+      ),
+    );
   const targetBlock = project.blocks.find((b) => b.id === target);
   const physical =
-    !isTap(project, source) &&
-    sourceBlock?.definition.ports.find((p) => p.id === sourceHandle)
-      ?.direction === 'physical';
+    (!isTap(project, source) &&
+      sourceBlock?.definition.ports.find((p) => p.id === sourceHandle)
+        ?.direction === 'physical') ||
+    (isTap(project, source) &&
+      project.junctions?.find((j) => j.id === source)?.domain !== 'signal');
   if (
     !physical &&
     sourceBlock &&
     targetBlock &&
-    isBackEdge(project, source, target)
+    isBackEdge(project, sourceBlock.id, targetBlock.id)
   )
-    return loopPoints(from, to, loopRailY(project, source, target));
-  return rubberBandPoints(from, to, sideToPosition(from.side));
+    return loopPoints(
+      from,
+      to,
+      loopRailY(project, sourceBlock.id, targetBlock.id),
+      exit,
+      entry,
+    );
+  return routeBetween(from, to, exit, entry);
 }
 
 export function isBackEdge(project: Project, fromId: string, toId: string) {
@@ -77,7 +208,7 @@ export function isBackEdge(project: Project, fromId: string, toId: string) {
   const to = project.blocks.find((b) => b.id === toId);
   if (!from || !to) return false;
   if (to.position.x + blockSize(to).width < from.position.x) return true;
-  return feeds(project, toId, fromId);
+  return to.position.x < from.position.x && feeds(project, toId, fromId);
 }
 
 function feeds(project: Project, fromBlock: string, toBlock: string) {
@@ -89,21 +220,13 @@ function feeds(project: Project, fromBlock: string, toBlock: string) {
     if (seen.has(id)) continue;
     seen.add(id);
     for (const w of project.wires) {
-      if (isTap(project, w.source) || isTap(project, w.target)) {
-        if (w.source === id && !isTap(project, w.target)) stack.push(w.target);
-        continue;
-      }
       if (w.source === id) stack.push(w.target);
     }
   }
   return false;
 }
 
-export function loopRailY(
-  project: Project,
-  fromId: string,
-  toId: string,
-) {
+export function loopRailY(project: Project, fromId: string, toId: string) {
   const from = project.blocks.find((b) => b.id === fromId);
   const to = project.blocks.find((b) => b.id === toId);
   let bottom = 0;
@@ -125,16 +248,23 @@ export function loopRailY(
   return bottom + RETURN_CLEARANCE;
 }
 
-export function loopPoints(from: Pt, to: Pt, railY: number): Pt[] {
-  const stub = RETURN_STUB;
-  const leaveX = from.x + stub;
-  return [
+export function loopPoints(
+  from: Pt,
+  to: Pt,
+  railY: number,
+  exit = Position.Right,
+  entry = Position.Bottom,
+): Pt[] {
+  const a = outward(from, exit, RETURN_STUB),
+    b = outward(to, entry, RETURN_STUB);
+  return simplifyPoints([
     from,
-    { x: leaveX, y: from.y },
-    { x: leaveX, y: railY },
-    { x: to.x, y: railY },
+    a,
+    { x: a.x, y: railY },
+    { x: b.x, y: railY },
+    b,
     to,
-  ];
+  ]);
 }
 
 export function segmentsOf(pts: Pt[]) {
@@ -153,6 +283,7 @@ export function segmentsOf(pts: Pt[]) {
 export function collectAnchors(
   project: Project,
   ignoreWireIds: string[] = [],
+  ignoreEnds: Set<string> = new Set(),
 ): Anchor[] {
   const anchors: Anchor[] = [];
   const seen = new Set<string>();
@@ -164,12 +295,14 @@ export function collectAnchors(
   };
   for (const b of project.blocks)
     for (const p of b.definition.ports) {
+      if (ignoreEnds.has(`${b.id}.${p.id}`)) continue;
       const pt = portPoint(b, p.id);
       if (!pt) continue;
       add('x', pt.x);
       add('y', pt.y);
     }
   for (const j of project.junctions ?? []) {
+    if (ignoreEnds.has(`j:${j.id}`)) continue;
     add('x', j.position.x);
     add('y', j.position.y);
   }
@@ -242,8 +375,10 @@ export function hitSegment(
   at: Pt,
   max = SEGMENT_HIT_PX,
   ignoreWireIds: string[] = [],
-): { wireId: string; point: Pt; dist: number } | undefined {
-  let best: { wireId: string; point: Pt; dist: number } | undefined;
+): { wireId: string; point: Pt; dist: number; segment: number } | undefined {
+  let best:
+    | { wireId: string; point: Pt; dist: number; segment: number }
+    | undefined;
   for (const w of project.wires) {
     if (ignoreWireIds.includes(w.id)) continue;
     const pts = polylineOfWire(project, w.id);
@@ -260,7 +395,7 @@ export function hitSegment(
       const point = { x: a.x + t * dx, y: a.y + t * dy };
       const dist = Math.hypot(at.x - point.x, at.y - point.y);
       if (dist <= max && (!best || dist < best.dist))
-        best = { wireId: w.id, point, dist };
+        best = { wireId: w.id, point, dist, segment: i };
     }
   }
   return best;
@@ -273,11 +408,15 @@ export function livePath(
   corners: Pt[],
   start?: Pt,
 ): Pt[] {
-  const tail = rubberBandPoints(origin, cursor, exit);
+  const tail = rubberBandPoints(
+    origin,
+    cursor,
+    exit,
+    corners.length ? 0 : EXIT_STUB,
+  );
   const head = start ? [start, ...corners] : [...corners];
   const last = head.at(-1);
-  const rest =
-    last && tail[0] && samePt(last, tail[0]) ? tail.slice(1) : tail;
+  const rest = last && tail[0] && samePt(last, tail[0]) ? tail.slice(1) : tail;
   return [...head, ...rest];
 }
 
@@ -287,3 +426,34 @@ export function firstSegmentHorizontal(pts: Pt[]) {
 }
 
 export { EXIT_STUB };
+
+export function overlapsDifferentNet(
+  project: Project,
+  wireId: string,
+): boolean {
+  const w = project.wires.find((w) => w.id === wireId);
+  if (!w) return false;
+  const own =
+    netComponents(project).find((keys) =>
+      keys.includes(
+        isTap(project, w.source)
+          ? `j:${w.source}`
+          : `${w.source}.${w.sourceHandle}`,
+      ),
+    ) ?? [];
+  const runs = segmentsOf(polylineOfWire(project, wireId));
+  return project.wires.some((other) => {
+    if (
+      other.id === wireId ||
+      own.includes(
+        isTap(project, other.source)
+          ? `j:${other.source}`
+          : `${other.source}.${other.sourceHandle}`,
+      )
+    )
+      return false;
+    return segmentsOf(polylineOfWire(project, other.id)).some((a) =>
+      runs.some((b) => overlap({ ...a, net: 0 }, { ...b, net: 1 })),
+    );
+  });
+}

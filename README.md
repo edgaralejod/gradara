@@ -15,7 +15,7 @@ To stop the background launcher, run `.venv/bin/python scripts/stop.py`. The loc
 
 - Click **Run**. The default model simulates a 100 rad/s speed request with a 24 V limited PI controller, electrical motor dynamics, rotational inertia, and shaft feedback.
 - Select **Speed reference**, change **Target speed** to 60, then run again. Click the Speed, Current, and Drive voltage plot tabs.
-- Press **A**, ask for “A first-order low-pass filter with a 50 ms time constant,” and insert the generated component. Connect it into a signal path; disconnect the old wire before assigning another source to an input.
+- Press **A**, ask for “A first-order low-pass filter with a 50 ms time constant,” and insert the generated component. Connect it into a signal path; select the old wire and drag its round end to reconnect it.
 - Drag from a signal port into empty canvas to create and automatically connect a new component.
 - Select a signal component and click **Refine with agent**. Compatible port identities and connections are preserved.
 - Double-click a signal block to edit equations and internal state in Monaco.
@@ -40,6 +40,8 @@ The original `.flux.json` project files still open as Gradara projects. `GRADARA
 This is the first functional desktop-browser demo. Agent-created components currently have scalar signal inputs/outputs and optional continuous/discrete state. Physical library components expose parameters and inspected equations. The C exporter operates on one controller block, with explicit state and timing in its contract; compiled C has not been tested on target hardware. Hierarchical subsystems, HDL generation, arbitrary Modelica import, collaborative editing, full library browsing, binary caching, and Electron installers remain future work.
 
 The editable project graph is the current authoring representation; each save and run produces Modelica source. Editing a `.mo` file externally does not yet update the canvas. That source round trip is an explicit next architecture milestone. UI positions are excluded from simulation identity, so rearranging the diagram keeps existing results current.
+
+Orthogonal nets, pin-exit drawing, snap anchors, T-junctions, and feedback U-paths are specified in [WIRING.md](WIRING.md). That document is the product spec for the next wiring pass; live canvas drawing is not yet at that bar.
 
 ## Developer setup
 
@@ -76,3 +78,15 @@ The prototype exposes optional WebMCP tools for reading the model and editing a 
 - `ARCHITECTURE.md`: product direction and intended growth boundaries.
 
 OpenModelica and the standard library retain their own licenses. See the architecture document's upstream references before distributing a packaged engine.
+
+### Wiring playground
+
+Choose **Wiring playground** from Examples to try the net editor on a running feedback controller.
+
+- **Draw:** drag between ports, or click a port and then its destination. Drop on existing wire ink to join that net. Release in empty space and click to pin bends.
+- **Reshape:** select a wire, then drag a segment or its midpoint grip. Even a straight connection can become a dogleg. Square handles move corners; round end handles reconnect either endpoint to a port or wire.
+- **Redraw:** select a wire and press **D**, or use the on-canvas **Redraw** button. Click to place bends, then click the highlighted destination or press **Enter**. A ghost of the old route remains visible until you finish.
+- **Branch:** drag an unselected wire, or **Alt-drag** any wire. Click a junction to branch, drag it to move, or Alt-drag to branch directly.
+- **Recover:** **Backspace** unpins; **Escape** cancels the entire edit. **R** restores automatic routing. Each completed gesture is one undo step.
+
+The interaction contract and implementation notes live in [WIRING.md](WIRING.md).

@@ -1,11 +1,8 @@
-import type { Project, Block, Definition, Wire } from './model';
+import { polylineOfWire } from './net-draw';
+import { simplifyPoints } from './routing';
+import type { Project, Definition, Wire } from './model';
 import { compatible, portOf } from './model';
-import {
-  endpointPort,
-  endpointsCompatible,
-  flattenWires,
-  isTap,
-} from './net';
+import { connectionError, endpointPort, flattenWires, isTap } from './net';
 export function semanticSignature(p: Project) {
   return JSON.stringify({
     duration: p.duration,
@@ -20,33 +17,16 @@ export function semanticSignature(p: Project) {
     })),
     wires: flattenWires(p)
       .map((w) => [w.source, w.sourceHandle, w.target, w.targetHandle])
-      .sort(),
+      .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
   });
 }
 export function addWire(p: Project, w: Wire): Project {
-  if (!endpointsCompatible(p, w.source, w.sourceHandle, w.target, w.targetHandle))
-    throw new Error(
-      'Connect ports in the same domain. Signals need an output and an input.',
-    );
-  const a = endpointPort(p, w.source, w.sourceHandle, 'source');
-  const b = endpointPort(p, w.target, w.targetHandle, 'target');
-  const input =
-    !isTap(p, w.source) && a?.direction === 'input'
-      ? { block: w.source, port: w.sourceHandle }
-      : !isTap(p, w.target) && b?.direction === 'input'
-        ? { block: w.target, port: w.targetHandle }
-        : null;
-  if (
-    input &&
-    flattenWires(p).some(
-      (x) =>
-        (x.target === input.block && x.targetHandle === input.port) ||
-        (x.source === input.block && x.sourceHandle === input.port),
-    )
-  )
-    throw new Error(
-      'This input already has a source. Remove its existing wire first.',
-    );
+  const error = connectionError(
+    p,
+    { id: w.source, handle: w.sourceHandle },
+    { id: w.target, handle: w.targetHandle },
+  );
+  if (error) throw new Error(error);
   if (
     p.wires.some(
       (x) =>
@@ -83,7 +63,7 @@ export function linkEnds(
     sourceHandle: from.handle,
     target: to.id,
     targetHandle: to.handle,
-    waypoints,
+    waypoints: aIsSink && !bIsSink ? waypoints?.slice().reverse() : waypoints,
   });
 }
 export function removeSelection(
@@ -91,7 +71,7 @@ export function removeSelection(
   ids: string[],
   wireIds: string[] = [],
 ) {
-  return {
+  return pruneJunctions({
     ...p,
     blocks: p.blocks.filter((b) => !ids.includes(b.id)),
     junctions: (p.junctions ?? []).filter((j) => !ids.includes(j.id)),
@@ -101,8 +81,59 @@ export function removeSelection(
         !ids.includes(w.source) &&
         !ids.includes(w.target),
     ),
-  };
+  });
 }
+/** Removing a branch also removes its dangling stub; degree-two junctions become bends. */
+export function pruneJunctions(
+  project: Project,
+  preferredWireId?: string,
+): Project {
+  let p = project;
+  while (true) {
+    const j = p.junctions?.find(
+      (j) =>
+        p.wires.filter((w) => w.source === j.id || w.target === j.id).length <
+        3,
+    );
+    if (!j) return p;
+    const incident = p.wires.filter(
+      (w) => w.source === j.id || w.target === j.id,
+    );
+    const rest = p.wires.filter((w) => w.source !== j.id && w.target !== j.id);
+    if (incident.length === 2) {
+      const [a, b] =
+        incident[1].id === preferredWireId
+          ? [incident[1], incident[0]]
+          : incident;
+      const pa = [...polylineOfWire(p, a.id)],
+        pb = [...polylineOfWire(p, b.id)];
+      const from =
+        a.source === j.id
+          ? { id: a.target, handle: a.targetHandle }
+          : { id: a.source, handle: a.sourceHandle };
+      const to =
+        b.target === j.id
+          ? { id: b.source, handle: b.sourceHandle }
+          : { id: b.target, handle: b.targetHandle };
+      if (a.source === j.id) pa.reverse();
+      if (b.target === j.id) pb.reverse();
+      rest.push({
+        id: a.id,
+        source: from.id,
+        sourceHandle: from.handle,
+        target: to.id,
+        targetHandle: to.handle,
+        waypoints: simplifyPoints([...pa, ...pb.slice(1)]).slice(1, -1),
+      });
+    }
+    p = {
+      ...p,
+      junctions: p.junctions?.filter((x) => x.id !== j.id),
+      wires: rest,
+    };
+  }
+}
+
 export function replaceDefinition(
   p: Project,
   id: string,

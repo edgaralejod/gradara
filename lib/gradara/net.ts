@@ -1,7 +1,6 @@
-import type { Domain, Junction, Port, Project, Wire } from './model';
+import type { Port, Project, Wire } from './model';
 import { compatible, portOf } from './model';
 import { portPoint } from './ports';
-import { GRID } from './placement';
 
 export const TAP_HANDLE = 'node';
 export const TAP_SIZE = 10;
@@ -25,7 +24,12 @@ export function endpointPort(
     return {
       id: TAP_HANDLE,
       name: 'node',
-      direction: role === 'source' ? 'output' : 'input',
+      direction:
+        tap.domain !== 'signal'
+          ? 'physical'
+          : role === 'source'
+            ? 'output'
+            : 'input',
       domain: tap.domain,
     };
   return portOf(project, id, handle);
@@ -62,172 +66,82 @@ function parseKey(k: string) {
   return { id: k.slice(0, i), handle: k.slice(i + 1) };
 }
 
-/** Port-to-port pairs for execution. Junctions are only geometry. */
+/** Stable connected components; connector geometry never participates in execution. */
+export function netComponents(project: Project): string[][] {
+  const visited = new Set<string>();
+  const components: string[][] = [];
+  for (const w of project.wires) {
+    const seed = { id: w.source, handle: w.sourceHandle };
+    if (visited.has(key(seed.id, seed.handle, project))) continue;
+    const component = [...netKeys(project, seed)].sort();
+    component.forEach((k) => visited.add(k));
+    components.push(component);
+  }
+  return components;
+}
 export function flattenWires(project: Project): Wire[] {
-  const adj = new Map<string, string[]>();
-  const link = (a: string, b: string) => {
-    adj.set(a, [...(adj.get(a) ?? []), b]);
-    adj.set(b, [...(adj.get(b) ?? []), a]);
-  };
-  for (const w of project.wires)
-    link(
-      key(w.source, w.sourceHandle, project),
-      key(w.target, w.targetHandle, project),
+  const result: Wire[] = [];
+  for (const component of netComponents(project)) {
+    const ports = component
+      .filter((k) => !k.startsWith('j:'))
+      .map(parseKey)
+      .filter((e) => portOf(project, e.id, e.handle));
+    const driver = ports.find(
+      (e) => portOf(project, e.id, e.handle)?.direction === 'output',
     );
-
-  const portKeys = [...adj.keys()].filter((k) => !k.startsWith('j:'));
-  const outputs = portKeys.filter((k) => {
-    const { id, handle } = parseKey(k);
-    const p = portOf(project, id, handle);
-    return p?.direction === 'output' || p?.direction === 'physical';
-  });
-  const seen = new Set<string>();
-  const pairs: Wire[] = [];
-  for (const origin of outputs) {
-    const { id: sid, handle: sh } = parseKey(origin);
-    const stack = [origin];
-    const visited = new Set([origin]);
-    while (stack.length) {
-      const cur = stack.pop()!;
-      for (const n of adj.get(cur) ?? []) {
-        if (visited.has(n)) continue;
-        visited.add(n);
-        if (n.startsWith('j:')) {
-          stack.push(n);
-          continue;
-        }
-        const { id: tid, handle: th } = parseKey(n);
-        const p = portOf(project, tid, th);
-        if (!p) continue;
-        if (p.direction === 'input' || p.direction === 'physical') {
-          const sig = [sid, sh, tid, th].join('|');
-          if (seen.has(sig)) continue;
-          seen.add(sig);
-          pairs.push({
-            id: sig,
-            source: sid,
-            sourceHandle: sh,
-            target: tid,
-            targetHandle: th,
-          });
-        }
-      }
+    const source = driver ?? ports[0];
+    if (!source) continue;
+    for (const target of ports) {
+      if (target === source) continue;
+      const p = portOf(project, target.id, target.handle)!;
+      if (driver ? p.direction !== 'input' : p.direction !== 'physical')
+        continue;
+      const sig = [source.id, source.handle, target.id, target.handle].join(
+        '|',
+      );
+      result.push({
+        id: sig,
+        source: source.id,
+        sourceHandle: source.handle,
+        target: target.id,
+        targetHandle: target.handle,
+      });
     }
   }
-  return pairs;
+  return result.sort((a, b) => a.id.localeCompare(b.id));
+}
+/** Junctions carry connectivity, never an invented signal direction or driver. */
+export function connectionError(
+  project: Project,
+  a: { id: string; handle: string },
+  b: { id: string; handle: string },
+): string | null {
+  const pa = endpointPort(project, a.id, a.handle, 'source'),
+    pb = endpointPort(project, b.id, b.handle, 'target');
+  if (!pa || !pb) return 'This port no longer exists.';
+  if (pa.domain !== pb.domain) return `Use a ${pa.domain} port or wire.`;
+  if (onNet(project, a, b)) return 'Already part of this net.';
+  const ports = [...new Set([...netKeys(project, a), ...netKeys(project, b)])]
+    .filter((k) => !k.startsWith('j:'))
+    .map(parseKey)
+    .map((e) => portOf(project, e.id, e.handle))
+    .filter((p) => !!p);
+  const physical = ports.filter((p) => p.direction === 'physical');
+  if (physical.length)
+    return physical.length === ports.length
+      ? null
+      : 'Physical connectors cannot join signal ports.';
+  const drivers = ports.filter((p) => p.direction === 'output');
+  if (drivers.length > 1)
+    return 'This net already has a source. Join an unused input instead.';
+  if (drivers.length === 0) return 'A signal net needs an output.';
+  return null;
 }
 
-export function tapPositionFromPort(
+export function netKeys(
   project: Project,
-  blockId: string,
-  portId: string,
+  seed: { id: string; handle: string },
 ) {
-  const block = project.blocks.find((b) => b.id === blockId);
-  const pt = block ? portPoint(block, portId) : undefined;
-  if (!pt) return { x: 0, y: 0 };
-  const side = pt.side;
-  const step = 36;
-  if (side === 'right') return { x: pt.x + step, y: pt.y };
-  if (side === 'left') return { x: pt.x - step, y: pt.y };
-  if (side === 'bottom') return { x: pt.x, y: pt.y + step };
-  return { x: pt.x, y: pt.y - step };
-}
-
-function newTapId() {
-  return `j_${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`;
-}
-
-export function createTap(
-  project: Project,
-  position: { x: number; y: number },
-  domain: Domain,
-): { project: Project; id: string } {
-  const id = newTapId();
-  const tap: Junction = {
-    id,
-    position: {
-      x: Math.round(position.x / GRID) * GRID,
-      y: Math.round(position.y),
-    },
-    domain,
-  };
-  return {
-    id,
-    project: { ...project, junctions: [...(project.junctions ?? []), tap] },
-  };
-}
-
-export function moveTap(
-  project: Project,
-  id: string,
-  position: { x: number; y: number },
-): Project {
-  return {
-    ...project,
-    junctions: (project.junctions ?? []).map((j) =>
-      j.id === id ? { ...j, position } : j,
-    ),
-  };
-}
-
-/** If a second wire leaves the same output, share a trunk node instead of stacking. */
-export function shareTrunk(project: Project, added: Wire): Project {
-  if (isTap(project, added.source) || isTap(project, added.target))
-    return project;
-  const port = portOf(project, added.source, added.sourceHandle);
-  if (!port || port.direction === 'input') return project;
-  const family = project.wires.filter(
-    (w) =>
-      w.source === added.source && w.sourceHandle === added.sourceHandle,
-  );
-  if (family.length < 2) return project;
-  const others = family.filter((w) => w.id !== added.id);
-  const onlyTap =
-    others.length === 1 && isTap(project, others[0].target)
-      ? others[0].target
-      : undefined;
-  if (onlyTap) {
-    return {
-      ...project,
-      wires: project.wires.map((w) =>
-        w.id === added.id
-          ? { ...w, source: onlyTap, sourceHandle: TAP_HANDLE }
-          : w,
-      ),
-    };
-  }
-  const blockWires = family.filter(
-    (w) => !isTap(project, w.target) && !isTap(project, w.source),
-  );
-  if (blockWires.length < 2) return project;
-  const { project: withTap, id: tapId } = createTap(
-    project,
-    tapPositionFromPort(project, added.source, added.sourceHandle),
-    port.domain,
-  );
-  const rest = withTap.wires.filter(
-    (w) => !blockWires.some((b) => b.id === w.id),
-  );
-  const split: Wire[] = [
-    {
-      id: `w_${tapId}`,
-      source: added.source,
-      sourceHandle: added.sourceHandle,
-      target: tapId,
-      targetHandle: TAP_HANDLE,
-    },
-    ...blockWires.map((w) => ({
-      ...w,
-      source: tapId,
-      sourceHandle: TAP_HANDLE,
-      waypoints: undefined,
-      junctions: undefined,
-    })),
-  ];
-  return { ...withTap, wires: [...rest, ...split] };
-}
-
-export function netKeys(project: Project, seed: { id: string; handle: string }) {
   const start = key(seed.id, seed.handle, project);
   const visited = new Set([start]);
   const stack = [start];
@@ -253,7 +167,10 @@ export function onNet(
   return netKeys(project, a).has(key(b.id, b.handle, project));
 }
 
-export function netBlocks(project: Project, seed: { id: string; handle: string }) {
+export function netBlocks(
+  project: Project,
+  seed: { id: string; handle: string },
+) {
   const ids = new Set<string>();
   for (const k of netKeys(project, seed)) {
     if (k.startsWith('j:')) ids.add(k.slice(2));
@@ -271,33 +188,4 @@ export function occupiedInputs(project: Project) {
     if (a?.direction === 'input') taken.add(`${w.source}.${w.sourceHandle}`);
   }
   return taken;
-}
-
-export function splitAt(
-  project: Project,
-  wireId: string,
-  at: { x: number; y: number },
-  domain: Domain,
-): { project: Project; tapId: string } | null {
-  const wire = project.wires.find((w) => w.id === wireId);
-  if (!wire) return null;
-  const { project: withTap, id: tapId } = createTap(project, at, domain);
-  const rest = withTap.wires.filter((w) => w.id !== wireId);
-  const a: Wire = {
-    id: wire.id,
-    source: wire.source,
-    sourceHandle: wire.sourceHandle,
-    target: tapId,
-    targetHandle: TAP_HANDLE,
-    waypoints: undefined,
-  };
-  const b: Wire = {
-    id: `${wire.id}_b`,
-    source: tapId,
-    sourceHandle: TAP_HANDLE,
-    target: wire.target,
-    targetHandle: wire.targetHandle,
-    waypoints: undefined,
-  };
-  return { tapId, project: { ...withTap, wires: [...rest, a, b] } };
 }

@@ -33,31 +33,36 @@ function Results({
   stale: boolean;
 }) {
   const [channel, setChannel] = useState('speed');
+  const plotGroups = result?.snapshot?.plots;
+  const activeChannel =
+    plotGroups?.length && !plotGroups.some((p) => p.id === channel)
+      ? plotGroups[0].id
+      : channel;
   const [collapsed, setCollapsed] = useState(false);
   const [timeRange, setTimeRange] = useState('full');
   const [hidden, setHidden] = useState<string[]>([]);
   const series = useMemo(() => {
     if (!result) return [];
     const available = result.series;
-    const group = result.snapshot?.plots?.find((p) => p.id === channel);
+    const group = result.snapshot?.plots?.find((p) => p.id === activeChannel);
     let chosen = group
       ? group.series.flatMap((key, i) =>
           available
             .filter((s) => s.key === key)
             .map((s) => ({ ...s, name: group.labels?.[i] ?? s.name })),
         )
-      : channel === 'speed'
+      : activeChannel === 'speed'
         ? ['load.w', 'reference.y'].flatMap((key) =>
             available.filter((s) => s.key === key),
           )
-        : channel === 'current'
+        : activeChannel === 'current'
           ? available.filter((s) => s.key === 'motor.i')
-          : channel === 'voltage'
+          : activeChannel === 'voltage'
             ? available.filter((s) => s.key === 'controller.y')
-            : available.filter((s) => s.key === channel);
+            : available.filter((s) => s.key === activeChannel);
     if (!chosen.length) chosen = available.slice(0, 2);
     return chosen;
-  }, [result, channel]);
+  }, [result, activeChannel]);
   const timeStart =
     timeRange === 'last50' ? Math.max(0, (result?.duration ?? 0) - 0.05) : 0;
   const points = useMemo(
@@ -151,7 +156,7 @@ function Results({
           <>
             <div className="plot-toolbar">
               <Tabs
-                value={channel}
+                value={activeChannel}
                 onValueChange={(v) => {
                   setChannel(String(v));
                   setTimeRange(v === 'phases' ? 'last50' : 'full');

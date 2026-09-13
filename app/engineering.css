@@ -465,7 +465,8 @@
 }
 .canvas-agent-shortcut {
   right: 12px;
-  bottom: 13px;
+  bottom: auto;
+  pointer-events: none;
 }
 .canvas-agent-shortcut button {
   height: 29px;
@@ -979,4 +980,296 @@
 .notation-inductor .block-symbol,
 .notation-diode .block-symbol {
   inset: 2px;
+}
+
+/* One net overlay owns wire ink and gestures; React Flow owns the blocks and viewport. */
+.net-layer {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 3;
+}
+.net-wire-ink,
+.net-wire-halo,
+.net-wire-hit,
+.net-live {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.net-wire-ink {
+  stroke: currentColor;
+  stroke-width: 1.55;
+}
+.net-wire-halo {
+  stroke: currentColor;
+  stroke-width: 7;
+  opacity: 0;
+}
+.net-wire-hit {
+  stroke: transparent;
+  stroke-width: 18;
+  pointer-events: stroke;
+  cursor: crosshair;
+}
+.net-wire.is-hovered .net-wire-halo {
+  opacity: 0.09;
+}
+.net-wire.is-selected .net-wire-halo {
+  opacity: 0.13;
+}
+.net-wire.is-selected .net-wire-ink {
+  stroke-width: 2;
+}
+.net-vertex {
+  fill: white;
+  stroke: #3283b7;
+  stroke-width: 1.3;
+  vector-effect: non-scaling-stroke;
+  pointer-events: all;
+  cursor: move;
+}
+.net-junction {
+  pointer-events: all;
+  cursor: move;
+}
+.net-junction-hit {
+  fill: transparent;
+}
+.net-junction:hover .net-junction-hit {
+  fill: #3496ba20;
+}
+.net-guide {
+  stroke: #5e9bc3;
+  stroke-width: 0.8;
+  stroke-dasharray: 3 5;
+  opacity: 0.7;
+  vector-effect: non-scaling-stroke;
+}
+.net-live {
+  stroke-width: 1.7;
+  stroke-dasharray: none;
+  opacity: 0.9;
+}
+.net-live.is-invalid {
+  stroke: #cf6455 !important;
+  stroke-dasharray: 5 4;
+}
+.net-pin {
+  fill: white;
+  stroke: #4c8cad;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.net-target {
+  fill: #fff;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.net-target circle:last-child {
+  fill: currentColor;
+  stroke: none;
+}
+.net-target.is-invalid {
+  color: #cf6455 !important;
+}
+.diagram-port {
+  padding: 0;
+  pointer-events: all !important;
+  cursor: crosshair !important;
+}
+.diagram-port:hover {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--port-color) 15%, transparent);
+}
+.diagram-port:focus-visible {
+  outline: 2px solid var(--port-color);
+  outline-offset: 4px;
+}
+.react-flow[data-wiring='connecting'] .react-flow__pane,
+.react-flow[data-wiring='drawing'] .react-flow__pane {
+  cursor: crosshair;
+}
+.canvas-stage:has(.net-status) .canvas-hint {
+  display: none;
+}
+.net-status {
+  position: absolute;
+  z-index: 12;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  background: #fffffff2;
+  border: 1px solid #d6e1e8;
+  box-shadow: 0 3px 14px #21364d0c;
+  border-radius: 5px;
+  padding: 8px 12px;
+  color: #426078;
+  font: 11px var(--font-sans, sans-serif);
+  pointer-events: none;
+}
+.net-status-dot {
+  width: 5px;
+  height: 5px;
+  background: #3c92ba;
+  border-radius: 50%;
+}
+.net-status kbd {
+  margin-left: 6px;
+  font-size: 10px;
+  color: #73828e;
+  border: 1px solid #e0e6eb;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.net-status.is-invalid {
+  color: #a25546;
+  border-color: #ebcfc7;
+}
+.main-layout > .library-panel {
+  grid-column: 1;
+  grid-row: 1;
+}
+.main-layout > .center-panel {
+  grid-column: 2;
+  grid-row: 1;
+}
+.main-layout > .inspector-panel {
+  grid-column: 3;
+  grid-row: 1;
+}
+.canvas-wrap:has(.net-status) .canvas-hint {
+  display: none;
+}
+
+.canvas-agent-shortcut button {
+  pointer-events: auto;
+}
+.canvas-wrap:has(.net-status) .canvas-agent-shortcut {
+  visibility: hidden;
+}
+
+/* Wire editing stays on the canvas, with screen-sized controls at every zoom. */
+.net-ghost {
+  fill: none;
+  stroke: #8295a7;
+  stroke-width: 1.4;
+  stroke-dasharray: 4 5;
+  opacity: 0.45;
+  vector-effect: non-scaling-stroke;
+}
+.net-segment-grip,
+.net-endpoint-dot {
+  fill: #fff;
+  stroke: #3283b7;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.net-segment-grip,
+.net-endpoint {
+  pointer-events: all;
+}
+.net-endpoint {
+  cursor: crosshair;
+}
+.net-endpoint-hit {
+  fill: transparent;
+}
+.net-endpoint:hover .net-endpoint-dot,
+.net-segment-grip:hover {
+  fill: #dceefa;
+  stroke: #19689e;
+}
+.net-wire-hit.axis-h,
+.net-segment-grip.axis-h {
+  cursor: ns-resize;
+}
+.net-wire-hit.axis-v,
+.net-segment-grip.axis-v {
+  cursor: ew-resize;
+}
+.net-destination {
+  fill: #e7f2fa66;
+  stroke: #3283b7;
+  stroke-width: 1.3;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+.net-toolbar {
+  position: absolute;
+  z-index: 13;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 120px);
+  padding: 5px;
+  border: 1px solid #cbd8e1;
+  border-radius: 6px;
+  background: #fffffff5;
+  box-shadow: 0 3px 16px #21364d12;
+  color: #3c566c;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.net-toolbar.is-drawing {
+  bottom: 60px;
+}
+.net-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #35566f;
+  font-size: 11px;
+  cursor: pointer;
+}
+.net-toolbar button:hover {
+  background: #e9f2f8;
+}
+.net-toolbar button:focus-visible {
+  outline: 2px solid #3283b7;
+  outline-offset: 1px;
+}
+.net-toolbar .net-delete:hover {
+  color: #b54336;
+  background: #fcf0ee;
+}
+.net-toolbar kbd {
+  font: 10px inherit;
+  color: #8799a8;
+}
+.net-toolbar-label {
+  color: #8092a0;
+  padding: 0 8px;
+  border-right: 1px solid #e0e7ed;
+}
+.net-toolbar-tip {
+  margin: 0 7px;
+  color: #8092a0;
+  font-size: 10px;
+}
+.canvas-wrap:has(.net-toolbar) .canvas-hint {
+  display: none;
+}
+@media (max-width: 700px) {
+  .net-toolbar-tip {
+    display: none;
+  }
+  .net-status {
+    max-width: calc(100% - 24px);
+    white-space: normal;
+  }
 }

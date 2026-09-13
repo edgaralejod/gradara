@@ -95,13 +95,11 @@ function manhattan(ends: Ends): string {
 
 export function pointsToPath(pts: Pt[]): string {
   if (!pts.length) return '';
-  return pts
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-    .join(' ');
+  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 }
 
 function nearly(a: number, b: number) {
-  return Math.abs(a - b) <= STRAIGHT_EPS;
+  return Math.abs(a - b) <= 0.000001;
 }
 
 function dedupe(pts: Pt[]): Pt[] {
@@ -124,9 +122,9 @@ export function rubberBandPoints(
   exit: Position,
   minStub = EXIT_STUB,
 ): Pt[] {
+  if (nearly(from.x, to.x) && nearly(from.y, to.y)) return [from];
   const horiz = exit === Position.Left || exit === Position.Right;
-  const sign =
-    exit === Position.Right || exit === Position.Bottom ? 1 : -1;
+  const sign = exit === Position.Right || exit === Position.Bottom ? 1 : -1;
   if (horiz) {
     const reach = sign * (to.x - from.x);
     const x = from.x + sign * Math.max(minStub, reach);
@@ -154,8 +152,13 @@ export function segmentExit(a: Pt, b: Pt): Position {
 }
 
 /** Pin the live rubber band at the cursor. Next exit is the last segment's direction. */
-export function pinRubberBand(from: Pt, to: Pt, exit: Position) {
-  const pts = rubberBandPoints(from, to, exit);
+export function pinRubberBand(
+  from: Pt,
+  to: Pt,
+  exit: Position,
+  minStub = EXIT_STUB,
+) {
+  const pts = rubberBandPoints(from, to, exit, minStub);
   const origin = pts.at(-1) ?? to;
   const prev = pts.at(-2) ?? from;
   return {
@@ -163,4 +166,131 @@ export function pinRubberBand(from: Pt, to: Pt, exit: Position) {
     origin,
     exit: segmentExit(prev, origin),
   };
+}
+
+/** Exact simplification: tolerance-based deduplication can introduce diagonal segments. */
+export function simplifyPoints(points: Pt[]): Pt[] {
+  const out: Pt[] = [];
+  for (const p of points) {
+    const last = out.at(-1);
+    if (last && nearly(last.x, p.x) && nearly(last.y, p.y)) continue;
+    const a = out.at(-2);
+    if (
+      a &&
+      last &&
+      ((nearly(a.x, last.x) &&
+        nearly(last.x, p.x) &&
+        (last.y - a.y) * (p.y - last.y) >= 0) ||
+        (nearly(a.y, last.y) &&
+          nearly(last.y, p.y) &&
+          (last.x - a.x) * (p.x - last.x) >= 0))
+    )
+      out.pop();
+    out.push({ x: p.x, y: p.y });
+  }
+  return out;
+}
+export function outward(p: Pt, side: Position, distance = EXIT_STUB): Pt {
+  return {
+    x:
+      p.x +
+      (side === Position.Right
+        ? distance
+        : side === Position.Left
+          ? -distance
+          : 0),
+    y:
+      p.y +
+      (side === Position.Bottom
+        ? distance
+        : side === Position.Top
+          ? -distance
+          : 0),
+  };
+}
+export function toward(a: Pt, b: Pt): Position {
+  return segmentExit(a, b);
+}
+export function opposite(side: Position): Position {
+  return {
+    left: Position.Right,
+    right: Position.Left,
+    top: Position.Bottom,
+    bottom: Position.Top,
+  }[side];
+}
+/** A completed connection respects both port normals. Free tails use rubberBandPoints. */
+export function routeBetween(
+  from: Pt,
+  to: Pt,
+  exit: Position,
+  entry?: Position,
+  sourceStub = EXIT_STUB,
+): Pt[] {
+  if (nearly(from.x, to.x) && nearly(from.y, to.y)) return [from];
+  const direct = nearly(from.x, to.x) || nearly(from.y, to.y);
+  if (
+    direct &&
+    (toward(from, to) === exit || sourceStub === 0) &&
+    (!entry || toward(to, from) === entry)
+  )
+    return [from, to];
+  if (!entry)
+    return simplifyPoints(rubberBandPoints(from, to, exit, sourceStub));
+  const a = outward(from, exit, sourceStub),
+    b = outward(to, entry);
+  const h1 = exit === Position.Left || exit === Position.Right;
+  const h2 = entry === Position.Left || entry === Position.Right;
+  let middle: Pt[];
+  if (h1 && h2) {
+    const facing =
+      (exit === Position.Right && entry === Position.Left && a.x <= b.x) ||
+      (exit === Position.Left && entry === Position.Right && a.x >= b.x);
+    // Closely stacked blocks need two vertical legs: a single leg doubles back through a port.
+    if (!facing && exit !== entry) {
+      const y = nearly(a.y, b.y) ? a.y + RETURN_CLEARANCE : (a.y + b.y) / 2;
+      return simplifyPoints([from, a, { x: a.x, y }, { x: b.x, y }, b, to]);
+    }
+    const x = facing
+      ? sourceStub === 0
+        ? a.x
+        : (a.x + b.x) / 2
+      : exit === Position.Right
+        ? Math.max(a.x, b.x)
+        : Math.min(a.x, b.x);
+    middle = [
+      { x, y: a.y },
+      { x, y: b.y },
+    ];
+  } else if (!h1 && !h2) {
+    const facing =
+      (exit === Position.Bottom && entry === Position.Top && a.y <= b.y) ||
+      (exit === Position.Top && entry === Position.Bottom && a.y >= b.y);
+    if (!facing && exit !== entry) {
+      const x = nearly(a.x, b.x) ? a.x + RETURN_CLEARANCE : (a.x + b.x) / 2;
+      return simplifyPoints([from, a, { x, y: a.y }, { x, y: b.y }, b, to]);
+    }
+    const y = facing
+      ? sourceStub === 0
+        ? a.y
+        : (a.y + b.y) / 2
+      : exit === Position.Bottom
+        ? Math.max(a.y, b.y)
+        : Math.min(a.y, b.y);
+    middle = [
+      { x: a.x, y },
+      { x: b.x, y },
+    ];
+  } else {
+    const corner = h1 ? { x: to.x, y: from.y } : { x: from.x, y: to.y };
+    if (
+      toward(from, corner) === exit &&
+      toward(to, corner) === entry &&
+      Math.hypot(corner.x - from.x, corner.y - from.y) >= EXIT_STUB &&
+      Math.hypot(corner.x - to.x, corner.y - to.y) >= EXIT_STUB
+    )
+      return simplifyPoints([from, corner, to]);
+    middle = h1 ? [{ x: a.x, y: b.y }] : [{ x: b.x, y: a.y }];
+  }
+  return simplifyPoints([from, a, ...middle, b, to]);
 }

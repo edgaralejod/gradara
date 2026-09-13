@@ -1,9 +1,7 @@
 'use client';
 import { memo, useEffect } from 'react';
 import {
-  Handle,
   NodeResizer,
-  Position,
   useUpdateNodeInternals,
   type NodeProps,
   type Node,
@@ -13,12 +11,6 @@ import { minimumBlockSize, type BlockNodeData } from '@/lib/gradara/canvas';
 import { portOffset, portSide } from '@/lib/gradara/ports';
 import { BlockSymbol } from './block-symbol';
 export type { BlockNodeData } from '@/lib/gradara/canvas';
-const positions = {
-  left: Position.Left,
-  right: Position.Right,
-  top: Position.Top,
-  bottom: Position.Bottom,
-};
 function BlockNode({ id, data, selected }: NodeProps<Node<BlockNodeData>>) {
   const d = data.definition;
   const sum = d.kind === 'sum' || d.kind === 'subtract';
@@ -111,17 +103,18 @@ function BlockNode({ id, data, selected }: NodeProps<Node<BlockNodeData>>) {
             : { left: `${offset}%` };
         return (
           <div key={port.id}>
-            <Handle
-              id={port.id}
-              type={port.direction === 'input' ? 'target' : 'source'}
-              position={positions[side]}
+            <button
+              type="button"
+              data-block-id={id}
+              data-port-id={port.id}
+              aria-label={`${d.name}: ${port.name} (${port.domain} ${port.direction})`}
               style={
                 {
                   ...location,
                   '--port-color': domainColors[port.domain],
                 } as React.CSSProperties & { '--port-color': string }
               }
-              className={port.direction === 'physical' ? 'physical-port' : ''}
+              className={`react-flow__handle react-flow__handle-${side} diagram-port nodrag nopan ${port.direction === 'physical' ? 'physical-port' : ''}`}
               title={`${port.name} · ${port.domain} ${port.direction === 'physical' ? 'connection' : port.direction}${port.unit ? ' · ' + port.unit : ''}`}
             />
             <span

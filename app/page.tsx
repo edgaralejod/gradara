@@ -4,15 +4,9 @@ import {
   ReactFlowProvider,
   Background,
   ViewportPortal,
-  MarkerType,
   Controls,
-  ConnectionMode,
-  ConnectionLineType,
-  Position,
   SelectionMode,
   useReactFlow,
-  type Connection,
-  type EdgeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
@@ -85,34 +79,15 @@ import {
   compatible,
   portOf,
 } from '@/lib/gradara/model';
-import {
-  endpointPoint,
-  endpointPort,
-  endpointsCompatible,
-  isTap,
-  tapOf,
-} from '@/lib/gradara/net';
 import { matchingPort } from '@/lib/gradara/catalog';
 import {
   placeAligned,
   placeAtDrop,
-  placeDownstream,
   snapMovedBlocks,
   snapPoint,
 } from '@/lib/gradara/placement';
-import { WiringPreview } from '@/components/gradara/signal-edge';
-import {
-  insertVertexOnWire,
-  resetWireRoute,
-  setWireWaypoints,
-} from '@/lib/gradara/wires';
-import { linkEnds } from '@/lib/gradara/project';
-import { NetSession } from '@/lib/gradara/net-session';
-import { committedPoints } from '@/lib/gradara/net-draw';
+import { resetWireRoute } from '@/lib/gradara/wires';
 import NetLayer from '@/components/gradara/net-layer';
-import { feedbackRailY, isReturnPath, pinRubberBand } from '@/lib/gradara/routing';
-import { sideToPosition } from '@/lib/gradara/wires';
-import { portPoint } from '@/lib/gradara/ports';
 import {
   api,
   waitForJob,
@@ -176,9 +151,6 @@ function Workbench() {
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
   const [composer, setComposer] = useState<ComposerContext | null>(null);
   const [inserter, setInserter] = useState<InsertContext | null>(null);
-  const sessionRef = useRef(new NetSession(projectRef.current));
-  const [, setNetTick] = useState(0);
-  const bumpNet = () => setNetTick((n) => n + 1);
   const [equationBlock, setEquationBlock] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(true);
@@ -371,91 +343,6 @@ function Workbench() {
     },
     [commit],
   );
-  const edges = useMemo(
-    () =>
-      project.wires.map((w) => {
-        const sourcePort = endpointPort(
-          project,
-          w.source,
-          w.sourceHandle,
-          'source',
-        );
-        const domain = sourcePort?.domain ?? 'signal';
-        const pts = committedPoints(
-          project,
-          w.source,
-          w.sourceHandle,
-          w.target,
-          w.targetHandle,
-          w.waypoints,
-        );
-        return {
-          ...w,
-          type: 'signal',
-          data: {
-            waypoints: pts.slice(1, -1),
-            flow: sourcePort?.direction === 'physical' ? 'physical' : 'signal',
-            onSelect: () => setSelectedEdges([w.id]),
-            onVerticesCommit: (points: { x: number; y: number }[]) => {
-              commit((p) => setWireWaypoints(p, w.id, points));
-            },
-            onInsertVertex: (point: { x: number; y: number }) => {
-              commit((p) => insertVertexOnWire(p, w.id, point));
-              setSelectedEdges([w.id]);
-            },
-            onBranchStart: (point: { x: number; y: number }) => {
-              sessionRef.current.project = projectRef.current;
-              sessionRef.current.pressSegment(point);
-              bumpNet();
-            },
-          },
-          markerEnd:
-            domain === 'signal'
-              ? {
-                  type: MarkerType.ArrowClosed,
-                  width: 10,
-                  height: 10,
-                  color: domainColors[domain],
-                }
-              : undefined,
-          selected: selectedEdges.includes(w.id),
-          style: { stroke: domainColors[domain], strokeWidth: 1.4 },
-          pathOptions: { borderRadius: 5, offset: 28 },
-          interactionWidth: 18,
-        };
-      }),
-    [project.blocks, project.wires, selectedEdges],
-  );
-  const onEdgesChange = useCallback((changes: EdgeChange[]) => {
-    const selections = changes.filter((c) => c.type === 'select');
-    if (selections.length)
-      setSelectedEdges((ids) => {
-        let next = [...ids];
-        for (const c of selections)
-          if (c.type === 'select')
-            next = c.selected
-              ? [...new Set([...next, c.id])]
-              : next.filter((id) => id !== c.id);
-        return next;
-      });
-  }, []);
-  const connect = useCallback(
-    (c: Connection) => {
-      if (!c.sourceHandle || !c.targetHandle) return;
-      try {
-        commit((p) =>
-          linkEnds(
-            p,
-            { id: c.source, handle: c.sourceHandle! },
-            { id: c.target, handle: c.targetHandle! },
-          ),
-        );
-      } catch (e) {
-        notify((e as Error).message);
-      }
-    },
-    [commit, notify],
-  );
   const newPosition = useCallback(() => {
     const bounds = canvasRef.current?.getBoundingClientRect();
     return flow.screenToFlowPosition({
@@ -477,8 +364,8 @@ function Workbench() {
         : selected;
       const fromPort = connection
         ? portOf(current, connection.blockId, connection.portId)
-        : origin?.definition.ports.find((x) => x.direction === 'output') ??
-          origin?.definition.ports.find((x) => x.direction === 'physical');
+        : (origin?.definition.ports.find((x) => x.direction === 'output') ??
+          origin?.definition.ports.find((x) => x.direction === 'physical'));
       const toPort = matchingPort(fromPort, definition);
       const placed =
         connection && position
@@ -506,8 +393,9 @@ function Workbench() {
             ? {
                 blockId: selected.id,
                 portId:
-                  selected.definition.ports.find((x) => x.direction === 'output')
-                    ?.id ?? '',
+                  selected.definition.ports.find(
+                    (x) => x.direction === 'output',
+                  )?.id ?? '',
               }
             : undefined);
         if (!wire?.portId) return next;
@@ -596,7 +484,7 @@ function Workbench() {
       const input = (e.target as HTMLElement)?.closest(
         'input,textarea,[contenteditable=true],.monaco-editor,[role=dialog]',
       );
-      if (input) return;
+      if (input || e.defaultPrevented) return;
       const command = e.metaKey || e.ctrlKey;
       if (command && e.key.toLowerCase() === 'z') {
         e.preventDefault();
@@ -624,21 +512,18 @@ function Workbench() {
         e.preventDefault();
         setLibraryOpen(true);
         document.getElementById('library-search')?.focus();
-      } else if (e.key.toLowerCase() === 'r' && !command && selectedEdges.length) {
+      } else if (
+        e.key.toLowerCase() === 'r' &&
+        !command &&
+        selectedEdges.length
+      ) {
         e.preventDefault();
         commit((p) =>
           selectedEdges.reduce((next, id) => resetWireRoute(next, id), p),
         );
-      } else if (e.key === 'Backspace' && sessionRef.current.mode === 'drawing') {
-        e.preventDefault();
-        sessionRef.current.unpin();
-        bumpNet();
       } else if (e.key === 'Escape') {
         setComposer(null);
         setInserter(null);
-        sessionRef.current.cancel();
-        commit(sessionRef.current.project);
-        bumpNet();
         setSelectedIds([]);
         setSelectedEdges([]);
       } else if (e.key === '?' && !command) setHelpOpen(true);
@@ -656,10 +541,6 @@ function Workbench() {
     selectedEdges,
     commit,
   ]);
-  useEffect(() => {
-    if (sessionRef.current.mode === 'idle')
-      sessionRef.current.project = project;
-  }, [project]);
   const insertGenerated = (definition: Definition) => {
     if (!composer) return;
     const ctx = composer;
@@ -825,6 +706,7 @@ function Workbench() {
             >
               <option value="dc">DC motor · Speed control</option>
               <option value="foc">AC motor · Field-oriented control</option>
+              <option value="wiring">Wiring playground</option>
             </select>
             <span className="saved-dot" />
           </div>
@@ -951,7 +833,7 @@ function Workbench() {
               ref={canvasRef}
               className={`canvas-wrap tool-${canvasTool}`}
               onDoubleClick={(e) => {
-                if (sessionRef.current.mode !== 'idle') return;
+                if (e.defaultPrevented) return;
                 if (!(e.target as HTMLElement).closest('.react-flow__pane'))
                   return;
                 const bounds = canvasRef.current?.getBoundingClientRect();
@@ -1010,8 +892,8 @@ function Workbench() {
                     )
                   }
                   onLayout={updateLayout}
-                  edges={edges}
-                  onEdgesChange={onEdgesChange}
+                  edges={[]}
+                  nodesConnectable={false}
                   onNodeClick={(event, n) => {
                     if (event.shiftKey || event.metaKey || event.ctrlKey) {
                       setSelectedIds(
@@ -1026,91 +908,7 @@ function Workbench() {
                     if (n.type === 'tap') return;
                     setEquationBlock(n.id);
                   }}
-                  onConnect={connect}
-                  onReconnect={(old, c) => {
-                    if (!c.sourceHandle || !c.targetHandle) return;
-                    try {
-                      commit((p) =>
-                        addWire(
-                          {
-                            ...p,
-                            wires: p.wires.filter((w) => w.id !== old.id),
-                          },
-                          {
-                            ...c,
-                            id: old.id,
-                            sourceHandle: c.sourceHandle!,
-                            targetHandle: c.targetHandle!,
-                          },
-                        ),
-                      );
-                    } catch (e) {
-                      notify((e as Error).message);
-                    }
-                  }}
-                  onConnectEnd={(event, state) => {
-                    if (!state.fromNode || !state.fromHandle) return;
-                    if (state.isValid && state.toNode) return;
-                    const e =
-                      'changedTouches' in event
-                        ? event.changedTouches[0]
-                        : event;
-                    const cursor = flow.screenToFlowPosition({
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                    const s = sessionRef.current;
-                    s.project = projectRef.current;
-                    if (isTap(s.project, state.fromNode.id))
-                      s.pressJunction(state.fromNode.id, cursor);
-                    else
-                      s.pressPort(state.fromNode.id, state.fromHandle.id ?? '');
-                    s.release(cursor);
-                    if (s.mode === 'idle') commit(s.project);
-                    bumpNet();
-                  }}
-                  onPointerMove={(e) => {
-                    if (sessionRef.current.mode === 'idle') return;
-                    const cursor = flow.screenToFlowPosition({
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                    sessionRef.current.move(cursor.x, cursor.y);
-                    bumpNet();
-                  }}
-                  onPointerUp={(e) => {
-                    const s = sessionRef.current;
-                    if (s.mode !== 'connecting') return;
-                    const cursor = flow.screenToFlowPosition({
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                    try {
-                      s.release(cursor);
-                      bumpNet();
-                      if (sessionRef.current.mode === 'idle')
-                        commit(sessionRef.current.project);
-                    } catch (err) {
-                      notify((err as Error).message);
-                    }
-                  }}
-                  onPaneClick={(e) => {
-                    const s = sessionRef.current;
-                    if (s.mode !== 'idle') {
-                      const cursor = flow.screenToFlowPosition({
-                        x: e.clientX,
-                        y: e.clientY,
-                      });
-                      try {
-                        s.click(cursor);
-                        bumpNet();
-                        if (sessionRef.current.mode === 'idle')
-                          commit(sessionRef.current.project);
-                      } catch (err) {
-                        notify((err as Error).message);
-                      }
-                      return;
-                    }
+                  onPaneClick={() => {
                     setInserter(null);
                     setSelectedIds([]);
                     setSelectedEdges([]);
@@ -1126,25 +924,6 @@ function Workbench() {
                     setSelectedIds([]);
                     setSelectedEdges([]);
                     return false;
-                  }}
-                  connectionMode={ConnectionMode.Loose}
-                  connectionLineType={ConnectionLineType.SmoothStep}
-                  connectionLineComponent={WiringPreview}
-                  isValidConnection={(c) => {
-                    if (!c.sourceHandle || !c.targetHandle) return false;
-                    if (c.source === c.target) return false;
-                    if (
-                      isTap(project, c.source) ||
-                      isTap(project, c.target)
-                    )
-                      return true;
-                    return endpointsCompatible(
-                      project,
-                      c.source,
-                      c.sourceHandle,
-                      c.target,
-                      c.targetHandle,
-                    );
                   }}
                   fitViewOptions={{ padding: 0.16, maxZoom: 1.15 }}
                   minZoom={0.25}
@@ -1176,18 +955,18 @@ function Workbench() {
                     ))}
                   </ViewportPortal>
                   <NetLayer
-                    session={sessionRef.current}
-                    onChange={bumpNet}
-                    onCommit={() => commit(sessionRef.current.project)}
+                    project={project}
+                    selected={selectedEdges}
+                    onSelect={(ids) => {
+                      setSelectedEdges(ids);
+                      setSelectedIds([]);
+                    }}
+                    onCommit={commit}
                   />
                   <Controls showInteractive={false} />
                 </ModelCanvas>
               )}
-              {sessionRef.current.mode !== 'idle' ? (
-                <div className="canvas-hint">
-                  Click pins this run · Port ends the wire · Esc cancel
-                </div>
-              ) : selectedIds.length === 0 && (
+              {selectedIds.length === 0 && (
                 <div className="canvas-hint">
                   <MousePointer2 size={11} />
                   {canvasTool === 'select' ? 'Drag to select' : 'Drag to pan'}
@@ -1280,8 +1059,9 @@ function Workbench() {
                     Wire
                   </h3>
                   <p>
-                    Drag the squares to redraw. Drag from the wire itself to
-                    branch to another input. R restores the automatic route.
+                    Drag a segment to move it, or drag either round end to
+                    reconnect it. D redraws the path. Alt-drag branches from a
+                    wire. R restores the automatic route.
                   </p>
                   <Button
                     variant="outline"
@@ -1625,8 +1405,13 @@ function Workbench() {
             <div className="shortcut-list">
               {[
                 ['Search the library', '/'],
-                ['Branch from a wire', 'Drag the wire'],
-                ['Redraw a wire', 'Drag its squares'],
+                ['Draw a connection', 'Drag or click two ports'],
+                ['Branch from a wire', 'Alt + drag'],
+                ['Move a wire segment', 'Select, then drag'],
+                ['Reconnect a wire', 'Drag its round end'],
+                ['Redraw a wire', 'Select + D'],
+                ['Finish redrawing', 'Click destination / Enter'],
+                ['Remove last bend / cancel', 'Backspace / Escape'],
                 ['Restore auto route', 'R'],
                 ['Create a component', 'A'],
                 ['Run simulation', '⌘ / Ctrl + Enter'],

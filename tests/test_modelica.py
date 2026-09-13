@@ -30,7 +30,9 @@ def test_connection_domains_and_single_signal_driver():
     with pytest.raises(ValidationError,match='same domain'):
         Project.model_validate(raw)
     raw=json.loads(FIXTURE.read_text())
-    raw['wires'].append({**raw['wires'][0],'id':'duplicateDriver'})
+    controller = next(b for b in raw['blocks'] if b['id']=='controller')
+    output = next(p['id'] for p in controller['definition']['ports'] if p['direction']=='output')
+    raw['wires'].append({**raw['wires'][0],'id':'duplicateDriver','source':'controller','sourceHandle':output})
     with pytest.raises(ValidationError,match='only one source'):
         Project.model_validate(raw)
 
@@ -97,3 +99,62 @@ def test_foc_tracks_speed_rejects_load_and_keeps_phases_balanced():
         assert trace(a,'motor.torque')[-1]>sum(before)/len(before)+.2
         assert all(len(s['values'])==len(a['time']) for s in a['series'])
     asyncio.run(run())
+
+
+def test_junction_geometry_is_absent_from_execution_and_rejects_two_drivers():
+    from server.models import flatten_connects
+    raw = json.loads(FIXTURE.read_text())
+    w = raw['wires'][0]
+    source, target, handle = w['source'], w['target'], w['targetHandle']
+    raw['junctions'] = [{'id': 'test_j', 'domain': 'signal', 'position': {'x': 180, 'y': 140}}]
+    raw['wires'][0] = {**w, 'target': 'test_j', 'targetHandle': 'node', 'waypoints': [{'x': 180, 'y': 60}]}
+    raw['wires'].append({'id': 'test_branch', 'source': 'test_j', 'sourceHandle': 'node', 'target': target, 'targetHandle': handle})
+    p = Project.model_validate(raw)
+    assert flatten_connects(p) == flatten_connects(project())
+    assert semantic_hash(p) == semantic_hash(project())
+    from server.models import Position
+    p.junctions[0].position.x += 200
+    p.wires[0].waypoints = [Position(x=50, y=100)]
+    assert semantic_hash(p) == semantic_hash(project())
+    other = next(b for b in raw['blocks'] if b['id'] == 'controller')
+    output = next(port['id'] for port in other['definition']['ports'] if port['direction'] == 'output')
+    raw['wires'].append({'id':'bad_driver','source':other['id'],'sourceHandle':output,'target':'test_j','targetHandle':'node'})
+    with pytest.raises(ValidationError, match='signal net may have only one source'):
+        Project.model_validate(raw)
+
+
+def test_physical_connection_set_has_no_duplicate_or_reverse_pairs():
+    from server.models import flatten_connects
+    pairs = flatten_connects(project())
+    undirected = {tuple(sorted(((a, b), (c, d)))) for a, b, c, d in pairs}
+    assert len(undirected) == len(pairs)
+
+
+@pytest.mark.integration
+def test_branched_feedback_playground_runs_in_openmodelica():
+    fixture = Path(__file__).parents[1] / 'models/examples/wiring.json'
+    async def run():
+        p = Project.model_validate_json(fixture.read_text())
+        result = await simulate(p, 'wiring'+uuid.uuid4().hex[:12])
+        traces = {s['key']:s['values'] for s in result['series']}
+        assert traces['gain.y'][-1] == pytest.approx(traces['reference.y'][-1]/3, abs=1e-6)
+        import csv
+        from server.engine import RUNS
+        with (RUNS/result['id']/'simulation_res.csv').open() as stream:
+            last = list(csv.DictReader(stream))[-1]
+        assert float(last['scope.u']) == pytest.approx(traces['gain.y'][-1], abs=1e-6)
+        assert float(last['display.u']) == pytest.approx(traces['reference.y'][-1], abs=1e-6)
+    asyncio.run(run())
+
+
+def test_a_disconnected_branch_can_be_saved_and_reconnected_to_one_driver():
+    from server.models import flatten_connects
+    raw = json.loads(FIXTURE.read_text())
+    controller = next(b for b in raw['blocks'] if b['id'] == 'controller')
+    inputs = [p['id'] for p in controller['definition']['ports'] if p['direction'] == 'input']
+    raw['wires'] = [{'id':'partial','source':'controller','sourceHandle':inputs[0],'target':'controller','targetHandle':inputs[1]}]
+    partial = Project.model_validate(raw)
+    assert flatten_connects(partial) == []
+    raw['wires'].append({'id':'reconnect','source':'reference','sourceHandle':'y','target':'controller','targetHandle':inputs[0]})
+    restored = Project.model_validate(raw)
+    assert len(flatten_connects(restored)) == 2

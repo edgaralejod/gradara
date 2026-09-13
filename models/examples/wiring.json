@@ -1,0 +1,318 @@
+{
+  "exampleId": "wiring",
+  "description": "Try wiring on a small closed-loop controller. Drag from a wire to branch; drop a port on wire ink to join. Click a junction to draw a branch; drag it to reposition. Esc cancels and Backspace unpins.",
+  "annotations": [],
+  "plots": [
+    {
+      "id": "feedback",
+      "label": "Feedback response",
+      "series": ["reference.y", "gain.y", "error.y"],
+      "labels": ["Reference", "Output", "Error"]
+    }
+  ],
+  "version": 1,
+  "name": "Wiring playground",
+  "blocks": [
+    {
+      "id": "reference",
+      "definition": {
+        "kind": "step",
+        "name": "Step",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal",
+            "unit": ""
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1.0,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.2,
+            "unit": "s",
+            "min": 0.0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "declarations": "",
+        "generated": false,
+        "controller": false,
+        "category": "",
+        "keywords": ["source", "reference"]
+      },
+      "position": {
+        "x": 0.0,
+        "y": 40.0
+      }
+    },
+    {
+      "id": "error",
+      "definition": {
+        "kind": "subtract",
+        "name": "Subtract",
+        "description": "Subtract",
+        "domain": "signal",
+        "symbol": "sum",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "unit": ""
+          },
+          {
+            "id": "b",
+            "name": "\u2212",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": ""
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "parameters": [],
+        "equations": "y = a - b;",
+        "declarations": "",
+        "generated": false,
+        "controller": false,
+        "category": "",
+        "keywords": []
+      },
+      "position": {
+        "x": 200.0,
+        "y": 50.0
+      }
+    },
+    {
+      "id": "gain",
+      "definition": {
+        "kind": "gain",
+        "name": "Gain",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal",
+            "unit": ""
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal",
+            "unit": ""
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;",
+        "declarations": "",
+        "generated": false,
+        "controller": false,
+        "category": "",
+        "keywords": []
+      },
+      "position": {
+        "x": 420.0,
+        "y": 36.0
+      }
+    },
+    {
+      "id": "scope",
+      "definition": {
+        "kind": "scope",
+        "name": "Scope",
+        "description": "A drawing sink for a signal you intend to inspect.",
+        "domain": "signal",
+        "symbol": "scope",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "unit": ""
+          }
+        ],
+        "parameters": [],
+        "equations": "unused = u;",
+        "declarations": "Real unused;",
+        "generated": false,
+        "controller": false,
+        "category": "",
+        "keywords": ["sink", "plot", "scope"]
+      },
+      "position": {
+        "x": 500.0,
+        "y": 240.0
+      }
+    },
+    {
+      "id": "display",
+      "definition": {
+        "kind": "display",
+        "name": "Display",
+        "description": "A numeric readout sink.",
+        "domain": "signal",
+        "symbol": "123",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "unit": ""
+          }
+        ],
+        "parameters": [],
+        "equations": "unused = u;",
+        "declarations": "Real unused;",
+        "generated": false,
+        "controller": false,
+        "category": "",
+        "keywords": ["sink", "value"]
+      },
+      "position": {
+        "x": 200.0,
+        "y": 280.0
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "wire_1",
+      "source": "error",
+      "sourceHandle": "y",
+      "target": "gain",
+      "targetHandle": "u",
+      "waypoints": [],
+      "junctions": []
+    },
+    {
+      "id": "wire_2",
+      "source": "gain",
+      "sourceHandle": "y",
+      "target": "output_junction",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 514.0,
+          "y": 68.0
+        },
+        {
+          "x": 514.0,
+          "y": 176.0
+        }
+      ],
+      "junctions": []
+    },
+    {
+      "id": "wire_3",
+      "source": "output_junction",
+      "sourceHandle": "node",
+      "target": "error",
+      "targetHandle": "b",
+      "waypoints": [
+        {
+          "x": 218.0,
+          "y": 176.0
+        }
+      ],
+      "junctions": []
+    },
+    {
+      "id": "wire_4",
+      "source": "output_junction",
+      "sourceHandle": "node",
+      "target": "scope",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 364.0,
+          "y": 272.0
+        }
+      ],
+      "junctions": []
+    },
+    {
+      "id": "wire_5",
+      "source": "reference",
+      "sourceHandle": "y",
+      "target": "reference_junction",
+      "targetHandle": "node",
+      "waypoints": [],
+      "junctions": []
+    },
+    {
+      "id": "wire_6",
+      "source": "reference_junction",
+      "sourceHandle": "node",
+      "target": "error",
+      "targetHandle": "a",
+      "waypoints": [],
+      "junctions": []
+    },
+    {
+      "id": "wire_7",
+      "source": "reference_junction",
+      "sourceHandle": "node",
+      "target": "display",
+      "targetHandle": "u",
+      "waypoints": [],
+      "junctions": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "output_junction",
+      "position": {
+        "x": 364.0,
+        "y": 176.0
+      },
+      "domain": "signal"
+    },
+    {
+      "id": "reference_junction",
+      "position": {
+        "x": 125.10188679245283,
+        "y": 68.0
+      },
+      "domain": "signal"
+    }
+  ],
+  "duration": 4.0,
+  "revision": 1
+}

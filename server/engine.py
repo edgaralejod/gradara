@@ -82,7 +82,7 @@ async def simulate(project: Project, job_id: str):
         candidates = [(p.id, p.name, p.unit) for p in definition.ports if p.direction == 'output']
         if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
         if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
-        if definition.kind == 'step': candidates = [('y', 'Target speed', definition.ports[0].unit or 'rad/s')]
+        if definition.kind == 'step' and project.exampleId in {'dc', 'foc'}: candidates = [('y', 'Target speed', definition.ports[0].unit or 'rad/s')]
         if definition.controller: candidates = [(p.id, f'{definition.name} · {p.name}', 'V') for p in definition.ports if p.direction=='output']
         for variable,label,unit in candidates:
             key = f'{block.id}.{variable}'

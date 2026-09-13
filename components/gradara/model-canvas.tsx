@@ -15,30 +15,15 @@ import {
   type NodeChange,
 } from '@xyflow/react';
 import BlockNode from './block-node';
-import JunctionNode from './junction-node';
-import SignalEdge from './signal-edge';
 import {
   CanvasGestures,
   reconcileNodes,
   type BlockLayout,
   type CanvasNode,
 } from '@/lib/gradara/canvas';
-import type { Block, Junction } from '@/lib/gradara/model';
-import { TAP_SIZE } from '@/lib/gradara/net';
+import type { Block } from '@/lib/gradara/model';
 
-const edgeTypes = { signal: SignalEdge };
-const nodeTypes = { block: BlockNode, tap: JunctionNode };
-const noJunctions: Junction[] = [];
-
-function sameTap(a: CanvasNode | undefined, b: Junction, selected: boolean) {
-  return (
-    a?.type === 'tap' &&
-    a.position.x === b.position.x - TAP_SIZE / 2 &&
-    a.position.y === b.position.y - TAP_SIZE / 2 &&
-    a.selected === selected &&
-    a.data.domain === b.domain
-  );
-}
+const nodeTypes = { block: BlockNode };
 function InitialViewport({ blockIds }: { blockIds: string }) {
   const documentReady = useStore(
     (s) => s.nodes.map((n) => n.id).join('|') === blockIds,
@@ -63,7 +48,6 @@ type Props = Omit<
   'nodes' | 'onNodesChange' | 'nodeTypes'
 > & {
   blocks: Block[];
-  junctions?: Junction[];
   selectedIds: string[];
   onSelectedIdsChange: (ids: string[]) => void;
   onLayout: (layouts: BlockLayout[]) => void;
@@ -72,7 +56,6 @@ type Props = Omit<
 /** Pointer-rate state belongs to the canvas, not autosave, history, inspector, or plots. */
 export default function ModelCanvas({
   blocks,
-  junctions = noJunctions,
   selectedIds,
   onSelectedIdsChange,
   onLayout,
@@ -98,28 +81,8 @@ export default function ModelCanvas({
       blocks,
       selectedIds,
     );
-    const selected = new Set(selectedIds);
-    const existing = new Map(nodesRef.current.map((n) => [n.id, n]));
-    const taps = junctions.map((j) => {
-      const prev = existing.get(j.id);
-      if (sameTap(prev, j, selected.has(j.id))) return prev!;
-      return {
-        id: j.id,
-        type: 'tap' as const,
-        position: {
-          x: j.position.x - TAP_SIZE / 2,
-          y: j.position.y - TAP_SIZE / 2,
-        },
-        width: TAP_SIZE,
-        height: TAP_SIZE,
-        selected: selected.has(j.id),
-        data: { domain: j.domain },
-        draggable: true,
-        connectable: true,
-      };
-    });
     previousBlocks.current = blocks;
-    const next = [...blocksNodes, ...taps];
+    const next = blocksNodes;
     if (
       next.length === nodesRef.current.length &&
       next.every((n, i) => n === nodesRef.current[i])
@@ -127,7 +90,7 @@ export default function ModelCanvas({
       return;
     nodesRef.current = next;
     setNodes(next);
-  }, [blocks, junctions, selectedIds]);
+  }, [blocks, selectedIds]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange<CanvasNode>[]) => {
@@ -158,14 +121,9 @@ export default function ModelCanvas({
       {...props}
       nodes={nodes}
       nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
       onNodesChange={onNodesChange}
     >
-      <InitialViewport
-        blockIds={[...blocks.map((b) => b.id), ...junctions.map((j) => j.id)].join(
-          '|',
-        )}
-      />
+      <InitialViewport blockIds={blocks.map((b) => b.id).join('|')} />
       {props.children}
     </ReactFlow>
   );
