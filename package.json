@@ -12,10 +12,11 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/project.test.ts tests/wiring.test.ts",
+    "test": "tsx --test tests/project.test.ts tests/wiring.test.ts tests/selection.test.ts tests/nets.test.ts tests/names.test.ts tests/block-design.test.ts tests/results.test.ts tests/examples.test.ts",
     "engine:test": ".venv/bin/python -m pytest -q",
     "local": "python3 scripts/start.py",
-    "postinstall": "node scripts/patch-react-flow.mjs"
+    "postinstall": "node scripts/patch-react-flow.mjs",
+    "audit:blocks": "tsx scripts/audit-blocks.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -42,8 +43,8 @@
     "vinext": "^1.0.0-beta.9"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.54.6",
-    "@cloudflare/workers-types": "^5.20260908.1",
+    "@cloudflare/vite-plugin": "^1.54.8",
+    "@cloudflare/workers-types": "^5.20260911.1",
     "@openai/sites-vite-plugin": "0.2.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
@@ -58,10 +59,11 @@
     "tsx": "^4.23.13",
     "typescript": "5.9.3",
     "vite": "^8.2.2",
-    "wrangler": "^4.130.0"
+    "wrangler": "^4.131.1"
   },
   "type": "module",
   "overrides": {
     "dompurify": "3.4.15"
-  }
+  },
+  "description": "Agent-assisted graphical multidomain simulation with OpenModelica"
 }

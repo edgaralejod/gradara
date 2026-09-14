@@ -1,5 +1,6 @@
 import { controlBlocks } from './control-blocks';
 import { extraBlocks } from './extra-blocks';
+import { powerBlocks } from './power-blocks';
 export type Domain = 'signal' | 'electrical' | 'mechanical' | 'thermal';
 export type Port = {
   id: string;
@@ -49,6 +50,8 @@ export type Block = {
   definition: Definition;
   position: { x: number; y: number };
   size?: { width: number; height: number };
+  /** Canvas offset from the centered label below the block; never part of simulation. */
+  labelOffset?: { x: number; y: number };
 };
 export type Wire = {
   id: string;
@@ -56,6 +59,7 @@ export type Wire = {
   sourceHandle: string;
   target: string;
   targetHandle: string;
+  /** Undefined permits automatic lanes; [] explicitly preserves a straight route. */
   waypoints?: { x: number; y: number }[];
   junctions?: { x: number; y: number }[];
 };
@@ -64,14 +68,31 @@ export type Junction = {
   position: { x: number; y: number };
   domain: Domain;
 };
+/** One connected net, independent of the number or shape of its drawn wires. */
+export type Net = {
+  id: string;
+  /** User override; absent means a name derived from the anchor block and port. */
+  name?: string;
+  /** Names retained when previously named physical nets are joined. */
+  aliases?: string[];
+  /** A port key (block.port) or junction key (j:id) that owns identity on a split. */
+  anchor: string;
+  wireIds: string[];
+  label?: { wireId: string; fraction: number; side: -1 | 1 };
+  hidden?: boolean;
+};
 export type Project = {
   version: 1;
   name: string;
   blocks: Block[];
   wires: Wire[];
   junctions?: Junction[];
+  /** Absent only in legacy documents; populated when the document is opened. */
+  nets?: Net[];
   duration: number;
   revision: number;
+  /** Stable saved-document identity; separate from its optional template origin. */
+  modelId?: string;
   exampleId?: string;
   description?: string;
   annotations?: { x: number; y: number; text: string; detail?: string }[];
@@ -109,6 +130,7 @@ const physical = (
   side: Port['side'],
 ): Port => ({ id, name, domain, side, direction: 'physical' });
 export const library: Definition[] = [
+  ...powerBlocks,
   ...controlBlocks,
   {
     kind: 'step',

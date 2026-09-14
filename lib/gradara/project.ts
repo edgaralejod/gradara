@@ -3,6 +3,7 @@ import { simplifyPoints } from './routing';
 import type { Project, Definition, Wire } from './model';
 import { compatible, portOf } from './model';
 import { connectionError, endpointPort, flattenWires, isTap } from './net';
+import { emptySelection, extractSelection, pasteSelection } from './selection';
 export function semanticSignature(p: Project) {
   return JSON.stringify({
     duration: p.duration,
@@ -20,6 +21,33 @@ export function semanticSignature(p: Project) {
       .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
   });
 }
+/** Move a label independently of its block and all connected geometry. */
+export function setLabelOffset(
+  project: Project,
+  id: string,
+  offset: { x: number; y: number } | undefined,
+): Project {
+  const block = project.blocks.find((b) => b.id === id);
+  if (
+    !block ||
+    (offset && (!Number.isFinite(offset.x) || !Number.isFinite(offset.y)))
+  )
+    return project;
+  const value =
+    offset && (offset.x !== 0 || offset.y !== 0) ? offset : undefined;
+  if (
+    (block.labelOffset?.x ?? 0) === (value?.x ?? 0) &&
+    (block.labelOffset?.y ?? 0) === (value?.y ?? 0)
+  )
+    return project;
+  return {
+    ...project,
+    blocks: project.blocks.map((b) =>
+      b.id === id ? { ...b, labelOffset: value } : b,
+    ),
+  };
+}
+
 export function addWire(p: Project, w: Wire): Project {
   const error = connectionError(
     p,
@@ -154,35 +182,12 @@ export function replaceDefinition(
   };
 }
 export function duplicateBlocks(p: Project, ids: string[]) {
-  const remap = new Map(
-    ids.map((id) => [
-      id,
-      `b_${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`,
-    ]),
+  const result = pasteSelection(
+    p,
+    extractSelection(p, { ...emptySelection(), blockIds: ids }),
   );
-  const blocks = p.blocks
-    .filter((b) => ids.includes(b.id))
-    .map((b) => ({
-      ...structuredClone(b),
-      id: remap.get(b.id)!,
-      position: { x: b.position.x + 35, y: b.position.y + 45 },
-    }));
-  const wires = p.wires
-    .filter((w) => ids.includes(w.source) && ids.includes(w.target))
-    .map((w) => ({
-      ...w,
-      id: crypto.randomUUID(),
-      source: remap.get(w.source)!,
-      target: remap.get(w.target)!,
-      junctions: w.junctions?.map((p) => ({ x: p.x + 35, y: p.y + 45 })),
-      waypoints: w.waypoints?.map((p) => ({ x: p.x + 35, y: p.y + 45 })),
-    }));
   return {
-    project: {
-      ...p,
-      blocks: [...p.blocks, ...blocks],
-      wires: [...p.wires, ...wires],
-    },
-    ids: blocks.map((b) => b.id),
+    ...result,
+    ids: result.selection.blockIds,
   };
 }

@@ -4,7 +4,7 @@ Written 12 September 2026 after a stretch of incremental wiring work that did no
 
 **Quality bar:** Simulink’s *feel* (nets, T-branches, feedback loops) with Altium’s *drawing contract* (pin exit, orthogonal rubber-band, click pins a run). Not LabVIEW. Not a generic graph editor.
 
-**Status:** specified; partially implemented in code; **not** solved in the browser. Coordinate-driven tests in `tests/wiring.test.ts` pass. Live pointer interaction on the canvas still fights the user.
+**Status:** core drawing, branching, reconnection, route editing, straightening, connected group movement/duplication, wire-region selection, net inspection, and automatic/custom naming are implemented. Sections 12–19 describe the current implementation; the earlier sections preserve the original design and investigation. The [Simulink-based audit](WIRING_AUDIT.md) records findings, implementation progress, and acceptance criteria. Edge-pan, obstacle avoidance, fine-grained segment/annotation selection, and large-diagram/device testing remain open. See the [current architecture](ARCHITECTURE.md) and [model format](docs/architecture/MODEL_FORMAT.md) for document ownership and persistence boundaries.
 
 Related: [ARCHITECTURE.md](ARCHITECTURE.md) (canvas vs model ownership), [VALIDATION.md](VALIDATION.md) (FOC/DC demos).
 
@@ -281,3 +281,131 @@ The wire selection toolbar exposes Redraw (D), Auto route (R), and Delete. Selec
 Browser checks cover dragging straight runs, both endpoint reconnects, click-to-click creation, free drawing, Enter completion, cancel via Escape and the toolbar, invalid reconnection, reconnecting onto wire ink, branch cleanup, and single-step undo. A captured drag can omit the browser's click event, so stale click suppression is cleared at the next pointer-down. Closely stacked opposing ports get a two-leg route instead of doubling back through a port, and a manually drawn tail turns at its last pinned corner.
 
 The remaining limits in section 12 still apply to obstacle avoidance, imported geometry, and large-diagram/device testing. Whole-segment sliding and endpoint/redraw editing are now implemented.
+
+
+## 14. Prefer straight runs; movable names — September 13, 2026
+
+Editing now treats the path's own stationary runs and endpoints as the highest-priority alignment targets within 8 **screen** pixels. This is intentionally different from free drawing, where self-snapping remains excluded. If several alignments are possible, fewer segments wins, then shorter travel, then the nearest coordinate. Nearby parallel runs coalesce onto the chosen coordinate; redundant collinear vertices and hairpins disappear from the stored route. Corner handles use the same capture radius and guides. Coordinates stay exactly orthogonal: endpoint ports and real junctions never move to hide an offset. Different endpoint rows therefore still need an elbow, and endpoint escape directions remain respected. The conventional left-to-right signal layout is retained.
+
+Pure geometry lives in `net-edit.ts`; the pointer adapter continues deriving each preview from the gesture's original document. A run can collapse during dragging without losing pointer capture or accumulating new vertices. Completion is one undo transaction, and cancel restores the original. Regression cases include multiple nearly aligned runs, subpixel jogs taken from the actual workspace, backtracking, 20 repeated bend/straighten cycles, corner editing, feedback escapes, junction preservation, vertical physical wires, and tolerance at four zoom levels.
+
+Block names have an optional per-instance `labelOffset`, relative to their normal centered position below the symbol. `BlockLabel` previews its own drag and commits once on release. Names render in a separate viewport layer above the wire hit areas, so even a name sitting on a wire can be grabbed. They follow block motion and resizing, support arrow-key nudges, and reset on double-click or Home. Pointer ownership transfers back to the wire layer when a wire is clicked. Both Python and TypeScript retain the serialized offset while excluding it from simulation identity.
+
+## 15. Gesture ownership and retraced bends — September 13, 2026
+
+React Flow's delegated capture handler runs before native listeners attached to `.react-flow`. Previously, clicking the empty canvas to pin a wire bend could start its selection rectangle before `NetLayer` stopped the press. Wiring now claims presses at window capture, scoped to this canvas, and consumes movement for its active gesture. Ordinary canvas presses pass through to React Flow. This also prevents Shift-selection from stealing a port, branch, or redraw gesture; selection remains available after cancellation.
+
+Moving a block could make a completed route double back from an old pinned corner, leaving a vertical spur with no junction. `simplifyRoute` now removes those collinear retraced sections in the shared committed-path calculation, with guards for both port normals. Rendering and hit testing therefore use the same cleaned path during movement and after reload. Useful bends, real junctions, and the saved routing intent remain intact. Wire editing uses the same simplifier.
+
+Regression tests cover either endpoint moving, partial and complete retracing, repeated moves, resize, physical ports, immutable cached geometry, and preservation of real branches. Browser checks reproduce the original marquee conflict and vertical spur, then verify drawing, Shift-started drawing, redraw, cancel, ordinary marquee selection, and undo with the fixes.
+
+## 16. Junctions follow their run — September 13, 2026
+
+Block ports remain fixed during wire editing, but junctions are part of the edited run. Moving an endpoint run now carries its junction perpendicular to the run and stretches every incident wire in the same transaction. This propagates across straight junction-to-junction paths, so a trunk with several branch dots moves as a unit. Horizontal and vertical runs, either stored wire direction, and physical and signal domains use the same rule. Corner editing carries junctions on its adjacent endpoint runs too. Moving or resizing a block carries junctions when the affected port shares a whole straight run with them; conflicting moves on the same axis leave the junction in place and bend the routes.
+
+`net-layout.ts` owns these net-wide operations. It also canonicalizes old shared detours: if all but one paths incident to a junction initially overlap, the dot slides to their first divergence and the incident paths are trimmed or extended along existing ink. This preserves the visible union and connectivity while moving the dot onto the actual T. A genuine four-way split, an unrelated crossing, or a move that would merge the dot with another junction or port cannot trigger this cleanup. The canonical geometry is used on load, import, document commit, and in transient block-drag previews; it is saved as normal junction positions and waypoints, with no solver changes.
+
+This supersedes the fixed-junction rule in section 14 for junctions attached to the run being edited. Undo/cancel still restore the whole transaction, including the incident paths. Tests cover rotated and mirrored layouts, reversed storage, multiple dots, multi-bend shared detours, conflicting block moves, port/junction preservation, repeated movement, and reload without the geometry cache. Browser validation includes repairing the supplied example, horizontal and vertical run dragging, snapping a branch straight, moving its block, and undo/redo.
+
+## 17. Connected selections and Ctrl-drag — September 13, 2026
+
+`selection.ts` is the shared model boundary for resolving, extracting, translating, and pasting a selection. Blocks, whole wire records, and junctions participate. Paths between selected ports retain the intervening junctions; unselected block ports form the boundary. Group movement translates internal bends and dots rigidly while external connections stretch. Preview and release both call `layoutSelection`, and React Flow group snapping uses one delta so off-grid port alignment survives. Single-block moves retain the existing alignment and junction-following behavior.
+
+Duplication and the in-workspace clipboard use the same fragment extraction. Internal block/junction/wire IDs are regenerated, nested definitions and label offsets are copied, external branches are omitted, and degree-two junctions collapse into bends. A fragment containing only signal sinks leaves their inputs open; physical nets require no invented driver. Explicitly saved empty waypoints preserve straight routes instead of requesting automatic lane allocation.
+
+The marquee now includes wires and dots. Drag a selected wire in a region/group selection to move that selection; ordinary single-wire selection retains segment editing. Select All includes every block, wire, and dot. Copy, Cut, Paste, and Duplicate each create at most one document edit; Copy alone creates none. Copy/Paste buttons are available beside Undo, and shortcuts are listed in Help. Clipboard scope is the current workbench session; operating-system clipboard exchange and annotation/individual-segment selection remain separate follow-ups.
+
+Hold **Ctrl and drag a block** to place a copy. If that block belongs to the selected group, the entire selected block fragment is copied with internal wiring. Originals remain in place during the preview. Fresh IDs remain stable throughout the drag. Release commits once; Escape, pointer cancellation, or focus loss discards the draft. A plain Ctrl-click creates nothing. The pointer owner is isolated in `copy-drag.ts`, with React rendering in `CopyDragLayer` and `SelectionPreviewContext`; pointer previews stay below workbench autosave/history/results.
+
+Regression coverage includes branched and partial duplication, undirected physical nets, feedback and multiple junctions, boundary stretching, off-grid group movement, repeated translation, wire-only regions, independent clipboard snapshots, and the actual Ctrl-drag pointer owner with zoom, release, cancellation, and stale-document protection. Browser checks cover connected duplication, group movement, region selection, clipboard buttons, and undo/redo. Edge-pan, net tracing/names, insertion into wires, and obstacle-aware routing remain subsequent audit milestones.
+
+## 18. Logical nets, model inspector, and signal labels
+
+The model inspector browses and searches blocks and nets by name, ID, domain,
+or connected block/port. Selecting a net highlights every drawn wire in that
+connection. Properties show its full copyable ID, source and destinations (or
+physical terminals), name, and label visibility. Locate fits the connected
+blocks into view. Unconnected ports do not become nets until they are wired.
+
+Double-click any wire section to name its net; F2 or the wire toolbar's Name
+action also opens inline editing. Enter or blur commits, Escape cancels, and
+an empty name restores the automatic name. Double-click an existing label to rename it.
+Drag a label along any branch and onto either side of the wire. Arrow keys move
+it along the wire or flip sides; Shift increases the step; Home resets placement.
+A label drag makes one undo entry and never moves the wiring. Custom names are optional,
+up to 120 characters, and may be shared by distinct nets; identity is always the ID.
+Without an override, the name follows the anchor block and port, such as `Step.y`.
+These direct naming/movement gestures follow MathWorks' documented interaction:
+https://www.mathworks.com/help/simulink/ug/configure-model-element-names-and-labels.html
+
+`Project.nets` is persistent metadata for connected components. Each record has
+an immutable UUID-based `id`, an `anchor` endpoint, and the complete `wireIds`
+partition. `name`, merged-name `aliases`, `hidden`, and a route-relative `label`
+are optional. Signal identity is anchored at its producing port; physical nets
+retain a stable terminal anchor. Ports on one block remain separate graph vertices,
+including different domains. Crossing wires do not imply connectivity.
+
+`reconcileNets(next, previous)` runs once at the document transaction boundary,
+after junction normalization. It uses indexed endpoint and wire overlap, never
+screen geometry. Legacy documents are migrated on opening; save/import/export
+and undo/redo carry the records. Rerouting, moving blocks, branching, and pruning
+junctions retain identity. On a split, the component containing the anchor keeps
+the ID/custom name; the other components get fresh IDs and automatic names. If the anchor disappears,
+surviving wire IDs and then endpoints recover the best continuation. On a merge,
+the driver's identity wins; physical ties are deterministic. Other names are
+retained as aliases in the inspector. Explicitly clearing the name clears aliases.
+Copy/paste and duplication remap net IDs, endpoint anchors, and label wire IDs;
+the copies keep display names without sharing identity with originals.
+
+A label stores a wire ID, a fraction of its routed length, and a side. It follows
+route and block motion without fixed world-coordinate offsets. If its wire is
+removed by a topology edit, placement falls back to the longest horizontal stretch
+of the surviving net. Naming a net does not create a solver variable or propagate
+through blocks. Signal objects, bus schemas, data types, sample-time inference,
+and hierarchical label propagation remain separate future capabilities.
+
+The Python contract validates unique IDs, complete/disjoint ownership of wires,
+connected membership, valid anchors, and label attachment. Net metadata is excluded
+from Modelica emission and both simulation validity/cache signatures. Numerical
+execution continues to derive connectivity solely from the graph.
+
+Validation covers migration, physical and signal topology, branches, splits,
+merges, anchor deletion, large splits, duplication and partial clipboard copies,
+label movement, schema rejection, and simulation independence. Browser checks
+cover double-click naming (including whole-net selection), label dragging between
+branches, Escape, undo/redo, inspector search/renaming/visibility, and reload.
+
+
+## 19. Unique block names and automatic net names
+
+`normalizeProject` is the editing boundary for loading, importing, adding,
+agent-created blocks, and document commits. It first normalizes block instance
+names, then junction geometry and logical net identity. Copy/paste (including
+Ctrl-drag previews) uses the same name allocator before returning its new model.
+
+Blocks receive `Step`, `Step1`, `Step2`, etc. Existing distinct names are reserved
+before resolving collisions, so importing `Step, Step, Step1` repairs only the
+duplicate to `Step2`. An unchanged existing block owns its name when a newly added
+or renamed block requests it. Copies of numbered names increment their suffix
+(`Step1` becomes `Step2`, skipping occupied names). Deleting a block does not
+renumber others; a subsequent insertion may reuse a free name. Names are unique
+within the model, case-sensitive, and bounded to 100 characters. The allocator
+clones only changed instance definitions and never changes library definitions.
+
+Automatic net names use the source block and port, e.g. `Step.y` or `Gain.y`.
+Physical connections use their stable anchor terminal, e.g. `Resistor.p`, without
+inventing a driver. Junction-only fragments fall back to `Net1`, `Net2`, etc.
+The inspector shows destination summaries (`→ Sum.a`, `→ Display.u + 1`, or
+`↔ Capacitor.p`) and an Auto indicator. The full UUID remains available in the
+properties and tooltip, rather than being the primary list label.
+
+`Net.name` remains a custom override. `automaticNetName` and `netDisplayName`
+derive the visible default from the current document; a cached display name is
+never serialized. Renaming a block updates its automatic net names immediately.
+Branches share one name and adding a destination does not rename the signal.
+Manual net names remain fixed across block renames. Clearing a name, or choosing
+Use automatic name, restores the derived name. Automatic and custom names both
+support dragging and the Show name on diagram option. Duplicated automatic nets
+follow their newly allocated block names; duplicated custom names stay custom.
+Names and IDs have separate roles, so naming has no effect on equation emission,
+net connectivity, simulation signatures, or result-cache identity.

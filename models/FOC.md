@@ -50,3 +50,7 @@ signal equations and component interfaces. The two curated physical implementati
 in `server/modelica.py`. `models/examples/foc.json` is the portable bundled snapshot.
 Geometry, routing waypoints, annotations, and plot groups remain presentation data;
 they do not enter the executable Modelica equations.
+
+## Standard-layout refresh
+
+The template uses the shared block sizes and terminal captions, with separate speed/current loops, parallel phase paths, and explicit branched feedback. Names move to a free side when a connected terminal would cross their usual position. `npx tsx scripts/style-examples.ts` reproduces the DC/FOC template layouts without touching saved user documents. The generated Modelica was byte-for-byte unchanged by this layout refresh; create from **New model → AC motor · FOC** to use it. For this larger diagram, use **F** for the overview and zoom in to work on an individual control stage.

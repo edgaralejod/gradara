@@ -8,6 +8,7 @@ import time
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
 from .runtime import IMAGE, LEGACY_IMAGE, docker_argv
+from .diagnostics import validate_simulation, explain_failure
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNS = ROOT/'projects'/'runs'
@@ -47,12 +48,14 @@ async def execute(folder: Path, config: dict, name: str):
         process = await asyncio.create_subprocess_exec(*command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
         try:
             output, _ = await asyncio.wait_for(process.communicate(), 120)
-        except (asyncio.CancelledError, asyncio.TimeoutError):
+        except (asyncio.CancelledError, asyncio.TimeoutError) as exc:
             cleanup = await asyncio.create_subprocess_exec(*docker_argv(), 'rm', '-f', name, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
             await cleanup.wait()
             if process.returncode is None:
                 process.kill()
             await process.wait()
+            if isinstance(exc, asyncio.TimeoutError):
+                raise RuntimeError("OpenModelica exceeded the 120-second execution limit. Try a shorter duration or check stiff equations and initial conditions.") from exc
             raise
     (folder/'engine.log').write_bytes(output)
     report = folder/'engine.json'
@@ -64,37 +67,49 @@ async def execute(folder: Path, config: dict, name: str):
     return result
 
 async def simulate(project: Project, job_id: str):
+    validate_simulation(project)
     started = time.monotonic()
     folder = RUNS/job_id
     folder.mkdir(parents=True, exist_ok=True)
     (folder/'model.mo').write_text(emit_project(project))
     (folder/'project.json').write_text(project.model_dump_json(indent=2))
-    report = await execute(folder, {'duration':project.duration}, f'gradara-run-{job_id}')
+    try:
+        report = await execute(folder, {'duration':project.duration}, f'gradara-run-{job_id}')
+    except RuntimeError as exc:
+        raise RuntimeError(explain_failure(project, str(exc))) from exc
     csv_file = folder/'simulation_res.csv'
     with csv_file.open() as file:
         reader = csv.DictReader(file)
         rows = list(reader)
     if not rows:
         raise RuntimeError('The engine returned no simulation samples.')
+    end_time = float(rows[-1]['time'])
+    if not math.isfinite(end_time) or end_time < project.duration - max(1e-8, project.duration * 1e-8):
+        raise RuntimeError(f'Simulation stopped at {end_time:g} s before the requested {project.duration:g} s.')
+    # DASSL can emit one output-grid row just beyond stopTime. Keep the plot
+    # and final values inside the requested interval; retain the raw CSV.
+    rows = [row for row in rows if float(row['time']) <= project.duration + max(1e-12, project.duration * 1e-12)]
     outputs = []
     for block in project.blocks:
         definition = block.definition
-        candidates = [(p.id, p.name, p.unit) for p in definition.ports if p.direction == 'output']
+        candidates = [(p.id, p.name, p.unit) for p in definition.ports if p.direction == 'output' or (definition.kind in {'scope', 'display'} and p.direction == 'input')]
         if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
         if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
-        if definition.kind == 'step' and project.exampleId in {'dc', 'foc'}: candidates = [('y', 'Target speed', definition.ports[0].unit or 'rad/s')]
-        if definition.controller: candidates = [(p.id, f'{definition.name} · {p.name}', 'V') for p in definition.ports if p.direction=='output']
         for variable,label,unit in candidates:
             key = f'{block.id}.{variable}'
             if key in rows[0]:
                 values = [float(row[key]) for row in rows]
                 if not all(math.isfinite(value) for value in values):
                     raise RuntimeError(f'{label} contains non-finite results.')
-                outputs.append({'key':key,'name':label,'unit':unit,'blockId':block.id,'values':values})
+                outputs.append({'key':key,'name':f'{definition.name}.{label}', 'unit':unit,'blockId':block.id,'values':values})
     sample_indices = list(range(0,len(rows),max(1,len(rows)//1800)))
     sample_indices += [len(rows)-1]
-    # Preserve a dense tail for the scope's last-50-ms view, alongside the overview.
-    tail = [i for i,row in enumerate(rows) if float(row['time']) >= project.duration-0.05]
+    # Preserve switching event pairs and a dense tail for short-time ripple views.
+    for i in range(1,len(rows)):
+        if abs(float(rows[i]['time'])-float(rows[i-1]['time'])) <= 1e-12:
+            sample_indices.extend([i-1,i])
+    tail_window = min(0.05, project.duration * 0.1)
+    tail = [i for i,row in enumerate(rows) if float(row['time']) >= project.duration-tail_window]
     sample_indices += tail[::max(1,len(tail)//400)]
     for series in outputs:
         values=series['values']

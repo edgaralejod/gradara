@@ -190,6 +190,41 @@ export function simplifyPoints(points: Pt[]): Pt[] {
   }
   return out;
 }
+
+/** Remove retraced spurs from a complete route, while preserving both port normals.
+ * Unlike a free drawing tail, a completed route has enough context to discard
+ * collinear backtracking safely when a block moves past an old bend.
+ */
+export function simplifyRoute(
+  points: Pt[],
+  sourceSide?: Position,
+  targetSide?: Position,
+): Pt[] {
+  let out = simplifyPoints(points);
+  for (let i = 1; i < out.length - 1;) {
+    const a = out[i - 1],
+      b = out[i],
+      c = out[i + 1];
+    if (
+      (nearly(a.x, b.x) && nearly(b.x, c.x)) ||
+      (nearly(a.y, b.y) && nearly(b.y, c.y))
+    ) {
+      const next = dedupe(out.filter((_, j) => j !== i));
+      if (
+        next.length >= 2 &&
+        (!sourceSide || segmentExit(next[0], next[1]) === sourceSide) &&
+        (!targetSide || segmentExit(next.at(-1)!, next.at(-2)!) === targetSide)
+      ) {
+        out = next;
+        i = Math.max(1, i - 1);
+        continue;
+      }
+    }
+    i++;
+  }
+  return out;
+}
+
 export function outward(p: Pt, side: Position, distance = EXIT_STUB): Pt {
   return {
     x:

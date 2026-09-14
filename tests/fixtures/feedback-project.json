@@ -1,17 +1,24 @@
 {
-  "exampleId": "wiring",
-  "description": "Try wiring on a small closed-loop controller. Drag from a wire to branch; drop a port on wire ink to join. Click a junction to draw a branch; drag it to reposition. Esc cancels and Backspace unpins.",
+  "description": "A deterministic feedback and signal-branching engine fixture.",
   "annotations": [],
   "plots": [
     {
       "id": "feedback",
       "label": "Feedback response",
-      "series": ["reference.y", "gain.y", "error.y"],
-      "labels": ["Reference", "Output", "Error"]
+      "series": [
+        "reference.y",
+        "gain.y",
+        "error.y"
+      ],
+      "labels": [
+        "Reference",
+        "Output",
+        "Error"
+      ]
     }
   ],
   "version": 1,
-  "name": "Wiring playground",
+  "name": "Branched feedback regression",
   "blocks": [
     {
       "id": "reference",
@@ -50,7 +57,10 @@
         "generated": false,
         "controller": false,
         "category": "",
-        "keywords": ["source", "reference"]
+        "keywords": [
+          "source",
+          "reference"
+        ]
       },
       "position": {
         "x": 0.0,
@@ -172,7 +182,11 @@
         "generated": false,
         "controller": false,
         "category": "",
-        "keywords": ["sink", "plot", "scope"]
+        "keywords": [
+          "sink",
+          "plot",
+          "scope"
+        ]
       },
       "position": {
         "x": 500.0,
@@ -203,7 +217,10 @@
         "generated": false,
         "controller": false,
         "category": "",
-        "keywords": ["sink", "value"]
+        "keywords": [
+          "sink",
+          "value"
+        ]
       },
       "position": {
         "x": 200.0,

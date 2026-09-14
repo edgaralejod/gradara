@@ -487,3 +487,43 @@ void test('a second wire from the same output does not invent a mid-wire node', 
     2,
   );
 });
+
+void test('moving a label preserves block geometry, wiring, and simulation identity', async () => {
+  const { setLabelOffset } = await import('../lib/gradara/project');
+  const p = initialProject(),
+    id = p.blocks[0].id;
+  const next = setLabelOffset(p, id, { x: 45, y: -90 });
+  assert.equal(next.blocks[0].position, p.blocks[0].position);
+  assert.equal(next.wires, p.wires);
+  assert.equal(next.blocks[0].definition, p.blocks[0].definition);
+  assert.equal(semanticSignature(next), semanticSignature(p));
+  assert.deepEqual(next.blocks[0].labelOffset, { x: 45, y: -90 });
+  assert.equal(setLabelOffset(next, id, { x: 45, y: -90 }), next);
+  assert.equal(setLabelOffset(next, id, { x: NaN, y: 0 }), next);
+  assert.equal(
+    setLabelOffset(next, id, undefined).blocks[0].labelOffset,
+    undefined,
+  );
+});
+void test('label positions follow block moves, survive duplication, and reconcile through undo', async () => {
+  const { setLabelOffset, duplicateBlocks } =
+    await import('../lib/gradara/project');
+  const p = initialProject(),
+    id = p.blocks[0].id;
+  const nodes = reconcileNodes([], [], p.blocks, []);
+  const labeled = setLabelOffset(p, id, { x: 30, y: -80 });
+  const rendered = reconcileNodes(nodes, p.blocks, labeled.blocks, []);
+  assert.deepEqual(rendered[0].data.labelOffset, { x: 30, y: -80 });
+  assert.equal(rendered[0].position, nodes[0].position);
+  const restored = reconcileNodes(rendered, labeled.blocks, p.blocks, []);
+  assert.equal(restored[0].data.labelOffset, undefined);
+  const moved = applyLayout(labeled, [
+    { id, position: { x: 400, y: 500 }, size: blockSize(labeled.blocks[0]) },
+  ]);
+  assert.equal(moved.blocks[0].labelOffset, labeled.blocks[0].labelOffset);
+  const copies = duplicateBlocks(labeled, [id]);
+  assert.deepEqual(copies.project.blocks.at(-1)!.labelOffset, {
+    x: 30,
+    y: -80,
+  });
+});

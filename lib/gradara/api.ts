@@ -1,9 +1,25 @@
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`/api${path}`, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-  });
-  const data = await response.json();
+  const headers = new Headers(options?.headers);
+  if (!headers.has('Content-Type'))
+    headers.set('Content-Type', 'application/json');
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, { ...options, headers });
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') throw error;
+    throw new Error(
+      'Cannot reach the local simulation service. Check that the Gradara launcher is running, then try again.',
+    );
+  }
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(
+      `The local simulation service returned an invalid response (${response.status}). Check that the Gradara launcher is running.`,
+    );
+  }
   if (!response.ok) {
     const detail = (data as { detail?: string | { msg: string }[] }).detail;
     throw new Error(
@@ -29,7 +45,8 @@ export async function waitForJob<T>(
     if (job.status === 'complete') return job.result!;
     if (job.status === 'failed')
       throw new Error(job.error ?? 'The operation failed.');
-    if (job.status === 'cancelled') throw new Error('Cancelled.');
+    if (job.status === 'cancelled')
+      throw new DOMException('Cancelled', 'AbortError');
     await new Promise<void>((resolve, reject) => {
       const done = () => {
         signal?.removeEventListener('abort', abort);
@@ -41,6 +58,7 @@ export async function waitForJob<T>(
         reject(new DOMException('Cancelled', 'AbortError'));
       };
       signal?.addEventListener('abort', abort, { once: true });
+      if (signal?.aborted) abort();
     });
   }
   throw new DOMException('Cancelled', 'AbortError');

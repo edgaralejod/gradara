@@ -1,5 +1,16 @@
 'use client';
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import {
+  defaultBlockSize,
+  snapBlockPosition,
+} from '@/lib/gradara/block-design';
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 import {
   ReactFlowProvider,
   Background,
@@ -20,12 +31,15 @@ import {
   Code2,
   ArrowUpRight,
   FolderOpen,
+  FilePlus2,
   Square,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
   Copy,
+  Clipboard,
+  ClipboardPaste,
   Trash2,
   Maximize,
   Keyboard,
@@ -33,7 +47,6 @@ import {
   Check,
   LoaderCircle,
   X,
-  RotateCcw,
   MousePointer2,
   Hand,
 } from 'lucide-react';
@@ -51,8 +64,23 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import ModelCanvas from '@/components/gradara/model-canvas';
+import { normalizeProject } from '@/lib/gradara/normalize-project';
+import { describeNets, renameNet } from '@/lib/gradara/net-registry';
+import { setNetLabel } from '@/lib/gradara/net-label';
 import {
-  applyLayout,
+  IdentityField,
+  ModelExplorer,
+  NetProperties,
+} from '@/components/gradara/model-inspector';
+import {
+  emptySelection,
+  extractSelection,
+  layoutSelection,
+  pasteSelection,
+  type ModelFragment,
+  type ModelSelection,
+} from '@/lib/gradara/selection';
+import {
   blockSize,
   minimumBlockSize,
   type BlockLayout,
@@ -60,7 +88,8 @@ import {
 import NumberField from '@/components/gradara/number-field';
 import NameField from '@/components/gradara/name-field';
 import Results from '@/components/gradara/results';
-import { focProject } from '@/lib/gradara/foc';
+import NewModelDialog from '@/components/gradara/new-model-dialog';
+import { blankProject, type TemplateId } from '@/lib/gradara/workspace';
 import LibraryNavigator from '@/components/gradara/library-navigator';
 import BlockInserter, {
   type InsertContext,
@@ -71,7 +100,6 @@ import AgentComposer, {
 import EquationEditor from '@/components/gradara/equation-editor';
 import ExportDialog from '@/components/gradara/export-dialog';
 import {
-  initialProject,
   library,
   domainColors,
   type Project,
@@ -80,12 +108,7 @@ import {
   portOf,
 } from '@/lib/gradara/model';
 import { matchingPort } from '@/lib/gradara/catalog';
-import {
-  placeAligned,
-  placeAtDrop,
-  snapMovedBlocks,
-  snapPoint,
-} from '@/lib/gradara/placement';
+import { placeAligned, placeAtDrop } from '@/lib/gradara/placement';
 import { resetWireRoute } from '@/lib/gradara/wires';
 import NetLayer from '@/components/gradara/net-layer';
 import {
@@ -96,6 +119,7 @@ import {
 } from '@/lib/gradara/api';
 import {
   semanticSignature,
+  setLabelOffset,
   addWire,
   removeSelection,
   replaceDefinition,
@@ -132,14 +156,38 @@ function IconButton({
   );
 }
 function Workbench() {
-  const [project, setProject] = useState<Project>(initialProject);
+  const [project, setProject] = useState<Project>(blankProject);
   const savedBody = useRef('');
   const projectRef = useRef(project);
   projectRef.current = project;
-  const [selectedIds, setSelectedIds] = useState<string[]>(['controller']);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
+  const [selectedJunctions, setSelectedJunctions] = useState<string[]>([]);
+  const [groupSelection, setGroupSelection] = useState(false);
+  const clipboard = useRef<ModelFragment | null>(null);
+  const [canPaste, setCanPaste] = useState(false);
+  const pasteCount = useRef(0);
+  const selection = useMemo<ModelSelection>(
+    () => ({
+      blockIds: selectedIds,
+      wireIds: selectedEdges,
+      junctionIds: selectedJunctions,
+    }),
+    [selectedIds, selectedEdges, selectedJunctions],
+  );
+  const selectionRef = useRef(selection);
+  useLayoutEffect(() => {
+    selectionRef.current = selection;
+  }, [selection]);
+  const select = useCallback((next: ModelSelection) => {
+    setSelectedIds(next.blockIds);
+    setSelectedEdges(next.wireIds);
+    setSelectedJunctions(next.junctionIds);
+    setGroupSelection(next.blockIds.length > 1 || next.wireIds.length > 1);
+  }, []);
   const [ready, setReady] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [newModelOpen, setNewModelOpen] = useState(false);
   const [saving, setSaving] = useState('Loading');
   const [health, setHealth] = useState({
     engineReady: false,
@@ -153,10 +201,28 @@ function Workbench() {
   const [inserter, setInserter] = useState<InsertContext | null>(null);
   const [equationBlock, setEquationBlock] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
-  const [libraryOpen, setLibraryOpen] = useState(true);
-  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [libraryOpen, updateLibraryOpen] = useState(true);
+  const [inspectorOpen, updateInspectorOpen] = useState(true);
+  const setLibraryOpen = useCallback((open: boolean) => {
+    if (open && window.innerWidth < 1100) updateInspectorOpen(false);
+    updateLibraryOpen(open);
+  }, []);
+  const setInspectorOpen = useCallback((open: boolean) => {
+    if (open && window.innerWidth < 1100) updateLibraryOpen(false);
+    updateInspectorOpen(open);
+  }, []);
+  useEffect(() => {
+    const resize = () => {
+      if (window.innerWidth < 1100 && libraryOpen && inspectorOpen)
+        updateLibraryOpen(false);
+    };
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, [libraryOpen, inspectorOpen]);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
+  const [savedModels, setSavedModels] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState('');
   const [result, setResult] = useState<SimulationResult | null>(null);
@@ -165,6 +231,14 @@ function Workbench() {
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const runController = useRef<AbortController | null>(null);
   const runId = useRef('');
+  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const persistProject = useCallback((body: string) => {
+    const pending = saveQueue.current
+      .catch(() => {})
+      .then(() => api('/project', { method: 'PUT', body }));
+    saveQueue.current = pending;
+    return pending;
+  }, []);
   const importRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const flow = useReactFlow();
@@ -175,7 +249,10 @@ function Workbench() {
   }, []);
   const commit = useCallback((update: Project | ((p: Project) => Project)) => {
     const previous = projectRef.current;
-    const next = typeof update === 'function' ? update(previous) : update;
+    const next = normalizeProject(
+      typeof update === 'function' ? update(previous) : update,
+      previous,
+    );
     if (next === previous) return;
     setHistory((h) => [...h.slice(-49), structuredClone(previous)]);
     setFuture([]);
@@ -204,7 +281,30 @@ function Workbench() {
     setProject(restored);
   }, [future]);
   const active = project.blocks.find((b) => b.id === selectedIds[0]);
-  const activeWire = project.wires.find((w) => w.id === selectedEdges[0]);
+  const nets = useMemo(() => describeNets(project), [project]);
+  const activeNet = nets.find(({ net }) =>
+    net.wireIds.includes(selectedEdges[0]),
+  );
+  const inspectBlock = (id: string) => {
+    select({ ...emptySelection(), blockIds: [id] });
+  };
+  const inspectNet = (id: string) => {
+    const entry = nets.find(({ net }) => net.id === id);
+    if (entry) select({ ...emptySelection(), wireIds: entry.net.wireIds });
+  };
+  const focusNet = (id: string) => {
+    const entry = nets.find(({ net }) => net.id === id);
+    if (!entry) return;
+    inspectNet(id);
+    void flow.fitView({
+      nodes: [...new Set(entry.ports.map((p) => p.blockId))].map((id) => ({
+        id,
+      })),
+      padding: 0.6,
+      maxZoom: 1.5,
+      duration: 200,
+    });
+  };
   const signature = useMemo(() => semanticSignature(project), [project]);
   useEffect(() => {
     let disposed = false;
@@ -217,13 +317,22 @@ function Workbench() {
             setInspectorOpen(false);
             setSelectedIds([]);
           }
-          setProject(loaded.project);
-          projectRef.current = loaded.project;
+          const canonical = normalizeProject(loaded.project);
+          const restored =
+            canonical === loaded.project
+              ? canonical
+              : { ...canonical, revision: canonical.revision + 1 };
+          setProject(restored);
+          projectRef.current = restored;
           savedBody.current = JSON.stringify(loaded.project);
         }
         const latest = await api<{ result: SimulationResult | null }>(
-          `/results/latest?example=${loaded.project?.exampleId ?? 'dc'}`,
-        );
+          '/results/latest',
+        ).catch(() => ({ result: null }));
+        const saved = await api<{ models: { id: string; name: string }[] }>(
+          '/models',
+        ).catch(() => ({ models: [] }));
+        if (!disposed) setSavedModels(saved.models);
         if (!disposed && latest.result) {
           setResult(latest.result);
           if (latest.result.snapshot)
@@ -235,13 +344,18 @@ function Workbench() {
           localStorage.getItem('flux-workspace');
         if (local) {
           try {
-            const p = JSON.parse(local);
+            const p = normalizeProject(JSON.parse(local));
             setProject(p);
             projectRef.current = p;
           } catch {}
         }
       } finally {
-        if (!disposed) setReady(true);
+        if (!disposed) {
+          const current = normalizeProject(projectRef.current);
+          projectRef.current = current;
+          setProject(current);
+          setReady(true);
+        }
       }
     }
     void load();
@@ -281,10 +395,10 @@ function Workbench() {
     const timer = setTimeout(() => {
       localStorage.setItem('gradara-workspace', JSON.stringify(project));
       localStorage.removeItem('flux-workspace');
-      void api('/project', { method: 'PUT', body })
+      void persistProject(body)
         .then(() => {
           savedBody.current = body;
-          setSaving('Saved');
+          if (JSON.stringify(projectRef.current) === body) setSaving('Saved');
         })
         .catch((e) => {
           setSaving('Saved on device');
@@ -292,36 +406,62 @@ function Workbench() {
         });
     }, 550);
     return () => clearTimeout(timer);
-  }, [project, ready, switching, notify]);
-  const openExample = async (exampleId: string) => {
-    if (
-      switching ||
-      running ||
-      exampleId === (projectRef.current.exampleId ?? 'dc')
-    )
-      return;
+  }, [project, ready, switching, notify, persistProject]);
+  const activateModel = (next: Project) => {
+    savedBody.current = JSON.stringify(next);
+    projectRef.current = next;
+    setProject(next);
+    setHistory([]);
+    setFuture([]);
+    select(emptySelection());
+    setComposer(null);
+    setInserter(null);
+    setEquationBlock(null);
+    setInspectorOpen(false);
+    setRunError('');
+    setResult(null);
+    setResultSignature('');
+  };
+  const createModel = async (name: string, template: TemplateId) => {
     setSwitching(true);
     try {
-      await api('/project', {
-        method: 'PUT',
-        body: JSON.stringify(projectRef.current),
+      await persistProject(JSON.stringify(projectRef.current));
+      const created = await api<{ project: Project }>('/models', {
+        method: 'POST',
+        body: JSON.stringify({ name, template }),
       });
-      const loaded = await api<{ project: Project }>(`/examples/${exampleId}`);
-      const next = { ...loaded.project, exampleId };
-      await api('/project', { method: 'PUT', body: JSON.stringify(next) });
-      savedBody.current = JSON.stringify(next);
-      projectRef.current = next;
-      setProject(next);
-      setHistory([]);
-      setFuture([]);
-      setSelectedIds([]);
-      setSelectedEdges([]);
-      setInspectorOpen(false);
-      setRunError('');
-      setResult(null);
-      setResultSignature('');
+      const next = normalizeProject(created.project);
+      await persistProject(JSON.stringify(next));
+      activateModel(next);
+      setNewModelOpen(false);
+      setLibraryOpen(template === 'blank');
+      setSavedModels((models) => [
+        ...models.filter((m) => m.id !== next.modelId),
+        { id: next.modelId!, name: next.name },
+      ]);
+      notify(`${next.name} created.`);
+    } finally {
+      setSwitching(false);
+    }
+  };
+  const openModel = async (value: string) => {
+    if (switching || running || value === projectRef.current.modelId) return;
+    setSwitching(true);
+    try {
+      await persistProject(JSON.stringify(projectRef.current));
+      const path = value.startsWith('example:')
+        ? `/examples/${value.slice(8)}`
+        : `/models/${value}`;
+      const loaded = await api<{ project: Project }>(path);
+      const next = normalizeProject(loaded.project);
+      await persistProject(JSON.stringify(next));
+      activateModel(next);
+      const saved = await api<{ models: { id: string; name: string }[] }>(
+        '/models',
+      );
+      setSavedModels(saved.models);
       const latest = await api<{ result: SimulationResult | null }>(
-        `/results/latest?example=${exampleId}`,
+        `/results/latest?model=${next.modelId}`,
       );
       setResult(latest.result);
       if (latest.result?.snapshot)
@@ -334,12 +474,7 @@ function Workbench() {
   };
   const updateLayout = useCallback(
     (layouts: BlockLayout[]) => {
-      commit((p) =>
-        snapMovedBlocks(
-          applyLayout(p, layouts),
-          layouts.map((l) => l.id).filter((id) => !id.startsWith('j_')),
-        ),
-      );
+      commit((p) => layoutSelection(p, layouts, selectionRef.current));
     },
     [commit],
   );
@@ -371,10 +506,10 @@ function Workbench() {
         connection && position
           ? placeAtDrop(position, definition, toPort, fromPort?.direction)
           : position
-            ? snapPoint(position)
+            ? snapBlockPosition(position, defaultBlockSize(definition))
             : origin && fromPort && toPort
               ? placeAligned(origin, fromPort, definition, toPort)
-              : snapPoint(newPosition());
+              : snapBlockPosition(newPosition(), defaultBlockSize(definition));
       commit((p) => {
         let next = {
           ...p,
@@ -383,6 +518,7 @@ function Workbench() {
             {
               id,
               definition: structuredClone(definition),
+              size: defaultBlockSize(definition),
               position: placed,
             },
           ],
@@ -423,58 +559,114 @@ function Workbench() {
     [commit, newPosition, selectedIds],
   );
   const deleteSelected = useCallback(() => {
-    if (!selectedIds.length && !selectedEdges.length) return;
-    commit((p) => removeSelection(p, selectedIds, selectedEdges));
-    setSelectedIds([]);
-    setSelectedEdges([]);
-  }, [commit, selectedIds, selectedEdges]);
+    const s = selectionRef.current;
+    if (!s.blockIds.length && !s.wireIds.length && !s.junctionIds.length)
+      return;
+    commit((p) =>
+      removeSelection(p, [...s.blockIds, ...s.junctionIds], s.wireIds),
+    );
+    select(emptySelection());
+  }, [commit, select]);
   const duplicate = useCallback(() => {
     const d = duplicateBlocks(projectRef.current, selectedIds);
     if (!d.ids.length) return;
     commit(d.project);
-    setSelectedIds(d.ids);
-  }, [commit, selectedIds]);
+    select(d.selection);
+  }, [commit, selectedIds, select]);
+  const copySelection = useCallback(
+    (cut = false) => {
+      const fragment = extractSelection(
+        projectRef.current,
+        selectionRef.current,
+      );
+      if (!fragment.blocks.length) return;
+      clipboard.current = fragment;
+      setCanPaste(true);
+      pasteCount.current = 0;
+      if (cut) deleteSelected();
+      notify(
+        `${cut ? 'Cut' : 'Copied'} ${fragment.blocks.length} block${fragment.blocks.length === 1 ? '' : 's'} with internal connections.`,
+      );
+    },
+    [deleteSelected, notify],
+  );
+  const paste = useCallback(() => {
+    if (!clipboard.current) return;
+    const step = ++pasteCount.current * 40;
+    const result = pasteSelection(projectRef.current, clipboard.current, {
+      x: step,
+      y: step,
+    });
+    commit(result.project);
+    select(result.selection);
+  }, [commit, select]);
   const startComposer = useCallback(
     () => setComposer({ position: newPosition() }),
     [newPosition],
   );
   async function runSimulation() {
-    if (running) return;
+    if (runController.current || switching || !ready) return;
+    if (!projectRef.current.blocks.length) {
+      notify('Add a block from the library or ask the agent to create one.');
+      return;
+    }
+    const controller = new AbortController();
+    runController.current = controller;
     setRunning(true);
     setRunError('');
-    runController.current = new AbortController();
+    setResult(null);
+    setResultSignature('');
     const snapshot = structuredClone(projectRef.current);
     const currentSignature = semanticSignature(snapshot);
     try {
+      // Always receive the job ID, so cancellation during submission can stop the engine too.
       const job = await api<Job<SimulationResult>>('/runs', {
         method: 'POST',
         body: JSON.stringify(snapshot),
-        signal: runController.current.signal,
       });
+      if (controller.signal.aborted) {
+        await api(`/jobs/${job.id}`, { method: 'DELETE' });
+        return;
+      }
       runId.current = job.id;
-      const r = await waitForJob<SimulationResult>(
-        job.id,
-        runController.current.signal,
-      );
+      const r = await waitForJob<SimulationResult>(job.id, controller.signal);
+      if (
+        runController.current !== controller ||
+        controller.signal.aborted ||
+        projectRef.current.modelId !== snapshot.modelId
+      )
+        return;
       setResult(r);
       setResultSignature(currentSignature);
     } catch (e) {
-      if ((e as Error).name !== 'AbortError') setRunError((e as Error).message);
+      if (
+        runController.current === controller &&
+        !controller.signal.aborted &&
+        (e as Error).name !== 'AbortError'
+      )
+        setRunError((e as Error).message);
     } finally {
-      setRunning(false);
-      runId.current = '';
+      if (runController.current === controller) {
+        runController.current = null;
+        setRunning(false);
+        runId.current = '';
+      }
     }
   }
   async function cancelRun() {
     runController.current?.abort();
-    if (runId.current) {
+    runController.current = null;
+    const id = runId.current;
+    runId.current = '';
+    setRunning(false);
+    if (id) {
       try {
-        await api(`/jobs/${runId.current}`, { method: 'DELETE' });
+        await api(`/jobs/${id}`, { method: 'DELETE' });
       } catch (e) {
         notify((e as Error).message);
+        return;
       }
     }
-    setRunning(false);
     notify('Simulation cancelled.');
   }
   const runRef = useRef(runSimulation);
@@ -492,6 +684,22 @@ function Workbench() {
       } else if (command && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         duplicate();
+      } else if (command && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        select({
+          blockIds: projectRef.current.blocks.map((b) => b.id),
+          wireIds: projectRef.current.wires.map((w) => w.id),
+          junctionIds: (projectRef.current.junctions ?? []).map((j) => j.id),
+        });
+      } else if (command && ['c', 'x'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        copySelection(e.key.toLowerCase() === 'x');
+      } else if (command && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        paste();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        deleteSelected();
       } else if (command && e.key.toLowerCase() === 's') {
         e.preventDefault();
         notify('Your workspace saves automatically.');
@@ -524,8 +732,7 @@ function Workbench() {
       } else if (e.key === 'Escape') {
         setComposer(null);
         setInserter(null);
-        setSelectedIds([]);
-        setSelectedEdges([]);
+        select(emptySelection());
       } else if (e.key === '?' && !command) setHelpOpen(true);
     };
     window.addEventListener('keydown', key);
@@ -534,6 +741,10 @@ function Workbench() {
     undo,
     redo,
     duplicate,
+    copySelection,
+    paste,
+    deleteSelected,
+    select,
     notify,
     composer,
     startComposer,
@@ -555,7 +766,18 @@ function Workbench() {
       id = `b_${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`;
       let next = {
         ...p,
-        blocks: [...p.blocks, { id, definition, position: ctx.position }],
+        blocks: [
+          ...p.blocks,
+          {
+            id,
+            definition,
+            position: snapBlockPosition(
+              ctx.position,
+              defaultBlockSize(definition),
+            ),
+            size: defaultBlockSize(definition),
+          },
+        ],
       };
       if (ctx.connection) {
         const from = portOf(p, ctx.connection.blockId, ctx.connection.portId);
@@ -586,7 +808,25 @@ function Workbench() {
     try {
       const imported = JSON.parse(await file.text()) as Project;
       await api('/source', { method: 'POST', body: JSON.stringify(imported) });
-      commit(imported);
+      await persistProject(JSON.stringify(projectRef.current));
+      // Import is a separate local document, even when copied from this workspace.
+      const next = normalizeProject({
+        ...imported,
+        modelId: crypto.randomUUID(),
+      });
+      await persistProject(JSON.stringify(next));
+      projectRef.current = next;
+      setProject(next);
+      savedBody.current = JSON.stringify(next);
+      setHistory([]);
+      setFuture([]);
+      select(emptySelection());
+      setRunError('');
+      setResultSignature('');
+      const saved = await api<{ models: { id: string; name: string }[] }>(
+        '/models',
+      );
+      setSavedModels(saved.models);
       setSelectedIds([]);
       setResult(null);
       setTimeout(() => void flow.fitView({ padding: 0.2, duration: 200 }), 100);
@@ -696,21 +936,37 @@ function Workbench() {
           </div>
           <div className="project-breadcrumb">
             <FolderOpen size={16} />
-            <span>Examples</span>
+            <span>Models</span>
             <ChevronRight size={14} />
             <select
-              aria-label="Example model"
-              value={project.exampleId ?? 'dc'}
+              aria-label="Open model"
+              value={project.modelId ?? ''}
               disabled={switching || running}
-              onChange={(e) => void openExample(e.target.value)}
+              onChange={(e) => void openModel(e.target.value)}
             >
-              <option value="dc">DC motor · Speed control</option>
-              <option value="foc">AC motor · Field-oriented control</option>
-              <option value="wiring">Wiring playground</option>
+              <optgroup label="Saved models">
+                <option value={project.modelId ?? ''}>{project.name}</option>
+                {savedModels
+                  .filter((m) => m.id !== project.modelId)
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+              </optgroup>
             </select>
             <span className="saved-dot" />
           </div>
           <div className="header-right">
+            <Button
+              className="new-model-button"
+              variant="outline"
+              disabled={!ready || switching || running}
+              onClick={() => setNewModelOpen(true)}
+            >
+              <FilePlus2 size={15} />
+              New model
+            </Button>
             <span className="local-badge">
               <span />
               Local workspace
@@ -730,6 +986,114 @@ function Workbench() {
         <div
           className={`main-layout ${!libraryOpen ? 'library-hidden' : ''} ${!inspectorOpen ? 'inspector-hidden' : ''}`}
         >
+          <div className="model-toolbar">
+            <div className="toolbar-left">
+              <IconButton
+                label={libraryOpen ? 'Hide components' : 'Show components'}
+                onClick={() => setLibraryOpen(!libraryOpen)}
+              >
+                {libraryOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
+              </IconButton>
+              <div
+                className="canvas-tools"
+                role="group"
+                aria-label="Canvas tools"
+              >
+                <button
+                  aria-label="Select tool"
+                  aria-pressed={canvasTool === 'select'}
+                  title="Select · V"
+                  onClick={() => setCanvasTool('select')}
+                >
+                  <MousePointer2 size={15} />
+                </button>
+                <button
+                  aria-label="Pan tool"
+                  aria-pressed={canvasTool === 'pan'}
+                  title="Pan · H"
+                  onClick={() => setCanvasTool('pan')}
+                >
+                  <Hand size={15} />
+                </button>
+              </div>
+              <div className="model-tab">
+                <Activity size={15} />
+                <span>{project.name}</span>
+                <span className="tab-dot" />
+              </div>
+            </div>
+            <div className="toolbar-actions">
+              <IconButton
+                label="Copy selection · ⌘C"
+                onClick={() => copySelection()}
+                disabled={!selectedIds.length}
+              >
+                <Clipboard />
+              </IconButton>
+              <IconButton
+                label="Paste selection · ⌘V"
+                onClick={paste}
+                disabled={!canPaste}
+              >
+                <ClipboardPaste />
+              </IconButton>
+              <IconButton
+                label="Undo · ⌘Z"
+                onClick={undo}
+                disabled={!history.length}
+              >
+                <Undo2 />
+              </IconButton>
+              <IconButton
+                label="Redo · ⇧⌘Z"
+                onClick={redo}
+                disabled={!future.length}
+              >
+                <Redo2 />
+              </IconButton>
+              <span className="toolbar-divider" />
+              <label>
+                Stop time{' '}
+                <NumberField
+                  value={project.duration}
+                  onChange={(duration) => commit((p) => ({ ...p, duration }))}
+                  min={0.000001}
+                  max={60}
+                  ariaLabel="Simulation stop time"
+                />
+                <span>s</span>
+              </label>
+              <Button
+                className={`run-button ${running ? 'running' : ''}`}
+                onClick={() => void (running ? cancelRun() : runSimulation())}
+                disabled={
+                  (!health.engineReady ||
+                    !ready ||
+                    switching ||
+                    !project.blocks.length) &&
+                  !running
+                }
+              >
+                {running ? (
+                  <>
+                    <Square size={12} fill="currentColor" />
+                    Stop
+                  </>
+                ) : (
+                  <>
+                    <Play fill="currentColor" />
+                    Run<span className="run-shortcut">⌘↵</span>
+                  </>
+                )}
+              </Button>
+              <IconButton
+                label={inspectorOpen ? 'Hide inspector' : 'Show inspector'}
+                onClick={() => setInspectorOpen(!inspectorOpen)}
+              >
+                {inspectorOpen ? <PanelRightClose /> : <PanelRightOpen />}
+              </IconButton>
+            </div>
+          </div>
           <aside className="library-panel">
             <LibraryNavigator
               onAdd={(definition) => addComponent(definition)}
@@ -737,98 +1101,6 @@ function Workbench() {
             />
           </aside>
           <section className="center-panel">
-            <div className="model-toolbar">
-              <div className="toolbar-left">
-                <IconButton
-                  label={libraryOpen ? 'Hide components' : 'Show components'}
-                  onClick={() => setLibraryOpen((v) => !v)}
-                >
-                  {libraryOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-                </IconButton>
-                <div
-                  className="canvas-tools"
-                  role="group"
-                  aria-label="Canvas tools"
-                >
-                  <button
-                    aria-label="Select tool"
-                    aria-pressed={canvasTool === 'select'}
-                    title="Select · V"
-                    onClick={() => setCanvasTool('select')}
-                  >
-                    <MousePointer2 size={15} />
-                  </button>
-                  <button
-                    aria-label="Pan tool"
-                    aria-pressed={canvasTool === 'pan'}
-                    title="Pan · H"
-                    onClick={() => setCanvasTool('pan')}
-                  >
-                    <Hand size={15} />
-                  </button>
-                </div>
-                <div className="model-tab">
-                  <Activity size={15} />
-                  <span>
-                    {project.exampleId === 'foc'
-                      ? 'FOC controller + PMSM'
-                      : 'DC motor control'}
-                  </span>
-                  <span className="tab-dot" />
-                </div>
-              </div>
-              <div className="toolbar-actions">
-                <IconButton
-                  label="Undo · ⌘Z"
-                  onClick={undo}
-                  disabled={!history.length}
-                >
-                  <Undo2 />
-                </IconButton>
-                <IconButton
-                  label="Redo · ⇧⌘Z"
-                  onClick={redo}
-                  disabled={!future.length}
-                >
-                  <Redo2 />
-                </IconButton>
-                <span className="toolbar-divider" />
-                <label>
-                  Stop time{' '}
-                  <NumberField
-                    value={project.duration}
-                    onChange={(duration) => commit((p) => ({ ...p, duration }))}
-                    min={0.05}
-                    max={60}
-                    ariaLabel="Simulation stop time"
-                  />
-                  <span>s</span>
-                </label>
-                <Button
-                  className={`run-button ${running ? 'running' : ''}`}
-                  onClick={() => void (running ? cancelRun() : runSimulation())}
-                  disabled={!health.engineReady && !running}
-                >
-                  {running ? (
-                    <>
-                      <Square size={12} fill="currentColor" />
-                      Stop
-                    </>
-                  ) : (
-                    <>
-                      <Play fill="currentColor" />
-                      Run<span className="run-shortcut">⌘↵</span>
-                    </>
-                  )}
-                </Button>
-                <IconButton
-                  label={inspectorOpen ? 'Hide inspector' : 'Show inspector'}
-                  onClick={() => setInspectorOpen((v) => !v)}
-                >
-                  {inspectorOpen ? <PanelRightClose /> : <PanelRightOpen />}
-                </IconButton>
-              </div>
-            </div>
             <div
               ref={canvasRef}
               className={`canvas-wrap tool-${canvasTool}`}
@@ -878,10 +1150,60 @@ function Workbench() {
                   );
               }}
             >
+              {ready &&
+                project.blocks.length === 0 &&
+                !composer &&
+                !inserter && (
+                  <div
+                    className="empty-model"
+                    role="region"
+                    aria-label="Empty model"
+                  >
+                    <span className="empty-model-icon">
+                      <FilePlus2 size={28} />
+                    </span>
+                    <h1>Build your first connection</h1>
+                    <p>
+                      Add a source, an operation, or a physical component.
+                      <br />
+                      Connect its ports, then run your model.
+                    </p>
+                    <div>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setLibraryOpen(true);
+                          requestAnimationFrame(() =>
+                            document.getElementById('library-search')?.focus(),
+                          );
+                        }}
+                      >
+                        <FolderOpen size={15} />
+                        Browse blocks
+                      </Button>
+                      <Button variant="outline" onClick={startComposer}>
+                        <Sparkles size={15} />
+                        Ask agent
+                      </Button>
+                    </div>
+                    <button
+                      className="empty-model-examples"
+                      onClick={() => setNewModelOpen(true)}
+                    >
+                      Or start from an example
+                    </button>
+                  </div>
+                )}
               {ready && (
                 <ModelCanvas
-                  key={project.exampleId ?? 'dc'}
+                  key={project.modelId ?? 'workspace'}
                   blocks={project.blocks}
+                  project={project}
+                  selection={selection}
+                  onCopyDrop={({ project: next, selection: selected }) => {
+                    commit(next);
+                    select(selected);
+                  }}
                   selectedIds={selectedIds}
                   onSelectedIdsChange={(ids) =>
                     setSelectedIds((prev) =>
@@ -892,17 +1214,27 @@ function Workbench() {
                     )
                   }
                   onLayout={updateLayout}
+                  onLabelOffset={(id, offset) =>
+                    commit((p) => setLabelOffset(p, id, offset))
+                  }
+                  onLabelSelect={(id) => {
+                    select({ ...emptySelection(), blockIds: [id] });
+                  }}
                   edges={[]}
                   nodesConnectable={false}
-                  onNodeClick={(event, n) => {
+                  onNodeClick={(event, node) => {
                     if (event.shiftKey || event.metaKey || event.ctrlKey) {
+                      // Apply the click's intent idempotently: React Flow may
+                      // already have delivered its own selection change.
                       setSelectedIds(
-                        selectedIds.includes(n.id)
-                          ? selectedIds.filter((id) => id !== n.id)
-                          : [...selectedIds, n.id],
+                        node.selected
+                          ? selectedIds.filter((id) => id !== node.id)
+                          : [...new Set([...selectedIds, node.id])],
                       );
-                    } else setSelectedIds([n.id]);
-                    setInspectorOpen(true);
+                    } else {
+                      select({ ...emptySelection(), blockIds: [node.id] });
+                      setInspectorOpen(true);
+                    }
                   }}
                   onNodeDoubleClick={(_, n) => {
                     if (n.type === 'tap') return;
@@ -910,8 +1242,7 @@ function Workbench() {
                   }}
                   onPaneClick={() => {
                     setInserter(null);
-                    setSelectedIds([]);
-                    setSelectedEdges([]);
+                    select(emptySelection());
                   }}
                   onBeforeDelete={async ({ nodes, edges }) => {
                     commit((p) =>
@@ -928,9 +1259,7 @@ function Workbench() {
                   fitViewOptions={{ padding: 0.16, maxZoom: 1.15 }}
                   minZoom={0.25}
                   maxZoom={2}
-                  snapToGrid
-                  snapGrid={[20, 20]}
-                  deleteKeyCode={['Backspace', 'Delete']}
+                  deleteKeyCode={null}
                   zoomOnDoubleClick={false}
                   selectionMode={SelectionMode.Partial}
                   selectionOnDrag={canvasTool === 'select'}
@@ -957,10 +1286,20 @@ function Workbench() {
                   <NetLayer
                     project={project}
                     selected={selectedEdges}
-                    onSelect={(ids) => {
-                      setSelectedEdges(ids);
-                      setSelectedIds([]);
+                    selection={selection}
+                    groupSelection={groupSelection || selectedIds.length > 1}
+                    onRegionSelect={(next) => {
+                      select(next);
+                      setGroupSelection(true);
                     }}
+                    onSelect={(ids, additive) => {
+                      select({
+                        ...emptySelection(),
+                        blockIds: additive ? selectedIds : [],
+                        wireIds: ids,
+                      });
+                    }}
+                    onDeleteSelection={deleteSelected}
                     onCommit={commit}
                   />
                   <Controls showInteractive={false} />
@@ -977,7 +1316,7 @@ function Workbench() {
               <div className="canvas-agent-shortcut">
                 <Button variant="outline" onClick={startComposer}>
                   <Sparkles size={14} />
-                  Create block<kbd>A</kbd>
+                  Ask agent<kbd>A</kbd>
                 </Button>
               </div>
               {inserter && (
@@ -1023,18 +1362,19 @@ function Workbench() {
               )}
             </div>
             <Results
-              key={project.exampleId ?? 'dc'}
+              key={project.modelId ?? 'workspace'}
               result={result}
               running={running}
               error={runError}
               stale={!!result && signature !== resultSignature}
+              empty={!project.blocks.length}
             />
           </section>
           <aside className="inspector-panel">
             <div className="panel-heading">
               <Settings2 size={16} />
-              <h2>Inspector</h2>
-              {selectedIds.length > 0 && (
+              <h2>Model inspector</h2>
+              {active && (
                 <div className="inspector-actions">
                   <IconButton label="Duplicate · ⌘D" onClick={duplicate}>
                     <Copy />
@@ -1051,28 +1391,38 @@ function Workbench() {
                 <X />
               </IconButton>
             </div>
-            {activeWire && !active ? (
-              <>
-                <div className="inspector-intro">
-                  <span className="component-category">CONNECTION</span>
-                  <h3 className="component-name-input" style={{ fontSize: 18 }}>
-                    Wire
-                  </h3>
-                  <p>
-                    Drag a segment to move it, or drag either round end to
-                    reconnect it. D redraws the path. Alt-drag branches from a
-                    wire. R restores the automatic route.
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      commit((p) => resetWireRoute(p, activeWire.id))
-                    }
-                  >
-                    Auto route
-                  </Button>
-                </div>
-              </>
+            <ModelExplorer
+              project={project}
+              nets={nets}
+              selection={selection}
+              onBlock={inspectBlock}
+              onNet={inspectNet}
+              onModel={() => select(emptySelection())}
+            />
+            {activeNet && !active ? (
+              <NetProperties
+                description={activeNet}
+                project={project}
+                onRename={(name) =>
+                  commit((p) => renameNet(p, activeNet.net.id, name))
+                }
+                onVisibility={(visible) =>
+                  commit((p) => ({
+                    ...p,
+                    nets: p.nets?.map((n) =>
+                      n.id === activeNet.net.id
+                        ? { ...n, hidden: !visible }
+                        : n,
+                    ),
+                  }))
+                }
+                onResetLabel={() =>
+                  commit((p) => setNetLabel(p, activeNet.net.id, undefined))
+                }
+                onTrace={() => inspectNet(activeNet.net.id)}
+                onFocus={() => focusNet(activeNet.net.id)}
+                onBlock={inspectBlock}
+              />
             ) : active ? (
               <>
                 <div className="inspector-intro">
@@ -1103,8 +1453,14 @@ function Workbench() {
                             : b,
                         ),
                       }));
+                      return (
+                        projectRef.current.blocks.find(
+                          (b) => b.id === active.id,
+                        )?.definition.name ?? name
+                      );
                     }}
                   />
+                  <IdentityField id={active.id} label="Block ID" />
                   <p>{active.definition.description}</p>
                   <Button
                     className="refine-button"
@@ -1183,7 +1539,7 @@ function Workbench() {
                       <NumberField
                         key={`${active.id}-width`}
                         value={blockSize(active).width}
-                        min={minimumBlockSize(active.definition.kind).width}
+                        min={minimumBlockSize(active.definition).width}
                         max={1200}
                         ariaLabel="Block width"
                         onChange={(width) =>
@@ -1202,7 +1558,7 @@ function Workbench() {
                       <NumberField
                         key={`${active.id}-height`}
                         value={blockSize(active).height}
-                        min={minimumBlockSize(active.definition.kind).height}
+                        min={minimumBlockSize(active.definition).height}
                         max={1000}
                         ariaLabel="Block height"
                         onChange={(height) =>
@@ -1217,7 +1573,24 @@ function Workbench() {
                       />
                     </label>
                   </div>
-                  <p className="size-hint">Drag a corner or edge to resize.</p>
+                  <button
+                    type="button"
+                    className="standard-block-size"
+                    onClick={() =>
+                      updateLayout([
+                        {
+                          id: active.id,
+                          position: active.position,
+                          size: defaultBlockSize(active.definition),
+                        },
+                      ])
+                    }
+                  >
+                    Use standard size
+                  </button>
+                  <p className="size-hint">
+                    Drag a corner or edge to resize. Text stays the same size.
+                  </p>
                 </div>
                 <div className="inspector-section">
                   <div className="section-label">Interface</div>
@@ -1285,12 +1658,24 @@ function Workbench() {
             ) : (
               <div className="inspector-empty">
                 <MousePointer2 size={25} />
-                <strong>
-                  {project.description ? project.name : 'Select a component'}
-                </strong>
+                <NameField
+                  label="Model name"
+                  value={project.name}
+                  onCommit={(name) => commit((p) => ({ ...p, name }))}
+                />
+                <label className="model-duration-field">
+                  Stop time (seconds)
+                  <NumberField
+                    ariaLabel="Model stop time"
+                    value={project.duration}
+                    min={0.000001}
+                    max={60}
+                    onChange={(duration) => commit((p) => ({ ...p, duration }))}
+                  />
+                </label>
                 <p>
                   {project.description ||
-                    'Explore its parameters, interface, and equations here.'}
+                    'Select a block or net above, or click it on the canvas to inspect its properties.'}
                 </p>
                 <Button
                   variant="outline"
@@ -1300,10 +1685,6 @@ function Workbench() {
                 >
                   <Maximize size={13} />
                   Fit model to view
-                </Button>
-                <Button variant="ghost" onClick={() => setResetOpen(true)}>
-                  <RotateCcw size={13} />
-                  Reset example
                 </Button>
               </div>
             )}
@@ -1316,11 +1697,10 @@ function Workbench() {
             />
             {health.engineReady
               ? 'OpenModelica ready'
-              : 'Connecting to engine…'}
+              : 'OpenModelica unavailable · Check the local service'}
           </span>
           <span>
-            {project.blocks.length} components · {project.wires.length}{' '}
-            connections
+            {project.blocks.length} components · {nets.length} nets
           </span>
           <span className="domain-legend" aria-label="Port domains">
             {[
@@ -1389,6 +1769,12 @@ function Workbench() {
               }}
             />
           )}
+        {newModelOpen && (
+          <NewModelDialog
+            onClose={() => setNewModelOpen(false)}
+            onCreate={createModel}
+          />
+        )}
         {exportOpen && (
           <ExportDialog
             project={project}
@@ -1413,17 +1799,28 @@ function Workbench() {
                 ['Finish redrawing', 'Click destination / Enter'],
                 ['Remove last bend / cancel', 'Backspace / Escape'],
                 ['Restore auto route', 'R'],
+                ['Name a signal / net', 'Double-click wire / F2'],
+                ['Move a signal label', 'Drag along its net'],
                 ['Create a component', 'A'],
                 ['Run simulation', '⌘ / Ctrl + Enter'],
                 ['Undo', '⌘ / Ctrl + Z'],
                 ['Redo', '⌘ / Ctrl + Shift + Z'],
                 ['Duplicate selection', '⌘ / Ctrl + D'],
+                ['Drag a copy of a block or selection', 'Ctrl + drag'],
+                ['Select all blocks and wires', '⌘ / Ctrl + A'],
+                [
+                  'Copy / cut selection (in this workspace)',
+                  '⌘ / Ctrl + C / X',
+                ],
+                ['Paste selection', '⌘ / Ctrl + V'],
                 ['Delete selection', 'Delete / Backspace'],
                 ['Fit model to canvas', 'F'],
                 ['Select several components', 'Shift + click / Drag'],
                 ['Select / pan tools', 'V / H'],
                 ['Pan canvas', 'Space + drag / Trackpad'],
                 ['Resize a block', 'Drag a corner or edge'],
+                ['Move a block name', 'Drag the label'],
+                ['Reset label position', 'Double-click its label'],
                 ['Nudge selected blocks', 'Arrow keys'],
                 ['Inspect equations', 'Double-click a block'],
                 ['Save', 'Automatic'],
@@ -1433,39 +1830,6 @@ function Workbench() {
                   <kbd>{key}</kbd>
                 </div>
               ))}
-            </div>
-          </DialogContent>
-        </Dialog>
-        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-          <DialogContent>
-            <DialogTitle>Restore the motor example?</DialogTitle>
-            <DialogDescription>
-              Your current diagram will be replaced. You can undo this change.
-            </DialogDescription>
-            <div className="dialog-actions">
-              <Button variant="outline" onClick={() => setResetOpen(false)}>
-                Keep working
-              </Button>
-              <Button
-                onClick={() => {
-                  commit(
-                    project.exampleId === 'foc'
-                      ? focProject()
-                      : initialProject(),
-                  );
-                  setSelectedIds(
-                    project.exampleId === 'foc' ? [] : ['controller'],
-                  );
-                  setResetOpen(false);
-                  setRunError('');
-                  setTimeout(
-                    () => void flow.fitView({ padding: 0.2, duration: 200 }),
-                    100,
-                  );
-                }}
-              >
-                Restore example
-              </Button>
             </div>
           </DialogContent>
         </Dialog>

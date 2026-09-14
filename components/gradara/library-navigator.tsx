@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Search, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
-  domainColors,
   library,
   type Definition,
   type LibraryCategoryId,
@@ -11,11 +10,12 @@ import {
 } from '@/lib/gradara/model';
 import {
   categoryOf,
+  categoryLabel,
   libraryCategories,
   searchLibrary,
 } from '@/lib/gradara/catalog';
 import { fuzzyRanges } from '@/lib/gradara/fuzzy';
-import { BlockSymbol } from './block-symbol';
+import { BlockPreview } from './block-face';
 
 function Highlight({ text, query }: { text: string; query: string }) {
   const ranges = fuzzyRanges(query, text);
@@ -29,40 +29,6 @@ function Highlight({ text, query }: { text: string; query: string }) {
   });
   if (cursor < text.length) parts.push(text.slice(cursor));
   return parts;
-}
-
-function Specimen({ definition }: { definition: Definition }) {
-  const sum = definition.kind === 'sum' || definition.kind === 'subtract';
-  return (
-    <span
-      className={`specimen notation-${sum ? 'sum' : definition.kind === 'gain' ? 'gain' : definition.kind}`}
-      style={{ '--domain': domainColors[definition.domain] } as React.CSSProperties}
-    >
-      <svg className="specimen-outline" viewBox="0 0 100 100" preserveAspectRatio="none">
-        {sum ? (
-          <ellipse cx="50" cy="50" rx="46" ry="46" />
-        ) : definition.kind === 'gain' ? (
-          <polygon points="4,8 96,50 4,92" />
-        ) : definition.kind === 'mux' ? (
-          <polygon points="12,8 90,24 90,76 12,92" />
-        ) : definition.kind === 'demux' ? (
-          <polygon points="10,24 88,8 88,92 10,76" />
-        ) : ['ground', 'resistor', 'capacitor', 'inductor', 'diode'].includes(
-            definition.kind,
-          ) ? null : (
-          <rect x="5" y="8" width="90" height="84" rx="0" />
-        )}
-      </svg>
-      <span className="specimen-symbol">
-        <BlockSymbol definition={definition} />
-        {sum && (
-          <span className="library-sum">
-            {definition.kind === 'sum' ? '+' : '±'}
-          </span>
-        )}
-      </span>
-    </span>
-  );
 }
 
 export default function LibraryNavigator({
@@ -81,8 +47,7 @@ export default function LibraryNavigator({
   const [active, setActive] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const hits = useMemo(
-    () =>
-      searchLibrary(query, query.trim() ? 'all' : category, compatibleWith),
+    () => searchLibrary(query, query.trim() ? 'all' : category, compatibleWith),
     [query, category, compatibleWith],
   );
   useEffect(() => {
@@ -108,7 +73,7 @@ export default function LibraryNavigator({
   return (
     <div className={`library-navigator is-${variant}`}>
       <header className="library-titleblock">
-        <span className="tb-kicker">Sheet</span>
+        <span className="tb-kicker">Library</span>
         <strong>Components</strong>
         <span className="tb-count">{library.length}</span>
         <div className="search-field">
@@ -121,7 +86,7 @@ export default function LibraryNavigator({
               setQuery(e.target.value);
               setActive(0);
             }}
-            placeholder="Find"
+            placeholder="Find a component…"
             aria-label="Find a component"
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') {
@@ -172,13 +137,20 @@ export default function LibraryNavigator({
             )}
             {group.items.map((hit) => {
               const index = flat.indexOf(hit);
+              const drawingOnly =
+                !hit.definition.generated &&
+                ['mux', 'demux', 'subsystem'].includes(hit.definition.kind);
               return (
                 <button
                   key={hit.definition.kind}
                   type="button"
                   draggable={variant === 'panel'}
                   className={`legend-row ${index === highlight ? 'is-active' : ''}`}
-                  title={hit.definition.description}
+                  title={
+                    drawingOnly
+                      ? 'Drawing only — simulation is not available for this block yet.'
+                      : hit.definition.description
+                  }
                   onMouseEnter={() => setActive(index)}
                   onDragStart={(e) => {
                     e.dataTransfer.setData(
@@ -189,12 +161,20 @@ export default function LibraryNavigator({
                   }}
                   onClick={() => onAdd(hit.definition)}
                 >
-                  <Specimen definition={hit.definition} />
+                  <span className="legend-preview">
+                    <BlockPreview definition={hit.definition} miniature />
+                  </span>
                   <span className="legend-copy">
                     <span className="legend-name">
                       <Highlight text={hit.definition.name} query={query} />
                     </span>
-                    <span className="legend-kind">{hit.definition.kind}</span>
+                    <span className="legend-kind">
+                      {drawingOnly
+                        ? 'Drawing only · not yet simulated'
+                        : hit.definition.description === hit.definition.name
+                          ? categoryLabel(categoryOf(hit.definition))
+                          : hit.definition.description}
+                    </span>
                   </span>
                 </button>
               );
@@ -205,6 +185,16 @@ export default function LibraryNavigator({
           <div className="library-empty">No part under that name.</div>
         )}
       </div>
+      {variant === 'panel' && (
+        <a
+          className="library-catalog-link"
+          href="/block-catalog"
+          target="_blank"
+          rel="noreferrer"
+        >
+          View block design catalog ↗
+        </a>
+      )}
       {onAskAgent && (
         <button type="button" className="library-ask" onClick={onAskAgent}>
           <Sparkles size={12} />

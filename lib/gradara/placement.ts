@@ -1,4 +1,5 @@
 import { blockSize } from './canvas';
+import { snapBlockPosition } from './block-design';
 import type { Block, Definition, Port, Project } from './model';
 import { portPoint, portSide, positionForPortAt } from './ports';
 import { isReturnPath } from './routing';
@@ -80,18 +81,19 @@ export function placeAtDrop(
       ? next.ports.find((p) => p.direction === 'output')
       : next.ports.find((p) => p.direction === 'input')) ??
     next.ports[0];
-  if (!port)
-    return snapPoint({ x: drop.x + 12, y: drop.y });
+  if (!port) return snapPoint({ x: drop.x + 12, y: drop.y });
   const placed = positionForPortAt(next, port, drop);
   return { x: snapX(placed.x), y: placed.y };
 }
 
-function alignmentShift(project: Project, block: Block): { x: number; y: number } {
-  let best: { x: number; y: number; mag: number } | undefined;
+function alignmentShift(project: Project, block: Block) {
+  let best: { x: number; y: number; mag: number; axis: 'x' | 'y' } | undefined;
   for (const wire of project.wires) {
     if (wire.source !== block.id && wire.target !== block.id) continue;
-    const mine = wire.source === block.id ? wire.sourceHandle : wire.targetHandle;
-    const theirs = wire.source === block.id ? wire.targetHandle : wire.sourceHandle;
+    const mine =
+      wire.source === block.id ? wire.sourceHandle : wire.targetHandle;
+    const theirs =
+      wire.source === block.id ? wire.targetHandle : wire.sourceHandle;
     const otherId = wire.source === block.id ? wire.target : wire.source;
     const other = project.blocks.find((b) => b.id === otherId);
     const a = portPoint(block, mine);
@@ -100,10 +102,10 @@ function alignmentShift(project: Project, block: Block): { x: number; y: number 
     const sourcePt = wire.source === block.id ? a : b;
     const targetPt = wire.target === block.id ? a : b;
     const sourceBlock = wire.source === block.id ? block : other;
-    const sourceHandle =
-      sourceBlock?.definition.ports.find((p) => p.id === wire.sourceHandle);
-    const flow =
-      sourceHandle?.direction === 'physical' ? 'physical' : 'signal';
+    const sourceHandle = sourceBlock?.definition.ports.find(
+      (p) => p.id === wire.sourceHandle,
+    );
+    const flow = sourceHandle?.direction === 'physical' ? 'physical' : 'signal';
     if (isReturnPath({ sourceX: sourcePt.x, targetX: targetPt.x, flow }))
       continue;
     const horizontal =
@@ -112,7 +114,7 @@ function alignmentShift(project: Project, block: Block): { x: number; y: number 
     if (horizontal) {
       const dy = b.y - a.y;
       if (Math.abs(dy) <= ALIGN_SNAP && (!best || Math.abs(dy) < best.mag))
-        best = { x: 0, y: dy, mag: Math.abs(dy) };
+        best = { x: 0, y: dy, mag: Math.abs(dy), axis: 'y' };
     }
     const vertical =
       (a.side === 'top' || a.side === 'bottom') &&
@@ -120,7 +122,7 @@ function alignmentShift(project: Project, block: Block): { x: number; y: number 
     if (vertical) {
       const dx = b.x - a.x;
       if (Math.abs(dx) <= ALIGN_SNAP && (!best || Math.abs(dx) < best.mag))
-        best = { x: dx, y: 0, mag: Math.abs(dx) };
+        best = { x: dx, y: 0, mag: Math.abs(dx), axis: 'x' };
     }
   }
   return best ?? { x: 0, y: 0 };
@@ -145,4 +147,28 @@ export function snapMovedBlocks(project: Project, ids: string[]): Project {
     );
   }
   return blocks === project.blocks ? project : { ...project, blocks };
+}
+
+/** A nearby connected port wins over the placement grid, including in legacy layouts. */
+export function snapDraggedBlockPosition(
+  project: Project,
+  id: string,
+  position: Block['position'],
+  movingIds: string[] = [],
+) {
+  const original = project.blocks.find((b) => b.id === id);
+  if (!original) return position;
+  const block = { ...original, position };
+  const snapped = snapBlockPosition(position, blockSize(block));
+  const moving = new Set(movingIds);
+  const external = {
+    ...project,
+    wires: project.wires.filter(
+      (w) => !(moving.has(w.source) && moving.has(w.target)),
+    ),
+  };
+  const shift = alignmentShift(external, block);
+  if ('axis' in shift && shift.axis === 'y') snapped.y = position.y + shift.y;
+  if ('axis' in shift && shift.axis === 'x') snapped.x = position.x + shift.x;
+  return snapped;
 }

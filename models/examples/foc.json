@@ -41,11 +41,11 @@
       },
       "position": {
         "x": 0,
-        "y": 95
+        "y": 128
       },
       "size": {
-        "width": 64,
-        "height": 56
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -81,12 +81,12 @@
         "equations": "y = k*u;"
       },
       "position": {
-        "x": 115,
-        "y": 95
+        "x": 128,
+        "y": 128
       },
       "size": {
-        "width": 65,
-        "height": 56
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -126,12 +126,16 @@
         "declarations": ""
       },
       "position": {
-        "x": 230,
-        "y": 105
+        "x": 256,
+        "y": 140
       },
       "size": {
-        "width": 36,
-        "height": 36
+        "width": 40,
+        "height": 40
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -76
       }
     },
     {
@@ -167,12 +171,12 @@
         "equations": "y = k*u;"
       },
       "position": {
-        "x": 330,
-        "y": 95
+        "x": 368,
+        "y": 128
       },
       "size": {
-        "width": 68,
-        "height": 56
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -208,12 +212,12 @@
         "equations": "y = k*u;"
       },
       "position": {
-        "x": 330,
-        "y": 235
+        "x": 368,
+        "y": 264
       },
       "size": {
-        "width": 68,
-        "height": 56
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -254,12 +258,12 @@
         "declarations": "Real x(start=0, fixed=true);"
       },
       "position": {
-        "x": 445,
-        "y": 233
+        "x": 496,
+        "y": 264
       },
       "size": {
-        "width": 60,
-        "height": 60
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -299,12 +303,16 @@
         "declarations": ""
       },
       "position": {
-        "x": 475,
-        "y": 105
+        "x": 512,
+        "y": 140
       },
       "size": {
-        "width": 36,
-        "height": 36
+        "width": 40,
+        "height": 40
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -76
       }
     },
     {
@@ -347,12 +355,12 @@
         "equations": "y = max(lower, min(upper, u));"
       },
       "position": {
-        "x": 570,
-        "y": 95
+        "x": 624,
+        "y": 128
       },
       "size": {
-        "width": 64,
-        "height": 56
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -392,12 +400,16 @@
         "declarations": ""
       },
       "position": {
-        "x": 710,
-        "y": 105
+        "x": 800,
+        "y": 140
       },
       "size": {
-        "width": 36,
-        "height": 36
+        "width": 40,
+        "height": 40
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -76
       }
     },
     {
@@ -458,12 +470,12 @@
         "controller": true
       },
       "position": {
-        "x": 805,
-        "y": 88
+        "x": 912,
+        "y": 128
       },
       "size": {
-        "width": 100,
-        "height": 70
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -496,12 +508,12 @@
         "declarations": ""
       },
       "position": {
-        "x": 575,
-        "y": 252
+        "x": 624,
+        "y": 272
       },
       "size": {
-        "width": 54,
-        "height": 42
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -541,12 +553,16 @@
         "declarations": ""
       },
       "position": {
-        "x": 710,
-        "y": 255
+        "x": 800,
+        "y": 284
       },
       "size": {
-        "width": 36,
-        "height": 36
+        "width": 40,
+        "height": 40
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -76
       }
     },
     {
@@ -607,12 +623,12 @@
         "controller": true
       },
       "position": {
-        "x": 805,
-        "y": 238
+        "x": 912,
+        "y": 272
       },
       "size": {
-        "width": 100,
-        "height": 70
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -630,7 +646,7 @@
             "direction": "input",
             "domain": "signal",
             "side": "left",
-            "offset": 70
+            "offset": 75
           },
           {
             "id": "vq",
@@ -638,7 +654,7 @@
             "direction": "input",
             "domain": "signal",
             "side": "left",
-            "offset": 30
+            "offset": 25
           },
           {
             "id": "theta",
@@ -677,12 +693,16 @@
         "declarations": "Real alpha;\nReal beta;"
       },
       "position": {
-        "x": 985,
-        "y": 135
+        "x": 1104,
+        "y": 136
       },
       "size": {
-        "width": 115,
-        "height": 120
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
       }
     },
     {
@@ -753,19 +773,19 @@
         "declarations": "Real offset;"
       },
       "position": {
-        "x": 1160,
-        "y": 135
+        "x": 1296,
+        "y": 136
       },
       "size": {
-        "width": 110,
-        "height": 120
+        "width": 128,
+        "height": 96
       }
     },
     {
       "id": "motor",
       "definition": {
         "kind": "pmsm",
-        "name": "PMSM · 4 pole pairs",
+        "name": "PMSM",
         "symbol": "pmsm",
         "domain": "electrical",
         "description": "Three-phase permanent-magnet synchronous motor. Sinusoidal flux, fixed d/q inductances, ideal rotor-angle and current measurements.",
@@ -895,19 +915,23 @@
         "equations": "Ld*der(id) = vd - R*id + we*Lq*iq;\nLq*der(iq) = vq - R*iq - we*(Ld*id + psi);\ntorque = 1.5*polePairs*(psi*iq + (Ld-Lq)*id*iq);"
       },
       "position": {
-        "x": 1330,
-        "y": 135
+        "x": 1504,
+        "y": 136
       },
       "size": {
-        "width": 120,
-        "height": 120
+        "width": 160,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
       }
     },
     {
       "id": "load",
       "definition": {
         "kind": "shaftLoad",
-        "name": "Inertia + load step",
+        "name": "Mechanical load",
         "symbol": "J",
         "domain": "mechanical",
         "description": "Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.",
@@ -966,12 +990,12 @@
         "equations": "loadTorque = initialLoad + (if time < loadTime then 0 else stepLoad);\nJ*der(w) = flange.tau - damping*w - loadTorque;"
       },
       "position": {
-        "x": 1510,
-        "y": 155
+        "x": 1760,
+        "y": 136
       },
       "size": {
-        "width": 100,
-        "height": 80
+        "width": 128,
+        "height": 96
       }
     },
     {
@@ -1026,12 +1050,12 @@
         "declarations": ""
       },
       "position": {
-        "x": 1180,
-        "y": 400
+        "x": 1336,
+        "y": 432
       },
       "size": {
-        "width": 110,
-        "height": 90
+        "width": 128,
+        "height": 96
       }
     },
     {
@@ -1086,12 +1110,16 @@
         "declarations": ""
       },
       "position": {
-        "x": 975,
-        "y": 400
+        "x": 1104,
+        "y": 432
       },
       "size": {
-        "width": 110,
-        "height": 90
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
       }
     }
   ],
@@ -1101,42 +1129,35 @@
       "source": "reference",
       "sourceHandle": "y",
       "target": "units",
-      "targetHandle": "u"
+      "targetHandle": "u",
+      "waypoints": []
     },
     {
       "id": "w_1",
       "source": "units",
       "sourceHandle": "y",
       "target": "speedError",
-      "targetHandle": "a"
+      "targetHandle": "a",
+      "waypoints": []
     },
     {
       "id": "w_2",
       "source": "speedError",
       "sourceHandle": "y",
-      "target": "speedKp",
-      "targetHandle": "u"
+      "target": "foc_error",
+      "targetHandle": "node",
+      "waypoints": []
     },
     {
       "id": "w_3",
-      "source": "speedError",
-      "sourceHandle": "y",
+      "source": "foc_error",
+      "sourceHandle": "node",
       "target": "speedKi",
       "targetHandle": "u",
       "waypoints": [
         {
-          "x": 300,
-          "y": 123
-        },
-        {
-          "x": 300,
-          "y": 263
-        }
-      ],
-      "junctions": [
-        {
-          "x": 300,
-          "y": 123
+          "x": 328,
+          "y": 296
         }
       ]
     },
@@ -1145,14 +1166,16 @@
       "source": "speedKp",
       "sourceHandle": "y",
       "target": "speedSum",
-      "targetHandle": "a"
+      "targetHandle": "a",
+      "waypoints": []
     },
     {
       "id": "w_5",
       "source": "speedKi",
       "sourceHandle": "y",
       "target": "speedIntegral",
-      "targetHandle": "u"
+      "targetHandle": "u",
+      "waypoints": []
     },
     {
       "id": "w_6",
@@ -1162,16 +1185,16 @@
       "targetHandle": "b",
       "waypoints": [
         {
-          "x": 535,
-          "y": 263
+          "x": 608,
+          "y": 296
         },
         {
-          "x": 535,
-          "y": 200
+          "x": 608,
+          "y": 224
         },
         {
-          "x": 493,
-          "y": 200
+          "x": 532,
+          "y": 224
         }
       ]
     },
@@ -1180,35 +1203,40 @@
       "source": "speedSum",
       "sourceHandle": "y",
       "target": "iqReference",
-      "targetHandle": "u"
+      "targetHandle": "u",
+      "waypoints": []
     },
     {
       "id": "w_8",
       "source": "iqReference",
       "sourceHandle": "y",
       "target": "qError",
-      "targetHandle": "a"
+      "targetHandle": "a",
+      "waypoints": []
     },
     {
       "id": "w_9",
       "source": "qError",
       "sourceHandle": "y",
       "target": "qPI",
-      "targetHandle": "u"
+      "targetHandle": "u",
+      "waypoints": []
     },
     {
       "id": "w_10",
       "source": "dReference",
       "sourceHandle": "y",
       "target": "dError",
-      "targetHandle": "a"
+      "targetHandle": "a",
+      "waypoints": []
     },
     {
       "id": "w_11",
       "source": "dError",
       "sourceHandle": "y",
       "target": "dPI",
-      "targetHandle": "u"
+      "targetHandle": "u",
+      "waypoints": []
     },
     {
       "id": "w_12",
@@ -1216,16 +1244,7 @@
       "sourceHandle": "y",
       "target": "inverse",
       "targetHandle": "vq",
-      "waypoints": [
-        {
-          "x": 945,
-          "y": 123
-        },
-        {
-          "x": 945,
-          "y": 171
-        }
-      ]
+      "waypoints": []
     },
     {
       "id": "w_13",
@@ -1235,12 +1254,12 @@
       "targetHandle": "vd",
       "waypoints": [
         {
-          "x": 945,
-          "y": 273
+          "x": 1040,
+          "y": 304
         },
         {
-          "x": 945,
-          "y": 219
+          "x": 1040,
+          "y": 208
         }
       ]
     },
@@ -1249,49 +1268,56 @@
       "source": "inverse",
       "sourceHandle": "va",
       "target": "inverter",
-      "targetHandle": "ua"
+      "targetHandle": "ua",
+      "waypoints": []
     },
     {
       "id": "w_15",
       "source": "inverter",
       "sourceHandle": "va",
       "target": "motor",
-      "targetHandle": "va"
+      "targetHandle": "va",
+      "waypoints": []
     },
     {
       "id": "w_16",
       "source": "inverse",
       "sourceHandle": "vb",
       "target": "inverter",
-      "targetHandle": "ub"
+      "targetHandle": "ub",
+      "waypoints": []
     },
     {
       "id": "w_17",
       "source": "inverter",
       "sourceHandle": "vb",
       "target": "motor",
-      "targetHandle": "vb"
+      "targetHandle": "vb",
+      "waypoints": []
     },
     {
       "id": "w_18",
       "source": "inverse",
       "sourceHandle": "vc",
       "target": "inverter",
-      "targetHandle": "uc"
+      "targetHandle": "uc",
+      "waypoints": []
     },
     {
       "id": "w_19",
       "source": "inverter",
       "sourceHandle": "vc",
       "target": "motor",
-      "targetHandle": "vc"
+      "targetHandle": "vc",
+      "waypoints": []
     },
     {
       "id": "w_20",
       "source": "motor",
       "sourceHandle": "flange",
       "target": "load",
-      "targetHandle": "flange"
+      "targetHandle": "flange",
+      "waypoints": []
     },
     {
       "id": "w_21",
@@ -1301,8 +1327,8 @@
       "targetHandle": "ia",
       "waypoints": [
         {
-          "x": 1354,
-          "y": 422.5
+          "x": 1536,
+          "y": 456
         }
       ]
     },
@@ -1314,8 +1340,8 @@
       "targetHandle": "ib",
       "waypoints": [
         {
-          "x": 1378,
-          "y": 445
+          "x": 1568,
+          "y": 480
         }
       ]
     },
@@ -1327,8 +1353,8 @@
       "targetHandle": "ic",
       "waypoints": [
         {
-          "x": 1402,
-          "y": 467.5
+          "x": 1600,
+          "y": 504
         }
       ]
     },
@@ -1337,14 +1363,16 @@
       "source": "clarke",
       "sourceHandle": "alpha",
       "target": "park",
-      "targetHandle": "alpha"
+      "targetHandle": "alpha",
+      "waypoints": []
     },
     {
       "id": "w_25",
       "source": "clarke",
       "sourceHandle": "beta",
       "target": "park",
-      "targetHandle": "beta"
+      "targetHandle": "beta",
+      "waypoints": []
     },
     {
       "id": "w_26",
@@ -1354,12 +1382,8 @@
       "targetHandle": "b",
       "waypoints": [
         {
-          "x": 880,
-          "y": 430
-        },
-        {
-          "x": 728,
-          "y": 430
+          "x": 820,
+          "y": 464
         }
       ]
     },
@@ -1371,20 +1395,16 @@
       "targetHandle": "b",
       "waypoints": [
         {
-          "x": 925,
-          "y": 460
+          "x": 760,
+          "y": 496
         },
         {
-          "x": 675,
-          "y": 460
+          "x": 760,
+          "y": 224
         },
         {
-          "x": 675,
-          "y": 200
-        },
-        {
-          "x": 728,
-          "y": 200
+          "x": 820,
+          "y": 224
         }
       ]
     },
@@ -1392,47 +1412,25 @@
       "id": "w_28",
       "source": "motor",
       "sourceHandle": "theta",
-      "target": "inverse",
-      "targetHandle": "theta",
+      "target": "foc_angle",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 1426,
-          "y": 550
-        },
-        {
-          "x": 1120,
-          "y": 550
-        },
-        {
-          "x": 1120,
-          "y": 320
-        },
-        {
-          "x": 1042.5,
-          "y": 320
-        }
-      ],
-      "junctions": [
-        {
-          "x": 1120,
-          "y": 550
+          "x": 1632,
+          "y": 568
         }
       ]
     },
     {
       "id": "w_29",
-      "source": "motor",
-      "sourceHandle": "theta",
+      "source": "foc_angle",
+      "sourceHandle": "node",
       "target": "park",
       "targetHandle": "theta",
       "waypoints": [
         {
-          "x": 1426,
-          "y": 550
-        },
-        {
-          "x": 1030,
-          "y": 550
+          "x": 1168,
+          "y": 568
         }
       ]
     },
@@ -1444,20 +1442,45 @@
       "targetHandle": "b",
       "waypoints": [
         {
-          "x": 1360,
-          "y": 40
+          "x": 1544,
+          "y": 72
         },
         {
-          "x": 1660,
-          "y": 40
+          "x": 1960,
+          "y": 72
         },
         {
-          "x": 1660,
-          "y": 615
+          "x": 1960,
+          "y": 640
         },
         {
-          "x": 248,
-          "y": 615
+          "x": 276,
+          "y": 640
+        }
+      ]
+    },
+    {
+      "id": "foc_kp",
+      "source": "foc_error",
+      "sourceHandle": "node",
+      "target": "speedKp",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "foc_angle_branch",
+      "source": "foc_angle",
+      "sourceHandle": "node",
+      "target": "inverse",
+      "targetHandle": "theta",
+      "waypoints": [
+        {
+          "x": 1264,
+          "y": 328
+        },
+        {
+          "x": 1168,
+          "y": 328
         }
       ]
     }
@@ -1466,37 +1489,27 @@
   "annotations": [
     {
       "x": 0,
-      "y": -25,
+      "y": 16,
       "text": "01  SPEED CONTROL",
       "detail": "Speed error → PI → torque-producing current"
     },
     {
-      "x": 710,
-      "y": -25,
+      "x": 800,
+      "y": 16,
       "text": "02  CURRENT CONTROL",
       "detail": "Independent d / q regulators"
     },
     {
-      "x": 1160,
-      "y": -25,
+      "x": 1296,
+      "y": 16,
       "text": "03  POWER & MECHANICS",
-      "detail": "48 V inverter · three-phase AC motor"
+      "detail": "48 V inverter · four-pole-pair PMSM"
     },
     {
-      "x": 925,
-      "y": 350,
+      "x": 1104,
+      "y": 368,
       "text": "CURRENT FEEDBACK",
       "detail": "abc → αβ → dq"
-    },
-    {
-      "x": 20,
-      "y": 555,
-      "text": "ωm  ·  SPEED FEEDBACK"
-    },
-    {
-      "x": 1130,
-      "y": 565,
-      "text": "θe  ·  ELECTRICAL ANGLE"
     }
   ],
   "plots": [
@@ -1563,6 +1576,274 @@
         "vq",
         "vd"
       ]
+    }
+  ],
+  "junctions": [
+    {
+      "id": "foc_error",
+      "domain": "signal",
+      "position": {
+        "x": 328,
+        "y": 160
+      }
+    },
+    {
+      "id": "foc_angle",
+      "domain": "signal",
+      "position": {
+        "x": 1264,
+        "y": 568
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_foc_0",
+      "anchor": "reference.y",
+      "wireIds": [
+        "w_0"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_1",
+      "anchor": "units.y",
+      "wireIds": [
+        "w_1"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_2",
+      "anchor": "speedError.y",
+      "wireIds": [
+        "foc_kp",
+        "w_2",
+        "w_3"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_3",
+      "anchor": "speedKp.y",
+      "wireIds": [
+        "w_4"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_4",
+      "anchor": "speedKi.y",
+      "wireIds": [
+        "w_5"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_5",
+      "anchor": "speedIntegral.y",
+      "wireIds": [
+        "w_6"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_6",
+      "anchor": "speedSum.y",
+      "wireIds": [
+        "w_7"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_7",
+      "anchor": "iqReference.y",
+      "wireIds": [
+        "w_8"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_8",
+      "anchor": "qError.y",
+      "wireIds": [
+        "w_9"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_9",
+      "anchor": "dReference.y",
+      "wireIds": [
+        "w_10"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_10",
+      "anchor": "dError.y",
+      "wireIds": [
+        "w_11"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_11",
+      "anchor": "qPI.y",
+      "wireIds": [
+        "w_12"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_12",
+      "anchor": "dPI.y",
+      "wireIds": [
+        "w_13"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_13",
+      "anchor": "inverse.va",
+      "wireIds": [
+        "w_14"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_14",
+      "anchor": "inverter.va",
+      "wireIds": [
+        "w_15"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_15",
+      "anchor": "inverse.vb",
+      "wireIds": [
+        "w_16"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_16",
+      "anchor": "inverter.vb",
+      "wireIds": [
+        "w_17"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_17",
+      "anchor": "inverse.vc",
+      "wireIds": [
+        "w_18"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_18",
+      "anchor": "inverter.vc",
+      "wireIds": [
+        "w_19"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_19",
+      "anchor": "load.flange",
+      "wireIds": [
+        "w_20"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_20",
+      "anchor": "motor.ia",
+      "wireIds": [
+        "w_21"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_21",
+      "anchor": "motor.ib",
+      "wireIds": [
+        "w_22"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_22",
+      "anchor": "motor.ic",
+      "wireIds": [
+        "w_23"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_23",
+      "anchor": "clarke.alpha",
+      "wireIds": [
+        "w_24"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_24",
+      "anchor": "clarke.beta",
+      "wireIds": [
+        "w_25"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_25",
+      "anchor": "park.id",
+      "wireIds": [
+        "w_26"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_26",
+      "anchor": "park.iq",
+      "wireIds": [
+        "w_27"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_foc_27",
+      "anchor": "motor.theta",
+      "wireIds": [
+        "foc_angle_branch",
+        "w_28",
+        "w_29"
+      ],
+      "hidden": false,
+      "name": "θe · electrical angle",
+      "label": {
+        "wireId": "w_28",
+        "fraction": 0.7386363636363636,
+        "side": 1
+      }
+    },
+    {
+      "id": "net_foc_28",
+      "anchor": "motor.wm",
+      "wireIds": [
+        "w_30"
+      ],
+      "hidden": false,
+      "name": "ωm · measured speed",
+      "label": {
+        "wireId": "w_30",
+        "fraction": 0.7468671679197995,
+        "side": -1
+      }
     }
   ]
 }

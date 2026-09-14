@@ -1,0 +1,143 @@
+.block-catalog {
+  min-height: 100vh;
+  background: #f3f6f8;
+  color: #273f50;
+  padding: 28px;
+  font-family: var(--block-font);
+}
+.catalog-heading {
+  max-width: 1480px;
+  margin: 0 auto 24px;
+}
+.catalog-heading a {
+  font-size: 14px;
+  color: #426a83;
+}
+.catalog-heading h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 16px 0 6px;
+  letter-spacing: -0.5px;
+}
+.catalog-heading p {
+  font-size: 14px;
+  color: #637987;
+}
+.catalog-controls {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 12px 0 20px;
+  background: #f3f6f8;
+}
+.catalog-controls input {
+  flex: 1;
+  min-width: 180px;
+  height: 36px;
+  background: white;
+  font-size: 14px;
+}
+.catalog-controls select {
+  border: 1px solid #ccd9e2;
+  background: white;
+  padding: 7px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.catalog-controls > span {
+  font-size: 12px;
+  color: #637987;
+}
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, calc(220px * var(--catalog-zoom))), 1fr)
+  );
+  gap: 20px;
+  max-width: 1480px;
+  margin: auto;
+}
+.catalog-card {
+  min-width: 0;
+  border: 1px solid #d8e2e9;
+  background: white;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.catalog-card > header {
+  padding: 14px 16px 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.catalog-card > header strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.catalog-card > header span {
+  font-size: 12px;
+  white-space: nowrap;
+  color: #718693;
+  font-variant-numeric: tabular-nums;
+}
+.catalog-stage {
+  height: calc(180px * var(--catalog-zoom));
+  display: grid;
+  place-items: center;
+  background: radial-gradient(#d5e0e8 0.6px, transparent 0.6px) 8px 8px / 16px
+    16px;
+}
+.catalog-model {
+  position: relative;
+  transform: scale(var(--catalog-zoom));
+}
+.catalog-block-name {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  font: 400 var(--block-text)/var(--block-line) var(--block-font);
+  white-space: nowrap;
+  background: #ffffffde;
+}
+.catalog-library-sample {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid #e5ecf1;
+  background: #f8fafb;
+}
+.catalog-card footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: #637987;
+  padding: 8px 14px;
+  border-top: 1px solid #e5ecf1;
+}
+.catalog-card footer code {
+  font-size: 11px;
+}
+.catalog-empty {
+  padding: 40px;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .block-catalog {
+    padding: 16px;
+  }
+  .catalog-grid {
+    gap: 14px;
+  }
+}

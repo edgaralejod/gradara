@@ -1,30 +1,32 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 
-export default function NameField({
-  value,
-  onCommit,
-}: {
+type Props = {
+  label?: string;
   value: string;
-  onCommit: (name: string) => void;
-}) {
+  onCommit: (name: string) => string | void;
+};
+
+export default function NameField(props: Props) {
+  return <NameInput key={props.value} {...props} />;
+}
+
+function NameInput({ value, onCommit, label = 'Component name' }: Props) {
   const [draft, setDraft] = useState(value);
   const skipBlur = useRef(false);
-  useEffect(() => setDraft(value), [value]);
   const commit = () => {
     const name = draft.trim();
     if (!name) {
       setDraft(value);
       return;
     }
-    setDraft(name);
-    if (name !== value) onCommit(name);
+    setDraft(name !== value ? (onCommit(name) ?? name) : name);
   };
   return (
     <Input
       className="component-name-input"
-      aria-label="Component name"
+      aria-label={label}
       maxLength={100}
       value={draft}
       onChange={(e) => setDraft(e.target.value)}

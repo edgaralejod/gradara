@@ -36,8 +36,12 @@
         "equations": "y = if time < startTime then 0 else height;"
       },
       "position": {
-        "x": 0,
-        "y": 85
+        "x": 40,
+        "y": 192
+      },
+      "size": {
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -60,7 +64,8 @@
             "id": "measured",
             "name": "meas",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "bottom"
           },
           {
             "id": "y",
@@ -101,8 +106,16 @@
         "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
       },
       "position": {
-        "x": 225,
-        "y": 65
+        "x": 240,
+        "y": 176
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
       }
     },
     {
@@ -139,8 +152,16 @@
         "equations": "v = u;"
       },
       "position": {
-        "x": 470,
-        "y": 85
+        "x": 472,
+        "y": 176
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
       }
     },
     {
@@ -164,14 +185,16 @@
             "name": "−",
             "domain": "electrical",
             "side": "bottom",
-            "direction": "physical"
+            "direction": "physical",
+            "offset": 25
           },
           {
             "id": "flange",
             "name": "shaft",
             "domain": "mechanical",
             "side": "bottom",
-            "direction": "physical"
+            "direction": "physical",
+            "offset": 75
           }
         ],
         "parameters": [
@@ -200,8 +223,16 @@
         "equations": "L*der(i) = v - R*i - k*w;\ntau = k*i;"
       },
       "position": {
-        "x": 705,
-        "y": 85
+        "x": 704,
+        "y": 176
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
       }
     },
     {
@@ -247,8 +278,12 @@
         "equations": "J*der(w) = tau - damping*w;"
       },
       "position": {
-        "x": 705,
-        "y": 335
+        "x": 736,
+        "y": 416
+      },
+      "size": {
+        "width": 128,
+        "height": 96
       }
     },
     {
@@ -279,8 +314,12 @@
         "equations": "y = der(flange.phi);\nflange.tau = 0;"
       },
       "position": {
-        "x": 225,
-        "y": 335
+        "x": 240,
+        "y": 416
+      },
+      "size": {
+        "width": 128,
+        "height": 96
       }
     },
     {
@@ -304,8 +343,12 @@
         "equations": "p.v = 0;"
       },
       "position": {
-        "x": 495,
-        "y": 345
+        "x": 584,
+        "y": 336
+      },
+      "size": {
+        "width": 40,
+        "height": 40
       }
     }
   ],
@@ -315,59 +358,228 @@
       "source": "reference",
       "sourceHandle": "y",
       "target": "controller",
-      "targetHandle": "reference"
+      "targetHandle": "reference",
+      "waypoints": []
     },
     {
       "id": "wire1",
       "source": "controller",
       "sourceHandle": "y",
       "target": "drive",
-      "targetHandle": "u"
+      "targetHandle": "u",
+      "waypoints": []
     },
     {
       "id": "wire2",
       "source": "drive",
       "sourceHandle": "p",
       "target": "motor",
-      "targetHandle": "p"
+      "targetHandle": "p",
+      "waypoints": []
     },
     {
       "id": "wire3",
       "source": "drive",
       "sourceHandle": "n",
-      "target": "ground",
-      "targetHandle": "p"
+      "target": "dc_return",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 536,
+          "y": 320
+        }
+      ]
     },
     {
       "id": "wire4",
       "source": "motor",
       "sourceHandle": "n",
-      "target": "ground",
-      "targetHandle": "p"
+      "target": "dc_return",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 736,
+          "y": 320
+        }
+      ]
     },
     {
       "id": "wire5",
       "source": "motor",
       "sourceHandle": "flange",
       "target": "load",
-      "targetHandle": "a"
+      "targetHandle": "a",
+      "waypoints": []
     },
     {
       "id": "wire6",
       "source": "load",
       "sourceHandle": "b",
       "target": "sensor",
-      "targetHandle": "flange"
+      "targetHandle": "flange",
+      "waypoints": []
     },
     {
       "id": "wire7",
       "source": "sensor",
       "sourceHandle": "y",
       "target": "controller",
-      "targetHandle": "measured"
+      "targetHandle": "measured",
+      "waypoints": [
+        {
+          "x": 176,
+          "y": 464
+        },
+        {
+          "x": 176,
+          "y": 344
+        },
+        {
+          "x": 304,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "dc_ground",
+      "source": "dc_return",
+      "sourceHandle": "node",
+      "target": "ground",
+      "targetHandle": "p",
+      "waypoints": []
     }
   ],
   "duration": 4,
   "revision": 1,
-  "exampleId": "dc"
+  "exampleId": "dc",
+  "junctions": [
+    {
+      "id": "dc_return",
+      "domain": "electrical",
+      "position": {
+        "x": 604,
+        "y": 320
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "x": 40,
+      "y": 64,
+      "text": "01  SPEED CONTROL",
+      "detail": "100 rad/s reference · bounded PI"
+    },
+    {
+      "x": 472,
+      "y": 64,
+      "text": "02  ELECTRICAL DRIVE",
+      "detail": "24 V drive · armature dynamics"
+    },
+    {
+      "x": 240,
+      "y": 552,
+      "text": "03  MECHANICAL LOAD",
+      "detail": "Shaft inertia · damping · measured speed"
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_dc_0",
+      "anchor": "reference.y",
+      "wireIds": [
+        "wire0"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_1",
+      "anchor": "controller.y",
+      "wireIds": [
+        "wire1"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_2",
+      "anchor": "drive.p",
+      "wireIds": [
+        "wire2"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_3",
+      "anchor": "drive.n",
+      "wireIds": [
+        "dc_ground",
+        "wire3",
+        "wire4"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_4",
+      "anchor": "load.a",
+      "wireIds": [
+        "wire5"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_5",
+      "anchor": "load.b",
+      "wireIds": [
+        "wire6"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_6",
+      "anchor": "sensor.y",
+      "wireIds": [
+        "wire7"
+      ],
+      "hidden": false,
+      "name": "ω measured",
+      "label": {
+        "wireId": "wire7",
+        "fraction": 0.5729166666666666,
+        "side": -1
+      }
+    }
+  ],
+  "plots": [
+    {
+      "id": "speed",
+      "label": "Speed",
+      "series": [
+        "load.w",
+        "reference.y"
+      ],
+      "labels": [
+        "Rotor speed",
+        "Speed command"
+      ]
+    },
+    {
+      "id": "voltage",
+      "label": "Control voltage",
+      "series": [
+        "controller.y"
+      ],
+      "labels": [
+        "Control voltage"
+      ]
+    },
+    {
+      "id": "current",
+      "label": "Armature current",
+      "series": [
+        "motor.i"
+      ],
+      "labels": [
+        "Armature current"
+      ]
+    }
+  ]
 }

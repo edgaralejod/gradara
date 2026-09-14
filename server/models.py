@@ -77,6 +77,7 @@ class Block(BaseModel):
     definition: Definition
     position: Position
     size: Size | None = None
+    labelOffset: Position | None = None
 
 class Wire(BaseModel):
     id: str = Field(max_length=100)
@@ -92,6 +93,27 @@ class Junction(BaseModel):
     position: Position
     domain: Domain
 
+class NetLabel(BaseModel):
+    wireId: str = Field(min_length=1, max_length=100)
+    fraction: float = Field(ge=0, le=1, allow_inf_nan=False)
+    side: Literal[-1, 1] = 1
+
+class Net(BaseModel):
+    id: str = Field(pattern=IDENTIFIER, max_length=80)
+    name: str | None = Field(default=None, max_length=120)
+    aliases: list[str] = Field(default_factory=list, max_length=3000)
+    anchor: str = Field(min_length=1, max_length=160)
+    wireIds: list[str] = Field(min_length=1, max_length=3000)
+    label: NetLabel | None = None
+    hidden: bool = False
+
+    @field_validator('aliases')
+    @classmethod
+    def alias_lengths(cls, values):
+        if any(len(value) > 120 for value in values):
+            raise ValueError('Net names must be at most 120 characters.')
+        return values
+
 class Annotation(BaseModel):
     x: float
     y: float
@@ -105,7 +127,8 @@ class PlotGroup(BaseModel):
     labels: list[str] = Field(default_factory=list)
 
 class Project(BaseModel):
-    exampleId: str = Field(default="dc", pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
+    modelId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
+    exampleId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
     description: str = Field(default="", max_length=2000)
     annotations: list[Annotation] = Field(default_factory=list, max_length=100)
     plots: list[PlotGroup] = Field(default_factory=list, max_length=30)
@@ -114,6 +137,7 @@ class Project(BaseModel):
     blocks: list[Block] = Field(max_length=1000)
     wires: list[Wire] = Field(max_length=3000)
     junctions: list[Junction] = Field(default_factory=list, max_length=2000)
+    nets: list[Net] | None = Field(default=None, max_length=3000)
     duration: float = Field(gt=0, le=60, allow_inf_nan=False)
     revision: int = Field(ge=0)
 
@@ -162,6 +186,41 @@ class Project(BaseModel):
                 raise ValueError('Each signal net may have only one source, including through junctions.')
             if 'physical' in directions and any(d != 'physical' for d in directions):
                 raise ValueError('Physical connectors cannot join signal ports.')
+        if self.nets is not None:
+            net_ids = [n.id for n in self.nets]
+            if len(set(net_ids)) != len(net_ids):
+                raise ValueError('Net identifiers must be unique.')
+            owned = [w for n in self.nets for w in n.wireIds]
+            if len(owned) != len(set(owned)) or set(owned) != wire_ids:
+                raise ValueError('Every wire must belong to exactly one net.')
+            by_wire = {w.id: w for w in self.wires}
+            endpoint_owners = {}
+            def endpoint(ident, handle):
+                return f'j:{ident}' if ident in taps else f'{ident}.{handle}'
+            for net in self.nets:
+                adj = {}
+                for ident in net.wireIds:
+                    wire = by_wire[ident]
+                    a, b = endpoint(wire.source, wire.sourceHandle), endpoint(wire.target, wire.targetHandle)
+                    adj.setdefault(a, set()).add(b)
+                    adj.setdefault(b, set()).add(a)
+                if net.anchor not in adj:
+                    raise ValueError('A net anchor must belong to its connection.')
+                seen, stack = set(), [net.anchor]
+                while stack:
+                    current = stack.pop()
+                    if current in seen:
+                        continue
+                    seen.add(current)
+                    stack.extend(adj[current] - seen)
+                if seen != set(adj):
+                    raise ValueError('A net must be one connected component.')
+                for key in seen:
+                    if key in endpoint_owners:
+                        raise ValueError('Connected wires must share one net identifier.')
+                    endpoint_owners[key] = net.id
+                if net.label and net.label.wireId not in net.wireIds:
+                    raise ValueError('A net label must be attached to a wire in that net.')
         return self
 
 def net_components(project: 'Project') -> list[list[tuple[str, str]]]:
@@ -215,3 +274,8 @@ class ExportRequest(BaseModel):
     project: Project
     blockId: str
     target: Literal['c'] = 'c'
+
+
+class NewModelRequest(BaseModel):
+    name: str = Field(default='Untitled model', min_length=1, max_length=100)
+    template: Literal['blank', 'dc', 'foc', 'buck'] = 'blank'

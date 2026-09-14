@@ -131,13 +131,16 @@ def test_physical_connection_set_has_no_duplicate_or_reverse_pairs():
 
 
 @pytest.mark.integration
-def test_branched_feedback_playground_runs_in_openmodelica():
-    fixture = Path(__file__).parents[1] / 'models/examples/wiring.json'
+def test_branched_feedback_runs_in_openmodelica():
+    fixture = Path(__file__).parent / 'fixtures/feedback-project.json'
     async def run():
         p = Project.model_validate_json(fixture.read_text())
         result = await simulate(p, 'wiring'+uuid.uuid4().hex[:12])
         traces = {s['key']:s['values'] for s in result['series']}
         assert traces['gain.y'][-1] == pytest.approx(traces['reference.y'][-1]/3, abs=1e-6)
+        assert traces['scope.u'][-1] == pytest.approx(traces['gain.y'][-1], abs=1e-6)
+        assert traces['display.u'][-1] == pytest.approx(traces['reference.y'][-1], abs=1e-6)
+        assert next(s for s in result['series'] if s['key'] == 'scope.u')['name'] == 'Scope.u'
         import csv
         from server.engine import RUNS
         with (RUNS/result['id']/'simulation_res.csv').open() as stream:
@@ -158,3 +161,98 @@ def test_a_disconnected_branch_can_be_saved_and_reconnected_to_one_driver():
     raw['wires'].append({'id':'reconnect','source':'reference','sourceHandle':'y','target':'controller','targetHandle':inputs[0]})
     restored = Project.model_validate(raw)
     assert len(flatten_connects(restored)) == 2
+
+def test_label_offsets_roundtrip_without_changing_simulation():
+    p=project()
+    source=emit_project(p)
+    key=semantic_hash(p)
+    raw=p.model_dump()
+    raw['blocks'][0]['labelOffset']={'x':27.5,'y':-84}
+    moved=Project.model_validate(raw)
+    restored=Project.model_validate_json(moved.model_dump_json())
+    assert restored.blocks[0].labelOffset.x==27.5
+    assert restored.blocks[0].labelOffset.y==-84
+    assert emit_project(restored)==source
+    assert semantic_hash(restored)==key
+    raw['blocks'][0]['labelOffset']['x']=float('inf')
+    with pytest.raises(ValidationError):
+        Project.model_validate(raw)
+
+
+def named_project():
+    """Net metadata over the same topology used by the compiler."""
+    from server.models import net_components
+    p = project()
+    raw = p.model_dump(exclude_none=True)
+    raw['nets'] = []
+    for i, component in enumerate(net_components(p)):
+        endpoints = set(component)
+        wires = [w.id for w in p.wires if (w.source, w.sourceHandle) in endpoints]
+        raw['nets'].append({'id': f'net_test_{i}', 'name': f'Signal {i}',
+            'anchor': '.'.join(component[0]), 'wireIds': wires,
+            'label': {'wireId': wires[0], 'fraction': .37, 'side': -1}})
+    return raw
+
+
+def test_net_metadata_roundtrips_and_cannot_affect_compilation_or_result_cache():
+    from server.modelica import project_key
+    raw = named_project()
+    p = Project.model_validate(raw)
+    restored = Project.model_validate_json(p.model_dump_json(exclude_none=True))
+    assert restored.nets[0].id == 'net_test_0'
+    assert restored.nets[0].name == 'Signal 0'
+    assert restored.nets[0].label.fraction == .37
+    assert emit_project(restored) == emit_project(project())
+    assert semantic_hash(restored) == semantic_hash(project())
+    assert project_key(restored) == project_key(project())
+    restored.nets[0].name = 'ω / measured current'
+    restored.nets[0].hidden = True
+    assert project_key(restored) == project_key(project())
+
+
+@pytest.mark.parametrize('mutation, message', [
+    (lambda n: n[1].update(id=n[0]['id']), 'Net identifiers must be unique'),
+    (lambda n: n.pop(), 'Every wire must belong to exactly one net'),
+    (lambda n: n[1]['wireIds'].append(n[0]['wireIds'][0]), 'Every wire must belong to exactly one net'),
+    (lambda n: n[0].update(anchor='missing.port'), 'net anchor must belong'),
+    (lambda n: n[0]['label'].update(wireId=n[1]['wireIds'][0]), 'label must be attached'),
+    (lambda n: n[0]['label'].update(fraction=float('inf')), 'finite number'),
+    (lambda n: n[0].update(name='x'*121), 'at most 120'),
+])
+def test_invalid_net_metadata_is_rejected(mutation, message):
+    raw = named_project()
+    mutation(raw['nets'])
+    with pytest.raises(ValidationError, match=message):
+        Project.model_validate(raw)
+
+
+def test_disconnected_nets_cannot_share_one_id():
+    raw = named_project()
+    other = raw['nets'].pop()
+    raw['nets'][0]['wireIds'].extend(other['wireIds'])
+    with pytest.raises(ValidationError, match='one connected component'):
+        Project.model_validate(raw)
+
+
+def test_connected_branches_cannot_claim_separate_net_ids():
+    raw = named_project()
+    net = next(n for n in raw['nets'] if len(n['wireIds']) > 1)
+    wire_id = net['wireIds'].pop()
+    wire = next(w for w in raw['wires'] if w['id'] == wire_id)
+    net.pop('label')
+    raw['nets'].append({'id':'net_invalid_split','anchor':f"{wire['source']}.{wire['sourceHandle']}", 'wireIds':[wire_id]})
+    with pytest.raises(ValidationError, match='share one net identifier|anchor must belong'):
+        Project.model_validate(raw)
+
+
+def test_automatic_block_names_do_not_invalidate_simulation_or_cache():
+    from server.modelica import project_key
+    p = project()
+    source, key, model_hash = emit_project(p), project_key(p), semantic_hash(p)
+    for i, block in enumerate(p.blocks):
+        block.definition.name = 'Block' if i == 0 else f'Block{i}'
+    assert emit_project(p) == source
+    assert project_key(p) == key
+    assert semantic_hash(p) == model_hash
+    restored = Project.model_validate_json(p.model_dump_json())
+    assert [b.definition.name for b in restored.blocks] == [b.definition.name for b in p.blocks]

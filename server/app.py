@@ -7,7 +7,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
-from .models import Project, GenerateRequest
+from .models import Project, GenerateRequest, NewModelRequest
+from . import workspace
 from .modelica import emit_project, project_key, semantic_hash
 from .engine import ROOT, RUNS, engine_available, simulate
 from .agent import generate_component, CODEX
@@ -42,33 +43,46 @@ async def health():
 
 @app.get('/api/project')
 async def load_project():
-    if not PROJECT_FILE.exists(): return {'project':None}
-    return {'project':json.loads(PROJECT_FILE.read_text())}
+    project = workspace.load_current(PROJECT_DIR)
+    return {'project':project.model_dump(exclude_none=True) if project else None}
 
 @app.put('/api/project')
 async def save_project(project:Project):
-    data = project.model_dump_json(indent=2,exclude_none=True)
-    examples = PROJECT_DIR/'examples'
-    examples.mkdir(exist_ok=True)
-    archive = examples/f'{project.exampleId}.json'
-    archive.write_text(data)
-    temporary = PROJECT_DIR/'workspace.tmp'
-    temporary.write_text(data)
-    temporary.replace(PROJECT_FILE)
-    source = PROJECT_DIR/'workspace.mo'
-    temp_source = PROJECT_DIR/'workspace.mo.tmp'
-    temp_source.write_text(emit_project(project))
-    temp_source.replace(source)
-    return {'saved':True,'revision':project.revision,'key':project_key(project)}
+    project = workspace.save(PROJECT_DIR, project)
+    return {'saved':True,'modelId':project.modelId,'revision':project.revision,'key':project_key(project)}
+
+@app.get('/api/models')
+async def list_models():
+    return {'models':[{'id':p.modelId,'name':p.name} for p in workspace.saved_models(PROJECT_DIR).values()]}
+
+@app.post('/api/models')
+async def create_model(request: NewModelRequest):
+    try:
+        project = workspace.new_model(PROJECT_DIR, ROOT/'models'/'examples', request.name, request.template)
+    except ValueError as exc:
+        raise HTTPException(422,str(exc)) from exc
+    return {'project':project.model_dump(exclude_none=True)}
+
+@app.get('/api/models/{model_id}')
+async def load_model(model_id: str):
+    project = workspace.saved_models(PROJECT_DIR).get(model_id)
+    if project is None: raise HTTPException(404,'Saved model not found.')
+    return {'project':project.model_dump(exclude_none=True)}
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):
-    if example_id not in {'dc','foc','wiring'}: raise HTTPException(404,'Example not found.')
-    saved = PROJECT_DIR/'examples'/f'{example_id}.json'
-    bundled = ROOT/'models'/'examples'/f'{example_id}.json'
-    path = saved if saved.exists() else bundled
+    if example_id not in {'dc','foc','buck'}: raise HTTPException(404,'Example not found.')
+    path = ROOT/'models'/'examples'/f'{example_id}.json'
     if not path.exists(): raise HTTPException(404,'Example is unavailable.')
-    return {'project':json.loads(path.read_text())}
+    data = json.loads(path.read_text())
+    data['modelId'] = uuid.uuid4().hex
+    names = {p.name for p in workspace.saved_models(PROJECT_DIR).values()}
+    base = data['name']
+    number = 2
+    while data['name'] in names:
+        data['name'] = f'{base} ({number})'
+        number += 1
+    return {'project':workspace.document(data).model_dump(exclude_none=True)}
 
 @app.post('/api/source')
 async def source(project:Project):
@@ -109,21 +123,21 @@ async def cancel(job_id:str):
     return {'cancelled':True}
 
 @app.get('/api/results/latest')
-async def latest(example: str | None = None):
+async def latest(model: str | None = None):
+    project = workspace.saved_models(PROJECT_DIR).get(model) if model else workspace.load_current(PROJECT_DIR)
+    if project is None: return {'result':None}
+    wanted_hash = semantic_hash(project)
     files = sorted(RUNS.glob('*/result.json'),key=lambda p:p.stat().st_mtime,reverse=True)
-    target = PROJECT_DIR/'examples'/f'{example}.json' if example in {'dc','foc','wiring'} else PROJECT_FILE
-    wanted_hash = None
-    if target.exists():
-        wanted_hash = semantic_hash(Project.model_validate_json(target.read_text()))
-    fallback = None
     for path in files:
-        result = json.loads(path.read_text())
-        if example is not None and result.get('snapshot',{}).get('exampleId','dc') != example:
+        try:
+            result = json.loads(path.read_text())
+        except (OSError, ValueError):
             continue
-        if fallback is None: fallback = result
-        if result.get('modelHash') == wanted_hash:
+        snapshot = result.get('snapshot', {})
+        identity = snapshot.get('modelId') or f"legacy-{snapshot.get('exampleId') or 'workspace'}"
+        if identity == project.modelId and result.get('modelHash') == wanted_hash:
             return {'result':result}
-    return {'result':fallback}
+    return {'result':None}
 
 @app.get('/api/results/{run_id}/csv')
 async def csv_download(run_id:str):

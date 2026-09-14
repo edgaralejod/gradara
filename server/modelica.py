@@ -143,6 +143,41 @@ PHYSICAL['shaftLoad'] = '''model {name}
   J*der(w) = flange.tau - damping*w - loadTorque;
  end {name};'''
 
+# Standard-library components own ideal switching and sensor semantics.
+PHYSICAL['dcSource'] = '''model {name}
+  extends Modelica.Electrical.Analog.Sources.ConstantVoltage;
+end {name};'''
+PHYSICAL['idealSwitch'] = '''model {name}
+  Modelica.Electrical.Analog.Interfaces.PositivePin p;
+  Modelica.Electrical.Analog.Interfaces.NegativePin n;
+  Modelica.Blocks.Interfaces.RealInput gate;
+  Modelica.Electrical.Analog.Ideal.IdealClosingSwitch sw(Ron=0, Goff=0);
+equation
+  connect(p, sw.p);
+  connect(n, sw.n);
+  sw.control = gate > 0.5;
+end {name};'''
+PHYSICAL['voltageSensor'] = '''model {name}
+  Modelica.Electrical.Analog.Interfaces.PositivePin p;
+  Modelica.Electrical.Analog.Interfaces.NegativePin n;
+  Modelica.Blocks.Interfaces.RealOutput y;
+  Modelica.Electrical.Analog.Sensors.VoltageSensor sensor;
+equation
+  connect(p, sensor.p);
+  connect(n, sensor.n);
+  y = sensor.v;
+end {name};'''
+PHYSICAL['currentSensor'] = '''model {name}
+  Modelica.Electrical.Analog.Interfaces.PositivePin p;
+  Modelica.Electrical.Analog.Interfaces.NegativePin n;
+  Modelica.Blocks.Interfaces.RealOutput y;
+  Modelica.Electrical.Analog.Sensors.CurrentSensor sensor;
+equation
+  connect(p, sensor.p);
+  connect(n, sensor.n);
+  y = sensor.i;
+end {name};'''
+
 def component_source(definition: Definition, name: str) -> str:
     if definition.kind in PHYSICAL and not definition.generated:
         return PHYSICAL[definition.kind].format(name=name)
@@ -184,7 +219,7 @@ def project_key(project: Project) -> str:
     data = project.model_dump(exclude_none=True)
     data.pop('revision', None)
     data.pop('name', None)
-    for key in ['exampleId', 'description', 'annotations', 'plots']:
+    for key in ['modelId', 'exampleId', 'description', 'annotations', 'plots', 'nets']:
         data.pop(key, None)
     data.pop('junctions', None)
     data['wires'] = [
@@ -197,4 +232,6 @@ def project_key(project: Project) -> str:
     for block in data['blocks']:
         block.pop('position', None)
         block.pop('size', None)
+        block.pop('labelOffset', None)
+        block['definition'].pop('name', None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:20]

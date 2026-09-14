@@ -1,5 +1,6 @@
 import { Position } from '@xyflow/react';
 import { blockSize } from './canvas';
+import { defaultBlockSize } from './block-design';
 import type { Block, Definition, Port } from './model';
 
 export type Side = 'left' | 'right' | 'top' | 'bottom';
@@ -10,7 +11,7 @@ export function portSide(port: Port): Side {
 }
 
 export function portOffset(definition: Definition, port: Port): number {
-  if (port.offset !== undefined) return port.offset;
+  if (typeof port.offset === 'number') return port.offset;
   const side = portSide(port);
   const peers = definition.ports.filter((p) => portSide(p) === side);
   return ((peers.indexOf(port) + 1) / (peers.length + 1)) * 100;
@@ -36,11 +37,7 @@ export function positionForPortAt(
   port: Port,
   target: { x: number; y: number },
 ): { x: number; y: number } {
-  const size = blockSize({
-    id: 'next',
-    definition,
-    position: { x: 0, y: 0 },
-  });
+  const size = defaultBlockSize(definition);
   const t = portOffset(definition, port) / 100;
   const side = portSide(port);
   if (side === 'left') return { x: target.x, y: target.y - t * size.height };

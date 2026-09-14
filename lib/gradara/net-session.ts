@@ -8,6 +8,7 @@ import {
   TAP_HANDLE,
 } from './net';
 import { linkEnds, pruneJunctions } from './project';
+import { moveJunctions, normalizeJunctions } from './net-layout';
 import { sideToPosition } from './ports';
 import { routeBetween, segmentExit, simplifyPoints } from './routing';
 import {
@@ -466,30 +467,9 @@ export class NetSession {
     return { id, handle: TAP_HANDLE };
   }
   moveJunction(id: string, x: number, y: number) {
-    const old = this.project;
-    this.project = {
-      ...old,
-      junctions: old.junctions?.map((j) =>
-        j.id === id ? { ...j, position: { x, y } } : j,
-      ),
-      wires: old.wires.map((w) => {
-        if (w.source !== id && w.target !== id) return w;
-        const pts = polylineOfWire(old, w.id);
-        const start = w.source === id;
-        const p = start ? pts[0] : pts.at(-1)!;
-        const neighbor = start ? pts[1] : pts.at(-2)!;
-        const horizontal = p.y === neighbor.y;
-        const middle = start ? { x: neighbor.x, y } : { x: neighbor.x, y };
-        if (!horizontal) {
-          middle.x = x;
-          middle.y = neighbor.y;
-        }
-        const moved = start
-          ? [{ x, y }, middle, ...pts.slice(1)]
-          : [...pts.slice(0, -1), middle, { x, y }];
-        return { ...w, waypoints: simplifyPoints(moved).slice(1, -1) };
-      }),
-    };
+    this.project = normalizeJunctions(
+      moveJunctions(this.project, new Map([[id, { x, y }]])),
+    );
   }
   pathPoints(wireId: string) {
     return polylineOfWire(this.project, wireId);

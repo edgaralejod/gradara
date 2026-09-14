@@ -51,12 +51,12 @@ export default function AgentComposer({
   }, []);
   useEffect(() => {
     if (!busy) return;
-    setSeconds(0);
     const t = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, [busy]);
   async function generate() {
     if (prompt.trim().length < 3 || busy) return;
+    setSeconds(0);
     setBusy(true);
     onBusy?.(true);
     setError('');
@@ -86,9 +86,8 @@ export default function AgentComposer({
     }
   }
   return (
-    <div
+    <section
       className="agent-composer nodrag nopan nowheel"
-      role="region"
       aria-label="Create a component with an agent"
     >
       <div className="composer-heading">
@@ -157,6 +156,7 @@ export default function AgentComposer({
       ) : (
         <>
           <Textarea
+            aria-label="Describe component behavior"
             ref={promptRef}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -230,6 +230,6 @@ export default function AgentComposer({
           </div>
         </>
       )}
-    </div>
+    </section>
   );
 }

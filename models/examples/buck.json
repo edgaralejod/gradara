@@ -1,0 +1,866 @@
+{
+  "version": 1,
+  "name": "Buck converter · Ideal switches",
+  "exampleId": "buck",
+  "description": "24 V synchronous buck: complementary ideal switches at 10 kHz and 50% duty, 1 mH / 100 µF filter, 10 Ω load. Start from zero stored energy. Expect approximately 12 V and 1.2 A after settling. No losses, dead time, or parasitics.",
+  "duration": 0.02,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "supply",
+      "definition": {
+        "kind": "dcSource",
+        "name": "24 V supply",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 24,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 20,
+        "y": 350
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": 72
+      }
+    },
+    {
+      "id": "pwm",
+      "definition": {
+        "kind": "pwmPair",
+        "name": "Gate drive",
+        "domain": "signal",
+        "category": "control",
+        "symbol": "PWM",
+        "description": "Complementary 0/1 gate signals at a fixed frequency and duty cycle. Ideal simultaneous switching, with no dead time.",
+        "ports": [
+          {
+            "id": "high",
+            "name": "hi",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": ""
+          },
+          {
+            "id": "low",
+            "name": "lo",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": ""
+          }
+        ],
+        "parameters": [
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 10000,
+            "unit": "Hz",
+            "min": 1,
+            "max": 1000000
+          },
+          {
+            "id": "duty",
+            "name": "Duty cycle",
+            "value": 0.5,
+            "unit": "",
+            "min": 0,
+            "max": 1
+          }
+        ],
+        "declarations": "Modelica.Blocks.Sources.BooleanPulse pulse(width=100*duty, period=1/frequency);",
+        "equations": "high = if pulse.y then 1 else 0;\nlow = 1 - high;",
+        "keywords": [
+          "pwm",
+          "gate",
+          "buck",
+          "duty",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 160,
+        "y": 176
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "highSide",
+      "definition": {
+        "kind": "idealSwitch",
+        "name": "High-side switch",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "switch",
+        "description": "Ideal bidirectional power switch. Gate above 0.5 closes the switch; zero on-resistance and zero off-conductance.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "gate",
+            "name": "g",
+            "direction": "input",
+            "side": "left",
+            "domain": "signal",
+            "unit": ""
+          }
+        ],
+        "parameters": [],
+        "equations": "p.i + n.i = 0;\nif gate > 0.5 then\n  p.v = n.v;\nelse\n  p.i = 0;\nend if;",
+        "keywords": [
+          "mosfet",
+          "transistor",
+          "switching",
+          "buck",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 400,
+        "y": 168
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 96,
+        "y": -48
+      }
+    },
+    {
+      "id": "lowSide",
+      "definition": {
+        "kind": "idealSwitch",
+        "name": "Low-side switch",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "switch",
+        "description": "Ideal bidirectional power switch. Gate above 0.5 closes the switch; zero on-resistance and zero off-conductance.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "gate",
+            "name": "g",
+            "direction": "input",
+            "side": "left",
+            "domain": "signal",
+            "unit": ""
+          }
+        ],
+        "parameters": [],
+        "equations": "p.i + n.i = 0;\nif gate > 0.5 then\n  p.v = n.v;\nelse\n  p.i = 0;\nend if;",
+        "keywords": [
+          "mosfet",
+          "transistor",
+          "switching",
+          "buck",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 400,
+        "y": 350
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 96,
+        "y": -48
+      }
+    },
+    {
+      "id": "inductor",
+      "definition": {
+        "kind": "inductor",
+        "name": "1 mH inductor",
+        "symbol": "L",
+        "domain": "electrical",
+        "description": "An ideal inductor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 0.001,
+            "unit": "H",
+            "min": 1e-12
+          }
+        ],
+        "equations": "v = L*der(i);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 544,
+        "y": 266
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "current",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "Inductor current",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 676,
+        "y": 266
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "capacitor",
+      "definition": {
+        "kind": "capacitor",
+        "name": "100 µF capacitor",
+        "symbol": "C",
+        "domain": "electrical",
+        "description": "An ideal capacitor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance",
+            "value": 0.0001,
+            "unit": "F",
+            "min": 1e-12
+          }
+        ],
+        "equations": "i = C*der(v);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 796,
+        "y": 350
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": 72
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "resistor",
+        "name": "10 Ω load",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 916,
+        "y": 350
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": 72
+      }
+    },
+    {
+      "id": "voltageProbe",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "Output voltage",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1040,
+        "y": 350
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": 72
+      }
+    },
+    {
+      "id": "ground",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 404,
+        "y": 490
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "w_0",
+      "source": "supply",
+      "sourceHandle": "p",
+      "target": "highSide",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 44,
+          "y": 130
+        },
+        {
+          "x": 424,
+          "y": 130
+        }
+      ]
+    },
+    {
+      "id": "w_1",
+      "source": "pwm",
+      "sourceHandle": "high",
+      "target": "highSide",
+      "targetHandle": "gate",
+      "waypoints": []
+    },
+    {
+      "id": "w_2",
+      "source": "pwm",
+      "sourceHandle": "low",
+      "target": "lowSide",
+      "targetHandle": "gate",
+      "waypoints": [
+        {
+          "x": 340,
+          "y": 240
+        },
+        {
+          "x": 340,
+          "y": 390
+        }
+      ]
+    },
+    {
+      "id": "w_3",
+      "source": "highSide",
+      "sourceHandle": "n",
+      "target": "sw",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_4",
+      "source": "sw",
+      "sourceHandle": "node",
+      "target": "lowSide",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w_5",
+      "source": "sw",
+      "sourceHandle": "node",
+      "target": "inductor",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w_6",
+      "source": "inductor",
+      "sourceHandle": "n",
+      "target": "current",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w_7",
+      "source": "current",
+      "sourceHandle": "n",
+      "target": "out",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_8",
+      "source": "out",
+      "sourceHandle": "node",
+      "target": "capacitor",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w_9",
+      "source": "out",
+      "sourceHandle": "node",
+      "target": "load",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 940,
+          "y": 290
+        }
+      ]
+    },
+    {
+      "id": "w_10",
+      "source": "out",
+      "sourceHandle": "node",
+      "target": "voltageProbe",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1064,
+          "y": 290
+        }
+      ]
+    },
+    {
+      "id": "w_11",
+      "source": "supply",
+      "sourceHandle": "n",
+      "target": "return",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 44,
+          "y": 490
+        }
+      ]
+    },
+    {
+      "id": "w_12",
+      "source": "lowSide",
+      "sourceHandle": "n",
+      "target": "return",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_13",
+      "source": "return",
+      "sourceHandle": "node",
+      "target": "ground",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w_14",
+      "source": "capacitor",
+      "sourceHandle": "n",
+      "target": "return",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 820,
+          "y": 490
+        }
+      ]
+    },
+    {
+      "id": "w_15",
+      "source": "load",
+      "sourceHandle": "n",
+      "target": "return",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 940,
+          "y": 490
+        }
+      ]
+    },
+    {
+      "id": "w_16",
+      "source": "voltageProbe",
+      "sourceHandle": "n",
+      "target": "return",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1064,
+          "y": 490
+        }
+      ]
+    }
+  ],
+  "junctions": [
+    {
+      "id": "sw",
+      "domain": "electrical",
+      "position": {
+        "x": 424,
+        "y": 290
+      }
+    },
+    {
+      "id": "out",
+      "domain": "electrical",
+      "position": {
+        "x": 820,
+        "y": 290
+      }
+    },
+    {
+      "id": "return",
+      "domain": "electrical",
+      "position": {
+        "x": 424,
+        "y": 490
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "x": 160,
+      "y": 64,
+      "text": "GATE DRIVE",
+      "detail": "10 kHz · 50% duty"
+    },
+    {
+      "x": 400,
+      "y": 64,
+      "text": "IDEAL SWITCHING STAGE",
+      "detail": "24 V input · complementary gates"
+    },
+    {
+      "x": 680,
+      "y": 192,
+      "text": "OUTPUT FILTER & LOAD",
+      "detail": "12 V nominal · 1.2 A nominal"
+    }
+  ],
+  "plots": [
+    {
+      "id": "voltage",
+      "label": "Output voltage",
+      "series": [
+        "voltageProbe.y"
+      ],
+      "labels": [
+        "Output voltage"
+      ]
+    },
+    {
+      "id": "current",
+      "label": "Inductor current",
+      "series": [
+        "current.y"
+      ],
+      "labels": [
+        "Inductor current"
+      ]
+    },
+    {
+      "id": "gates",
+      "label": "Switch gates",
+      "series": [
+        "pwm.high",
+        "pwm.low"
+      ],
+      "labels": [
+        "High-side gate",
+        "Low-side gate"
+      ]
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_968eef850e9845efbb2306daf68c38df",
+      "anchor": "highSide.p",
+      "wireIds": [
+        "w_0"
+      ],
+      "name": "Vin",
+      "hidden": false,
+      "label": {
+        "wireId": "w_0",
+        "fraction": 0.4200626959247649,
+        "side": -1
+      }
+    },
+    {
+      "id": "net_8753f08e21b549dbb945eeabe4978a32",
+      "anchor": "pwm.high",
+      "wireIds": [
+        "w_1"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_34d7a9f8c78346d99e10f2ddbf21cdfd",
+      "anchor": "pwm.low",
+      "wireIds": [
+        "w_2"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_9ab672d87b704f70b79a42966ef5b32b",
+      "anchor": "highSide.n",
+      "wireIds": [
+        "w_3",
+        "w_4",
+        "w_5"
+      ],
+      "name": "SW",
+      "hidden": false
+    },
+    {
+      "id": "net_be8301bf3263442e8813c7b9730c0d9d",
+      "anchor": "current.p",
+      "wireIds": [
+        "w_6"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_5a90cab6dbac423e8ebe917dfe1b0bc7",
+      "anchor": "capacitor.p",
+      "wireIds": [
+        "w_10",
+        "w_7",
+        "w_8",
+        "w_9"
+      ],
+      "name": "Vout",
+      "hidden": false
+    },
+    {
+      "id": "net_d525885446de4c20b176dcb9eaf6dbca",
+      "anchor": "capacitor.n",
+      "wireIds": [
+        "w_11",
+        "w_12",
+        "w_13",
+        "w_14",
+        "w_15",
+        "w_16"
+      ],
+      "name": "GND",
+      "hidden": false
+    }
+  ]
+}

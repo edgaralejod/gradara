@@ -1,12 +1,19 @@
-import { applyNodeChanges, type Node, type NodeChange } from '@xyflow/react';
+import {
+  applyNodeChanges,
+  type Node,
+  type NodeChange,
+  type NodePositionChange,
+} from '@xyflow/react';
 import type { Block, Definition, Domain, Project } from './model';
 import { TAP_SIZE } from './net';
+import { minimumDesignedSize, snapBlockPosition } from './block-design';
 
-export type BlockNodeData = { definition: Definition };
+export type BlockNodeData = {
+  definition: Definition;
+  labelOffset?: Block['labelOffset'];
+};
 export type BlockCanvasNode = Node<BlockNodeData, 'block'>;
-export type CanvasNode =
-  | BlockCanvasNode
-  | Node<{ domain: Domain }, 'tap'>;
+export type CanvasNode = BlockCanvasNode | Node<{ domain: Domain }, 'tap'>;
 export type BlockLayout = Pick<Block, 'id' | 'position'> & {
   size: { width: number; height: number };
 };
@@ -35,12 +42,10 @@ const compactKinds = new Set([
   'display',
   'terminator',
 ]);
-export function minimumBlockSize(kind: string) {
-  if (kind === 'sum' || kind === 'subtract') return { width: 32, height: 32 };
-  if (kind === 'subsystem') return { width: 96, height: 64 };
-  if (kind === 'ground') return { width: 36, height: 32 };
-  return { width: 48, height: 40 };
+export function minimumBlockSize(definition: Definition) {
+  return minimumDesignedSize(definition);
 }
+/** Unsized v1 documents keep their original geometry. New insertions persist defaultBlockSize. */
 export function blockSize(block: Block) {
   if (block.size) return block.size;
   const kind = block.definition.kind;
@@ -94,7 +99,8 @@ export function reconcileNodes(
       width === n.width &&
       height === n.height &&
       n.selected === isSelected &&
-      n.data.definition === b.definition
+      n.data.definition === b.definition &&
+      n.data.labelOffset === b.labelOffset
     )
       return n;
     return {
@@ -107,9 +113,10 @@ export function reconcileNodes(
       measured: n?.measured,
       selected: isSelected,
       data:
-        n?.data.definition === b.definition
+        n?.data.definition === b.definition &&
+        n.data.labelOffset === b.labelOffset
           ? n.data
-          : { definition: b.definition },
+          : { definition: b.definition, labelOffset: b.labelOffset },
       ariaLabel: b.definition.name,
     };
   });
@@ -166,11 +173,68 @@ export class CanvasGestures {
   private dragging = new Set<string>();
   private resizing = new Set<string>();
   private dirty = new Set<string>();
+  private moveOrigins = new Map<string, Block['position']>();
 
-  apply(changes: NodeChange<CanvasNode>[], nodes: CanvasNode[]): {
+  apply(
+    changes: NodeChange<CanvasNode>[],
+    nodes: CanvasNode[],
+    snapPositions:
+      | boolean
+      | ((
+          node: CanvasNode,
+          position: Block['position'],
+        ) => Block['position']) = false,
+  ): {
     nodes: CanvasNode[];
     layouts: BlockLayout[];
   } {
+    if (snapPositions) {
+      // Snap one anchor, then the existing group logic applies its delta rigidly.
+      const anchor = changes.find(
+        (c) => c.type === 'position' && c.position && c.dragging !== undefined,
+      );
+      const node =
+        anchor && 'id' in anchor
+          ? nodes.find((n) => n.id === anchor.id)
+          : undefined;
+      if (node && anchor?.type === 'position' && anchor.position) {
+        const position =
+          typeof snapPositions === 'function'
+            ? snapPositions(node, anchor.position)
+            : snapBlockPosition(anchor.position, {
+                width: node.width ?? 80,
+                height: node.height ?? 64,
+              });
+        changes = changes.map((c) => (c === anchor ? { ...c, position } : c));
+      }
+    }
+    const positions = changes.filter(
+      (c): c is NodePositionChange =>
+        c.type === 'position' && !!c.position && c.dragging !== undefined,
+    );
+    // React Flow grid-snaps each node independently. A group must instead keep
+    // its original spacing, including off-grid port-aligned blocks.
+    if (positions.length > 1) {
+      for (const c of positions)
+        if (!this.moveOrigins.has(c.id)) {
+          const node = nodes.find((n) => n.id === c.id);
+          if (node) this.moveOrigins.set(c.id, node.position);
+        }
+      const anchor = positions[0];
+      const origin = this.moveOrigins.get(anchor.id);
+      if (origin && anchor.type === 'position' && anchor.position) {
+        const delta = {
+          x: anchor.position.x - origin.x,
+          y: anchor.position.y - origin.y,
+        };
+        changes = changes.map((c) => {
+          const from = 'id' in c ? this.moveOrigins.get(c.id) : undefined;
+          return c.type === 'position' && c.position && from
+            ? { ...c, position: { x: from.x + delta.x, y: from.y + delta.y } }
+            : c;
+        });
+      }
+    }
     const next = applyNodeChanges(changes, nodes);
     for (const change of changes) {
       if (change.type === 'position' && change.position) {
@@ -200,6 +264,7 @@ export class CanvasGestures {
           });
         }
       this.dirty.clear();
+      this.moveOrigins.clear();
     }
     return { nodes: next, layouts };
   }

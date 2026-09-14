@@ -12,6 +12,7 @@ import { portPoint } from './ports';
 import {
   routeBetween,
   simplifyPoints,
+  simplifyRoute,
   segmentExit,
   outward,
   EXIT_STUB,
@@ -84,8 +85,8 @@ export function routedPolylines(project: Project): Map<string, Pt[]> {
       ? `j:${w.source}`
       : `${w.source}.${w.sourceHandle}`;
     const net = nets.get(key) ?? -1;
-    let pts = rawPolyline(project, w.id);
-    if (!w.waypoints?.length) {
+    let pts = rawPolyline(project, w.id).map(({ x, y }) => ({ x, y }));
+    if (!w.waypoints) {
       const next: Pt[] = [];
       for (let i = 0; i < pts.length - 1; i++) {
         const a = pts[i],
@@ -130,6 +131,16 @@ export function routedPolylines(project: Project): Map<string, Pt[]> {
       if (pts.length) next.push(pts.at(-1)!);
       pts = simplifyPoints(next);
     }
+    // Automatic lanes and pinned paths must expose the same canonical geometry.
+    // Otherwise freezing a route for a group move removes old lane spurs only
+    // after release, making a rigid selection appear to change shape.
+    const from = endpointPoint(project, w.source, w.sourceHandle);
+    const to = endpointPoint(project, w.target, w.targetHandle);
+    pts = simplifyRoute(
+      pts,
+      from && !isTap(project, w.source) ? sideToPosition(from.side) : undefined,
+      to && !isTap(project, w.target) ? sideToPosition(to.side) : undefined,
+    );
     routes.set(w.id, pts);
     runs.push(...segmentsOf(pts).map((r) => ({ ...r, net })));
   }
@@ -164,10 +175,11 @@ export function committedPoints(
     }
     const last = points.at(-1)!;
     const tailExit = segmentExit(last, to);
-    return simplifyPoints([
-      ...points,
-      ...routeBetween(last, to, tailExit, entry, 0).slice(1),
-    ]);
+    return simplifyRoute(
+      [...points, ...routeBetween(last, to, tailExit, entry, 0).slice(1)],
+      isTap(project, source) ? undefined : exit,
+      entry,
+    );
   }
   const driverKeys = isTap(project, source)
     ? netKeys(project, { id: source, handle: sourceHandle })

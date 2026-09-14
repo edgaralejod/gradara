@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -15,13 +16,21 @@ import {
   type NodeChange,
 } from '@xyflow/react';
 import BlockNode from './block-node';
+import { snapDraggedBlockPosition } from '@/lib/gradara/placement';
+import { LabelEditingContext } from './label-editing-context';
 import {
   CanvasGestures,
   reconcileNodes,
   type BlockLayout,
   type CanvasNode,
 } from '@/lib/gradara/canvas';
-import type { Block } from '@/lib/gradara/model';
+import type { Block, Project } from '@/lib/gradara/model';
+import type { ModelSelection } from '@/lib/gradara/selection';
+import CopyDragLayer from './copy-drag-layer';
+import {
+  SelectionPreviewContext,
+  type SelectionPreview,
+} from './selection-preview-context';
 
 const nodeTypes = { block: BlockNode };
 function InitialViewport({ blockIds }: { blockIds: string }) {
@@ -48,19 +57,32 @@ type Props = Omit<
   'nodes' | 'onNodesChange' | 'nodeTypes'
 > & {
   blocks: Block[];
+  project: Project;
+  selection: ModelSelection;
+  onCopyDrop: (preview: SelectionPreview) => void;
   selectedIds: string[];
   onSelectedIdsChange: (ids: string[]) => void;
   onLayout: (layouts: BlockLayout[]) => void;
+  onLabelOffset: (id: string, offset: Block['labelOffset']) => void;
+  onLabelSelect: (id: string) => void;
 };
 
 /** Pointer-rate state belongs to the canvas, not autosave, history, inspector, or plots. */
 export default function ModelCanvas({
-  blocks,
-  selectedIds,
+  blocks: documentBlocks,
+  selectedIds: documentSelectedIds,
+  project,
+  selection,
+  onCopyDrop,
   onSelectedIdsChange,
   onLayout,
+  onLabelOffset,
+  onLabelSelect,
   ...props
 }: Props) {
+  const [preview, setPreview] = useState<SelectionPreview | null>(null);
+  const blocks = preview?.project.blocks ?? documentBlocks;
+  const selectedIds = preview?.selection.blockIds ?? documentSelectedIds;
   const [nodes, setNodes] = useState<CanvasNode[]>(() =>
     reconcileNodes([], [], blocks, selectedIds),
   );
@@ -68,6 +90,10 @@ export default function ModelCanvas({
   const previousBlocks = useRef(blocks);
   const gestures = useRef(new CanvasGestures());
   const paintFrame = useRef<number | null>(null);
+  const labelEditing = useMemo(
+    () => ({ onMove: onLabelOffset, onSelect: onLabelSelect }),
+    [onLabelOffset, onLabelSelect],
+  );
   useEffect(
     () => () => {
       if (paintFrame.current !== null) cancelAnimationFrame(paintFrame.current);
@@ -97,6 +123,15 @@ export default function ModelCanvas({
       const { nodes: next, layouts } = gestures.current.apply(
         changes,
         nodesRef.current,
+        (node, position) => {
+          const snapped = snapDraggedBlockPosition(
+            project,
+            node.id,
+            position,
+            documentSelectedIds,
+          );
+          return snapped;
+        },
       );
       nodesRef.current = next;
       // Measurement callbacks run inside ResizeObserver delivery. Paint on the
@@ -113,18 +148,36 @@ export default function ModelCanvas({
       }
       if (layouts.length) onLayout(layouts);
     },
-    [onSelectedIdsChange, onLayout],
+    [onSelectedIdsChange, onLayout, project, documentSelectedIds],
   );
 
   return (
-    <ReactFlow
-      {...props}
-      nodes={nodes}
-      nodeTypes={nodeTypes}
-      onNodesChange={onNodesChange}
-    >
-      <InitialViewport blockIds={blocks.map((b) => b.id).join('|')} />
-      {props.children}
-    </ReactFlow>
+    <SelectionPreviewContext.Provider value={preview}>
+      <LabelEditingContext.Provider value={labelEditing}>
+        <ReactFlow
+          {...props}
+          snapToGrid={false}
+          nodes={nodes}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+        >
+          <InitialViewport blockIds={blocks.map((b) => b.id).join('|')} />
+          <CopyDragLayer
+            project={project}
+            selection={selection}
+            onPreview={setPreview}
+            onCommit={onCopyDrop}
+          />
+          {props.children}
+          {preview && (
+            <div className="copy-drag-hint">
+              Copy{' '}
+              {preview.selection.blockIds.length === 1 ? 'block' : 'selection'}{' '}
+              · Release to place · Esc to cancel
+            </div>
+          )}
+        </ReactFlow>
+      </LabelEditingContext.Provider>
+    </SelectionPreviewContext.Provider>
   );
 }

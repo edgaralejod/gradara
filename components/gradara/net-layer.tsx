@@ -1,13 +1,19 @@
 'use client';
 import {
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { ViewportPortal, useReactFlow, useStore } from '@xyflow/react';
+import {
+  ViewportPortal,
+  useReactFlow,
+  useStore,
+  useStoreApi,
+} from '@xyflow/react';
 import { domainColors, type Project } from '@/lib/gradara/model';
 import { endpointPoint, endpointPort, isTap } from '@/lib/gradara/net';
 import { NetSession } from '@/lib/gradara/net-session';
@@ -21,16 +27,39 @@ import { pointsToPath, type Pt } from '@/lib/gradara/routing';
 import { removeSelection } from '@/lib/gradara/project';
 import {
   editingAnchors,
-  moveVertex,
+  snappedVertex,
   snappedSegment,
 } from '@/lib/gradara/net-edit';
 import { resetWireRoute } from '@/lib/gradara/wires';
+import { normalizeJunctions } from '@/lib/gradara/net-layout';
+import { blockSize } from '@/lib/gradara/canvas';
+import {
+  layoutSelection,
+  resolveSelection,
+  translateSelection,
+  selectionInRect,
+  type ModelSelection,
+} from '@/lib/gradara/selection';
 import { PencilLine, Route, Trash2, Check, X } from 'lucide-react';
+import { SelectionPreviewContext } from './selection-preview-context';
+import { netForWire, renameNet } from '@/lib/gradara/net-registry';
+import { netDisplayName } from '@/lib/gradara/names';
+import {
+  labelPosition,
+  nearestLabelAnchor,
+  setNetLabel,
+  type LabelAnchor,
+} from '@/lib/gradara/net-label';
+import NetLabel from './net-label';
 
 type Props = {
   project: Project;
   selected: string[];
-  onSelect: (ids: string[]) => void;
+  selection: ModelSelection;
+  groupSelection: boolean;
+  onRegionSelect: (selection: ModelSelection) => void;
+  onSelect: (ids: string[], additive?: boolean) => void;
+  onDeleteSelection: () => void;
   onCommit: (project: Project) => void;
 };
 type Gesture = {
@@ -42,6 +71,7 @@ type Gesture = {
     | 'port'
     | 'segment'
     | 'endpoint';
+  selection?: ModelSelection;
   id?: string;
   vertex?: number;
   segment?: number;
@@ -69,30 +99,56 @@ function viewOf(session: NetSession, editing = false) {
 }
 
 /** The sole wiring pointer owner. Pointer-rate state stays below the workbench. */
-export default function NetLayer(props: Props) {
+export default function NetLayer(baseProps: Props) {
+  const copyPreview = useContext(SelectionPreviewContext);
+  const props = useMemo(
+    () =>
+      copyPreview
+        ? {
+            ...baseProps,
+            ...copyPreview,
+            selected: copyPreview.selection.wireIds,
+            groupSelection: true,
+          }
+        : baseProps,
+    [baseProps, copyPreview],
+  );
   const flow = useReactFlow();
+  const store = useStoreApi();
   const nodes = useStore((s) => s.nodes);
   const zoom = useStore((s) => s.transform[2]);
   const scene = useMemo(
-    () => ({
-      ...props.project,
-      blocks: props.project.blocks.map((b) => {
-        const node = nodes.find((n) => n.id === b.id);
-        return node
-          ? {
-              ...b,
-              position: node.position,
-              size: {
-                width:
-                  node.measured?.width ?? node.width ?? b.size?.width ?? 64,
-                height:
-                  node.measured?.height ?? node.height ?? b.size?.height ?? 64,
-              },
-            }
-          : b;
-      }),
-    }),
-    [props.project, nodes],
+    () =>
+      normalizeJunctions(
+        layoutSelection(
+          props.project,
+          props.project.blocks.map((b) => {
+            const node = nodes.find((n) => n.id === b.id);
+            return node
+              ? {
+                  id: b.id,
+                  position: node.position,
+                  size: {
+                    width:
+                      node.measured?.width ?? node.width ?? b.size?.width ?? 64,
+                    height:
+                      node.measured?.height ??
+                      node.height ??
+                      b.size?.height ??
+                      64,
+                  },
+                }
+              : { id: b.id, position: b.position, size: blockSize(b) };
+          }),
+          props.selection,
+          false,
+        ),
+      ),
+    [props, nodes],
+  );
+  const selectedGeometry = useMemo(
+    () => resolveSelection(props.project, props.selection),
+    [props],
   );
   const latest = useRef({ ...props, scene });
   useLayoutEffect(() => {
@@ -106,6 +162,10 @@ export default function NetLayer(props: Props) {
   const [view, setView] = useState(() => viewOf(new NetSession(scene)));
   const [message, setMessage] = useState('');
   const [hover, setHover] = useState<string | null>(null);
+  const [editingNet, setEditingNet] = useState<{
+    id: string;
+    anchor: LabelAnchor;
+  } | null>(null);
   const repaint = useCallback(() => {
     if (frame.current === null)
       frame.current = requestAnimationFrame(() => {
@@ -121,6 +181,28 @@ export default function NetLayer(props: Props) {
       });
   }, []);
   useEffect(() => {
+    // Observe the same marquee as React Flow, in world coordinates. Wires are
+    // rendered in SVG, so React Flow cannot add them to its node selection.
+    return store.subscribe((state, previous) => {
+      const rect = state.userSelectionRect;
+      if (
+        !state.userSelectionActive ||
+        !rect ||
+        rect === previous.userSelectionRect
+      )
+        return;
+      const [x, y, z] = state.transform;
+      latest.current.onRegionSelect(
+        selectionInRect(latest.current.project, {
+          x: (rect.x - x) / z,
+          y: (rect.y - y) / z,
+          width: rect.width / z,
+          height: rect.height / z,
+        }),
+      );
+    });
+  }, [store]);
+  useEffect(() => {
     session.current.cancel();
     const root = svg.current?.closest('.react-flow') as HTMLElement | null;
     if (root) root.dataset.wiring = 'idle';
@@ -132,6 +214,12 @@ export default function NetLayer(props: Props) {
     const root = svg.current?.closest('.react-flow') as HTMLElement | null;
     if (!root) return;
     let suppressClick = false;
+    let lastWireClick: {
+      id: string;
+      time: number;
+      x: number;
+      y: number;
+    } | null = null;
     const stop = (e: Event) => {
       e.preventDefault();
       e.stopPropagation();
@@ -146,16 +234,19 @@ export default function NetLayer(props: Props) {
       root.dataset.wiring = session.current.mode;
       repaint();
     };
-    const commit = (selectId?: string) => {
+    const commit = (selectId?: string, includeBlocks = false) => {
       const s = session.current;
       // Preserve the document's blocks: transient React Flow measurements are view state.
       if (
         s.project.wires !== latest.current.project.wires ||
-        s.project.junctions !== latest.current.project.junctions
+        s.project.junctions !== latest.current.project.junctions ||
+        (includeBlocks && s.project.blocks !== latest.current.project.blocks)
       ) {
         latest.current.onCommit({
           ...s.project,
-          blocks: latest.current.project.blocks,
+          blocks: includeBlocks
+            ? s.project.blocks
+            : latest.current.project.blocks,
         });
         if (selectId && s.project.wires.some((w) => w.id === selectId))
           latest.current.onSelect([selectId]);
@@ -182,13 +273,14 @@ export default function NetLayer(props: Props) {
       refresh();
     };
     const down = (e: PointerEvent) => {
-      if (e.button !== 0) return;
+      if (e.button !== 0 || !root.contains(e.target as Node)) return;
+      if (root.dataset.copying) return;
       // A captured drag may not produce a browser click. Never swallow the next gesture.
       if (session.current.mode === 'idle') suppressClick = false;
       const target = e.target as Element;
       if (
         target.closest(
-          '.react-flow__controls,.react-flow__minimap,.net-toolbar',
+          '.react-flow__controls,.react-flow__minimap,.net-toolbar,.block-name,.net-label',
         )
       )
         return;
@@ -227,6 +319,9 @@ export default function NetLayer(props: Props) {
             : undefined;
       if (!pin && !junction && !wire && !vertex) return;
       stop(e);
+      // Transfer keyboard ownership from a previously focused block label.
+      root.tabIndex = -1;
+      root.focus({ preventScroll: true });
       suppressClick = true;
       setMessage('');
       s.project = latest.current.scene;
@@ -238,7 +333,25 @@ export default function NetLayer(props: Props) {
         initial: s.project,
         moved: false,
       };
-      if (endpoint) {
+      const selected = resolveSelection(
+        latest.current.project,
+        latest.current.selection,
+      );
+      const groupHit =
+        !e.altKey &&
+        !e.shiftKey &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        latest.current.groupSelection &&
+        ((wire && selected.wireIds.includes(wire.dataset.wireId!)) ||
+          (junction &&
+            selected.junctionIds.includes(junction.dataset.junctionId!)));
+      if (groupHit) {
+        g.kind = 'segment';
+        g.id = wire?.dataset.wireId;
+        g.selection = latest.current.selection;
+        g.initial = latest.current.project;
+      } else if (endpoint) {
         g.kind = 'endpoint';
         g.id = endpoint.dataset.wireId;
         s.reconnect(g.id!, endpoint.dataset.wireEnd as 'source' | 'target');
@@ -255,6 +368,7 @@ export default function NetLayer(props: Props) {
         g.kind = 'vertex';
         g.id = vertex.dataset.wireId;
         g.vertex = Number(vertex.dataset.wireVertex);
+        g.anchors = editingAnchors(s.project, g.id!);
       } else {
         g.kind =
           !e.altKey &&
@@ -274,9 +388,10 @@ export default function NetLayer(props: Props) {
           g.anchors = editingAnchors(s.project, g.id!);
         }
         latest.current.onSelect(
-          e.shiftKey
+          e.shiftKey || e.metaKey || e.ctrlKey
             ? [...new Set([...latest.current.selected, g.id!])]
             : [g.id!],
+          e.shiftKey || e.metaKey || e.ctrlKey,
         );
       }
       gesture.current = g;
@@ -288,13 +403,30 @@ export default function NetLayer(props: Props) {
         g = gesture.current;
       if (g && g.pointer !== e.pointerId) return;
       if (!g && s.mode === 'idle') return;
+      // The wiring gesture owns movement as well as the press/release. Letting
+      // React Flow see these moves can activate a pending marquee selection.
+      stop(e);
       const at = point(e);
       s.zoom = flow.getZoom();
       if (g && Math.hypot(e.clientX - g.screen.x, e.clientY - g.screen.y) > 5)
         g.moved = true;
       if (g?.kind === 'wire' && g.moved && s.mode === 'idle')
         s.pressSegment(g.at);
-      if (g?.kind === 'junction' && g.moved) {
+      if (g?.selection && g.moved) {
+        const delta = {
+          x: Math.round((at.x - g.at.x) / 4) * 4,
+          y: Math.round((at.y - g.at.y) / 4) * 4,
+        };
+        s.project = translateSelection(g.initial, g.selection, delta);
+        const positions = new Map(
+          s.project.blocks.map((b) => [b.id, b.position]),
+        );
+        flow.setNodes((nodes) =>
+          nodes.map((n) =>
+            positions.has(n.id) ? { ...n, position: positions.get(n.id)! } : n,
+          ),
+        );
+      } else if (g?.kind === 'junction' && g.moved) {
         const old = g.initial.junctions?.find((j) => j.id === g.id);
         if (!old) return;
         s.project = g.initial;
@@ -317,12 +449,17 @@ export default function NetLayer(props: Props) {
         s.guides = result.guides;
         s.cursor = at;
       } else if (g?.kind === 'vertex' && g.moved) {
-        const i = g.vertex!;
-        const next = {
-          x: Math.round(at.x / 4) * 4,
-          y: Math.round(at.y / 4) * 4,
-        };
-        s.project = moveVertex(g.initial, g.id!, i, next);
+        const result = snappedVertex(
+          g.initial,
+          g.id!,
+          g.vertex!,
+          at,
+          s.zoom,
+          g.anchors,
+        );
+        s.project = result.project;
+        s.guides = result.guides;
+        s.cursor = at;
       } else if (s.mode !== 'idle') s.move(at.x, at.y);
       refresh();
     };
@@ -334,6 +471,27 @@ export default function NetLayer(props: Props) {
       if (root.hasPointerCapture(e.pointerId))
         root.releasePointerCapture(e.pointerId);
       const s = session.current;
+      // Pointer capture retargets the browser's dblclick to the canvas root.
+      // Recognize clicks here, where the originally hit wire is still known.
+      if (!g.moved && g.id && (g.kind === 'wire' || g.kind === 'segment')) {
+        if (
+          lastWireClick?.id === g.id &&
+          e.timeStamp - lastWireClick.time < 450 &&
+          Math.hypot(e.clientX - lastWireClick.x, e.clientY - lastWireClick.y) <
+            6
+        ) {
+          lastWireClick = null;
+          nameWire(g.id, point(e));
+          refresh();
+          return;
+        }
+        lastWireClick = {
+          id: g.id,
+          time: e.timeStamp,
+          x: e.clientX,
+          y: e.clientY,
+        };
+      } else lastWireClick = null;
       if (g.kind === 'drawing') {
         refresh();
         return;
@@ -344,7 +502,7 @@ export default function NetLayer(props: Props) {
         g.kind === 'segment'
       ) {
         s.guides = [];
-        if (g.moved) commit();
+        if (g.moved) commit(undefined, !!g.selection);
         else if (g.kind === 'junction') {
           s.pressJunction(g.id!);
           s.mode = 'drawing';
@@ -364,6 +522,16 @@ export default function NetLayer(props: Props) {
       if (g && root.hasPointerCapture(g.pointer))
         root.releasePointerCapture(g.pointer);
       session.current.cancel();
+      if (g?.selection) {
+        const positions = new Map(
+          g.initial.blocks.map((b) => [b.id, b.position]),
+        );
+        flow.setNodes((nodes) =>
+          nodes.map((n) =>
+            positions.has(n.id) ? { ...n, position: positions.get(n.id)! } : n,
+          ),
+        );
+      }
       session.current.project = latest.current.scene;
       gesture.current = null;
       suppressClick = false;
@@ -373,7 +541,7 @@ export default function NetLayer(props: Props) {
     const key = (e: KeyboardEvent) => {
       if (
         (e.target as Element)?.closest(
-          'input,textarea,[contenteditable=true],[role=dialog]',
+          'input,textarea,[contenteditable=true],[role=dialog],.block-name,.net-label',
         )
       )
         return;
@@ -393,8 +561,15 @@ export default function NetLayer(props: Props) {
         } else if (e.key === 'Enter' && s.editing?.kind === 'redraw') {
           stop(e);
           attempt(() => s.finishRedraw());
-        } else if (['Delete', 'a', 'd', 'r', '/', 'Enter'].includes(e.key))
+        } else if (
+          e.metaKey ||
+          e.ctrlKey ||
+          ['Delete', 'a', 'd', 'r', '/', 'Enter'].includes(e.key)
+        )
           stop(e);
+      } else if (e.key === 'F2' && latest.current.selected.length === 1) {
+        stop(e);
+        commands.current('name');
       } else if (
         e.key.toLowerCase() === 'd' &&
         !e.metaKey &&
@@ -408,15 +583,12 @@ export default function NetLayer(props: Props) {
         latest.current.selected.length
       ) {
         stop(e);
-        latest.current.onCommit(
-          removeSelection(latest.current.project, [], latest.current.selected),
-        );
-        latest.current.onSelect([]);
+        latest.current.onDeleteSelection();
       }
     };
     const click = (e: MouseEvent) => {
       if (!root.contains(e.target as Node)) return;
-      if ((e.target as Element).closest('.net-toolbar')) {
+      if ((e.target as Element).closest('.net-toolbar,.net-label')) {
         suppressClick = false;
         return;
       }
@@ -425,12 +597,39 @@ export default function NetLayer(props: Props) {
         suppressClick = false;
       }
     };
+    const nameWire = (id: string, at?: Pt) => {
+      const p = latest.current.scene,
+        net = netForWire(p, id);
+      if (!net) return;
+      const anchor = at
+        ? nearestLabelAnchor(p, net, at)
+        : labelPosition(p, net)?.anchor;
+      if (anchor)
+        setEditingNet({
+          id: net.id,
+          anchor: net.name ? anchor : { ...anchor, side: 1 },
+        });
+    };
     const dblclick = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (target.closest('.net-label')) return;
+      const wire = target.closest<SVGElement>('[data-wire-id]');
       if (
+        session.current.mode === 'idle' &&
+        wire &&
+        !target.closest('[data-wire-end]')
+      ) {
+        stop(e);
+        nameWire(
+          wire.dataset.wireId!,
+          flow.screenToFlowPosition(
+            { x: e.clientX, y: e.clientY },
+            { snapToGrid: false },
+          ),
+        );
+      } else if (
         session.current.mode !== 'idle' ||
-        (e.target as Element).closest(
-          '[data-wire-id],[data-junction-id],[data-port-id]',
-        )
+        target.closest('[data-junction-id],[data-port-id]')
       )
         stop(e);
     };
@@ -448,6 +647,7 @@ export default function NetLayer(props: Props) {
       if (s.mode !== 'idle' || !id) return;
       s.project = latest.current.scene;
       s.zoom = flow.getZoom();
+      if (action === 'name') nameWire(id);
       if (action === 'redraw') {
         s.redraw(id);
         setMessage('');
@@ -463,22 +663,28 @@ export default function NetLayer(props: Props) {
         latest.current.onSelect([]);
       }
     };
-    root.addEventListener('pointerdown', down, true);
+    // React's delegated capture handlers run above .react-flow in the DOM.
+    // Claim wiring presses at window capture, before Pane can start selecting
+    // (or Shift-selecting) underneath a wire gesture. Unclaimed presses pass on.
+    window.addEventListener('pointerdown', down, true);
     window.addEventListener('click', click, true);
     root.addEventListener('dblclick', dblclick, true);
     window.addEventListener('pointermove', move, true);
     window.addEventListener('pointerup', up, true);
     window.addEventListener('pointercancel', cancel, true);
+    window.addEventListener('blur', cancel);
     window.addEventListener('keydown', key, true);
     return () => {
-      root.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('pointerdown', down, true);
       window.removeEventListener('click', click, true);
       root.removeEventListener('dblclick', dblclick, true);
       window.removeEventListener('pointermove', move, true);
       window.removeEventListener('pointerup', up, true);
       window.removeEventListener('pointercancel', cancel, true);
+      window.removeEventListener('blur', cancel);
       window.removeEventListener('keydown', key, true);
       if (frame.current !== null) cancelAnimationFrame(frame.current);
+      frame.current = null;
     };
   }, [flow, repaint]);
 
@@ -498,6 +704,15 @@ export default function NetLayer(props: Props) {
       })),
     [document],
   );
+  const wireNets = useMemo(
+    () =>
+      new Map(
+        (document.nets ?? []).flatMap((n) =>
+          n.wireIds.map((id) => [id, n] as const),
+        ),
+      ),
+    [document.nets],
+  );
   const preview = s.preview;
   const destination =
     s.wireEdit &&
@@ -507,6 +722,8 @@ export default function NetLayer(props: Props) {
       s.wireEdit.destination.handle,
     );
   const singleSelection =
+    !props.groupSelection &&
+    props.selection.blockIds.length === 0 &&
     props.selected.length === 1 &&
     paths.some((p) => p.wire.id === props.selected[0]);
   return (
@@ -519,6 +736,7 @@ export default function NetLayer(props: Props) {
           height="1"
           aria-label="Model wiring"
           data-mode={s.mode}
+          data-group-selection={props.groupSelection || undefined}
         >
           <defs>
             <marker
@@ -540,12 +758,18 @@ export default function NetLayer(props: Props) {
             />
           )}
           {paths.map(({ wire: w, points, color }) => {
-            const selected = props.selected.includes(w.id);
+            const selected = selectedGeometry.wireIds.includes(w.id);
             return (
               <g
                 key={w.id}
                 data-wire-id={w.id}
-                aria-label={`Wire ${w.source} to ${w.target}`}
+                data-net-id={wireNets.get(w.id)?.id}
+                data-net-name={
+                  wireNets.get(w.id)
+                    ? netDisplayName(document, wireNets.get(w.id)!)
+                    : undefined
+                }
+                aria-label={`${wireNets.get(w.id) ? netDisplayName(document, wireNets.get(w.id)!) : 'Connection'} · ${wireNets.get(w.id)?.id ?? w.id}`}
                 className={`net-wire ${selected ? 'is-selected' : ''} ${hover === w.id ? 'is-hovered' : ''}`}
                 style={{ color }}
                 onPointerEnter={() => setHover(w.id)}
@@ -571,6 +795,7 @@ export default function NetLayer(props: Props) {
                   />
                 ))}
                 {selected &&
+                  !props.groupSelection &&
                   !drawing &&
                   points
                     .slice(1, -1)
@@ -600,7 +825,7 @@ export default function NetLayer(props: Props) {
               <g
                 key={j.id}
                 data-junction-id={j.id}
-                className="net-junction"
+                className={`net-junction ${selectedGeometry.junctionIds.includes(j.id) ? 'is-selected' : ''}`}
                 aria-label="Junction: drag to move, click to branch, Alt-drag to branch"
               >
                 <title>Drag to move · Click or Alt-drag to branch</title>
@@ -619,6 +844,7 @@ export default function NetLayer(props: Props) {
               </g>
             ))}
           {!drawing &&
+            !props.groupSelection &&
             paths
               .filter((p) => props.selected.includes(p.wire.id))
               .map(({ wire: w, points }) => (
@@ -732,6 +958,50 @@ export default function NetLayer(props: Props) {
             </g>
           )}
         </svg>
+        {!drawing &&
+          (document.nets ?? [])
+            .filter((net) => !net.hidden || editingNet?.id === net.id)
+            .map((net) => (
+              <NetLabel
+                key={net.id}
+                project={document}
+                net={net}
+                selected={net.wireIds.some((id) => props.selected.includes(id))}
+                color={
+                  paths.find((p) => net.wireIds.includes(p.wire.id))?.color ??
+                  domainColors.signal
+                }
+                editing={
+                  editingNet?.id === net.id ? editingNet.anchor : undefined
+                }
+                onEdit={(anchor) => {
+                  if (anchor) setEditingNet({ id: net.id, anchor });
+                }}
+                onCancel={() => setEditingNet(null)}
+                onName={(name, anchor) => {
+                  setEditingNet(null);
+                  const original = latest.current.project;
+                  let next = renameNet(original, net.id, name);
+                  if (name.trim()) {
+                    next = setNetLabel(next, net.id, anchor);
+                    if (net.hidden)
+                      next = {
+                        ...next,
+                        nets: next.nets?.map((n) =>
+                          n.id === net.id ? { ...n, hidden: false } : n,
+                        ),
+                      };
+                  }
+                  if (next !== original) latest.current.onCommit(next);
+                }}
+                onMove={(anchor) =>
+                  latest.current.onCommit(
+                    setNetLabel(latest.current.project, net.id, anchor),
+                  )
+                }
+                onSelect={() => latest.current.onSelect(net.wireIds)}
+              />
+            ))}
       </ViewportPortal>
       {(drawing || singleSelection) && (
         <div
@@ -758,6 +1028,12 @@ export default function NetLayer(props: Props) {
           ) : (
             <>
               <span className="net-toolbar-label">Wire</span>
+              <button
+                onClick={() => commands.current('name')}
+                title="Name this net (F2)"
+              >
+                Name<kbd>F2</kbd>
+              </button>
               <button
                 onClick={() => commands.current('redraw')}
                 title="Redraw the selected wire (D)"

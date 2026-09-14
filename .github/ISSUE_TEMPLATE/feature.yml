@@ -1,0 +1,22 @@
+name: Feature or block proposal
+description: Propose a concrete improvement or a useful new block.
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: User outcome
+      description: What should someone be able to do? Include an example workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Proposed scope
+      description: For blocks, include domains, ports, units, parameters, state, equations, and assumptions. For UI, describe the interaction.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance and validation
+      description: How would we demonstrate that this works? Note schema, compatibility, or upstream dependencies.
+    validations:
+      required: true

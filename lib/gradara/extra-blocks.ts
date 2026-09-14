@@ -310,7 +310,7 @@ export const extraBlocks: Definition[] = [
     'when sample(0, Ts) then\n  x = pre(x) + Ts*u;\nend when;\ny = x;',
     [p('Ts', 'Sample period', 0.001, 's', 0.0001)],
     'discrete Real x(start=0, fixed=true);',
-    'Forward-Euler discrete integrator.',
+    'Sampled integrator accumulating the current input at each sample.',
     ['discrete', 'sum'],
   ),
   signal(

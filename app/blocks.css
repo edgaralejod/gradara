@@ -1,0 +1,346 @@
+/* Block design contract. Diagram units scale with the viewport, never with block resizing. */
+:root {
+  --block-font: 'Segoe UI', Arial, sans-serif;
+  --block-text: 14px;
+  --block-line: 18px;
+  --block-ink: #273f50;
+}
+.block-face {
+  position: absolute;
+  inset: 0;
+  display: block;
+  color: var(--domain);
+  font: 400 var(--block-text)/var(--block-line) var(--block-font);
+  pointer-events: none;
+}
+.block-face .block-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.block-face .block-outline > * {
+  fill: color-mix(in srgb, var(--domain) 2%, white);
+  stroke: var(--domain);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.engineering-block.is-selected .block-outline > * {
+  stroke: #1976b8;
+  fill: #f3f9fd;
+}
+.block-face .block-symbol {
+  position: absolute;
+  inset: var(--well-top) var(--well-right) var(--well-bottom) var(--well-left);
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  color: var(--domain);
+  font: inherit;
+  letter-spacing: normal;
+  overflow: hidden;
+}
+.block-face .block-symbol > svg {
+  width: 100%;
+  height: 100%;
+  max-width: 48px;
+  max-height: 40px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.block-face .block-symbol svg text {
+  fill: currentColor;
+  stroke: none;
+  font: 400 26px var(--block-font);
+}
+.block-face .block-symbol svg .symbol-small {
+  font-size: 16px;
+}
+.block-face .symbol-axis {
+  opacity: 0.3;
+  stroke-width: 1;
+}
+.block-face .math-op,
+.block-face .pid-symbol,
+.block-face .display-glyph,
+.block-face .gain-value,
+.block-face .value-symbol {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.block-face .transfer-symbol {
+  display: flex;
+  flex-direction: column;
+  min-width: 22px;
+  font: inherit;
+  line-height: 19px;
+  text-align: center;
+  white-space: nowrap;
+}
+.block-face .transfer-symbol > span:first-child:not(:last-child) {
+  border-bottom: 1px solid currentColor;
+  padding: 0 3px 1px;
+}
+.block-face .transform-symbol {
+  display: block;
+  font: inherit;
+  white-space: nowrap;
+}
+.block-face .custom-symbol {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.block-face.shape-gain .block-symbol {
+  inset: 8px 26px 8px 4px;
+}
+.block-face.shape-sum .block-symbol {
+  display: none;
+}
+.block-face.shape-physical .block-symbol,
+.block-face.shape-ground .block-symbol {
+  inset: 0;
+  overflow: visible;
+}
+.block-face.shape-physical .block-symbol > svg,
+.block-face.shape-ground .block-symbol > svg {
+  max-width: none;
+  max-height: none;
+}
+.block-face.shape-physical .block-symbol path,
+.block-face.shape-ground .block-symbol path {
+  vector-effect: non-scaling-stroke;
+}
+.block-face .port-label {
+  position: absolute;
+  display: block;
+  max-width: 42px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: inherit;
+  background: transparent;
+  padding: 0;
+}
+.block-face .port-left {
+  left: 6px;
+  transform: translateY(-50%);
+}
+.block-face .port-right {
+  right: 6px;
+  transform: translateY(-50%);
+}
+.block-face .port-top {
+  top: 4px;
+  transform: translateX(-50%);
+}
+.block-face .port-bottom {
+  bottom: 4px;
+  transform: translateX(-50%);
+}
+.block-face .port-label.sum-sign {
+  color: var(--block-ink);
+  font: inherit;
+}
+.block-face.shape-sum .port-left {
+  left: 4px;
+}
+.block-face.shape-sum .port-bottom {
+  bottom: 1px;
+}
+.engineering-label .block-name,
+.engineering-label.notation-sum .block-name {
+  font: 400 var(--block-text)/var(--block-line) var(--block-font);
+  color: var(--block-ink);
+  margin-top: 8px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.block-preview {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+.block-preview-body {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+.preview-terminal {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--port-color);
+  border-radius: 50%;
+}
+.preview-terminal.is-physical {
+  border-radius: 0;
+  background: white;
+  border: 1.3px solid var(--port-color);
+}
+.terminal-left {
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+.terminal-right {
+  right: 0;
+  transform: translate(50%, -50%);
+}
+.terminal-top {
+  top: 0;
+  transform: translate(-50%, -50%);
+}
+.terminal-bottom {
+  bottom: 0;
+  transform: translate(-50%, 50%);
+}
+/* Library is a readable index with the same symbols, silhouette, and proportions as the diagram. */
+.library-panel,
+.library-navigator {
+  background: #f8fafb;
+}
+.library-titleblock {
+  background: #f1f5f7;
+  border-color: #dce4e9;
+  padding: 12px;
+}
+.library-titleblock strong {
+  color: #273f50;
+}
+.library-titleblock .tb-kicker {
+  color: #637987;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+}
+.library-titleblock .tb-count {
+  font-size: 12px;
+  color: #637987;
+}
+.library-titleblock .search-field {
+  border-color: #d0dce4;
+  background: white;
+  border-radius: 4px;
+}
+.library-titleblock .search-field input {
+  height: 32px;
+  font-size: 14px;
+}
+.library-index {
+  background: #f1f5f7;
+  border-color: #dce4e9;
+  padding-bottom: 4px;
+}
+.library-index button {
+  color: #506775;
+  font-size: 12px;
+  padding: 6px;
+}
+.library-group-label {
+  color: #637987;
+  font-size: 12px;
+  padding: 14px 12px 6px;
+  letter-spacing: 0.6px;
+}
+.legend-row {
+  min-height: 64px;
+  gap: 12px;
+  padding: 8px 12px;
+}
+.legend-row:hover,
+.legend-row.is-active {
+  background: #eaf2f7;
+}
+.legend-row:focus-visible {
+  outline: 2px solid #3283b7;
+  outline-offset: -2px;
+}
+.legend-preview {
+  width: 60px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.legend-copy {
+  gap: 3px;
+}
+.legend-name {
+  color: #273f50;
+  font-size: 14px;
+}
+.legend-kind {
+  color: #637987;
+  font: 12px/16px var(--block-font);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.legend-name mark {
+  background: #cee4f2;
+}
+.library-ask {
+  background: #f1f5f7;
+  border-color: #dce4e9;
+  font-size: 14px;
+  color: #426479;
+  padding: 12px;
+}
+.library-ask kbd {
+  font-size: 12px;
+}
+.library-catalog-link {
+  display: block;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: #436c86;
+  border-top: 1px solid #dce4e9;
+}
+
+.standard-block-size {
+  color: #326984;
+  font-size: 12px;
+  margin-top: 12px;
+  padding: 5px 8px;
+  border: 1px solid #cadbe5;
+  background: #f5fafc;
+  border-radius: 3px;
+}
+
+/* Thumbnails omit terminal captions; the adjacent name is the readable primary label. */
+.block-preview.is-miniature .block-face:not(.shape-sum) .port-label {
+  display: none;
+}
+.block-preview.is-miniature .shape-box .block-symbol {
+  inset: 8px;
+}
+.block-preview.is-miniature .shape-box .block-symbol > svg {
+  max-width: 72px;
+  max-height: 56px;
+}
+
+.block-preview.is-miniature .math-op,
+.block-preview.is-miniature .pid-symbol,
+.block-preview.is-miniature .display-glyph,
+.block-preview.is-miniature .gain-value,
+.block-preview.is-miniature .value-symbol,
+.block-preview.is-miniature .custom-symbol,
+.block-preview.is-miniature .transform-symbol {
+  font-size: var(--preview-text);
+}
+
+.legend-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  max-height: 36px;
+  line-height: 18px;
+  white-space: normal;
+}

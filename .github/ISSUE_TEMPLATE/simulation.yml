@@ -1,0 +1,34 @@
+name: Simulation or block problem
+description: Report equations, connector behavior, engine diagnostics, or numerical results.
+body:
+  - type: markdown
+    attributes:
+      value: "Attach a minimal synthetic model, not your whole projects directory. Please distinguish an expected physical effect from a software failure."
+  - type: textarea
+    id: model
+    attributes:
+      label: Model and steps
+      description: Template or small project, changed parameters, units, stop time, and how to reproduce.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior and evidence
+      description: Reference equations, engineering assumptions, expected trajectory or tolerance.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result and diagnostics
+      description: Redacted compiler/runtime errors or measured differences. Do not include private model content.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Versions
+      description: Gradara commit, OS, Docker runtime/context, and OpenModelica version.
+    validations:
+      required: true
