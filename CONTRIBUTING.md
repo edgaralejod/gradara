@@ -8,7 +8,7 @@ For a bug, provide a minimal reproduction and the expected behavior before chang
 
 Small fixes and documentation improvements can go directly to a pull request. Discuss substantial schema, dependency, engine, or interaction redesigns in an issue first so contributors do not build incompatible approaches. There is no blanket approval requirement for routine local fixes.
 
-The repository is hosted at [edgaralejod/gradara on Cursor Origin](https://cursor.com/codebase/edgaralejod/gradara), with access governed by its codebase permissions. Authorized collaborators can create a branch and open an Origin PR against `main`. Keep one coherent change per PR. Public contribution and licensing setup remains pending; do not assume anonymous access or an open-source license from the repository link.
+The repository is hosted at [edgaralejod/gradara on Cursor Origin](https://cursor.com/codebase/edgaralejod/gradara), with access governed by its codebase permissions. Authorized collaborators can create a branch and open an Origin PR against `main`. Keep one coherent change per PR. Origin's Internal visibility does not provide anonymous public access; contact the maintainer through [Virtu Services](https://virtu-services.us) about early access.
 
 ## Development workflow
 
@@ -16,15 +16,15 @@ The repository is hosted at [edgaralejod/gradara on Cursor Origin](https://curso
 2. Read the [architecture](ARCHITECTURE.md), [agent/repository guidance](AGENTS.md), and relevant subsystem docs.
 3. Implement the change using existing model operations and shared visual primitives. Preserve legacy documents and user geometry.
 4. Run appropriate [tests and manual checks](docs/development/TESTING.md). Add a regression for a behavior or contract that could break, rather than a test that simply repeats the implementation.
-5. Update user/developer docs where behavior changed. Regenerate catalog reports only if the catalog changed.
+5. Update user/developer docs where behavior changed. Generate a local catalog report when reviewing block changes; do not commit generated reports or session logs.
 6. Review your diff for unrelated formatting, generated files, private models, and license notices. Fill in the PR template with what changed and how it was checked.
 
 The core checks are TypeScript typecheck/tests/build, Python tests without the integration marker, documentation links, and repository hygiene. Real-engine tests run separately when relevant. Whole-repository lint has an existing backlog and is currently advisory; keep new code clean and report pre-existing failures honestly.
 
 ## Design standards
 
-- Read [BLOCK_DESIGN.md](BLOCK_DESIGN.md) before changing a block or palette specimen. Reuse `BlockFace`; keep compact engineering notation and shared geometry.
-- Read [WIRING.md](WIRING.md) before changing gestures or route normalization. Generalize the rule and test different positions, zoom levels, port sides, branches, undo, and reload.
+- Read the [block design contract](docs/blocks/DESIGN.md) before changing a block or palette specimen. Reuse `BlockFace`; keep compact engineering notation and shared geometry.
+- Read the [wiring contract](docs/architecture/WIRING.md) before changing gestures or route normalization. Generalize the rule and test different positions, zoom levels, port sides, branches, undo, and reload.
 - Keep UI interactions local and responsive. Do not introduce backend or provider latency into direct manipulation.
 - Keep equations, connector laws, and result validity separate from layout. Physical blocks require a real backend implementation; visual color is not a solver contract.
 - Keep model edits immutable and undoable. Migrations preserve original user data and stable identity.
@@ -43,4 +43,6 @@ Follow [community expectations](CODE_OF_CONDUCT.md). Report security-sensitive f
 
 ## Licensing
 
-The project owner still needs to select the license for Gradara's original code before public contributions are solicited. Do not assume a license grant from the repository's availability. Once selected, contributions will need to be provided under the repository license, with permission to contribute their contents. Preserve all [third-party notices](THIRD_PARTY_NOTICES.md) and identify copied or adapted upstream code in the PR. No CLA or sign-off requirement is currently configured.
+Contributions intentionally submitted for inclusion in Gradara are provided under [Apache-2.0](LICENSE), unless explicitly stated otherwise, consistent with section 5 of the license. You retain ownership of your contributions and must have permission to contribute their contents. No copyright assignment, CLA, or sign-off is required.
+
+Preserve [NOTICE](NOTICE), all [third-party notices](THIRD_PARTY_NOTICES.md), and existing file-level licenses. Identify copied or adapted upstream material and its terms in the PR; the project license does not override them. New original source files should carry an `SPDX-License-Identifier: Apache-2.0` comment where the file format permits comments.

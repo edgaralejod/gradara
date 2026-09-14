@@ -42,7 +42,7 @@ Retain the shared `domainColors`: signal blue, electrical ochre, mechanical teal
 
 Rendering must use `portSide`/`portOffset` geometry also used by `portPoint`. Do not position a visual terminal independently from its hit target or routing endpoint. Keep `data-block-id`, `data-port-id`, accessible names, and native pointer ownership intact.
 
-## Library and audit surface
+## Library and catalog
 
 The library uses the same face, uniformly scaled to fit a 56 × 42 thumbnail envelope with no enlargement. The text next to that supplementary thumbnail stays 14 px; the one-line description is 12 px. Terminal captions are omitted at thumbnail scale except input signs on sums. The silhouette and glyph still come from the shared renderer. Simple thumbnail text has a 12 px optical size so it remains recognizable; long second-order notation uses the conventional `H(s)` shorthand. Fractions and pictograms scale with the specimen. These are thumbnail detail rules, not alternative canvas typography.
 
@@ -66,7 +66,7 @@ The inspector's **Use standard size** command deliberately applies the new dimen
 - `app/blocks.css`: authoritative typography, stroke, symbol, and library styling.
 - `components/gradara/block-node.tsx`: canvas integration, resizer, interactive terminals, movable name.
 - `lib/gradara/ports.ts`: shared terminal geometry and insertion alignment.
-- `docs/blocks/AGENT_BLOCK_GUIDE.md`: authoring procedure for agents.
-- `BLOCK_AUDIT.md`: generated catalog inventory and known limitations.
+- [Block authoring guide](AGENT_BLOCK_GUIDE.md): procedure for agents and contributors.
+- `npm run report:blocks`: generate a local inventory at `reports/block-catalog.md`. This report is excluded from Git.
 
-Keep new styles in `blocks.css`; don't append competing block rules to `globals.css` or `engineering.css`. The existing files retain historical workbench rules, but the new face's explicit selectors own block presentation.
+Keep block styles in `blocks.css`; do not append competing rules to `globals.css` or `engineering.css`. `BlockFace` and its explicit selectors own block presentation.

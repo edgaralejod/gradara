@@ -4,11 +4,13 @@ An agent-assisted workbench for graphical, multidomain simulation. Build a diagr
 
 Gradara puts the diagram first: responsive orthogonal wiring, recognizable engineering symbols, domain-colored ports, and equations you can inspect. Agents help author components; the Modelica compiler and numerical runtime execute the model.
 
-**Status: early working prototype, preparing for its first public release.** The local macOS workflow has been exercised end to end. Linux and Windows support are development targets, not certified distributions. There are no desktop installers yet. MATLAB script compatibility is outside scope.
+**Status: early working prototype.** The local macOS workflow has been exercised end to end. Linux and Windows support are development targets, not certified distributions. There are no desktop installers yet. MATLAB script compatibility is outside scope.
+
+Created by **Edgar Duarte**. Engineering consulting through **[Virtu Services](https://virtu-services.us)**.
 
 [Get started](docs/development/SETUP.md) · [Documentation](docs/README.md) · [Contribute](CONTRIBUTING.md) · [Agent instructions](AGENTS.md) · [Roadmap](ROADMAP.md)
 
-Source hosting: [edgaralejod/gradara on Cursor Origin](https://cursor.com/codebase/edgaralejod/gradara). Repository access currently follows Origin codebase permissions; this is not yet a public open-source release.
+Source hosting: [edgaralejod/gradara on Cursor Origin](https://cursor.com/codebase/edgaralejod/gradara). The code is Apache-2.0 licensed; repository access currently requires Origin codebase permissions. Origin's Internal visibility does not provide anonymous public access.
 
 ## Try it locally
 
@@ -27,7 +29,7 @@ No AI account is needed to edit existing blocks, wire models, or simulate. Compo
 
 ## Start with a model
 
-Choose **New model**, give it a name, and select a blank canvas or a template. Each creation is an independent saved document.
+A fresh workspace opens with one empty **Untitled model**. Click its title to rename it, **New model** for another blank document, or **Examples** to create an independent copy of a built-in model. New documents receive unique names.
 
 | Starting point | What to explore |
 | --- | --- |
@@ -36,7 +38,9 @@ Choose **New model**, give it a name, and select a blank canvas or a template. E
 | [AC motor · FOC](models/FOC.md) | PMSM field-oriented control, d/q transforms, current loops, and an averaged inverter. |
 | [Buck converter](models/BUCK.md) | A 24 V to 12 V synchronous converter with actual ideal switches; inspect switching ripple with **Last 1 ms**. |
 
-The model selector reopens saved documents. Export a `.gradara.json` file to share a model and use the upload button to reopen it. Original `.flux.json` files remain supported.
+**Models** opens a searchable browser with **My models**, **Examples**, and recoverable **Trash**. Saved rows show block counts and last-save times. **Save a copy** preserves the original; **Import file** always creates a separate document with a unique name. Export a `.gradara.json` file to share a model. Original `.flux.json` files remain supported.
+
+The repository includes only the curated example templates. Personal models, Trash, simulation runs, and generated artifacts are local data excluded from Git.
 
 ## What works today
 
@@ -53,7 +57,7 @@ Drawing, dragging, and routing stay in the browser. The FastAPI service saves pr
 
 Drag between ports, or click a port and then its destination. Drop on wire ink to join a net. Select a wire to reshape it; **D** redraws and **R** restores automatic routing. **Escape** cancels a gesture. Drag a block's name to reposition its label.
 
-Drag empty canvas to select. Pan with the middle/right mouse button or Space. **F** fits the model; **⌘/Ctrl+Z** undoes; **⌘/Ctrl+D** duplicates. The in-app Shortcuts dialog lists more gestures. See the [user guide](docs/USER_GUIDE.md) and [wiring contract](WIRING.md).
+Drag empty canvas to select. Pan with the middle/right mouse button or Space. **F** fits the model; **⌘/Ctrl+Z** undoes; **⌘/Ctrl+D** duplicates. The in-app Shortcuts dialog lists more gestures. See the [user guide](docs/USER_GUIDE.md) and [wiring contract](docs/architecture/WIRING.md).
 
 ## Boundaries
 
@@ -75,8 +79,18 @@ npm run build
 
 Real-engine tests additionally require the Docker image; see [testing](docs/development/TESTING.md). Whole-repository lint currently has a recorded backlog and is advisory in CI. Follow [CONTRIBUTING.md](CONTRIBUTING.md); agents should start with [AGENTS.md](AGENTS.md) and the [task playbooks](docs/agents/PLAYBOOKS.md).
 
-## Licensing and project identity
+## Creator and engineering services
 
-The license for Gradara's original code is awaiting the project owner's selection; the repository is **not yet ready to be presented as a licensed open-source release**. The [release checklist](docs/RELEASING.md) tracks that decision and publication setup. Third-party code retains its own terms; see [third-party notices](THIRD_PARTY_NOTICES.md), including the separate OpenModelica compiler/runtime and Modelica Standard Library licenses.
+Gradara is created and maintained by **Edgar Duarte**, exploring how responsive graphical tools and agent-assisted authoring can make engineering models easier to build and understand.
+
+For paid work in FPGA/RTL, embedded systems, connected products, engineering software, or business automation, visit **[Virtu Services](https://virtu-services.us)** to discuss a project. Consulting is optional; using or contributing to Gradara does not require a services engagement.
+
+## License
+
+Copyright 2026 Edgar Duarte and the Gradara contributors.
+
+Gradara's original source code, documentation, and bundled example models are licensed under the **[Apache License, Version 2.0](LICENSE)**. You may use, modify, and distribute them, including commercially, subject to that license. They are provided without warranties. See [NOTICE](NOTICE) for attribution.
+
+Third-party material retains its own terms; see [third-party notices](THIRD_PARTY_NOTICES.md) and `LICENSES/`. OpenModelica's compiler/runtime and the Modelica Standard Library are separately licensed. This license does not change ownership of models you create or grant trademark rights beyond those stated in Apache-2.0.
 
 Gradara is an independent project and is not affiliated with or endorsed by MathWorks. MATLAB and Simulink are referenced as compatibility or usability context, not as project components.

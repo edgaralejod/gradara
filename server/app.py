@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
-from .models import Project, GenerateRequest, NewModelRequest
+from .models import Project, GenerateRequest, NewModelRequest, SaveModelRequest, CopyModelRequest
 from . import workspace
 from .modelica import emit_project, project_key, semantic_hash
 from .engine import ROOT, RUNS, engine_available, simulate
@@ -41,19 +41,32 @@ async def health():
     ready = await engine_available()
     return {'engine': 'OpenModelica 1.27.0','engineReady':ready,'agentReady':Path(CODEX).exists() or shutil.which(CODEX) is not None,'provider':'Codex','projectDirectory':str(PROJECT_DIR)}
 
+def document_response(project):
+    return {'project': project.model_dump(exclude_none=True) if project else None,
+            'saveVersion': workspace.save_version(project) if project else None}
+
 @app.get('/api/project')
 async def load_project():
     project = workspace.load_current(PROJECT_DIR)
-    return {'project':project.model_dump(exclude_none=True) if project else None}
+    return document_response(project)
 
 @app.put('/api/project')
 async def save_project(project:Project):
-    project = workspace.save(PROJECT_DIR, project)
+    project = workspace.document(project.model_dump(exclude_none=True))
+    existing = workspace.saved_models(PROJECT_DIR).get(project.modelId)
+    if existing and workspace.save_version(existing) != workspace.save_version(project):
+        raise HTTPException(409, 'Reload Gradara to save this model with conflict protection.')
+    try:
+        project = existing or workspace.save_document(PROJECT_DIR, project, None)
+        if existing is None:
+            project = workspace.activate(PROJECT_DIR, project.modelId)
+    except workspace.SaveConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
     return {'saved':True,'modelId':project.modelId,'revision':project.revision,'key':project_key(project)}
 
 @app.get('/api/models')
-async def list_models():
-    return {'models':[{'id':p.modelId,'name':p.name} for p in workspace.saved_models(PROJECT_DIR).values()]}
+async def list_models(trashed: bool = False):
+    return {'models':workspace.model_summaries(PROJECT_DIR, trashed)}
 
 @app.post('/api/models')
 async def create_model(request: NewModelRequest):
@@ -61,13 +74,53 @@ async def create_model(request: NewModelRequest):
         project = workspace.new_model(PROJECT_DIR, ROOT/'models'/'examples', request.name, request.template)
     except ValueError as exc:
         raise HTTPException(422,str(exc)) from exc
-    return {'project':project.model_dump(exclude_none=True)}
+    return document_response(project)
+
+@app.post('/api/models/copy')
+async def copy_model(request: CopyModelRequest):
+    try:
+        return document_response(workspace.copy_model(PROJECT_DIR, request.project, request.name))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+@app.put('/api/models/{model_id}')
+async def update_model(model_id: str, request: SaveModelRequest):
+    if model_id != request.project.modelId:
+        raise HTTPException(422, 'Document ID does not match the save destination.')
+    try:
+        return document_response(workspace.save_document(PROJECT_DIR, request.project, request.expectedVersion))
+    except workspace.SaveConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+@app.post('/api/models/{model_id}/activate')
+async def activate_model(model_id: str):
+    try:
+        return document_response(workspace.activate(PROJECT_DIR, model_id))
+    except KeyError as exc:
+        raise HTTPException(404, 'Saved model not found.') from exc
+
+@app.post('/api/models/{model_id}/trash')
+async def trash_model(model_id: str):
+    try:
+        workspace.trash_model(PROJECT_DIR, model_id)
+        return {'trashed': True}
+    except workspace.SaveConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except KeyError as exc:
+        raise HTTPException(404, 'Saved model not found.') from exc
+
+@app.post('/api/models/{model_id}/restore')
+async def restore_model(model_id: str):
+    try:
+        return document_response(workspace.restore_model(PROJECT_DIR, model_id))
+    except KeyError as exc:
+        raise HTTPException(404, 'Model not found in Trash.') from exc
 
 @app.get('/api/models/{model_id}')
 async def load_model(model_id: str):
     project = workspace.saved_models(PROJECT_DIR).get(model_id)
     if project is None: raise HTTPException(404,'Saved model not found.')
-    return {'project':project.model_dump(exclude_none=True)}
+    return document_response(project)
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):

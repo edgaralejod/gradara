@@ -13,7 +13,7 @@ The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation li
 | `wires`, `junctions` | Connectivity and drawn route geometry. |
 | `nets` | Optional legacy field; current documents reconcile stable logical nets. |
 | `duration` | Simulation stop time, in seconds. Server accepts greater than 0 and at most 60. |
-| `revision` | Edit revision. Not a server-enforced optimistic-concurrency token. |
+| `revision` | Edit/undo revision. Save concurrency instead uses a separate content-hash `saveVersion` token. |
 | `exampleId` | Optional template origin, not document identity. |
 | `annotations`, `plots` | Diagram explanations and named result-series groups. |
 
@@ -64,7 +64,7 @@ A net describes one connected component of wires:
 
 Each wire belongs to exactly one net in documents with a net registry. Each net must be connected and contain its anchor. Signal nets permit at most one output driver, including connections through junctions; physical nets join compatible physical ports without inventing a signal source. Incomplete signal nets can be saved but fail simulation preflight when required inputs lack a source.
 
-Use [net-registry.ts](../../lib/gradara/net-registry.ts) reconciliation after graph edits rather than allocating a new ID on every render. Test merge, split, deletion, duplication, label placement, undo, and reload. The [wiring document](../../WIRING.md) records the detailed naming and identity policy.
+Use [net-registry.ts](../../lib/gradara/net-registry.ts) reconciliation after graph edits rather than allocating a new ID on every render. Test merge, split, deletion, duplication, label placement, undo, and reload. The [wiring document](WIRING.md) records the detailed naming and identity policy.
 
 ## Normalization and persistence
 
@@ -73,14 +73,21 @@ Use [net-registry.ts](../../lib/gradara/net-registry.ts) reconciliation after gr
 | Path under `projects/` | Ownership |
 | --- | --- |
 | `models/{modelId}.json` | Saved documents. |
-| `workspace.json` | Active document snapshot. |
+| `workspace.json` | Last activated document snapshot/identity. Loading resolves its ID to the canonical file in `models/`, so old snapshot contents cannot override later edits. |
 | `workspace.mo` | Generated executable source projection. |
-| `examples/` | Legacy saved work, preserved by migration. Not the checked-in templates. |
+| `examples/` | Legacy saved work, preserved by migration. Not the checked-in templates in repository `models/examples/`. |
+| `trash/{modelId}.json` | Recoverable removed documents. Presence hides any legacy copy of the same identity. |
 | `runs/{jobId}/` | Immutable input snapshots, source, diagnostics, CSV, and result preview. |
 | `agent/` | Generation prompts, responses, schema, and logs. |
 | `exports/` | Generated controller packages. |
 
-The server uses per-file atomic replacement, not a transactional multi-file database. Autosave serialization belongs to the frontend; multi-client conflict resolution and crash-consistent transactions are future work. Preserve legacy inputs and migrate non-destructively. Never use a template refresh as a reason to rewrite all user documents.
+The server uses per-file atomic replacement, not a transactional multi-file database. `PUT /models/{id}` writes one document without activating it. It requires the `expectedVersion` from the last load/save response for an existing document; a content hash checks all persisted fields, including geometry and names. A stale save fails with 409. Retrying a body already stored is idempotent, even when its acknowledgment was lost. The single-process service performs the check/write without an intervening await; multiple workers are not supported by this protocol.
+
+`POST /models/{id}/activate` explicitly selects a document. Legacy workspace-only data is materialized into a canonical model file before switching. Reading/opening an unchanged canonical document preserves its last-save timestamp. Creation, import, and Save a copy allocate independent identities; example provenance never selects a save destination.
+
+`DocumentStore` serializes browser writes and keeps save versions per model. Transitions flush the latest snapshot, cancel pending debounce timers, and temporarily lock edits. A failed write remains unsaved. Drafts and each tab's active ID live in session storage; a recovered draft retains its original base version so it cannot silently overwrite newer disk data. Copy recovery gives the draft a new identity.
+
+Moving an inactive model to Trash preserves a recoverable JSON copy and hides legacy copies with the same ID. Saves to a trashed ID fail rather than resurrecting it. Restore retains the original identity without switching the active model. Examples in the repository remain untouched. Custom folders, collaborative merges, and crash-consistent multi-file transactions remain future work.
 
 ## Numerical identity
 

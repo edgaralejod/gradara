@@ -14,7 +14,7 @@ python3 scripts/check-repo.py
 npm run build
 ```
 
-`npm test` runs Node/tsx tests of immutable edits, geometry, gestures, selection, net identity, naming, block design, plots, and templates. These are not browser interaction tests. Python unit tests cover schemas, source emission, document persistence, diagnostics, and result handling. They create synthetic fixtures and do not require provider credentials.
+`npm test` runs Node/tsx tests of serialized document saves/recovery, immutable edits, geometry, gestures, selection, net identity, naming, block design, plots, and templates. These are not browser interaction tests. Python unit tests cover schemas, source emission, document persistence, diagnostics, and result handling. They create synthetic fixtures and do not require provider credentials.
 
 `check-docs.py` checks relative Markdown file links, excluding code fences. `check-repo.py` checks repository candidates for accidental local artifacts, private absolute paths, and a limited set of credential patterns without printing suspected secret values. It is not a comprehensive security audit or dependency vulnerability scanner.
 
@@ -43,7 +43,7 @@ Engine and block changes should add checks with engineering meaning: expected st
 
 Use the real browser whenever a change affects interactions. Start from a new disposable model or template; do not rearrange someone else's saved document for QA.
 
-1. Create a blank model, add Step and Gain, wire them, change a parameter, run, save, and reopen.
+1. Click New model, rename its title, add Step and Gain, wire them, change a parameter, and immediately create/open another model. Reopen the first model through Models search; verify the latest edits and run it. Verify My models and Examples remain separate. Exercise Save a copy, repeated imports, Trash/restore, and reload. In two tabs editing the same model, confirm a stale save gets an actionable conflict and saving a copy preserves both versions.
 2. Draw click-to-click and drag-to-connect wires, branch onto wire ink, reshape/reconnect, cancel, undo, and redo. Check that canvas selection does not compete with drawing.
 3. Move connected blocks and junctions, straighten near-horizontal runs, resize a block, and drag its label. Confirm no leftover stubs or unexpected geometry changes after reload.
 4. Ctrl-drag a block and a connected selection. Names and IDs must be unique, originals unchanged, and undo atomic.
@@ -54,17 +54,32 @@ Use the real browser whenever a change affects interactions. Start from a new di
 
 For agent changes, separately test generation/refinement with a configured provider. Preserve compatible port identities. For C-export changes, inspect the contract and compile result, and verify cancellation/resource cleanup. Agent calls are intentionally absent from automated CI.
 
-Record OS/browser, precise gestures, expected/observed behavior, and checks run in the PR. Reference the [wiring audit](../../WIRING_AUDIT.md) and [UI audit](../../UI_AUDIT.md) for open gaps. Do not infer Simulink parity from one pleasant demo.
+Record OS/browser, precise gestures, expected/observed behavior, and checks run in the PR. Use the [wiring contract](../architecture/WIRING.md) for implemented behavior and the [roadmap](../../ROADMAP.md) for open gaps. A passing geometry suite or a small smooth diagram does not establish performance or feature parity with another tool.
+
+### Wiring regression fixtures
+
+| Fixture | Verify |
+| --- | --- |
+| Source → sum → gain with feedback | Port exit direction, direct and pinned routes, branch creation, cancel, reconnect/redraw, and one-step undo. |
+| Several junctions on one trunk | Dots follow the edited run in horizontal, vertical, mirrored, and reversed-endpoint layouts; connectivity survives normalization and reload. |
+| Complete and partial connected selections | Internal geometry translates rigidly; boundary wires stretch; copies have independent IDs and no invented external connections. |
+| Nearby or crossing nets | Alignment does not splice; attachment highlights the intended target; invalid joins leave the original document intact. |
+| Repeated bend/straighten cycles | Nearly collinear runs coalesce without accumulating stubs; endpoint normals, real junctions, and useful manual bends remain intact. |
+| Signal and physical connections | Driver rules differ from acausal terminal laws; geometry-only edits preserve emitted connections and result identity. |
+
+Repeat affected gestures at 25%, 100%, and 200% zoom, including Escape, focus loss, undo/redo, and reload. Test input fields and Monaco separately so shortcuts do not steal text editing. Use the FOC template for a realistic dense sheet and synthetic load fixtures for performance measurements; record visible/total element counts and pointer-to-paint latency separately from numerical runtime.
 
 ## Generated fixtures and reports
 
 ```sh
-npm run audit:blocks
+npm run report:blocks
 npx tsx scripts/build-buck-example.ts
 npx tsx scripts/style-examples.ts
 ```
 
-Run only the relevant generator. The first refreshes `BLOCK_AUDIT.md`; the others rewrite checked-in template files, not user documents. Review the diff, run template tests, and inspect the resulting examples. A deliberate example change should not be mixed into unrelated work.
+Run only the relevant generator. `report:blocks` writes `reports/block-catalog.md`, which is ignored by Git and can be regenerated at any time. Review block visuals in the live `/block-catalog` page; structural inventory alone cannot verify appearance or physics.
+
+The example builders rewrite checked-in template files, not user documents. Review their diffs, run template tests, and inspect the resulting examples. A deliberate example change should not be mixed into unrelated work.
 
 ## CI
 

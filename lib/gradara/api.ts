@@ -1,3 +1,13 @@
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const headers = new Headers(options?.headers);
   if (!headers.has('Content-Type'))
@@ -22,10 +32,11 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   }
   if (!response.ok) {
     const detail = (data as { detail?: string | { msg: string }[] }).detail;
-    throw new Error(
+    throw new ApiError(
       Array.isArray(detail)
         ? detail.map((x: { msg: string }) => x.msg).join('\n')
         : (detail ?? 'The local service could not complete this request.'),
+      response.status,
     );
   }
   return data as T;

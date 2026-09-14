@@ -27,6 +27,9 @@ import {
   Undo2,
   Redo2,
   ChevronRight,
+  BookOpen,
+  AlertCircle,
+  RotateCw,
   Settings2,
   Code2,
   ArrowUpRight,
@@ -43,7 +46,6 @@ import {
   Trash2,
   Maximize,
   Keyboard,
-  Upload,
   Check,
   LoaderCircle,
   X,
@@ -88,7 +90,17 @@ import {
 import NumberField from '@/components/gradara/number-field';
 import NameField from '@/components/gradara/name-field';
 import Results from '@/components/gradara/results';
-import NewModelDialog from '@/components/gradara/new-model-dialog';
+import ModelBrowser, {
+  type BrowserSection,
+} from '@/components/gradara/model-browser';
+import SaveCopyDialog from '@/components/gradara/save-copy-dialog';
+import AboutDialog from '@/components/gradara/about-dialog';
+import {
+  DocumentStore,
+  draftKey,
+  type Draft,
+  type SavedDocument,
+} from '@/lib/gradara/document-store';
 import { blankProject, type TemplateId } from '@/lib/gradara/workspace';
 import LibraryNavigator from '@/components/gradara/library-navigator';
 import BlockInserter, {
@@ -157,7 +169,6 @@ function IconButton({
 }
 function Workbench() {
   const [project, setProject] = useState<Project>(blankProject);
-  const savedBody = useRef('');
   const projectRef = useRef(project);
   projectRef.current = project;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -187,7 +198,15 @@ function Workbench() {
   }, []);
   const [ready, setReady] = useState(false);
   const [switching, setSwitching] = useState(false);
-  const [newModelOpen, setNewModelOpen] = useState(false);
+  const [browserSection, setBrowserSection] = useState<BrowserSection | null>(
+    null,
+  );
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [startupError, setStartupError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [saveError, setSaveError] = useState('');
+  const switchingRef = useRef(false);
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [saving, setSaving] = useState('Loading');
   const [health, setHealth] = useState({
     engineReady: false,
@@ -220,9 +239,6 @@ function Workbench() {
     return () => window.removeEventListener('resize', resize);
   }, [libraryOpen, inspectorOpen]);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [savedModels, setSavedModels] = useState<
-    { id: string; name: string }[]
-  >([]);
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState('');
   const [result, setResult] = useState<SimulationResult | null>(null);
@@ -231,14 +247,39 @@ function Workbench() {
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const runController = useRef<AbortController | null>(null);
   const runId = useRef('');
-  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
-  const persistProject = useCallback((body: string) => {
-    const pending = saveQueue.current
-      .catch(() => {})
-      .then(() => api('/project', { method: 'PUT', body }));
-    saveQueue.current = pending;
-    return pending;
-  }, []);
+  const documents = useRef<DocumentStore | null>(null);
+  if (!documents.current)
+    documents.current = new DocumentStore((project, expectedVersion) =>
+      api<SavedDocument>(`/models/${project.modelId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ project, expectedVersion }),
+      }),
+    );
+  const store = documents.current;
+  const persistProject = useCallback(
+    async (body: string) => {
+      const snapshot = JSON.parse(body) as Project;
+      try {
+        sessionStorage.setItem(
+          draftKey(snapshot.modelId!),
+          JSON.stringify(store.draft(snapshot)),
+        );
+      } catch {
+        /* Server save still works if browser storage is full. */
+      }
+      await store.save(snapshot);
+      try {
+        const draft = JSON.parse(
+          sessionStorage.getItem(draftKey(snapshot.modelId!)) ?? 'null',
+        ) as Draft | null;
+        if (draft && JSON.stringify(draft.project) === body)
+          sessionStorage.removeItem(draftKey(snapshot.modelId!));
+      } catch {
+        /* A browser cache failure must not turn a completed disk save into an error. */
+      }
+    },
+    [store],
+  );
   const importRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const flow = useReactFlow();
@@ -248,6 +289,7 @@ function Workbench() {
     noticeTimer.current = setTimeout(() => setNotice(''), 5500);
   }, []);
   const commit = useCallback((update: Project | ((p: Project) => Project)) => {
+    if (switchingRef.current) return;
     const previous = projectRef.current;
     const next = normalizeProject(
       typeof update === 'function' ? update(previous) : update,
@@ -306,55 +348,89 @@ function Workbench() {
     });
   };
   const signature = useMemo(() => semanticSignature(project), [project]);
+  const restoreDocument = (loaded: SavedDocument, recover = true) => {
+    store.remember(loaded);
+    let next = loaded.project;
+    if (recover) {
+      try {
+        const draft = JSON.parse(
+          sessionStorage.getItem(draftKey(next.modelId!)) ?? 'null',
+        ) as Draft | null;
+        if (
+          draft &&
+          draft.project.modelId === next.modelId &&
+          JSON.stringify(draft.project) !== JSON.stringify(next)
+        ) {
+          next = draft.project;
+          store.recover(draft);
+          notify('Recovered unsaved edits from this browser.');
+        }
+      } catch {
+        /* Ignore an unreadable browser draft; the disk document remains authoritative. */
+      }
+    }
+    return normalizeProject(next);
+  };
   useEffect(() => {
     let disposed = false;
     async function load() {
+      setStartupError('');
       try {
-        const loaded = await api<{ project: Project | null }>('/project');
-        if (disposed) return;
-        if (loaded.project) {
-          if (loaded.project.exampleId === 'foc') {
-            setInspectorOpen(false);
-            setSelectedIds([]);
-          }
-          const canonical = normalizeProject(loaded.project);
-          const restored =
-            canonical === loaded.project
-              ? canonical
-              : { ...canonical, revision: canonical.revision + 1 };
-          setProject(restored);
-          projectRef.current = restored;
-          savedBody.current = JSON.stringify(loaded.project);
+        let tabModel: string | null = null;
+        try {
+          tabModel = sessionStorage.getItem('gradara-active-model');
+        } catch {
+          /* Browser storage is optional. */
         }
+        let loaded = await api<{
+          project: Project | null;
+          saveVersion: string | null;
+        }>(tabModel ? `/models/${tabModel}` : '/project').catch(
+          async (error) => {
+            if (tabModel && error.status === 404)
+              return api<{
+                project: Project | null;
+                saveVersion: string | null;
+              }>('/project');
+            throw error;
+          },
+        );
+        if (disposed) return;
+        if (!loaded.project)
+          loaded = await api<SavedDocument>('/models', {
+            method: 'POST',
+            body: JSON.stringify({ name: 'Untitled model', template: 'blank' }),
+          });
+        if (disposed) return;
+        if (!loaded.saveVersion)
+          throw new Error(
+            'Restart the Gradara service to enable the updated model-saving system.',
+          );
+        const next = restoreDocument(loaded as SavedDocument);
+        try {
+          sessionStorage.setItem('gradara-active-model', next.modelId!);
+        } catch {
+          /* The service still remembers the active document. */
+        }
+        projectRef.current = next;
+        setProject(next);
+        setReady(true);
         const latest = await api<{ result: SimulationResult | null }>(
-          '/results/latest',
+          `/results/latest?model=${next.modelId}`,
         ).catch(() => ({ result: null }));
-        const saved = await api<{ models: { id: string; name: string }[] }>(
-          '/models',
-        ).catch(() => ({ models: [] }));
-        if (!disposed) setSavedModels(saved.models);
-        if (!disposed && latest.result) {
+        if (
+          !disposed &&
+          projectRef.current.modelId === next.modelId &&
+          latest.result
+        ) {
           setResult(latest.result);
           if (latest.result.snapshot)
             setResultSignature(semanticSignature(latest.result.snapshot));
         }
-      } catch {
-        const local =
-          localStorage.getItem('gradara-workspace') ??
-          localStorage.getItem('flux-workspace');
-        if (local) {
-          try {
-            const p = normalizeProject(JSON.parse(local));
-            setProject(p);
-            projectRef.current = p;
-          } catch {}
-        }
-      } finally {
+      } catch (e) {
         if (!disposed) {
-          const current = normalizeProject(projectRef.current);
-          projectRef.current = current;
-          setProject(current);
-          setReady(true);
+          setStartupError((e as Error).message);
+          setSaving('Not connected');
         }
       }
     }
@@ -365,7 +441,7 @@ function Workbench() {
       disposed = true;
       runController.current?.abort();
     };
-  }, []);
+  }, [loadAttempt]);
   useEffect(() => {
     let alive = true;
     const update = () =>
@@ -384,31 +460,65 @@ function Workbench() {
       clearInterval(timer);
     };
   }, []);
+  const saveCurrent = async () => {
+    const snapshot = projectRef.current;
+    setSaving('Saving');
+    try {
+      await persistProject(JSON.stringify(snapshot));
+      if (projectRef.current.modelId === snapshot.modelId) {
+        setSaveError('');
+        setSaving(
+          store.isSaved(projectRef.current) ? 'Saved' : 'Unsaved changes',
+        );
+      }
+    } catch (e) {
+      if (projectRef.current.modelId === snapshot.modelId) {
+        setSaving('Not saved');
+        setSaveError((e as Error).message);
+      }
+      throw e;
+    }
+  };
+  const saveNowRef = useRef(saveCurrent);
+  saveNowRef.current = saveCurrent;
   useEffect(() => {
     if (!ready || switching) return;
-    const body = JSON.stringify(project);
-    if (body === savedBody.current) {
+    if (store.isSaved(project)) {
       setSaving('Saved');
       return;
     }
-    setSaving('Saving');
-    const timer = setTimeout(() => {
-      localStorage.setItem('gradara-workspace', JSON.stringify(project));
-      localStorage.removeItem('flux-workspace');
-      void persistProject(body)
-        .then(() => {
-          savedBody.current = body;
-          if (JSON.stringify(projectRef.current) === body) setSaving('Saved');
-        })
-        .catch((e) => {
-          setSaving('Saved on device');
-          notify((e as Error).message);
-        });
+    setSaving('Unsaved changes');
+    try {
+      sessionStorage.setItem(
+        draftKey(project.modelId!),
+        JSON.stringify(store.draft(project)),
+      );
+    } catch {
+      /* Saving to disk remains available. */
+    }
+    autosaveTimer.current = setTimeout(() => {
+      void saveNowRef.current().catch(() => {});
     }, 550);
-    return () => clearTimeout(timer);
-  }, [project, ready, switching, notify, persistProject]);
+    return () => {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    };
+  }, [project, ready, switching, store]);
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (ready && !store.isSaved(projectRef.current)) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [ready, store]);
   const activateModel = (next: Project) => {
-    savedBody.current = JSON.stringify(next);
+    try {
+      sessionStorage.setItem('gradara-active-model', next.modelId!);
+    } catch {
+      /* The service still remembers the active document. */
+    }
     projectRef.current = next;
     setProject(next);
     setHistory([]);
@@ -419,57 +529,102 @@ function Workbench() {
     setEquationBlock(null);
     setInspectorOpen(false);
     setRunError('');
+    setSaveError('');
     setResult(null);
     setResultSignature('');
+    setSaving(store.isSaved(next) ? 'Saved' : 'Unsaved changes');
   };
-  const createModel = async (name: string, template: TemplateId) => {
+  const beginTransition = () => {
+    if (switchingRef.current || running || !ready) return false;
+    switchingRef.current = true;
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     setSwitching(true);
+    return true;
+  };
+  const endTransition = () => {
+    switchingRef.current = false;
+    setSwitching(false);
+  };
+  const createModel = async (
+    name = 'Untitled model',
+    template: TemplateId = 'blank',
+  ) => {
+    if (!beginTransition()) return;
     try {
-      await persistProject(JSON.stringify(projectRef.current));
-      const created = await api<{ project: Project }>('/models', {
+      await saveCurrent();
+      const created = await api<SavedDocument>('/models', {
         method: 'POST',
         body: JSON.stringify({ name, template }),
       });
-      const next = normalizeProject(created.project);
-      await persistProject(JSON.stringify(next));
-      activateModel(next);
-      setNewModelOpen(false);
+      activateModel(restoreDocument(created, false));
+      setBrowserSection(null);
       setLibraryOpen(template === 'blank');
-      setSavedModels((models) => [
-        ...models.filter((m) => m.id !== next.modelId),
-        { id: next.modelId!, name: next.name },
-      ]);
-      notify(`${next.name} created.`);
     } finally {
-      setSwitching(false);
+      endTransition();
     }
   };
-  const openModel = async (value: string) => {
-    if (switching || running || value === projectRef.current.modelId) return;
-    setSwitching(true);
+  const openBrowser = async (section: BrowserSection) => {
+    await saveCurrent().catch(() => {});
+    setBrowserSection(section);
+  };
+  const openModel = async (id: string) => {
+    if (id === projectRef.current.modelId) return;
+    if (!beginTransition()) return;
     try {
-      await persistProject(JSON.stringify(projectRef.current));
-      const path = value.startsWith('example:')
-        ? `/examples/${value.slice(8)}`
-        : `/models/${value}`;
-      const loaded = await api<{ project: Project }>(path);
-      const next = normalizeProject(loaded.project);
-      await persistProject(JSON.stringify(next));
+      await saveCurrent();
+      const loaded = await api<SavedDocument>(`/models/${id}/activate`, {
+        method: 'POST',
+      });
+      const next = restoreDocument(loaded);
       activateModel(next);
-      const saved = await api<{ models: { id: string; name: string }[] }>(
-        '/models',
-      );
-      setSavedModels(saved.models);
       const latest = await api<{ result: SimulationResult | null }>(
         `/results/latest?model=${next.modelId}`,
-      );
-      setResult(latest.result);
-      if (latest.result?.snapshot)
-        setResultSignature(semanticSignature(latest.result.snapshot));
+      ).catch(() => ({ result: null }));
+      if (projectRef.current.modelId === next.modelId) {
+        setResult(latest.result);
+        if (latest.result?.snapshot)
+          setResultSignature(semanticSignature(latest.result.snapshot));
+      }
+    } finally {
+      endTransition();
+    }
+  };
+  const saveCopy = async (name: string) => {
+    if (!beginTransition()) return;
+    try {
+      // Preserve the current edits even when saving the original is blocked by a conflict.
+      const originalId = projectRef.current.modelId!;
+      const copied = await api<SavedDocument>('/models/copy', {
+        method: 'POST',
+        body: JSON.stringify({ name, project: projectRef.current }),
+      });
+      try {
+        sessionStorage.removeItem(draftKey(originalId));
+      } catch {
+        /* The copy is already on disk. */
+      }
+      activateModel(restoreDocument(copied, false));
+      setBrowserSection(null);
+      notify('Copy saved as a separate model.');
+    } finally {
+      endTransition();
+    }
+  };
+  const reloadSaved = async () => {
+    if (!beginTransition()) return;
+    try {
+      const id = projectRef.current.modelId!;
+      const loaded = await api<SavedDocument>(`/models/${id}`);
+      try {
+        sessionStorage.removeItem(draftKey(id));
+      } catch {
+        /* Keep the saved document usable if browser storage is unavailable. */
+      }
+      activateModel(restoreDocument(loaded, false));
     } catch (e) {
       notify((e as Error).message);
     } finally {
-      setSwitching(false);
+      endTransition();
     }
   };
   const updateLayout = useCallback(
@@ -702,7 +857,10 @@ function Workbench() {
         deleteSelected();
       } else if (command && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        notify('Your workspace saves automatically.');
+        void saveNowRef
+          .current()
+          .then(() => notify('Model saved.'))
+          .catch(() => {});
       } else if (command && e.key === 'Enter') {
         e.preventDefault();
         void runRef.current();
@@ -805,34 +963,22 @@ function Workbench() {
     );
   };
   async function importProject(file: File) {
+    if (!beginTransition()) return;
     try {
       const imported = JSON.parse(await file.text()) as Project;
       await api('/source', { method: 'POST', body: JSON.stringify(imported) });
-      await persistProject(JSON.stringify(projectRef.current));
-      // Import is a separate local document, even when copied from this workspace.
-      const next = normalizeProject({
-        ...imported,
-        modelId: crypto.randomUUID(),
+      await saveCurrent();
+      const copied = await api<SavedDocument>('/models/copy', {
+        method: 'POST',
+        body: JSON.stringify({ name: imported.name, project: imported }),
       });
-      await persistProject(JSON.stringify(next));
-      projectRef.current = next;
-      setProject(next);
-      savedBody.current = JSON.stringify(next);
-      setHistory([]);
-      setFuture([]);
-      select(emptySelection());
-      setRunError('');
-      setResultSignature('');
-      const saved = await api<{ models: { id: string; name: string }[] }>(
-        '/models',
-      );
-      setSavedModels(saved.models);
-      setSelectedIds([]);
-      setResult(null);
-      setTimeout(() => void flow.fitView({ padding: 0.2, duration: 200 }), 100);
-      notify('Project opened.');
+      activateModel(restoreDocument(copied, false));
+      setBrowserSection(null);
+      notify(`${copied.project.name} imported as a separate model.`);
     } catch (e) {
-      notify('Could not open this project. ' + (e as Error).message);
+      notify('Could not import this model. ' + (e as Error).message);
+    } finally {
+      endTransition();
     }
   }
   const actionsRef = useRef({ commit, runSimulation, addComponent });
@@ -928,61 +1074,97 @@ function Workbench() {
     <TooltipProvider delay={450}>
       <main className="workbench">
         <header className="app-header">
-          <div className="brand">
-            <span className="brand-icon">
-              <Activity size={23} />
-            </span>
-            Gradara<span className="preview-tag">MODELING</span>
-          </div>
+          <AboutDialog />
           <div className="project-breadcrumb">
-            <FolderOpen size={16} />
-            <span>Models</span>
-            <ChevronRight size={14} />
-            <select
-              aria-label="Open model"
-              value={project.modelId ?? ''}
-              disabled={switching || running}
-              onChange={(e) => void openModel(e.target.value)}
+            <button
+              className="models-button"
+              aria-label="Open model browser"
+              disabled={!ready || switching || running}
+              onClick={() => void openBrowser('models')}
             >
-              <optgroup label="Saved models">
-                <option value={project.modelId ?? ''}>{project.name}</option>
-                {savedModels
-                  .filter((m) => m.id !== project.modelId)
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
-            <span className="saved-dot" />
+              <FolderOpen size={16} />
+              <span>Models</span>
+            </button>
+            <ChevronRight size={14} />
+            <div className="model-title-field" title="Click to rename model">
+              <NameField
+                label="Model name"
+                value={project.name}
+                onCommit={(name) => {
+                  commit((p) => ({ ...p, name }));
+                }}
+              />
+            </div>
           </div>
           <div className="header-right">
             <Button
               className="new-model-button"
               variant="outline"
               disabled={!ready || switching || running}
-              onClick={() => setNewModelOpen(true)}
+              onClick={() => void createModel().catch((e) => notify(e.message))}
             >
               <FilePlus2 size={15} />
               New model
             </Button>
-            <span className="local-badge">
-              <span />
-              Local workspace
-            </span>
-            <IconButton
-              label="Open a Gradara project"
-              onClick={() => importRef.current?.click()}
+            <Button
+              className="examples-button"
+              variant="ghost"
+              disabled={!ready || switching || running}
+              onClick={() => void openBrowser('examples')}
             >
-              <Upload size={15} />
-            </IconButton>
+              <BookOpen size={15} />
+              Examples
+            </Button>
             <Button variant="outline" onClick={() => setExportOpen(true)}>
               <ArrowUpRight />
               Export
             </Button>
           </div>
         </header>
+        {startupError && (
+          <div className="model-save-banner" role="alert">
+            <AlertCircle size={16} />
+            <span>{startupError}</span>
+            <Button
+              variant="outline"
+              onClick={() => setLoadAttempt((n) => n + 1)}
+            >
+              Reconnect
+            </Button>
+          </div>
+        )}
+        {saveError && (
+          <div className="model-save-banner" role="alert">
+            <AlertCircle size={16} />
+            <span>
+              <strong>Changes are not saved.</strong> {saveError}
+            </span>
+            <Button
+              variant="outline"
+              disabled={switching}
+              onClick={() => void saveCurrent().catch(() => {})}
+            >
+              <RotateCw size={14} />
+              Retry
+            </Button>
+            <Button variant="outline" onClick={() => setCopyOpen(true)}>
+              Save a copy…
+            </Button>
+            <Button
+              variant="ghost"
+              disabled={switching}
+              onClick={() => void reloadSaved()}
+            >
+              Reload saved version
+            </Button>
+          </div>
+        )}
+        {switching && (
+          <div className="document-transition" role="status">
+            <LoaderCircle className="spin" size={20} />
+            Opening model…
+          </div>
+        )}
         <div
           className={`main-layout ${!libraryOpen ? 'library-hidden' : ''} ${!inspectorOpen ? 'inspector-hidden' : ''}`}
         >
@@ -1188,7 +1370,7 @@ function Workbench() {
                     </div>
                     <button
                       className="empty-model-examples"
-                      onClick={() => setNewModelOpen(true)}
+                      onClick={() => void openBrowser('examples')}
                     >
                       Or start from an example
                     </button>
@@ -1723,11 +1905,18 @@ function Workbench() {
                 </span>
               ))}
           </span>
-          <span className="save-indicator">
+          <span
+            className={`save-indicator ${saveError ? 'save-failed' : ''}`}
+            role="status"
+          >
             {saving === 'Saving' ? (
               <LoaderCircle size={10} className="spin" />
-            ) : (
+            ) : saveError ? (
+              <AlertCircle size={12} />
+            ) : saving === 'Saved' ? (
               <Check size={10} />
+            ) : (
+              <span className="unsaved-dot" />
             )}{' '}
             {saving}
           </span>
@@ -1769,10 +1958,25 @@ function Workbench() {
               }}
             />
           )}
-        {newModelOpen && (
-          <NewModelDialog
-            onClose={() => setNewModelOpen(false)}
+        {browserSection && (
+          <ModelBrowser
+            section={browserSection}
+            activeId={project.modelId}
+            onClose={() => setBrowserSection(null)}
+            onOpen={openModel}
             onCreate={createModel}
+            onImport={() => importRef.current?.click()}
+            onCopy={() => {
+              setBrowserSection(null);
+              setCopyOpen(true);
+            }}
+          />
+        )}
+        {copyOpen && (
+          <SaveCopyDialog
+            name={project.name}
+            onClose={() => setCopyOpen(false)}
+            onSave={saveCopy}
           />
         )}
         {exportOpen && (

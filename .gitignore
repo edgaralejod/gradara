@@ -36,6 +36,7 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+/reports/
 
 # Local execution and generated project artifacts
 .venv/

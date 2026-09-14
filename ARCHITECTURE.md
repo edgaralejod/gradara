@@ -1,6 +1,6 @@
 # Architecture
 
-Decision established September 9, 2026; implementation description reviewed September 13, 2026. This document describes the working code. Future capabilities are explicitly marked.
+This document describes the implemented boundaries and the decisions behind them. Planned capabilities are listed separately under growth decisions and in the roadmap.
 
 ## Product decision
 
@@ -47,7 +47,7 @@ flowchart LR
 
 Stable document, block, port, wire, junction, and net identities serve different purposes. Human names and geometry may change without changing equations. React Flow node/edge objects are derived views and must not become saved solver state. See the [model format](docs/architecture/MODEL_FORMAT.md).
 
-Saving uses temporary files and per-file atomic replacement. Each model has its own document ID; a separate workspace file records the active model. Frontend saves are serialized. This does not implement revision-based conflict resolution across multiple browsers: simultaneous writers can overwrite each other.
+Saving uses temporary files and per-file atomic replacement. Each model has its own canonical document file; a separate workspace file records the last explicitly activated model. Document writes and activation are separate API operations. Frontend writes are serialized and carry an expected content-hash save version. A stale write receives HTTP 409 and can be recovered as a copy; this is conflict detection, not collaborative merging. The local service uses one process; this check/write protocol does not claim coordination across multiple server workers. Each browser tab retains its own active document and optional recovery draft in session storage. See the document contract for legacy and Trash behavior.
 
 The source-derived `semantic_hash` excludes presentation; latest results must match both that hash and the document ID. The separate `project_key` is a broader graph key and retains some definition metadata. There is no compiled-binary cache, and the current hash is not a cross-engine cache contract.
 
@@ -55,7 +55,7 @@ The source-derived `semantic_hash` excludes presentation; latest results must ma
 
 Pointer previews are local and frame-batched. A completed gesture commits one document change and one undo step. Autosave, source emission, agent calls, and simulation do not belong in the pointer-move loop. Preserve user geometry, labels, and explicitly chosen wire paths when changing numerical definitions.
 
-Shared geometry lives in `ports.ts` and `block-design.ts`. Library previews, the canvas, and the catalog use `BlockFace`. The [block design contract](BLOCK_DESIGN.md) and [wiring contract](WIRING.md) cover the detailed rules.
+Shared geometry lives in `ports.ts` and `block-design.ts`. Library previews, the canvas, and the catalog use `BlockFace`. The [block design contract](docs/blocks/DESIGN.md) and [wiring contract](docs/architecture/WIRING.md) cover the detailed rules.
 
 React Flow 12.11.6 requires a narrow, version-checked observer patch applied by `scripts/patch-react-flow.mjs` during install. It moves node-measurement publication to an animation frame. It does not suppress native errors. Read [the patch notes](patches/README.md) before upgrading React Flow.
 

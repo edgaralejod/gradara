@@ -134,3 +134,134 @@ def test_new_model_rejects_invalid_requests_without_touching_workspace(tmp_path,
     templates = Path(__file__).parents[1]/'models/examples'
     with pytest.raises(ValueError): workspace.new_model(tmp_path, templates, name, template)
     assert not (tmp_path/'workspace.json').exists()
+
+
+def test_background_save_does_not_activate_or_replace_another_document(tmp_path):
+    a = workspace.save(tmp_path, feedback())
+    token = workspace.save_version(a)
+    b = workspace.new_model(tmp_path, Path('models/examples'), 'Blank model')
+    a.name = 'Renamed in another tab'
+    a.revision += 1
+    workspace.save_document(tmp_path, a, token)
+    assert workspace.load_current(tmp_path).modelId == b.modelId
+    assert workspace.saved_models(tmp_path)[a.modelId].name == a.name
+    assert workspace.saved_models(tmp_path)[b.modelId].blocks == []
+    workspace.activate(tmp_path, a.modelId)
+    assert workspace.load_current(tmp_path).name == a.name
+
+
+def test_stale_same_revision_edit_is_rejected_and_can_be_saved_as_copy(tmp_path):
+    model = workspace.save(tmp_path, feedback())
+    token = workspace.save_version(model)
+    left, right = model.model_copy(deep=True), model.model_copy(deep=True)
+    left.name = 'First tab'
+    right.name = 'Second tab'
+    left.revision += 1
+    right.revision += 1
+    workspace.save_document(tmp_path, left, token)
+    with pytest.raises(workspace.SaveConflict):
+        workspace.save_document(tmp_path, right, token)
+    assert workspace.load_current(tmp_path).name == 'First tab'
+    copied = workspace.copy_model(tmp_path, right, 'Recovered edits')
+    assert copied.modelId != model.modelId
+    assert copied.blocks == right.blocks
+    assert workspace.saved_models(tmp_path)[model.modelId].name == 'First tab'
+    assert workspace.load_current(tmp_path).name == 'Recovered edits'
+
+
+def test_retry_after_lost_response_is_idempotent(tmp_path):
+    model = workspace.save(tmp_path, feedback())
+    token = workspace.save_version(model)
+    model.name = 'Saved already'
+    workspace.save_document(tmp_path, model, token)
+    path = tmp_path/'models'/f'{model.modelId}.json'
+    modified = path.stat().st_mtime_ns
+    retry = workspace.save_document(tmp_path, model, token)
+    assert workspace.save_version(retry) == workspace.save_version(model)
+    assert path.stat().st_mtime_ns == modified
+
+
+def test_current_snapshot_cannot_override_newer_canonical_document(tmp_path):
+    model = workspace.save(tmp_path, feedback())
+    snapshot = (tmp_path/'workspace.json').read_bytes()
+    token = workspace.save_version(model)
+    model.name = 'New name'
+    workspace.save_document(tmp_path, model, token)
+    assert (tmp_path/'workspace.json').read_bytes() == snapshot
+    assert workspace.load_current(tmp_path).name == 'New name'
+    assert workspace.saved_models(tmp_path)[model.modelId].name == 'New name'
+
+
+def test_creating_model_preserves_a_workspace_only_legacy_document(tmp_path):
+    original = json.loads(FIXTURE.read_text())
+    original.pop('modelId', None)
+    original.pop('exampleId', None)
+    (tmp_path/'workspace.json').write_text(json.dumps(original))
+    old = workspace.load_current(tmp_path)
+    workspace.new_model(tmp_path, Path('models/examples'), 'Untitled model')
+    assert workspace.saved_models(tmp_path)[old.modelId].blocks == old.blocks
+    assert (tmp_path/'models'/f'{old.modelId}.json').exists()
+
+
+def test_opening_model_does_not_change_last_saved_time(tmp_path):
+    model = workspace.save(tmp_path, feedback())
+    summary = workspace.model_summaries(tmp_path)[0]
+    workspace.activate(tmp_path, model.modelId)
+    assert workspace.model_summaries(tmp_path)[0] == summary
+    assert summary['blocks'] == len(model.blocks)
+
+
+def test_model_api_returns_save_versions_and_conflicts(tmp_path, monkeypatch):
+    from server import app as service
+    from server.models import SaveModelRequest, CopyModelRequest, NewModelRequest
+    from fastapi import HTTPException
+    monkeypatch.setattr(service, 'PROJECT_DIR', tmp_path)
+    response = asyncio.run(service.create_model(NewModelRequest()))
+    blank = Project.model_validate(response['project'])
+    assert blank.name == 'Untitled model'
+    assert blank.blocks == []
+    assert len(response['saveVersion']) == 64
+    request = SaveModelRequest(project=blank, expectedVersion=response['saveVersion'])
+    request.project.name = 'My circuit'
+    saved = asyncio.run(service.update_model(blank.modelId, request))
+    assert saved['saveVersion'] != response['saveVersion']
+    request.project.name = 'Stale edits'
+    with pytest.raises(HTTPException) as failure:
+        asyncio.run(service.update_model(blank.modelId, request))
+    assert failure.value.status_code == 409
+    with pytest.raises(HTTPException) as legacy_failure:
+        asyncio.run(service.save_project(request.project))
+    assert legacy_failure.value.status_code == 409
+    copied = asyncio.run(service.copy_model(CopyModelRequest(project=request.project, name='My circuit')))
+    assert copied['project']['name'] == 'My circuit (2)'
+    asyncio.run(service.activate_model(blank.modelId))
+    assert asyncio.run(service.load_project())['project']['name'] == 'My circuit'
+    assert len(asyncio.run(service.list_models())['models']) == 2
+
+
+def test_trash_is_recoverable_and_legacy_files_do_not_resurrect_it(tmp_path, monkeypatch):
+    from server import app as service
+    from fastapi import HTTPException
+    monkeypatch.setattr(service, 'PROJECT_DIR', tmp_path)
+    legacy = tmp_path/'examples/dc.json'
+    legacy.parent.mkdir()
+    legacy.write_text(FIXTURE.read_text())
+    model = next(iter(workspace.saved_models(tmp_path).values()))
+    active = workspace.new_model(tmp_path, Path('models/examples'), 'Current model')
+    workspace.trash_model(tmp_path, model.modelId)
+    assert model.modelId not in workspace.saved_models(tmp_path)
+    assert legacy.exists()
+    assert workspace.model_summaries(tmp_path, True)[0]['id'] == model.modelId
+    with pytest.raises(workspace.SaveConflict):
+        workspace.save_document(tmp_path, model, workspace.save_version(model))
+    with pytest.raises(HTTPException) as legacy_failure:
+        asyncio.run(service.save_project(model))
+    assert legacy_failure.value.status_code == 409
+    assert not (tmp_path/'models'/f'{model.modelId}.json').exists()
+    restored = workspace.restore_model(tmp_path, model.modelId)
+    assert restored == model
+    assert workspace.load_current(tmp_path).modelId == active.modelId
+    assert workspace.model_summaries(tmp_path, True) == []
+    assert model.modelId in workspace.saved_models(tmp_path)
+    with pytest.raises(workspace.SaveConflict):
+        workspace.trash_model(tmp_path, active.modelId)

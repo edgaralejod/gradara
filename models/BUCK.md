@@ -1,6 +1,6 @@
 # Synchronous buck converter with ideal switches
 
-Create it with **New model → Buck converter → Create model**, then press **Run**. This makes an independent saved document. Select **Output voltage**, **Inductor current**, or **Switch gates** in the results panel. **Last 1 ms** automatically fits the vertical axis to reveal ripple; **Full run** shows startup.
+Open **Examples**, choose **Use example** under **Buck converter**, then press **Run**. This creates an independent saved document. Select **Output voltage**, **Inductor current**, or **Switch gates** in the results panel. **Last 1 ms** automatically fits the vertical axis to reveal ripple; **Full run** shows startup.
 
 ## Circuit
 

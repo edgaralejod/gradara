@@ -1,7 +1,7 @@
 # AC motor example: permanent-magnet synchronous motor FOC
 
-Open **AC motor · Field-oriented control** in the example selector and press **Run**.
-The DC example and AC example are saved separately; switching between them keeps edits.
+Open **Examples**, choose **Use example** under **AC motor · FOC**, then press **Run**.
+This creates an independent saved document; the built-in template stays unchanged.
 
 The diagram is executable. Its 19 components and 31 connections become a Modelica system,
 which OpenModelica compiles and integrates. No LLM participates in execution order or time integration.
@@ -51,6 +51,6 @@ in `server/modelica.py`. `models/examples/foc.json` is the portable bundled snap
 Geometry, routing waypoints, annotations, and plot groups remain presentation data;
 they do not enter the executable Modelica equations.
 
-## Standard-layout refresh
+## Layout
 
-The template uses the shared block sizes and terminal captions, with separate speed/current loops, parallel phase paths, and explicit branched feedback. Names move to a free side when a connected terminal would cross their usual position. `npx tsx scripts/style-examples.ts` reproduces the DC/FOC template layouts without touching saved user documents. The generated Modelica was byte-for-byte unchanged by this layout refresh; create from **New model → AC motor · FOC** to use it. For this larger diagram, use **F** for the overview and zoom in to work on an individual control stage.
+The template uses shared block sizes and terminal captions, with separate speed/current loops, parallel phase paths, and explicit branched feedback. Names occupy a free side when a connected terminal would cross their usual position. `npx tsx scripts/style-examples.ts` reproduces the DC/FOC template layouts without touching saved documents. Use **F** for the overview and zoom in to work on an individual control stage.

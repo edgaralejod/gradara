@@ -27,9 +27,9 @@ Do not submit confidential equations or model metadata unless using the configur
 
 ## Reporting a vulnerability
 
-Before public launch, the maintainer must configure and verify a private reporting channel as recorded in [RELEASING.md](docs/RELEASING.md). This preparation checkout has no public repository/contact configured yet.
+Contact Edgar Duarte privately at **[contact@virtu-services.us](mailto:contact@virtu-services.us?subject=Gradara%20security%20report)** with the subject **Gradara security report**. This is the public contact address for [Virtu Services](https://virtu-services.us). Do not post exploit details, credentials, or private models in a public issue.
 
-On a published GitHub repository, use **Security → Report a vulnerability** if private vulnerability reporting is enabled. Otherwise, contact a known project maintainer privately to arrange a reporting channel; do not post exploit details, credentials, or private models in a public issue. A useful report identifies the affected revision, trust boundary, impact, and minimal synthetic reproduction. No guaranteed response time or supported long-term release series is currently offered.
+A useful report identifies the affected revision, trust boundary, impact, and minimal synthetic reproduction. Start with a concise description and arrange transfer of sensitive attachments with the maintainer. No guaranteed response time or supported long-term release series is currently offered.
 
 ## Contributor requirements
 

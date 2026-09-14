@@ -279,3 +279,13 @@ class ExportRequest(BaseModel):
 class NewModelRequest(BaseModel):
     name: str = Field(default='Untitled model', min_length=1, max_length=100)
     template: Literal['blank', 'dc', 'foc', 'buck'] = 'blank'
+
+
+class SaveModelRequest(BaseModel):
+    project: Project
+    expectedVersion: str | None = Field(default=None, pattern=r'^[a-f0-9]{64}$')
+
+
+class CopyModelRequest(BaseModel):
+    project: Project
+    name: str = Field(min_length=1, max_length=120)

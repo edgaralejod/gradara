@@ -1,6 +1,6 @@
 # Third-party notices and distribution scope
 
-Reviewed against this checkout's installed packages and pinned engine/library sources on September 13, 2026. Gradara's original-code license is still awaiting selection. That selection does not replace the licenses of upstream code, dependencies, example references, or generated artifacts.
+Gradara's original source code, documentation, and bundled example models are licensed under [Apache-2.0](LICENSE); see [NOTICE](NOTICE). Third-party code, dependencies, and engine components retain their own licenses. This inventory identifies included/adapted material and the separate terms relevant to distribution.
 
 ## Source included or adapted in this repository
 

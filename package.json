@@ -12,11 +12,11 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/project.test.ts tests/wiring.test.ts tests/selection.test.ts tests/nets.test.ts tests/names.test.ts tests/block-design.test.ts tests/results.test.ts tests/examples.test.ts",
+    "test": "tsx --test tests/project.test.ts tests/wiring.test.ts tests/selection.test.ts tests/nets.test.ts tests/names.test.ts tests/block-design.test.ts tests/results.test.ts tests/examples.test.ts tests/document-store.test.ts",
     "engine:test": ".venv/bin/python -m pytest -q",
     "local": "python3 scripts/start.py",
     "postinstall": "node scripts/patch-react-flow.mjs",
-    "audit:blocks": "tsx scripts/audit-blocks.ts"
+    "report:blocks": "tsx scripts/report-blocks.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -65,5 +65,15 @@
   "overrides": {
     "dompurify": "3.4.15"
   },
-  "description": "Agent-assisted graphical multidomain simulation with OpenModelica"
+  "description": "Agent-assisted graphical multidomain simulation with OpenModelica",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Edgar Duarte",
+    "url": "https://virtu-services.us"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://origin.cursor.com/edgaralejod/gradara.git"
+  },
+  "homepage": "https://cursor.com/codebase/edgaralejod/gradara"
 }

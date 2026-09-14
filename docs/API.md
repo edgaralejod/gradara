@@ -11,11 +11,16 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | Method and path | Input | Response / effect |
 | --- | --- | --- |
 | `GET /health` | None | Engine label, `engineReady`, `agentReady`, provider, local project directory. |
-| `GET /project` | None | `{project: Project \| null}` for the active document. |
-| `PUT /project` | Project | Saves and activates it; returns `saved`, `modelId`, `revision`, `key`. Missing model ID is assigned. |
-| `GET /models` | None | `{models: [{id, name}]}` for saved documents. |
-| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project}`. Template is `blank`, `dc`, `foc`, or `buck`. |
-| `GET /models/{modelId}` | Saved ID | Returns `{project}`; does not itself save a new active snapshot. |
+| `GET /project` | None | `{project: Project \| null, saveVersion: string \| null}` for the last activated document, resolved from its canonical saved file. |
+| `PUT /project` | Project | Legacy creation/idempotent retry only. Changing an existing document returns 409 with a reload instruction; use versioned model saves. |
+| `GET /models` | Optional `?trashed=true` | `{models: [{id, name, blocks, exampleId, updatedAt}]}`, newest saved first. Trash is separate from My models. |
+| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, or `buck`. |
+| `GET /models/{modelId}` | Saved ID | Returns `{project, saveVersion}` without activating it. |
+| `PUT /models/{modelId}` | `{project, expectedVersion}` | Writes that document without changing active selection; returns `{project, saveVersion}`. ID must match the path. Stale versions return 409. |
+| `POST /models/{modelId}/activate` | None | Opens an existing model as the last active document; returns `{project, saveVersion}`. |
+| `POST /models/copy` | `{project, name}` | Creates and activates an independent saved copy with a unique name; returns `{project, saveVersion}`. Used for import and copy recovery. |
+| `POST /models/{modelId}/trash` | None | Moves an inactive model to recoverable Trash. Returns `{trashed: true}`; removing the active model returns 409. |
+| `POST /models/{modelId}/restore` | None | Restores a trashed model with its original identity, without activating it; returns `{project, saveVersion}`. |
 | `GET /examples/{template}` | `dc`, `foc`, or `buck` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
 | `POST /source` | Project | `{source}` containing emitted Modelica. Does not run a solver. |
 | `POST /runs` | Project | Queues a simulation and returns a job. |
@@ -27,7 +32,7 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | `POST /exports` | `{project, blockId}` | Queues C generation for one controller block. |
 | `GET /exports/{exportId}/download` | Export ID | ZIP with C source/header, original contract, and integration notes. |
 
-Normal responses currently use HTTP 200, including accepted jobs. Validation errors are 422, unknown documents/jobs are 404, rejected origins are 403, and exceeding four active operations returns 429. Once a job starts, numerical/generation failures are reported by a successful job-status response with `status: "failed"` and `error`; clients must inspect status rather than only HTTP success.
+Normal responses currently use HTTP 200, including accepted jobs. Save conflicts are 409, validation errors are 422, unknown documents/jobs are 404, rejected origins are 403, and exceeding four active operations returns 429. Once a job starts, numerical/generation failures are reported by a successful job-status response with `status: "failed"` and `error`; clients must inspect status rather than only HTTP success.
 
 ## Job contract
 

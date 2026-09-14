@@ -2,11 +2,23 @@
 
 ## Create, save, and share
 
-Use **New model** to start blank or copy a template. Choose a descriptive name. The model selector opens saved documents; choosing a template again makes another document instead of replacing previous work.
+Click **New model** to open a fresh empty canvas immediately. Its initial name is **Untitled model**, with a suffix when needed. Click the title in the header to rename it; Enter or clicking away commits the name, and Escape cancels editing.
 
-Edits autosave through the local service. Keep it running and watch connection/save errors. The current implementation assumes one active editing client; two browser sessions editing the same document do not have conflict resolution. Undo history belongs to the current browser session.
+Open **Models** for the file browser:
 
-Use **Export** for a portable `.gradara.json` file or generated Modelica source. The upload button opens a project file. Modelica import is not implemented. Export before experimenting with a valuable model, and back up `projects/` for the full local history of documents and run artifacts.
+- **My models** contains your saved documents, searchable by name and ordered by last save. Rows show whether a model is empty, its block count, and its example origin when applicable.
+- **Examples** contains built-in starting points. **Use example** creates a new saved copy in My models. Editing or emptying that copy does not change the original example or automatically rename your document.
+- **Trash** holds removed models. Use a row's trash icon to move an inactive model there; open another model before removing the current one. Click a model in Trash to restore it. There is no permanent-delete command.
+
+**Save a copy** creates a separate document with your current edits. **Import file** opens a `.gradara.json` or legacy `.flux.json` as a new document, even if its ID matches a saved model. Repeated imports and copies receive distinct names. **Export** downloads portable JSON or generated Modelica; Modelica import is not implemented.
+
+Edits autosave locally after a short pause. Switching models or opening the file browser finishes the current save first. The footer distinguishes **Unsaved changes**, **Saving**, **Saved**, and **Not saved**. ⌘/Ctrl+S on the canvas performs an actual save. Keep the local service running.
+
+Saving a model does not make it the active model in another tab. Each browser tab remembers its own open document for reload. If two tabs edit the same saved version, the second save is rejected instead of overwriting the first. The error banner offers **Retry**, **Save a copy**, and **Reload saved version**. Saving a copy keeps your edits; reloading explicitly replaces them with the disk version. There is no automatic merge or live collaboration.
+
+Unsaved drafts are retained in the current tab's session storage when browser storage is available, allowing recovery after reload. This is a recovery aid, not an offline workspace or a backup after closing the tab. The browser warns before leaving with unsaved edits. Undo history is per tab and resets on model switching/reload.
+
+Model documents live in `projects/models/`; removed models live in `projects/trash/`. The active-workspace file records which document a new session should reopen. Back up `projects/` for the complete local history, results, and artifacts. Custom nested folders are not implemented yet.
 
 ## Build a diagram
 
@@ -32,7 +44,7 @@ Port colors show the connector's domain, which can differ from its block's main 
 | Move a selection | Drag its blocks; internal geometry follows the group. |
 | Duplicate | Ctrl-drag, or select and use ⌘/Ctrl+D. |
 
-Nearby parallel segments snap together and shed redundant bends. Junctions should follow their horizontal run as connected blocks move. One completed gesture should be one undo step. Report a minimal reproduction when a gesture behaves differently; the [wiring audit](../WIRING_AUDIT.md) is the acceptance reference.
+Nearby parallel segments snap together and shed redundant bends. Junctions should follow their horizontal run as connected blocks move. One completed gesture should be one undo step. Report a minimal reproduction when a gesture behaves differently; see the [wiring contract](architecture/WIRING.md) for expected behavior and limitations.
 
 The model inspector exposes blocks and logical nets. Nets receive stable IDs plus automatic names derived from their connection. Give a net a custom name when the engineering meaning is clearer than the default; its label and identity belong to the connected net, not each drawn segment.
 

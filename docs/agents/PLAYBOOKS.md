@@ -13,19 +13,19 @@ Acceptance: visible behavior and meaningful tests.
 Handoff: changed behavior, evidence, limitations, and follow-up work.
 ```
 
-Do not include credentials or an entire personal workspace. Inspect the current code rather than assuming filenames or old audit statements are still authoritative.
+Do not include credentials or an entire personal workspace. Inspect the current code and its tests before deciding which contract needs to change.
 
 ## Wiring or selection fix
 
-Read [WIRING.md](../../WIRING.md), the [wiring audit](../../WIRING_AUDIT.md), and [model format](../architecture/MODEL_FORMAT.md). Trace pointer ownership from canvas/net components into `net-session.ts`, `net-draw.ts`, or `net-edit.ts`, then the immutable project operation and normalization. Keep route geometry distinct from logical net identity.
+Read the [wiring contract](../architecture/WIRING.md), [browser acceptance checks](../development/TESTING.md), and [model format](../architecture/MODEL_FORMAT.md). Trace pointer ownership from canvas/net components into `net-session.ts`, `net-draw.ts`, or `net-edit.ts`, then the immutable project operation and normalization. Keep route geometry distinct from logical net identity.
 
 Reproduce before changing the policy. Fix the general rule, not a template's coordinates. Exercise above/below alignment, reversed port sides, a physical net, a signal branch, multiple zoom levels, Escape, undo/redo, and save/reload. Pointer previews should remain smooth and one gesture should commit once. Add a regression for the broken geometric or graph invariant, then confirm the actual gesture in a browser.
 
 ## New block or changed visual
 
-Follow the [block authoring guide](../blocks/AGENT_BLOCK_GUIDE.md) and [design contract](../../BLOCK_DESIGN.md). Start from a neighboring library definition. Choose stable port/parameter IDs, concise labels and notation, and shared size/port rules. Do not introduce an independent canvas or library renderer.
+Follow the [block authoring guide](../blocks/AGENT_BLOCK_GUIDE.md) and [design contract](../blocks/DESIGN.md). Start from a neighboring library definition. Choose stable port/parameter IDs, concise labels and notation, and shared size/port rules. Do not introduce an independent canvas or library renderer.
 
-For a signal block, validate generated Modelica and meaningful parameter/state behavior. For a physical block, implement a canonical wrapper and verify connector laws with an executable model. Inspect the library specimen, canvas block, inspector, and catalog. Refresh `BLOCK_AUDIT.md` when needed. Leave saved user instances unchanged unless the task explicitly includes a migration.
+For a signal block, validate generated Modelica and meaningful parameter/state behavior. For a physical block, implement a canonical wrapper and verify connector laws with an executable model. Inspect the library specimen, canvas block, inspector, and catalog. Generate a local inventory with `npm run report:blocks` when useful. Leave saved user instances unchanged unless the task explicitly includes a migration.
 
 ## Persistence or API change
 
