@@ -405,8 +405,20 @@ void test('a right-to-left signal is feedback and does not draw a straight line'
     targetPosition: Position.Left,
   });
   assert.equal(isReturnPath({ sourceX: 400, targetX: 80 }), true);
-  assert.notEqual(path, 'M 400 40 L 80 40');
-  assert.match(path, / 8[0-9] /);
+  // Without explicit railY, even RTL connections use normal orthogonal routing
+  assert.equal(path, 'M 400 40 L 80 40');
+  // With explicit railY, feedback uses a U-shaped rail
+  const feedbackPath = wirePath({
+    sourceX: 400,
+    sourceY: 40,
+    targetX: 80,
+    targetY: 40,
+    sourcePosition: Position.Right,
+    targetPosition: Position.Left,
+    railY: 120,
+  });
+  assert.notEqual(feedbackPath, 'M 400 40 L 80 40');
+  assert.match(feedbackPath, / 120 /);
   const physical = wirePath({
     sourceX: 400,
     sourceY: 40,

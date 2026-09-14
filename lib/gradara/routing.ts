@@ -41,7 +41,7 @@ export function feedbackRailY(source: Block, target: Block): number {
 
 /** Straight forward paths. Return paths ride a rail under the chain. */
 export function wirePath(ends: Ends): string {
-  if (isReturnPath(ends)) return returnRail(ends);
+  if (ends.railY !== undefined) return returnRail(ends);
   const { sourceX, sourceY, targetX, targetY } = ends;
   const dx = targetX - sourceX;
   const dy = targetY - sourceY;
@@ -281,8 +281,9 @@ export function routeBetween(
     const facing =
       (exit === Position.Right && entry === Position.Left && a.x <= b.x) ||
       (exit === Position.Left && entry === Position.Right && a.x >= b.x);
-    // Closely stacked blocks need two vertical legs: a single leg doubles back through a port.
-    if (!facing && exit !== entry) {
+    // Closely stacked blocks need two legs to avoid doubling back through a port.
+    // Only add clearance when ports are very close on their axis (risk of backtracking).
+    if (!facing && exit !== entry && Math.abs(a.x - b.x) < EXIT_STUB * 2) {
       const y = nearly(a.y, b.y) ? a.y + RETURN_CLEARANCE : (a.y + b.y) / 2;
       return simplifyPoints([from, a, { x: a.x, y }, { x: b.x, y }, b, to]);
     }
@@ -301,7 +302,7 @@ export function routeBetween(
     const facing =
       (exit === Position.Bottom && entry === Position.Top && a.y <= b.y) ||
       (exit === Position.Top && entry === Position.Bottom && a.y >= b.y);
-    if (!facing && exit !== entry) {
+    if (!facing && exit !== entry && Math.abs(a.y - b.y) < EXIT_STUB * 2) {
       const x = nearly(a.x, b.x) ? a.x + RETURN_CLEARANCE : (a.x + b.x) / 2;
       return simplifyPoints([from, a, { x, y: a.y }, { x, y: b.y }, b, to]);
     }
