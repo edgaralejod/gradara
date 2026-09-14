@@ -115,6 +115,10 @@ export default function NetLayer(baseProps: Props) {
   );
   const flow = useReactFlow();
   const store = useStoreApi();
+  // ViewportPortal mounts after React Flow publishes its DOM root. Observe that
+  // root directly so new/switched models rebind listeners even when `flow` stays
+  // stable in the shared provider; reading the portal's SVG ref once can miss it.
+  const canvasRoot = useStore((s) => s.domNode);
   const nodes = useStore((s) => s.nodes);
   const zoom = useStore((s) => s.transform[2]);
   const scene = useMemo(
@@ -156,7 +160,6 @@ export default function NetLayer(baseProps: Props) {
   }, [props, scene]);
   const session = useRef(new NetSession(scene));
   const gesture = useRef<Gesture | null>(null);
-  const svg = useRef<SVGSVGElement>(null);
   const frame = useRef<number | null>(null);
   const commands = useRef<(action: string) => void>(() => {});
   const [view, setView] = useState(() => viewOf(new NetSession(scene)));
@@ -204,14 +207,14 @@ export default function NetLayer(baseProps: Props) {
   }, [store]);
   useEffect(() => {
     session.current.cancel();
-    const root = svg.current?.closest('.react-flow') as HTMLElement | null;
+    const root = store.getState().domNode;
     if (root) root.dataset.wiring = 'idle';
     session.current.project = latest.current.scene;
     gesture.current = null;
     repaint();
-  }, [props.project, repaint]);
+  }, [props.project, repaint, canvasRoot, store]);
   useEffect(() => {
-    const root = svg.current?.closest('.react-flow') as HTMLElement | null;
+    const root = store.getState().domNode;
     if (!root) return;
     let suppressClick = false;
     let lastWireClick: {
@@ -686,7 +689,7 @@ export default function NetLayer(baseProps: Props) {
       if (frame.current !== null) cancelAnimationFrame(frame.current);
       frame.current = null;
     };
-  }, [flow, repaint]);
+  }, [flow, repaint, canvasRoot, store]);
 
   const s = view;
   const drawing = s.mode !== 'idle';
@@ -730,7 +733,6 @@ export default function NetLayer(baseProps: Props) {
     <>
       <ViewportPortal>
         <svg
-          ref={svg}
           className="net-layer"
           width="1"
           height="1"
