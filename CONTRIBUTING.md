@@ -8,7 +8,7 @@ For a bug, provide a minimal reproduction and the expected behavior before chang
 
 Small fixes and documentation improvements can go directly to a pull request. Discuss substantial schema, dependency, engine, or interaction redesigns in an issue first so contributors do not build incompatible approaches. There is no blanket approval requirement for routine local fixes.
 
-The repository is hosted at [edgaralejod/gradara on Cursor Origin](https://cursor.com/codebase/edgaralejod/gradara), with access governed by its codebase permissions. Authorized collaborators can create a branch and open an Origin PR against `main`. Keep one coherent change per PR. Origin's Internal visibility does not provide anonymous public access; contact the maintainer through [Virtu Services](https://virtu-services.us) about early access.
+The repository is hosted at [edgaralejod/gradara on GitHub](https://github.com/edgaralejod/gradara). Fork it, create a branch in your fork, and open a pull request against `main`. Keep one coherent change per PR. Use [issues](https://github.com/edgaralejod/gradara/issues) for reproducible bugs, feature proposals, and substantial design discussions.
 
 ## Development workflow
 

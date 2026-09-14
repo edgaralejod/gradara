@@ -41,13 +41,13 @@ export default function AboutDialog() {
         </div>
         <div className="about-project-links">
           <a
-            href="https://cursor.com/codebase/edgaralejod/gradara"
+            href="https://github.com/edgaralejod/gradara"
             target="_blank"
             rel="noreferrer"
           >
-            Source on Cursor Origin <ArrowUpRight size={14} />
+            Source on GitHub <ArrowUpRight size={14} />
           </a>
-          <small>Repository access requires Origin codebase permissions.</small>
+          <small>Explore the source, report an issue, or contribute.</small>
           <a
             href="https://www.apache.org/licenses/LICENSE-2.0"
             target="_blank"

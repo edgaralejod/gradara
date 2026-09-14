@@ -73,7 +73,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://origin.cursor.com/edgaralejod/gradara.git"
+    "url": "https://github.com/edgaralejod/gradara.git"
   },
-  "homepage": "https://cursor.com/codebase/edgaralejod/gradara"
+  "homepage": "https://github.com/edgaralejod/gradara",
+  "bugs": {
+    "url": "https://github.com/edgaralejod/gradara/issues"
+  }
 }

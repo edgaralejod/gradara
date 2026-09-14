@@ -18,6 +18,8 @@ macOS with Colima has been exercised end to end. Linux uses the active Docker co
 macOS, Linux, or a WSL terminal:
 
 ```sh
+git clone https://github.com/edgaralejod/gradara.git
+cd gradara
 npm ci
 python3 -m venv .venv
 .venv/bin/python -m pip install -r server/requirements-dev.txt

@@ -6,7 +6,7 @@ Use this checklist for a source release. Engine images and desktop installers re
 
 - [x] Apache-2.0 selected for Gradara's original code, documentation, and bundled examples. The complete `LICENSE`, `NOTICE`, package metadata, and contribution terms are included.
 - [ ] Confirm the code and examples can be contributed under that license; retain copied-code notices. The existing [third-party inventory](../THIRD_PARTY_NOTICES.md) is a starting point, not a complete distribution review.
-- [ ] Provide public read/contribution access on the intended host. The Origin repository exists, but its Internal visibility is restricted to codebase access; it is not a public launch destination.
+- [ ] Verify anonymous clone access and contribution links for [edgaralejod/gradara](https://github.com/edgaralejod/gradara) on GitHub.
 - [ ] Verify delivery and handling of the published private reporting address before launch. [SECURITY.md](../SECURITY.md) and [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) use the public Virtu Services contact address; publishing the address does not verify mailbox delivery.
 - [ ] Inspect the full reachable Git history and release payload for personal models, credentials, prompts/logs, deployment identifiers, private paths, and material without clear provenance. Rotate exposed secrets if found; deleting a current file is not history cleanup.
 - [ ] Run the checks below from a clean source checkout with no existing `.venv`, `node_modules`, local model data, or provider configuration required.
@@ -48,6 +48,6 @@ The current `npm run build` output is only a web bundle. It is not an authentica
 
 ## Release status and evidence
 
-Source hosting is [Cursor Origin](https://cursor.com/codebase/edgaralejod/gradara), with default branch `main` and internal visibility. Its [documented visibility choices](https://cursor.com/docs/origin/settings) are Internal and Private; a public launch needs a publicly accessible source host or distribution. Public access, verified reporting delivery, observed hosted CI, and broader platform verification remain release gates. The GitHub Actions files are workflow templates; no Origin CI integration is connected.
+The canonical source host is [GitHub](https://github.com/edgaralejod/gradara), with default branch `main`. Check [Actions](https://github.com/edgaralejod/gradara/actions) for results on the commit being released; workflow files alone do not establish a successful run. Source availability is separate from a tagged release or a supported binary distribution. Verify reporting delivery and record platform coverage before making release claims.
 
 Record the release commit, commands and results, tested platforms, and known limitations in the release notes or linked CI artifacts. Re-run checks for the actual release candidate; historical local test counts are not evidence for a later checkout. Keep generated inventories and development-session logs outside the source distribution.

@@ -10,13 +10,15 @@ Created by **Edgar Duarte**. Engineering consulting through **[Virtu Services](h
 
 [Get started](docs/development/SETUP.md) · [Documentation](docs/README.md) · [Contribute](CONTRIBUTING.md) · [Agent instructions](AGENTS.md) · [Roadmap](ROADMAP.md)
 
-Source hosting: [edgaralejod/gradara on Cursor Origin](https://cursor.com/codebase/edgaralejod/gradara). The code is Apache-2.0 licensed; repository access currently requires Origin codebase permissions. Origin's Internal visibility does not provide anonymous public access.
+Source: **[edgaralejod/gradara on GitHub](https://github.com/edgaralejod/gradara)** · [Report an issue](https://github.com/edgaralejod/gradara/issues) · Apache-2.0 licensed.
 
 ## Try it locally
 
-Install **Node.js 22.13+**, **Python 3.12**, and a working **Docker** runtime. On macOS, the launcher supports Colima; for Docker Desktop, set the context as described in the setup guide. From a checkout of this repository:
+Install **Node.js 22.13+**, **Python 3.12**, and a working **Docker** runtime. On macOS, the launcher supports Colima; for Docker Desktop, set the context as described in the setup guide. Clone the repository and start the workbench:
 
 ```sh
+git clone https://github.com/edgaralejod/gradara.git
+cd gradara
 npm ci
 python3 -m venv .venv
 .venv/bin/python -m pip install -r server/requirements-dev.txt
