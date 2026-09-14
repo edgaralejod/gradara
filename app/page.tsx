@@ -222,6 +222,9 @@ function Workbench() {
   const [exportOpen, setExportOpen] = useState(false);
   const [libraryOpen, updateLibraryOpen] = useState(true);
   const [inspectorOpen, updateInspectorOpen] = useState(true);
+  const [workspaceMode, setWorkspaceMode] = useState<'diagram' | 'results'>(
+    'diagram',
+  );
   const setLibraryOpen = useCallback((open: boolean) => {
     if (open && window.innerWidth < 1100) updateInspectorOpen(false);
     updateLibraryOpen(open);
@@ -793,6 +796,7 @@ function Workbench() {
         return;
       setResult(r);
       setResultSignature(currentSignature);
+      setWorkspaceMode('results');
     } catch (e) {
       if (
         runController.current === controller &&
@@ -891,6 +895,12 @@ function Workbench() {
         setComposer(null);
         setInserter(null);
         select(emptySelection());
+      } else if (e.key === '1' && command) {
+        e.preventDefault();
+        setWorkspaceMode('diagram');
+      } else if (e.key === '2' && command) {
+        e.preventDefault();
+        setWorkspaceMode('results');
       } else if (e.key === '?' && !command) setHelpOpen(true);
     };
     window.addEventListener('keydown', key);
@@ -1198,10 +1208,25 @@ function Workbench() {
                   <Hand size={15} />
                 </button>
               </div>
-              <div className="model-tab">
-                <Activity size={15} />
-                <span>{project.name}</span>
-                <span className="tab-dot" />
+              <div className="workspace-tabs" role="tablist">
+                <button
+                  role="tab"
+                  aria-selected={workspaceMode === 'diagram'}
+                  aria-label="Diagram view"
+                  onClick={() => setWorkspaceMode('diagram')}
+                >
+                  <Activity size={15} />
+                  <span>Diagram</span>
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={workspaceMode === 'results'}
+                  aria-label="Results view"
+                  onClick={() => setWorkspaceMode('results')}
+                >
+                  <Activity size={15} />
+                  <span>Results</span>
+                </button>
               </div>
             </div>
             <div className="toolbar-actions">
@@ -1283,10 +1308,11 @@ function Workbench() {
             />
           </aside>
           <section className="center-panel">
-            <div
-              ref={canvasRef}
-              className={`canvas-wrap tool-${canvasTool}`}
-              onDoubleClick={(e) => {
+            {workspaceMode === 'diagram' ? (
+              <div
+                ref={canvasRef}
+                className={`canvas-wrap tool-${canvasTool}`}
+                onDoubleClick={(e) => {
                 if (e.defaultPrevented) return;
                 if (!(e.target as HTMLElement).closest('.react-flow__pane'))
                   return;
@@ -1542,15 +1568,20 @@ function Workbench() {
                   onInsert={insertGenerated}
                 />
               )}
-            </div>
-            <Results
-              key={project.modelId ?? 'workspace'}
-              result={result}
-              running={running}
-              error={runError}
-              stale={!!result && signature !== resultSignature}
-              empty={!project.blocks.length}
-            />
+              </div>
+            ) : (
+              <div className="results-view-wrap">
+                <Results
+                  key={project.modelId ?? 'workspace'}
+                  result={result}
+                  running={running}
+                  error={runError}
+                  stale={!!result && signature !== resultSignature}
+                  empty={!project.blocks.length}
+                  dedicated
+                />
+              </div>
+            )}
           </section>
           <aside className="inspector-panel">
             <div className="panel-heading">

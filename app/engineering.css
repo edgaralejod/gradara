@@ -255,6 +255,41 @@
   padding: 0 10px;
   background: #fafbfc;
 }
+.workspace-tabs {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  border: 1px solid #dce2e8;
+  border-radius: 4px;
+  background: #fff;
+  padding: 2px;
+}
+.workspace-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #62737f;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.workspace-tabs button:hover {
+  background: #f4f6f8;
+  color: #4a5c6a;
+}
+.workspace-tabs button[aria-selected='true'] {
+  background: #226b9d;
+  color: #fff;
+  font-weight: 550;
+}
+.workspace-tabs button svg {
+  width: 14px;
+  height: 14px;
+}
 .model-tab {
   background: transparent;
   border: 0;
@@ -406,6 +441,24 @@
   border-radius: 3px;
   box-shadow: none;
   font-size: 11px;
+}
+.results-view-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.results-view-wrap .results-panel {
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.results-view-wrap .results-panel .plot-body {
+  flex: 1;
+  min-height: 0;
 }
 .results-panel:not(.is-collapsed) {
   height: clamp(205px, 28vh, 285px);
@@ -780,7 +833,7 @@
 }
 .block-inserter {
   position: absolute;
-  z-index: 22;
+  z-index: 50;
   width: 300px;
   max-height: min(520px, calc(100% - 24px));
   display: flex;

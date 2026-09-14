@@ -26,19 +26,21 @@ function Results({
   error,
   stale,
   empty = false,
+  dedicated = false,
 }: {
   result: SimulationResult | null;
   running: boolean;
   error: string;
   stale: boolean;
   empty?: boolean;
+  dedicated?: boolean;
 }) {
   const [channel, setChannel] = useState('');
   const [compare, setCompare] = useState('');
   const options = useMemo(() => plotOptions(result), [result]);
   const active = options.find((p) => p.id === channel) ?? options[0];
   const [collapsed, setCollapsed] = useState(false);
-  const isCollapsed = (collapsed || empty) && !error;
+  const isCollapsed = !dedicated && (collapsed || empty) && !error;
   const [timeRange, setTimeRange] = useState('full');
   const [fitAmplitude, setFitAmplitude] = useState(false);
   const [hidden, setHidden] = useState<string[]>([]);
@@ -95,7 +97,9 @@ function Results({
       <div className="results-heading">
         <div>
           <Activity size={16} />
-          <strong>Simulation results</strong>
+          <strong>
+            {dedicated ? 'Data Inspector' : 'Simulation results'}
+          </strong>
           {running ? (
             <span className="result-status">
               <LoaderCircle className="spin" size={12} />
@@ -127,15 +131,17 @@ function Results({
               <Download size={14} />
             </a>
           )}
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => setCollapsed((v) => !v)}
-            disabled={empty}
-            aria-label={isCollapsed ? 'Expand results' : 'Collapse results'}
-          >
-            {isCollapsed ? <ChevronUp /> : <ChevronDown />}
-          </Button>
+          {!dedicated && (
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => setCollapsed((v) => !v)}
+              disabled={empty}
+              aria-label={isCollapsed ? 'Expand results' : 'Collapse results'}
+            >
+              {isCollapsed ? <ChevronUp /> : <ChevronDown />}
+            </Button>
+          )}
         </div>
       </div>
       {!isCollapsed &&
