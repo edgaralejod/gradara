@@ -1209,24 +1209,42 @@ function Workbench() {
                 </button>
               </div>
               <div className="workspace-tabs" role="tablist">
-                <button
-                  role="tab"
-                  aria-selected={workspaceMode === 'diagram'}
-                  aria-label="Diagram view"
-                  onClick={() => setWorkspaceMode('diagram')}
-                >
-                  <Activity size={15} />
-                  <span>Diagram</span>
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={workspaceMode === 'results'}
-                  aria-label="Results view"
-                  onClick={() => setWorkspaceMode('results')}
-                >
-                  <Activity size={15} />
-                  <span>Results</span>
-                </button>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        role="tab"
+                        aria-selected={workspaceMode === 'diagram'}
+                        aria-label="Diagram view"
+                        onClick={() => setWorkspaceMode('diagram')}
+                      >
+                        <Activity size={15} />
+                        <span>Diagram</span>
+                      </button>
+                    }
+                  >
+                    <span />
+                  </TooltipTrigger>
+                  <TooltipContent>Diagram view · ⌘1</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        role="tab"
+                        aria-selected={workspaceMode === 'results'}
+                        aria-label="Results view"
+                        onClick={() => setWorkspaceMode('results')}
+                      >
+                        <Activity size={15} />
+                        <span>Results</span>
+                      </button>
+                    }
+                  >
+                    <span />
+                  </TooltipTrigger>
+                  <TooltipContent>Results view · ⌘2</TooltipContent>
+                </Tooltip>
               </div>
             </div>
             <div className="toolbar-actions">
@@ -2049,6 +2067,8 @@ function Workbench() {
                 ],
                 ['Paste selection', '⌘ / Ctrl + V'],
                 ['Delete selection', 'Delete / Backspace'],
+                ['Switch to Diagram view', '⌘ / Ctrl + 1'],
+                ['Switch to Results view', '⌘ / Ctrl + 2'],
                 ['Fit model to canvas', 'F'],
                 ['Select several components', 'Shift + click / Drag'],
                 ['Select / pan tools', 'V / H'],

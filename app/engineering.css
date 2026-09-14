@@ -540,6 +540,12 @@
   .model-tab {
     display: none;
   }
+  .workspace-tabs button span {
+    display: none;
+  }
+  .workspace-tabs button {
+    padding: 5px 8px;
+  }
   .main-layout {
     grid-template-columns: 185px minmax(350px, 1fr) 245px;
   }
