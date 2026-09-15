@@ -39,3 +39,12 @@ Run checks appropriate to the change and record exact commands/results. Use a re
 Describe the resulting behavior, changed contracts, validation, and remaining limitations. If a check cannot run, say why. The current lint backlog is documented; do not silently disable lint rules to claim a clean run. Update the relevant guide when behavior changes, and keep proposals labeled as future work.
 
 Keep documentation about the current product. Record task-specific test results in the PR or handoff; do not add session transcripts, dated audit diaries, personal workspace examples, or launch drafts to the repository. Put durable contracts in `docs/` and unresolved work in `ROADMAP.md`.
+
+## Pull requests and git messages
+
+Git history is the durable record; GitHub PR text is the review record. Keep them separate.
+
+- Write ordinary git messages: one short subject and, when useful, a few sentences. Same rule for merge commits.
+- Fill [the PR template](.github/PULL_REQUEST_TEMPLATE.md) on GitHub. Do not copy that template, HTML, checklists, agent UI, or session notes into a commit or merge message.
+- When opening or merging a PR, set the merge commit to the same short style as the branch commits. A squash or merge title plus two or three sentences is enough; the PR body can stay longer.
+- Do not use `git commit --amend` or history rewrites to “improve formatting” of already-published work unless a maintainer asked for that rewrite.

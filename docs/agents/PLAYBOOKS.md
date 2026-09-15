@@ -54,3 +54,5 @@ For documentation, link to existing source contracts and remove stale claims ins
 ## Handoff format
 
 Report the resulting behavior, changed contracts, checks actually run, and known limitations. Include browser evidence for interaction changes and numerical evidence for physics changes. Leave a narrow follow-up task when work exceeds the agreed scope. Do not claim a clean build, tested platform, or solved physics unless you have that evidence.
+
+Put that handoff in the GitHub PR or the session reply. Git commit and merge messages stay short: a subject and a few sentences, with no PR template, HTML, checklists, or agent UI. See [AGENTS.md](../../AGENTS.md) for the pull-request rule.

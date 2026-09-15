@@ -17,7 +17,7 @@ The repository is hosted at [edgaralejod/gradara on GitHub](https://github.com/e
 3. Implement the change using existing model operations and shared visual primitives. Preserve legacy documents and user geometry.
 4. Run appropriate [tests and manual checks](docs/development/TESTING.md). Add a regression for a behavior or contract that could break, rather than a test that simply repeats the implementation.
 5. Update user/developer docs where behavior changed. Generate a local catalog report when reviewing block changes; do not commit generated reports or session logs.
-6. Review your diff for unrelated formatting, generated files, private models, and license notices. Fill in the PR template with what changed and how it was checked.
+6. Review your diff for unrelated formatting, generated files, private models, and license notices. Fill in the PR template on GitHub with what changed and how it was checked. Keep the git commit and merge messages short; the template is not the commit.
 
 The core checks are TypeScript typecheck/tests/build, Python tests without the integration marker, documentation links, and repository hygiene. Real-engine tests run separately when relevant. Whole-repository lint has an existing backlog and is currently advisory; keep new code clean and report pre-existing failures honestly.
 
@@ -38,6 +38,8 @@ Summarize material agent involvement and any generated equations or export assum
 ## Reviews and communication
 
 Lead PR descriptions with the user-visible problem and resulting behavior. For UI changes include a screenshot or short recording made with a synthetic model; for simulation changes include numerical evidence and diagnostics. State which checks ran and which did not. Maintainers may ask for a smaller scope, a regression, or compatibility changes.
+
+Keep `git log` readable. The GitHub PR can hold the template, checklists, and evidence. Commits and merge commits should be a short subject plus a few sentences, without HTML, agent footers, or a pasted PR body. Agents follow the same rule in [AGENTS.md](AGENTS.md).
 
 Follow [community expectations](CODE_OF_CONDUCT.md). Report security-sensitive findings privately using [SECURITY.md](SECURITY.md), rather than posting exploitable details or private models in an issue.
 

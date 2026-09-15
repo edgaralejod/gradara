@@ -1,3 +1,9 @@
+<!--
+This file is the GitHub pull-request description, not the git commit.
+Keep commit and merge messages to a short subject plus a few sentences.
+Do not copy this template, HTML, checklists, or agent UI into git history.
+-->
+
 ## Problem and resulting behavior
 
 Describe what a user could not do and what this change enables. Link an issue if there is one.
