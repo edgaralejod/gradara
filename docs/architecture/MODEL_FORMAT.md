@@ -96,3 +96,7 @@ Moving an inactive model to Trash preserves a recoverable JSON copy and hides le
 `project_key(project)` removes geometry and some metadata but is not identical to the source hash. Do not use these interchangeably. Current hashes do not include a separately versioned solver configuration or library manifest; a future compiled cache must include those inputs and define invalidation explicitly.
 
 When adding fields, decide whether they affect physics, presentation, provenance, or identity. Update both contracts, serializer behavior, migrations, and a round-trip or behavioral test. Keep a small old-format fixture when changing compatibility rules.
+
+## Signal logging
+
+`Net.logged?: boolean` records a signal/control net in the next simulation. Physical nets cannot be logged directly; select the physical quantity with a sensor and log its signal output. Reconciliation retains logging with the net identity on split and enables it on a merged net if any contributing net was logged. Logging is undoable and changes observation/result identity; geometry and label edits do not. Modelica emits an output observation per logged net, while the solver continues to determine execution order.

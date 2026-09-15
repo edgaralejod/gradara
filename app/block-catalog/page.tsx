@@ -1,4 +1,5 @@
 'use client';
+import { useGeneratedLibrary } from '@/lib/gradara/generated-library';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -9,12 +10,16 @@ import { defaultBlockSize } from '@/lib/gradara/block-design';
 import './catalog.css';
 
 export default function BlockCatalog() {
+  const { entries, error } = useGeneratedLibrary();
+  const [source, setSource] = useState('built-in');
+  const pool =
+    source === 'ai' ? entries.map((entry) => entry.definition) : library;
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [zoom, setZoom] = useState(1);
-  const definitions = library.filter(
+  const definitions = pool.filter(
     (d) =>
-      (category === 'all' || categoryOf(d) === category) &&
+      (source === 'ai' || category === 'all' || categoryOf(d) === category) &&
       `${d.name} ${d.kind} ${d.description}`
         .toLowerCase()
         .includes(query.toLowerCase()),
@@ -24,11 +29,18 @@ export default function BlockCatalog() {
       <header className="catalog-heading">
         <Link href="/">← Gradara</Link>
         <h1>Block design catalog</h1>
-        <p>
-          80 × 64 standard body · 14 px diagram text · {library.length} blocks
-        </p>
+        <p>80 × 64 standard body · 14 px diagram text · {pool.length} blocks</p>
       </header>
+      {source === 'ai' && error && <p role="alert">{error}</p>}
       <div className="catalog-controls">
+        <select
+          aria-label="Catalog source"
+          value={source}
+          onChange={(e) => setSource(e.target.value)}
+        >
+          <option value="built-in">Built-in blocks</option>
+          <option value="ai">AI blocks</option>
+        </select>
         <Input
           aria-label="Search block catalog"
           placeholder="Find a block…"
@@ -37,6 +49,7 @@ export default function BlockCatalog() {
         />
         <select
           aria-label="Block category"
+          disabled={source === 'ai'}
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         >
@@ -65,7 +78,13 @@ export default function BlockCatalog() {
         {definitions.map((d) => {
           const size = defaultBlockSize(d);
           return (
-            <article className="catalog-card" key={d.kind} data-kind={d.kind}>
+            <article
+              className="catalog-card"
+              key={
+                entries.find((entry) => entry.definition === d)?.id ?? d.kind
+              }
+              data-kind={d.kind}
+            >
               <header>
                 <strong>{d.name}</strong>
                 <span>

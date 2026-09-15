@@ -52,3 +52,9 @@ Current gaps include behavioral comparison, whole-subsystem boundaries, clock/ra
 Keep the frontend responsive while these operations run. Pass snapshots across the boundary, preserve diagnostics, and use structured IDs rather than filesystem paths in APIs. Keep engine-specific logic inside the adapter and emitter. A future backend must declare what component, connector, state, and event semantics it supports; replacing OpenModelica with arbitrary numerical libraries is not a drop-in change.
 
 The current service is intended for trusted local use. Read [SECURITY.md](../../SECURITY.md) before changing transport, model validation, container mounts, agent tool access, or execution privileges.
+
+## Inspector observations
+
+`logging_signals.py` maps explicitly logged signal nets to their source variable. It rejects physical-net logging; sensor outputs carry those measurements. `modelica.py` emits output observation variables so the compiler retains them in CSV. Missing/non-finite logged output is a run failure, not an empty successful trace. Existing automatic output channels remain available alongside explicitly logged nets.
+
+The dedicated Data Inspector uses a canvas renderer and frame-scheduled gestures. It loads full stored samples through the data endpoint, clips plotting to the visible time interval, preserves event pairs, and stores layouts/assignments/ranges as browser-local model preferences. It supports up to six time plots with independent Y ranges and optional linked X ranges. It does not yet provide multiple-run comparisons, dual cursors, frequency-domain views, independently scaled dual Y axes, or live streaming.

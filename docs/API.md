@@ -84,3 +84,13 @@ API request models validate identifiers, domains, net ownership, finite values, 
 ### Component generation types
 
 `POST /api/components/generate` accepts `prompt`, optional `existing`, and optional `blockType`: `signal`, `electrical`, `mechanical` (rotational), `thermal`, or `multidomain`. Omission defaults to signal for new blocks and infers the type for refinement. Physical choices require matching physical terminals; multidomain requires at least two physical domains. A wrong-type response is rejected and gets one repair attempt. Successful job results include `definition`, `provider`, `checked`, and `blockType`. `checked` means OpenModelica accepted the component, not that its physical behavior has been proven.
+
+### Generated component library
+
+`GET /api/components/library` returns `{components: [...]}` with immutable content-derived `id`, `definition`, `checked`, and `createdAt` fields. Successful component generation saves the checked definition and returns `libraryId` alongside its usual result. Entries are stored under ignored `projects/components/`. On first access, generated definitions already present in saved models are imported once with `checked: false`; importing does not edit the models. A later successful check of identical content promotes that entry to checked. Model documents continue to embed definitions and never reference mutable library state. Library removal, cross-workspace synchronization, and public sharing are not implemented.
+
+### Inspector data and logging
+
+`GET /api/results/{run_id}/data` returns the stored result metadata with full-resolution `time` and `series[].values` loaded from its CSV. Output is restricted to the requested simulation interval; repeated event timestamps are retained. It returns 404 for missing runs. The inspector can fall back to the existing reduced preview with an explicit warning.
+
+A net's optional `logged` boolean defaults to false. Only signal-domain nets accept it; physical nets are rejected during document validation and require sensor outputs. Logging changes the emitted observation variables and result identity, so capturing a newly logged net requires another simulation. Logged series include `netId` and use stable observation keys. Renaming a net changes its next run's display name, not its numerical connectivity.

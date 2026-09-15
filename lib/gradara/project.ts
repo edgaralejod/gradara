@@ -7,6 +7,7 @@ import { emptySelection, extractSelection, pasteSelection } from './selection';
 export function semanticSignature(p: Project) {
   return JSON.stringify({
     duration: p.duration,
+    loggedNets: (p.nets ?? []).filter((n) => n.logged).map((n) => n.id).sort(),
     blocks: p.blocks.map((b) => ({
       id: b.id,
       kind: b.definition.kind,

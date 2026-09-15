@@ -157,6 +157,7 @@ export function reconcileNets(
       ...(name ? { name } : {}),
       ...(aliases.length ? { aliases } : {}),
       ...(label ? { label } : {}),
+      ...(choices.some(({ net }) => net.logged) ? { logged: true } : {}),
       ...(retained?.hidden ? { hidden: true } : {}),
     };
   });

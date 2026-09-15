@@ -1,4 +1,5 @@
 'use client';
+import { useGeneratedLibrary } from '@/lib/gradara/generated-library';
 import {
   defaultBlockSize,
   snapBlockPosition,
@@ -168,6 +169,7 @@ function IconButton({
   );
 }
 function Workbench() {
+  const { entries: generatedEntries } = useGeneratedLibrary();
   const [project, setProject] = useState<Project>(blankProject);
   const projectRef = useRef(project);
   projectRef.current = project;
@@ -1368,7 +1370,9 @@ function Workbench() {
                 const kind =
                   e.dataTransfer.getData('application/gradara-component') ||
                   e.dataTransfer.getData('application/flux-component');
-                const d = library.find((d) => d.kind === kind);
+                const d =
+                  generatedEntries.find((entry) => entry.id === kind)?.definition ??
+                  library.find((d) => d.kind === kind);
                 if (d)
                   addComponent(
                     d,
@@ -1591,6 +1595,7 @@ function Workbench() {
               <div className="results-view-wrap">
                 <Results
                   key={project.modelId ?? 'workspace'}
+                  modelId={project.modelId}
                   result={result}
                   running={running}
                   error={runError}
@@ -1647,6 +1652,8 @@ function Workbench() {
                     ),
                   }))
                 }
+                onLogging={(logged) => commit((p) => ({ ...p, nets: p.nets?.map((n) => n.id === activeNet.net.id ? { ...n, logged } : n) }))}
+                onOpenData={() => setWorkspaceMode('results')}
                 onResetLabel={() =>
                   commit((p) => setNetLabel(p, activeNet.net.id, undefined))
                 }

@@ -1,4 +1,5 @@
 'use client';
+import DataInspector from './data-inspector';
 import { memo, useMemo, useState } from 'react';
 import {
   LineChart,
@@ -27,6 +28,7 @@ function Results({
   stale,
   empty = false,
   dedicated = false,
+  modelId,
 }: {
   result: SimulationResult | null;
   running: boolean;
@@ -34,6 +36,7 @@ function Results({
   stale: boolean;
   empty?: boolean;
   dedicated?: boolean;
+  modelId?: string;
 }) {
   const [channel, setChannel] = useState('');
   const [compare, setCompare] = useState('');
@@ -89,6 +92,7 @@ function Results({
   }, [points, series, hidden, fitAmplitude]);
   const colors = ['#237db3', '#c77e22', '#379b87', '#945f9f'];
   const last = series[0]?.values.at(-1);
+  if (dedicated) return <DataInspector result={result} running={running} error={error} stale={stale} modelId={modelId}/>;
   return (
     <section
       className={`results-panel ${isCollapsed ? 'is-collapsed' : ''}`}

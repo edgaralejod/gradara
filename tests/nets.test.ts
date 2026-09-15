@@ -393,3 +393,13 @@ void test('explicitly clearing a merged name does not resurrect its aliases', ()
   assert.equal(cleared.nets![0].name, undefined);
   assert.equal(cleared.nets![0].aliases, undefined);
 });
+
+void test('signal logging survives reconciliation and affects run identity', () => {
+  const p = branched();
+  const net = p.nets![0];
+  const logged = { ...p, nets: p.nets!.map(n => n.id === net.id ? { ...n, logged: true } : n) };
+  const next = reconcileNets(logged,p);
+  assert.equal(next.nets!.find(n=>n.id===net.id)!.logged,true);
+  assert.notEqual(semanticSignature(p),semanticSignature(next));
+  assert.equal(reconcileNets(next,next).nets!.find(n=>n.id===net.id)!.logged,true);
+});

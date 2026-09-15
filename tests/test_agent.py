@@ -27,6 +27,7 @@ def test_wrong_type_is_repaired_before_compiler(monkeypatch):
     compiler = AsyncMock()
     monkeypatch.setattr(agent, 'structured_generation', provider)
     monkeypatch.setattr(agent, 'check_component', compiler)
+    monkeypatch.setattr(agent, 'save_component', lambda *args: {'id':'test-library'})
     result = asyncio.run(agent.generate_component('ideal transformer', None, 'test', 'electrical'))
     assert result['blockType'] == 'electrical'
     assert compiler.await_count == 1
@@ -104,6 +105,7 @@ def test_repeated_type_violation_never_reaches_compiler(monkeypatch):
     compiler = AsyncMock()
     monkeypatch.setattr(agent, 'structured_generation', provider)
     monkeypatch.setattr(agent, 'check_component', compiler)
+    monkeypatch.setattr(agent, 'save_component', lambda *args: {'id':'test-library'})
     with pytest.raises(RuntimeError, match='requires thermal'):
         asyncio.run(agent.generate_component('heat resistor', None, 'test', 'thermal'))
     assert provider.await_count == 2

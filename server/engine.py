@@ -102,6 +102,15 @@ async def simulate(project: Project, job_id: str):
                 if not all(math.isfinite(value) for value in values):
                     raise RuntimeError(f'{label} contains non-finite results.')
                 outputs.append({'key':key,'name':f'{definition.name}.{label}', 'unit':unit,'blockId':block.id,'values':values})
+    from .logging_signals import logged_signals
+    for log in logged_signals(project):
+        key = log['key']
+        if key not in rows[0]:
+            raise RuntimeError(f"Logged net {log['name']} is missing from the solver output.")
+        values = [float(row[key]) for row in rows]
+        if not all(math.isfinite(v) for v in values):
+            raise RuntimeError(f"Logged net {log['name']} contains non-finite values.")
+        outputs.append({k:v for k,v in log.items() if k != 'expression'} | {'values':values})
     sample_indices = list(range(0,len(rows),max(1,len(rows)//1800)))
     sample_indices += [len(rows)-1]
     # Preserve switching event pairs and a dense tail for short-time ripple views.

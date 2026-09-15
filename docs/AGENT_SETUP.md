@@ -82,3 +82,5 @@ The current local CLI approach is suitable for early testers. A polished release
 Keep a small structured-generation interface between Gradara and providers: prompt, schema, cancellation, result, and diagnostics. The current shared function is `server/agent.py:structured_generation`; it is Codex-specific today. A future provider adapter can sit behind that boundary while the block schema, compiler checks, and simulation path remain shared. Other providers, local models, and a hosted relay are proposals, not supported configuration options. See the [roadmap](../ROADMAP.md).
 
 The repository's [AGENTS.md](../AGENTS.md) and [task playbooks](agents/PLAYBOOKS.md) are separate instructions for coding agents contributing to Gradara. End users do not need to configure those files to generate a block.
+
+Successful generations are saved automatically in the local **AI blocks** library. Reuse them without another provider call. The library keeps complete definitions; refinements do not silently alter existing model instances.

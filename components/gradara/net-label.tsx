@@ -191,7 +191,7 @@ export default function NetLabel(props: Props) {
         }
       }}
     >
-      {name}
+      {net.logged && <span title="Logged to Data Inspector" aria-label="Logged signal">● </span>}{name}
     </button>
   );
 }

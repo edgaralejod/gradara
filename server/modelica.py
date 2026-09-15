@@ -1,4 +1,5 @@
 """Small packaging adapter; OpenModelica owns equation processing and execution."""
+from .logging_signals import logged_signals
 import hashlib
 import json
 from .models import Definition, Project, flatten_connects
@@ -214,7 +215,12 @@ def emit_project(project: Project) -> str:
     for block in project.blocks:
         params = ', '.join(f'{p.id}={p.value:.16g}' for p in block.definition.parameters)
         parts.append(f'  Component_{block.id} {block.id}({params});')
+    logs = logged_signals(project)
+    for log in logs:
+        parts.append(f"  output Real {log['key']};")
     parts.append('equation')
+    for log in logs:
+        parts.append(f"  {log['key']} = {log['expression']};")
     for source, source_handle, target, target_handle in flatten_connects(project):
         parts.append(f'  connect({source}.{source_handle}, {target}.{target_handle});')
     parts.append(f'  annotation(experiment(StartTime=0, StopTime={project.duration}, Tolerance=1e-6));')

@@ -90,6 +90,7 @@ export type SimulationResult = {
     name: string;
     unit: string;
     blockId: string;
+    netId?: string;
     values: number[];
   }[];
   diagnostics: string;

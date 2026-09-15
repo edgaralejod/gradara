@@ -192,12 +192,36 @@ async def latest(model: str | None = None):
             return {'result':result}
     return {'result':None}
 
+@app.get('/api/results/{run_id}/data')
+async def full_result_data(run_id: str):
+    if not run_id.isalnum(): raise HTTPException(400, 'Invalid run ID.')
+    folder = RUNS/run_id
+    if not (folder/'result.json').exists() or not (folder/'simulation_res.csv').exists():
+        raise HTTPException(404, 'Results are unavailable.')
+    def read():
+        import csv, math
+        result = json.loads((folder/'result.json').read_text())
+        with (folder/'simulation_res.csv').open() as stream:
+            rows = [row for row in csv.DictReader(stream) if float(row['time']) <= result['duration'] + max(1e-12, result['duration']*1e-12)]
+        result['time'] = [float(row['time']) for row in rows]
+        for series in result['series']:
+            series['values'] = [float(row[series['key']]) for row in rows]
+        if not all(math.isfinite(v) for v in result['time']) or not all(math.isfinite(v) for s in result['series'] for v in s['values']):
+            raise ValueError('Non-finite samples in stored results.')
+        return result
+    return await asyncio.to_thread(read)
+
 @app.get('/api/results/{run_id}/csv')
 async def csv_download(run_id:str):
     if not run_id.isalnum(): raise HTTPException(400,'Invalid run ID.')
     path = RUNS/run_id/'simulation_res.csv'
     if not path.exists(): raise HTTPException(404,'Results are unavailable.')
     return FileResponse(path,media_type='text/csv',filename='gradara-simulation.csv')
+
+@app.get('/api/components/library')
+async def component_library():
+    from .component_library import list_components
+    return {'components': list_components(PROJECT_DIR)}
 
 @app.post('/api/components/generate')
 async def generate(request:GenerateRequest):

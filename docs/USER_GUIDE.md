@@ -67,3 +67,17 @@ Describe the inputs, outputs, state, and timing you want, for example: “A firs
 For generated C, select one block marked as a controller and use **Export**. The package includes a header, source, original contract, and timing/integration notes. Review the chosen discretization and validate behavior for your application. Whole-subsystem and HDL exports remain future work.
 
 See [data handling](../SECURITY.md) before sending proprietary equations or model information to an agent provider.
+
+### Reuse AI blocks
+
+Successfully generated and compiler-checked blocks are automatically saved to **Library → AI blocks**, even before you add them to a diagram. Search, click, or drag them into any model; the dangling-wire picker also offers compatible AI blocks. The block design catalog has the same AI collection. Each insertion is an independent copy. Refinements create new library entries when the definition changes, without updating other models. Identical definitions are deduplicated. Existing generated blocks in saved models are imported once and labeled **From saved model**, rather than claiming a fresh compiler check. This library is local to your workspace, not a public marketplace.
+
+### Data Inspector navigation and signal logging
+
+Select a wire and choose **Log signal** in the wire toolbar, or enable **Log to Data Inspector** in its net properties. A dot beside the net name indicates logging. Run again to capture the signal. Only signal/control nets can be logged: use a voltage, current, speed, or other sensor to choose a physical quantity, then log its signal output. A physical connection itself cannot be logged. Existing automatically captured block outputs remain available for compatibility and are distinct from the **Logged nets only** filter.
+
+In Results, choose one plot, two stacked, two side by side, a 2×2 grid, or a 3×2 grid. Select a plot with its header or canvas, then check signals in the left panel; you can also drag a signal directly onto any plot. The same signal can appear in multiple plots. Removing a signal or clearing a plot changes only the view. Layout changes retain assignments for temporarily hidden plots.
+
+Use **Pan**, **Box zoom**, or **Cursor**, with **X only**, **Y only**, or **X + Y** axes. The mouse wheel zooms around the pointer; plus/minus zoom around the center. Link X axes to keep plots synchronized in time while their Y ranges remain independent. **Fit X**, **Fit Y**, and **Fit both** reset the selected ranges; double-click or Home fits both. Arrow keys pan a focused plot. Maximize a plot to inspect it alone, then restore the layout. Cursor values report saved samples (the last sample at or before the selected time), preserving pre/post-event discontinuities rather than inventing interpolated values.
+
+The inspector loads full stored CSV samples, retaining repeated event times. If that request fails, it explicitly shows the reduced preview and offers Retry. CSV export retains the complete run. Plot layout, signal assignments, and axis ranges are saved locally in this browser per model; they do not change the simulation or get embedded in exported model documents. Signals unavailable in a later run remain identified rather than being silently replaced. Different units on one plot share a numeric Y axis; use separate plots when their scales differ.

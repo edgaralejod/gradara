@@ -96,3 +96,7 @@ Keep these boundaries modular within the current application. Microservices, an 
 - [Modelica Standard Library 4.1.0](https://github.com/modelica/ModelicaStandardLibrary/releases/tag/v4.1.0) and [Modelica 3.6 specification](https://specification.modelica.org/maint/3.6/MLS.pdf).
 - [React Flow](https://github.com/xyflow/xyflow); Gradara keeps its engineering wire behavior in this repository.
 - [Third-party licensing](THIRD_PARTY_NOTICES.md). Process separation is an engineering choice, not a determination of distribution license obligations.
+
+## Local generated-block library
+
+`server/component_library.py` stores checked generations as immutable, content-addressed JSON under ignored `projects/components/`; identical definitions deduplicate. Changed definitions produce new entries. The library and block design catalog load this collection through `/api/components/library`, and insertion copies a definition into the ordinary model document. Model execution remains independent of library availability. Existing generated blocks in saved models are imported once with explicit unverified provenance. No private generated definitions are added to the repository or published.

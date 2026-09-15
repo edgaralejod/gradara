@@ -502,3 +502,16 @@ void test('label positions follow block moves, survive duplication, and reconcil
     y: -80,
   });
 });
+
+void test('AI library search keeps same-kind variants and respects physical compatibility', () => {
+  const base = structuredClone(library.find((d) => d.kind === 'resistor')!);
+  base.generated = true;
+  base.name = 'Custom resistor';
+  const variant = structuredClone(base);
+  variant.parameters[0].value = 25;
+  const electrical = { id: 'p', name: 'p', direction: 'physical' as const, domain: 'electrical' as const };
+  const signal = { id: 'y', name: 'y', direction: 'output' as const, domain: 'signal' as const };
+  assert.equal(searchLibrary('custom', 'all', electrical, [base, variant]).length, 2);
+  assert.equal(searchLibrary('custom', 'all', signal, [base, variant]).length, 0);
+  assert.equal(searchLibrary('electrical', 'all', undefined, [base]).length, 1);
+});

@@ -69,3 +69,15 @@ void test('short simulations and switching windows have distinct readable time l
   );
   assert.equal(new Set(ticks).size, ticks.length);
 });
+
+void test('time zoom is bounded, pan preserves span, and fit includes discontinuity neighbors', async () => {
+  const { clampTime, zoomRange, panView, fitValues, sampleIndex } = await import('../lib/gradara/plot-navigation');
+  assert.deepEqual(clampTime([-.1,.3],1),[0,.4]);
+  assert.deepEqual(clampTime([.8,1.2],1),[.6000000000000001,1]);
+  assert.deepEqual(zoomRange([0,10],.5,.2),[1,6]);
+  assert.deepEqual(panView({x:[.2,.4],y:[-1,1]},.5,.5,'y',1),{x:[.2,.4],y:[0,2]});
+  assert.deepEqual(panView({x:[.2,.4],y:[-1,1]},.5,.5,'x',1),{x:[.1,.30000000000000004],y:[-1,1]});
+  assert.equal(sampleIndex([0,.5,.5,1],.5),2);
+  const fitted=fitValues([0,.5,.5,1],[[0,0,100,100]],[.49,.51]);
+  assert.ok(fitted[0]<0&&fitted[1]>100);
+});

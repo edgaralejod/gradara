@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { refreshGeneratedLibrary } from '@/lib/gradara/generated-library';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
 import { domainColors, type Definition } from '@/lib/gradara/model';
 import {
@@ -86,6 +87,7 @@ export default function AgentComposer({
         controller.current.signal,
       );
       setPreview(result.definition);
+      refreshGeneratedLibrary();
     } catch (e) {
       if ((e as Error).name !== 'AbortError') setError((e as Error).message);
     } finally {
@@ -150,7 +152,7 @@ export default function AgentComposer({
         <div className="component-preview">
           <span className="preview-checked">
             <Check size={12} />
-            Modelica checked
+            Modelica checked · Saved to AI blocks
           </span>
           <div className="preview-block">
             <span>{preview.symbol}</span>

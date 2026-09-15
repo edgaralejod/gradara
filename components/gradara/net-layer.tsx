@@ -729,6 +729,9 @@ export default function NetLayer(baseProps: Props) {
     props.selection.blockIds.length === 0 &&
     props.selected.length === 1 &&
     paths.some((p) => p.wire.id === props.selected[0]);
+  const loggingWire = props.project.wires.find((w) => w.id === props.selected[0]);
+  const loggingNet = loggingWire ? netForWire(props.project, loggingWire.id) : undefined;
+  const canLog = loggingWire && endpointPort(props.project, loggingWire.source, loggingWire.sourceHandle, 'source')?.domain === 'signal';
   return (
     <>
       <ViewportPortal>
@@ -1030,6 +1033,7 @@ export default function NetLayer(baseProps: Props) {
           ) : (
             <>
               <span className="net-toolbar-label">Wire</span>
+              {loggingNet && <button disabled={!canLog} aria-pressed={!!loggingNet.logged} title={canLog ? 'Capture this signal in the next simulation' : 'Add a sensor and log its signal output'} onClick={() => props.onCommit({...props.project, nets: props.project.nets?.map(n => n.id === loggingNet.id ? {...n, logged: !n.logged} : n)})}>{loggingNet.logged ? '● Logging on' : 'Log signal'}</button>}
               <button
                 onClick={() => commands.current('name')}
                 title="Name this net (F2)"

@@ -107,6 +107,7 @@ class Net(BaseModel):
     wireIds: list[str] = Field(min_length=1, max_length=3000)
     label: NetLabel | None = None
     hidden: bool = False
+    logged: bool = False
 
     @field_validator('aliases')
     @classmethod
@@ -199,6 +200,11 @@ class Project(BaseModel):
             def endpoint(ident, handle):
                 return f'j:{ident}' if ident in taps else f'{ident}.{handle}'
             for net in self.nets:
+                if net.logged:
+                    first = by_wire[net.wireIds[0]]
+                    domain = ports[(first.source, first.sourceHandle)].domain if first.source in blocks else taps[first.source].domain
+                    if domain != 'signal':
+                        raise ValueError('Only signal/control nets can be logged. Add a sensor and log its signal output.')
                 adj = {}
                 for ident in net.wireIds:
                     wire = by_wire[ident]

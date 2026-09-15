@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 from .models import BlockType, Definition
 from .engine import ROOT, check_component
+from .component_library import save_component
 
 AGENT_DIR = ROOT/'projects'/'agent'
 AGENT_DIR.mkdir(parents=True, exist_ok=True)
@@ -108,7 +109,8 @@ Declarations contain only internal Real/Integer/Boolean variables and initial va
             definition = Definition.model_validate({**data,'generated':True})
             validate_generated_type(definition, selected, existing)
             await check_component(definition, f'{job_id}-{attempt}')
-            return {'definition':definition.model_dump(exclude_none=True),'provider':'Codex','checked':True,'blockType':selected}
+            entry = save_component(ROOT/'projects', definition)
+            return {'libraryId':entry['id'], 'definition':definition.model_dump(exclude_none=True),'provider':'Codex','checked':True,'blockType':selected}
         except Exception as exc:
             errors.append(str(exc))
             instructions += '\nYour prior candidate:\n'+json.dumps(data)+'\nCorrect this integration error while preserving SELECTED BLOCK TYPE '+selected+':\n'+str(exc)[-4000:]

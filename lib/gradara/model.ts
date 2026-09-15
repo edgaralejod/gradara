@@ -80,6 +80,8 @@ export type Net = {
   wireIds: string[];
   label?: { wireId: string; fraction: number; side: -1 | 1 };
   hidden?: boolean;
+  /** Capture this signal/control net on the next run; physical nets require sensors. */
+  logged?: boolean;
 };
 export type Project = {
   version: 1;

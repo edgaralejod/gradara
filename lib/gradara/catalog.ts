@@ -85,8 +85,8 @@ const kindCategory: Record<string, LibraryCategoryId> = {
 
 export function categoryOf(definition: Definition): LibraryCategoryId {
   return (
-    definition.category ??
-    kindCategory[definition.kind] ??
+    definition.category ||
+    kindCategory[definition.kind] ||
     (definition.domain === 'electrical'
       ? 'electrical'
       : definition.domain === 'mechanical'
@@ -104,6 +104,8 @@ function haystack(definition: Definition) {
     definition.name,
     definition.kind,
     definition.symbol,
+    definition.domain,
+    ...definition.ports.map((port) => port.domain),
     definition.description,
     categoryLabel(categoryOf(definition)),
     ...(definition.keywords ?? []),
@@ -116,8 +118,9 @@ export function searchLibrary(
   query: string,
   category: LibraryCategoryId | 'all' = 'all',
   compatibleWith?: Port,
+  definitions: Definition[] = library,
 ): LibraryHit[] {
-  const pool = library.filter((definition) => {
+  const pool = definitions.filter((definition) => {
     if (category !== 'all' && categoryOf(definition) !== category) return false;
     if (
       compatibleWith &&
@@ -143,8 +146,7 @@ export function searchLibrary(
     .filter((hit): hit is LibraryHit => hit !== null)
     .sort(
       (a, b) =>
-        b.score - a.score ||
-        a.definition.name.localeCompare(b.definition.name),
+        b.score - a.score || a.definition.name.localeCompare(b.definition.name),
     );
 }
 
@@ -162,8 +164,7 @@ export function matchingPort(from: Port | undefined, definition: Definition) {
   if (from.direction === 'input')
     return (
       ports.find(
-        (port) =>
-          port.direction === 'output' && ['y', 'out'].includes(port.id),
+        (port) => port.direction === 'output' && ['y', 'out'].includes(port.id),
       ) ?? ports.find((port) => port.direction === 'output')
     );
   return ports[0];
