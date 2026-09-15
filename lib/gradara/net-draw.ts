@@ -1,23 +1,12 @@
 import { Position } from '@xyflow/react';
-import { blockSize } from './canvas';
 import type { Project } from './model';
-import {
-  endpointPoint,
-  isTap,
-  netComponents,
-  netKeys,
-  TAP_HANDLE,
-} from './net';
+import { endpointPoint, isTap, netComponents, TAP_HANDLE } from './net';
 import { portPoint } from './ports';
 import {
   routeBetween,
-  simplifyPoints,
   simplifyRoute,
   segmentExit,
-  outward,
   EXIT_STUB,
-  RETURN_CLEARANCE,
-  RETURN_STUB,
   pinRubberBand,
   pointsToPath,
   rubberBandPoints,
@@ -70,79 +59,20 @@ function overlap(a: Run, b: Run) {
     0.001
   );
 }
-/** Deterministic lane allocation for automatic runs; pinned routes are never rerouted. */
+/** Displayed geometry is the drawing route: pinned waypoints, or orthogonal auto-route. */
 export function routedPolylines(project: Project): Map<string, Pt[]> {
   const cached = routeCache.get(project);
   if (cached) return cached;
-  const nets = new Map<string, number>();
-  netComponents(project).forEach((keys, i) =>
-    keys.forEach((k) => nets.set(k, i)),
-  );
-  const runs: Run[] = [];
   const routes = new Map<string, Pt[]>();
   for (const w of project.wires) {
-    const key = isTap(project, w.source)
-      ? `j:${w.source}`
-      : `${w.source}.${w.sourceHandle}`;
-    const net = nets.get(key) ?? -1;
-    let pts = rawPolyline(project, w.id).map(({ x, y }) => ({ x, y }));
-    if (!w.waypoints) {
-      const next: Pt[] = [];
-      for (let i = 0; i < pts.length - 1; i++) {
-        const a = pts[i],
-          b = pts[i + 1];
-        const axis = a.y === b.y ? 'h' : 'v';
-        const run: Run = { a, b, axis, coord: axis === 'h' ? a.y : a.x, net };
-        next.push(a);
-        if (!runs.some((r) => r.net !== net && overlap(run, r))) continue;
-        let offset = 8;
-        while (
-          offset < 160 &&
-          runs.some(
-            (r) =>
-              r.net !== net &&
-              overlap({ ...run, coord: run.coord + offset }, r),
-          )
-        )
-          offset += 8;
-        const shift = (p: Pt) =>
-          axis === 'h'
-            ? { x: p.x, y: p.y + offset }
-            : { x: p.x + offset, y: p.y };
-        // Leave endpoint normals intact, shifting only the usable middle of an endpoint run.
-        const start =
-          i === 0
-            ? outward(
-                a,
-                segmentExit(a, b),
-                Math.min(20, Math.hypot(a.x - b.x, a.y - b.y) / 3),
-              )
-            : a;
-        const end =
-          i === pts.length - 2
-            ? outward(
-                b,
-                segmentExit(b, a),
-                Math.min(20, Math.hypot(a.x - b.x, a.y - b.y) / 3),
-              )
-            : b;
-        next.push(start, shift(start), shift(end), end);
-      }
-      if (pts.length) next.push(pts.at(-1)!);
-      pts = simplifyPoints(next);
-    }
-    // Automatic lanes and pinned paths must expose the same canonical geometry.
-    // Otherwise freezing a route for a group move removes old lane spurs only
-    // after release, making a rigid selection appear to change shape.
     const from = endpointPoint(project, w.source, w.sourceHandle);
     const to = endpointPoint(project, w.target, w.targetHandle);
-    pts = simplifyRoute(
-      pts,
+    const pts = simplifyRoute(
+      rawPolyline(project, w.id),
       from && !isTap(project, w.source) ? sideToPosition(from.side) : undefined,
       to && !isTap(project, w.target) ? sideToPosition(to.side) : undefined,
     );
     routes.set(w.id, pts);
-    runs.push(...segmentsOf(pts).map((r) => ({ ...r, net })));
   }
   routeCache.set(project, routes);
   return routes;
@@ -181,102 +111,7 @@ export function committedPoints(
       entry,
     );
   }
-  const driverKeys = isTap(project, source)
-    ? netKeys(project, { id: source, handle: sourceHandle })
-    : undefined;
-  const sourceBlock =
-    project.blocks.find((b) => b.id === source) ??
-    project.blocks.find((b) =>
-      b.definition.ports.some(
-        (p) => p.direction === 'output' && driverKeys?.has(`${b.id}.${p.id}`),
-      ),
-    );
-  const targetBlock = project.blocks.find((b) => b.id === target);
-  const physical =
-    (!isTap(project, source) &&
-      sourceBlock?.definition.ports.find((p) => p.id === sourceHandle)
-        ?.direction === 'physical') ||
-    (isTap(project, source) &&
-      project.junctions?.find((j) => j.id === source)?.domain !== 'signal');
-  if (
-    !physical &&
-    sourceBlock &&
-    targetBlock &&
-    isBackEdge(project, sourceBlock.id, targetBlock.id)
-  )
-    return loopPoints(
-      from,
-      to,
-      loopRailY(project, sourceBlock.id, targetBlock.id),
-      exit,
-      entry,
-    );
   return routeBetween(from, to, exit, entry);
-}
-
-export function isBackEdge(project: Project, fromId: string, toId: string) {
-  if (isTap(project, fromId) || isTap(project, toId)) return false;
-  const from = project.blocks.find((b) => b.id === fromId);
-  const to = project.blocks.find((b) => b.id === toId);
-  if (!from || !to) return false;
-  if (to.position.x + blockSize(to).width < from.position.x) return true;
-  return to.position.x < from.position.x && feeds(project, toId, fromId);
-}
-
-function feeds(project: Project, fromBlock: string, toBlock: string) {
-  const seen = new Set<string>();
-  const stack = [fromBlock];
-  while (stack.length) {
-    const id = stack.pop()!;
-    if (id === toBlock) return true;
-    if (seen.has(id)) continue;
-    seen.add(id);
-    for (const w of project.wires) {
-      if (w.source === id) stack.push(w.target);
-    }
-  }
-  return false;
-}
-
-export function loopRailY(project: Project, fromId: string, toId: string) {
-  const from = project.blocks.find((b) => b.id === fromId);
-  const to = project.blocks.find((b) => b.id === toId);
-  let bottom = 0;
-  const left = Math.min(from?.position.x ?? 0, to?.position.x ?? 0);
-  const right = Math.max(
-    (from?.position.x ?? 0) + (from ? blockSize(from).width : 0),
-    (to?.position.x ?? 0) + (to ? blockSize(to).width : 0),
-  );
-  for (const b of project.blocks) {
-    const box = blockSize(b);
-    const mid = b.position.x + box.width / 2;
-    if (
-      b.id === fromId ||
-      b.id === toId ||
-      (mid >= left - 8 && mid <= right + 8)
-    )
-      bottom = Math.max(bottom, b.position.y + box.height);
-  }
-  return bottom + RETURN_CLEARANCE;
-}
-
-export function loopPoints(
-  from: Pt,
-  to: Pt,
-  railY: number,
-  exit = Position.Right,
-  entry = Position.Bottom,
-): Pt[] {
-  const a = outward(from, exit, RETURN_STUB),
-    b = outward(to, entry, RETURN_STUB);
-  return simplifyPoints([
-    from,
-    a,
-    { x: a.x, y: railY },
-    { x: b.x, y: railY },
-    b,
-    to,
-  ]);
 }
 
 export function segmentsOf(pts: Pt[]) {

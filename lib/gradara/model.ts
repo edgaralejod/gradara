@@ -59,7 +59,7 @@ export type Wire = {
   sourceHandle: string;
   target: string;
   targetHandle: string;
-  /** Undefined permits automatic lanes; [] explicitly preserves a straight route. */
+  /** Undefined permits automatic orthogonal routing; [] explicitly preserves a straight route. */
   waypoints?: { x: number; y: number }[];
   junctions?: { x: number; y: number }[];
 };

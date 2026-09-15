@@ -2,7 +2,6 @@ import { blockSize } from './canvas';
 import { snapBlockPosition } from './block-design';
 import type { Block, Definition, Port, Project } from './model';
 import { portPoint, portSide, positionForPortAt } from './ports';
-import { isReturnPath } from './routing';
 
 export const GRID = 20;
 export const STAGE_GAP = 56;
@@ -99,15 +98,6 @@ function alignmentShift(project: Project, block: Block) {
     const a = portPoint(block, mine);
     const b = other ? portPoint(other, theirs) : undefined;
     if (!a || !b) continue;
-    const sourcePt = wire.source === block.id ? a : b;
-    const targetPt = wire.target === block.id ? a : b;
-    const sourceBlock = wire.source === block.id ? block : other;
-    const sourceHandle = sourceBlock?.definition.ports.find(
-      (p) => p.id === wire.sourceHandle,
-    );
-    const flow = sourceHandle?.direction === 'physical' ? 'physical' : 'signal';
-    if (isReturnPath({ sourceX: sourcePt.x, targetX: targetPt.x, flow }))
-      continue;
     const horizontal =
       (a.side === 'left' || a.side === 'right') &&
       (b.side === 'left' || b.side === 'right');

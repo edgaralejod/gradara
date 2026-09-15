@@ -40,7 +40,7 @@ Pointer previews are derived from the gesture's original snapshot and painted lo
 
 ## Routing and alignment
 
-Unpinned signal feedback routes use a return rail around the loop's blocks. Explicitly drawn feedback preserves the selected path. Physical connections use acausal orthogonal routing and do not inherit signal-flow direction.
+Unpinned routes use the same orthogonal router as live drawing: leave in the port's exit direction, follow any pinned corners, and enter the destination along its port normal. Auto-route does not inject a feedback U, a lane offset, or another preset shape. Explicitly drawn paths keep their vertices. Physical and signal connections share that geometry; they differ only in connection laws.
 
 While reshaping, the path's stationary runs and endpoints are preferred alignment targets within eight screen pixels. Candidate alignment favors fewer segments, then shorter travel, then proximity. Free drawing excludes its own net from alignment candidates so a new branch does not collapse onto its parent trunk.
 
@@ -50,7 +50,7 @@ Junctions attached to an edited endpoint run follow that run perpendicular to it
 
 Junction normalization can move an apparent branch point to the first actual divergence of overlapping incident paths, preserving the visible union and connectivity. An unrelated crossing, genuine four-way split, or collision with another terminal must not trigger that cleanup. Apply this rule generally across domain, orientation, stored endpoint order, and zoom.
 
-The router is not obstacle-aware. Automatic collinear paths use deterministic lanes; a newly pinned route overlapping a different net is rejected. Imported geometry or later block/bend movement can still create overlaps that require manual correction. Never describe coordinate alignment as guaranteed obstacle avoidance.
+The router is not obstacle-aware. A newly pinned route overlapping a different net is rejected. Imported geometry or later block/bend movement can still create overlaps that require manual correction. Never describe coordinate alignment as guaranteed obstacle avoidance.
 
 ## Connected selections
 

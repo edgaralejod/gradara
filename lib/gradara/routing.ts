@@ -1,97 +1,8 @@
 import { Position } from '@xyflow/react';
-import { blockSize } from './canvas';
-import type { Block } from './model';
 
-export const STRAIGHT_EPS = 3.5;
-export const RETURN_STUB = 22;
-export const RETURN_CLEARANCE = 48;
-export const RETURN_THRESHOLD = 12;
 export const EXIT_STUB = 20;
 
 export type Pt = { x: number; y: number };
-
-type Ends = {
-  sourceX: number;
-  sourceY: number;
-  targetX: number;
-  targetY: number;
-  sourcePosition: Position;
-  targetPosition: Position;
-  railY?: number;
-  /** Conserving/physical nets are never treated as control feedback. */
-  flow?: 'signal' | 'physical';
-};
-
-/** A signal wire is feedback when it travels upstream — source sits to the right of the target. */
-export function isReturnPath(
-  ends: Pick<Ends, 'sourceX' | 'targetX' | 'flow'>,
-): boolean {
-  if (ends.flow === 'physical') return false;
-  return ends.sourceX > ends.targetX + RETURN_THRESHOLD;
-}
-
-export function feedbackRailY(source: Block, target: Block): number {
-  const a = blockSize(source);
-  const b = blockSize(target);
-  return (
-    Math.max(source.position.y + a.height, target.position.y + b.height) +
-    RETURN_CLEARANCE
-  );
-}
-
-/** Straight forward paths. Return paths ride a rail under the chain. */
-export function wirePath(ends: Ends): string {
-  if (ends.railY !== undefined) return returnRail(ends);
-  const { sourceX, sourceY, targetX, targetY } = ends;
-  const dx = targetX - sourceX;
-  const dy = targetY - sourceY;
-  if (Math.abs(dy) <= STRAIGHT_EPS && Math.abs(dx) >= Math.abs(dy))
-    return `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
-  if (Math.abs(dx) <= STRAIGHT_EPS && Math.abs(dy) >= Math.abs(dx))
-    return `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
-  return manhattan(ends);
-}
-
-function returnRail(ends: Ends): string {
-  const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition } =
-    ends;
-  const stub = RETURN_STUB;
-  const railY = Math.max(
-    ends.railY ?? Number.NEGATIVE_INFINITY,
-    sourceY + RETURN_CLEARANCE,
-    targetY + RETURN_CLEARANCE,
-  );
-  const leaveX =
-    sourcePosition === Position.Left ? sourceX - stub : sourceX + stub;
-  const leaveY =
-    sourcePosition === Position.Top
-      ? sourceY - stub
-      : sourcePosition === Position.Bottom
-        ? sourceY + stub
-        : sourceY;
-  const start =
-    sourcePosition === Position.Top || sourcePosition === Position.Bottom
-      ? `M ${sourceX} ${sourceY} L ${sourceX} ${leaveY} L ${sourceX} ${railY}`
-      : `M ${sourceX} ${sourceY} L ${leaveX} ${sourceY} L ${leaveX} ${railY}`;
-
-  if (targetPosition === Position.Bottom)
-    return `${start} L ${targetX} ${railY} L ${targetX} ${targetY}`;
-  if (targetPosition === Position.Top)
-    return `${start} L ${targetX} ${railY} L ${targetX} ${targetY}`;
-  const enterX =
-    targetPosition === Position.Left ? targetX - stub : targetX + stub;
-  return `${start} L ${enterX} ${railY} L ${enterX} ${targetY} L ${targetX} ${targetY}`;
-}
-
-function manhattan(ends: Ends): string {
-  return pointsToPath(
-    rubberBandPoints(
-      { x: ends.sourceX, y: ends.sourceY },
-      { x: ends.targetX, y: ends.targetY },
-      ends.sourcePosition,
-    ),
-  );
-}
 
 export function pointsToPath(pts: Pt[]): string {
   if (!pts.length) return '';
@@ -281,10 +192,9 @@ export function routeBetween(
     const facing =
       (exit === Position.Right && entry === Position.Left && a.x <= b.x) ||
       (exit === Position.Left && entry === Position.Right && a.x >= b.x);
-    // Closely stacked blocks need two legs to avoid doubling back through a port.
-    // Only add clearance when ports are very close on their axis (risk of backtracking).
+    // Closely stacked opposite ports need two legs so the entry is not a hairpin.
     if (!facing && exit !== entry && Math.abs(a.x - b.x) < EXIT_STUB * 2) {
-      const y = nearly(a.y, b.y) ? a.y + RETURN_CLEARANCE : (a.y + b.y) / 2;
+      const y = nearly(a.y, b.y) ? a.y + EXIT_STUB : (a.y + b.y) / 2;
       return simplifyPoints([from, a, { x: a.x, y }, { x: b.x, y }, b, to]);
     }
     const x = facing
@@ -303,7 +213,7 @@ export function routeBetween(
       (exit === Position.Bottom && entry === Position.Top && a.y <= b.y) ||
       (exit === Position.Top && entry === Position.Bottom && a.y >= b.y);
     if (!facing && exit !== entry && Math.abs(a.y - b.y) < EXIT_STUB * 2) {
-      const x = nearly(a.x, b.x) ? a.x + RETURN_CLEARANCE : (a.x + b.x) / 2;
+      const x = nearly(a.x, b.x) ? a.x + EXIT_STUB : (a.x + b.x) / 2;
       return simplifyPoints([from, a, { x, y: a.y }, { x, y: b.y }, b, to]);
     }
     const y = facing

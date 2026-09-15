@@ -130,7 +130,7 @@ void test('4 drop on ink creates a junction; dragging it moves the T', () => {
   assert.ok(pairs.some((w) => w.target === 'sat'));
 });
 
-void test('5 unpinned feedback is a U under the blocks, not along the trunk', () => {
+void test('5 unpinned feedback uses ordinary orthogonal routing, not a return rail', () => {
   const s = new NetSession(sheet());
   s.pressPort('step', 'y');
   s.move(180, 68);
@@ -138,7 +138,6 @@ void test('5 unpinned feedback is a U under the blocks, not along the trunk', ()
   s.pressPort('sum', 'y');
   s.move(300, 68);
   s.release({ x: 300, y: 68 });
-  const trunkY = 68;
   s.pressPort('gain', 'y');
   const minus = port(s.project, 'sum', 'b');
   s.move(minus.x, minus.y);
@@ -148,12 +147,23 @@ void test('5 unpinned feedback is a U under the blocks, not along the trunk', ()
   );
   assert.ok(fb);
   const pts = s.pathPoints(fb!.id);
+  orthogonal(pts);
+  const src = port(s.project, 'gain', 'y');
+  const dst = minus;
   const lowest = Math.max(...pts.map((p) => p.y));
+  const bottom =
+    Math.max(
+      ...s.project.blocks.map((b) => b.position.y + blockSize(b).height),
+    ) + 40;
   assert.ok(
-    lowest >= 36 + 64 + 40,
-    `U rail should clear the gain box, got ${lowest}`,
+    lowest < bottom,
+    `unpinned feedback must not drop under the chain, got ${JSON.stringify(pts)}`,
   );
-  assert.ok(lowest > trunkY + 30, 'U must not hug the forward trunk');
+  assert.ok(pts[1].x > pts[0].x, 'output still leaves to the right');
+  assert.equal(pts[0].x, src.x);
+  assert.equal(pts[0].y, src.y);
+  assert.equal(pts.at(-1)!.x, dst.x);
+  assert.equal(pts.at(-1)!.y, dst.y);
 });
 
 void test('6 drawn feedback keeps vertices and adds no junction', () => {
@@ -328,15 +338,19 @@ void test('splitting a routed feedback run retains its exact existing ink', () =
   s.release(port(s.project, 'sum', 'b'));
   const w = s.project.wires.find((w) => w.source === 'gain')!;
   const before = s.pathPoints(w.id);
-  const rail = before[2].y;
-  const at = { x: (before[2].x + before[3].x) / 2, y: rail };
+  assert.ok(before.length >= 3);
+  const segment = Math.min(1, before.length - 2);
+  const at = {
+    x: (before[segment].x + before[segment + 1].x) / 2,
+    y: (before[segment].y + before[segment + 1].y) / 2,
+  };
   const end = s.spliceAt(w.id, at)!;
   const halves = s.project.wires
-    .filter((w) => w.source === end.id || w.target === end.id)
-    .map((w) => s.pathPoints(w.id));
+    .filter((wire) => wire.source === end.id || wire.target === end.id)
+    .map((wire) => s.pathPoints(wire.id));
   halves.forEach(orthogonal);
-  assert.deepEqual(halves[0].slice(0, -1), before.slice(0, 3));
-  assert.deepEqual(halves[1].slice(1), before.slice(3));
+  assert.deepEqual(halves[0].slice(0, -1), before.slice(0, segment + 1));
+  assert.deepEqual(halves[1].slice(1), before.slice(segment + 1));
   s.cancel();
   assert.equal(s.project.wires.length, 3);
   assert.equal(s.junctionCount(), 0);
@@ -462,14 +476,36 @@ void test('physical junctions flatten to a unique spanning tree regardless of ed
     flattenWires(s.project),
   );
 });
-void test('automatic return rails on distinct nets occupy different lanes', () => {
+void test('right-to-left without a loop uses ordinary routing, not a return rail', () => {
+  const p = {
+    ...sheet(),
+    blocks: [place('gain', 'src', 400, 0), place('gain', 'dst', 0, 40)],
+    wires: [],
+  };
+  const s = new NetSession(p);
+  s.pressPort('src', 'y');
+  s.release(port(s.project, 'dst', 'u'));
+  assert.equal(s.project.wires.length, 1);
+  const pts = s.pathPoints(s.project.wires[0].id);
+  orthogonal(pts);
+  const src = port(s.project, 'src', 'y');
+  const dst = port(s.project, 'dst', 'u');
+  const lowest = Math.max(...pts.map((pt) => pt.y));
+  assert.ok(
+    lowest <= Math.max(src.y, dst.y) + 1,
+    `RTL without a loop must stay on the orthogonal route, got ${JSON.stringify(pts)}`,
+  );
+  assert.ok(pts[1].x > pts[0].x, 'output still leaves to the right');
+});
+
+void test('automatic routes keep drawing geometry and are not offset into lanes', () => {
   const p = {
     ...sheet(),
     blocks: [
       place('gain', 'a', 400, 0),
       place('gain', 'b', 0, 0),
-      place('gain', 'c', 400, 140),
-      place('gain', 'd', 0, 140),
+      place('gain', 'c', 400, 0),
+      place('gain', 'd', 80, 0),
     ],
     wires: [
       {
@@ -489,13 +525,15 @@ void test('automatic return rails on distinct nets occupy different lanes', () =
     ],
   };
   const s = new NetSession(p);
-  const a = s.pathPoints('ab'),
-    b = s.pathPoints('cd');
+  const a = s.pathPoints('ab');
+  const expected = routeBetween(
+    port(p, 'a', 'y'),
+    port(p, 'b', 'u'),
+    sideToPosition(port(p, 'a', 'y').side),
+    sideToPosition(port(p, 'b', 'u').side),
+  );
   orthogonal(a);
-  orthogonal(b);
-  const railA = Math.max(...a.map((p) => p.y)),
-    railB = Math.max(...b.map((p) => p.y));
-  assert.equal(railB - railA, 8);
+  assert.deepEqual(a, expected);
 });
 
 void test('deleting the last branch removes its junction and preserves the original connection', async () => {
@@ -517,23 +555,11 @@ void test('deleting the last branch removes its junction and preserves the origi
     orthogonal(new NetSession(pruned).pathPoints(w.id)),
   );
 });
-void test('a splice on a lane-offset auto route uses the displayed lane', () => {
+void test('a splice on an auto route uses the displayed polyline', () => {
   const p = {
     ...sheet(),
-    blocks: [
-      place('gain', 'a', 400, 0),
-      place('gain', 'b', 0, 0),
-      place('gain', 'c', 400, 140),
-      place('gain', 'd', 0, 140),
-    ],
+    blocks: [place('gain', 'c', 400, 140), place('gain', 'd', 0, 140)],
     wires: [
-      {
-        id: 'ab',
-        source: 'a',
-        sourceHandle: 'y',
-        target: 'b',
-        targetHandle: 'u',
-      },
       {
         id: 'cd',
         source: 'c',
@@ -544,10 +570,19 @@ void test('a splice on a lane-offset auto route uses the displayed lane', () => 
     ],
   };
   const s = new NetSession(p);
-  const rail = Math.max(...s.pathPoints('cd').map((p) => p.y));
-  const end = s.spliceAt('cd', { x: 200, y: rail });
+  const pts = s.pathPoints('cd');
+  const segment = pts.findIndex(
+    (pt, i) => pts[i + 1] && (pt.x !== pts[i + 1].x || pt.y !== pts[i + 1].y),
+  );
+  assert.ok(segment >= 0);
+  const at = {
+    x: (pts[segment].x + pts[segment + 1].x) / 2,
+    y: (pts[segment].y + pts[segment + 1].y) / 2,
+  };
+  const end = s.spliceAt('cd', at);
   assert.ok(end);
-  assert.equal(s.project.junctions![0].position.y, rail);
+  assert.equal(s.project.junctions![0].position.x, at.x);
+  assert.equal(s.project.junctions![0].position.y, at.y);
 });
 
 function editableSheet() {
@@ -1025,14 +1060,15 @@ void test('straightening retains endpoint escape directions on a feedback loop',
   const wire = s.project.wires.at(-1)!,
     points = s.pathPoints(wire.id);
   const i = points.findIndex(
-    (p, i) =>
-      p.y === Math.max(...points.map((p) => p.y)) && points[i + 1]?.y === p.y,
+    (p, idx) =>
+      points[idx + 1] && p.y === points[idx + 1].y && p.x !== points[idx + 1].x,
   );
+  assert.ok(i >= 0);
   const result = snappedSegment(
     s.project,
     wire.id,
     i,
-    { x: 220, y: 70 },
+    { x: (points[i].x + points[i + 1].x) / 2, y: 70 },
     1,
     [],
   ).project;

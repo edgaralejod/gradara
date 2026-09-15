@@ -11,10 +11,9 @@ import {
 } from '../lib/gradara/placement';
 import { portPoint } from '../lib/gradara/ports';
 import {
-  isReturnPath,
   pinRubberBand,
   rubberBandPoints,
-  wirePath,
+  routeBetween,
 } from '../lib/gradara/routing';
 import { Position } from '@xyflow/react';
 import {
@@ -313,24 +312,26 @@ void test('a pin forces the first segment out of the block, click freezes that r
 });
 
 void test('aligned ports draw a single straight segment', () => {
-  const path = wirePath({
-    sourceX: 10,
-    sourceY: 40,
-    targetX: 200,
-    targetY: 41,
-    sourcePosition: Position.Right,
-    targetPosition: Position.Left,
-  });
-  assert.equal(path, 'M 10 40 L 200 41');
-  const jog = wirePath({
-    sourceX: 10,
-    sourceY: 40,
-    targetX: 200,
-    targetY: 90,
-    sourcePosition: Position.Right,
-    targetPosition: Position.Left,
-  });
-  assert.match(jog, /L \d+(\.\d+)? 40 L \d+(\.\d+)? 90/);
+  assert.deepEqual(
+    routeBetween(
+      { x: 10, y: 40 },
+      { x: 200, y: 40 },
+      Position.Right,
+      Position.Left,
+    ),
+    [
+      { x: 10, y: 40 },
+      { x: 200, y: 40 },
+    ],
+  );
+  const jog = routeBetween(
+    { x: 10, y: 40 },
+    { x: 200, y: 90 },
+    Position.Right,
+    Position.Left,
+  );
+  assert.ok(jog.some((p, i) => i > 0 && p.y === 40 && jog[i - 1]!.y === 40));
+  assert.ok(jog.some((p, i) => i > 0 && p.y === 90 && jog[i - 1]!.y === 90));
 });
 
 void test('moving a block near a connected port snaps onto the straight line', () => {
@@ -395,71 +396,33 @@ void test('resizing a block pulls its port back onto the connected line', () => 
   assert.ok(Math.abs(from.y - to.y) < 0.001);
 });
 
-void test('a right-to-left signal is feedback and does not draw a straight line', () => {
-  const path = wirePath({
-    sourceX: 400,
-    sourceY: 40,
-    targetX: 80,
-    targetY: 40,
-    sourcePosition: Position.Right,
-    targetPosition: Position.Left,
-  });
-  assert.equal(isReturnPath({ sourceX: 400, targetX: 80 }), true);
-  // Without explicit railY, even RTL connections use normal orthogonal routing
-  assert.equal(path, 'M 400 40 L 80 40');
-  // With explicit railY, feedback uses a U-shaped rail
-  const feedbackPath = wirePath({
-    sourceX: 400,
-    sourceY: 40,
-    targetX: 80,
-    targetY: 40,
-    sourcePosition: Position.Right,
-    targetPosition: Position.Left,
-    railY: 120,
-  });
-  assert.notEqual(feedbackPath, 'M 400 40 L 80 40');
-  assert.match(feedbackPath, / 120 /);
-  const physical = wirePath({
-    sourceX: 400,
-    sourceY: 40,
-    targetX: 80,
-    targetY: 40,
-    sourcePosition: Position.Right,
-    targetPosition: Position.Left,
-    flow: 'physical',
-  });
-  assert.equal(physical, 'M 400 40 L 80 40');
-});
-
-void test('feedback connections do not snap the loop onto one row', () => {
-  const sum = library.find((d) => d.kind === 'sum')!;
-  const product = library.find((d) => d.kind === 'product')!;
-  const a = { id: 'sum', definition: sum, position: { x: 0, y: 0 } };
-  const b = { id: 'prod', definition: product, position: { x: 220, y: 8 } };
+void test('right-to-left connections snap onto a nearby port row', () => {
+  const gain = library.find((d) => d.kind === 'gain')!;
+  const a = { id: 'src', definition: gain, position: { x: 400, y: 0 } };
+  const b = { id: 'dst', definition: gain, position: { x: 0, y: 8 } };
   const project = {
     ...initialProject(),
     blocks: [a, b],
     wires: [
       {
-        id: 'fwd',
-        source: 'sum',
+        id: 'rtl',
+        source: 'src',
         sourceHandle: 'y',
-        target: 'prod',
-        targetHandle: 'a',
-      },
-      {
-        id: 'fb',
-        source: 'prod',
-        sourceHandle: 'y',
-        target: 'sum',
-        targetHandle: 'b',
+        target: 'dst',
+        targetHandle: 'u',
       },
     ],
   };
-  const before = b.position.y;
-  const snapped = snapMovedBlocks(project, ['prod']);
-  const next = snapped.blocks.find((block) => block.id === 'prod')!;
-  assert.equal(next.position.y, before);
+  const from = portPoint(a, 'y')!;
+  const before = portPoint(b, 'u')!;
+  assert.ok(Math.abs(from.y - before.y) <= ALIGN_SNAP);
+  assert.ok(Math.abs(from.y - before.y) > 0);
+  const snapped = snapMovedBlocks(project, ['dst']);
+  const to = portPoint(
+    snapped.blocks.find((block) => block.id === 'dst')!,
+    'u',
+  )!;
+  assert.ok(Math.abs(from.y - to.y) < 0.001);
 });
 
 // Branch gestures and rejection of driven-net drops are exercised through NetSession

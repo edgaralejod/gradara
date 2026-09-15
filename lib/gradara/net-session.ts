@@ -19,7 +19,6 @@ import {
   hitPort,
   hitSegment,
   livePath,
-  loopRailY,
   pinRubberBand,
   polylineOfWire,
   samePt,
@@ -487,4 +486,4 @@ export function hasJunctionGraphic(project: Project) {
     ) ?? false
   );
 }
-export { samePt, loopRailY };
+export { samePt };
