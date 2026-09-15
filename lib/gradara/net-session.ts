@@ -10,7 +10,13 @@ import {
 import { linkEnds, pruneJunctions } from './project';
 import { moveJunctions, normalizeJunctions } from './net-layout';
 import { sideToPosition } from './ports';
-import { routeBetween, segmentExit, simplifyPoints } from './routing';
+import {
+  EXIT_STUB,
+  pinRubberBand,
+  routeBetween,
+  segmentExit,
+  simplifyPoints,
+} from './routing';
 import {
   ANCHOR_PX,
   CANCEL_PX,
@@ -19,7 +25,6 @@ import {
   hitPort,
   hitSegment,
   livePath,
-  pinRubberBand,
   polylineOfWire,
   samePt,
   snapToAnchors,
@@ -101,7 +106,7 @@ export class NetSession {
           this.cursor,
           this.exit,
           entry,
-          this.corners.length ? 0 : 20,
+          this.corners.length ? 0 : EXIT_STUB,
         ).slice(1),
       ]);
     }
@@ -293,7 +298,7 @@ export class NetSession {
       this.origin,
       this.cursor,
       this.exit,
-      this.pins.length > 1 ? 0 : 20,
+      this.pins.length > 1 ? 0 : EXIT_STUB,
     );
     this.corners.push(...pin.points);
     this.origin = pin.origin;
@@ -357,7 +362,7 @@ export class NetSession {
             point,
             this.exit,
             entry,
-            this.corners.length ? 0 : 20,
+            this.corners.length ? 0 : EXIT_STUB,
           ).slice(1),
         ]).slice(1, -1)
       : undefined;
@@ -477,13 +482,3 @@ export class NetSession {
     return this.project.junctions?.length ?? 0;
   }
 }
-export function hasJunctionGraphic(project: Project) {
-  return (
-    project.junctions?.some(
-      (j) =>
-        project.wires.filter((w) => w.source === j.id || w.target === j.id)
-          .length >= 3,
-    ) ?? false
-  );
-}
-export { samePt };

@@ -1,25 +1,21 @@
 import { Position } from '@xyflow/react';
 import type { Project } from './model';
 import { endpointPoint, isTap, netComponents, TAP_HANDLE } from './net';
-import { portPoint } from './ports';
+import { portPoint, sideToPosition } from './ports';
 import {
   routeBetween,
   simplifyRoute,
   segmentExit,
   EXIT_STUB,
-  pinRubberBand,
-  pointsToPath,
   rubberBandPoints,
   type Pt,
 } from './routing';
-import { sideToPosition } from './ports';
 
 export const ANCHOR_PX = 8;
-export const PORT_HIT_PX = 16;
-export const SEGMENT_HIT_PX = 10;
+const PORT_HIT_PX = 16;
+const SEGMENT_HIT_PX = 10;
 export const CANCEL_PX = 16;
 
-export { pinRubberBand, rubberBandPoints, pointsToPath };
 export type { Pt };
 
 export function nearly(a: number, b: number, eps = 0.000001) {
@@ -30,7 +26,7 @@ export function samePt(a: Pt, b: Pt, eps = 0.000001) {
   return nearly(a.x, b.x, eps) && nearly(a.y, b.y, eps);
 }
 
-export type Anchor = { axis: 'x' | 'y'; value: number; net?: string };
+export type Anchor = { axis: 'x' | 'y'; value: number };
 
 function rawPolyline(project: Project, wireId: string): Pt[] {
   const w = project.wires.find((x) => x.id === wireId);
@@ -49,7 +45,7 @@ function rawPolyline(project: Project, wireId: string): Pt[] {
 }
 
 const routeCache = new WeakMap<Project, Map<string, Pt[]>>();
-type Run = { a: Pt; b: Pt; axis: 'h' | 'v'; coord: number; net: number };
+type Run = { a: Pt; b: Pt; axis: 'h' | 'v'; coord: number };
 function overlap(a: Run, b: Run) {
   if (a.axis !== b.axis || !nearly(a.coord, b.coord)) return false;
   const key = a.axis === 'h' ? 'x' : 'y';
@@ -60,7 +56,7 @@ function overlap(a: Run, b: Run) {
   );
 }
 /** Displayed geometry is the drawing route: pinned waypoints, or orthogonal auto-route. */
-export function routedPolylines(project: Project): Map<string, Pt[]> {
+function routedPolylines(project: Project): Map<string, Pt[]> {
   const cached = routeCache.get(project);
   if (cached) return cached;
   const routes = new Map<string, Pt[]>();
@@ -81,7 +77,7 @@ export function polylineOfWire(project: Project, wireId: string): Pt[] {
   return routedPolylines(project).get(wireId) ?? [];
 }
 
-export function committedPoints(
+function committedPoints(
   project: Project,
   source: string,
   sourceHandle: string,
@@ -272,8 +268,6 @@ export function firstSegmentHorizontal(pts: Pt[]) {
   return nearly(pts[0].y, pts[1].y) && !nearly(pts[0].x, pts[1].x);
 }
 
-export { EXIT_STUB };
-
 export function overlapsDifferentNet(
   project: Project,
   wireId: string,
@@ -300,7 +294,7 @@ export function overlapsDifferentNet(
     )
       return false;
     return segmentsOf(polylineOfWire(project, other.id)).some((a) =>
-      runs.some((b) => overlap({ ...a, net: 0 }, { ...b, net: 1 })),
+      runs.some((b) => overlap(a, b)),
     );
   });
 }

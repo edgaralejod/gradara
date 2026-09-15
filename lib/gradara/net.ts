@@ -1,5 +1,5 @@
 import type { Port, Project, Wire } from './model';
-import { compatible, portOf } from './model';
+import { portOf } from './model';
 import { portPoint } from './ports';
 
 export const TAP_HANDLE = 'node';
@@ -9,7 +9,7 @@ export function isTap(project: Project, id: string) {
   return !!project.junctions?.some((j) => j.id === id);
 }
 
-export function tapOf(project: Project, id: string) {
+function tapOf(project: Project, id: string) {
   return project.junctions?.find((j) => j.id === id);
 }
 
@@ -33,19 +33,6 @@ export function endpointPort(
       domain: tap.domain,
     };
   return portOf(project, id, handle);
-}
-
-export function endpointsCompatible(
-  project: Project,
-  source: string,
-  sourceHandle: string,
-  target: string,
-  targetHandle: string,
-) {
-  return compatible(
-    endpointPort(project, source, sourceHandle, 'source'),
-    endpointPort(project, target, targetHandle, 'target'),
-  );
 }
 
 export function endpointPoint(project: Project, id: string, handle: string) {
@@ -165,27 +152,4 @@ export function onNet(
   b: { id: string; handle: string },
 ) {
   return netKeys(project, a).has(key(b.id, b.handle, project));
-}
-
-export function netBlocks(
-  project: Project,
-  seed: { id: string; handle: string },
-) {
-  const ids = new Set<string>();
-  for (const k of netKeys(project, seed)) {
-    if (k.startsWith('j:')) ids.add(k.slice(2));
-    else ids.add(parseKey(k).id);
-  }
-  return ids;
-}
-
-export function occupiedInputs(project: Project) {
-  const taken = new Set<string>();
-  for (const w of flattenWires(project)) {
-    const b = portOf(project, w.target, w.targetHandle);
-    if (b?.direction === 'input') taken.add(`${w.target}.${w.targetHandle}`);
-    const a = portOf(project, w.source, w.sourceHandle);
-    if (a?.direction === 'input') taken.add(`${w.source}.${w.sourceHandle}`);
-  }
-  return taken;
 }

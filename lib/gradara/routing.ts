@@ -50,10 +50,6 @@ export function rubberBandPoints(
   return dedupe([from, corner, drop, to]);
 }
 
-export function rubberBandPath(from: Pt, to: Pt, exit: Position) {
-  return pointsToPath(rubberBandPoints(from, to, exit));
-}
-
 export function segmentExit(a: Pt, b: Pt): Position {
   const dx = b.x - a.x,
     dy = b.y - a.y;
@@ -154,16 +150,8 @@ export function outward(p: Pt, side: Position, distance = EXIT_STUB): Pt {
           : 0),
   };
 }
-export function toward(a: Pt, b: Pt): Position {
+function toward(a: Pt, b: Pt): Position {
   return segmentExit(a, b);
-}
-export function opposite(side: Position): Position {
-  return {
-    left: Position.Right,
-    right: Position.Left,
-    top: Position.Bottom,
-    bottom: Position.Top,
-  }[side];
 }
 /** A completed connection respects both port normals. Free tails use rubberBandPoints. */
 export function routeBetween(
