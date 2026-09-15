@@ -50,7 +50,7 @@ The repository includes only the curated example templates. Personal models, Tra
 - A shared block design system, searchable library, model inspector, resize handles, movable labels, selection tools, and Ctrl-drag duplication.
 - Signal/control components alongside electrical and rotational mechanical components. Physical ports can cross block domains through explicit sensors and actuators.
 - Asynchronous OpenModelica simulation, cancellation, diagnostics, saved runs, plots, and complete CSV downloads.
-- Agent-created scalar signal blocks with algebraic equations, continuous state, or sampled updates; optional Monaco equation editing.
+- Agent-created signal, electrical, rotational mechanical, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals; optional Monaco equation editing.
 - Modelica source export, portable project export, and agent-generated, compile-checked C11 for **one controller block**.
 
 Drawing, dragging, and routing stay in the browser. The FastAPI service saves project documents and supervises isolated OpenModelica jobs. The authoring representation is currently **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.

@@ -6,7 +6,6 @@ import {
   X,
   Check,
   LoaderCircle,
-  ArrowRight,
   RotateCcw,
   Plus,
   ChevronRight,
@@ -14,7 +13,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
-import type { Definition } from '@/lib/gradara/model';
+import { domainColors, type Definition } from '@/lib/gradara/model';
+import {
+  blockTypes,
+  inferBlockType,
+  type BlockType,
+} from '@/lib/gradara/block-creation';
 export type ComposerContext = {
   position: { x: number; y: number };
   existing?: { id: string; definition: Definition };
@@ -31,6 +35,10 @@ export default function AgentComposer({
   onInsert: (definition: Definition) => void;
   onBusy?: (busy: boolean) => void;
 }) {
+  const [blockType, setBlockType] = useState<BlockType>(() =>
+    inferBlockType(context.existing?.definition),
+  );
+  const typeInfo = blockTypes[blockType];
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<Definition | null>(null);
@@ -67,6 +75,7 @@ export default function AgentComposer({
         method: 'POST',
         body: JSON.stringify({
           prompt,
+          blockType,
           existing: context.existing?.definition,
         }),
         signal: controller.current.signal,
@@ -113,11 +122,35 @@ export default function AgentComposer({
           <X />
         </Button>
       </div>
+      <div className="composer-type">
+        <label htmlFor="component-block-type">Block type</label>
+        <select
+          id="component-block-type"
+          value={blockType}
+          disabled={busy || !!preview || !!context.existing}
+          onChange={(event) => {
+            setBlockType(event.target.value as BlockType);
+            setError('');
+          }}
+        >
+          {Object.entries(blockTypes).map(([value, info]) => (
+            <option key={value} value={value}>
+              {info.label}
+            </option>
+          ))}
+        </select>
+        <p>
+          {context.existing
+            ? 'Type and existing terminals are preserved when refining. '
+            : ''}
+          {typeInfo.description}
+        </p>
+      </div>
       {preview ? (
         <div className="component-preview">
           <span className="preview-checked">
             <Check size={12} />
-            Ready to connect
+            Modelica checked
           </span>
           <div className="preview-block">
             <span>{preview.symbol}</span>
@@ -126,20 +159,19 @@ export default function AgentComposer({
               <p>{preview.description}</p>
             </div>
           </div>
-          <div className="preview-ports">
-            <span>
-              {preview.ports
-                .filter((p) => p.direction === 'input')
-                .map((p) => p.name)
-                .join(', ') || 'No inputs'}
-            </span>
-            <ArrowRight size={14} />
-            <span>
-              {preview.ports
-                .filter((p) => p.direction === 'output')
-                .map((p) => p.name)
-                .join(', ')}
-            </span>
+          <div className="preview-terminals">
+            {preview.ports.map((port) => (
+              <span
+                key={port.id}
+                style={{ borderColor: domainColors[port.domain] }}
+              >
+                <i style={{ background: domainColors[port.domain] }} />
+                {port.name}{' '}
+                <small>
+                  {port.direction === 'physical' ? port.domain : port.direction}
+                </small>
+              </span>
+            ))}
           </div>
           <pre>{preview.equations}</pre>
           <div className="preview-actions">
@@ -162,8 +194,8 @@ export default function AgentComposer({
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={
               context.existing
-                ? '“Add a rate limit to the output…”'
-                : '“A low-pass filter with a 50 ms time constant…”'
+                ? 'Describe the change; existing terminals will be preserved…'
+                : typeInfo.suggestions[0]
             }
             className="composer-input"
             disabled={busy}
@@ -178,8 +210,11 @@ export default function AgentComposer({
           {!busy && !prompt && (
             <div className="prompt-suggestions">
               {(context.existing
-                ? ['Add output saturation', 'Make it run at 1 kHz']
-                : ['Low-pass filter', 'Deadband of ±0.1', 'Sine wave at 2 Hz']
+                ? [
+                    'Explain the equations in the description',
+                    'Make the main coefficient configurable',
+                  ]
+                : typeInfo.suggestions
               ).map((s) => (
                 <button
                   key={s}

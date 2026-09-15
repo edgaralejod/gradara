@@ -2382,3 +2382,13 @@
     flex-shrink: 0;
   }
 }
+
+.composer-type { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.composer-type label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+.composer-type select { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 5px; background: var(--background); color: inherit; font: inherit; font-size: 12px; }
+.composer-type select:disabled { opacity: .7; }
+.composer-type p { font-size: 11px; line-height: 1.5; color: var(--muted-foreground); margin: 7px 0 0; }
+.preview-terminals { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.preview-terminals > span { display: inline-flex; align-items: center; gap: 5px; border: 1px solid; border-radius: 4px; padding: 4px 6px; font-size: 11px; }
+.preview-terminals i { width: 6px; height: 6px; border-radius: 50%; }
+.preview-terminals small { color: var(--muted-foreground); font-size: 10px; }

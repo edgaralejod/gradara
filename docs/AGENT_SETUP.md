@@ -40,7 +40,7 @@ The public `0.154.0` executable's version and `exec --help` were checked against
 ## Try your first generated block
 
 1. Start a blank model and open the agent composer.
-2. Ask: “A first-order low-pass filter with scalar input u, output y, and a 50 ms time constant.”
+2. Choose **Signal / control** in **Block type**, then ask: “A first-order low-pass filter with scalar input u, output y, and a 50 ms time constant.”
 3. Wait for generation and the OpenModelica check. The successful definition is inserted into the diagram through normal model editing.
 4. Connect a Step block to its input, set a suitable stop time, and run the model. Inspect the output in Results.
 
@@ -59,7 +59,7 @@ flowchart LR
     Model --> Run[Run: local OpenModelica simulation]
 ```
 
-The agent authors bounded equations. Conventional code packages connectivity, supervises compilation, and executes the simulation. Generated blocks currently support scalar signal ports, parameters, and internal state. Generating new physical connector types, whole subsystems, and HDL is not implemented. C export targets one controller block and checks compilation; see the [execution contract](architecture/EXECUTION.md).
+The agent authors bounded equations. Conventional code packages connectivity, supervises compilation, and executes the simulation. Choose Signal / control, Electrical, Mechanical (rotational), Thermal, or Multiple physical domains before generation. The selected type constrains the provider schema and server validation. Physical blocks have real Modelica terminals, and may also expose scalar signal ports. Refinement preserves the type and existing terminal IDs, domains, and directions. Arbitrary connector families, translational mechanics, whole subsystems, and HDL generation are not implemented. C export targets one controller block and checks compilation; see the [execution contract](architecture/EXECUTION.md).
 
 Generation sends the prompt and relevant definition to the provider; refinement and repair can include prior candidates and compiler diagnostics. C export includes its controller contract. Local generation artifacts are retained under `projects/agent/`. Read [data handling](../SECURITY.md) before sharing logs. Ordinary simulation does not call the provider.
 

@@ -80,3 +80,7 @@ print([series["key"] for series in result["series"]])
 ```
 
 API request models validate identifiers, domains, net ownership, finite values, and bounded equation text. They do not implement a general Modelica parser or a security boundary for hostile model files. Saved documents omit unset optional values in responses. Preserve this serialization behavior when adding endpoints.
+
+### Component generation types
+
+`POST /api/components/generate` accepts `prompt`, optional `existing`, and optional `blockType`: `signal`, `electrical`, `mechanical` (rotational), `thermal`, or `multidomain`. Omission defaults to signal for new blocks and infers the type for refinement. Physical choices require matching physical terminals; multidomain requires at least two physical domains. A wrong-type response is rejected and gets one repair attempt. Successful job results include `definition`, `provider`, `checked`, and `blockType`. `checked` means OpenModelica accepted the component, not that its physical behavior has been proven.

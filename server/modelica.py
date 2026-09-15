@@ -181,12 +181,23 @@ end {name};'''
 def component_source(definition: Definition, name: str) -> str:
     if definition.kind in PHYSICAL and not definition.generated:
         return PHYSICAL[definition.kind].format(name=name)
-    if any(p.direction == 'physical' for p in definition.ports):
-        raise ValueError('Generated components currently support signal ports. Use library components for physical connections.')
-    lines = [f'block {name}']
+    physical = any(p.direction == 'physical' for p in definition.ports)
+    lines = [f'{"model" if physical else "block"} {name}']
     for port in definition.ports:
-        connector = 'RealInput' if port.direction == 'input' else 'RealOutput'
-        lines.append(f'  Modelica.Blocks.Interfaces.{connector} {port.id};')
+        if port.direction == 'physical':
+            connectors = {
+                'electrical': 'Modelica.Electrical.Analog.Interfaces.Pin',
+                'mechanical': 'Modelica.Mechanics.Rotational.Interfaces.Flange_a',
+                'thermal': 'Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a',
+            }
+            if port.domain not in connectors:
+                raise ValueError('Physical terminals require an electrical, mechanical, or thermal domain.')
+            connector = connectors[port.domain]
+        else:
+            if port.domain != 'signal':
+                raise ValueError('Input/output ports must use the signal domain; physical terminals use physical direction.')
+            connector = 'Modelica.Blocks.Interfaces.' + ('RealInput' if port.direction == 'input' else 'RealOutput')
+        lines.append(f'  {connector} {port.id};')
     for param in definition.parameters:
         lines.append(f'  parameter Real {param.id} = {param.value:.16g};')
     if definition.declarations.strip():

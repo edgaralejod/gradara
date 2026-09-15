@@ -65,13 +65,13 @@ Smooth interaction is a product requirement. Large-model frame-rate and latency 
 
 The Python service validates the document, checks connected scalar inputs, emits Modelica, and launches a supervised container using an immutable snapshot. Signal nets have at most one output driver; physical nets use Modelica potential/flow connection semantics. A visual junction is not an executable block, and canvas order is not evaluation order.
 
-Known physical `kind` values select canonical wrappers in `server/modelica.py`. Their display equations are explanatory; editing that text does not replace their physical implementation. Signal definitions use their bounded declarations and equations. Add a physical block through the wrapper and connector contracts, not by assigning a domain color to a generic equation block.
+Built-in, non-generated physical `kind` values select canonical wrappers in `server/modelica.py`. Their display equations are explanatory; editing that text does not replace their physical implementation. Signal definitions and generated physical definitions use their bounded declarations and equations. Generated physical ports emit standard electrical pins, rotational flanges, or heat ports. Built-in physical additions use the canonical wrapper contract; generated additions use typed standard connectors and bounded equations. Assigning a domain color alone does not create physical connectivity.
 
 The API exposes jobs rather than blocking the editor. Current concurrency, cancellation, diagnostics, result sampling, and file ownership are described in [simulation and agent execution](docs/architecture/EXECUTION.md) and the [API guide](docs/API.md).
 
 ## Agent and export boundary
 
-The component adapter returns structured JSON for scalar signal input/output blocks. Pydantic validates the definition, and OpenModelica checks it before insertion. Compiler diagnostics can trigger one repair attempt. The generated response is data, not a project-editing command. The browser applies the accepted component through its normal operations.
+The component adapter returns structured JSON constrained by the user-selected signal, electrical, rotational mechanical, thermal, or multidomain type. The server enforces terminal domains and directions independently of the provider, and refinement preserves the existing wired interface. Pydantic validates the definition, and OpenModelica checks it before insertion. Compiler diagnostics can trigger one repair attempt. The generated response is data, not a project-editing command. The browser applies the accepted component through its normal operations.
 
 C export currently targets **one block marked `controller`**. The package includes its equations, parameters, local connection information, project revision, and a C11 init/step interface. Generated source is compiled in a container; the package retains the exact source and integration notes. Generation itself is not reproducible, and compile success proves neither behavioral equivalence nor hardware readiness.
 

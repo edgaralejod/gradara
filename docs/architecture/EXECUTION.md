@@ -4,7 +4,7 @@
 
 1. The browser submits the current `Project` to `POST /api/runs`.
 2. FastAPI/Pydantic validates structure. Empty models fail immediately. The job runner checks unsupported components and required scalar inputs before numerical execution.
-3. `server/modelica.py` emits a complete Modelica model from the snapshot. Known physical kinds use canonical wrappers; signal components use bounded definitions.
+3. `server/modelica.py` emits a complete Modelica model from the snapshot. Built-in physical kinds use canonical wrappers; signal and generated physical components use bounded definitions with standard Modelica connectors.
 4. `server/engine.py` records the snapshot and source in a unique run directory and invokes `engine_runner.py` inside the engine container.
 5. OpenModelica loads MSL, compiles, initializes, and simulates. The adapter requires explicit successful completion, a result file, sufficient coverage, and finite preview data.
 6. The service saves a result preview and retains full CSV output. The browser polls the job and renders results or diagnostics.
@@ -33,7 +33,7 @@ For installation, account ownership, and first-use troubleshooting, see [AI feat
 
 `server/agent.py` invokes the locally installed Codex CLI with a structured output schema, ephemeral execution, ignored user configuration, read-only sandbox mode, and the shell tool disabled. Requests instruct it to return data and not execute tools. The prompt contains user intent and, when refining, the selected existing definition.
 
-The current schema supports scalar Real signal inputs/outputs, numeric parameters, declarations, equations, a short symbol, and controller metadata. Generated definitions are checked by Pydantic and OpenModelica. A failed integration check can trigger one repair attempt containing the candidate and diagnostics. A successful result returns to the frontend for insertion; the subprocess does not directly edit the saved model.
+The selected block type constrains the schema: scalar Real signals, electrical pins, rotational mechanical flanges, thermal ports, or a coupling of multiple physical domains. Physical definitions may also have scalar signal ports. Server validation rejects mismatched port domains/directions, signal-only substitutes for physical requests, and refinement that changes existing terminal identity or semantics. All types support numeric parameters, declarations, equations, and a short symbol; controller export metadata is restricted to signal blocks. Generated definitions are checked by Pydantic and OpenModelica. A failed integration check can trigger one repair attempt containing the candidate and diagnostics. A successful result returns to the frontend for insertion; the subprocess does not directly edit the saved model.
 
 Generation has a 180-second timeout per CLI invocation. Prompts, responses, and stderr are retained locally. The implementation uses POSIX process groups for cancellation; native Windows parity is unfinished. Ordinary simulation does not call the provider.
 

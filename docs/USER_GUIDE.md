@@ -22,7 +22,7 @@ Model documents live in `projects/models/`; removed models live in `projects/tra
 
 ## Build a diagram
 
-Click a library component to insert it, or invoke the agent from a selected location or dangling signal connection. Select a component to edit its parameters in the inspector. Double-click a signal block to inspect or edit equations in Monaco. Built-in physical implementations use canonical Modelica wrappers; their displayed equations explain behavior.
+Click a library component to insert it, or invoke the agent from a selected location or dangling connection. Select a component to edit its parameters in the inspector. Double-click a signal block to inspect or edit equations in Monaco. Built-in physical implementations use canonical Modelica wrappers; their displayed equations explain behavior.
 
 Blocks get readable unique names such as Step, Step1, and Step2. IDs remain stable when names change. Drag a block label separately from the symbol; double-click the label to restore its default location. Resize using selection handles, or choose **Use standard size** in the inspector. The library, canvas, and [block catalog](http://localhost:4317/block-catalog) share the same visual design.
 
@@ -62,7 +62,7 @@ Moving blocks or labels does not invalidate simulation behavior. Changing equati
 
 Follow [AI feature setup](AGENT_SETUP.md) to connect your own Codex CLI account. A hosted Gradara account or Cursor installation is not required.
 
-Describe the inputs, outputs, state, and timing you want, for example: “A first-order low-pass filter with a 50 ms time constant.” The current generator supports scalar signal ports. It validates and compiler-checks a candidate before insertion. Ordinary editing and simulation still work when the agent is unavailable.
+Describe the inputs, outputs, state, and timing you want, for example: “A first-order low-pass filter with a 50 ms time constant.” First choose the block type: Signal / control, Electrical, Mechanical (rotational), Thermal, or Multiple physical domains. For example, choose Electrical and ask for an ideal transformer to get physical winding terminals rather than signal inputs and outputs. The preview identifies each terminal domain. Refining a block preserves its type and existing terminal interface. It validates and compiler-checks a candidate before insertion. Ordinary editing and simulation still work when the agent is unavailable.
 
 For generated C, select one block marked as a controller and use **Export**. The package includes a header, source, original contract, and timing/integration notes. Review the chosen discretization and validate behavior for your application. Whole-subsystem and HDL exports remain future work.
 

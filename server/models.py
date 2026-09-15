@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 IDENTIFIER = r'^[A-Za-z][A-Za-z0-9_]*$'
 Domain = Literal['signal', 'electrical', 'mechanical', 'thermal']
+BlockType = Literal['signal', 'electrical', 'mechanical', 'thermal', 'multidomain']
 
 class Port(BaseModel):
     id: str = Field(pattern=IDENTIFIER, max_length=60)
@@ -269,6 +270,7 @@ def flatten_connects(project: 'Project') -> list[tuple[str, str, str, str]]:
 class GenerateRequest(BaseModel):
     prompt: str = Field(min_length=3, max_length=4000)
     existing: Definition | None = None
+    blockType: BlockType | None = None
 
 class ExportRequest(BaseModel):
     project: Project

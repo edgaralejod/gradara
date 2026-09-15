@@ -201,7 +201,7 @@ async def csv_download(run_id:str):
 
 @app.post('/api/components/generate')
 async def generate(request:GenerateRequest):
-    return await start_job('component',lambda i:generate_component(request.prompt,request.existing,i))
+    return await start_job('component',lambda i:generate_component(request.prompt,request.existing,i,request.blockType))
 
 from .models import ExportRequest
 from .exporter import export_controller, EXPORTS
