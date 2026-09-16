@@ -25,7 +25,7 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r server/requirements-dev.txt
 ```
 
-For runtime only, `server/requirements.txt` omits pytest. Direct Python dependencies are pinned; their transitive dependencies are not yet captured in a full lockfile.
+For runtime only, `server/requirements.txt` omits pytest and `httpx2`. `httpx2` is required for FastAPI/Starlette `TestClient` in the unit suite. Direct Python dependencies are pinned; their transitive dependencies are not yet captured in a full lockfile.
 
 `npm ci` runs the version-checked React Flow observer patch. Do not bypass a patch failure or use `--ignore-scripts` for a working development install. See [patch maintenance](../../patches/README.md).
 
