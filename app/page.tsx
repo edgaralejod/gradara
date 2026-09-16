@@ -94,6 +94,7 @@ import Results from '@/components/gradara/results';
 import ModelBrowser, {
   type BrowserSection,
 } from '@/components/gradara/model-browser';
+import ModelComposer from '@/components/gradara/model-composer';
 import SaveCopyDialog from '@/components/gradara/save-copy-dialog';
 import AboutDialog from '@/components/gradara/about-dialog';
 import {
@@ -564,6 +565,22 @@ function Workbench() {
       activateModel(restoreDocument(created, false));
       setBrowserSection(null);
       setLibraryOpen(template === 'blank');
+    } finally {
+      endTransition();
+    }
+  };
+  const insertGeneratedModel = async (generated: Project) => {
+    if (!beginTransition())
+      throw new Error('Wait for the current operation to finish.');
+    try {
+      await saveCurrent();
+      const saved = await api<SavedDocument>('/models/copy', {
+        method: 'POST',
+        body: JSON.stringify({ name: generated.name, project: generated }),
+      });
+      activateModel(restoreDocument(saved, false));
+      setBrowserSection(null);
+      notify('Generated model saved. Run it to view its results in Data Inspector.');
     } finally {
       endTransition();
     }
@@ -1580,7 +1597,13 @@ function Workbench() {
                   }}
                 />
               )}
-              {composer && (
+              {composer?.mode === 'model' ? (
+                <ModelComposer
+                  onClose={() => setComposer(null)}
+                  onBlockMode={() => setComposer({ ...composer, mode: 'block' })}
+                  onInsert={insertGeneratedModel}
+                />
+              ) : composer && (
                 <AgentComposer
                   key={
                     composer.existing?.id ?? JSON.stringify(composer.position)
@@ -1588,6 +1611,7 @@ function Workbench() {
                   context={composer}
                   onClose={() => setComposer(null)}
                   onInsert={insertGenerated}
+                  onModelMode={() => setComposer({ ...composer, mode: 'model' })}
                 />
               )}
               </div>

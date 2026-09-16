@@ -5,7 +5,7 @@ import type { Project } from '../lib/gradara/model';
 import { defaultBlockSize } from '../lib/gradara/block-design';
 import { polylineOfWire } from '../lib/gradara/net-draw';
 
-for (const name of ['dc', 'foc', 'buck']) {
+for (const name of ['dc', 'foc', 'buck', 'flyback']) {
   void test(`${name} example uses standard bodies and clear orthogonal routes`, () => {
     const p: Project = JSON.parse(
       readFileSync(

@@ -12,6 +12,7 @@ from . import workspace
 from .modelica import emit_project, project_key, semantic_hash
 from .engine import ROOT, RUNS, engine_available, simulate
 from .agent import generate_component, CODEX
+from .model_agent import ModelGenerateRequest, generate_model
 
 PROJECT_DIR = ROOT/'projects'
 PROJECT_FILE = PROJECT_DIR/'workspace.json'
@@ -124,7 +125,7 @@ async def load_model(model_id: str):
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):
-    if example_id not in {'dc','foc','buck'}: raise HTTPException(404,'Example not found.')
+    if example_id not in {'dc','foc','buck','flyback'}: raise HTTPException(404,'Example not found.')
     path = ROOT/'models'/'examples'/f'{example_id}.json'
     if not path.exists(): raise HTTPException(404,'Example is unavailable.')
     data = json.loads(path.read_text())
@@ -222,6 +223,10 @@ async def csv_download(run_id:str):
 async def component_library():
     from .component_library import list_components
     return {'components': list_components(PROJECT_DIR)}
+
+@app.post('/api/models/generate')
+async def generate_full_model(request: ModelGenerateRequest):
+    return await start_job('model', lambda i: generate_model(request, i, lambda message: JOBS[i].update(progress=message)))
 
 @app.post('/api/components/generate')
 async def generate(request:GenerateRequest):

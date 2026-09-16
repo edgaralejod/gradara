@@ -84,3 +84,7 @@ Keep a small structured-generation interface between Gradara and providers: prom
 The repository's [AGENTS.md](../AGENTS.md) and [task playbooks](agents/PLAYBOOKS.md) are separate instructions for coding agents contributing to Gradara. End users do not need to configure those files to generate a block.
 
 Successful generations are saved automatically in the local **AI blocks** library. Reuse them without another provider call. The library keeps complete definitions; refinements do not silently alter existing model instances.
+
+### Complete circuits and models
+
+The same local Codex sign-in also powers **Ask agent → Full model / circuit**. No additional service or account is required. A request may invoke the provider several times: library planning, each missing block (with optional repair), assembly, and one optional assembly repair. It can therefore take several minutes and consume more provider usage than a single block. OpenModelica must be available for both component checks and the final trial simulation. See the [user guide](USER_GUIDE.md#ask-an-agent-for-a-complete-model) for review, cancellation, and saved-model behavior.

@@ -39,3 +39,9 @@ Keep visible terminal names to roughly 1–5 characters. Use meaningful names fo
 7. Run `npm run report:blocks` to inspect the ignored local inventory. Run `npm run typecheck` and the existing frontend tests for any geometry/insertion changes. Use focused numerical validation if behavior changes; a visual-only edit should not require a new solver.
 
 A block is ready when it is recognizable at normal zoom, contributes to a quiet diagram, has no overlapping notation or captions, and behaves through the same selection, wiring, resizing, naming, and history mechanisms as every other block. Record a remaining limitation explicitly instead of implying an icon makes a placeholder simulation feature complete.
+
+## When building a complete model
+
+The full-model orchestrator inventories existing definitions before asking for missing blocks. Prefer catalog reuse and parameter overrides to new definitions. Missing physical behavior must use the correct typed component creator; do not represent a two-terminal electrical element as a scalar signal block. Generate reusable constitutive behavior, not a monolithic block containing the entire requested circuit.
+
+Assembly begins only after missing definitions are checked and archived. Reference the supplied immutable catalog IDs and exact port/parameter IDs. Do not redefine equations during assembly. Connect all required scalar inputs, include physical references, and use sensors for physical measurements. Give instances readable names, distinct layout cells, left-to-right signal flow, and explicit assumptions. A complete simulation is required before the draft is presented. Keep unsupported domains and unresolved diagnostics visible; do not invent connector types or silently substitute a different physical domain.

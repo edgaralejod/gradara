@@ -14,14 +14,14 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | `GET /project` | None | `{project: Project \| null, saveVersion: string \| null}` for the last activated document, resolved from its canonical saved file. |
 | `PUT /project` | Project | Legacy creation/idempotent retry only. Changing an existing document returns 409 with a reload instruction; use versioned model saves. |
 | `GET /models` | Optional `?trashed=true` | `{models: [{id, name, blocks, exampleId, updatedAt}]}`, newest saved first. Trash is separate from My models. |
-| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, or `buck`. |
+| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, or `flyback`. |
 | `GET /models/{modelId}` | Saved ID | Returns `{project, saveVersion}` without activating it. |
 | `PUT /models/{modelId}` | `{project, expectedVersion}` | Writes that document without changing active selection; returns `{project, saveVersion}`. ID must match the path. Stale versions return 409. |
 | `POST /models/{modelId}/activate` | None | Opens an existing model as the last active document; returns `{project, saveVersion}`. |
 | `POST /models/copy` | `{project, name}` | Creates and activates an independent saved copy with a unique name; returns `{project, saveVersion}`. Used for import and copy recovery. |
 | `POST /models/{modelId}/trash` | None | Moves an inactive model to recoverable Trash. Returns `{trashed: true}`; removing the active model returns 409. |
 | `POST /models/{modelId}/restore` | None | Restores a trashed model with its original identity, without activating it; returns `{project, saveVersion}`. |
-| `GET /examples/{template}` | `dc`, `foc`, or `buck` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
+| `GET /examples/{template}` | `dc`, `foc`, `buck`, or `flyback` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
 | `POST /source` | Project | `{source}` containing emitted Modelica. Does not run a solver. |
 | `POST /runs` | Project | Queues a simulation and returns a job. |
 | `GET /jobs/{jobId}` | Job ID | Current job, with result or error once finished. |
@@ -40,7 +40,7 @@ Normal responses currently use HTTP 200, including accepted jobs. Save conflicts
 {"id":"opaque-job-id","kind":"simulation","status":"queued"}
 ```
 
-`kind` is `simulation`, `component`, or `export`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`. Jobs disappear from the registry on service restart. A result file is durable only if the operation completed and wrote it. See [execution details](architecture/EXECUTION.md).
+`kind` is `simulation`, `component`, `model`, or `export`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`. Jobs disappear from the registry on service restart. A result file is durable only if the operation completed and wrote it. See [execution details](architecture/EXECUTION.md).
 
 ## Run a checked-in example without changing saved models
 
@@ -94,3 +94,11 @@ API request models validate identifiers, domains, net ownership, finite values, 
 `GET /api/results/{run_id}/data` returns the stored result metadata with full-resolution `time` and `series[].values` loaded from its CSV. Output is restricted to the requested simulation interval; repeated event timestamps are retained. It returns 404 for missing runs. The inspector can fall back to the existing reduced preview with an explicit warning.
 
 A net's optional `logged` boolean defaults to false. Only signal-domain nets accept it; physical nets are rejected during document validation and require sensor outputs. Logging changes the emitted observation variables and result identity, so capturing a newly logged net requires another simulation. Logged series include `netId` and use stable observation keys. Renaming a net changes its next run's display name, not its numerical connectivity.
+
+### Full-model generation
+
+`POST /api/models/generate` accepts `{prompt, catalog}`. `prompt` is 3–8,000 characters; `catalog` is a snapshot of the frontend's built-in `Definition[]` (1–300 unique, non-generated kinds). This keeps the existing TypeScript catalog authoritative without maintaining a second Python copy. The local service appends its saved AI library. Drawing-only built-ins are excluded. This has the same trusted-local-client boundary as submitting an ordinary model; it is not a public catalog attestation API.
+
+The response is a job of kind `model`. Poll `/api/jobs/{id}`; optional `progress` is a human-readable stage. The orchestrator plans against `builtin:<kind>` and immutable AI library IDs, awaits up to four typed component creations sequentially, then requests assembly. Newly created definitions have request-local `new:<alias>` references. Assembly contains only catalog references, instance names, numeric parameter overrides, layout cells, and endpoint pairs. It cannot supply definitions or equations. Conventional code copies definitions, validates parameters/connectivity, and runs OpenModelica. One assembly repair is allowed.
+
+Successful `result` contains `project`, `assumptions`, `generated` (`id`, `libraryId`, `name`), `reused` (display names), `checked: true`, `samples`, and `provider`. Here `checked` includes a completed simulation, unlike component-only checks. The project is an unsaved draft; accepting uses the existing `/models/copy` endpoint. Trial results are retained locally, but are not reassigned to the accepted model's new identity. No active model is changed by generation. Cancelling the parent job cancels its current awaited subprocess/engine operation; already archived components remain available.

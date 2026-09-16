@@ -19,6 +19,7 @@ Agent and export subprocesses have separate lifecycle code. Native Windows agent
 Ordinary local simulation does not call an LLM provider. Dependency installation and the first Docker image/library build download upstream packages. The optional agent features contact the configured Codex provider using the user's existing CLI authentication.
 
 - Component creation sends the request text; refinement also sends the existing component definition.
+- Full-model creation sends the request, built-in catalog snapshot, and local AI library definitions to the configured provider for planning and assembly. It does not send unrelated saved models.
 - Repair attempts may send the candidate and compiler diagnostics.
 - Controller export sends project name/revision, the selected block's equations, parameters and definition, nearby connection metadata, and target-interface instructions.
 - Generation prompts and responses are also retained locally for diagnostics.

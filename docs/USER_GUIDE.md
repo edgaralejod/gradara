@@ -81,3 +81,17 @@ In Results, choose one plot, two stacked, two side by side, a 2×2 grid, or a 3�
 Use **Pan**, **Box zoom**, or **Cursor**, with **X only**, **Y only**, or **X + Y** axes. The mouse wheel zooms around the pointer; plus/minus zoom around the center. Link X axes to keep plots synchronized in time while their Y ranges remain independent. **Fit X**, **Fit Y**, and **Fit both** reset the selected ranges; double-click or Home fits both. Arrow keys pan a focused plot. Maximize a plot to inspect it alone, then restore the layout. Cursor values report saved samples (the last sample at or before the selected time), preserving pre/post-event discontinuities rather than inventing interpolated values.
 
 The inspector loads full stored CSV samples, retaining repeated event times. If that request fails, it explicitly shows the reduced preview and offers Retry. CSV export retains the complete run. Plot layout, signal assignments, and axis ranges are saved locally in this browser per model; they do not change the simulation or get embedded in exported model documents. Signals unavailable in a later run remain identified rather than being silently replaced. Different units on one plot share a numeric Y axis; use separate plots when their scales differ.
+
+## Ask an agent for a complete model
+
+Open **Ask agent**, choose **Full model / circuit**, and describe the system, inputs, component values, measurements, and simulation duration. This creates a separate model; it does not modify the open diagram.
+
+The builder inspects the built-in catalog and your local AI block library. It reuses suitable components, creates missing components through the typed block creator, waits for their Modelica checks and library saves, then assembles the circuit. The complete draft must finish an OpenModelica simulation before it is offered for opening. Progress reports the current stage. Close the creator to cancel.
+
+Review the diagram, library choices, and assumptions, then choose **Open as new model**. Your current model is saved before switching. The new model uses normal editable blocks and wires. Click **Run** to capture results under the new saved model's identity in Data Inspector. The builder's trial run is a separate validation snapshot.
+
+Currently the builder supports flat models with up to 80 instances and four newly created component types per request. Supported domains match the block creator: scalar signals, electrical, rotational mechanical, thermal, and their couplings. Unsupported domains are reported instead of substituted. A simulation failure gets one assembly repair; unresolved diagnostics remain visible. Missing blocks that completed successfully remain in the AI library even if later assembly fails or is cancelled. Generation is not resumable after closing the creator or restarting the service.
+
+## Flyback power-supply example
+
+**Examples → 480 VAC flyback** opens a hand-authored 480 V RMS single-phase to 24 V / 1 A switching model with bridge rectification, magnetizing energy storage, soft start, and PI regulation. See the [flyback example guide](examples/FLYBACK.md) for assumptions, expected signals, and modeling limits.

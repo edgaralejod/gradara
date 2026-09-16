@@ -30,7 +30,7 @@ import { modelTemplates, type TemplateId } from '@/lib/gradara/workspace';
 import type { ModelSummary } from '@/lib/gradara/document-store';
 
 export type BrowserSection = 'models' | 'examples' | 'trash';
-const icons = { blank: FilePlus2, dc: Gauge, foc: CircuitBoard, buck: Zap };
+const icons = { blank: FilePlus2, dc: Gauge, foc: CircuitBoard, buck: Zap, flyback: Zap };
 const dateLabel = (date: string) => {
   const value = new Date(date);
   return value.getTime() > 0
@@ -167,7 +167,7 @@ export default function ModelBrowser({
               }}
             >
               <BookOpen size={17} />
-              Examples<span>3</span>
+              Examples<span>{modelTemplates.filter((template) => template.id !== 'blank').length}</span>
             </button>
             <button
               disabled={!!busy}

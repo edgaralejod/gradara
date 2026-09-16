@@ -1,0 +1,2591 @@
+{
+  "version": 1,
+  "exampleId": "flyback",
+  "name": "480 VAC → 24 VDC flyback",
+  "duration": 0.3,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "line",
+      "definition": {
+        "kind": "sine",
+        "name": "480 V RMS · 60 Hz",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 678.8225099390856,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 60,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 160
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ac",
+      "definition": {
+        "kind": "voltage",
+        "name": "AC source",
+        "description": "An ideal voltage source driven by a control signal.",
+        "domain": "electrical",
+        "symbol": "V",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "v = u;"
+      },
+      "position": {
+        "x": 160,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "rin",
+      "definition": {
+        "kind": "resistor",
+        "name": "10 Ω inrush",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 320,
+        "y": 160
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "d1",
+      "definition": {
+        "kind": "diode",
+        "name": "Bridge A+",
+        "symbol": "D",
+        "domain": "electrical",
+        "description": "Piecewise-linear diode: 0.7 V forward drop, 0.05 ohm conduction resistance, 10 nS reverse conductance. Finite slopes make commutation well posed.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "A",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "K",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Vf",
+            "name": "Vf",
+            "value": 0.7,
+            "unit": "V"
+          },
+          {
+            "id": "Ron",
+            "name": "Ron",
+            "value": 0.05,
+            "unit": "Ohm"
+          },
+          {
+            "id": "Goff",
+            "name": "Goff",
+            "value": 1e-8,
+            "unit": "S"
+          }
+        ],
+        "equations": "v=p.v-n.v; p.i=if v > Vf then (v-Vf)/Ron else Goff*(v-Vf); p.i+n.i=0;",
+        "keywords": [
+          "electrical",
+          "semiconductor"
+        ],
+        "generated": true,
+        "declarations": "Real v;"
+      },
+      "position": {
+        "x": 500,
+        "y": 160
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "d2",
+      "definition": {
+        "kind": "diode",
+        "name": "Bridge B+",
+        "symbol": "D",
+        "domain": "electrical",
+        "description": "Piecewise-linear diode: 0.7 V forward drop, 0.05 ohm conduction resistance, 10 nS reverse conductance. Finite slopes make commutation well posed.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "A",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "K",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Vf",
+            "name": "Vf",
+            "value": 0.7,
+            "unit": "V"
+          },
+          {
+            "id": "Ron",
+            "name": "Ron",
+            "value": 0.05,
+            "unit": "Ohm"
+          },
+          {
+            "id": "Goff",
+            "name": "Goff",
+            "value": 1e-8,
+            "unit": "S"
+          }
+        ],
+        "equations": "v=p.v-n.v; p.i=if v > Vf then (v-Vf)/Ron else Goff*(v-Vf); p.i+n.i=0;",
+        "keywords": [
+          "electrical",
+          "semiconductor"
+        ],
+        "generated": true,
+        "declarations": "Real v;"
+      },
+      "position": {
+        "x": 500,
+        "y": 320
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "d3",
+      "definition": {
+        "kind": "diode",
+        "name": "Bridge A−",
+        "symbol": "D",
+        "domain": "electrical",
+        "description": "Piecewise-linear diode: 0.7 V forward drop, 0.05 ohm conduction resistance, 10 nS reverse conductance. Finite slopes make commutation well posed.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "A",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "K",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Vf",
+            "name": "Vf",
+            "value": 0.7,
+            "unit": "V"
+          },
+          {
+            "id": "Ron",
+            "name": "Ron",
+            "value": 0.05,
+            "unit": "Ohm"
+          },
+          {
+            "id": "Goff",
+            "name": "Goff",
+            "value": 1e-8,
+            "unit": "S"
+          }
+        ],
+        "equations": "v=p.v-n.v; p.i=if v > Vf then (v-Vf)/Ron else Goff*(v-Vf); p.i+n.i=0;",
+        "keywords": [
+          "electrical",
+          "semiconductor"
+        ],
+        "generated": true,
+        "declarations": "Real v;"
+      },
+      "position": {
+        "x": 500,
+        "y": 480
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "d4",
+      "definition": {
+        "kind": "diode",
+        "name": "Bridge B−",
+        "symbol": "D",
+        "domain": "electrical",
+        "description": "Piecewise-linear diode: 0.7 V forward drop, 0.05 ohm conduction resistance, 10 nS reverse conductance. Finite slopes make commutation well posed.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "A",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "K",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Vf",
+            "name": "Vf",
+            "value": 0.7,
+            "unit": "V"
+          },
+          {
+            "id": "Ron",
+            "name": "Ron",
+            "value": 0.05,
+            "unit": "Ohm"
+          },
+          {
+            "id": "Goff",
+            "name": "Goff",
+            "value": 1e-8,
+            "unit": "S"
+          }
+        ],
+        "equations": "v=p.v-n.v; p.i=if v > Vf then (v-Vf)/Ron else Goff*(v-Vf); p.i+n.i=0;",
+        "keywords": [
+          "electrical",
+          "semiconductor"
+        ],
+        "generated": true,
+        "declarations": "Real v;"
+      },
+      "position": {
+        "x": 500,
+        "y": 640
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "bulk",
+      "definition": {
+        "kind": "capacitor",
+        "name": "100 µF bus",
+        "symbol": "C",
+        "domain": "electrical",
+        "description": "An ideal capacitor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance",
+            "value": 0.0001,
+            "unit": "F",
+            "min": 1e-12
+          }
+        ],
+        "equations": "i = C*der(v);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 740,
+        "y": 320
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "bleed",
+      "definition": {
+        "kind": "resistor",
+        "name": "1 MΩ bleeder",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1000000,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 880,
+        "y": 320
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "acref",
+      "definition": {
+        "kind": "resistor",
+        "name": "100 MΩ reference",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 100000000,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 320,
+        "y": 640
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "xfmr",
+      "definition": {
+        "kind": "flybackTransformer",
+        "name": "8:1 transformer",
+        "domain": "electrical",
+        "symbol": "8:1",
+        "generated": true,
+        "description": "Ideal lossless 8:1 transformer. The separate parallel magnetizing inductor stores flyback energy. No leakage inductance or saturation.",
+        "ports": [
+          {
+            "id": "p1",
+            "name": "p1",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "n1",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "p2",
+            "name": "p2",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "n2",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "turnsRatio",
+            "name": "turnsRatio",
+            "value": 8,
+            "unit": ""
+          }
+        ],
+        "equations": "p1.v-n1.v = turnsRatio*(p2.v-n2.v); p1.i+n1.i=0; p2.i+n2.i=0; turnsRatio*p1.i+p2.i=0;"
+      },
+      "position": {
+        "x": 1240,
+        "y": 280
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "mag",
+      "definition": {
+        "kind": "inductor",
+        "name": "2 mH magnetizing",
+        "symbol": "L",
+        "domain": "electrical",
+        "description": "An ideal inductor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 0.002,
+            "unit": "H",
+            "min": 1e-12
+          }
+        ],
+        "equations": "v = L*der(i);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 1040,
+        "y": 320
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "ip",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "Primary current",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1100,
+        "y": 560
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "rpri",
+      "definition": {
+        "kind": "resistor",
+        "name": "0.5 Ω winding",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 0.5,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1260,
+        "y": 560
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "sw",
+      "definition": {
+        "kind": "finiteSwitch",
+        "name": "Primary switch",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "SW",
+        "description": "Gate-controlled switch: 0.2 ohm on resistance and 10 nS off conductance. No capacitance, switching loss, body diode or avalanche model.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "gate",
+            "name": "g",
+            "direction": "input",
+            "side": "left",
+            "domain": "signal",
+            "unit": ""
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "Ron",
+            "value": 0.2,
+            "unit": "Ohm"
+          },
+          {
+            "id": "Goff",
+            "name": "Goff",
+            "value": 1e-8,
+            "unit": "S"
+          }
+        ],
+        "equations": "p.i=if gate > 0.5 then (p.v-n.v)/Ron else Goff*(p.v-n.v); p.i+n.i=0;",
+        "keywords": [
+          "mosfet",
+          "transistor",
+          "switching",
+          "buck",
+          "power"
+        ],
+        "generated": true
+      },
+      "position": {
+        "x": 1400,
+        "y": 560
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "rect",
+      "definition": {
+        "kind": "diode",
+        "name": "Secondary diode",
+        "symbol": "D",
+        "domain": "electrical",
+        "description": "Piecewise-linear diode: 0.7 V forward drop, 0.05 ohm conduction resistance, 10 nS reverse conductance. Finite slopes make commutation well posed.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "A",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "K",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Vf",
+            "name": "Vf",
+            "value": 0.7,
+            "unit": "V"
+          },
+          {
+            "id": "Ron",
+            "name": "Ron",
+            "value": 0.05,
+            "unit": "Ohm"
+          },
+          {
+            "id": "Goff",
+            "name": "Goff",
+            "value": 1e-8,
+            "unit": "S"
+          }
+        ],
+        "equations": "v=p.v-n.v; p.i=if v > Vf then (v-Vf)/Ron else Goff*(v-Vf); p.i+n.i=0;",
+        "keywords": [
+          "electrical",
+          "semiconductor"
+        ],
+        "generated": true,
+        "declarations": "Real v;"
+      },
+      "position": {
+        "x": 1520,
+        "y": 320
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "rout",
+      "definition": {
+        "kind": "resistor",
+        "name": "50 mΩ ESR",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 0.05,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1660,
+        "y": 320
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "cout",
+      "definition": {
+        "kind": "capacitor",
+        "name": "1000 µF output",
+        "symbol": "C",
+        "domain": "electrical",
+        "description": "An ideal capacitor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance",
+            "value": 0.001,
+            "unit": "F",
+            "min": 1e-12
+          }
+        ],
+        "equations": "i = C*der(v);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 1820,
+        "y": 480
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "resistor",
+        "name": "24 Ω · 24 W load",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 24,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1960,
+        "y": 480
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "gpri",
+      "definition": {
+        "kind": "ground",
+        "name": "Primary reference",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 900,
+        "y": 740
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    },
+    {
+      "id": "gsec",
+      "definition": {
+        "kind": "ground",
+        "name": "Secondary reference",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1900,
+        "y": 740
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    },
+    {
+      "id": "vbus",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "DC bus voltage",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 740,
+        "y": 560
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "vsw",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "Switch voltage",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1580,
+        "y": 560
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "vout",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "Output voltage",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 2100,
+        "y": 480
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "start",
+      "definition": {
+        "kind": "ramp",
+        "name": "Soft start",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 20,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.03,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1000
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ref",
+      "definition": {
+        "kind": "saturation",
+        "name": "0–1 reference",
+        "description": "Clamp a signal between lower and upper limits.",
+        "domain": "signal",
+        "symbol": "sat",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "lower",
+            "name": "Lower limit",
+            "value": 0,
+            "unit": ""
+          },
+          {
+            "id": "upper",
+            "name": "Upper limit",
+            "value": 1,
+            "unit": ""
+          }
+        ],
+        "equations": "y = max(lower, min(upper, u));"
+      },
+      "position": {
+        "x": 180,
+        "y": 1000
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "filt",
+      "definition": {
+        "kind": "filter",
+        "name": "1 ms feedback filter",
+        "description": "First-order continuous filter.",
+        "domain": "signal",
+        "symbol": "1/(τs+1)",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "tau",
+            "name": "Time constant",
+            "value": 0.001,
+            "unit": "s",
+            "min": 0.00001
+          }
+        ],
+        "declarations": "Real x(start=0, fixed=true);",
+        "equations": "der(x) = (u-x)/tau;\ny = x;"
+      },
+      "position": {
+        "x": 180,
+        "y": 1160
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "norm",
+      "definition": {
+        "kind": "gain",
+        "name": "1/24 feedback",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 0.041666666666666664,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 360,
+        "y": 1160
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "pi",
+      "definition": {
+        "kind": "pi",
+        "name": "Voltage PI",
+        "description": "Sampled speed control with output saturation and a bounded integral state.",
+        "domain": "signal",
+        "symbol": "PI",
+        "controller": true,
+        "ports": [
+          {
+            "id": "reference",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "measured",
+            "name": "meas",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 0.03,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 4,
+            "unit": ""
+          },
+          {
+            "id": "limit",
+            "name": "Voltage limit",
+            "value": 0.18,
+            "unit": "V",
+            "min": 0.1
+          },
+          {
+            "id": "samplePeriod",
+            "name": "Sample period",
+            "value": 0.0001,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
+        "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+      },
+      "position": {
+        "x": 560,
+        "y": 1000
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "duty",
+      "definition": {
+        "kind": "saturation",
+        "name": "0–18% duty",
+        "description": "Clamp a signal between lower and upper limits.",
+        "domain": "signal",
+        "symbol": "sat",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "lower",
+            "name": "Lower limit",
+            "value": 0,
+            "unit": ""
+          },
+          {
+            "id": "upper",
+            "name": "Upper limit",
+            "value": 0.18,
+            "unit": ""
+          }
+        ],
+        "equations": "y = max(lower, min(upper, u));"
+      },
+      "position": {
+        "x": 800,
+        "y": 1000
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "pwm",
+      "definition": {
+        "kind": "flybackPWM",
+        "name": "50 kHz PWM",
+        "domain": "signal",
+        "symbol": "PWM",
+        "generated": true,
+        "description": "Sample duty at each cycle; explicit time events resolve falling edges. Disable switching until 30 ms for bus precharge.",
+        "ports": [
+          {
+            "id": "duty",
+            "name": "duty",
+            "domain": "signal",
+            "direction": "input",
+            "side": "left"
+          },
+          {
+            "id": "gate",
+            "name": "gate",
+            "domain": "signal",
+            "direction": "output",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "frequency",
+            "name": "frequency",
+            "value": 50000,
+            "unit": "Hz"
+          },
+          {
+            "id": "enableTime",
+            "name": "enableTime",
+            "value": 0.03,
+            "unit": "s"
+          }
+        ],
+        "declarations": "discrete Real sampledDuty(start=0, fixed=true); discrete Real cycleStart(start=0, fixed=true);",
+        "equations": "when {initial(), sample(0, 1/frequency)} then sampledDuty=min(1,max(0,duty)); cycleStart=time; end when; gate=if time < enableTime then 0 else if sampledDuty <= 0 then 0 else if sampledDuty >= 1 then 1 else if time < cycleStart+sampledDuty/frequency then 1 else 0;"
+      },
+      "position": {
+        "x": 1040,
+        "y": 1000
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    }
+  ],
+  "description": "Hand-authored switching example: single-phase 480 V RMS / 60 Hz, 24 V at 1 A into 24 Ω. Bridge rectifier, 100 µF bulk, 8:1 transformer plus 2 mH magnetizing inductance, 50 kHz PWM, 30 ms enable delay, 50 ms soft start, sampled PI regulation. Finite diode/switch resistances and off conductances regularize commutation. Separate primary/secondary references; ideal magnetic coupling. Omits leakage inductance, core saturation/loss, device capacitances, clamp/snubber, EMI filter and practical isolation/control circuitry. Simulation example, not a hardware design.",
+  "wires": [
+    {
+      "id": "w0",
+      "source": "line",
+      "sourceHandle": "y",
+      "target": "ac",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 136,
+          "y": 192
+        },
+        {
+          "x": 136,
+          "y": 208
+        }
+      ]
+    },
+    {
+      "id": "w1",
+      "source": "ac",
+      "sourceHandle": "p",
+      "target": "rin",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 312,
+          "y": 208
+        },
+        {
+          "x": 296,
+          "y": 208
+        },
+        {
+          "x": 296,
+          "y": 184
+        }
+      ]
+    },
+    {
+      "id": "w2",
+      "source": "rin",
+      "sourceHandle": "n",
+      "target": "d1",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w3",
+      "source": "rin",
+      "sourceHandle": "n",
+      "target": "d3",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 424,
+          "y": 184
+        },
+        {
+          "x": 424,
+          "y": 452
+        },
+        {
+          "x": 604,
+          "y": 452
+        },
+        {
+          "x": 604,
+          "y": 504
+        }
+      ]
+    },
+    {
+      "id": "w4",
+      "source": "ac",
+      "sourceHandle": "n",
+      "target": "d2",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 224,
+          "y": 280
+        },
+        {
+          "x": 476,
+          "y": 280
+        },
+        {
+          "x": 476,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "w5",
+      "source": "ac",
+      "sourceHandle": "n",
+      "target": "d4",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 224,
+          "y": 280
+        },
+        {
+          "x": 604,
+          "y": 280
+        },
+        {
+          "x": 604,
+          "y": 664
+        }
+      ]
+    },
+    {
+      "id": "w6",
+      "source": "d1",
+      "sourceHandle": "n",
+      "target": "d2",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 604,
+          "y": 184
+        },
+        {
+          "x": 604,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "w7",
+      "source": "d1",
+      "sourceHandle": "n",
+      "target": "bulk",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 764,
+          "y": 184
+        }
+      ]
+    },
+    {
+      "id": "w8",
+      "source": "d3",
+      "sourceHandle": "p",
+      "target": "d4",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 476,
+          "y": 504
+        },
+        {
+          "x": 476,
+          "y": 664
+        }
+      ]
+    },
+    {
+      "id": "w9",
+      "source": "d3",
+      "sourceHandle": "p",
+      "target": "bulk",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 476,
+          "y": 504
+        },
+        {
+          "x": 476,
+          "y": 424
+        },
+        {
+          "x": 764,
+          "y": 424
+        }
+      ]
+    },
+    {
+      "id": "w10",
+      "source": "bulk",
+      "sourceHandle": "n",
+      "target": "gpri",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 764,
+          "y": 424
+        },
+        {
+          "x": 920,
+          "y": 424
+        }
+      ]
+    },
+    {
+      "id": "w11",
+      "source": "bulk",
+      "sourceHandle": "p",
+      "target": "bleed",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 764,
+          "y": 296
+        },
+        {
+          "x": 904,
+          "y": 296
+        }
+      ]
+    },
+    {
+      "id": "w12",
+      "source": "bulk",
+      "sourceHandle": "n",
+      "target": "bleed",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 764,
+          "y": 424
+        },
+        {
+          "x": 904,
+          "y": 424
+        }
+      ]
+    },
+    {
+      "id": "w13",
+      "source": "ac",
+      "sourceHandle": "n",
+      "target": "acref",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 224,
+          "y": 280
+        },
+        {
+          "x": 344,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w14",
+      "source": "acref",
+      "sourceHandle": "n",
+      "target": "gpri",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 344,
+          "y": 744
+        },
+        {
+          "x": 872,
+          "y": 744
+        },
+        {
+          "x": 872,
+          "y": 716
+        },
+        {
+          "x": 920,
+          "y": 716
+        }
+      ]
+    },
+    {
+      "id": "w15",
+      "source": "bulk",
+      "sourceHandle": "p",
+      "target": "xfmr",
+      "targetHandle": "p1",
+      "waypoints": [
+        {
+          "x": 764,
+          "y": 296
+        },
+        {
+          "x": 1216,
+          "y": 296
+        },
+        {
+          "x": 1216,
+          "y": 312
+        }
+      ]
+    },
+    {
+      "id": "w16",
+      "source": "xfmr",
+      "sourceHandle": "p1",
+      "target": "mag",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1064,
+          "y": 312
+        },
+        {
+          "x": 1064,
+          "y": 296
+        }
+      ]
+    },
+    {
+      "id": "w17",
+      "source": "xfmr",
+      "sourceHandle": "n1",
+      "target": "mag",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 1216,
+          "y": 344
+        },
+        {
+          "x": 1216,
+          "y": 424
+        },
+        {
+          "x": 1064,
+          "y": 424
+        }
+      ]
+    },
+    {
+      "id": "w18",
+      "source": "xfmr",
+      "sourceHandle": "n1",
+      "target": "ip",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1216,
+          "y": 344
+        },
+        {
+          "x": 1216,
+          "y": 556
+        },
+        {
+          "x": 1076,
+          "y": 556
+        },
+        {
+          "x": 1076,
+          "y": 584
+        }
+      ]
+    },
+    {
+      "id": "w19",
+      "source": "ip",
+      "sourceHandle": "n",
+      "target": "rpri",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w20",
+      "source": "rpri",
+      "sourceHandle": "n",
+      "target": "sw",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1364,
+          "y": 584
+        },
+        {
+          "x": 1364,
+          "y": 536
+        },
+        {
+          "x": 1440,
+          "y": 536
+        }
+      ]
+    },
+    {
+      "id": "w21",
+      "source": "sw",
+      "sourceHandle": "n",
+      "target": "gpri",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1440,
+          "y": 648
+        },
+        {
+          "x": 920,
+          "y": 648
+        }
+      ]
+    },
+    {
+      "id": "w22",
+      "source": "xfmr",
+      "sourceHandle": "n2",
+      "target": "rect",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w23",
+      "source": "rect",
+      "sourceHandle": "n",
+      "target": "rout",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w24",
+      "source": "rout",
+      "sourceHandle": "n",
+      "target": "cout",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1844,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "w25",
+      "source": "cout",
+      "sourceHandle": "p",
+      "target": "load",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1844,
+          "y": 456
+        },
+        {
+          "x": 1984,
+          "y": 456
+        }
+      ]
+    },
+    {
+      "id": "w26",
+      "source": "cout",
+      "sourceHandle": "n",
+      "target": "load",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 1844,
+          "y": 584
+        },
+        {
+          "x": 1984,
+          "y": 584
+        }
+      ]
+    },
+    {
+      "id": "w27",
+      "source": "xfmr",
+      "sourceHandle": "p2",
+      "target": "cout",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 1792,
+          "y": 312
+        },
+        {
+          "x": 1792,
+          "y": 584
+        },
+        {
+          "x": 1844,
+          "y": 584
+        }
+      ]
+    },
+    {
+      "id": "w28",
+      "source": "cout",
+      "sourceHandle": "n",
+      "target": "gsec",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1844,
+          "y": 584
+        },
+        {
+          "x": 1920,
+          "y": 584
+        }
+      ]
+    },
+    {
+      "id": "w29",
+      "source": "bulk",
+      "sourceHandle": "p",
+      "target": "vbus",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 764,
+          "y": 296
+        },
+        {
+          "x": 716,
+          "y": 296
+        },
+        {
+          "x": 716,
+          "y": 536
+        },
+        {
+          "x": 764,
+          "y": 536
+        }
+      ]
+    },
+    {
+      "id": "w30",
+      "source": "bulk",
+      "sourceHandle": "n",
+      "target": "vbus",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 764,
+          "y": 424
+        },
+        {
+          "x": 716,
+          "y": 424
+        },
+        {
+          "x": 716,
+          "y": 664
+        },
+        {
+          "x": 764,
+          "y": 664
+        }
+      ]
+    },
+    {
+      "id": "w31",
+      "source": "sw",
+      "sourceHandle": "p",
+      "target": "vsw",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1440,
+          "y": 536
+        },
+        {
+          "x": 1604,
+          "y": 536
+        }
+      ]
+    },
+    {
+      "id": "w32",
+      "source": "sw",
+      "sourceHandle": "n",
+      "target": "vsw",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 1440,
+          "y": 648
+        },
+        {
+          "x": 1604,
+          "y": 648
+        },
+        {
+          "x": 1604,
+          "y": 664
+        }
+      ]
+    },
+    {
+      "id": "w33",
+      "source": "cout",
+      "sourceHandle": "p",
+      "target": "vout",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 1844,
+          "y": 456
+        },
+        {
+          "x": 2124,
+          "y": 456
+        }
+      ]
+    },
+    {
+      "id": "w34",
+      "source": "cout",
+      "sourceHandle": "n",
+      "target": "vout",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 1844,
+          "y": 584
+        },
+        {
+          "x": 2124,
+          "y": 584
+        }
+      ]
+    },
+    {
+      "id": "w35",
+      "source": "vout",
+      "sourceHandle": "y",
+      "target": "filt",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 2172,
+          "y": 520
+        },
+        {
+          "x": 2172,
+          "y": 1132
+        },
+        {
+          "x": 156,
+          "y": 1132
+        },
+        {
+          "x": 156,
+          "y": 1192
+        }
+      ]
+    },
+    {
+      "id": "w36",
+      "source": "filt",
+      "sourceHandle": "y",
+      "target": "norm",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "w37",
+      "source": "norm",
+      "sourceHandle": "y",
+      "target": "pi",
+      "targetHandle": "measured",
+      "waypoints": [
+        {
+          "x": 536,
+          "y": 1192
+        },
+        {
+          "x": 536,
+          "y": 1064
+        }
+      ]
+    },
+    {
+      "id": "w38",
+      "source": "start",
+      "sourceHandle": "y",
+      "target": "ref",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "w39",
+      "source": "ref",
+      "sourceHandle": "y",
+      "target": "pi",
+      "targetHandle": "reference",
+      "waypoints": []
+    },
+    {
+      "id": "w40",
+      "source": "pi",
+      "sourceHandle": "y",
+      "target": "duty",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 776,
+          "y": 1048
+        },
+        {
+          "x": 776,
+          "y": 1032
+        }
+      ]
+    },
+    {
+      "id": "w41",
+      "source": "duty",
+      "sourceHandle": "y",
+      "target": "pwm",
+      "targetHandle": "duty",
+      "waypoints": []
+    },
+    {
+      "id": "w42",
+      "source": "pwm",
+      "sourceHandle": "gate",
+      "target": "sw",
+      "targetHandle": "gate",
+      "waypoints": [
+        {
+          "x": 1376,
+          "y": 1032
+        },
+        {
+          "x": 1376,
+          "y": 592
+        }
+      ]
+    }
+  ],
+  "junctions": [],
+  "annotations": [
+    {
+      "x": 0,
+      "y": 40,
+      "text": "RECTIFY · 480 V RMS",
+      "detail": "60 Hz · finite-conductance bridge"
+    },
+    {
+      "x": 740,
+      "y": 40,
+      "text": "DC LINK",
+      "detail": "100 µF · approximately 670 V DC"
+    },
+    {
+      "x": 1100,
+      "y": 120,
+      "text": "FLYBACK ENERGY STORAGE",
+      "detail": "8:1 ratio · 2 mH primary magnetizing inductance"
+    },
+    {
+      "x": 1780,
+      "y": 220,
+      "text": "24 V · 1 A OUTPUT",
+      "detail": "Isolated secondary · 24 Ω load"
+    },
+    {
+      "x": 0,
+      "y": 880,
+      "text": "VOLTAGE CONTROL",
+      "detail": "30 ms bus precharge · 50 ms soft start · 50 kHz PWM"
+    }
+  ],
+  "plots": [
+    {
+      "id": "output",
+      "label": "Output voltage",
+      "series": [
+        "vout.y"
+      ],
+      "labels": [
+        "Output voltage"
+      ]
+    },
+    {
+      "id": "bus",
+      "label": "Rectified DC bus",
+      "series": [
+        "vbus.y"
+      ],
+      "labels": [
+        "DC bus voltage"
+      ]
+    },
+    {
+      "id": "primary",
+      "label": "Primary current",
+      "series": [
+        "ip.y"
+      ],
+      "labels": [
+        "Primary current"
+      ]
+    },
+    {
+      "id": "switch",
+      "label": "Switch voltage",
+      "series": [
+        "vsw.y"
+      ],
+      "labels": [
+        "Switch voltage"
+      ]
+    },
+    {
+      "id": "duty",
+      "label": "PWM duty",
+      "series": [
+        "duty.y"
+      ],
+      "labels": [
+        "Duty command"
+      ]
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_flyback_0",
+      "anchor": "line.y",
+      "wireIds": [
+        "w0"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_1",
+      "anchor": "ac.p",
+      "wireIds": [
+        "w1"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_2",
+      "anchor": "d1.p",
+      "wireIds": [
+        "w2",
+        "w3"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_3",
+      "anchor": "ac.n",
+      "wireIds": [
+        "w13",
+        "w4",
+        "w5"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_4",
+      "anchor": "bleed.p",
+      "wireIds": [
+        "w11",
+        "w15",
+        "w16",
+        "w29",
+        "w6",
+        "w7"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_5",
+      "anchor": "acref.n",
+      "wireIds": [
+        "w10",
+        "w12",
+        "w14",
+        "w21",
+        "w30",
+        "w32",
+        "w8",
+        "w9"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_6",
+      "anchor": "ip.p",
+      "wireIds": [
+        "w17",
+        "w18"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_7",
+      "anchor": "ip.n",
+      "wireIds": [
+        "w19"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_8",
+      "anchor": "rpri.n",
+      "wireIds": [
+        "w20",
+        "w31"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_9",
+      "anchor": "rect.p",
+      "wireIds": [
+        "w22"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_10",
+      "anchor": "rect.n",
+      "wireIds": [
+        "w23"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_11",
+      "anchor": "cout.p",
+      "wireIds": [
+        "w24",
+        "w25",
+        "w33"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_12",
+      "anchor": "cout.n",
+      "wireIds": [
+        "w26",
+        "w27",
+        "w28",
+        "w34"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_13",
+      "anchor": "vout.y",
+      "wireIds": [
+        "w35"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_14",
+      "anchor": "filt.y",
+      "wireIds": [
+        "w36"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_15",
+      "anchor": "norm.y",
+      "wireIds": [
+        "w37"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_16",
+      "anchor": "start.y",
+      "wireIds": [
+        "w38"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_17",
+      "anchor": "ref.y",
+      "wireIds": [
+        "w39"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_18",
+      "anchor": "pi.y",
+      "wireIds": [
+        "w40"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_19",
+      "anchor": "duty.y",
+      "wireIds": [
+        "w41"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_flyback_20",
+      "anchor": "pwm.gate",
+      "wireIds": [
+        "w42"
+      ],
+      "hidden": true
+    }
+  ]
+}

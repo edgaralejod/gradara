@@ -144,7 +144,7 @@ def model_summaries(directory: Path, trashed: bool = False):
 
 
 def new_model(directory: Path, templates: Path, name: str, template: str = 'blank') -> Project:
-    if template not in {'blank', 'dc', 'foc', 'buck'}:
+    if template not in {'blank', 'dc', 'foc', 'buck', 'flyback'}:
         raise ValueError('Unknown model template.')
     name = name.strip()
     if not name: raise ValueError('Enter a model name.')

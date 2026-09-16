@@ -32,6 +32,14 @@ export const modelTemplates = [
       '24 V to 12 V with complementary ideal switches and an LC output filter.',
     detail: 'Power electronics · 10 kHz PWM',
   },
+  {
+    id: 'flyback',
+    title: '480 VAC flyback',
+    name: '480 VAC → 24 VDC flyback',
+    description:
+      'Bridge rectifier, magnetic energy storage, and 50 kHz switching with soft-start voltage regulation.',
+    detail: '480 V RMS · 24 V / 1 A · switching model',
+  },
 ] as const;
 export type TemplateId = (typeof modelTemplates)[number]['id'];
 export function blankProject(name = 'Untitled model'): Project {

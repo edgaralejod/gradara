@@ -22,6 +22,7 @@ import {
 } from '@/lib/gradara/block-creation';
 export type ComposerContext = {
   position: { x: number; y: number };
+  mode?: 'block' | 'model';
   existing?: { id: string; definition: Definition };
   connection?: { blockId: string; portId: string };
 };
@@ -30,11 +31,13 @@ export default function AgentComposer({
   onClose,
   onInsert,
   onBusy,
+  onModelMode,
 }: {
   context: ComposerContext;
   onClose: () => void;
   onInsert: (definition: Definition) => void;
   onBusy?: (busy: boolean) => void;
+  onModelMode?: () => void;
 }) {
   const [blockType, setBlockType] = useState<BlockType>(() =>
     inferBlockType(context.existing?.definition),
@@ -124,6 +127,14 @@ export default function AgentComposer({
           <X />
         </Button>
       </div>
+      {!context.existing && !context.connection && onModelMode && (
+        <div className="model-mode-switch">
+          <span>Single block</span>
+          <Button variant="ghost" disabled={busy} onClick={onModelMode}>
+            Full model / circuit
+          </Button>
+        </div>
+      )}
       <div className="composer-type">
         <label htmlFor="component-block-type">Block type</label>
         <select

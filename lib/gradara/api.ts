@@ -46,13 +46,16 @@ export type Job<T> = {
   status: 'queued' | 'running' | 'complete' | 'failed' | 'cancelled';
   result?: T;
   error?: string;
+  progress?: string;
 };
 export async function waitForJob<T>(
   id: string,
   signal?: AbortSignal,
+  onProgress?: (message: string) => void,
 ): Promise<T> {
   while (!signal?.aborted) {
     const job = await api<Job<T>>(`/jobs/${id}`, { signal });
+    if (job.progress) onProgress?.(job.progress);
     if (job.status === 'complete') return job.result!;
     if (job.status === 'failed')
       throw new Error(job.error ?? 'The operation failed.');

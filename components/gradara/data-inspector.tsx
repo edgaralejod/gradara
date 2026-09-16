@@ -1,5 +1,18 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  Activity,
+  Download,
+  Hand,
+  Scan,
+  Crosshair,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Minimize2,
+  X,
+  LayoutGrid,
+} from 'lucide-react';
 import { api, type SimulationResult } from '@/lib/gradara/api';
 import { plotOptions } from '@/lib/gradara/results';
 import {
@@ -243,7 +256,9 @@ function InspectorSession({
   return (
     <section className="data-inspector" aria-label="Data Inspector">
       <header className="di-heading">
-        <strong>Data Inspector</strong>
+        <strong>
+          <Activity size={14} aria-hidden="true" /> Data Inspector
+        </strong>
         <span>
           {running
             ? 'Simulating…'
@@ -257,7 +272,7 @@ function InspectorSession({
         </span>
         {result && (
           <a href={`/api/results/${result.id}/csv`} download>
-            Download CSV
+            <Download size={13} aria-hidden="true" /> Export CSV
           </a>
         )}
       </header>
@@ -290,7 +305,7 @@ function InspectorSession({
         <>
           <div className="di-toolbar" aria-label="Plot navigation">
             <label>
-              Layout{' '}
+              <LayoutGrid size={14} aria-hidden="true" /> Layout{' '}
               <select
                 aria-label="Plot layout"
                 value={config.layout}
@@ -321,6 +336,13 @@ function InspectorSession({
                 aria-pressed={mode === m}
                 onClick={() => setMode(m)}
               >
+                {m === 'pan' ? (
+                  <Hand size={14} aria-hidden="true" />
+                ) : m === 'zoom' ? (
+                  <Scan size={14} aria-hidden="true" />
+                ) : (
+                  <Crosshair size={14} aria-hidden="true" />
+                )}
                 {m === 'pan' ? 'Pan' : m === 'zoom' ? 'Box zoom' : 'Cursor'}
               </button>
             ))}
@@ -337,10 +359,10 @@ function InspectorSession({
               </select>
             </label>
             <button aria-label="Zoom in" onClick={() => zoom(0.5)}>
-              ＋
+              <ZoomIn size={15} aria-hidden="true" />
             </button>
             <button aria-label="Zoom out" onClick={() => zoom(2)}>
-              −
+              <ZoomOut size={15} aria-hidden="true" />
             </button>
             <button onClick={() => fit(active, 'x')}>Fit X</button>
             <button onClick={() => fit(active, 'y')}>Fit Y</button>
@@ -371,7 +393,10 @@ function InspectorSession({
           </div>
           <div className="di-workspace">
             <aside className="di-signals" aria-label="Signal selection">
-              <strong>Signals</strong>
+              <div className="di-pane-title">
+                <strong>Signals</strong>
+                <span>{traces.length}</span>
+              </div>
               <p>Assign to plot {active + 1}, or drag onto a plot.</p>
               <input
                 aria-label="Search signals"
@@ -388,7 +413,10 @@ function InspectorSession({
                 Logged nets only
               </label>
               {shown.map((s) => (
-                <div key={s.key} className="di-signal">
+                <div
+                  key={s.key}
+                  className={`di-signal ${config.plots[active].signals.includes(s.key) ? 'is-assigned' : ''}`}
+                >
                   <input
                     type="checkbox"
                     aria-label={`Plot ${s.name} in plot ${active + 1}`}
@@ -412,16 +440,11 @@ function InspectorSession({
                         !config.plots[active].signals.includes(s.key),
                       )
                     }
-                    title="Drag onto a plot or click to toggle"
+                    title={`${s.name} · ${s.unit || 'unitless'}${s.netId ? ' · logged' : ''} — Drag onto a plot or click to toggle`}
                   >
                     <i style={{ background: s.color }} />
-                    <span>
-                      {s.name}
-                      <small>
-                        {s.unit || 'unitless'}
-                        {s.netId ? ' · logged' : ''}
-                      </small>
-                    </span>
+                    <span>{s.name}</span>
+                    <small>{s.unit || '—'}</small>
                   </button>
                 </div>
               ))}
@@ -483,6 +506,9 @@ function InspectorSession({
                         aria-pressed={active === index}
                         onClick={() => edit((c) => ({ ...c, active: index }))}
                       >
+                        <span className="di-plot-number">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>{' '}
                         Plot {index + 1}
                       </button>
                       <span>
@@ -491,14 +517,25 @@ function InspectorSession({
                         ].join(' / ')}
                       </span>
                       <button
+                        aria-label={
+                          maximized === index ? 'Restore' : 'Maximize'
+                        }
+                        title={
+                          maximized === index ? 'Restore plot' : 'Maximize plot'
+                        }
                         onClick={() =>
                           setMaximized(maximized === index ? null : index)
                         }
                       >
-                        {maximized === index ? 'Restore' : 'Maximize'}
+                        {maximized === index ? (
+                          <Minimize2 size={13} aria-hidden="true" />
+                        ) : (
+                          <Maximize2 size={13} aria-hidden="true" />
+                        )}
                       </button>
                       <button
                         aria-label={`Clear plot ${index + 1}`}
+                        title="Clear plot"
                         onClick={() =>
                           edit((c) => ({
                             ...c,
@@ -508,7 +545,7 @@ function InspectorSession({
                           }))
                         }
                       >
-                        Clear
+                        <X size={14} aria-hidden="true" />
                       </button>
                     </header>
                     <div className="di-chart">
@@ -587,7 +624,9 @@ export default function DataInspector(props: {
     return (
       <section className="data-inspector" aria-label="Data Inspector">
         <header className="di-heading">
-          <strong>Data Inspector</strong>
+          <strong>
+            <Activity size={14} aria-hidden="true" /> Data Inspector
+          </strong>
           <span>{props.running ? 'Simulating…' : 'No run yet'}</span>
         </header>
         {props.error && (

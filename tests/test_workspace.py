@@ -118,7 +118,7 @@ def test_new_blank_model_preserves_current_document_and_uses_independent_identit
     assert second.name == 'My circuit (2)'
     assert second.modelId != blank.modelId
 
-@pytest.mark.parametrize('template', ['dc', 'foc', 'buck'])
+@pytest.mark.parametrize('template', ['dc', 'foc', 'buck', 'flyback'])
 def test_new_model_templates_are_saved_independent_documents(tmp_path, template):
     templates = Path(__file__).parents[1]/'models/examples'
     before = (templates/f'{template}.json').read_text()

@@ -127,9 +127,9 @@ export default function InspectorPlot({
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, width, height);
-    ctx.font = '11px system-ui';
-    ctx.strokeStyle = '#e9edf1';
-    ctx.fillStyle = '#687584';
+    ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+    ctx.strokeStyle = '#e7ebef';
+    ctx.fillStyle = '#65707a';
     for (const value of axisTicks(view.x, Math.max(2, Math.floor(w / 90)))) {
       const px = left + ((value - view.x[0]) / (view.x[1] - view.x[0])) * w;
       ctx.beginPath();
@@ -152,6 +152,9 @@ export default function InspectorPlot({
       ctx.textAlign = 'right';
       ctx.fillText(number(value), left - 8, py + 4);
     }
+    ctx.strokeStyle = '#adb6bf';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(left, top, w, h);
     ctx.save();
     ctx.beginPath();
     ctx.rect(left, top, w, h);
@@ -161,6 +164,8 @@ export default function InspectorPlot({
     for (const s of traces) {
       ctx.strokeStyle = s.color;
       ctx.lineWidth = 1.5;
+      // Dense switching samples should not produce exaggerated miter spikes.
+      ctx.lineJoin = 'round';
       ctx.beginPath();
       let started = false;
       for (let i = from; i <= to; i++) {
