@@ -8,7 +8,12 @@ import { polylineOfWire, samePt } from './net-draw';
 import { followJunctionsForLayout, moveJunctions } from './net-layout';
 import { snapMovedBlocks } from './placement';
 import { sideToPosition } from './ports';
-import { routeBetween, segmentExit, simplifyPoints, type Pt } from './routing';
+import {
+  routeBetween,
+  simplifyPoints,
+  simplifyRoute,
+  type Pt,
+} from './routing';
 
 /** Transient editor selection. Geometry is never inferred from visual crossings. */
 export type ModelSelection = {
@@ -106,6 +111,7 @@ export function translateSelection(
   const junctionIds = new Set(resolved.junctionIds);
   const wireIds = new Set(resolved.wireIds);
   if (!blockIds.size && !junctionIds.size && !wireIds.size) return project;
+  const allBlockIds = new Set(project.blocks.map((b) => b.id));
   const moves = (id: string) => blockIds.has(id) || junctionIds.has(id);
   const movedDots = moveJunctions(
     project,
@@ -140,17 +146,20 @@ export function translateSelection(
       const end = endpointPoint(next, w.target, w.targetHandle)!;
       const tail = moved.at(-1)!;
       moved.push(
-        ...routeBetween(
-          tail,
-          end,
-          segmentExit(tail, end),
-          sideToPosition(end.side),
-        ).slice(1),
+        ...routeBetween(end, tail, sideToPosition(end.side)).reverse().slice(1),
       );
     }
     return {
       ...w,
-      waypoints: simplifyPoints(moved).slice(1, -1),
+      waypoints: simplifyRoute(
+        moved,
+        allBlockIds.has(w.source)
+          ? sideToPosition(endpointPoint(next, w.source, w.sourceHandle)!.side)
+          : undefined,
+        allBlockIds.has(w.target)
+          ? sideToPosition(endpointPoint(next, w.target, w.targetHandle)!.side)
+          : undefined,
+      ).slice(1, -1),
       junctions: w.junctions?.map((p) => offset(p, delta)),
     };
   });

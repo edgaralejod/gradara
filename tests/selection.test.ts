@@ -568,3 +568,67 @@ void test('the full FOC example preserves signal and physical connectivity throu
   assert.equal(flattenWires(copy.project).length, 2 * flattenWires(p).length);
   geometry(copy.project);
 });
+
+void test('fine and coarse nudges preserve branched geometry and numerical identity', () => {
+  const p = branched();
+  let next = p;
+  for (const step of [1, 1, 1, 10])
+    next = normalizeJunctions(
+      translateSelection(next, all(next), { x: step, y: -step }),
+    );
+  for (const b of p.blocks) {
+    const moved = next.blocks.find((n) => n.id === b.id)!;
+    assert.deepEqual(moved.position, {
+      x: b.position.x + 13,
+      y: b.position.y - 13,
+    });
+  }
+  assert.equal(semanticSignature(next), semanticSignature(p));
+  for (const w of p.wires)
+    assert.deepEqual(
+      polylineOfWire(next, w.id),
+      polylineOfWire(p, w.id).map((point) => ({
+        x: point.x + 13,
+        y: point.y - 13,
+      })),
+    );
+  geometry(next);
+});
+
+void test('nudging a branch moves its junction without moving unselected blocks', () => {
+  const p = branched();
+  const next = normalizeJunctions(
+    translateSelection(
+      p,
+      { ...emptySelection(), wireIds: ['upper'] },
+      { x: 0, y: 10 },
+    ),
+  );
+  assert.deepEqual(next.blocks, p.blocks);
+  assert.equal(semanticSignature(next), semanticSignature(p));
+  assert.notDeepEqual(
+    polylineOfWire(next, 'upper'),
+    polylineOfWire(p, 'upper'),
+  );
+  geometry(next);
+});
+
+void test('repeated fine wire nudges keep fixed ports and do not accumulate retraced spurs', () => {
+  let project = initialProject();
+  const id = project.wires[0].id;
+  const original = polylineOfWire(project, id);
+  const selection = { ...emptySelection(), wireIds: [id] };
+  for (let i = 0; i < 12; i++) {
+    project = translateSelection(project, selection, { x: 0, y: 1 });
+    const points = polylineOfWire(project, id);
+    assert.deepEqual(points[0], original[0]);
+    assert.deepEqual(points.at(-1), original.at(-1));
+    assert.ok(points.length <= original.length + 4);
+    for (let j = 1; j < points.length; j++) {
+      assert.ok(
+        points[j].x >= points[j - 1].x,
+        'left-to-right route must not double back',
+      );
+    }
+  }
+});

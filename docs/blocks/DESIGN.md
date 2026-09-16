@@ -1,6 +1,6 @@
 # Gradara block design contract
 
-The diagram is a technical drawing. Identity comes from a recognizable symbol, clean terminals, and a short name. Keep whitespace calm, wires legible, and color tied to physical domains. Avoid card shadows, header bars, badges, and arbitrary fonts inside blocks.
+The diagram is a technical drawing. Identity comes from a recognizable symbol, clean terminals, and a short name. Keep whitespace calm, wires legible, and color tied to physical domains. Avoid card-style elevation, header bars, badges, and arbitrary fonts inside blocks. A subtle shared shadow on the outline adds relief without turning the symbol into a card.
 
 ## Shared dimensions and typography
 
@@ -27,6 +27,7 @@ These are deliberate semantic exceptions, not permission to invent dimensions fo
 
 - `BlockFace` is the sole body renderer for the canvas, library, and catalog. `BlockSymbol` supplies only internal notation. Do not recreate outlines in a library-only component.
 - Use a bounded SVG in a `60 × 44` viewBox for ordinary pictograms. The normal symbol well is capped at `48 × 40`. Use a `1.6` stroke, round caps/joins, no fill by default. Machine symbols use an `80 × 70` viewBox and the same optical envelope.
+- Shadows use the shared `--block-shadow` token on the outline only; unboxed circuit glyphs use the lighter `--block-symbol-shadow`. Do not shadow text, ports, wires, or entire node containers. Shadows are omitted for printing and never affect geometry.
 - Body outlines use a `1.4` stroke and a 2% domain tint. Rectangles have almost square corners. Preserve the established triangle, circle, and circuit conventions.
 - Orient passive circuit glyphs from their physical terminal sides. Vertical source/switch/sensor symbols use a 48 × 80 viewBox; ground already has a top-facing lead and must not receive the passive-glyph quarter-turn. Keep signal gate/measurement stubs blue.
 - Circuit primitives stretch only their circuit SVG, using non-scaling strokes. Their outer leads must touch the actual port locations. A wire must never appear disconnected from the glyph.

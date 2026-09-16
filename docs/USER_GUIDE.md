@@ -30,6 +30,8 @@ Port colors show the connector's domain, which can differ from its block's main 
 
 ## Wire and arrange
 
+Select blocks, wires, or junctions and use the **arrow keys** to nudge them by one diagram unit, or **Shift + arrow** for ten units. Holding an arrow repeats the movement as one undo action. Connected wires follow moving blocks; unselected block terminals stay fixed when a wire moves. Arrow keys keep their normal behavior in text fields and focused plots.
+
 | Action | Gesture |
 | --- | --- |
 | Connect | Drag port to port, or click the start and destination. |

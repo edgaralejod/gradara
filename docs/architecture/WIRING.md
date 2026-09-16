@@ -27,6 +27,7 @@ The [model format](MODEL_FORMAT.md) defines the serialized fields. Rendered poly
 | Complete a connection | Finish on a compatible port, junction, or wire segment. Connected ports take precedence over overlapping wire hit areas. |
 | Branch | Drag unselected wire ink, Alt-drag a selected wire, or click/Alt-drag a junction. Splicing and the new branch commit together. |
 | Unpin or cancel | Backspace removes the last pinned run and restores its exit direction. Escape cancels the entire provisional edit, including splices. |
+| Nudge selection | Arrow keys translate selected blocks, wires, and junctions by one diagram unit; Shift uses ten. Key repeats form one undo transaction. Fixed boundary ports retain their positions and normals. |
 | Move a junction | A normal junction drag moves its incident runs. |
 | Reshape | Select a wire and drag a segment, midpoint grip, or bend handle. A segment moves perpendicular to itself; fixed block ports grow connecting elbows. |
 | Reconnect | Drag a selected wire's round endpoint. Preserve the wire ID and the fixed part of its manual route where possible; prune obsolete junctions after commit. |

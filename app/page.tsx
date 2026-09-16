@@ -80,6 +80,7 @@ import {
   emptySelection,
   extractSelection,
   layoutSelection,
+  translateSelection,
   pasteSelection,
   type ModelFragment,
   type ModelSelection,
@@ -295,20 +296,27 @@ function Workbench() {
     if (noticeTimer.current) clearTimeout(noticeTimer.current);
     noticeTimer.current = setTimeout(() => setNotice(''), 5500);
   }, []);
-  const commit = useCallback((update: Project | ((p: Project) => Project)) => {
-    if (switchingRef.current) return;
-    const previous = projectRef.current;
-    const next = normalizeProject(
-      typeof update === 'function' ? update(previous) : update,
-      previous,
-    );
-    if (next === previous) return;
-    setHistory((h) => [...h.slice(-49), structuredClone(previous)]);
-    setFuture([]);
-    const changed = { ...next, revision: previous.revision + 1 };
-    projectRef.current = changed;
-    setProject(changed);
-  }, []);
+  const commit = useCallback(
+    (
+      update: Project | ((p: Project) => Project),
+      options?: { mergeHistory?: boolean },
+    ) => {
+      if (switchingRef.current) return;
+      const previous = projectRef.current;
+      const next = normalizeProject(
+        typeof update === 'function' ? update(previous) : update,
+        previous,
+      );
+      if (next === previous) return;
+      if (!options?.mergeHistory)
+        setHistory((h) => [...h.slice(-49), structuredClone(previous)]);
+      setFuture([]);
+      const changed = { ...next, revision: previous.revision + 1 };
+      projectRef.current = changed;
+      setProject(changed);
+    },
+    [],
+  );
   const undo = useCallback(() => {
     if (!history.length) return;
     const previous = history[history.length - 1];
@@ -848,6 +856,101 @@ function Workbench() {
     }
     notify('Simulation cancelled.');
   }
+  // Capture before React Flow's own arrow handler, so a selection moves exactly once.
+  useEffect(() => {
+    let held: string | null = null;
+    let pointerDown = false;
+    const directions: Record<string, { x: number; y: number }> = {
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 },
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+    };
+    const keydown = (event: KeyboardEvent) => {
+      const direction = directions[event.key];
+      if (!direction) {
+        held = null;
+        return;
+      }
+      const target = event.target instanceof Element ? event.target : null;
+      const editing = target?.closest(
+        'input,textarea,select,[contenteditable=true],.monaco-editor,[role=dialog],[role=menu],[role=listbox],.library-panel,.data-inspector,.model-toolbar',
+      );
+      const otherButton =
+        target?.closest('button') &&
+        !target.closest('.explorer-row,.explorer-root,.react-flow__node');
+      if (
+        event.defaultPrevented ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        workspaceMode !== 'diagram' ||
+        composer ||
+        inserter ||
+        pointerDown ||
+        editing ||
+        otherButton ||
+        document.querySelector('[role=dialog],.net-live')
+      ) {
+        held = null;
+        return;
+      }
+      const selection = selectionRef.current;
+      if (
+        !selection.blockIds.length &&
+        !selection.wireIds.length &&
+        !selection.junctionIds.length
+      )
+        return;
+      event.preventDefault();
+      event.stopPropagation();
+      const signature = JSON.stringify([
+        projectRef.current.modelId,
+        selection,
+        event.key,
+        event.shiftKey,
+      ]);
+      const mergeHistory = event.repeat && held === signature;
+      held = signature;
+      const step = event.shiftKey ? 10 : 1;
+      commit(
+        (project) =>
+          translateSelection(project, selection, {
+            x: direction.x * step,
+            y: direction.y * step,
+          }),
+        { mergeHistory },
+      );
+    };
+    const release = () => {
+      held = null;
+    };
+    const down = () => {
+      pointerDown = true;
+      release();
+    };
+    const up = () => {
+      pointerDown = false;
+    };
+    const blur = () => {
+      pointerDown = false;
+      release();
+    };
+    window.addEventListener('keydown', keydown, true);
+    window.addEventListener('keyup', release);
+    window.addEventListener('pointerdown', down, true);
+    window.addEventListener('pointerup', up, true);
+    window.addEventListener('pointercancel', up, true);
+    window.addEventListener('blur', blur);
+    return () => {
+      window.removeEventListener('keydown', keydown, true);
+      window.removeEventListener('keyup', release);
+      window.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('pointerup', up, true);
+      window.removeEventListener('pointercancel', up, true);
+      window.removeEventListener('blur', blur);
+    };
+  }, [commit, workspaceMode, composer, inserter]);
   const runRef = useRef(runSimulation);
   runRef.current = runSimulation;
   useEffect(() => {
@@ -2115,7 +2218,8 @@ function Workbench() {
                 ['Resize a block', 'Drag a corner or edge'],
                 ['Move a block name', 'Drag the label'],
                 ['Reset label position', 'Double-click its label'],
-                ['Nudge selected blocks', 'Arrow keys'],
+                ['Nudge selected blocks / wires', 'Arrow keys'],
+                ['Nudge by 10 diagram units', 'Shift + arrows'],
                 ['Inspect equations', 'Double-click a block'],
                 ['Save', 'Automatic'],
               ].map(([label, key]) => (
