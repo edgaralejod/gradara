@@ -1,6 +1,8 @@
 'use client';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { Definition, Port } from '@/lib/gradara/model';
+import { clampPopoverPosition } from '@/lib/gradara/inserter';
 import LibraryNavigator from './library-navigator';
 
 export type InsertContext = {
@@ -22,10 +24,28 @@ export default function BlockInserter({
   onAskAgent: () => void;
   onClose: () => void;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [screen, setScreen] = useState(context.screen);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const parent = el?.offsetParent;
+    if (!el || !(parent instanceof HTMLElement)) {
+      setScreen(context.screen);
+      return;
+    }
+    setScreen(
+      clampPopoverPosition(
+        context.screen,
+        { width: parent.clientWidth, height: parent.clientHeight },
+        { width: el.offsetWidth, height: el.offsetHeight },
+      ),
+    );
+  }, [context.screen]);
   return (
     <div
+      ref={ref}
       className="block-inserter nodrag nopan nowheel"
-      style={{ left: context.screen.x, top: context.screen.y }}
+      style={{ left: screen.x, top: screen.y }}
       aria-label="Insert a block"
     >
       <div className="inserter-heading">

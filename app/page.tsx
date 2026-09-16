@@ -110,6 +110,10 @@ import LibraryNavigator from '@/components/gradara/library-navigator';
 import BlockInserter, {
   type InsertContext,
 } from '@/components/gradara/block-inserter';
+import {
+  clampPopoverPosition,
+  isCanvasInsertDoubleClick,
+} from '@/lib/gradara/inserter';
 import AgentComposer, {
   type ComposerContext,
 } from '@/components/gradara/agent-composer';
@@ -1457,34 +1461,27 @@ function Workbench() {
                 ref={canvasRef}
                 className={`canvas-wrap tool-${canvasTool}`}
                 onDoubleClick={(e) => {
-                if (e.defaultPrevented) return;
-                if (!(e.target as HTMLElement).closest('.react-flow__pane'))
-                  return;
-                const bounds = canvasRef.current?.getBoundingClientRect();
-                setComposer(null);
-                setInserter({
-                  position: flow.screenToFlowPosition({
-                    x: e.clientX,
-                    y: e.clientY,
-                  }),
-                  screen: {
-                    x: Math.max(
-                      12,
-                      Math.min(
-                        e.clientX - (bounds?.left ?? 0),
-                        (bounds?.width ?? 400) - 312,
-                      ),
+                  if (e.defaultPrevented) return;
+                  if (!isCanvasInsertDoubleClick(e.target)) return;
+                  const bounds = canvasRef.current?.getBoundingClientRect();
+                  setComposer(null);
+                  setInserter({
+                    position: flow.screenToFlowPosition({
+                      x: e.clientX,
+                      y: e.clientY,
+                    }),
+                    screen: clampPopoverPosition(
+                      {
+                        x: e.clientX - (bounds?.left ?? 0),
+                        y: e.clientY - (bounds?.top ?? 0),
+                      },
+                      {
+                        width: bounds?.width ?? 400,
+                        height: bounds?.height ?? 300,
+                      },
                     ),
-                    y: Math.max(
-                      12,
-                      Math.min(
-                        e.clientY - (bounds?.top ?? 0),
-                        (bounds?.height ?? 300) - 80,
-                      ),
-                    ),
-                  },
-                });
-              }}
+                  });
+                }}
               onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'copy';
@@ -1590,7 +1587,9 @@ function Workbench() {
                       setInspectorOpen(true);
                     }
                   }}
-                  onNodeDoubleClick={(_, n) => {
+                  onNodeDoubleClick={(e, n) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (n.type === 'tap') return;
                     setEquationBlock(n.id);
                   }}
@@ -2220,6 +2219,7 @@ function Workbench() {
                 ['Reset label position', 'Double-click its label'],
                 ['Nudge selected blocks / wires', 'Arrow keys'],
                 ['Nudge by 10 diagram units', 'Shift + arrows'],
+                ['Add a block at the pointer', 'Double-click empty canvas'],
                 ['Inspect equations', 'Double-click a block'],
                 ['Save', 'Automatic'],
               ].map(([label, key]) => (

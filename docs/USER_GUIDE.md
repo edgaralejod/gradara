@@ -22,7 +22,7 @@ Model documents live in `projects/models/`; removed models live in `projects/tra
 
 ## Build a diagram
 
-Click a library component to insert it, or invoke the agent from a selected location or dangling connection. Select a component to edit its parameters in the inspector. Double-click a signal block to inspect or edit equations in Monaco. Built-in physical implementations use canonical Modelica wrappers; their displayed equations explain behavior.
+Click a library component to insert it, or invoke the agent from a selected location or dangling connection. Double-click empty canvas to open the add-block picker at the pointer; it stays fully on the sheet if you click near an edge. Select a component to edit its parameters in the inspector. Double-click a signal block to inspect or edit equations in Monaco; that does not open the add-block picker. Built-in physical implementations use canonical Modelica wrappers; their displayed equations explain behavior.
 
 Blocks get readable unique names such as Step, Step1, and Step2. IDs remain stable when names change. Drag a block label separately from the symbol; double-click the label to restore its default location. Press **R** to rotate selected blocks clockwise by 90° about their centers. Ports and connected wires follow, while the instance name stays below the symbol. Rotation supports undo/redo and is saved with the model; with only wires selected, R still restores automatic routing. Resize using selection handles, or choose **Use standard size** in the inspector. The library, canvas, and [block catalog](http://localhost:4317/block-catalog) share the same visual design.
 
