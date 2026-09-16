@@ -1,4 +1,5 @@
 'use client';
+import { rotateBlocks } from '@/lib/gradara/rotation';
 import { useGeneratedLibrary } from '@/lib/gradara/generated-library';
 import {
   defaultBlockSize,
@@ -852,7 +853,7 @@ function Workbench() {
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       const input = (e.target as HTMLElement)?.closest(
-        'input,textarea,[contenteditable=true],.monaco-editor,[role=dialog]',
+        'input,textarea,select,[contenteditable=true],.monaco-editor,[role=dialog]',
       );
       if (input || e.defaultPrevented) return;
       const command = e.metaKey || e.ctrlKey;
@@ -887,6 +888,9 @@ function Workbench() {
       } else if (command && e.key === 'Enter') {
         e.preventDefault();
         void runRef.current();
+      } else if (e.key.toLowerCase() === 'r' && !command && !e.altKey && selectionRef.current.blockIds.length) {
+        e.preventDefault();
+        if (!e.repeat) commit((p) => rotateBlocks(p, selectionRef.current.blockIds));
       } else if (e.key.toLowerCase() === 'a' && !command && !composer) {
         e.preventDefault();
         startComposer();
@@ -1659,6 +1663,8 @@ function Workbench() {
               onNet={inspectNet}
               onModel={() => select(emptySelection())}
             />
+            <div className="properties-heading">{active ? 'Component properties' : activeNet ? 'Net properties' : 'Model properties'}</div>
+            <div className="inspector-properties">
             {activeNet && !active ? (
               <NetProperties
                 description={activeNet}
@@ -1695,12 +1701,12 @@ function Workbench() {
                     {active.definition.generated ? (
                       <>
                         <Sparkles size={11} />
-                        AGENT COMPONENT
+                        Agent component
                       </>
                     ) : active.definition.controller ? (
-                      'CONTROLLER'
+                      'Controller'
                     ) : (
-                      active.definition.domain.toUpperCase()
+                      active.definition.domain
                     )}
                   </span>
                   <NameField
@@ -1723,7 +1729,7 @@ function Workbench() {
                     }}
                   />
                   <IdentityField id={active.id} label="Block ID" />
-                  <p>{active.definition.description}</p>
+                  <details className="property-description"><summary>Description</summary><p>{active.definition.description}</p></details>
                   <Button
                     className="refine-button"
                     variant="outline"
@@ -1801,7 +1807,7 @@ function Workbench() {
                       <NumberField
                         key={`${active.id}-width`}
                         value={blockSize(active).width}
-                        min={minimumBlockSize(active.definition).width}
+                        min={minimumBlockSize(active.definition, active.rotation).width}
                         max={1200}
                         ariaLabel="Block width"
                         onChange={(width) =>
@@ -1820,8 +1826,8 @@ function Workbench() {
                       <NumberField
                         key={`${active.id}-height`}
                         value={blockSize(active).height}
-                        min={minimumBlockSize(active.definition).height}
-                        max={1000}
+                        min={minimumBlockSize(active.definition, active.rotation).height}
+                        max={1200}
                         ariaLabel="Block height"
                         onChange={(height) =>
                           updateLayout([
@@ -1843,15 +1849,18 @@ function Workbench() {
                         {
                           id: active.id,
                           position: active.position,
-                          size: defaultBlockSize(active.definition),
+                          size: active.rotation && active.rotation % 180 ? { width: defaultBlockSize(active.definition).height, height: defaultBlockSize(active.definition).width } : defaultBlockSize(active.definition),
                         },
                       ])
                     }
                   >
                     Use standard size
                   </button>
+                  <button type="button" className="standard-block-size" onClick={() => commit((p) => rotateBlocks(p, [active.id]))}>
+                    Rotate 90° · R
+                  </button>
                   <p className="size-hint">
-                    Drag a corner or edge to resize. Text stays the same size.
+                    Drag a corner or edge to resize. Press R to rotate.
                   </p>
                 </div>
                 <div className="inspector-section">
@@ -1919,14 +1928,14 @@ function Workbench() {
               </>
             ) : (
               <div className="inspector-empty">
-                <MousePointer2 size={25} />
+                <span className="property-field-label">Name</span>
                 <NameField
                   label="Model name"
                   value={project.name}
                   onCommit={(name) => commit((p) => ({ ...p, name }))}
                 />
                 <label className="model-duration-field">
-                  Stop time (seconds)
+                  <span>Stop time <small>s</small></span>
                   <NumberField
                     ariaLabel="Model stop time"
                     value={project.duration}
@@ -1935,10 +1944,7 @@ function Workbench() {
                     onChange={(duration) => commit((p) => ({ ...p, duration }))}
                   />
                 </label>
-                <p>
-                  {project.description ||
-                    'Select a block or net above, or click it on the canvas to inspect its properties.'}
-                </p>
+                {project.description && <details className="property-description"><summary>Description</summary><p>{project.description}</p></details>}
                 <Button
                   variant="outline"
                   onClick={() =>
@@ -1950,6 +1956,7 @@ function Workbench() {
                 </Button>
               </div>
             )}
+            </div>
           </aside>
         </div>
         <footer className="statusbar">
@@ -2082,7 +2089,8 @@ function Workbench() {
                 ['Redraw a wire', 'Select + D'],
                 ['Finish redrawing', 'Click destination / Enter'],
                 ['Remove last bend / cancel', 'Backspace / Escape'],
-                ['Restore auto route', 'R'],
+                ['Rotate selected blocks clockwise', 'R'],
+                ['Restore auto route (wires only)', 'R'],
                 ['Name a signal / net', 'Double-click wire / F2'],
                 ['Move a signal label', 'Drag along its net'],
                 ['Create a component', 'A'],

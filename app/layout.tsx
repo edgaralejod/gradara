@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import './engineering.css';
 import './blocks.css';
+import './inspector.css';
+import './workbench-dialogs.css';
 export const metadata: Metadata = {
   title: 'Gradara — Modeling workspace',
   description:

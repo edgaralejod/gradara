@@ -100,3 +100,7 @@ When adding fields, decide whether they affect physics, presentation, provenance
 ## Signal logging
 
 `Net.logged?: boolean` records a signal/control net in the next simulation. Physical nets cannot be logged directly; select the physical quantity with a sensor and log its signal output. Reconciliation retains logging with the net identity on split and enables it on a merged net if any contributing net was logged. Logging is undoable and changes observation/result identity; geometry and label edits do not. Modelica emits an output observation per logged net, while the solver continues to determine execution order.
+
+### Block rotation
+
+`Block.rotation` is an optional clockwise angle: 0, 90, 180, or 270 degrees (absent means 0). `size` stores the displayed bounding box; quarter turns swap width and height around the same center. Port IDs and definitions remain unchanged. Shared port geometry transforms sides and asymmetric offsets, and the face rotates within those bounds. Instance labels remain outside the transformed body. Rotation is presentation-only and excluded from simulation identity.

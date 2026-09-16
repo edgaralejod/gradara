@@ -17,12 +17,37 @@ export function portOffset(definition: Definition, port: Port): number {
   return ((peers.indexOf(port) + 1) / (peers.length + 1)) * 100;
 }
 
+/** Port geometry after clockwise rotation, including asymmetric offsets. */
+export function portPlacement(
+  definition: Definition,
+  port: Port,
+  rotation = 0,
+) {
+  let side = portSide(port);
+  let offset = portOffset(definition, port);
+  const clockwise: Record<Side, Side> = {
+    left: 'top',
+    top: 'right',
+    right: 'bottom',
+    bottom: 'left',
+  };
+  for (let turn = 0; turn < rotation / 90; turn++) {
+    if (side === 'left' || side === 'right') offset = 100 - offset;
+    side = clockwise[side];
+  }
+  return { side, offset };
+}
+
 export function portPoint(block: Block, portId: string): PortPoint | undefined {
   const port = block.definition.ports.find((p) => p.id === portId);
   if (!port) return undefined;
   const size = blockSize(block);
-  const side = portSide(port);
-  const t = portOffset(block.definition, port) / 100;
+  const { side, offset } = portPlacement(
+    block.definition,
+    port,
+    block.rotation,
+  );
+  const t = offset / 100;
   const { x, y } = block.position;
   if (side === 'left') return { x, y: y + t * size.height, side };
   if (side === 'right')

@@ -11,6 +11,7 @@ import {
 import { defaultBlockSize } from '../lib/gradara/block-design';
 import { portPoint } from '../lib/gradara/ports';
 import { simplifyPoints } from '../lib/gradara/routing';
+import { materializeBranches } from '../lib/gradara/net-branches';
 import { reconcileNets } from '../lib/gradara/net-registry';
 const pin = (id: string, side: Port['side']): Port => ({
   id,
@@ -210,6 +211,55 @@ const pairs: string[][] = [
   ['duty.y', 'pwm.duty'],
   ['pwm.gate', 'sw.gate'],
 ];
+// Schematic layout: rectifier columns, shared DC rails, isolated output,
+// and a separate left-to-right control chain below the power stage.
+const positions: Record<string, [number, number]> = {
+  line: [0, 320],
+  ac: [160, 320],
+  rin: [320, 328],
+  d1: [480, 184],
+  d2: [640, 184],
+  d3: [480, 424],
+  d4: [640, 424],
+  acref: [320, 544],
+  bulk: [840, 304],
+  bleed: [1000, 304],
+  vbus: [840, 484],
+  mag: [1180, 304],
+  xfmr: [1400, 240],
+  ip: [1200, 464],
+  rpri: [1400, 472],
+  sw: [1580, 464],
+  vsw: [1760, 464],
+  rect: [1660, 248],
+  rout: [1840, 248],
+  cout: [2020, 304],
+  load: [2200, 304],
+  vout: [2380, 304],
+  gpri: [1080, 644],
+  gsec: [2200, 544],
+  start: [440, 824],
+  ref: [640, 824],
+  pi: [1060, 808],
+  duty: [1300, 824],
+  pwm: [1500, 824],
+  filt: [640, 984],
+  norm: [840, 984],
+};
+for (const block of blocks) {
+  const [x, y] = positions[block.id];
+  block.position = { x, y };
+  if (['d1', 'd2', 'd3', 'd4'].includes(block.id)) {
+    block.rotation = 270;
+    block.size = { width: 48, height: 80 };
+  }
+}
+// Flyback winding polarity: positive secondary rail exits above its return.
+const winding = blocks.find((b) => b.id === 'xfmr')!;
+winding.definition.ports.find((p) => p.id === 'n2')!.offset = 25;
+winding.definition.ports.find((p) => p.id === 'p2')!.offset = 75;
+winding.definition.ports.find((p) => p.id === 'p1')!.offset = 25;
+winding.definition.ports.find((p) => p.id === 'n1')!.offset = 75;
 let project: Project = {
   version: 1,
   exampleId: 'flyback',
@@ -228,31 +278,31 @@ let project: Project = {
   annotations: [
     {
       x: 0,
-      y: 40,
+      y: 80,
       text: 'RECTIFY · 480 V RMS',
       detail: '60 Hz · finite-conductance bridge',
     },
     {
-      x: 740,
-      y: 40,
+      x: 840,
+      y: 80,
       text: 'DC LINK',
       detail: '100 µF · approximately 670 V DC',
     },
     {
-      x: 1100,
-      y: 120,
+      x: 1180,
+      y: 80,
       text: 'FLYBACK ENERGY STORAGE',
       detail: '8:1 ratio · 2 mH primary magnetizing inductance',
     },
     {
-      x: 1780,
-      y: 220,
+      x: 2020,
+      y: 80,
       text: '24 V · 1 A OUTPUT',
       detail: 'Isolated secondary · 24 Ω load',
     },
     {
-      x: 0,
-      y: 880,
+      x: 440,
+      y: 740,
       text: 'VOLTAGE CONTROL',
       detail: '30 ms bus precharge · 50 ms soft start · 50 kHz PWM',
     },
@@ -403,7 +453,22 @@ for (const wire of project.wires) {
     points.unshift({ x: xs[state.x], y: ys[state.y] });
   wire.waypoints = simplifyPoints([a, ...points, b]).slice(1, -1);
 }
-project = reconcileNets(project);
+project = reconcileNets(materializeBranches(project));
+// Keep curated geometry IDs reproducible across builds.
+const junctionIds = new Map(
+  (project.junctions ?? []).map((j, i) => [j.id, `flyback_j${i}`]),
+);
+project.junctions = project.junctions?.map((j) => ({
+  ...j,
+  id: junctionIds.get(j.id)!,
+}));
+project.wires = project.wires.map((w, i) => ({
+  ...w,
+  id: `w${i}`,
+  source: junctionIds.get(w.source) ?? w.source,
+  target: junctionIds.get(w.target) ?? w.target,
+}));
+project = reconcileNets({ ...project, nets: undefined });
 for (const [index, net] of (project.nets ?? []).entries()) {
   net.id = `net_flyback_${index}`;
   net.hidden = true;

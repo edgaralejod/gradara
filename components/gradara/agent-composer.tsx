@@ -268,12 +268,12 @@ export default function AgentComposer({
               )}
             </span>
             <Button
-              size="icon"
               disabled={busy || prompt.trim().length < 3}
               onClick={() => void generate()}
               aria-label="Generate component"
             >
               {busy ? <LoaderCircle className="spin" /> : <ArrowUp />}
+              Generate block
             </Button>
           </div>
         </>

@@ -24,9 +24,12 @@ for (const name of ['dc', 'foc', 'buck', 'flyback']) {
           `${name}: missing plot block ${key}`,
         );
     for (const block of p.blocks) {
+      const standard = defaultBlockSize(block.definition);
       assert.deepEqual(
         block.size,
-        defaultBlockSize(block.definition),
+        block.rotation && block.rotation % 180
+          ? { width: standard.height, height: standard.width }
+          : standard,
         block.id,
       );
       const r = {

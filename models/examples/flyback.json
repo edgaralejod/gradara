@@ -60,7 +60,7 @@
       },
       "position": {
         "x": 0,
-        "y": 160
+        "y": 320
       },
       "size": {
         "width": 80,
@@ -102,7 +102,7 @@
       },
       "position": {
         "x": 160,
-        "y": 160
+        "y": 320
       },
       "size": {
         "width": 128,
@@ -150,7 +150,7 @@
       },
       "position": {
         "x": 320,
-        "y": 160
+        "y": 328
       },
       "size": {
         "width": 80,
@@ -210,13 +210,14 @@
         "declarations": "Real v;"
       },
       "position": {
-        "x": 500,
-        "y": 160
+        "x": 480,
+        "y": 184
       },
       "size": {
-        "width": 80,
-        "height": 48
-      }
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 270
     },
     {
       "id": "d2",
@@ -271,13 +272,14 @@
         "declarations": "Real v;"
       },
       "position": {
-        "x": 500,
-        "y": 320
+        "x": 640,
+        "y": 184
       },
       "size": {
-        "width": 80,
-        "height": 48
-      }
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 270
     },
     {
       "id": "d3",
@@ -332,13 +334,14 @@
         "declarations": "Real v;"
       },
       "position": {
-        "x": 500,
-        "y": 480
+        "x": 480,
+        "y": 424
       },
       "size": {
-        "width": 80,
-        "height": 48
-      }
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 270
     },
     {
       "id": "d4",
@@ -393,13 +396,14 @@
         "declarations": "Real v;"
       },
       "position": {
-        "x": 500,
-        "y": 640
+        "x": 640,
+        "y": 424
       },
       "size": {
-        "width": 80,
-        "height": 48
-      }
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 270
     },
     {
       "id": "bulk",
@@ -440,8 +444,8 @@
         ]
       },
       "position": {
-        "x": 740,
-        "y": 320
+        "x": 840,
+        "y": 304
       },
       "size": {
         "width": 48,
@@ -488,8 +492,8 @@
         ]
       },
       "position": {
-        "x": 880,
-        "y": 320
+        "x": 1000,
+        "y": 304
       },
       "size": {
         "width": 48,
@@ -537,7 +541,7 @@
       },
       "position": {
         "x": 320,
-        "y": 640
+        "y": 544
       },
       "size": {
         "width": 48,
@@ -559,28 +563,32 @@
             "name": "p1",
             "domain": "electrical",
             "direction": "physical",
-            "side": "left"
+            "side": "left",
+            "offset": 25
           },
           {
             "id": "n1",
             "name": "n1",
             "domain": "electrical",
             "direction": "physical",
-            "side": "left"
+            "side": "left",
+            "offset": 75
           },
           {
             "id": "p2",
             "name": "p2",
             "domain": "electrical",
             "direction": "physical",
-            "side": "right"
+            "side": "right",
+            "offset": 75
           },
           {
             "id": "n2",
             "name": "n2",
             "domain": "electrical",
             "direction": "physical",
-            "side": "right"
+            "side": "right",
+            "offset": 25
           }
         ],
         "parameters": [
@@ -594,8 +602,8 @@
         "equations": "p1.v-n1.v = turnsRatio*(p2.v-n2.v); p1.i+n1.i=0; p2.i+n2.i=0; turnsRatio*p1.i+p2.i=0;"
       },
       "position": {
-        "x": 1240,
-        "y": 280
+        "x": 1400,
+        "y": 240
       },
       "size": {
         "width": 128,
@@ -641,8 +649,8 @@
         ]
       },
       "position": {
-        "x": 1040,
-        "y": 320
+        "x": 1180,
+        "y": 304
       },
       "size": {
         "width": 48,
@@ -691,8 +699,8 @@
         ]
       },
       "position": {
-        "x": 1100,
-        "y": 560
+        "x": 1200,
+        "y": 464
       },
       "size": {
         "width": 80,
@@ -739,8 +747,8 @@
         ]
       },
       "position": {
-        "x": 1260,
-        "y": 560
+        "x": 1400,
+        "y": 472
       },
       "size": {
         "width": 80,
@@ -805,8 +813,8 @@
         "generated": true
       },
       "position": {
-        "x": 1400,
-        "y": 560
+        "x": 1580,
+        "y": 464
       },
       "size": {
         "width": 80,
@@ -866,8 +874,8 @@
         "declarations": "Real v;"
       },
       "position": {
-        "x": 1520,
-        "y": 320
+        "x": 1660,
+        "y": 248
       },
       "size": {
         "width": 80,
@@ -914,8 +922,8 @@
         ]
       },
       "position": {
-        "x": 1660,
-        "y": 320
+        "x": 1840,
+        "y": 248
       },
       "size": {
         "width": 80,
@@ -961,8 +969,8 @@
         ]
       },
       "position": {
-        "x": 1820,
-        "y": 480
+        "x": 2020,
+        "y": 304
       },
       "size": {
         "width": 48,
@@ -1009,8 +1017,8 @@
         ]
       },
       "position": {
-        "x": 1960,
-        "y": 480
+        "x": 2200,
+        "y": 304
       },
       "size": {
         "width": 48,
@@ -1038,8 +1046,8 @@
         "equations": "p.v = 0;"
       },
       "position": {
-        "x": 900,
-        "y": 740
+        "x": 1080,
+        "y": 644
       },
       "size": {
         "width": 40,
@@ -1067,8 +1075,8 @@
         "equations": "p.v = 0;"
       },
       "position": {
-        "x": 1900,
-        "y": 740
+        "x": 2200,
+        "y": 544
       },
       "size": {
         "width": 40,
@@ -1117,8 +1125,8 @@
         ]
       },
       "position": {
-        "x": 740,
-        "y": 560
+        "x": 840,
+        "y": 484
       },
       "size": {
         "width": 48,
@@ -1167,8 +1175,8 @@
         ]
       },
       "position": {
-        "x": 1580,
-        "y": 560
+        "x": 1760,
+        "y": 464
       },
       "size": {
         "width": 48,
@@ -1217,8 +1225,8 @@
         ]
       },
       "position": {
-        "x": 2100,
-        "y": 480
+        "x": 2380,
+        "y": 304
       },
       "size": {
         "width": 48,
@@ -1266,8 +1274,8 @@
         ]
       },
       "position": {
-        "x": 0,
-        "y": 1000
+        "x": 440,
+        "y": 824
       },
       "size": {
         "width": 80,
@@ -1313,8 +1321,8 @@
         "equations": "y = max(lower, min(upper, u));"
       },
       "position": {
-        "x": 180,
-        "y": 1000
+        "x": 640,
+        "y": 824
       },
       "size": {
         "width": 80,
@@ -1356,8 +1364,8 @@
         "equations": "der(x) = (u-x)/tau;\ny = x;"
       },
       "position": {
-        "x": 180,
-        "y": 1160
+        "x": 640,
+        "y": 984
       },
       "size": {
         "width": 80,
@@ -1397,8 +1405,8 @@
         "equations": "y = k*u;"
       },
       "position": {
-        "x": 360,
-        "y": 1160
+        "x": 840,
+        "y": 984
       },
       "size": {
         "width": 80,
@@ -1466,8 +1474,8 @@
         "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
       },
       "position": {
-        "x": 560,
-        "y": 1000
+        "x": 1060,
+        "y": 808
       },
       "size": {
         "width": 128,
@@ -1513,8 +1521,8 @@
         "equations": "y = max(lower, min(upper, u));"
       },
       "position": {
-        "x": 800,
-        "y": 1000
+        "x": 1300,
+        "y": 824
       },
       "size": {
         "width": 80,
@@ -1564,8 +1572,8 @@
         "equations": "when {initial(), sample(0, 1/frequency)} then sampledDuty=min(1,max(0,duty)); cycleStart=time; end when; gate=if time < enableTime then 0 else if sampledDuty <= 0 then 0 else if sampledDuty >= 1 then 1 else if time < cycleStart+sampledDuty/frequency then 1 else 0;"
       },
       "position": {
-        "x": 1040,
-        "y": 1000
+        "x": 1500,
+        "y": 824
       },
       "size": {
         "width": 80,
@@ -1584,11 +1592,11 @@
       "waypoints": [
         {
           "x": 136,
-          "y": 192
+          "y": 352
         },
         {
           "x": 136,
-          "y": 208
+          "y": 368
         }
       ]
     },
@@ -1601,335 +1609,235 @@
       "waypoints": [
         {
           "x": 312,
-          "y": 208
+          "y": 368
         },
         {
           "x": 296,
-          "y": 208
+          "y": 368
         },
         {
           "x": 296,
-          "y": 184
+          "y": 352
         }
       ]
     },
     {
       "id": "w2",
-      "source": "rin",
-      "sourceHandle": "n",
+      "source": "flyback_j0",
+      "sourceHandle": "node",
       "target": "d1",
       "targetHandle": "p",
       "waypoints": []
     },
     {
       "id": "w3",
-      "source": "rin",
-      "sourceHandle": "n",
+      "source": "flyback_j0",
+      "sourceHandle": "node",
       "target": "d3",
       "targetHandle": "n",
-      "waypoints": [
-        {
-          "x": 424,
-          "y": 184
-        },
-        {
-          "x": 424,
-          "y": 452
-        },
-        {
-          "x": 604,
-          "y": 452
-        },
-        {
-          "x": 604,
-          "y": 504
-        }
-      ]
+      "waypoints": []
     },
     {
       "id": "w4",
-      "source": "ac",
-      "sourceHandle": "n",
+      "source": "flyback_j1",
+      "sourceHandle": "node",
       "target": "d2",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 224,
-          "y": 280
+          "x": 452,
+          "y": 288
         },
         {
-          "x": 476,
-          "y": 280
-        },
-        {
-          "x": 476,
-          "y": 344
+          "x": 664,
+          "y": 288
         }
       ]
     },
     {
       "id": "w5",
-      "source": "ac",
-      "sourceHandle": "n",
+      "source": "flyback_j1",
+      "sourceHandle": "node",
       "target": "d4",
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 224,
-          "y": 280
-        },
-        {
-          "x": 604,
-          "y": 280
-        },
-        {
-          "x": 604,
-          "y": 664
+          "x": 664,
+          "y": 400
         }
       ]
     },
     {
       "id": "w6",
-      "source": "d1",
-      "sourceHandle": "n",
+      "source": "flyback_j2",
+      "sourceHandle": "node",
       "target": "d2",
       "targetHandle": "n",
-      "waypoints": [
-        {
-          "x": 604,
-          "y": 184
-        },
-        {
-          "x": 604,
-          "y": 344
-        }
-      ]
+      "waypoints": []
     },
     {
       "id": "w7",
-      "source": "d1",
-      "sourceHandle": "n",
-      "target": "bulk",
-      "targetHandle": "p",
+      "source": "flyback_j2",
+      "sourceHandle": "node",
+      "target": "flyback_j3",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 764,
-          "y": 184
+          "x": 864,
+          "y": 160
         }
       ]
     },
     {
       "id": "w8",
-      "source": "d3",
-      "sourceHandle": "p",
+      "source": "flyback_j4",
+      "sourceHandle": "node",
       "target": "d4",
       "targetHandle": "p",
-      "waypoints": [
-        {
-          "x": 476,
-          "y": 504
-        },
-        {
-          "x": 476,
-          "y": 664
-        }
-      ]
+      "waypoints": []
     },
     {
       "id": "w9",
-      "source": "d3",
-      "sourceHandle": "p",
-      "target": "bulk",
-      "targetHandle": "n",
+      "source": "flyback_j4",
+      "sourceHandle": "node",
+      "target": "flyback_j5",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 476,
-          "y": 504
+          "x": 812,
+          "y": 528
         },
         {
-          "x": 476,
-          "y": 424
-        },
-        {
-          "x": 764,
-          "y": 424
+          "x": 812,
+          "y": 408
         }
       ]
     },
     {
       "id": "w10",
-      "source": "bulk",
-      "sourceHandle": "n",
-      "target": "gpri",
-      "targetHandle": "p",
+      "source": "flyback_j5",
+      "sourceHandle": "node",
+      "target": "flyback_j6",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 764,
-          "y": 424
-        },
-        {
-          "x": 920,
-          "y": 424
+          "x": 1100,
+          "y": 408
         }
       ]
     },
     {
       "id": "w11",
-      "source": "bulk",
-      "sourceHandle": "p",
+      "source": "flyback_j3",
+      "sourceHandle": "node",
       "target": "bleed",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 764,
-          "y": 296
-        },
-        {
-          "x": 904,
-          "y": 296
+          "x": 1024,
+          "y": 280
         }
       ]
     },
     {
       "id": "w12",
-      "source": "bulk",
-      "sourceHandle": "n",
+      "source": "flyback_j7",
+      "sourceHandle": "node",
       "target": "bleed",
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 764,
-          "y": 424
-        },
-        {
-          "x": 904,
-          "y": 424
+          "x": 1024,
+          "y": 408
         }
       ]
     },
     {
       "id": "w13",
-      "source": "ac",
-      "sourceHandle": "n",
+      "source": "flyback_j8",
+      "sourceHandle": "node",
       "target": "acref",
       "targetHandle": "p",
-      "waypoints": [
-        {
-          "x": 224,
-          "y": 280
-        },
-        {
-          "x": 344,
-          "y": 280
-        }
-      ]
+      "waypoints": []
     },
     {
       "id": "w14",
       "source": "acref",
       "sourceHandle": "n",
-      "target": "gpri",
-      "targetHandle": "p",
+      "target": "flyback_j6",
+      "targetHandle": "node",
       "waypoints": [
         {
           "x": 344,
-          "y": 744
+          "y": 648
         },
         {
-          "x": 872,
-          "y": 744
+          "x": 1076,
+          "y": 648
         },
         {
-          "x": 872,
-          "y": 716
-        },
-        {
-          "x": 920,
-          "y": 716
+          "x": 1076,
+          "y": 620
         }
       ]
     },
     {
       "id": "w15",
-      "source": "bulk",
-      "sourceHandle": "p",
-      "target": "xfmr",
-      "targetHandle": "p1",
+      "source": "flyback_j9",
+      "sourceHandle": "node",
+      "target": "flyback_j10",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 764,
-          "y": 296
-        },
-        {
-          "x": 1216,
-          "y": 296
-        },
-        {
-          "x": 1216,
-          "y": 312
+          "x": 1376,
+          "y": 280
         }
       ]
     },
     {
       "id": "w16",
-      "source": "xfmr",
-      "sourceHandle": "p1",
+      "source": "flyback_j10",
+      "sourceHandle": "node",
       "target": "mag",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 1064,
-          "y": 312
-        },
-        {
-          "x": 1064,
-          "y": 296
+          "x": 1204,
+          "y": 264
         }
       ]
     },
     {
       "id": "w17",
-      "source": "xfmr",
-      "sourceHandle": "n1",
+      "source": "flyback_j11",
+      "sourceHandle": "node",
       "target": "mag",
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 1216,
-          "y": 344
-        },
-        {
-          "x": 1216,
-          "y": 424
-        },
-        {
-          "x": 1064,
-          "y": 424
+          "x": 1204,
+          "y": 408
         }
       ]
     },
     {
       "id": "w18",
-      "source": "xfmr",
-      "sourceHandle": "n1",
+      "source": "flyback_j11",
+      "sourceHandle": "node",
       "target": "ip",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 1216,
-          "y": 344
+          "x": 1376,
+          "y": 456
         },
         {
-          "x": 1216,
-          "y": 556
+          "x": 1176,
+          "y": 456
         },
         {
-          "x": 1076,
-          "y": 556
-        },
-        {
-          "x": 1076,
-          "y": 584
+          "x": 1176,
+          "y": 488
         }
       ]
     },
@@ -1939,43 +1847,44 @@
       "sourceHandle": "n",
       "target": "rpri",
       "targetHandle": "p",
-      "waypoints": []
+      "waypoints": [
+        {
+          "x": 1376,
+          "y": 488
+        },
+        {
+          "x": 1376,
+          "y": 496
+        }
+      ]
     },
     {
       "id": "w20",
       "source": "rpri",
       "sourceHandle": "n",
-      "target": "sw",
-      "targetHandle": "p",
+      "target": "flyback_j12",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 1364,
-          "y": 584
+          "x": 1504,
+          "y": 496
         },
         {
-          "x": 1364,
-          "y": 536
-        },
-        {
-          "x": 1440,
-          "y": 536
+          "x": 1504,
+          "y": 440
         }
       ]
     },
     {
       "id": "w21",
-      "source": "sw",
-      "sourceHandle": "n",
-      "target": "gpri",
-      "targetHandle": "p",
+      "source": "flyback_j13",
+      "sourceHandle": "node",
+      "target": "flyback_j6",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 1440,
-          "y": 648
-        },
-        {
-          "x": 920,
-          "y": 648
+          "x": 1100,
+          "y": 552
         }
       ]
     },
@@ -1985,7 +1894,16 @@
       "sourceHandle": "n2",
       "target": "rect",
       "targetHandle": "p",
-      "waypoints": []
+      "waypoints": [
+        {
+          "x": 1636,
+          "y": 264
+        },
+        {
+          "x": 1636,
+          "y": 272
+        }
+      ]
     },
     {
       "id": "w23",
@@ -1999,46 +1917,38 @@
       "id": "w24",
       "source": "rout",
       "sourceHandle": "n",
-      "target": "cout",
-      "targetHandle": "p",
+      "target": "flyback_j14",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 1844,
-          "y": 344
+          "x": 2044,
+          "y": 272
         }
       ]
     },
     {
       "id": "w25",
-      "source": "cout",
-      "sourceHandle": "p",
+      "source": "flyback_j14",
+      "sourceHandle": "node",
       "target": "load",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 1844,
-          "y": 456
-        },
-        {
-          "x": 1984,
-          "y": 456
+          "x": 2224,
+          "y": 280
         }
       ]
     },
     {
       "id": "w26",
-      "source": "cout",
-      "sourceHandle": "n",
+      "source": "flyback_j15",
+      "sourceHandle": "node",
       "target": "load",
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 1844,
-          "y": 584
-        },
-        {
-          "x": 1984,
-          "y": 584
+          "x": 2224,
+          "y": 408
         }
       ]
     },
@@ -2046,159 +1956,110 @@
       "id": "w27",
       "source": "xfmr",
       "sourceHandle": "p2",
-      "target": "cout",
-      "targetHandle": "n",
+      "target": "flyback_j15",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 1792,
+          "x": 1552,
           "y": 312
         },
         {
-          "x": 1792,
-          "y": 584
-        },
-        {
-          "x": 1844,
-          "y": 584
+          "x": 1552,
+          "y": 408
         }
       ]
     },
     {
       "id": "w28",
-      "source": "cout",
-      "sourceHandle": "n",
+      "source": "flyback_j16",
+      "sourceHandle": "node",
       "target": "gsec",
       "targetHandle": "p",
-      "waypoints": [
-        {
-          "x": 1844,
-          "y": 584
-        },
-        {
-          "x": 1920,
-          "y": 584
-        }
-      ]
+      "waypoints": []
     },
     {
       "id": "w29",
-      "source": "bulk",
-      "sourceHandle": "p",
+      "source": "flyback_j9",
+      "sourceHandle": "node",
       "target": "vbus",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 764,
-          "y": 296
+          "x": 916,
+          "y": 460
         },
         {
-          "x": 716,
-          "y": 296
-        },
-        {
-          "x": 716,
-          "y": 536
-        },
-        {
-          "x": 764,
-          "y": 536
+          "x": 864,
+          "y": 460
         }
       ]
     },
     {
       "id": "w30",
-      "source": "bulk",
-      "sourceHandle": "n",
+      "source": "flyback_j7",
+      "sourceHandle": "node",
       "target": "vbus",
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 764,
-          "y": 424
+          "x": 916,
+          "y": 588
         },
         {
-          "x": 716,
-          "y": 424
-        },
-        {
-          "x": 716,
-          "y": 664
-        },
-        {
-          "x": 764,
-          "y": 664
+          "x": 864,
+          "y": 588
         }
       ]
     },
     {
       "id": "w31",
-      "source": "sw",
-      "sourceHandle": "p",
+      "source": "flyback_j12",
+      "sourceHandle": "node",
       "target": "vsw",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 1440,
-          "y": 536
-        },
-        {
-          "x": 1604,
-          "y": 536
+          "x": 1784,
+          "y": 440
         }
       ]
     },
     {
       "id": "w32",
-      "source": "sw",
-      "sourceHandle": "n",
+      "source": "flyback_j13",
+      "sourceHandle": "node",
       "target": "vsw",
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 1440,
-          "y": 648
-        },
-        {
-          "x": 1604,
-          "y": 648
-        },
-        {
-          "x": 1604,
-          "y": 664
+          "x": 1784,
+          "y": 552
         }
       ]
     },
     {
       "id": "w33",
-      "source": "cout",
-      "sourceHandle": "p",
+      "source": "flyback_j14",
+      "sourceHandle": "node",
       "target": "vout",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 1844,
-          "y": 456
-        },
-        {
-          "x": 2124,
-          "y": 456
+          "x": 2404,
+          "y": 280
         }
       ]
     },
     {
       "id": "w34",
-      "source": "cout",
-      "sourceHandle": "n",
+      "source": "flyback_j16",
+      "sourceHandle": "node",
       "target": "vout",
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 1844,
-          "y": 584
-        },
-        {
-          "x": 2124,
-          "y": 584
+          "x": 2404,
+          "y": 408
         }
       ]
     },
@@ -2210,20 +2071,20 @@
       "targetHandle": "u",
       "waypoints": [
         {
-          "x": 2172,
-          "y": 520
+          "x": 2452,
+          "y": 344
         },
         {
-          "x": 2172,
-          "y": 1132
+          "x": 2452,
+          "y": 956
         },
         {
-          "x": 156,
-          "y": 1132
+          "x": 616,
+          "y": 956
         },
         {
-          "x": 156,
-          "y": 1192
+          "x": 616,
+          "y": 1016
         }
       ]
     },
@@ -2243,12 +2104,12 @@
       "targetHandle": "measured",
       "waypoints": [
         {
-          "x": 536,
-          "y": 1192
+          "x": 1036,
+          "y": 1016
         },
         {
-          "x": 536,
-          "y": 1064
+          "x": 1036,
+          "y": 872
         }
       ]
     },
@@ -2266,7 +2127,16 @@
       "sourceHandle": "y",
       "target": "pi",
       "targetHandle": "reference",
-      "waypoints": []
+      "waypoints": [
+        {
+          "x": 1036,
+          "y": 856
+        },
+        {
+          "x": 1036,
+          "y": 840
+        }
+      ]
     },
     {
       "id": "w40",
@@ -2274,16 +2144,7 @@
       "sourceHandle": "y",
       "target": "duty",
       "targetHandle": "u",
-      "waypoints": [
-        {
-          "x": 776,
-          "y": 1048
-        },
-        {
-          "x": 776,
-          "y": 1032
-        }
-      ]
+      "waypoints": []
     },
     {
       "id": "w41",
@@ -2301,45 +2162,351 @@
       "targetHandle": "gate",
       "waypoints": [
         {
-          "x": 1376,
-          "y": 1032
+          "x": 1604,
+          "y": 856
         },
         {
-          "x": 1376,
-          "y": 592
+          "x": 1604,
+          "y": 532
+        },
+        {
+          "x": 1556,
+          "y": 532
+        },
+        {
+          "x": 1556,
+          "y": 496
         }
       ]
+    },
+    {
+      "id": "w43",
+      "source": "rin",
+      "sourceHandle": "n",
+      "target": "flyback_j0",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w44",
+      "source": "flyback_j8",
+      "sourceHandle": "node",
+      "target": "flyback_j1",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 452,
+          "y": 440
+        }
+      ]
+    },
+    {
+      "id": "w45",
+      "source": "d1",
+      "sourceHandle": "n",
+      "target": "flyback_j2",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 504,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "w46",
+      "source": "bulk",
+      "sourceHandle": "p",
+      "target": "flyback_j3",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w47",
+      "source": "d3",
+      "sourceHandle": "p",
+      "target": "flyback_j4",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 504,
+          "y": 528
+        }
+      ]
+    },
+    {
+      "id": "w48",
+      "source": "bulk",
+      "sourceHandle": "n",
+      "target": "flyback_j5",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w49",
+      "source": "gpri",
+      "sourceHandle": "p",
+      "target": "flyback_j6",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w50",
+      "source": "flyback_j5",
+      "sourceHandle": "node",
+      "target": "flyback_j7",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w51",
+      "source": "ac",
+      "sourceHandle": "n",
+      "target": "flyback_j8",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 224,
+          "y": 440
+        }
+      ]
+    },
+    {
+      "id": "w52",
+      "source": "flyback_j3",
+      "sourceHandle": "node",
+      "target": "flyback_j9",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w53",
+      "source": "xfmr",
+      "sourceHandle": "p1",
+      "target": "flyback_j10",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w54",
+      "source": "xfmr",
+      "sourceHandle": "n1",
+      "target": "flyback_j11",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1376,
+          "y": 312
+        }
+      ]
+    },
+    {
+      "id": "w55",
+      "source": "sw",
+      "sourceHandle": "p",
+      "target": "flyback_j12",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w56",
+      "source": "sw",
+      "sourceHandle": "n",
+      "target": "flyback_j13",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w57",
+      "source": "cout",
+      "sourceHandle": "p",
+      "target": "flyback_j14",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w58",
+      "source": "cout",
+      "sourceHandle": "n",
+      "target": "flyback_j15",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w59",
+      "source": "flyback_j15",
+      "sourceHandle": "node",
+      "target": "flyback_j16",
+      "targetHandle": "node",
+      "waypoints": []
     }
   ],
-  "junctions": [],
+  "junctions": [
+    {
+      "id": "flyback_j0",
+      "domain": "electrical",
+      "position": {
+        "x": 504,
+        "y": 352
+      }
+    },
+    {
+      "id": "flyback_j1",
+      "domain": "electrical",
+      "position": {
+        "x": 452,
+        "y": 400
+      }
+    },
+    {
+      "id": "flyback_j2",
+      "domain": "electrical",
+      "position": {
+        "x": 664,
+        "y": 160
+      }
+    },
+    {
+      "id": "flyback_j3",
+      "domain": "electrical",
+      "position": {
+        "x": 864,
+        "y": 280
+      }
+    },
+    {
+      "id": "flyback_j4",
+      "domain": "electrical",
+      "position": {
+        "x": 664,
+        "y": 528
+      }
+    },
+    {
+      "id": "flyback_j5",
+      "domain": "electrical",
+      "position": {
+        "x": 864,
+        "y": 408
+      }
+    },
+    {
+      "id": "flyback_j6",
+      "domain": "electrical",
+      "position": {
+        "x": 1100,
+        "y": 620
+      }
+    },
+    {
+      "id": "flyback_j7",
+      "domain": "electrical",
+      "position": {
+        "x": 916,
+        "y": 408
+      }
+    },
+    {
+      "id": "flyback_j8",
+      "domain": "electrical",
+      "position": {
+        "x": 344,
+        "y": 440
+      }
+    },
+    {
+      "id": "flyback_j9",
+      "domain": "electrical",
+      "position": {
+        "x": 916,
+        "y": 280
+      }
+    },
+    {
+      "id": "flyback_j10",
+      "domain": "electrical",
+      "position": {
+        "x": 1376,
+        "y": 264
+      }
+    },
+    {
+      "id": "flyback_j11",
+      "domain": "electrical",
+      "position": {
+        "x": 1376,
+        "y": 408
+      }
+    },
+    {
+      "id": "flyback_j12",
+      "domain": "electrical",
+      "position": {
+        "x": 1620,
+        "y": 440
+      }
+    },
+    {
+      "id": "flyback_j13",
+      "domain": "electrical",
+      "position": {
+        "x": 1620,
+        "y": 552
+      }
+    },
+    {
+      "id": "flyback_j14",
+      "domain": "electrical",
+      "position": {
+        "x": 2044,
+        "y": 280
+      }
+    },
+    {
+      "id": "flyback_j15",
+      "domain": "electrical",
+      "position": {
+        "x": 2044,
+        "y": 408
+      }
+    },
+    {
+      "id": "flyback_j16",
+      "domain": "electrical",
+      "position": {
+        "x": 2220,
+        "y": 408
+      }
+    }
+  ],
   "annotations": [
     {
       "x": 0,
-      "y": 40,
+      "y": 80,
       "text": "RECTIFY · 480 V RMS",
       "detail": "60 Hz · finite-conductance bridge"
     },
     {
-      "x": 740,
-      "y": 40,
+      "x": 840,
+      "y": 80,
       "text": "DC LINK",
       "detail": "100 µF · approximately 670 V DC"
     },
     {
-      "x": 1100,
-      "y": 120,
+      "x": 1180,
+      "y": 80,
       "text": "FLYBACK ENERGY STORAGE",
       "detail": "8:1 ratio · 2 mH primary magnetizing inductance"
     },
     {
-      "x": 1780,
-      "y": 220,
+      "x": 2020,
+      "y": 80,
       "text": "24 V · 1 A OUTPUT",
       "detail": "Isolated secondary · 24 Ω load"
     },
     {
-      "x": 0,
-      "y": 880,
+      "x": 440,
+      "y": 740,
       "text": "VOLTAGE CONTROL",
       "detail": "30 ms bus precharge · 50 ms soft start · 50 kHz PWM"
     }
@@ -2418,7 +2585,8 @@
       "anchor": "d1.p",
       "wireIds": [
         "w2",
-        "w3"
+        "w3",
+        "w43"
       ],
       "hidden": true
     },
@@ -2428,7 +2596,9 @@
       "wireIds": [
         "w13",
         "w4",
-        "w5"
+        "w44",
+        "w5",
+        "w51"
       ],
       "hidden": true
     },
@@ -2440,6 +2610,10 @@
         "w15",
         "w16",
         "w29",
+        "w45",
+        "w46",
+        "w52",
+        "w53",
         "w6",
         "w7"
       ],
@@ -2455,6 +2629,11 @@
         "w21",
         "w30",
         "w32",
+        "w47",
+        "w48",
+        "w49",
+        "w50",
+        "w56",
         "w8",
         "w9"
       ],
@@ -2465,7 +2644,8 @@
       "anchor": "ip.p",
       "wireIds": [
         "w17",
-        "w18"
+        "w18",
+        "w54"
       ],
       "hidden": true
     },
@@ -2482,7 +2662,8 @@
       "anchor": "rpri.n",
       "wireIds": [
         "w20",
-        "w31"
+        "w31",
+        "w55"
       ],
       "hidden": true
     },
@@ -2508,7 +2689,8 @@
       "wireIds": [
         "w24",
         "w25",
-        "w33"
+        "w33",
+        "w57"
       ],
       "hidden": true
     },
@@ -2519,7 +2701,9 @@
         "w26",
         "w27",
         "w28",
-        "w34"
+        "w34",
+        "w58",
+        "w59"
       ],
       "hidden": true
     },

@@ -21,7 +21,7 @@ export default function AboutDialog() {
         <span className="brand-icon">
           <Activity size={23} />
         </span>
-        Gradara<span className="preview-tag">MODELING</span>
+        Gradara
       </DialogTrigger>
       <DialogContent className="about-dialog">
         <DialogTitle>About Gradara</DialogTitle>

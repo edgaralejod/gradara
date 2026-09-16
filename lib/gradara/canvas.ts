@@ -11,6 +11,7 @@ import { minimumDesignedSize, snapBlockPosition } from './block-design';
 export type BlockNodeData = {
   definition: Definition;
   labelOffset?: Block['labelOffset'];
+  rotation?: Block['rotation'];
 };
 export type BlockCanvasNode = Node<BlockNodeData, 'block'>;
 export type CanvasNode = BlockCanvasNode | Node<{ domain: Domain }, 'tap'>;
@@ -42,8 +43,9 @@ const compactKinds = new Set([
   'display',
   'terminator',
 ]);
-export function minimumBlockSize(definition: Definition) {
-  return minimumDesignedSize(definition);
+export function minimumBlockSize(definition: Definition, rotation = 0) {
+  const size = minimumDesignedSize(definition);
+  return rotation % 180 ? { width: size.height, height: size.width } : size;
 }
 /** Unsized v1 documents keep their original geometry. New insertions persist defaultBlockSize. */
 export function blockSize(block: Block) {
@@ -100,7 +102,8 @@ export function reconcileNodes(
       height === n.height &&
       n.selected === isSelected &&
       n.data.definition === b.definition &&
-      n.data.labelOffset === b.labelOffset
+      n.data.labelOffset === b.labelOffset &&
+      n.data.rotation === b.rotation
     )
       return n;
     return {
@@ -114,9 +117,14 @@ export function reconcileNodes(
       selected: isSelected,
       data:
         n?.data.definition === b.definition &&
-        n.data.labelOffset === b.labelOffset
+        n.data.labelOffset === b.labelOffset &&
+        n.data.rotation === b.rotation
           ? n.data
-          : { definition: b.definition, labelOffset: b.labelOffset },
+          : {
+              definition: b.definition,
+              labelOffset: b.labelOffset,
+              rotation: b.rotation,
+            },
       ariaLabel: b.definition.name,
     };
   });

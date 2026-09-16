@@ -50,6 +50,8 @@ export type Block = {
   definition: Definition;
   position: { x: number; y: number };
   size?: { width: number; height: number };
+  /** Clockwise quarter turns; presentation only. Size stores the rotated bounds. */
+  rotation?: 0 | 90 | 180 | 270;
   /** Canvas offset from the centered label below the block; never part of simulation. */
   labelOffset?: { x: number; y: number };
 };

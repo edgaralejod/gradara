@@ -82,7 +82,7 @@ export default function ExportDialog({
       }}
     >
       <DialogContent className="export-dialog" showCloseButton={!busy}>
-        <DialogTitle>Take your model further</DialogTitle>
+        <DialogTitle>Export model</DialogTitle>
         <DialogDescription>
           Save an editable model or generate an implementation of your
           controller.
@@ -126,7 +126,7 @@ export default function ExportDialog({
           <Download size={17} />
         </button>
         <div className="controller-export">
-          <span className="component-category">CONTROLLER IMPLEMENTATION</span>
+          <span className="component-category">Controller implementation</span>
           <h3>{controller?.definition.name ?? 'No controller selected'}</h3>
           <p>
             {controller

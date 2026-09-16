@@ -1,0 +1,208 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Docked model tree and property grid. Scrolling either pane preserves the other. */
+.inspector-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: #f8fafb;
+  font: var(--text-ui)/1.5 var(--font-ui);
+  color: #354b5b;
+}
+.inspector-panel > .panel-heading {
+  flex: none;
+  height: 32px;
+  padding: 0 10px;
+  background: #e9edf0;
+  border-bottom: 1px solid #c6cdd4;
+}
+.inspector-panel .panel-heading button {
+  height: 24px;
+  width: 24px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  box-shadow: none;
+}
+.inspector-panel .model-explorer {
+  flex: 0 1 36%;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f8fafb;
+}
+.inspector-panel .explorer-root {
+  flex: none;
+  padding: 7px 10px;
+  gap: 6px;
+}
+.inspector-panel .explorer-search {
+  flex: none;
+  margin: 0 10px 7px;
+  padding: 4px 6px;
+  border-radius: 2px;
+}
+.inspector-panel .explorer-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  padding: 0 0 5px;
+}
+.inspector-panel .explorer-list summary {
+  font-size: var(--text-ui);
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 4px 10px;
+  background: #f0f3f5;
+}
+.inspector-panel .explorer-row {
+  min-height: 26px;
+  padding: 3px 10px 3px 24px;
+  border-radius: 0;
+}
+.inspector-panel .explorer-row code {
+  font-family: var(--font-ui);
+  font-size: var(--text-micro);
+}
+.properties-heading {
+  flex: none;
+  padding: 6px 10px;
+  background: #e9edf0;
+  border-block: 1px solid #c6cdd4;
+  font-weight: 600;
+}
+.inspector-properties {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.inspector-properties .inspector-intro,
+.inspector-properties .inspector-section,
+.inspector-properties .inspector-empty {
+  padding: 10px;
+}
+.inspector-properties .inspector-empty {
+  display: block;
+  text-align: left;
+  color: inherit;
+}
+.inspector-properties .component-category {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-ui);
+  letter-spacing: normal;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+.inspector-properties .component-name-input {
+  margin: 3px 0 8px;
+  width: 100%;
+  font-weight: 600;
+  height: 28px;
+}
+.inspector-properties .section-label {
+  font-size: var(--text-ui);
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: #354b5b;
+}
+.inspector-properties .parameter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-height: 34px;
+  border-bottom: 1px solid #e8edf1;
+  color: #526979;
+}
+.inspector-properties .parameter > span {
+  overflow-wrap: anywhere;
+}
+.inspector-properties .parameter > div {
+  height: 27px;
+  border-radius: 2px;
+  background: white;
+}
+.inspector-properties .parameter input {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  padding: 3px 6px;
+}
+.inspector-properties .parameter > div > span {
+  padding: 0 5px;
+  color: #637987;
+}
+.inspector-properties .model-duration-field {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 10px;
+}
+.inspector-properties .model-duration-field small {
+  color: #718693;
+  font: inherit;
+  margin-left: 4px;
+}
+.inspector-properties input:not([type='checkbox']) {
+  border-radius: 2px;
+  height: 28px;
+  box-shadow: none;
+  font-size: var(--text-ui);
+}
+.inspector-properties button {
+  border-radius: 2px;
+  box-shadow: none;
+  font-size: var(--text-ui);
+}
+.inspector-properties .refine-button {
+  margin-top: 8px;
+  height: 28px;
+}
+.inspector-properties .identity-field {
+  margin: 4px 0 8px;
+}
+.inspector-properties .identity-field > span {
+  font-size: var(--text-ui);
+}
+.inspector-properties .property-description {
+  margin: 8px 0;
+  border-block: 1px solid #e0e7ec;
+  padding: 6px 0;
+}
+.property-description summary {
+  cursor: pointer;
+  color: #526979;
+}
+.inspector-properties .property-description p {
+  margin: 6px 0;
+  color: #637987;
+  line-height: 1.5;
+  font-size: var(--text-ui);
+}
+.property-field-label {
+  color: #526979;
+}
+.inspector-properties .inspector-empty > button {
+  margin-top: 4px;
+  height: 28px;
+}
+.inspector-properties .block-size-fields {
+  gap: 8px;
+}
+.inspector-properties .size-hint {
+  line-height: 1.5;
+  margin-top: 6px;
+}
+.inspector-properties .identity-field {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+.inspector-properties .identity-field > span { margin: 0; }

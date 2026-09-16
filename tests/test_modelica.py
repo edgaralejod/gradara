@@ -256,3 +256,16 @@ def test_automatic_block_names_do_not_invalidate_simulation_or_cache():
     assert semantic_hash(p) == model_hash
     restored = Project.model_validate_json(p.model_dump_json())
     assert [b.definition.name for b in restored.blocks] == [b.definition.name for b in p.blocks]
+
+
+def test_rotation_is_persisted_but_does_not_change_physics():
+    import json
+    from pathlib import Path
+    from server.models import Project
+    from server.modelica import project_key
+    p = Project.model_validate(json.loads(Path('models/examples/flyback.json').read_text()))
+    before = (semantic_hash(p), project_key(p), emit_project(p))
+    p.blocks[0].rotation = 90
+    saved = Project.model_validate_json(p.model_dump_json())
+    assert saved.blocks[0].rotation == 90
+    assert (semantic_hash(saved), project_key(saved), emit_project(saved)) == before

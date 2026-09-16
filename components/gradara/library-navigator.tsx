@@ -54,6 +54,10 @@ export default function LibraryNavigator({
   const [category, setCategory] = useState<LibraryCategoryId | 'all'>('all');
   const [active, setActive] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = 0;
+  }, [category, query, source]);
   const hits = useMemo(
     () =>
       searchLibrary(
@@ -89,8 +93,7 @@ export default function LibraryNavigator({
   return (
     <div className={`library-navigator is-${variant}`}>
       <header className="library-titleblock">
-        <span className="tb-kicker">Library</span>
-        <strong>Components</strong>
+        <strong>Library</strong>
         <span className="tb-count">{definitions.length}</span>
         <div className="search-field">
           <Search size={12} />
@@ -162,38 +165,33 @@ export default function LibraryNavigator({
         </p>
       )}
       {source === 'built-in' && (
-        <div className="library-index">
-          <button
-            type="button"
-            className={category === 'all' ? 'is-active' : ''}
-            onClick={() => {
-              setCategory('all');
+        <label className="library-category-filter">
+          <span>Category</span>
+          <select
+            aria-label="Library category"
+            value={category}
+            onChange={(event) => {
+              setCategory(event.target.value as LibraryCategoryId | 'all');
               setActive(0);
             }}
           >
-            All
-          </button>
-          {libraryCategories.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              title={c.hint}
-              className={category === c.id ? 'is-active' : ''}
-              onClick={() => {
-                setCategory(c.id);
-                setActive(0);
-              }}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
+            <option value="all">All categories</option>
+            {libraryCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
-      <div className="library-legend">
+      <div className="library-legend" ref={listRef}>
         {grouped.map((group) => (
           <section key={group.id}>
             {(category === 'all' || query.trim()) && (
-              <div className="library-group-label">{group.label}</div>
+              <div className="library-group-label">
+                <span>{group.label}</span>
+                <span>{group.items.length}</span>
+              </div>
             )}
             {group.items.map((hit) => {
               const index = flat.indexOf(hit);
@@ -215,6 +213,7 @@ export default function LibraryNavigator({
                       : hit.definition.description
                   }
                   onMouseEnter={() => setActive(index)}
+                  onFocus={() => setActive(index)}
                   onDragStart={(e) => {
                     e.dataTransfer.setData(
                       'application/gradara-component',
@@ -227,7 +226,11 @@ export default function LibraryNavigator({
                   onClick={() => onAdd(hit.definition)}
                 >
                   <span className="legend-preview">
-                    <BlockPreview definition={hit.definition} miniature />
+                    <BlockPreview
+                      definition={hit.definition}
+                      miniature
+                      compact
+                    />
                   </span>
                   <span className="legend-copy">
                     {source === 'ai' && (
@@ -242,13 +245,9 @@ export default function LibraryNavigator({
                     <span className="legend-name">
                       <Highlight text={hit.definition.name} query={query} />
                     </span>
-                    <span className="legend-kind">
-                      {drawingOnly
-                        ? 'Drawing only · not yet simulated'
-                        : hit.definition.description === hit.definition.name
-                          ? categoryLabel(categoryOf(hit.definition))
-                          : hit.definition.description}
-                    </span>
+                    {drawingOnly && (
+                      <span className="legend-availability">Drawing only</span>
+                    )}
                   </span>
                 </button>
               );
@@ -259,6 +258,17 @@ export default function LibraryNavigator({
           <div className="library-empty">No part under that name.</div>
         )}
       </div>
+      {flat[highlight] && (
+        <div className="library-part-detail">
+          <strong>{flat[highlight].definition.name}</strong>
+          <p>
+            {flat[highlight].definition.description ===
+            flat[highlight].definition.name
+              ? categoryLabel(categoryOf(flat[highlight].definition))
+              : flat[highlight].definition.description}
+          </p>
+        </div>
+      )}
       {variant === 'panel' && (
         <a
           className="library-catalog-link"

@@ -24,7 +24,7 @@ Model documents live in `projects/models/`; removed models live in `projects/tra
 
 Click a library component to insert it, or invoke the agent from a selected location or dangling connection. Select a component to edit its parameters in the inspector. Double-click a signal block to inspect or edit equations in Monaco. Built-in physical implementations use canonical Modelica wrappers; their displayed equations explain behavior.
 
-Blocks get readable unique names such as Step, Step1, and Step2. IDs remain stable when names change. Drag a block label separately from the symbol; double-click the label to restore its default location. Resize using selection handles, or choose **Use standard size** in the inspector. The library, canvas, and [block catalog](http://localhost:4317/block-catalog) share the same visual design.
+Blocks get readable unique names such as Step, Step1, and Step2. IDs remain stable when names change. Drag a block label separately from the symbol; double-click the label to restore its default location. Press **R** to rotate selected blocks clockwise by 90° about their centers. Ports and connected wires follow, while the instance name stays below the symbol. Rotation supports undo/redo and is saved with the model; with only wires selected, R still restores automatic routing. Resize using selection handles, or choose **Use standard size** in the inspector. The library, canvas, and [block catalog](http://localhost:4317/block-catalog) share the same visual design.
 
 Port colors show the connector's domain, which can differ from its block's main domain. An actuator or sensor can have both a physical connector and a signal port. Signal wires connect an output to inputs; physical wires join compatible physical connectors. Crossing lines alone do not create a connection.
 
@@ -46,7 +46,7 @@ Port colors show the connector's domain, which can differ from its block's main 
 
 Nearby parallel segments snap together and shed redundant bends. Junctions should follow their horizontal run as connected blocks move. One completed gesture should be one undo step. Report a minimal reproduction when a gesture behaves differently; see the [wiring contract](architecture/WIRING.md) for expected behavior and limitations.
 
-The model inspector exposes blocks and logical nets. Nets receive stable IDs plus automatic names derived from their connection. Give a net a custom name when the engineering meaning is clearer than the default; its label and identity belong to the connected net, not each drawn segment.
+The model inspector exposes blocks and logical nets in a compact tree. The tree and property pane scroll independently. Select the model root, a block, or a net to switch the property pane; component parameters use aligned name/value rows. Expand Description to read model or component notes. Nets receive stable IDs plus automatic names derived from their connection. Give a net a custom name when the engineering meaning is clearer than the default; its label and identity belong to the connected net, not each drawn segment.
 
 ## Simulate and inspect
 

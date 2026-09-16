@@ -127,7 +127,8 @@ export default function InspectorPlot({
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, width, height);
-    ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+    const typography = getComputedStyle(node);
+    ctx.font = `${typography.getPropertyValue('--text-micro').trim() || '10px'} ${typography.getPropertyValue('--font-code').trim() || 'monospace'}`;
     ctx.strokeStyle = '#e7ebef';
     ctx.fillStyle = '#65707a';
     for (const value of axisTicks(view.x, Math.max(2, Math.floor(w / 90)))) {

@@ -71,7 +71,7 @@ class Position(BaseModel):
 
 class Size(BaseModel):
     width: float = Field(ge=32, le=1200, allow_inf_nan=False)
-    height: float = Field(ge=32, le=1000, allow_inf_nan=False)
+    height: float = Field(ge=32, le=1200, allow_inf_nan=False)
 
 class Block(BaseModel):
     id: str = Field(pattern=IDENTIFIER, max_length=80)
@@ -79,6 +79,7 @@ class Block(BaseModel):
     position: Position
     size: Size | None = None
     labelOffset: Position | None = None
+    rotation: Literal[0, 90, 180, 270] | None = None
 
 class Wire(BaseModel):
     id: str = Field(max_length=100)

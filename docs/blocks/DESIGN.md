@@ -4,7 +4,7 @@ The diagram is a technical drawing. Identity comes from a recognizable symbol, c
 
 ## Shared dimensions and typography
 
-At 100% canvas zoom, one diagram unit is one CSS pixel. The standard body is **80 × 64**. All normal diagram text—instance names, terminal captions, numeric values, operators, and fractions—uses **14 px / 18 px**, normal weight, Segoe UI with Arial/sans-serif fallbacks. A fraction uses 19 px lines to leave space for its rule. Symbols drawn in SVG have their own viewBox coordinates, not independent UI font scales. Their final optical size should match the surrounding notation.
+At 100% canvas zoom, one diagram unit is one CSS pixel. The standard body is **80 × 64**. All normal diagram text—instance names, terminal captions, numeric values, operators, and fractions—uses **14 px / 18 px**, normal weight, using the shared `--font-ui` system font stack. UI and diagram labels must never choose independent font families. A fraction uses 19 px lines to leave space for its rule. Symbols drawn in SVG have their own viewBox coordinates, not independent UI font scales. Their final optical size should match the surrounding notation.
 
 Enlarging a block changes the space around its symbol, not its text size. Zoom scales the complete diagram. Never use an observer or a font-shrink loop to squeeze content into a block.
 
@@ -44,9 +44,9 @@ Rendering must use `portSide`/`portOffset` geometry also used by `portPoint`. Do
 
 ## Library and catalog
 
-The library uses the same face, uniformly scaled to fit a 56 × 42 thumbnail envelope with no enlargement. The text next to that supplementary thumbnail stays 14 px; the one-line description is 12 px. Terminal captions are omitted at thumbnail scale except input signs on sums. The silhouette and glyph still come from the shared renderer. Simple thumbnail text has a 12 px optical size so it remains recognizable; long second-order notation uses the conventional `H(s)` shorthand. Fractions and pictograms scale with the specimen. These are thumbnail detail rules, not alternative canvas typography.
+The compact library uses the same face, uniformly scaled to fit a 36 × 28 thumbnail envelope with no enlargement; other miniature specimens can use 56 × 42. The text next to that supplementary thumbnail uses the shared 12 px UI size at medium weight; descriptions appear in a fixed detail area for the hovered or keyboard-focused part. Rows are 40 px tall with single-line names; availability warnings remain visible. A category selector filters the list, and sticky group headings organize the all-categories view. Terminal captions are omitted at thumbnail scale except input signs on sums. The silhouette and glyph still come from the shared renderer. Simple thumbnail text has a 12 px optical size so it remains recognizable; long second-order notation uses the conventional `H(s)` shorthand. Fractions and pictograms scale with the specimen. These are thumbnail detail rules, not alternative canvas typography.
 
-`/block-catalog` renders every definition at its actual standard dimensions, alongside its library specimen. It supports category/search filters and 100%, 150%, and 200% zoom. This is a visual review surface and never loads or changes a saved project. Do not judge a new block solely by its thumbnail.
+`/block-catalog` renders every definition at its actual standard dimensions, grouped by category, with optional compact library specimens. It supports source/category/search filters and 100%, 150%, and 200% zoom. The toolbar stays in place while the reference sheet scrolls; descriptions and domain markers remain visible. This is a visual review surface and never loads or changes a saved project. Do not judge a new block solely by its thumbnail.
 
 ## Placement alignment
 
@@ -70,3 +70,23 @@ The inspector's **Use standard size** command deliberately applies the new dimen
 - `npm run report:blocks`: generate a local inventory at `reports/block-catalog.md`. This report is excluded from Git.
 
 Keep block styles in `blocks.css`; do not append competing rules to `globals.css` or `engineering.css`. `BlockFace` and its explicit selectors own block presentation.
+
+## Workbench typography
+
+`app/globals.css` owns the shared font families and size tokens. Use `--font-ui` for UI, block labels, and symbols; use `--font-code` for code and dense numerical readouts. Fonts are local system fonts, with no network dependency. The native face can differ across operating systems, but all surfaces within the app use the same stack.
+
+- `--text-ui` (12 px): controls, library item names, ordinary workbench text.
+- `--text-meta` (alias of 12 px UI): descriptions and secondary labels, distinguished by color.
+- `--text-heading` (alias of 12 px UI): panel headings, distinguished by weight.
+- `--text-title` (alias of 12 px UI): editable model and component titles, distinguished by weight.
+- `--text-micro` (10 px): dense plot ticks, units, and status readouts only.
+
+Use 400 for body text, 500 for emphasized rows, and 600 for headings. Avoid tightly tracked text, arbitrary fractional weights, and typography `!important` overrides. The 20 px wordmark and dialog titles are deliberate exceptions. Diagram text remains 14/18 in diagram units and scales only with canvas zoom; UI sizing does not change block dimensions or port geometry. Keep block/library rules in `blocks.css` and workbench rules in `engineering.css`.
+
+Keep panel titles to one line of hierarchy: “Library,” not a kicker plus “Components.” Category labels use sentence case and normal tracking. Avoid decorative product subtitles in the toolbar. UI hierarchy comes from alignment, spacing, weight, and color rather than a different size for each role.
+
+## Tool windows and transient surfaces
+
+`app/workbench-dialogs.css` owns creator and dialog chrome. Keep title bars and action strips flat, borders subtle, corner radii at 2–3 px, and controls at the shared UI text size. Use compact lists for model/example choices rather than separate elevated cards. Keep descriptions subordinate and avoid decorative badges, gradients, large hero headings, or blurred modal backdrops. Dialog content must scroll within the viewport.
+
+Text action buttons use content-based width and do not shrink. Only explicitly icon-only controls may have a fixed square width. Creator footers wrap their status text before their action buttons, and long suggestions wrap rather than overflowing narrow windows. Keep visible keyboard focus, disabled/busy states, errors, and existing interaction semantics.

@@ -24,8 +24,19 @@
   --radius-sm: 4px;
 }
 :root {
-  --font-geist-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-geist-mono: 'SFMono-Regular', Consolas, monospace;
+  /* Shared UI and drawing typography. System fonts keep the app fully offline. */
+  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-code: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-geist-sans: var(--font-ui);
+  --text-micro: 10px;
+  --text-meta: var(--text-ui);
+  --text-ui: 12px;
+  --text-heading: var(--text-ui);
+  --text-title: var(--text-ui);
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-heading: 600;
+  --font-geist-mono: var(--font-code);
   --background: #fff;
   --foreground: #242a39;
   --primary: #5757cf;
@@ -54,18 +65,15 @@
 }
 body {
   margin: 0;
-  font-family:
-    var(--font-geist-sans),
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  font-family: var(--font-ui);
   color: var(--foreground);
   background: #fff;
-  font-size: 14px;
+  font-size: var(--text-ui);
+  line-height: 1.5;
 }
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -951,9 +959,10 @@ input:hover::-webkit-inner-spin-button {
   font-size: 13px !important;
 }
 .component-name-input {
-  font-size: 19px !important;
-  font-weight: 550 !important;
-  letter-spacing: -0.4px;
+  font-size: var(--text-title);
+  font-weight: var(--weight-heading);
+  letter-spacing: normal;
+  line-height: 20px;
   color: #343b51;
   margin: 8px 0 10px;
   border: 1px solid transparent !important;
@@ -1371,10 +1380,10 @@ input:hover::-webkit-inner-spin-button {
   border: 0 !important;
   box-shadow: none !important;
   min-height: 97px !important;
-  padding: 8px 22px !important;
-  font-size: 14px !important;
-  color: #57566e !important;
-  line-height: 1.7 !important;
+  padding: 10px 12px;
+  font-size: var(--text-ui);
+  color: var(--foreground);
+  line-height: 1.5;
   background: white !important;
 }
 .composer-input::placeholder {
@@ -1422,10 +1431,11 @@ input:hover::-webkit-inner-spin-button {
   border-radius: 50%;
 }
 .composer-footer > button {
-  border-radius: 7px !important;
-  background: #7162d7 !important;
-  width: 29px !important;
-  height: 29px !important;
+  border-radius: 2px;
+  background: var(--primary);
+  width: auto;
+  min-width: 96px;
+  height: 30px;
 }
 .composer-footer > button svg {
   height: 15px !important;
@@ -1568,8 +1578,8 @@ input:hover::-webkit-inner-spin-button {
 .export-dialog {
   max-width: 550px !important;
   width: calc(100vw - 40px) !important;
-  padding: 27px !important;
-  gap: 16px !important;
+  padding: 14px;
+  gap: 12px;
 }
 .export-dialog [data-slot='dialog-description'] {
   font-size: 13px;

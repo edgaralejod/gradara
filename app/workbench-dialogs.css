@@ -1,0 +1,372 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Transient workbench surfaces share tool-window chrome, not marketing cards. */
+:is(
+  .new-model-dialog,
+  .model-browser,
+  .save-copy-dialog,
+  .export-dialog,
+  .source-dialog,
+  .shortcuts-dialog,
+  .about-dialog,
+  .agent-composer
+) {
+  border: 1px solid #bfcbd5;
+  border-radius: 3px;
+  background: #f8fafb;
+  box-shadow: 0 8px 28px #22374726;
+  color: #304757;
+  font: var(--text-ui)/1.5 var(--font-ui);
+}
+:is(
+  .new-model-dialog,
+  .save-copy-dialog,
+  .export-dialog,
+  .source-dialog,
+  .shortcuts-dialog,
+  .about-dialog
+) {
+  padding: 14px;
+  gap: 12px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+:is(
+    .new-model-dialog,
+    .model-browser,
+    .save-copy-dialog,
+    .export-dialog,
+    .source-dialog,
+    .shortcuts-dialog,
+    .about-dialog
+  )
+  [data-slot='dialog-title'] {
+  font-size: var(--text-ui);
+  font-weight: 600;
+  letter-spacing: normal;
+}
+:is(
+    .new-model-dialog,
+    .model-browser,
+    .save-copy-dialog,
+    .export-dialog,
+    .source-dialog,
+    .shortcuts-dialog,
+    .about-dialog
+  )
+  [data-slot='dialog-description'] {
+  font-size: var(--text-ui);
+  color: #637987;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+:is(
+    .new-model-dialog,
+    .model-browser,
+    .save-copy-dialog,
+    .export-dialog,
+    .source-dialog,
+    .shortcuts-dialog,
+    .about-dialog,
+    .agent-composer,
+    .empty-model
+  )
+  :is(button, input, textarea, select) {
+  border-radius: 2px;
+  font-size: var(--text-ui);
+  box-shadow: none;
+}
+:is(
+    .new-model-dialog,
+    .model-browser,
+    .save-copy-dialog,
+    .export-dialog,
+    .source-dialog,
+    .shortcuts-dialog,
+    .about-dialog,
+    .agent-composer
+  )
+  button {
+  flex-shrink: 0;
+}
+:is(
+    .new-model-dialog,
+    .save-copy-dialog,
+    .export-dialog,
+    .source-dialog,
+    .shortcuts-dialog,
+    .about-dialog
+  )
+  .dialog-actions {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #d4dde4;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.agent-composer {
+  transform: translate(-50%, -50%);
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+}
+.agent-composer .composer-heading {
+  padding: 10px 12px;
+  gap: 8px;
+  border-bottom: 1px solid #cbd5dd;
+  background: #e9eef2;
+}
+.agent-composer .agent-orb {
+  width: 20px;
+  height: 24px;
+  flex: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #426b87;
+}
+.agent-composer .composer-heading strong {
+  color: #304757;
+  font-size: var(--text-ui);
+}
+.agent-composer .composer-heading > div {
+  min-width: 0;
+}
+.agent-composer .composer-heading > div > span {
+  color: #637987;
+  font-size: var(--text-ui);
+}
+.agent-composer .composer-heading > button {
+  align-self: flex-start;
+  color: #637987;
+}
+.agent-composer .model-mode-switch {
+  justify-content: flex-start;
+  padding: 6px 12px;
+  gap: 8px;
+  background: #f0f3f6;
+  border-bottom: 1px solid #d4dde4;
+}
+.agent-composer .model-mode-switch > span {
+  color: #226b9d;
+  padding: 5px 8px;
+  border-bottom: 2px solid #226b9d;
+}
+.agent-composer .model-mode-switch button {
+  height: 28px;
+  background: transparent;
+  border: 0;
+}
+.agent-composer .composer-type {
+  padding: 10px 12px;
+}
+.agent-composer .composer-type select {
+  padding: 4px 6px;
+  height: 30px;
+}
+.agent-composer .composer-input {
+  width: 100%;
+  min-height: 120px !important;
+  margin: 0;
+  border-radius: 0;
+}
+.agent-composer .model-composer-body {
+  padding: 0;
+}
+.agent-composer
+  .model-composer-body
+  > :is(
+    h3,
+    p,
+    details,
+    .preview-checked,
+    .model-draft-diagram,
+    .preview-actions
+  ) {
+  margin: 10px 12px;
+}
+.agent-composer .model-draft-diagram {
+  width: calc(100% - 24px);
+  border-radius: 2px;
+}
+.agent-composer h3 {
+  font-size: var(--text-ui);
+  font-weight: 600;
+}
+.agent-composer .prompt-suggestions {
+  padding: 6px 12px 10px;
+  gap: 6px;
+}
+.agent-composer .prompt-suggestions button {
+  background: #f4f7f9;
+  border-color: #d4dde4;
+  color: #526979;
+}
+.agent-composer .composer-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-top: 1px solid #cbd5dd;
+  background: #eef2f5;
+}
+.agent-composer .composer-footer > :is(span, output) {
+  flex: 1 1 180px;
+  min-width: 0;
+  color: #637987;
+  overflow-wrap: anywhere;
+  font-size: var(--text-ui);
+}
+.agent-composer .composer-footer > button {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 110px;
+  max-width: 100%;
+  height: 30px;
+  padding: 0 12px;
+  margin-left: auto;
+  color: white;
+  background: #226b9d;
+  white-space: nowrap;
+}
+.agent-composer .composer-footer > button:hover:not(:disabled) {
+  background: #19577f;
+}
+.agent-composer .composer-error {
+  margin: 10px 12px;
+}
+.agent-composer .preview-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.model-browser .model-browser-heading {
+  padding: 12px 16px;
+  background: #e9eef2;
+}
+.model-browser .model-browser-nav {
+  padding: 10px 8px;
+  background: #eef2f5;
+}
+.model-browser .model-browser-content {
+  padding: 0 12px 12px;
+}
+.model-browser .model-file-row {
+  padding: 8px;
+  border-radius: 0;
+  gap: 8px;
+}
+.model-browser .model-file-info {
+  gap: 2px;
+}
+.model-browser .model-browser-footer {
+  padding: 8px 12px;
+  background: #eef2f5;
+}
+.model-browser .example-file-list {
+  gap: 0;
+  border-top: 1px solid #d4dde4;
+}
+.model-browser .example-file {
+  border: 0;
+  border-bottom: 1px solid #d4dde4;
+  border-radius: 0;
+  padding: 12px 4px;
+  gap: 10px;
+  background: transparent;
+}
+.model-browser .example-file h3 {
+  font-size: var(--text-ui);
+}
+.model-browser .example-file > div > small {
+  font-size: var(--text-ui);
+  text-transform: none;
+  letter-spacing: normal;
+}
+.model-browser .example-file p {
+  margin: 4px 0 8px;
+}
+:is(.model-browser, .new-model-dialog) .template-icon {
+  width: 24px;
+  height: 28px;
+  border-radius: 0;
+  background: transparent;
+}
+.new-model-dialog .model-template-grid {
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid #d4dde4;
+}
+.new-model-dialog .model-template {
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 4px 10px;
+  padding: 9px 12px;
+  border: 0;
+  border-bottom: 1px solid #e1e7eb;
+  border-radius: 0;
+  box-shadow: none;
+  background: white;
+}
+.new-model-dialog .model-template.is-selected {
+  background: #e5eff7;
+  box-shadow: inset 3px 0 #226b9d;
+}
+.new-model-dialog .model-template :is(p, small) {
+  grid-column: 2;
+  margin: 0;
+}
+.new-model-dialog .new-model-name {
+  gap: 5px;
+}
+.new-model-dialog .new-model-name input {
+  height: 30px;
+}
+.export-dialog .export-option {
+  padding: 10px;
+  gap: 10px;
+  border-radius: 2px;
+  background: white;
+  border-color: #d4dde4;
+}
+.export-dialog .export-option:hover {
+  background: #eef5fa;
+  border-color: #9bb7ca;
+}
+.export-dialog .export-option > span {
+  width: 24px;
+  height: 28px;
+  background: transparent;
+  color: #426b87;
+}
+.empty-model {
+  padding: 16px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #ffffffed;
+}
+.empty-model .empty-model-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  border-radius: 0;
+  background: transparent;
+}
+.empty-model h1 {
+  font-size: var(--text-ui);
+  letter-spacing: normal;
+}
+.empty-model p {
+  margin: 6px 0 12px;
+}
+.empty-model > div {
+  flex-wrap: wrap;
+}
+[data-slot='dialog-overlay'] { backdrop-filter: none; background: #20344430; }
+.agent-composer .prompt-suggestions button { white-space: normal; text-align: left; height: auto; min-height: 28px; }
+.export-dialog .export-option :is(strong,h3), .about-dialog .about-creator > strong { font-size: var(--text-ui); font-weight: 600; }
+.export-dialog .controller-export { border-radius: 2px; background: #eef2f5; }
+.export-dialog .component-category { letter-spacing: normal; text-transform: none; }
+.export-dialog .controller-export { padding: 12px; border-color: #d4dde4; }
+.export-dialog .controller-export h3 { font-size: var(--text-ui); }
+.export-dialog :is(.export-option p,.controller-export p,.export-note) { color: #637987; }
+/* Floating creators must sit above overlay sidebars on small workspaces. */
+.agent-composer { z-index: 30; }
+.canvas-wrap:has(.agent-composer) { z-index: 30; }

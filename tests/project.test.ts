@@ -509,9 +509,86 @@ void test('AI library search keeps same-kind variants and respects physical comp
   base.name = 'Custom resistor';
   const variant = structuredClone(base);
   variant.parameters[0].value = 25;
-  const electrical = { id: 'p', name: 'p', direction: 'physical' as const, domain: 'electrical' as const };
-  const signal = { id: 'y', name: 'y', direction: 'output' as const, domain: 'signal' as const };
-  assert.equal(searchLibrary('custom', 'all', electrical, [base, variant]).length, 2);
-  assert.equal(searchLibrary('custom', 'all', signal, [base, variant]).length, 0);
+  const electrical = {
+    id: 'p',
+    name: 'p',
+    direction: 'physical' as const,
+    domain: 'electrical' as const,
+  };
+  const signal = {
+    id: 'y',
+    name: 'y',
+    direction: 'output' as const,
+    domain: 'signal' as const,
+  };
+  assert.equal(
+    searchLibrary('custom', 'all', electrical, [base, variant]).length,
+    2,
+  );
+  assert.equal(
+    searchLibrary('custom', 'all', signal, [base, variant]).length,
+    0,
+  );
   assert.equal(searchLibrary('electrical', 'all', undefined, [base]).length, 1);
+});
+
+void test('rotation preserves centers, identity and physics over four turns', async () => {
+  const { rotateBlocks } = await import('../lib/gradara/rotation');
+  const { blockSize } = await import('../lib/gradara/canvas');
+  const { polylineOfWire } = await import('../lib/gradara/net-draw');
+  const before = initialProject();
+  const id = before.blocks[0].id;
+  const original = before.blocks[0];
+  const size = blockSize(original);
+  const center = {
+    x: original.position.x + size.width / 2,
+    y: original.position.y + size.height / 2,
+  };
+  let next = before;
+  for (let turn = 1; turn <= 4; turn++) {
+    next = rotateBlocks(next, [id]);
+    const block = next.blocks[0];
+    assert.equal(block.rotation, (turn * 90) % 360);
+    assert.equal(block.definition, original.definition);
+    assert.equal(block.position.x + blockSize(block).width / 2, center.x);
+    assert.equal(block.position.y + blockSize(block).height / 2, center.y);
+    assert.equal(semanticSignature(next), semanticSignature(before));
+    for (const wire of next.wires) {
+      const points = polylineOfWire(next, wire.id);
+      for (let i = 1; i < points.length; i++)
+        assert.ok(
+          points[i].x === points[i - 1].x || points[i].y === points[i - 1].y,
+        );
+    }
+  }
+  assert.deepEqual(next.blocks[0].position, original.position);
+  assert.deepEqual(blockSize(next.blocks[0]), size);
+  assert.equal(before.blocks[0].rotation, undefined);
+});
+
+void test('asymmetric ports rotate around the same center as the symbol', async () => {
+  const { rotateBlocks } = await import('../lib/gradara/rotation');
+  const p = initialProject();
+  const block = p.blocks[0];
+  block.size = { width: 120, height: 80 };
+  block.definition = {
+    ...block.definition,
+    ports: ['left', 'top', 'right', 'bottom'].map((side, i) => ({
+      id: `p${i}`,
+      name: `p${i}`,
+      domain: 'electrical' as const,
+      direction: 'physical' as const,
+      side: side as 'left' | 'top' | 'right' | 'bottom',
+      offset: 25,
+    })),
+  };
+  const rotated = rotateBlocks(p, [block.id]).blocks[0];
+  const cx = block.position.x + 60,
+    cy = block.position.y + 40;
+  for (const port of block.definition.ports) {
+    const a = portPoint(block, port.id)!;
+    const b = portPoint(rotated, port.id)!;
+    assert.equal(b.x, cx - (a.y - cy));
+    assert.equal(b.y, cy + (a.x - cx));
+  }
 });

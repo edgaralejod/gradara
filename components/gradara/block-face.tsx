@@ -92,13 +92,19 @@ export function BlockFace({
 export function BlockPreview({
   definition,
   miniature = false,
+  compact = false,
 }: {
   definition: Definition;
   miniature?: boolean;
+  compact?: boolean;
 }) {
   const size = defaultBlockSize(definition);
   const scale = miniature
-    ? Math.min(0.7, 56 / size.width, 42 / size.height)
+    ? Math.min(
+        0.7,
+        (compact ? 36 : 56) / size.width,
+        (compact ? 28 : 42) / size.height,
+      )
     : 1;
   return (
     <span
