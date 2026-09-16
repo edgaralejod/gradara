@@ -1,5 +1,6 @@
 import type { Project } from './model';
 import { normalizeBlockNames } from './names';
+import { materializeBranches } from './net-branches';
 import { normalizeJunctions } from './net-layout';
 import { reconcileNets } from './net-registry';
 
@@ -10,7 +11,9 @@ export function normalizeProject(
 ) {
   if (!project.modelId) project = { ...project, modelId: crypto.randomUUID() };
   return reconcileNets(
-    normalizeJunctions(normalizeBlockNames(project, previous)),
+    normalizeJunctions(
+      materializeBranches(normalizeBlockNames(project, previous)),
+    ),
     previous,
   );
 }

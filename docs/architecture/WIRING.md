@@ -96,3 +96,7 @@ Waypoints, junction positions, names, and label placement are presentation metad
 | Topology, identity, and naming | [net.ts](../../lib/gradara/net.ts), [net-registry.ts](../../lib/gradara/net-registry.ts), [names.ts](../../lib/gradara/names.ts) |
 
 Geometry and graph regressions live in `tests/wiring.test.ts`, `tests/selection.test.ts`, `tests/nets.test.ts`, and `tests/names.test.ts`. Combine them with the [browser acceptance checks](../development/TESTING.md); coordinate tests alone do not establish smooth interaction. Edge-pan, insertion into wires, rotate/flip, obstacle avoidance, and measured large-diagram performance remain roadmap work.
+
+### Shared terminal runs
+
+At the project normalization boundary, wires that share an actual block terminal and a continuous overlapping route are factored into a shared trunk and explicit junctions. This applies equally to control signals and physical domains, including imported and agent-generated circuits. Junctions use the domain color and support the usual move/branch gestures. Additional leaves attach to existing trunk junctions. Independent crossings never imply connectivity. Normalization preserves terminal connectivity and existing net identities and names; it is idempotent and does not change the generated Modelica connections.

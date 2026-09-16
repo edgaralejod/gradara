@@ -1,3 +1,8 @@
+import { materializeBranches } from '../lib/gradara/net-branches';
+import { normalizeProject } from '../lib/gradara/normalize-project';
+import { moveJunctions } from '../lib/gradara/net-layout';
+import { polylineOfWire } from '../lib/gradara/net-draw';
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { initialProject, library, type Project } from '../lib/gradara/model';
@@ -360,15 +365,13 @@ void test('the anchor wins a split even when the detached fragment has over a th
       target: 'chain0',
       targetHandle: 'node',
     },
-    ...junctions
-      .slice(1)
-      .map((j, i) => ({
-        id: `link${i}`,
-        source: `chain${i}`,
-        sourceHandle: 'node',
-        target: j.id,
-        targetHandle: 'node',
-      })),
+    ...junctions.slice(1).map((j, i) => ({
+      id: `link${i}`,
+      source: `chain${i}`,
+      sourceHandle: 'node',
+      target: j.id,
+      targetHandle: 'node',
+    })),
     {
       id: 'sink',
       source: 'chain1199',
@@ -397,9 +400,169 @@ void test('explicitly clearing a merged name does not resurrect its aliases', ()
 void test('signal logging survives reconciliation and affects run identity', () => {
   const p = branched();
   const net = p.nets![0];
-  const logged = { ...p, nets: p.nets!.map(n => n.id === net.id ? { ...n, logged: true } : n) };
-  const next = reconcileNets(logged,p);
-  assert.equal(next.nets!.find(n=>n.id===net.id)!.logged,true);
-  assert.notEqual(semanticSignature(p),semanticSignature(next));
-  assert.equal(reconcileNets(next,next).nets!.find(n=>n.id===net.id)!.logged,true);
+  const logged = {
+    ...p,
+    nets: p.nets!.map((n) => (n.id === net.id ? { ...n, logged: true } : n)),
+  };
+  const next = reconcileNets(logged, p);
+  assert.equal(next.nets!.find((n) => n.id === net.id)!.logged, true);
+  assert.notEqual(semanticSignature(p), semanticSignature(next));
+  assert.equal(
+    reconcileNets(next, next).nets!.find((n) => n.id === net.id)!.logged,
+    true,
+  );
+});
+
+for (const domain of [
+  'signal',
+  'electrical',
+  'mechanical',
+  'thermal',
+] as const) {
+  void test(`${domain} shared runs become movable junctions without changing net identity`, () => {
+    const blocks = [0, 1, 2].map((i) => ({
+      id: `b${i}`,
+      position: { x: i ? 300 : 0, y: i === 2 ? 160 : 0 },
+      size: { width: 80, height: 40 },
+      definition: {
+        kind: 'test',
+        name: `Block${i}`,
+        domain,
+        symbol: 'T',
+        description: '',
+        parameters: [],
+        equations: '',
+        ports: [
+          {
+            id: 'p',
+            name: 'p',
+            domain,
+            direction:
+              domain === 'signal'
+                ? ((i ? 'input' : 'output') as 'input' | 'output')
+                : ('physical' as const),
+            side: i ? ('left' as const) : ('right' as const),
+          },
+        ],
+      },
+    }));
+    const before = reconcileNets({
+      version: 1,
+      name: 'Branch test',
+      modelId: 'test',
+      duration: 1,
+      revision: 0,
+      blocks,
+      wires: [
+        {
+          id: 'a',
+          source: 'b0',
+          sourceHandle: 'p',
+          target: 'b1',
+          targetHandle: 'p',
+          waypoints: [],
+        },
+        // Reversed storage must not change physical or signal branching behavior.
+        {
+          id: 'b',
+          source: 'b2',
+          sourceHandle: 'p',
+          target: 'b0',
+          targetHandle: 'p',
+          waypoints: [
+            { x: 180, y: 180 },
+            { x: 180, y: 20 },
+          ],
+        },
+      ],
+    });
+    before.nets![0].name = 'Preserved';
+    const after = normalizeProject(before);
+    assert.equal(after.junctions?.length, 1);
+    assert.equal(after.junctions![0].domain, domain);
+    assert.deepEqual(after.junctions![0].position, { x: 180, y: 20 });
+    assert.equal(after.wires.length, 3);
+    assert.equal(after.nets![0].id, before.nets![0].id);
+    assert.equal(after.nets![0].name, 'Preserved');
+    const terminals = (p: Project) =>
+      netTopology(p).map((n) =>
+        [...n.keys].filter((e) => !e.startsWith('j:')).sort(),
+      );
+    assert.deepEqual(terminals(after), terminals(before));
+    assert.equal(materializeBranches(after), after);
+    const moved = moveJunctions(
+      after,
+      new Map([[after.junctions![0].id, { x: 200, y: 40 }]]),
+    );
+    for (const wire of moved.wires) {
+      const route = polylineOfWire(moved, wire.id);
+      assert.ok(route.some((p) => p.x === 200 && p.y === 40));
+    }
+    assert.equal(before.junctions?.length ?? 0, 0);
+    // A third leaf must join the existing trunk, even with reversed storage.
+    const third = structuredClone(before.blocks[2]);
+    third.id = 'b3';
+    third.position.y = -160;
+    const fanout = normalizeProject({
+      ...before,
+      blocks: [...before.blocks, third],
+      wires: [
+        ...before.wires,
+        {
+          id: 'c',
+          source: 'b3',
+          sourceHandle: 'p',
+          target: 'b0',
+          targetHandle: 'p',
+          waypoints: [
+            { x: 180, y: -140 },
+            { x: 180, y: 20 },
+          ],
+        },
+      ],
+    });
+    assert.equal(fanout.junctions?.length, 1);
+    assert.equal(fanout.wires.length, 4);
+    assert.equal(
+      fanout.wires.filter((w) => w.source === 'b0' || w.target === 'b0').length,
+      1,
+    );
+    assert.deepEqual(normalizeProject(fanout), fanout);
+  });
+}
+void test('unrelated geometric crossings never become nodes', () => {
+  const p = branched();
+  p.junctions = [];
+  const source = structuredClone(p.blocks[0]);
+  source.id = 'independent';
+  source.position.y = 120;
+  p.blocks.push(source);
+  p.wires = [
+    {
+      id: 'one',
+      source: 'step',
+      sourceHandle: 'y',
+      target: 'b',
+      targetHandle: 'u',
+      waypoints: [
+        { x: 160, y: 28 },
+        { x: 160, y: 148 },
+      ],
+    },
+    {
+      id: 'two',
+      source: 'independent',
+      sourceHandle: 'y',
+      target: 'a',
+      targetHandle: 'u',
+      waypoints: [
+        { x: 220, y: 148 },
+        { x: 220, y: 28 },
+      ],
+    },
+  ];
+  const before = structuredClone(p);
+  const after = materializeBranches(p);
+  assert.equal(after, p);
+  assert.deepEqual(after, before);
 });
