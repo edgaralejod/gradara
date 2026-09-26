@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · Gradara</title>
+<meta name="description" content="How the Gradara app and Gradara AI handle your data.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara-web.web.app/privacy.html">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="./"><img src="assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="./#features">Features</a>
+      <a href="./#ai">AI</a>
+      <a href="./#pricing">Pricing</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="./#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc">
+<h1>Privacy notice</h1>
+<p class="meta">Draft for legal review · Last updated September 2026</p>
+<p class="lead-in">This notice covers the Gradara desktop app and the Gradara AI service, operated by Virtu Services LLC, Wisconsin, USA ("we"). Questions or requests: <a href="mailto:support@virtu-services.us">support@virtu-services.us</a>.</p>
+
+<h2>The short version</h2>
+<ul>
+<li>Your models, simulations, and results stay on your computer.</li>
+<li>Nothing is sent anywhere unless you use an AI feature.</li>
+<li>Gradara AI never stores or logs your prompts, models, equations, or AI responses.</li>
+<li>We keep only what billing needs: your email, credit balance, purchases, and request counts.</li>
+<li>No analytics, advertising, or tracking, in the app or on this website.</li>
+</ul>
+
+<h2>The desktop app</h2>
+<p>Models, simulation runs, results, exports, and your AI block library are saved in a data folder on your computer (Settings shows its location). Simulations run locally. Your own API keys and your Gradara AI sign-in are stored in the operating system keychain.</p>
+<p>The app connects to the internet only to check for updates on GitHub, to download the simulation engine when you set it up, to send AI requests when you ask for them, and to open links you click.</p>
+
+<h2>AI requests</h2>
+<p>An AI request contains your description and the model context the task needs, for example the component you are refining, the block catalog for a model build, or a controller's equations for C export. It does not include unrelated models or files.</p>
+<p>With your own OpenAI or Anthropic key, the request goes directly from your computer to that provider under your account and their terms. With Gradara AI, the request goes to our service, which forwards it to our model provider and returns the result. We process the content in memory only.</p>
+
+<h2>What Gradara AI keeps</h2>
+<table>
+<thead><tr><th>Record</th><th>Contents</th><th>Kept</th></tr></thead>
+<tbody>
+<tr><td>Account</td><td>Email, sign-in provider user id, credit balance</td><td>Until you delete your account</td></tr>
+<tr><td>Purchases</td><td>Credits added and the payment reference</td><td>As required for accounting</td></tr>
+<tr><td>Usage</td><td>Task type, model name, token counts, time, success</td><td>About 13 months</td></tr>
+<tr><td>Sign-ins</td><td>A one-way hash of each computer's token, and the day it was last used</td><td>Until revoked, then 30 days</td></tr>
+</tbody>
+</table>
+<p class="after-table">Server logs contain only the request type, status, timing, and a random request id.</p>
+
+<h2>Service providers</h2>
+<ul>
+<li><b>Google Cloud</b> hosts the service and database.</li>
+<li><b>Firebase Authentication</b> handles sign-in with Google or an email link. We never see passwords.</li>
+<li><b>Stripe</b> processes payments, tax, and receipts. We never receive card details.</li>
+<li><b>Our AI model provider</b> (Anthropic or OpenAI) processes request content to produce a result, under commercial API terms that do not use it for training.</li>
+<li><b>GitHub</b> hosts downloads and update checks.</li>
+<li><b>Firebase Hosting</b> serves this website. We add no cookies or analytics to it.</li>
+</ul>
+
+<h2>Your choices and rights</h2>
+<ul>
+<li><b>Delete</b> your Gradara AI account from Settings → AI in the app. This erases your email, sign-ins, and usage records. Remaining credits are forfeited. Stripe keeps payment records as the law requires.</li>
+<li><b>Export</b> your account data (account, purchases, usage, devices) by asking us, or through the service's export endpoint.</li>
+<li><b>Sign out</b> revokes access for that computer only.</li>
+<li>Depending on where you live, you may have additional rights to access, correct, or delete personal data. Contact us and we will respond within the time the law requires.</li>
+</ul>
+
+<h2>Children</h2>
+<p>Gradara AI is not directed to children under 16, and we do not knowingly collect their data.</p>
+
+<h2>Changes</h2>
+<p>We will update this page when what we collect or who processes it changes, and note the date above.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+      <a href="https://virtu-services.us">Virtu Services</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

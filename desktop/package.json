@@ -11,7 +11,7 @@
     "email": "support@virtu-services.us",
     "url": "https://virtu-services.us"
   },
-  "homepage": "https://virtu-services.us/gradara.html",
+  "homepage": "https://gradara-web.web.app/",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --publish never",

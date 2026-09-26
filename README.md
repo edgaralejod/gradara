@@ -14,7 +14,7 @@ Source: **[edgaralejod/gradara on GitHub](https://github.com/edgaralejod/gradara
 
 ## Install
 
-Download the installer for your computer from **[virtu-services.us/gradara.html](https://virtu-services.us/gradara.html)** or the [latest GitHub release](https://github.com/edgaralejod/gradara/releases/latest): Windows (`.exe`), macOS (`.dmg`, Apple silicon or Intel), or Linux (`.AppImage` or `.deb`).
+Download the installer for your computer from **[gradara-web.web.app](https://gradara-web.web.app/)** or the [latest GitHub release](https://github.com/edgaralejod/gradara/releases/latest): Windows (`.exe`), macOS (`.dmg`, Apple silicon or Intel), or Linux (`.AppImage` or `.deb`).
 
 On first launch, **Settings → Engine** walks through the one-time simulation engine setup:
 

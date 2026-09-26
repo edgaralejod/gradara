@@ -23,6 +23,10 @@ def test_foreign_host_and_origin_are_refused(isolated):
     assert client.get('/api/ai', headers={'Host': 'evil.example:8765'}).status_code == 403
     assert client.get('/api/ai', headers={'Origin': 'https://evil.example'}).status_code == 403
     assert client.get('/api/ai', headers={'Origin': 'http://localhost:4317'}).status_code == 200
+    # The installed app serves the workbench itself, on whatever port it was given.
+    same = {'Host': '127.0.0.1:40123', 'Origin': 'http://127.0.0.1:40123'}
+    assert client.get('/api/ai', headers=same).status_code == 200
+    assert client.get('/api/ai', headers={'Host': '127.0.0.1:40123', 'Origin': 'http://127.0.0.1:40999'}).status_code == 403
 
 
 def test_mutations_need_the_client_header(isolated):

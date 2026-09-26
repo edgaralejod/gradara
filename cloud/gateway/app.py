@@ -362,7 +362,7 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
 
     @app.get('/', include_in_schema=False)
     async def home():
-        return RedirectResponse('https://virtu-services.us/gradara.html')
+        return RedirectResponse('https://gradara-web.web.app/')
 
     downloads = {
         'windows': 'Gradara-win-x64.exe', 'mac-arm64': 'Gradara-mac-arm64.dmg', 'mac-x64': 'Gradara-mac-x64.dmg',

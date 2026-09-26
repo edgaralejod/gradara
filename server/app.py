@@ -60,7 +60,8 @@ async def local_only(request:Request, call_next):
     if _hostname(request.headers.get('host') or '') not in LOCAL_HOSTS:
         return JSONResponse({'detail':'This workspace only accepts local requests.'},status_code=403)
     origin = request.headers.get('origin')
-    if origin and origin not in LOCAL_ORIGINS:
+    same_origin = origin == f"http://{request.headers.get('host')}"
+    if origin and not same_origin and origin not in LOCAL_ORIGINS:
         return JSONResponse({'detail':'This workspace only accepts local requests.'},status_code=403)
     if request.method in {'POST','PUT','DELETE','PATCH'} and request.url.path.startswith('/api/') and not request.headers.get(CLIENT_HEADER):
         return JSONResponse({'detail':'Missing Gradara client header.'},status_code=403)
