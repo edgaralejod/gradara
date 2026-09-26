@@ -118,7 +118,10 @@ import {
 import AgentComposer, {
   type ComposerContext,
 } from '@/components/gradara/agent-composer';
-import EquationEditor from '@/components/gradara/equation-editor';
+import BlockDialog, {
+  type BlockDialogTab,
+} from '@/components/gradara/block-dialog';
+import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import SettingsDialog, {
   type SettingsTab,
@@ -147,6 +150,7 @@ import {
   addWire,
   removeSelection,
   replaceDefinition,
+  applyBlockEdits,
   duplicateBlocks,
 } from '@/lib/gradara/project';
 function IconButton({
@@ -240,7 +244,10 @@ function Workbench() {
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
   const [composer, setComposer] = useState<ComposerContext | null>(null);
   const [inserter, setInserter] = useState<InsertContext | null>(null);
-  const [equationBlock, setEquationBlock] = useState<string | null>(null);
+  const [equationBlock, setEquationBlock] = useState<{
+    id: string;
+    tab: BlockDialogTab;
+  } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [libraryOpen, updateLibraryOpen] = useState(true);
   const [inspectorOpen, updateInspectorOpen] = useState(true);
@@ -1631,7 +1638,7 @@ function Workbench() {
                     e.preventDefault();
                     e.stopPropagation();
                     if (n.type === 'tap') return;
-                    setEquationBlock(n.id);
+                    setEquationBlock({ id: n.id, tab: 'properties' });
                   }}
                   onPaneClick={() => {
                     setInserter(null);
@@ -1893,51 +1900,25 @@ function Workbench() {
                 <div className="inspector-section">
                   <div className="section-label">
                     Parameters<span>{active.definition.parameters.length}</span>
+                    <button
+                      onClick={() =>
+                        setEquationBlock({ id: active.id, tab: 'properties' })
+                      }
+                    >
+                      Edit…
+                    </button>
                   </div>
-                  {active.definition.parameters.length ? (
-                    active.definition.parameters.map((param) => (
-                      <label
-                        className="parameter"
-                        key={`${active.id}-${param.id}`}
-                      >
-                        <span>{param.name}</span>
-                        <div>
-                          <NumberField
-                            value={param.value}
-                            min={param.min}
-                            max={param.max}
-                            ariaLabel={param.name}
-                            onChange={(value) =>
-                              commit((p) => ({
-                                ...p,
-                                blocks: p.blocks.map((b) =>
-                                  b.id !== active.id
-                                    ? b
-                                    : {
-                                        ...b,
-                                        definition: {
-                                          ...b.definition,
-                                          parameters:
-                                            b.definition.parameters.map((x) =>
-                                              x.id === param.id
-                                                ? { ...x, value }
-                                                : x,
-                                            ),
-                                        },
-                                      },
-                                ),
-                              }))
-                            }
-                          />
-                          <span>{param.unit}</span>
-                        </div>
-                      </label>
-                    ))
-                  ) : (
-                    <p className="no-parameters">
-                      This component has no parameters.
-                    </p>
-                  )}
+                  <ParameterList
+                    blockId={active.id}
+                    parameters={active.definition.parameters}
+                    onChange={(id, value) =>
+                      commit((p) =>
+                        applyBlockEdits(p, active.id, {
+                          parameters: { [id]: value },
+                        }),
+                      )
+                    }
+                  />
                 </div>
                 <div className="inspector-section block-layout-section">
                   <div className="section-label">
@@ -2024,7 +2005,11 @@ function Workbench() {
                   <div className="section-label">
                     <Code2 size={13} />
                     Equations
-                    <button onClick={() => setEquationBlock(active.id)}>
+                    <button
+                      onClick={() =>
+                        setEquationBlock({ id: active.id, tab: 'equations' })
+                      }
+                    >
                       Open
                       <ArrowUpRight size={11} />
                     </button>
@@ -2182,16 +2167,26 @@ function Workbench() {
           }}
         />
         {equationBlock &&
-          project.blocks.find((b) => b.id === equationBlock) && (
-            <EquationEditor
-              definition={
-                project.blocks.find((b) => b.id === equationBlock)!.definition
-              }
+          project.blocks.find((b) => b.id === equationBlock.id) && (
+            <BlockDialog
+              key={equationBlock.id}
+              block={project.blocks.find((b) => b.id === equationBlock.id)!}
+              initialTab={equationBlock.tab}
               onClose={() => setEquationBlock(null)}
-              onApply={(definition) => {
-                commit((p) => replaceDefinition(p, equationBlock, definition));
+              onApply={(edits) => {
+                const before = projectRef.current.blocks.find(
+                  (b) => b.id === equationBlock.id,
+                )?.definition;
+                commit((p) => applyBlockEdits(p, equationBlock.id, edits));
                 setEquationBlock(null);
-                notify('Equations updated. Run the model to apply them.');
+                if (
+                  before &&
+                  ((edits.equations !== undefined &&
+                    edits.equations !== before.equations) ||
+                    (edits.declarations !== undefined &&
+                      edits.declarations !== (before.declarations ?? '')))
+                )
+                  notify('Equations updated. Run the model to apply them.');
               }}
             />
           )}

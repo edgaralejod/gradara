@@ -309,7 +309,7 @@ docs:     docs/USER_GUIDE.md (~33), docs/development/TESTING.md (browser checkli
 
 ### Current state
 
-`onNodeDoubleClick` in `app/page.tsx` (~1630) sets `equationBlock`, which renders `components/gradara/equation-editor.tsx`: a `.source-dialog` with tabs Equations and State & declarations, Monaco, read-only for built-in physical blocks, and `onApply` calling `commit(p => replaceDefinition(...))`. Parameters are editable only in the inspector (`app/page.tsx` ~1893–1940, one `commit` per `NumberField` change; name through `NameField`, ~1854).
+**Done** in this branch; the paragraph below describes the state before it. `onNodeDoubleClick` in `app/page.tsx` (~1630) set `equationBlock`, which rendered the former equation-editor.tsx: a `.source-dialog` with tabs Equations and State & declarations, Monaco, read-only for built-in physical blocks, and `onApply` calling `commit(p => replaceDefinition(...))`. Parameters are editable only in the inspector (`app/page.tsx` ~1893–1940, one `commit` per `NumberField` change; name through `NameField`, ~1854).
 
 ### Changes
 

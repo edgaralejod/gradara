@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type Ref } from 'react';
 import { Input } from '@/components/ui/input';
 export default function NumberField({
   value,
@@ -8,6 +8,9 @@ export default function NumberField({
   max,
   ariaLabel,
   className,
+  inputRef,
+  live = false,
+  onEnter,
 }: {
   value: number;
   onChange: (value: number) => void;
@@ -15,22 +18,32 @@ export default function NumberField({
   max?: number;
   ariaLabel?: string;
   className?: string;
+  inputRef?: Ref<HTMLInputElement>;
+  /** Report each valid keystroke; for staged editors, not undoable commits. */
+  live?: boolean;
+  /** Called after Enter commits a valid value. */
+  onEnter?: () => void;
 }) {
   const [text, setText] = useState(String(value));
   const [invalid, setInvalid] = useState(false);
   const skipBlur = useRef(false);
   useEffect(() => {
-    setText(String(value));
+    // Keep in-progress text such as "1." when it already parses to the value.
+    setText((t) => (t.trim() !== '' && Number(t) === value ? t : String(value)));
     setInvalid(false);
   }, [value]);
-  const commit = () => {
-    const next = Number(text);
-    if (
-      text.trim() === '' ||
+  const parse = (raw: string) => {
+    const next = Number(raw);
+    return raw.trim() === '' ||
       !Number.isFinite(next) ||
       (min !== undefined && next < min) ||
       (max !== undefined && next > max)
-    ) {
+      ? null
+      : next;
+  };
+  const commit = () => {
+    const next = parse(text);
+    if (next === null) {
       setInvalid(true);
       return;
     }
@@ -39,6 +52,7 @@ export default function NumberField({
   };
   return (
     <Input
+      ref={inputRef}
       className={className}
       type="number"
       step="any"
@@ -53,6 +67,10 @@ export default function NumberField({
       onChange={(e) => {
         setText(e.target.value);
         setInvalid(false);
+        if (live) {
+          const next = parse(e.target.value);
+          if (next !== null && next !== value) onChange(next);
+        }
       }}
       onBlur={() => {
         if (!skipBlur.current) commit();
@@ -63,6 +81,7 @@ export default function NumberField({
           commit();
           skipBlur.current = true;
           e.currentTarget.blur();
+          if (parse(text) !== null) onEnter?.();
         }
         if (e.key === 'Escape') {
           setText(String(value));

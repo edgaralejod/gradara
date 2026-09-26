@@ -182,6 +182,57 @@ export function replaceDefinition(
     ),
   };
 }
+export type BlockEdits = {
+  name?: string;
+  parameters?: Record<string, number>;
+  equations?: string;
+  declarations?: string;
+};
+
+/** Apply one dialog session; returns `p` itself when nothing changed. */
+export function applyBlockEdits(p: Project, id: string, edits: BlockEdits) {
+  const block = p.blocks.find((b) => b.id === id);
+  if (!block) return p;
+  const d = block.definition;
+  const name = edits.name?.trim();
+  const nameChanged = !!name && name !== d.name;
+  const values = edits.parameters ?? {};
+  const parametersChanged = d.parameters.some(
+    (x) => x.id in values && values[x.id] !== x.value,
+  );
+  const equationsChanged =
+    edits.equations !== undefined && edits.equations !== d.equations;
+  const declarationsChanged =
+    edits.declarations !== undefined &&
+    edits.declarations !== (d.declarations ?? '');
+  if (
+    !nameChanged &&
+    !parametersChanged &&
+    !equationsChanged &&
+    !declarationsChanged
+  )
+    return p;
+  const definition: Definition = {
+    ...d,
+    ...(nameChanged ? { name } : {}),
+    ...(parametersChanged
+      ? {
+          parameters: d.parameters.map((x) =>
+            x.id in values ? { ...x, value: values[x.id] } : x,
+          ),
+        }
+      : {}),
+    ...(equationsChanged ? { equations: edits.equations } : {}),
+    ...(declarationsChanged ? { declarations: edits.declarations } : {}),
+  };
+  if (equationsChanged || declarationsChanged)
+    return replaceDefinition(p, id, definition);
+  return {
+    ...p,
+    blocks: p.blocks.map((b) => (b.id === id ? { ...b, definition } : b)),
+  };
+}
+
 export function duplicateBlocks(p: Project, ids: string[]) {
   const result = pasteSelection(
     p,
