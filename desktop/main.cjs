@@ -15,7 +15,7 @@ const path = require('node:path');
 const DEV = !app.isPackaged;
 const REPO = path.resolve(__dirname, '..');
 const RESOURCES = DEV ? REPO : process.resourcesPath;
-const PRIVACY_URL = 'https://virtu-services.us/gradara/privacy';
+const PRIVACY_URL = 'https://virtu-services.us/gradara-privacy.html';
 const ISSUES_URL = 'https://github.com/edgaralejod/gradara/issues';
 
 let backend = null;
@@ -276,7 +276,7 @@ app.whenReady().then(() => {
     applicationName: 'Gradara',
     applicationVersion: app.getVersion(),
     copyright: 'Copyright 2026 Edgar Duarte and the Gradara contributors. Apache-2.0.',
-    website: 'https://virtu-services.us/gradara',
+    website: 'https://virtu-services.us/gradara.html',
   });
   // The workbench needs no camera, microphone, location, or notifications.
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));

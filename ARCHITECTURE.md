@@ -18,8 +18,11 @@ Agents author inspectable, saved component definitions and export artifacts. Ord
 | Diagram | React Flow plus custom orthogonal net rendering | Transient pointer state and screen geometry; not the execution graph. |
 | Model operations | `lib/gradara/` | Serializable document, names, nets, ports, routing, selection, immutable edit operations. |
 | Equation editor | Monaco | Edits bounded component declarations and equations. |
-| Local service | Python 3.12, FastAPI, Pydantic | Persistence, validation, source emission, asynchronous jobs, agent and export adapters. |
-| Simulation | OpenModelica 1.27.0, OMPython, MSL 4.1.0 in Docker | Equation processing, initialization, integration, and events. |
+| Local service | Python 3.12, FastAPI, Pydantic | Persistence, validation, source emission, asynchronous jobs, agent and export adapters. Loopback only; refuses cross-site requests. |
+| Simulation | OpenModelica 1.27.0 and MSL 4.1.0, native install or Docker image (`server/engines.py`) | Equation processing, initialization, integration, and events. |
+| AI providers | `server/llm/`: Gradara AI, OpenAI, Anthropic, Codex CLI | One schema-constrained generation interface; provider chosen in Settings. |
+| Desktop app | Electron shell, PyInstaller-frozen service, static workbench build | Installers per OS; see [distribution](docs/architecture/DISTRIBUTION.md). |
+| Gradara AI service | `cloud/`: FastAPI, PostgreSQL, Firebase Auth, Stripe | Accounts and prepaid credits; never stores prompts or responses. |
 | Storage | JSON documents and per-job filesystem directories | Single-user local persistence; no database or collaboration server. |
 
 The Vite configuration retains Sites/Cloudflare build scaffolding. Its optional D1/R2 bindings are unset; application persistence and simulation use FastAPI and the local filesystem. A successful web build is not a deployable hosted simulation service.
@@ -88,7 +91,7 @@ Full-model creation uses `server/model_agent.py` to plan against a catalog snaps
 | Remote execution | Authentication, authorization, isolation, quotas, durable jobs, versioned requests and artifacts. |
 | FMI or another numerical backend | A concrete interoperability requirement and a capability contract; Modelica equation semantics are not universally interchangeable. |
 | Verilog/VHDL | Clocks, resets, numeric representation, latency, synthesis checks, and behavioral comparisons. |
-| Desktop distribution | Verified installers and process lifecycle on each OS, plus dependency/license packaging. Electron is an option, not an implemented commitment. |
+| Bundled engine | A Windows installer that includes OpenModelica, and an embedded Linux VM for macOS, each with license packaging and update behavior. The desktop app itself is implemented; see [distribution](docs/architecture/DISTRIBUTION.md). |
 
 Keep these boundaries modular within the current application. Microservices, an intermediate language, or a Rust solver are not prerequisites for improving the workbench. The [roadmap](ROADMAP.md) orders the next work.
 

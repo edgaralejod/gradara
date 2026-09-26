@@ -4,7 +4,7 @@ An agent-assisted workbench for graphical, multidomain simulation. Build a diagr
 
 Gradara puts the diagram first: responsive orthogonal wiring, recognizable engineering symbols, domain-colored ports, and equations you can inspect. Agents help author components; the Modelica compiler and numerical runtime execute the model.
 
-**Status: early working prototype.** The local macOS workflow has been exercised end to end. Linux and Windows support are development targets, not certified distributions. There are no desktop installers yet. MATLAB script compatibility is outside scope.
+**Status: early release.** Desktop installers are built for Windows, macOS, and Linux. The source workflow on macOS has been exercised end to end; installer builds for each platform are validated in CI, and platform reports are welcome. MATLAB script compatibility is outside scope.
 
 Created by **Edgar Duarte**. Engineering consulting through **[Virtu Services](https://virtu-services.us)**.
 
@@ -12,9 +12,20 @@ Created by **Edgar Duarte**. Engineering consulting through **[Virtu Services](h
 
 Source: **[edgaralejod/gradara on GitHub](https://github.com/edgaralejod/gradara)** · [Report an issue](https://github.com/edgaralejod/gradara/issues) · Apache-2.0 licensed.
 
-## Try it locally
+## Install
 
-Install **Node.js 22.13+**, **Python 3.12**, and a working **Docker** runtime. On macOS, the launcher supports Colima; for Docker Desktop, set the context as described in the setup guide. Clone the repository and start the workbench:
+Download the installer for your computer from **[virtu-services.us/gradara.html](https://virtu-services.us/gradara.html)** or the [latest GitHub release](https://github.com/edgaralejod/gradara/releases/latest): Windows (`.exe`), macOS (`.dmg`, Apple silicon or Intel), or Linux (`.AppImage` or `.deb`).
+
+On first launch, **Settings → Engine** walks through the one-time simulation engine setup:
+
+- **Windows and Linux:** install [OpenModelica](https://openmodelica.org/download/), then let Gradara install the Modelica Standard Library.
+- **macOS:** install a container runtime (OrbStack, Docker Desktop, or Colima), then let Gradara download the engine image.
+
+AI features are optional. Choose **Gradara AI** (sign in, prepaid credits, no setup), your own OpenAI or Anthropic API key, or turn AI off in **Settings → AI**. See [AI setup](docs/AGENT_SETUP.md) and [privacy](docs/PRIVACY.md).
+
+## Run from source
+
+Install **Node.js 22.13+**, **Python 3.12**, and either OpenModelica or a working **Docker** runtime. Clone the repository and start the workbench:
 
 ```sh
 git clone https://github.com/edgaralejod/gradara.git
@@ -25,9 +36,7 @@ python3 -m venv .venv
 .venv/bin/python scripts/start.py
 ```
 
-Open **[localhost:4317](http://localhost:4317)**. The first start builds the OpenModelica image and downloads its standard library; allow several minutes and network access. Later simulations run locally. On macOS, **Start Gradara.command** also launches an installed checkout.
-
-No AI account is needed to edit existing blocks, wire models, or simulate. Component generation and controller C generation optionally use your own installed, signed-in Codex CLI. Follow [AI feature setup](docs/AGENT_SETUP.md) for account connection, the first generated block, and current limitations. See [setup and platform notes](docs/development/SETUP.md) for Windows/WSL, frontend-only development, environment variables, and separate service startup.
+Open **[localhost:4317](http://localhost:4317)**. With Docker, the first start builds the OpenModelica image; allow several minutes and network access. On macOS, **Start Gradara.command** also launches an installed checkout. See [setup and platform notes](docs/development/SETUP.md) for the desktop build, engine choices, and separate service startup.
 
 ## Start with a model
 
@@ -54,8 +63,9 @@ The repository includes only the curated example templates. Personal models, Tra
 - Asynchronous OpenModelica simulation, cancellation, diagnostics, saved runs, plots, and complete CSV downloads.
 - Agent-created signal, electrical, rotational mechanical, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals; optional Monaco equation editing.
 - Modelica source export, portable project export, and agent-generated, compile-checked C11 for **one controller block**.
+- Desktop installers with first-run engine setup, a native OpenModelica or container engine, and a choice of Gradara AI credits, your own OpenAI or Anthropic key, or no AI.
 
-Drawing, dragging, and routing stay in the browser. The FastAPI service saves project documents and supervises isolated OpenModelica jobs. The authoring representation is currently **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.
+Drawing, dragging, and routing stay in the workbench. The local FastAPI service saves project documents and supervises OpenModelica jobs, using a native OpenModelica install or the pinned container image. The authoring representation is currently **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.
 
 ## Controls
 
@@ -65,9 +75,9 @@ Drag empty canvas to select. Pan with the middle/right mouse button or Space. **
 
 ## Boundaries
 
-This is a trusted, single-user local application. **Do not expose the Python service to a public network.** It has no authentication or multi-user authorization. Model files, run data, prompts, and generated artifacts live in the ignored `projects/` directory. See [security and data handling](SECURITY.md).
+This is a trusted, single-user local application. **Do not expose the local service to a public network.** It accepts only loopback requests from its own workbench and has no multi-user authorization. Models and runs live in your data folder (`projects/` in a source checkout). See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
-Hierarchical subsystems, vector/bus execution, arbitrary Modelica import and round trips, general solver interchangeability, FMI, remote execution, and HDL generation are future work. Mux/demux and subsystem placeholders are visible but report their simulation limitations. C compilation does not establish behavioral equivalence or target-hardware correctness. The [roadmap](ROADMAP.md) describes bounded opportunities to help.
+Hierarchical subsystems, vector/bus execution, arbitrary Modelica import and round trips, general solver interchangeability, FMI, remote simulation, and HDL generation are future work. Mux/demux and subsystem placeholders are visible but report their simulation limitations. C compilation does not establish behavioral equivalence or target-hardware correctness. The [roadmap](ROADMAP.md) describes bounded opportunities to help.
 
 ## Develop and contribute
 
@@ -76,12 +86,13 @@ npm run typecheck
 npm test
 npm audit --audit-level=high
 .venv/bin/python -m pytest -q -m "not integration"
+(cd cloud && ../.venv/bin/python -m pytest -q)   # AI gateway; needs cloud/requirements.txt
 python3 scripts/check-docs.py
 python3 scripts/check-repo.py
 npm run build
 ```
 
-Real-engine tests additionally require the Docker image; see [testing](docs/development/TESTING.md). Whole-repository lint currently has a recorded backlog and is advisory in CI. Follow [CONTRIBUTING.md](CONTRIBUTING.md); agents should start with [AGENTS.md](AGENTS.md) and the [task playbooks](docs/agents/PLAYBOOKS.md).
+Real-engine tests additionally require the Docker image or a native OpenModelica install; see [testing](docs/development/TESTING.md). Whole-repository lint currently has a recorded backlog and is advisory in CI. Follow [CONTRIBUTING.md](CONTRIBUTING.md); agents should start with [AGENTS.md](AGENTS.md) and the [task playbooks](docs/agents/PLAYBOOKS.md).
 
 ## Creator and engineering services
 

@@ -1,0 +1,10 @@
+# Upload only what the gateway image needs.
+*
+!cloud/
+!cloud/**
+!server/
+!server/__init__.py
+!server/llm/
+!server/llm/**
+**/__pycache__/
+**/*.db

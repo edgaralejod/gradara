@@ -4,7 +4,8 @@
 appId: us.virtu-services.gradara
 productName: Gradara
 copyright: Copyright 2026 Edgar Duarte and the Gradara contributors
-artifactName: Gradara-${version}-${os}-${arch}.${ext}
+# Version-less names give the product page stable "latest" download links.
+artifactName: Gradara-${os}-${arch}.${ext}
 directories:
   output: dist
   buildResources: build

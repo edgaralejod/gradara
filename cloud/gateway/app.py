@@ -362,7 +362,23 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
 
     @app.get('/', include_in_schema=False)
     async def home():
-        return RedirectResponse('https://virtu-services.us/gradara')
+        return RedirectResponse('https://virtu-services.us/gradara.html')
+
+    downloads = {
+        'windows': 'Gradara-win-x64.exe', 'mac-arm64': 'Gradara-mac-arm64.dmg', 'mac-x64': 'Gradara-mac-x64.dmg',
+        'linux-appimage': 'Gradara-linux-x86_64.AppImage', 'linux-deb': 'Gradara-linux-amd64.deb',
+    }
+
+    @app.get('/download/{platform}', include_in_schema=False)
+    async def download(platform: str):
+        # Stable links for the product page; installers are hosted on GitHub Releases.
+        if platform not in downloads:
+            raise HTTPException(404, 'Unknown download.')
+        return RedirectResponse(f'{cfg.download_base}/{downloads[platform]}')
+
+    @app.get('/source', include_in_schema=False)
+    async def source():
+        return RedirectResponse(cfg.source_url)
 
     @app.get('/activate', include_in_schema=False)
     async def activate():

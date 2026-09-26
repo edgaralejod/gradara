@@ -1,5 +1,13 @@
 # Modeling with Gradara
 
+## Settings
+
+The gear button opens **Settings**:
+
+- **Engine** shows whether simulation is ready and walks through one-time setup: OpenModelica and its standard library on Windows and Linux, or a container runtime and engine image on macOS. Automatic selection prefers a native install.
+- **AI** chooses the provider for AI features: Gradara AI (sign in, prepaid credits), your own OpenAI or Anthropic API key, the Codex CLI, or Off. Signed-in accounts show the credit balance, prices, and credit packs.
+- **Privacy & data** summarizes what stays on your computer and what AI requests send. See [privacy](PRIVACY.md).
+
 ## Create, save, and share
 
 Click **New model** to open a fresh empty canvas immediately. Its initial name is **Untitled model**, with a suffix when needed. Click the title in the header to rename it; Enter or clicking away commits the name, and Escape cancels editing.

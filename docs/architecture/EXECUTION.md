@@ -13,7 +13,7 @@ The job registry is in memory. API job statuses are `queued`, `running`, `comple
 
 ## Engine supervision
 
-The engine is `gradara-engine:1.27.0`, built from the OpenModelica 1.27.0 OMPython image with MSL 4.1.0. The image runs as an unprivileged user. Simulation containers disable networking, drop Linux capabilities, disallow privilege escalation, and limit resources to 2 CPUs, 2 GiB memory, and 256 processes. They mount their job directory, not the entire repository. Host Docker access remains part of the trust boundary.
+Two backends run the same job folder (`server/engines.py`). The **native** backend drives a host OpenModelica install with a generated `.mos` script; it runs as the user, so definition text is screened by `server/safety.py` first. The **Docker** engine is `gradara-engine:1.27.0`, built from the OpenModelica 1.27.0 OMPython image with MSL 4.1.0. The image runs as an unprivileged user. Simulation containers disable networking, drop Linux capabilities, disallow privilege escalation, and limit resources to 2 CPUs, 2 GiB memory, and 256 processes. They mount their job directory, not the entire repository. Host Docker access remains part of the trust boundary.
 
 Numerical operations have a 120-second process timeout. Cancellation terminates the supervised process and removes its named container. Preserve cleanup in exceptions, timeouts, service shutdown, and user cancellation when editing this adapter. Agent generation and C compilation have separate lifecycle code; do not assume they share every engine cleanup guarantee.
 

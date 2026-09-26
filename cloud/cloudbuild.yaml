@@ -1,0 +1,6 @@
+# gcloud builds submit --config cloud/cloudbuild.yaml --ignore-file cloud/.gcloudignore \
+#   --substitutions _IMAGE=REGION-docker.pkg.dev/PROJECT/gradara/gateway:VERSION .
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-f', 'cloud/Dockerfile', '-t', '${_IMAGE}', '.']
+images: ['${_IMAGE}']

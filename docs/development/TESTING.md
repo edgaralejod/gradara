@@ -12,9 +12,10 @@ npm audit --audit-level=high
 python3 scripts/check-docs.py
 python3 scripts/check-repo.py
 npm run build
+(cd cloud && ../.venv/bin/python -m pytest -q)   # after pip install -r cloud/requirements.txt
 ```
 
-`npm test` runs Node/tsx tests of serialized document saves/recovery, immutable edits, geometry, gestures, selection, net identity, naming, block design, plots, and templates. These are not browser interaction tests. Python unit tests cover schemas, source emission, document persistence, diagnostics, and result handling. They create synthetic fixtures and do not require provider credentials.
+`npm test` runs Node/tsx tests of serialized document saves/recovery, immutable edits, geometry, gestures, selection, net identity, naming, block design, plots, and templates. These are not browser interaction tests. Python unit tests cover schemas, source emission, document persistence, diagnostics, and result handling. They create synthetic fixtures and do not require provider credentials. They also cover the local API boundary (host, origin, and client-header checks), keychain-free secret storage, provider request shapes with mocked HTTP, and the native engine plumbing with a stand-in `omc`. The gateway suite in `cloud/tests` covers sign-in, credit charging and refunds, Stripe webhook idempotency, account deletion, and that request content never reaches logs or the database.
 
 `check-docs.py` checks relative Markdown file links, excluding code fences. `check-repo.py` checks repository candidates for accidental local artifacts, private absolute paths, and a limited set of credential patterns without printing suspected secret values. It is not a comprehensive security audit or dependency vulnerability scanner.
 
@@ -85,6 +86,6 @@ The example builders rewrite checked-in template files, not user documents. Revi
 
 ## CI
 
-[Core CI](../../.github/workflows/ci.yml) runs typecheck, frontend tests, npm audit at high severity, web build, Python unit tests, documentation links, and repository hygiene on hosted Ubuntu. Lint is advisory. [Engine CI](../../.github/workflows/engine.yml) is manually dispatched and builds the Docker image before running the full Python suite. Neither workflow publishes artifacts or invokes an agent provider. They use read-only repository permissions and do not run pull requests on a maintainer's personal machine.
+[Core CI](../../.github/workflows/ci.yml) runs typecheck, frontend tests, npm audit at high severity, web build, Python unit tests, documentation links, and repository hygiene on hosted Ubuntu. Lint is advisory. [Engine CI](../../.github/workflows/engine.yml) is manually dispatched and builds the Docker image before running the full Python suite. [Native OpenModelica](../../.github/workflows/native-engine.yml) installs OpenModelica on Ubuntu and Windows and runs the full suite with `GRADARA_ENGINE=native`. [Gradara AI gateway](../../.github/workflows/cloud.yml) runs the gateway tests and builds its image. [Desktop installers](../../.github/workflows/release.yml) builds and smoke-tests installers on each OS. None of these invoke an AI provider. They use read-only repository permissions and do not run pull requests on a maintainer's personal machine.
 
 Inspect [GitHub Actions](https://github.com/edgaralejod/gradara/actions) for results on the exact commit under review. Workflow files are configuration, not evidence of a successful hosted run. Observe checks before making them required, and dispatch engine CI when validating a release candidate. The [release checklist](../RELEASING.md) separates source availability, hosted checks, and supported distributions.

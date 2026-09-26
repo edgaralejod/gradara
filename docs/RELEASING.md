@@ -40,11 +40,26 @@ The repository includes PR and issue templates and read-only GitHub Actions work
 
 After a GitHub repository exists, enable Issues, choose whether Discussions are useful, enable private vulnerability reporting and available secret scanning, and set a short description/topics. Add actual maintainers to access rules deliberately. Avoid a `CODEOWNERS` file containing guessed identities. Consider dependency update tooling after the initial checks are stable; dependency upgrades must respect the pinned React Flow patch.
 
-## Binary images and desktop installers
+## Desktop installers
 
-Treat a packaged numerical engine or installer as a separate release artifact. Inventory all included compiler/runtime/library/OS components, retain notices, and satisfy applicable source-distribution requirements. Record engine and MSL versions, supported host architectures, startup/shutdown behavior, storage paths, and update/rollback behavior.
+1. Bump `version` in `package.json` and `desktop/package.json` together.
+2. Push a tag `vX.Y.Z`. The **Desktop installers** workflow builds Windows (NSIS), macOS (DMG and ZIP for Apple silicon and Intel), and Linux (AppImage and deb), smoke-tests the frozen service on each OS, and attaches everything to a **draft** GitHub Release.
+3. Install each artifact on a clean machine or VM: first-run engine setup, open an example, run it, sign in to Gradara AI (staging gateway), generate a block, quit and confirm no service process remains.
+4. Write release notes with known limitations, then publish the draft. Published releases feed auto-update and the stable `/download/{platform}` links.
 
-The current `npm run build` output is only a web bundle. It is not an authenticated hosted simulation service or a complete cross-platform desktop application. A future remote service needs its own security and operations design before deployment.
+Signing secrets (optional until configured; unsigned builds warn users):
+
+| Secret | Purpose |
+| --- | --- |
+| `MAC_CERTIFICATE_P12`, `MAC_CERTIFICATE_PASSWORD` | Developer ID Application certificate (base64 .p12) |
+| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Notarization |
+| `WIN_CERTIFICATE_PFX`, `WIN_CERTIFICATE_PASSWORD` | Windows code signing certificate, or configure Azure Trusted Signing in `electron-builder.yml` |
+
+Installers bundle Electron, a Python runtime, and the service dependencies; see [third-party notices](../THIRD_PARTY_NOTICES.md). They do not bundle OpenModelica: users install it (Windows, Linux) or use the container engine (macOS, optional elsewhere).
+
+## Gradara AI service
+
+Deploy from `cloud/` following [its runbook](../cloud/README.md). Before live payments: run `pytest` in `cloud/`, verify sign-in and Checkout in Stripe test mode end to end with a desktop build pointed at the staging gateway, confirm the webhook grants credits once, and confirm logs contain no request content. Update [privacy](PRIVACY.md) and the public notice together whenever stored data or subprocessors change.
 
 ## Release status and evidence
 

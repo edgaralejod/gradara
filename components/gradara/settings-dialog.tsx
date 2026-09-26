@@ -753,7 +753,7 @@ function PrivacySettings({ dataDirectory }: { dataDirectory?: string }) {
       <Button
         variant="outline"
         onClick={() =>
-          openExternal('https://virtu-services.us/gradara/privacy')
+          openExternal('https://virtu-services.us/gradara-privacy.html')
         }
       >
         <ExternalLink />

@@ -18,6 +18,12 @@ The complete npm resolution is recorded in [package-lock.json](package-lock.json
 
 The optional Sites Vite plugin is a public dependency of the build scaffold. Its current package reports MIT licensing. No hosted-site credentials, bucket names, database bindings, or deployment IDs are required by the checked-in configuration. Optional Codex CLI installation and service use retain their own terms; the CLI is not bundled in this source repository.
 
+## Desktop installers and the AI service
+
+Desktop installers bundle Electron (MIT, with Chromium's notices in `LICENSES.chromium.html` inside the app), electron-updater (MIT), a Python runtime (PSF License) frozen with PyInstaller (GPL-2.0 with the bootloader exception, which permits distributing frozen applications), and the service's Python dependencies: FastAPI, Starlette, Pydantic, Uvicorn, httpx (BSD-3-Clause), and keyring (MIT). Gradara's own license files are copied to the app's `legal/` resources. Generate and review a full dependency license report for each release before publishing installers.
+
+The Gradara AI service (`cloud/`) additionally uses SQLAlchemy (MIT), psycopg (LGPL-3.0, used as an unmodified library), the Stripe Python library (MIT), google-auth and firebase-admin (Apache-2.0). The service is operated, not distributed, but the container image contents should still be inventoried.
+
 ## Numerical engine
 
 The Dockerfile references an upstream engine image; this source repository does not contain the engine binaries. It downloads MSL during the local image build. A later downloadable engine image or desktop installer must inventory everything it includes and satisfy applicable attribution, license, and source-distribution obligations.

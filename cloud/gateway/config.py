@@ -43,12 +43,14 @@ class Config:
     packs: list = field(default_factory=lambda: list(DEFAULT_PACKS))
     prices: dict = field(default_factory=lambda: {'component': 2, 'model': 20, 'export': 2})
     max_calls: dict = field(default_factory=lambda: {'component': 4, 'model': 24, 'export': 3})
-    free_credits: int = 10
+    free_credits: int = 20
     rate_per_minute: int = 20
     max_concurrent: int = 3
     usage_retention_days: int = 400
     admin_token: str = ''
     support_email: str = 'support@virtu-services.us'
+    download_base: str = 'https://github.com/edgaralejod/gradara/releases/latest/download'
+    source_url: str = 'https://github.com/edgaralejod/gradara'
 
     @property
     def production(self) -> bool:
@@ -98,12 +100,14 @@ def load() -> Config:
         stripe_webhook_secret=os.environ.get('STRIPE_WEBHOOK_SECRET', ''),
         stripe_automatic_tax=_bool('STRIPE_AUTOMATIC_TAX'),
         packs=packs,
-        free_credits=_int('FREE_CREDITS', 10),
+        free_credits=_int('FREE_CREDITS', 20),
         rate_per_minute=_int('RATE_PER_MINUTE', 20),
         max_concurrent=_int('MAX_CONCURRENT', 3),
         usage_retention_days=_int('USAGE_RETENTION_DAYS', 400),
         admin_token=os.environ.get('ADMIN_TOKEN', ''),
         support_email=os.environ.get('SUPPORT_EMAIL', 'support@virtu-services.us'),
+        download_base=os.environ.get('DOWNLOAD_BASE', 'https://github.com/edgaralejod/gradara/releases/latest/download'),
+        source_url=os.environ.get('SOURCE_URL', 'https://github.com/edgaralejod/gradara'),
         **({'prices': prices} if prices else {}),
     )
     config.validate()

@@ -99,9 +99,13 @@ The Vite proxy forwards `/api` to the service. Keep these ports unless changing 
 
 Frontend-only work requires just `npm ci` and `npm run dev`. The block catalog at `/block-catalog` supports visual work without Docker. The full model workflow needs the Python service; offline save and simulation are not implemented. Pure backend tests do not need Docker or an agent account.
 
-## Optional agent configuration
+## Choose the simulation engine
 
-Follow [AI feature setup](../AGENT_SETUP.md) to install the public Codex CLI, sign into your own account, and try a generated block. The adapter uses the executable from `GRADARA_CODEX_BIN`, PATH, or an older macOS application fallback. If needed:
+`GRADARA_ENGINE=auto` (default) prefers a ready native OpenModelica install, then the Docker image. Force one with `GRADARA_ENGINE=native` or `docker`, or choose it in Settings → Engine. For native use, install OpenModelica 1.27 (official Windows installer or Linux packages) and let Settings → Engine install MSL 4.1.0, or run `omc` with `installPackage(Modelica, "4.1.0", exactMatch=true);`. `GRADARA_OMC` points at a specific `omc` executable.
+
+## Optional AI configuration
+
+Follow [AI feature setup](../AGENT_SETUP.md). Choose a provider in Settings → AI, or set `GRADARA_AI_PROVIDER` (`gradara`, `openai`, `anthropic`, `codex`, `off`). `GRADARA_GATEWAY_URL` points at a local Gradara AI gateway (see [cloud/README.md](../../cloud/README.md)); `GRADARA_CREDENTIAL_STORE=file` keeps secrets in a user-only file instead of the OS keychain. For the Codex CLI:
 
 ```sh
 export GRADARA_CODEX_BIN="/path/to/codex"
@@ -109,10 +113,29 @@ export GRADARA_CODEX_BIN="/path/to/codex"
 
 The service reads process environment variables directly. `.env.example` is documentation; copying it to `.env` does **not** load variables into the Python service. Set variables in the launching shell. Legacy `FLUX_DOCKER_CONTEXT` and `FLUX_CODEX_BIN` remain aliases; prefer current names. Never commit credentials or your CLI configuration.
 
-`agentReady` means an executable was found, not that provider authentication or connectivity was tested. Read [security and data handling](../../SECURITY.md) for what generation sends to the provider.
+`agentReady` means the selected provider is configured (key saved, signed in, or CLI found), not that connectivity was tested. Read [security and data handling](../../SECURITY.md) for what generation sends to the provider.
 
 ## Files you own
 
 `projects/models/` holds documents; `projects/workspace.json` is the active model; run snapshots, CSVs, prompts, and exports also live under `projects/`. These files and `.runtime/`, `.venv/`, build outputs, and local environment files are ignored by Git. Back them up separately. Contributors should use synthetic examples and never force-add a personal workspace to a PR.
+
+## Desktop app
+
+The desktop app is an Electron shell around a frozen copy of the local service and a static build of the workbench. See [distribution](../architecture/DISTRIBUTION.md).
+
+```sh
+npm run desktop:web                 # static workbench → dist-desktop/web
+cd desktop && npm ci && npm start   # dev shell; uses .venv and the repo code
+```
+
+Build installers for the current OS:
+
+```sh
+python3 -m pip install -r server/requirements.txt pyinstaller==6.22.3   # in .venv
+npm run desktop:prepare             # workbench + PyInstaller service → build/backend
+cd desktop && npx electron-builder --publish never
+```
+
+Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service. Installers for all platforms are built by the **Desktop installers** workflow on tag pushes. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
 
 The repository retains optional Sites/Cloudflare build scaffolding with no database or bucket bindings. You do not need to register or publish a site to run Gradara locally. `npm run build` verifies the web bundle; it does not package the Python service or engine.
