@@ -85,14 +85,35 @@ jobs:
         shell: bash
         working-directory: desktop
         env:
-          # Optional signing secrets; builds are unsigned when these are empty.
-          CSC_LINK: ${{ runner.os == 'macOS' && secrets.MAC_CERTIFICATE_P12 || secrets.WIN_CERTIFICATE_PFX }}
-          CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.MAC_CERTIFICATE_PASSWORD || secrets.WIN_CERTIFICATE_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.MAC_CERTIFICATE_P12 && 'true' || 'false' }}
-        run: npx electron-builder ${{ matrix.builder }} --publish never
+          # Optional signing secrets. They are passed on only when set: an empty
+          # CSC_LINK makes electron-builder try to sign with a missing file on
+          # tag builds (pull-request builds always skip signing, so they hide it).
+          MAC_CERTIFICATE_P12: ${{ secrets.MAC_CERTIFICATE_P12 }}
+          MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          WIN_CERTIFICATE_PFX: ${{ secrets.WIN_CERTIFICATE_PFX }}
+          WIN_CERTIFICATE_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
+          SIGN_APPLE_ID: ${{ secrets.APPLE_ID }}
+          SIGN_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          SIGN_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          unset CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
+          if [ "$RUNNER_OS" = macOS ] && [ -n "$MAC_CERTIFICATE_P12" ]; then
+            export CSC_LINK="$MAC_CERTIFICATE_P12" CSC_KEY_PASSWORD="$MAC_CERTIFICATE_PASSWORD"
+            if [ -n "$SIGN_APPLE_ID" ]; then
+              export APPLE_ID="$SIGN_APPLE_ID" APPLE_APP_SPECIFIC_PASSWORD="$SIGN_APPLE_APP_SPECIFIC_PASSWORD" \
+                APPLE_TEAM_ID="$SIGN_APPLE_TEAM_ID"
+            fi
+            echo "Signing with the configured Developer ID certificate"
+          elif [ "$RUNNER_OS" = Windows ] && [ -n "$WIN_CERTIFICATE_PFX" ]; then
+            export CSC_LINK="$WIN_CERTIFICATE_PFX" CSC_KEY_PASSWORD="$WIN_CERTIFICATE_PASSWORD"
+            echo "Signing with the configured Windows certificate"
+          else
+            # No certificate: build unsigned, and do not pick up a stray identity from the keychain.
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
+            echo "No signing certificate configured; building unsigned"
+          fi
+          npx electron-builder ${{ matrix.builder }} --publish never
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: gradara-${{ matrix.os }}

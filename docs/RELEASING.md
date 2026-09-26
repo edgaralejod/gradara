@@ -49,6 +49,8 @@ After a GitHub repository exists, enable Issues, choose whether Discussions are 
 
 Self-test mode: launching the app with `GRADARA_SELF_TEST_REPORT=<file>` makes it start its service, create a model, wait for the workbench to render, write a JSON report to that file, and quit without dialogs. `packaging/installer_selftest.py --exe <installed executable>` wraps this and also fails if a service process outlives the app.
 
+Pull-request builds never sign (electron-builder skips signing on pull requests), so a signing problem first shows up on a tag. Before tagging, and after any change to signing or packaging, run **Desktop installers** manually on `main` (Actions → Desktop installers → Run workflow). A manual run takes the same non-pull-request path as a tag and tests every installer, but creates no release. If a tag build fails before anything is published, delete the tag (`git push origin :refs/tags/vX.Y.Z` and `git tag -d vX.Y.Z`), fix `main`, and tag again.
+
 Signing secrets (optional until configured; unsigned builds warn users):
 
 | Secret | Purpose |
