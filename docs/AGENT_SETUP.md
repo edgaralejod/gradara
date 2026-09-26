@@ -73,7 +73,7 @@ Generation sends the prompt and relevant definition to the provider; refinement 
 | Login works in a different terminal only | Check the service's OS user, executable, and `CODEX_HOME`. User-configured credential-store settings are not carried over by `--ignore-user-config`. |
 | Environment-only API key does not work | Authenticate the CLI first. The adapter filters most `CODEX_*` variables, including `CODEX_API_KEY`; exporting that variable is not a supported shortcut. |
 | Candidate fails compiler checks | Check Docker/engine availability and the job diagnostic. The service permits one compiler-driven repair, then reports failure. |
-| Long-running request | Each CLI call has a 180-second timeout. Compilation and a repair can extend total job duration. Native Windows agent cancellation is unfinished; use WSL2. |
+| Long-running request | Each CLI call has a 180-second timeout. Compilation and a repair can extend total job duration. Native Windows cancellation uses `taskkill.exe /T /F`; the launcher and full provider workflow are still unverified there, so prefer WSL2 for the complete workflow. |
 
 ## Next steps for the infrastructure
 

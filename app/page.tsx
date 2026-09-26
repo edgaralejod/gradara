@@ -1413,7 +1413,7 @@ function Workbench() {
                   value={project.duration}
                   onChange={(duration) => commit((p) => ({ ...p, duration }))}
                   min={0.000001}
-                  max={60}
+                  max={86400}
                   ariaLabel="Simulation stop time"
                 />
                 <span>s</span>
@@ -2042,7 +2042,7 @@ function Workbench() {
                     ariaLabel="Model stop time"
                     value={project.duration}
                     min={0.000001}
-                    max={60}
+                    max={86400}
                     onChange={(duration) => commit((p) => ({ ...p, duration }))}
                   />
                 </label>

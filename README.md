@@ -39,6 +39,8 @@ A fresh workspace opens with one empty **Untitled model**. Click its title to re
 | [DC motor control](models/DC.md) | A sampled PI controller, electrical motor, rotational load, and speed feedback. |
 | [AC motor · FOC](models/FOC.md) | PMSM field-oriented control, d/q transforms, current loops, and an averaged inverter. |
 | [Buck converter](models/BUCK.md) | A 24 V to 12 V synchronous converter with actual ideal switches; inspect switching ripple with **Last 1 ms**. |
+| [480 VAC flyback](docs/examples/FLYBACK.md) | Bridge rectification, magnetizing energy storage, and 50 kHz switching to 24 V / 1 A. |
+| [Data center cooling](docs/examples/DATACENTER.md) | A one-hour lumped electrical–thermal PI benchmark with load and cooling-capacity disturbances. |
 
 **Models** opens a searchable browser with **My models**, **Examples**, and recoverable **Trash**. Saved rows show block counts and last-save times. **Save a copy** preserves the original; **Import file** always creates a separate document with a unique name. Export a `.gradara.json` file to share a model. Original `.flux.json` files remain supported.
 

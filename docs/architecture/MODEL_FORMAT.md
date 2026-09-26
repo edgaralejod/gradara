@@ -12,7 +12,7 @@ The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation li
 | `blocks` | Instances with embedded definitions and presentation data. |
 | `wires`, `junctions` | Connectivity and drawn route geometry. |
 | `nets` | Optional legacy field; current documents reconcile stable logical nets. |
-| `duration` | Simulation stop time, in seconds. Server accepts greater than 0 and at most 60. |
+| `duration` | Simulation stop time, in seconds. Server accepts greater than 0 and at most 86,400. Full-model agent planning retains its separate 60-second bound. |
 | `revision` | Edit/undo revision. Save concurrency instead uses a separate content-hash `saveVersion` token. |
 | `exampleId` | Optional template origin, not document identity. |
 | `annotations`, `plots` | Diagram explanations and named result-series groups. |
@@ -32,7 +32,7 @@ An empty document is valid to save, but cannot be simulated:
 }
 ```
 
-Saving assigns a document identity. For realistic fixtures, start with the checked-in [DC](../../models/examples/dc.json), [FOC](../../models/examples/foc.json), or [buck](../../models/examples/buck.json) template and create an independent model through the UI or API.
+Saving assigns a document identity. For realistic fixtures, start with a checked-in template under [models/examples](../../models/examples/) (DC, FOC, buck, [flyback](../../models/examples/flyback.json), or [data center cooling](../../models/examples/datacenter.json)) and create an independent model through the UI or API.
 
 ## Blocks and definitions
 

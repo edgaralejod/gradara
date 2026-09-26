@@ -8,6 +8,7 @@ import shutil
 from .models import BlockType, Definition
 from .engine import ROOT, check_component
 from .component_library import save_component
+from .processes import terminate_generation
 
 AGENT_DIR = ROOT/'projects'/'agent'
 AGENT_DIR.mkdir(parents=True, exist_ok=True)
@@ -30,9 +31,7 @@ async def structured_generation(prompt: str, schema: dict, job_id: str):
     try:
         stdout, stderr = await asyncio.wait_for(process.communicate(prompt.encode()), 180)
     except (asyncio.CancelledError, asyncio.TimeoutError):
-        import signal
-        os.killpg(process.pid, signal.SIGTERM)
-        await process.wait()
+        await terminate_generation(process)
         raise
     (folder/'agent.log').write_bytes(stderr)
     if process.returncode != 0 or not result_path.exists():

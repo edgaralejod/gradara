@@ -1,7 +1,33 @@
-* text=auto
+# Cross-platform text: store and checkout LF on Windows, macOS, and Linux.
+# This overrides Git for Windows core.autocrlf so working copies are not rewritten to CRLF.
+* text=auto eol=lf
+
+# Scripts and configs that break or confuse tools when checked out as CRLF.
 *.sh text eol=lf
 *.command text eol=lf
 *.py text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+
+# cmd.exe requires CRLF if Windows batch files are added later.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Patch fixtures compared as exact bytes.
 /patches/*.txt text eol=lf
+
+# Binary assets must not be newline-normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.zip binary
+*.gz binary
+*.tgz binary

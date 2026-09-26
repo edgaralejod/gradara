@@ -35,7 +35,7 @@ For a named context, add `--context CONTEXT` to the Docker command and set `GRAD
 .venv/bin/python -m pytest -q
 ```
 
-This runs the complete Python suite, including real engine jobs. Integration tests cover the DC motor and parameter response, FOC behavior, ideal buck switching at two duties, and singular-model failure handling. They write uniquely named job artifacts under ignored `projects/runs/`. Do not delete that entire directory to clean tests; it also contains user runs.
+This runs the complete Python suite, including real engine jobs. Integration tests cover the DC motor and parameter response, FOC behavior, ideal buck switching at two duties, flyback startup and regulation, data-center electrical/thermal balances, and singular-model failure handling. They write uniquely named job artifacts under ignored `projects/runs/`. Do not delete that entire directory to clean tests; it also contains user runs.
 
 Engine and block changes should add checks with engineering meaning: expected steady-state relations, correct event behavior, conserved connection laws, or a meaningful failure diagnostic. A screenshot or successful compile alone does not prove a changed physical implementation works.
 
@@ -48,11 +48,11 @@ Use the real browser whenever a change affects interactions. Start from a new di
 3. Move connected blocks and junctions, straighten near-horizontal runs, resize a block, and drag its label. Confirm no leftover stubs or unexpected geometry changes after reload.
 4. Ctrl-drag a block and a connected selection. Names and IDs must be unique, originals unchanged, and undo atomic.
 5. Name a net, inspect its connected blocks, move its label, and save/reopen.
-6. Open all three fresh templates and check block sizing, readable labels, ports, and routes at normal zoom. Run relevant templates and inspect actual result traces.
+6. Open each fresh template (DC motor, FOC, buck, flyback, and data center cooling) and check block sizing, readable labels, ports, and routes at normal zoom. Run relevant templates and inspect actual result traces.
 7. Test a narrow window, keyboard focus, Escape, and text fields. Canvas shortcuts must not consume normal text editing.
 8. Inspect browser errors and service logs. Do not hide observer, promise, or script errors to make a test look clean.
 
-For agent changes, separately test generation/refinement with a configured provider. Preserve compatible port identities. For C-export changes, inspect the contract and compile result, and verify cancellation/resource cleanup. Agent calls are intentionally absent from automated CI.
+For agent changes, separately test generation/refinement with a configured provider. Preserve compatible port identities. For C-export changes, inspect the contract and compile result, and verify cancellation/resource cleanup. Process-tree cancellation without a provider is covered by `tests/test_processes.py`. Agent provider calls are intentionally absent from automated CI.
 
 Record OS/browser, precise gestures, expected/observed behavior, and checks run in the PR. Use the [wiring contract](../architecture/WIRING.md) for implemented behavior and the [roadmap](../../ROADMAP.md) for open gaps. A passing geometry suite or a small smooth diagram does not establish performance or feature parity with another tool.
 
@@ -74,6 +74,8 @@ Repeat affected gestures at 25%, 100%, and 200% zoom, including Escape, focus lo
 ```sh
 npm run report:blocks
 npx tsx scripts/build-buck-example.ts
+npx tsx scripts/build-flyback-example.ts
+npx tsx scripts/build-datacenter-example.ts
 npx tsx scripts/style-examples.ts
 ```
 

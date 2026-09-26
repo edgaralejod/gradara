@@ -17,8 +17,8 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | Wiring / selection / routing | `lib/gradara/net-*.ts`, `routing.ts`, `selection.ts`, canvas/net components | `docs/architecture/WIRING.md`, model format, browser acceptance checks. |
 | Definitions and physical blocks | `lib/gradara/*blocks.ts`, `model.ts`, `server/modelica.py` | Block guide and simulation execution guide. |
 | Save/load and API | `server/workspace.py`, `server/app.py`, `lib/gradara/api.ts` | Model format and API guide. |
-| Simulation / agents / export | `server/engine*.py`, `agent.py`, `exporter.py` | `server/AGENTS.md`, execution guide, `SECURITY.md`. |
-| Templates | `models/examples/`, `scripts/style-examples.ts`, buck builder | Example notes, block design, template tests. |
+| Simulation / agents / export | `server/engine*.py`, `agent.py`, `processes.py`, `exporter.py` | `server/AGENTS.md`, execution guide, `SECURITY.md`. |
+| Templates | `models/examples/`, `scripts/style-examples.ts`, buck/flyback/datacenter builders | Example notes, block design, template tests. |
 
 ## Invariants
 

@@ -52,7 +52,7 @@ The model inspector exposes blocks and logical nets in a compact tree. The tree 
 
 ## Simulate and inspect
 
-Set the stop time and press **Run**. Compilation and simulation happen asynchronously. You can cancel from the run controls. Unconnected signal inputs and unsupported executable placeholders produce diagnostics; invalid or incomplete simulations do not become successful partial plots.
+Set the stop time and press **Run**. Manual models accept stop times greater than 0 and at most 86,400 seconds. Compilation and simulation happen asynchronously. You can cancel from the run controls. Unconnected signal inputs and unsupported executable placeholders produce diagnostics; invalid or incomplete simulations do not become successful partial plots. The solver still uses 6,000 output intervals and a 120-second wall-clock timeout; a longer horizon is not a guarantee of adequate event resolution or completion. Full-model agent planning retains a separate 60-second bound.
 
 After a successful run, the workspace automatically switches to the **Results** tab (also called Data Inspector), which provides a dedicated view for inspecting simulation output. Switch between **Diagram** and **Results** tabs using the workspace tabs in the toolbar, or press ⌘/Ctrl+1 for Diagram and ⌘/Ctrl+2 for Results.
 
@@ -94,6 +94,8 @@ Review the diagram, library choices, and assumptions, then choose **Open as new 
 
 Currently the builder supports flat models with up to 80 instances and four newly created component types per request. Supported domains match the block creator: scalar signals, electrical, rotational mechanical, thermal, and their couplings. Unsupported domains are reported instead of substituted. A simulation failure gets one assembly repair; unresolved diagnostics remain visible. Missing blocks that completed successfully remain in the AI library even if later assembly fails or is cancelled. Generation is not resumable after closing the creator or restarting the service.
 
-## Flyback power-supply example
+## Built-in examples
 
 **Examples → 480 VAC flyback** opens a hand-authored 480 V RMS single-phase to 24 V / 1 A switching model with bridge rectification, magnetizing energy storage, soft start, and PI regulation. See the [flyback example guide](examples/FLYBACK.md) for assumptions, expected signals, and modeling limits.
+
+**Examples → Data center cooling** opens a one-hour electrical–thermal benchmark with workload and cooling-capacity disturbances. Compare temperatures, electricity, and PI recovery using the [cooling example guide](examples/DATACENTER.md). This is a lumped control model, not a detailed facility model.

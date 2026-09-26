@@ -6,7 +6,7 @@
 - [Enable AI features: accounts, infrastructure, and troubleshooting](AGENT_SETUP.md)
 - [Modeling workflow and controls](USER_GUIDE.md)
 - [Troubleshooting](development/TROUBLESHOOTING.md)
-- Examples: [DC motor](../models/DC.md), [field-oriented control](../models/FOC.md), [ideal-switch buck](../models/BUCK.md)
+- Examples: [DC motor](../models/DC.md), [field-oriented control](../models/FOC.md), [ideal-switch buck](../models/BUCK.md), [480 VAC flyback](examples/FLYBACK.md), [data center cooling](examples/DATACENTER.md)
 - [Security and data handling](../SECURITY.md)
 
 ## Contribute

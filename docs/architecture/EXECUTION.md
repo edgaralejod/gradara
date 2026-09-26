@@ -19,6 +19,8 @@ Numerical operations have a 120-second process timeout. Cancellation terminates 
 
 Defaults are DASSL, tolerance `1e-6`, and 6,000 output intervals. These settings are currently implementation constants rather than a general solver-settings UI. A declared maximum of 1,000 blocks in the schema is a validation bound, not a performance benchmark.
 
+Manual models support stop times up to 86,400 simulated seconds for slow thermal/control studies, including the [data-center cooling example](../examples/DATACENTER.md). The wall-clock timeout and output-interval count are unchanged; a longer horizon is not a guarantee of adequate fast-event resolution or completion within the resource budget. Full-model agent planning retains its separate 60-second limit.
+
 ## Results
 
 `result.json` includes run ID, engine label, project key, model hash, revision, full input snapshot, stop time, elapsed time, sample count, a common time array, signal series, and diagnostics. Series use component/variable keys such as `voltageProbe.y`.
@@ -35,7 +37,7 @@ For installation, account ownership, and first-use troubleshooting, see [AI feat
 
 The selected block type constrains the schema: scalar Real signals, electrical pins, rotational mechanical flanges, thermal ports, or a coupling of multiple physical domains. Physical definitions may also have scalar signal ports. Server validation rejects mismatched port domains/directions, signal-only substitutes for physical requests, and refinement that changes existing terminal identity or semantics. All types support numeric parameters, declarations, equations, and a short symbol; controller export metadata is restricted to signal blocks. Generated definitions are checked by Pydantic and OpenModelica. A failed integration check can trigger one repair attempt containing the candidate and diagnostics. A successful result returns to the frontend for insertion; the subprocess does not directly edit the saved model.
 
-Generation has a 180-second timeout per CLI invocation. Prompts, responses, and stderr are retained locally. The implementation uses POSIX process groups for cancellation; native Windows parity is unfinished. Ordinary simulation does not call the provider.
+Generation has a 180-second timeout per CLI invocation. Prompts, responses, and stderr are retained locally. Cancellation and timeout go through `server/processes.py`: POSIX process groups on macOS/Linux, and `taskkill.exe /T /F` on native Windows to stop the generation process tree. Windows cleanup runs without a console window and reports termination failures. Full native Windows provider and launcher parity remains unverified. Ordinary simulation does not call the provider.
 
 Successful generation establishes schema/compiler compatibility. It does not independently verify the user's intended physics. The design intentionally supports rapid authoring without inserting a separate physics-approval workflow.
 

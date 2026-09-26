@@ -141,7 +141,7 @@ class Project(BaseModel):
     wires: list[Wire] = Field(max_length=3000)
     junctions: list[Junction] = Field(default_factory=list, max_length=2000)
     nets: list[Net] | None = Field(default=None, max_length=3000)
-    duration: float = Field(gt=0, le=60, allow_inf_nan=False)
+    duration: float = Field(gt=0, le=86400, allow_inf_nan=False)
     revision: int = Field(ge=0)
 
     @model_validator(mode='after')
@@ -287,7 +287,7 @@ class ExportRequest(BaseModel):
 
 class NewModelRequest(BaseModel):
     name: str = Field(default='Untitled model', min_length=1, max_length=100)
-    template: Literal['blank', 'dc', 'foc', 'buck', 'flyback'] = 'blank'
+    template: Literal['blank', 'dc', 'foc', 'buck', 'flyback', 'datacenter'] = 'blank'
 
 
 class SaveModelRequest(BaseModel):

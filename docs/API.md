@@ -14,21 +14,24 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | `GET /project` | None | `{project: Project \| null, saveVersion: string \| null}` for the last activated document, resolved from its canonical saved file. |
 | `PUT /project` | Project | Legacy creation/idempotent retry only. Changing an existing document returns 409 with a reload instruction; use versioned model saves. |
 | `GET /models` | Optional `?trashed=true` | `{models: [{id, name, blocks, exampleId, updatedAt}]}`, newest saved first. Trash is separate from My models. |
-| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, or `flyback`. |
+| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, `flyback`, or `datacenter`. |
 | `GET /models/{modelId}` | Saved ID | Returns `{project, saveVersion}` without activating it. |
 | `PUT /models/{modelId}` | `{project, expectedVersion}` | Writes that document without changing active selection; returns `{project, saveVersion}`. ID must match the path. Stale versions return 409. |
 | `POST /models/{modelId}/activate` | None | Opens an existing model as the last active document; returns `{project, saveVersion}`. |
 | `POST /models/copy` | `{project, name}` | Creates and activates an independent saved copy with a unique name; returns `{project, saveVersion}`. Used for import and copy recovery. |
 | `POST /models/{modelId}/trash` | None | Moves an inactive model to recoverable Trash. Returns `{trashed: true}`; removing the active model returns 409. |
 | `POST /models/{modelId}/restore` | None | Restores a trashed model with its original identity, without activating it; returns `{project, saveVersion}`. |
-| `GET /examples/{template}` | `dc`, `foc`, `buck`, or `flyback` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
+| `GET /examples/{template}` | `dc`, `foc`, `buck`, `flyback`, or `datacenter` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
 | `POST /source` | Project | `{source}` containing emitted Modelica. Does not run a solver. |
 | `POST /runs` | Project | Queues a simulation and returns a job. |
 | `GET /jobs/{jobId}` | Job ID | Current job, with result or error once finished. |
 | `DELETE /jobs/{jobId}` | Job ID | Requests cancellation, returns `{cancelled: true}`; poll for terminal status. |
 | `GET /results/latest?model={modelId}` | Optional document ID | `{result: Result \| null}` matching the saved document and source hash. Omitting the ID uses the active model. |
 | `GET /results/{runId}/csv` | Run ID | Full CSV attachment, when available. |
+| `GET /results/{runId}/data` | Run ID | Stored result metadata with full-resolution time and series from CSV. |
+| `GET /components/library` | None | `{components: [...]}` of saved AI-block definitions. |
 | `POST /components/generate` | `{prompt, existing?}` | Queues component generation; `existing` is an optional Definition to refine. |
+| `POST /models/generate` | `{prompt, catalog}` | Queues full-model generation; poll the job of kind `model`. |
 | `POST /exports` | `{project, blockId}` | Queues C generation for one controller block. |
 | `GET /exports/{exportId}/download` | Export ID | ZIP with C source/header, original contract, and integration notes. |
 

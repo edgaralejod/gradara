@@ -28,7 +28,7 @@ Jobs are in memory. A backend restart can make a job ID return 404 even though a
 
 The CLI must be installed, signed in, and able to reach its provider. `agentReady` checks executable presence only. Set `GRADARA_CODEX_BIN` in the service's environment if executable discovery is wrong. Generation may take tens of seconds and has a timeout.
 
-Review diagnostics in the UI. Local prompts, responses, and agent logs are under `projects/agent/`; they may contain proprietary model content, so redact before sharing. The current generator accepts scalar signal components, not arbitrary Modelica packages or physical connector definitions. Editing and ordinary simulation remain available without an agent.
+Review diagnostics in the UI. Local prompts, responses, and agent logs are under `projects/agent/`; they may contain proprietary model content, so redact before sharing. The generator accepts the selected block type: scalar signal, electrical, rotational mechanical, thermal, or multidomain. It does not accept arbitrary Modelica packages, extra connector families, or whole subsystems. Editing and ordinary simulation remain available without an agent.
 
 ## Install fails at the React Flow patch
 

@@ -1,6 +1,14 @@
 import type { Project } from './model';
 export const modelTemplates = [
   {
+    id: 'datacenter',
+    title: 'Data center cooling',
+    name: 'Data center cooling control',
+    description:
+      'Lumped rack and room temperatures, electrical cooling demand, and PI control under load and capacity disturbances.',
+    detail: 'Electrical · Thermal · Control · 1 hour',
+  },
+  {
     id: 'blank',
     title: 'Blank model',
     name: 'Untitled model',

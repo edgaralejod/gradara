@@ -19,7 +19,7 @@ Gradara's priority is a polished, usable diagram-to-simulation workflow. This is
 | Lint cleanup | Small groups of existing workspace, editor, and UI primitive findings. | The strict lint command passes without blanket rule suppression; interaction regressions are checked. |
 | Clearer simulation diagnostics | Map compiler/runtime errors to named blocks and ports. | A problems list selects the relevant block or net while preserving expandable raw diagnostics. |
 | Simulation settings | Solver/tolerance, output interval, initialization, and parameter sweeps. | Settings have useful defaults, are validated and recorded with each immutable run, and expose failures clearly. |
-| Result inspection | Cursors, synchronized plots, mixed units, range selection, and saved viewing preferences. | Numerical values and units are unambiguous, viewing preferences survive reopen, and dense event traces remain responsive. |
+| Result inspection | Multiple-run comparisons, dual cursors, frequency-domain views, independently scaled dual Y axes, and live streaming. | Remaining inspector gaps are closed without losing event pairs, linked X ranges, or browser-local plot preferences. |
 | Export cancellation cleanup | Process/container lifecycle in `server/exporter.py`. | Cancellation and timeout leave no orphan compilation process or container; failure remains visible. |
 | Model folders and organization | Build on the searchable My models / Examples / Trash browser. | Users can organize models into nested folders without changing document identity, physics, or example source files. |
 | Example-driven blocks | Add one useful electrical/mechanical/control block at a time. | Shared design, valid connector contract, documented assumptions, and a meaningful real simulation. |
@@ -37,7 +37,7 @@ These capabilities extend the current drawing engine; keep manual route intent, 
 | Crowded target selection | Preview the exact receiving port/net and provide a way to disambiguate nearby targets. Crossing lines never connect by appearance alone. |
 | Insert or remove in a connection | Insert a compatible signal block into one branch atomically, preserving other sinks and labels. Provide an explicit remove-and-heal action for unambiguous one-input/one-output cases. |
 | Local obstacle routing | Respect block clearance and endpoint normals, retain pinned regions, and avoid unrelated route changes. Cover narrow passages and report an unresolved route without moving other blocks. |
-| Rotate and flip | Transform ports, labels, and incident routes through model operations; a CSS transform alone is insufficient. |
+| Flip | Mirror selected blocks through model operations, updating ports, labels, and incident routes; clockwise 90° rotation is already implemented. |
 
 ## Workbench quality at scale
 

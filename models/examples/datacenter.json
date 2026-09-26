@@ -1,0 +1,815 @@
+{
+  "version": 1,
+  "name": "Data center cooling control",
+  "exampleId": "datacenter",
+  "duration": 3600,
+  "revision": 0,
+  "description": "Illustrative lumped electrical–thermal cooling benchmark: 600 → 900 kW IT load at 10 min; cooling capacity halved at 30–35 min. Ideal 800 V DC supply equivalent, fixed COP=4. Not an SST, fluid-network, CFD, or validated facility model.",
+  "blocks": [
+    {
+      "id": "supply",
+      "definition": {
+        "kind": "dcSource",
+        "name": "800 V DC equivalent",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 800,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 200
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      }
+    },
+    {
+      "id": "it",
+      "definition": {
+        "kind": "dataCenterIT",
+        "name": "IT load",
+        "domain": "electrical",
+        "symbol": "IT",
+        "generated": true,
+        "description": "Illustrative IT load: 600 to 900 kW at 600 s. All absorbed electricity becomes rack heat. Constant power above minimumVoltage; resistive rolloff below it. No server throttling or UPS.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "p",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "n",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "heat",
+            "name": "heat",
+            "domain": "thermal",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "kW",
+            "name": "kW",
+            "unit": "kW",
+            "side": "bottom",
+            "domain": "signal",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "basePower",
+            "name": "basePower",
+            "value": 600000,
+            "unit": "W"
+          },
+          {
+            "id": "addedPower",
+            "name": "addedPower",
+            "value": 300000,
+            "unit": "W"
+          },
+          {
+            "id": "stepTime",
+            "name": "stepTime",
+            "value": 600,
+            "unit": "s"
+          },
+          {
+            "id": "minimumVoltage",
+            "name": "minimumVoltage",
+            "value": 400,
+            "unit": "V"
+          }
+        ],
+        "declarations": "Real demand; Real voltage; Real power; Real energy(start=0, fixed=true);",
+        "equations": "demand = basePower + (if time < stepTime then 0 else addedPower);\nvoltage = p.v-n.v;\np.i = demand*voltage/max(voltage*voltage, minimumVoltage*minimumVoltage);\np.i+n.i = 0;\npower = voltage*p.i;\nheat.Q_flow = -power;\nkW = power/1000;\nder(energy) = power;"
+      },
+      "position": {
+        "x": 240,
+        "y": 192
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "rack",
+      "definition": {
+        "kind": "dataCenterRack",
+        "name": "Rack thermal mass",
+        "domain": "thermal",
+        "symbol": "C/G",
+        "generated": true,
+        "description": "One lumped equipment temperature with thermal storage and fixed rack-to-room conductance. This is not chip junction temperature or an airflow model.",
+        "ports": [
+          {
+            "id": "heat",
+            "name": "heat",
+            "domain": "thermal",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "air",
+            "name": "air",
+            "domain": "thermal",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "degC",
+            "name": "degC",
+            "unit": "degC",
+            "side": "bottom",
+            "domain": "signal",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "capacity",
+            "name": "capacity",
+            "value": 20000000,
+            "unit": "J/K"
+          },
+          {
+            "id": "conductance",
+            "name": "conductance",
+            "value": 100000,
+            "unit": "W/K"
+          },
+          {
+            "id": "initialTemperature",
+            "name": "initialTemperature",
+            "value": 303.15,
+            "unit": "K"
+          }
+        ],
+        "declarations": "Real temperature(start=initialTemperature, fixed=true); Real transfer; Real energy;",
+        "equations": "heat.T = temperature;\ntransfer = conductance*(temperature-air.T);\nair.Q_flow = -transfer;\ncapacity*der(temperature) = heat.Q_flow-transfer;\ndegC = temperature-273.15;\nenergy = capacity*(temperature-initialTemperature);"
+      },
+      "position": {
+        "x": 480,
+        "y": 192
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "room",
+      "definition": {
+        "kind": "dataCenterRoom",
+        "name": "Room thermal mass",
+        "domain": "thermal",
+        "symbol": "C",
+        "generated": true,
+        "description": "Well-mixed room and effective coupled building mass. No humidity, spatial hot spots, or envelope heat gains. degC is the controlled room temperature, not a predicted rack inlet distribution.",
+        "ports": [
+          {
+            "id": "rack",
+            "name": "rack",
+            "domain": "thermal",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "cool",
+            "name": "cool",
+            "domain": "thermal",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "degC",
+            "name": "degC",
+            "unit": "degC",
+            "side": "bottom",
+            "domain": "signal",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "capacity",
+            "name": "capacity",
+            "value": 10000000,
+            "unit": "J/K"
+          },
+          {
+            "id": "initialTemperature",
+            "name": "initialTemperature",
+            "value": 297.15,
+            "unit": "K"
+          }
+        ],
+        "declarations": "Real temperature(start=initialTemperature, fixed=true); Real energy;",
+        "equations": "rack.T = temperature;\ncool.T = temperature;\ncapacity*der(temperature) = rack.Q_flow+cool.Q_flow;\ndegC = temperature-273.15;\nenergy = capacity*(temperature-initialTemperature);"
+      },
+      "position": {
+        "x": 720,
+        "y": 192
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 80,
+        "y": 0
+      }
+    },
+    {
+      "id": "cooling",
+      "definition": {
+        "kind": "dataCenterCooling",
+        "name": "Cooling plant",
+        "domain": "thermal",
+        "symbol": "COP",
+        "generated": true,
+        "description": "Aggregate sensible cooling with fixed COP, 20 s response, and a temporary 50% capacity limit from 1800 to 2100 s. Electrical compressor power and condenser heat are conserved. No pumps, fans, fluid circuit, humidity, or weather-dependent performance.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "p",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "n",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "cold",
+            "name": "cold",
+            "domain": "thermal",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "hot",
+            "name": "hot",
+            "domain": "thermal",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "u",
+            "name": "u",
+            "side": "bottom",
+            "domain": "signal",
+            "direction": "input"
+          },
+          {
+            "id": "kW",
+            "name": "kW",
+            "unit": "kW",
+            "side": "bottom",
+            "domain": "signal",
+            "direction": "output"
+          },
+          {
+            "id": "coolkW",
+            "name": "Q",
+            "unit": "kW",
+            "side": "bottom",
+            "domain": "signal",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "ratedCooling",
+            "name": "ratedCooling",
+            "value": 1200000,
+            "unit": "W"
+          },
+          {
+            "id": "COP",
+            "name": "COP",
+            "value": 4,
+            "unit": ""
+          },
+          {
+            "id": "responseTime",
+            "name": "responseTime",
+            "value": 20,
+            "unit": "s"
+          },
+          {
+            "id": "initialCooling",
+            "name": "initialCooling",
+            "value": 600000,
+            "unit": "W"
+          },
+          {
+            "id": "derateStart",
+            "name": "derateStart",
+            "value": 1800,
+            "unit": "s"
+          },
+          {
+            "id": "derateEnd",
+            "name": "derateEnd",
+            "value": 2100,
+            "unit": "s"
+          },
+          {
+            "id": "availableFraction",
+            "name": "availableFraction",
+            "value": 0.5,
+            "unit": ""
+          },
+          {
+            "id": "minimumVoltage",
+            "name": "minimumVoltage",
+            "value": 400,
+            "unit": "V"
+          }
+        ],
+        "declarations": "Real cooling(start=initialCooling, fixed=true); Real available; Real voltage; Real power; Real removedEnergy(start=0, fixed=true);",
+        "equations": "voltage = p.v-n.v;\navailable = if time >= derateStart and time < derateEnd then availableFraction else 1;\nresponseTime*der(cooling) = ratedCooling*min(max(u, 0), available)*min(voltage*voltage/(minimumVoltage*minimumVoltage), 1)-cooling;\np.i = (cooling/COP)*voltage/max(voltage*voltage, minimumVoltage*minimumVoltage);\np.i+n.i = 0;\npower = voltage*p.i;\ncold.Q_flow = cooling;\nhot.Q_flow = -cooling-power;\nkW = power/1000;\ncoolkW = cooling/1000;\nder(removedEnergy) = cooling;"
+      },
+      "position": {
+        "x": 1000,
+        "y": 192
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 80,
+        "y": 0
+      }
+    },
+    {
+      "id": "ambient",
+      "definition": {
+        "kind": "dataCenterAmbient",
+        "name": "Outdoor heat sink",
+        "domain": "thermal",
+        "symbol": "T",
+        "generated": true,
+        "description": "Infinite fixed-temperature heat sink. COP is fixed independently of this temperature; changing ambient temperature does not predict weather sensitivity.",
+        "ports": [
+          {
+            "id": "heat",
+            "name": "heat",
+            "domain": "thermal",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "kW",
+            "name": "kW",
+            "unit": "kW",
+            "side": "bottom",
+            "domain": "signal",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "temperature",
+            "name": "temperature",
+            "value": 308.15,
+            "unit": "K"
+          }
+        ],
+        "equations": "heat.T = temperature;\nkW = heat.Q_flow/1000;"
+      },
+      "position": {
+        "x": 1320,
+        "y": 192
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "controller",
+      "definition": {
+        "kind": "dataCenterPI",
+        "name": "Room temperature PI",
+        "domain": "signal",
+        "symbol": "PI",
+        "generated": true,
+        "controller": true,
+        "description": "PI room-temperature controller with back-calculation anti-windup and bounded 0–1 output. Baseline 0.5 command balances 600 kW. Positive temperature error increases cooling.",
+        "ports": [
+          {
+            "id": "degC",
+            "name": "degC",
+            "side": "left",
+            "domain": "signal",
+            "direction": "input"
+          },
+          {
+            "id": "u",
+            "name": "u",
+            "unit": "1",
+            "side": "right",
+            "domain": "signal",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "setpoint",
+            "name": "setpoint",
+            "value": 24,
+            "unit": "degC"
+          },
+          {
+            "id": "gain",
+            "name": "gain",
+            "value": 0.1,
+            "unit": "1/K"
+          },
+          {
+            "id": "integralTime",
+            "name": "integralTime",
+            "value": 120,
+            "unit": "s"
+          },
+          {
+            "id": "initialCommand",
+            "name": "initialCommand",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": "Real integral(start=initialCommand, fixed=true); Real error; Real raw;",
+        "equations": "error = degC-setpoint;\nraw = gain*error+integral;\nu = min(max(raw, 0), 1);\nintegralTime*der(integral) = gain*error+u-raw;"
+      },
+      "position": {
+        "x": 720,
+        "y": 468
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ground",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 0,
+        "y": 400
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "dc_w0",
+      "source": "supply",
+      "sourceHandle": "p",
+      "target": "it",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 24,
+          "y": 40
+        },
+        {
+          "x": 282.66666666666663,
+          "y": 40
+        }
+      ]
+    },
+    {
+      "id": "dc_w1",
+      "source": "it",
+      "sourceHandle": "p",
+      "target": "cooling",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 282.66666666666663,
+          "y": 40
+        },
+        {
+          "x": 1042.6666666666667,
+          "y": 40
+        }
+      ]
+    },
+    {
+      "id": "dc_w2",
+      "source": "supply",
+      "sourceHandle": "n",
+      "target": "it",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 24,
+          "y": 340
+        },
+        {
+          "x": 120,
+          "y": 340
+        },
+        {
+          "x": 120,
+          "y": 80
+        },
+        {
+          "x": 325.3333333333333,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "dc_w3",
+      "source": "it",
+      "sourceHandle": "n",
+      "target": "cooling",
+      "targetHandle": "n",
+      "waypoints": [
+        {
+          "x": 325.3333333333333,
+          "y": 80
+        },
+        {
+          "x": 1085.3333333333333,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "dc_w4",
+      "source": "supply",
+      "sourceHandle": "n",
+      "target": "ground",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "dc_w5",
+      "source": "it",
+      "sourceHandle": "heat",
+      "target": "rack",
+      "targetHandle": "heat",
+      "waypoints": []
+    },
+    {
+      "id": "dc_w6",
+      "source": "rack",
+      "sourceHandle": "air",
+      "target": "room",
+      "targetHandle": "rack",
+      "waypoints": []
+    },
+    {
+      "id": "dc_w7",
+      "source": "room",
+      "sourceHandle": "cool",
+      "target": "cooling",
+      "targetHandle": "cold",
+      "waypoints": []
+    },
+    {
+      "id": "dc_w8",
+      "source": "cooling",
+      "sourceHandle": "hot",
+      "target": "ambient",
+      "targetHandle": "heat",
+      "waypoints": []
+    },
+    {
+      "id": "dc_w9",
+      "source": "room",
+      "sourceHandle": "degC",
+      "target": "controller",
+      "targetHandle": "degC",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 380
+        },
+        {
+          "x": 660,
+          "y": 380
+        },
+        {
+          "x": 660,
+          "y": 500
+        }
+      ]
+    },
+    {
+      "id": "dc_w10",
+      "source": "controller",
+      "sourceHandle": "u",
+      "target": "cooling",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 1032,
+          "y": 500
+        }
+      ]
+    }
+  ],
+  "junctions": [],
+  "annotations": [
+    {
+      "x": 480,
+      "y": 110,
+      "text": "DATA CENTER · COOLING CONTROL",
+      "detail": "1 hour · illustrative parameters · ideal 800 V DC equivalent"
+    },
+    {
+      "x": 340,
+      "y": 400,
+      "text": "DISTURBANCES",
+      "detail": "10 min: IT 600 → 900 kW\n30–35 min: cooling capacity 50%"
+    },
+    {
+      "x": 1040,
+      "y": 500,
+      "text": "MODEL LIMITS",
+      "detail": "Fixed COP 4 · no fluid network or humidity\nRoom and rack are lumped temperatures"
+    }
+  ],
+  "plots": [
+    {
+      "id": "temperatures",
+      "label": "Temperatures (°C)",
+      "series": [
+        "room.degC",
+        "rack.degC"
+      ],
+      "labels": [
+        "Room",
+        "Rack mass"
+      ]
+    },
+    {
+      "id": "power",
+      "label": "Power (kW)",
+      "series": [
+        "it.kW",
+        "cooling.coolkW",
+        "cooling.kW",
+        "ambient.kW"
+      ],
+      "labels": [
+        "IT electricity / heat",
+        "Heat removed",
+        "Cooling electricity",
+        "Heat rejected"
+      ]
+    },
+    {
+      "id": "control",
+      "label": "Cooling command (0–1)",
+      "series": [
+        "controller.u"
+      ],
+      "labels": [
+        "PI command"
+      ]
+    }
+  ],
+  "nets": [
+    {
+      "id": "datacenter_net0",
+      "anchor": "cooling.p",
+      "wireIds": [
+        "dc_w0",
+        "dc_w1"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net1",
+      "anchor": "cooling.n",
+      "wireIds": [
+        "dc_w2",
+        "dc_w3",
+        "dc_w4"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net2",
+      "anchor": "it.heat",
+      "wireIds": [
+        "dc_w5"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net3",
+      "anchor": "rack.air",
+      "wireIds": [
+        "dc_w6"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net4",
+      "anchor": "cooling.cold",
+      "wireIds": [
+        "dc_w7"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net5",
+      "anchor": "ambient.heat",
+      "wireIds": [
+        "dc_w8"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net6",
+      "anchor": "room.degC",
+      "wireIds": [
+        "dc_w9"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net7",
+      "anchor": "controller.u",
+      "wireIds": [
+        "dc_w10"
+      ],
+      "hidden": true
+    }
+  ]
+}

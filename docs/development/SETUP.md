@@ -11,7 +11,7 @@ Run commands from the repository root. Use a checkout or source download of this
 | Docker | A running Docker-compatible Linux engine for simulation and C compilation. No host OpenModelica installation is required. |
 | Codex CLI | Optional, installed and signed in, for component generation and controller C export. |
 
-macOS with Colima has been exercised end to end. Linux uses the active Docker context; its hosted CI jobs are configured but must be observed after publication. On Windows, use WSL2 with Linux Node/Python and a Docker engine available inside WSL for the complete workflow. Native Windows process-group cancellation in the agent adapter is not implemented, and the launcher is not fully verified there. Do not interpret passing frontend tests on an OS as validation of its complete runtime.
+macOS with Colima has been exercised end to end. Linux uses the active Docker context; its hosted CI jobs are configured but must be observed after publication. On Windows, use WSL2 with Linux Node/Python and a Docker engine available inside WSL for the complete workflow. Native Windows agent cancellation uses `taskkill.exe /T /F` to stop the generation process tree; the launcher and full provider workflow are not fully verified there. Do not interpret passing frontend tests on an OS as validation of its complete runtime.
 
 ## Install
 
@@ -37,6 +37,12 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r server/requirements-dev.txt
 .\.venv\Scripts\python.exe -m pytest -q -m "not integration"
 ```
+
+## Line endings
+
+The repository stores **LF** for text files and checks them out as LF on Windows, macOS, and Linux. `.gitattributes` sets `eol=lf`, which overrides Git for Windows `core.autocrlf`. `.editorconfig` asks editors to save LF. Do not convert unrelated files to CRLF to silence a local Git warning; a fresh clone already has LF working copies.
+
+If an existing Windows checkout still has CRLF files from before this policy, convert those text files to LF (most editors and `dos2unix` can do this), then `git add --renormalize .` after committing or stashing unrelated work. Do not run `git checkout -- .` while you have uncommitted edits.
 
 ## Select the Docker runtime
 

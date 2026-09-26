@@ -125,7 +125,7 @@ async def load_model(model_id: str):
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):
-    if example_id not in {'dc','foc','buck','flyback'}: raise HTTPException(404,'Example not found.')
+    if example_id not in {'dc','foc','buck','flyback','datacenter'}: raise HTTPException(404,'Example not found.')
     path = ROOT/'models'/'examples'/f'{example_id}.json'
     if not path.exists(): raise HTTPException(404,'Example is unavailable.')
     data = json.loads(path.read_text())

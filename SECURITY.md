@@ -12,7 +12,7 @@ Saved documents, generated Modelica, full results, prompts, agent responses/logs
 
 The service can access the host filesystem and Docker daemon. Simulation containers use an unprivileged user, network isolation, resource limits, dropped capabilities, and a job-directory mount. These controls reduce exposure; they are not a guarantee that arbitrary hostile model files or compiler exploits are safe. Imported documents and equation snippets should come from trusted sources. The equation validator is a bounded input filter, not a complete Modelica security parser.
 
-Agent and export subprocesses have separate lifecycle code. Native Windows agent cancellation and C-export timeout/cancellation cleanup remain areas for improvement. Do not claim all subprocesses are hardened identically to the simulation adapter.
+Agent and export subprocesses have separate lifecycle code. Native Windows agent cancellation uses `taskkill.exe /T /F` for its process tree; this is cleanup, not additional sandboxing. Full native Windows provider validation and C-export timeout/cancellation cleanup remain areas for improvement. Do not claim all subprocesses are hardened identically to the simulation adapter.
 
 ## What leaves the machine
 
