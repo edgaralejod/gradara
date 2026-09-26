@@ -5,8 +5,10 @@
 # Run from the repository root, signed in with `gcloud auth login`:
 #
 #   cloud/deploy.sh setup           One time: APIs, database, service account, secrets
-#   cloud/deploy.sh secrets         Enter or replace the vendor and Stripe secrets
+#   cloud/deploy.sh secrets         Enter or replace the vendor and Stripe keys
+#   cloud/deploy.sh stripe          Create the credit prices and payment webhook in Stripe
 #   cloud/deploy.sh deploy          Build this checkout and deploy it
+#   cloud/deploy.sh domain          Serve it at PUBLIC_URL (after gcloud domains verify)
 #   cloud/deploy.sh status          Show the service URL and health
 #
 # Non-secret settings come from cloud/deploy.env. Secrets are typed at hidden
@@ -67,8 +69,66 @@ cmd_secrets() {
     openai) prompt_secret llm-api-key "OpenAI API key" "sk-" ;;
     *) echo "LLM_PROVIDER must be anthropic or openai"; exit 1 ;;
   esac
-  prompt_secret stripe-secret-key "Stripe secret key (sk_test_… or sk_live_…; a restricted rk_ key also works)" ""
-  prompt_secret stripe-webhook-secret "Stripe webhook signing secret (whsec_…)" "whsec_"
+  prompt_secret stripe-secret-key "Stripe secret key (sk_test_… for testing, sk_live_… for real payments)" "sk_"
+}
+
+stripe_api() { # method path [curl args...]; the key comes from Secret Manager and is never printed
+  local method=$1 path=$2 key
+  shift 2
+  key=$("${GC[@]}" secrets versions access latest --secret stripe-secret-key)
+  # The key goes to curl on stdin (-K -), so it never appears in the process list.
+  curl -sS --fail-with-body -X "$method" "${STRIPE_API:-https://api.stripe.com}/v1/$path" -K - "$@" \
+    <<<"user = \"$key:\""
+  key=''
+}
+
+json_get() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1], {'d': d}))" "$1"; }
+
+set_env_value() { # key value: update cloud/deploy.env in place
+  python3 - "$1" "$2" <<'PY'
+import re, sys, pathlib
+key, value = sys.argv[1], sys.argv[2]
+path = pathlib.Path('cloud/deploy.env')
+text = path.read_text()
+text = re.sub(rf'^{key}=.*$', f'{key}={value}', text, flags=re.M)
+path.write_text(text)
+PY
+}
+
+cmd_stripe() {
+  say "Stripe products and prices"
+  local mode prices starter pro product
+  mode=$(stripe_api GET balance | json_get "'live mode: real payments' if d['livemode'] else 'test mode: no real charges'")
+  prices=$(stripe_api GET 'prices?lookup_keys[]=gradara_credits_100&lookup_keys[]=gradara_credits_550&active=true')
+  starter=$(printf '%s' "$prices" | json_get "next((p['id'] for p in d['data'] if p['lookup_key']=='gradara_credits_100'), '')")
+  pro=$(printf '%s' "$prices" | json_get "next((p['id'] for p in d['data'] if p['lookup_key']=='gradara_credits_550'), '')")
+  if [[ -z $starter || -z $pro ]]; then
+    product=$(stripe_api POST products -d name="Gradara AI credits" \
+      -d description="Prepaid credits for Gradara AI block, model, and export generation" \
+      -d statement_descriptor="GRADARA AI" -d "metadata[gradara]=credits" | json_get "d['id']")
+    [[ -n $starter ]] || starter=$(stripe_api POST prices -d product="$product" -d currency=usd -d unit_amount=1000 \
+      -d lookup_key=gradara_credits_100 -d nickname="100 credits" | json_get "d['id']")
+    [[ -n $pro ]] || pro=$(stripe_api POST prices -d product="$product" -d currency=usd -d unit_amount=5000 \
+      -d lookup_key=gradara_credits_550 -d nickname="550 credits" | json_get "d['id']")
+  fi
+  set_env_value STRIPE_PRICE_STARTER "$starter"
+  set_env_value STRIPE_PRICE_PRO "$pro"
+  echo "  100 credits (USD 10): $starter"
+  echo "  550 credits (USD 50): $pro"
+  echo "  $mode"
+
+  say "Stripe webhook"
+  local url="$PUBLIC_URL/v1/billing/webhook" existing
+  existing=$(stripe_api GET 'webhook_endpoints?limit=100' |
+    json_get "' '.join(e['id'] for e in d['data'] if e['url']=='$url')")
+  for id in $existing; do stripe_api DELETE "webhook_endpoints/$id" >/dev/null; done
+  # The signing secret is only returned when the endpoint is created; it goes
+  # straight into Secret Manager.
+  stripe_api POST webhook_endpoints -d url="$url" \
+    -d "enabled_events[]=checkout.session.completed" \
+    -d "enabled_events[]=checkout.session.async_payment_succeeded" \
+    -d description="Gradara AI gateway" | json_get "d['secret']" | tr -d '\n' | store_secret stripe-webhook-secret
+  echo "  $url"
 }
 
 cmd_setup() {
@@ -127,6 +187,7 @@ cmd_setup() {
   secret_exists gateway-admin-token || openssl rand -hex 32 | tr -d '\n' | store_secret gateway-admin-token
 
   cmd_secrets
+  cmd_stripe
   say "Setup finished. Next: cloud/deploy.sh deploy"
 }
 
@@ -191,6 +252,25 @@ cmd_deploy() {
   cmd_status
 }
 
+cmd_domain() {
+  local host=${PUBLIC_URL#https://} root
+  root=${host#*.}
+  say "Custom domain $host"
+  if ! exists "${GC[@]}" beta run domain-mappings describe --domain "$host" --region "$REGION"; then
+    if ! "${GC[@]}" beta run domain-mappings create --service "$SERVICE" --domain "$host" --region "$REGION"; then
+      echo
+      echo "  Google needs proof that you own $root first. Run:"
+      echo "    gcloud domains verify $root"
+      echo "  It opens Search Console; add the TXT record it shows at your DNS provider, click Verify,"
+      echo "  then run: cloud/deploy.sh domain"
+      exit 1
+    fi
+  fi
+  echo "  Add this DNS record at your DNS provider (certificate issuance follows, up to an hour):"
+  "${GC[@]}" beta run domain-mappings describe --domain "$host" --region "$REGION" \
+    --format='table(status.resourceRecords[].type,status.resourceRecords[].name,status.resourceRecords[].rrdata)'
+}
+
 cmd_status() {
   local url
   url=$("${GC[@]}" run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')
@@ -206,8 +286,10 @@ cmd_status() {
 
 case ${1:-} in
   setup) cmd_setup ;;
-  secrets) cmd_secrets ;;
+  secrets) cmd_secrets; cmd_stripe ;;
+  stripe) cmd_stripe ;;
   deploy) cmd_deploy ;;
+  domain) cmd_domain ;;
   status) cmd_status ;;
-  *) sed -n '3,14p' "$0"; exit 1 ;;
+  *) sed -n '3,17p' "$0"; exit 1 ;;
 esac
