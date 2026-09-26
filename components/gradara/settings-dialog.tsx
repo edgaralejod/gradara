@@ -58,7 +58,7 @@ export default function SettingsDialog({
         <DialogDescription>
           Simulation engine, AI features, and how your data is handled.
         </DialogDescription>
-        <nav className="settings-tabs" role="tablist">
+        <div className="settings-tabs" role="tablist">
           {(
             [
               ['engine', 'Engine', Cpu],
@@ -77,7 +77,7 @@ export default function SettingsDialog({
               {label}
             </button>
           ))}
-        </nav>
+        </div>
         {tab === 'engine' && <EngineSettings onChange={onEngineChange} />}
         {tab === 'ai' && <AiSettings />}
         {tab === 'privacy' && <PrivacySettings dataDirectory={dataDirectory} />}
@@ -343,12 +343,11 @@ function AiSettings() {
         AI creates blocks, builds models from a description, and generates C for
         controllers. Editing and simulating never need AI.
       </p>
-      <div className="provider-list" role="radiogroup" aria-label="AI provider">
+      <div className="provider-list" aria-label="AI provider">
         {visible.map((p) => (
           <button
             key={p.id}
-            role="radio"
-            aria-checked={ai.provider === p.id}
+            aria-pressed={ai.provider === p.id}
             className={`provider-option ${ai.provider === p.id ? 'is-selected' : ''}`}
             onClick={() => void choose(p.id)}
           >

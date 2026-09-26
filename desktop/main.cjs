@@ -110,7 +110,7 @@ function startBackend() {
       });
       if (choice === 0) restart();
       else if (choice === 1) {
-        shell.openPath(logDir());
+        void shell.openPath(logDir());
         app.quit();
       } else app.quit();
     }
@@ -183,13 +183,13 @@ function createWindow() {
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//.test(url) && !isLocal(url)) shell.openExternal(url);
+    if (/^https?:\/\//.test(url) && !isLocal(url)) void shell.openExternal(url);
     return { action: 'deny' };
   });
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (!isLocal(url) && !url.startsWith('data:')) {
       event.preventDefault();
-      if (/^https?:\/\//.test(url)) shell.openExternal(url);
+      if (/^https?:\/\//.test(url)) void shell.openExternal(url);
     }
   });
   mainWindow.on('closed', () => {
@@ -215,7 +215,7 @@ async function launch() {
       detail: `${error.message} The service log in the logs folder has details.`,
       buttons: ['Open logs', 'Quit'],
     });
-    if (choice === 0) shell.openPath(logDir());
+    if (choice === 0) void shell.openPath(logDir());
     app.quit();
   }
 }
@@ -247,12 +247,12 @@ function buildMenu() {
     {
       role: 'help',
       submenu: [
-        { label: 'Open Data Folder', click: () => shell.openPath(dataDir()) },
-        { label: 'Open Logs Folder', click: () => shell.openPath(logDir()) },
+        { label: 'Open Data Folder', click: () => void shell.openPath(dataDir()) },
+        { label: 'Open Logs Folder', click: () => void shell.openPath(logDir()) },
         { label: 'Restart Local Service', click: () => restart() },
         { type: 'separator' },
-        { label: 'Privacy', click: () => shell.openExternal(PRIVACY_URL) },
-        { label: 'Report an Issue', click: () => shell.openExternal(ISSUES_URL) },
+        { label: 'Privacy', click: () => void shell.openExternal(PRIVACY_URL) },
+        { label: 'Report an Issue', click: () => void shell.openExternal(ISSUES_URL) },
         ...(isMac ? [] : [{ role: 'about' }]),
       ],
     },
@@ -271,7 +271,7 @@ function checkForUpdates() {
   }
 }
 
-app.whenReady().then(() => {
+void app.whenReady().then(() => {
   app.setAboutPanelOptions({
     applicationName: 'Gradara',
     applicationVersion: app.getVersion(),
@@ -285,7 +285,7 @@ app.whenReady().then(() => {
   checkForUpdates();
   app.on('activate', () => {
     if (!mainWindow && backend) {
-      createWindow().loadURL(`http://127.0.0.1:${port}/`);
+      void createWindow().loadURL(`http://127.0.0.1:${port}/`);
     }
   });
 });
