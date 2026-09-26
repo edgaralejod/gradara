@@ -205,7 +205,8 @@ jobs:
           exe=/Applications/Gradara.app/Contents/MacOS/Gradara
           file "$exe"
           file /Applications/Gradara.app/Contents/Resources/backend/gradara-backend
-          signature=$(codesign -dv /Applications/Gradara.app 2>&1 || true)
+          # Authority lines (the signing certificate chain) are only printed at -vv or higher.
+          signature=$(codesign -dvv /Applications/Gradara.app 2>&1 || true)
           echo "$signature"
           if grep -q "Developer ID Application" <<<"$signature"; then
             # Signed builds must pass the same checks a user's Mac runs on first open.
