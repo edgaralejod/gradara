@@ -122,3 +122,29 @@ def test_simulation_end_to_end_with_native_backend(fake_omc, tmp_path, monkeypat
     with pytest.raises(RuntimeError, match='before the requested|not'):
         run(engine.simulate(project.model_copy(update={'duration': 2.0}), 'native1'))
     assert (tmp_path/'runs'/'native1'/'model.mo').exists()
+
+
+def test_docker_probe_is_cached_and_detects_windows_containers(monkeypatch):
+    """One status check asks Docker once, and Windows-container mode is not 'ready'."""
+    import asyncio
+    from server import engines
+    calls = []
+
+    async def fake_run(argv, timeout, cwd=None, env=None):
+        calls.append(argv[1:3])
+        if argv[1] == 'info':
+            return 0, 'windows\n'
+        return 1, ''
+
+    backend = engines.DockerBackend()
+    monkeypatch.setattr(engines, '_run', fake_run)
+    monkeypatch.setattr(engines.shutil, 'which', lambda name: '/usr/bin/docker' if name == 'docker' else None)
+    monkeypatch.setattr(engines, 'docker_argv', lambda: ['docker'])
+
+    status = asyncio.run(backend.status())
+    assert status.label == 'Docker is set to Windows containers'
+    assert not asyncio.run(backend.available())
+    assert calls == [['info', '--format']], 'image lookups are skipped and the probe is reused'
+    backend.forget()
+    asyncio.run(backend.status())
+    assert len(calls) == 2

@@ -75,6 +75,15 @@ async def _run(argv: list[str], timeout: float, cwd: Path | None = None, env: di
 
 class DockerBackend:
     name = 'docker'
+    # Docker probes can each take seconds when the runtime is stopped or busy.
+    # Status polls reuse a recent answer instead of repeating them.
+    PROBE_TTL = 20.0
+
+    def __init__(self):
+        self._probe: tuple[float, str, bool] | None = None
+
+    def forget(self) -> None:
+        self._probe = None
 
     async def _image_present(self, tag: str) -> bool:
         try:
@@ -86,16 +95,17 @@ class DockerBackend:
     async def cli_present(self) -> bool:
         return shutil.which('docker') is not None
 
-    async def daemon_ready(self) -> bool:
-        if not await self.cli_present():
-            return False
+    async def _daemon(self) -> str:
+        """'ready', 'stopped', or 'windows' (Docker Desktop set to Windows containers)."""
         try:
-            code, _ = await _run([*docker_argv(), 'info'], 10)
-            return code == 0
+            code, output = await _run([*docker_argv(), 'info', '--format', '{{.OSType}}'], 8)
         except asyncio.TimeoutError:
-            return False
+            return 'stopped'
+        if code != 0:
+            return 'stopped'
+        return 'windows' if output.strip().lower() == 'windows' else 'ready'
 
-    async def available(self) -> bool:
+    async def _image(self) -> bool:
         if await self._image_present(IMAGE):
             return True
         if await self._image_present(LEGACY_IMAGE):
@@ -103,16 +113,39 @@ class DockerBackend:
             return code == 0
         return False
 
-    async def status(self) -> EngineStatus:
+    async def probe(self) -> tuple[str, bool]:
+        """Daemon state and whether the engine image is present, cached briefly."""
         if not await self.cli_present():
+            return 'missing', False
+        now = time.monotonic()
+        if self._probe and now - self._probe[0] < self.PROBE_TTL:
+            return self._probe[1], self._probe[2]
+        daemon = await self._daemon()
+        image = daemon == 'ready' and await self._image()
+        self._probe = (time.monotonic(), daemon, image)
+        return daemon, image
+
+    async def daemon_ready(self) -> bool:
+        return (await self.probe())[0] == 'ready'
+
+    async def available(self) -> bool:
+        daemon, image = await self.probe()
+        return daemon == 'ready' and image
+
+    async def status(self) -> EngineStatus:
+        daemon, image = await self.probe()
+        if daemon == 'missing':
             return EngineStatus('docker', False, 'Docker is not installed',
                                 'Install a Docker-compatible runtime (Docker Desktop, OrbStack, or Colima).',
                                 ['install-docker'])
-        if not await self.daemon_ready():
+        if daemon == 'windows':
+            return EngineStatus('docker', False, 'Docker is set to Windows containers',
+                                'Switch Docker Desktop to Linux containers, then check again.')
+        if daemon != 'ready':
             actions = ['start-runtime'] if sys.platform == 'darwin' and shutil.which('colima') else []
             return EngineStatus('docker', False, 'Docker is not running',
                                 'Start your container runtime, then check again.', actions)
-        if not await self.available():
+        if not image:
             return EngineStatus('docker', False, 'Engine image not prepared',
                                 'Gradara downloads the OpenModelica engine image once (about 1-2 GB).',
                                 ['prepare'])
@@ -130,8 +163,10 @@ class DockerBackend:
             raise EngineError('Start Docker Desktop, OrbStack, or your container runtime, then check again.')
 
     async def prepare(self, progress) -> None:
+        self.forget()
         if not await self.daemon_ready():
             await self.start_runtime(progress)
+            self.forget()
         if await self.available():
             return
         progress('Downloading the OpenModelica engine image…')
@@ -463,6 +498,7 @@ async def select() -> DockerBackend | NativeBackend:
 async def status(refresh: bool = False) -> dict:
     if refresh:
         NATIVE._library_checked.clear()
+        DOCKER.forget()
     backend = await select()
     current = await backend.status()
     return {'preference': preference(), 'platform': sys.platform, 'recommended': platform_default(),
@@ -486,7 +522,10 @@ async def compile_c(folder: Path, source: str) -> tuple[int, str]:
 
 async def prepare(progress=lambda message: None) -> dict:
     backend = await select()
-    await backend.prepare(progress)
+    try:
+        await backend.prepare(progress)
+    finally:
+        DOCKER.forget()
     return await status()
 
 

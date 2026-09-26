@@ -1,7 +1,8 @@
 name: Website
 
 # Deploys site/ to Firebase Hosting (gradara.app). Pull requests get a
-# temporary preview channel. Requires the FIREBASE_SERVICE_ACCOUNT_GRADARA secret.
+# temporary preview channel. Requires the FIREBASE_SERVICE_ACCOUNT_GRADARA secret
+# (`firebase init hosting:github` creates it); without it the deploy is skipped.
 on:
   push:
     branches: [main]
@@ -20,14 +21,27 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    env:
+      HAS_DEPLOY_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GRADARA != '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: FirebaseExtended/action-hosting-deploy@0cbcac4740c2bfb00d632f0b863b57713124eb5a # v0.9.0
+      - name: Check the site files
+        run: |
+          for f in index.html privacy.html terms.html 404.html assets/site.css assets/site.js; do
+            test -s "site/public/$f" || { echo "missing site/public/$f"; exit 1; }
+          done
+      - name: Deploy key not configured
+        if: env.HAS_DEPLOY_KEY != 'true'
+        run: echo "::notice::FIREBASE_SERVICE_ACCOUNT_GRADARA is not set; skipping the Firebase deploy. Run 'firebase init hosting:github' in site/ to enable it."
+      - if: env.HAS_DEPLOY_KEY == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@0cbcac4740c2bfb00d632f0b863b57713124eb5a # v0.9.0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GRADARA }}
           projectId: gradara-2e47a
           entryPoint: site
-          channelId: ${{ github.event_name == 'pull_request' && '' || 'live' }}
+          # Empty channelId means a pull-request preview channel. (Writing this as
+          # `cond && '' || 'live'` would always yield 'live', because '' is falsy.)
+          channelId: ${{ github.event_name != 'pull_request' && 'live' || '' }}
