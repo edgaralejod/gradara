@@ -36,11 +36,42 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 - Do not hide errors, bypass schema checks, or report incomplete simulation output as success. Read the pinned React Flow patch notes before changing that dependency.
 - Keep original and upstream license notices. Do not add secrets, personal models, provider transcripts, or generated run directories to Git.
 
+## Keep documentation current
+
+Documentation is part of every change, not a follow-up. A change that alters behavior, commands, settings, file locations, the API, data handling, prices, or supported platforms is not done while any doc still describes the old state.
+
+1. **Update docs in the same change.** Use the map below to find the docs your change owns, and update them in the same commit or pull request.
+2. **Search for what you replaced.** Before finishing, `git grep -n` the old name, command, path, setting, or behavior across `*.md`, `site/`, `.env.example`, and in-app text, and fix every hit.
+3. **Describe the present.** Docs state what the product does now. When you ship something listed in `ROADMAP.md`, remove or shrink that item in the same change. Future work belongs only in `ROADMAP.md`, marked as future.
+4. **Keep promises exact.** Privacy, pricing, and security statements in `docs/PRIVACY.md`, `SECURITY.md`, `site/public/`, and the app's Settings text must match the code. If you change what the gateway stores, logs, or charges, update all of them together.
+5. **Fix, don't silence.** `python3 scripts/check-docs.py` checks links, backticked repository paths, `npm run` scripts, `cloud/deploy.sh` commands, and `GRADARA_*` variables in both directions. When it fails, fix the doc (or document the new variable). Do not loosen the check to pass.
+6. **Leave it better.** Fix small stale passages you notice nearby. List larger ones in the pull request instead of ignoring them.
+
+Pull requests get an advisory warning (`scripts/check-doc-drift.py`) when they change code in the left column without touching any doc in the right column. If no doc update is needed, say why in the pull request.
+
+<!-- doc-map:start -->
+| When you change | Update |
+| --- | --- |
+| `server/app.py`, `lib/gradara/api.ts` | `docs/API.md` |
+| `server/models.py`, `lib/gradara/model.ts`, `server/workspace.py` | `docs/architecture/MODEL_FORMAT.md`, `docs/API.md` |
+| `server/engine.py`, `server/engines.py`, `server/engine_runner.py`, `server/safety.py`, `Dockerfile.engine` | `docs/architecture/EXECUTION.md`, `docs/development/TROUBLESHOOTING.md`, `SECURITY.md` |
+| `server/llm/`, `server/agent.py`, `server/model_agent.py`, `server/exporter.py` | `docs/architecture/EXECUTION.md`, `docs/architecture/DISTRIBUTION.md`, `docs/AGENT_SETUP.md`, `docs/PRIVACY.md` |
+| `server/credentials.py`, `server/settings.py`, `server/paths.py` | `SECURITY.md`, `docs/development/SETUP.md`, `.env.example` |
+| `lib/gradara/net-*.ts`, `lib/gradara/routing.ts`, `lib/gradara/selection.ts` | `docs/architecture/WIRING.md` |
+| `lib/gradara/block-design.ts`, `components/gradara/block-face.tsx` | `docs/blocks/DESIGN.md` |
+| `components/gradara/settings-dialog.tsx` | `docs/USER_GUIDE.md`, `docs/AGENT_SETUP.md` |
+| `desktop/`, `packaging/`, `vite.desktop.config.ts` | `docs/architecture/DISTRIBUTION.md`, `docs/development/SETUP.md`, `docs/RELEASING.md` |
+| `cloud/gateway/` | `cloud/README.md`, `docs/PRIVACY.md`, `site/public/privacy.html` |
+| `cloud/deploy.sh`, `cloud/deploy.env`, `cloud/Dockerfile` | `cloud/README.md` |
+| `.github/workflows/` | `docs/development/TESTING.md`, `docs/RELEASING.md` |
+| `package.json`, `scripts/` | `docs/development/SETUP.md`, `docs/development/TESTING.md` |
+<!-- doc-map:end -->
+
 ## Verification and handoff
 
 Run checks appropriate to the change and record exact commands/results. Use a real browser for interaction changes; pure routing tests do not establish smooth pointer behavior. Use engine integration tests for physical/compiler/runtime changes. Documentation-only work needs link/hygiene checks, not a paid agent call or a simulation of every model.
 
-Describe the resulting behavior, changed contracts, validation, and remaining limitations. If a check cannot run, say why. The current lint backlog is documented; do not silently disable lint rules to claim a clean run. Update the relevant guide when behavior changes, and keep proposals labeled as future work.
+Describe the resulting behavior, changed contracts, validation, and remaining limitations. If a check cannot run, say why. The current lint backlog is documented; do not silently disable lint rules to claim a clean run. Update the docs your change owns (see [Keep documentation current](#keep-documentation-current)), and keep proposals labeled as future work.
 
 Keep documentation about the current product. Record task-specific test results in the PR or handoff; do not add session transcripts, dated audit diaries, personal workspace examples, or launch drafts to the repository. Put durable contracts in `docs/` and unresolved work in `ROADMAP.md`.
 

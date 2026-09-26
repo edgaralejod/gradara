@@ -1,6 +1,6 @@
 # Workbench components
 
-The root [AGENTS.md](../../AGENTS.md) applies. These components render and interact with model data; they do not define numerical execution order.
+The root [AGENTS.md](../../AGENTS.md) applies, including [keeping documentation current](../../AGENTS.md#keep-documentation-current); user-visible changes usually own `docs/USER_GUIDE.md`. These components render and interact with model data; they do not define numerical execution order.
 
 - Reuse `BlockFace` and shared port geometry for canvas and library visuals. Read the block design contract before changing sizes, text, symbols, or pin positions.
 - Keep transient pointer state local and frame-batched. Commit completed gestures through normal model operations/history, including label movement, resize, reconnect, and duplication.

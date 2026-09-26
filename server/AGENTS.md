@@ -1,6 +1,6 @@
 # Local service and numerical engine
 
-The root [AGENTS.md](../AGENTS.md) applies. Read [execution](../docs/architecture/EXECUTION.md), [model format](../docs/architecture/MODEL_FORMAT.md), [API](../docs/API.md), and [SECURITY.md](../SECURITY.md) for relevant changes.
+The root [AGENTS.md](../AGENTS.md) applies, including [keeping documentation current](../AGENTS.md#keep-documentation-current): service changes usually own `docs/API.md`, the execution guide, or the privacy notice. Read [execution](../docs/architecture/EXECUTION.md), [model format](../docs/architecture/MODEL_FORMAT.md), [API](../docs/API.md), and [SECURITY.md](../SECURITY.md) for relevant changes.
 
 - Preserve loopback binding, origin checks, bounded request validation, and container isolation. Do not turn this trusted local prototype into a hosted service by changing only a bind address.
 - Keep `models.py` and the TypeScript document contract aligned. Omit unset optional values in document responses; test save/load, migration, and identity with temporary directories.

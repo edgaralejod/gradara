@@ -46,7 +46,7 @@ flowchart LR
   S -->|AI, own key| P[OpenAI / Anthropic]
 ```
 
-- The shell picks a free loopback port, starts the service with `GRADARA_DATA_DIR`, `GRADARA_STATIC_DIR`, and `GRADARA_RESOURCES`, waits for it, then loads the workbench. Quitting stops the service and its process tree.
+- The shell picks a free loopback port, starts the service with `GRADARA_PORT`, `GRADARA_DATA_DIR`, `GRADARA_LOG_DIR`, `GRADARA_STATIC_DIR`, `GRADARA_RESOURCES`, and `GRADARA_VERSION`, waits for it, then loads the workbench. Quitting stops the service and its process tree.
 - The data folder is `<OS app data>/Gradara/data`. Logs are in `<OS app data>/Gradara/logs`. Help menu entries open both.
 - The workbench is the same React app built without server rendering (`vite.desktop.config.ts`, mode `desktop`).
 - Installers: NSIS on Windows, DMG and ZIP per architecture on macOS, AppImage and deb on Linux. Updates use electron-updater against published GitHub Releases (drafts are never offered). Windows and the Linux AppImage update in place; macOS can only apply updates to signed builds, so unsigned Mac builds keep working but must be updated by downloading the new DMG. `GRADARA_DISABLE_UPDATES=1` turns update checks off.

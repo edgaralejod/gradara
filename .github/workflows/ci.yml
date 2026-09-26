@@ -55,9 +55,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+          # Full history so the doc-drift check can diff against the base branch.
+          fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
       - run: python scripts/check-docs.py
+      - name: Docs updated alongside code (advisory)
+        if: github.event_name == 'pull_request'
+        run: python scripts/check-doc-drift.py "origin/${{ github.base_ref }}"
       - run: python scripts/check-repo.py
       - run: git diff --check

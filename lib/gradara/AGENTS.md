@@ -1,6 +1,6 @@
 # Model and interaction core
 
-The root [AGENTS.md](../../AGENTS.md) applies. Read the [document contract](../../docs/architecture/MODEL_FORMAT.md) and relevant wiring/design docs.
+The root [AGENTS.md](../../AGENTS.md) applies, including [keeping documentation current](../../AGENTS.md#keep-documentation-current). Read the [document contract](../../docs/architecture/MODEL_FORMAT.md) and relevant wiring/design docs.
 
 - Keep model operations immutable and independent of React Flow's view objects. Clone nested definitions when duplicating; preserve IDs when renaming or revising compatible interfaces.
 - Reconcile net identities after connectivity changes. Test merge, split, branch deletion, duplication, undo, and label persistence. Do not treat every drawn wire as a separate net.
