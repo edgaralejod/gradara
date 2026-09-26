@@ -57,8 +57,45 @@ store_secret() { # name value-on-stdin
   echo "  stored $name"
 }
 
-prompt_secret() { # name "question" prefix
-  local name=$1 question=$2 prefix=$3 value=''
+verify_key() { # kind value: a free, read-only call to the provider; the key goes to curl on stdin
+  local kind=$1 value=$2 url config body
+  case $kind in
+    anthropic)
+      url="https://api.anthropic.com/v1/models?limit=1"
+      config=$(printf 'header = "x-api-key: %s"\nheader = "anthropic-version: 2023-06-01"' "$value") ;;
+    openai)
+      url=https://api.openai.com/v1/models
+      config=$(printf 'header = "Authorization: Bearer %s"' "$value") ;;
+    stripe)
+      url="${STRIPE_API:-https://api.stripe.com}/v1/balance"
+      config=$(printf 'user = "%s:"' "$value") ;;
+    *) return 0 ;;
+  esac
+  if body=$(curl -sS --fail-with-body -m 20 "$url" -K - <<<"$config" 2>&1); then
+    if [[ $kind == stripe ]]; then
+      if [[ $body == *'"livemode": true'* || $body == *'"livemode":true'* ]]; then
+        echo "  key works (Stripe live mode: real payments)"
+      else
+        echo "  key works (Stripe test mode: no real charges)"
+      fi
+    else
+      echo "  key works"
+    fi
+    return 0
+  fi
+  # Show the provider's reason without echoing anything that could contain the key.
+  echo "  the provider rejected this key: $(printf '%s' "$body" | python3 -c 'import json,sys
+t=sys.stdin.read()
+try:
+    d=json.loads(t[t.index("{"):]); e=d.get("error", d)
+    print(e.get("message", "unknown error") if isinstance(e, dict) else e)
+except Exception:
+    print("no response (check the network)")')"
+  return 1
+}
+
+prompt_secret() { # name "question" prefixes verifier
+  local name=$1 question=$2 prefixes=$3 kind=${4:-} value='' ok
   while true; do
     read -r -s -p "  $question: " value
     echo
@@ -66,8 +103,13 @@ prompt_secret() { # name "question" prefix
       if secret_exists "$name"; then echo "  kept the existing $name"; return; fi
       echo "  a value is required"; continue
     fi
-    if [[ -n $prefix && $value != "$prefix"* ]]; then
-      echo "  that does not look right (expected it to start with $prefix); try again"; continue
+    ok=''
+    for prefix in $prefixes; do [[ $value == "$prefix"* ]] && ok=1; done
+    if [[ -n $prefixes && -z $ok ]]; then
+      echo "  that does not look right (expected it to start with ${prefixes// / or }); try again"; continue
+    fi
+    if ! verify_key "$kind" "$value"; then
+      echo "  not saved; paste the key again (or press Ctrl-C to stop)"; continue
     fi
     printf '%s' "$value" | store_secret "$name"
     value=''
@@ -78,11 +120,11 @@ prompt_secret() { # name "question" prefix
 cmd_secrets() {
   say "Secrets (typing is hidden; press Enter to keep an existing value)"
   case $LLM_PROVIDER in
-    anthropic) prompt_secret llm-api-key "Anthropic API key" "sk-ant-" ;;
-    openai) prompt_secret llm-api-key "OpenAI API key" "sk-" ;;
+    anthropic) prompt_secret llm-api-key "Anthropic API key" "sk-ant-" anthropic ;;
+    openai) prompt_secret llm-api-key "OpenAI API key" "sk-" openai ;;
     *) echo "LLM_PROVIDER must be anthropic or openai"; exit 1 ;;
   esac
-  prompt_secret stripe-secret-key "Stripe secret key (sk_test_… for testing, sk_live_… for real payments)" "sk_"
+  prompt_secret stripe-secret-key "Stripe secret key (sk_live_… for real payments, sk_test_… for testing; a restricted rk_ key also works)" "sk_ rk_" stripe
 }
 
 stripe_api() { # method path [curl args...]; the key comes from Secret Manager and is never printed

@@ -49,7 +49,7 @@ With `GATEWAY_ENV=production` the service refuses to start with development sign
 
 ## Deploy on Google Cloud
 
-The service runs in the Google Cloud project `gradara-2e47a` (the same project as the Firebase sign-in and the website), region `us-central1`. `cloud/deploy.sh` does the work from the repository root with `gcloud` signed in. Non-secret settings (project, region, Firebase web config, model, Stripe price ids) are in `cloud/deploy.env`. Secrets are typed at hidden prompts and go straight to Secret Manager; the script never prints them.
+The service runs in the Google Cloud project `gradara-2e47a` (the same project as the Firebase sign-in and the website), region `us-central1`. `cloud/deploy.sh` does the work from the repository root with `gcloud` signed in. Non-secret settings (project, region, Firebase web config, model, Stripe price ids) are in `cloud/deploy.env`. Secrets are typed at hidden prompts, checked with a free read-only call to the provider (Anthropic or OpenAI model list, Stripe balance), and only then stored in Secret Manager; the script never prints them. The Stripe check also reports whether the key is live or test mode.
 
 ```sh
 cloud/deploy.sh setup     # once: APIs, Cloud SQL (db-f1-micro), service accounts, log exclusion,
