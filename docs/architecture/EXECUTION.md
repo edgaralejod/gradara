@@ -9,6 +9,8 @@
 5. OpenModelica loads MSL, compiles, initializes, and simulates. The adapter requires explicit successful completion, a result file, sufficient coverage, and finite preview data.
 6. The service saves a result preview and retains full CSV output. The browser polls the job and renders results or diagnostics.
 
+Failures raise `SimulationFailure` (`server/diagnostics.py`). Its message is the readable text stored as the job `error`; its structured `Diagnostic` list is stored as the job `diagnostics` (see the [job contract](../API.md#job-contract)). Validation and safety problems name their blocks and ports directly. For solver text, `failure_diagnostics` makes one entry per compiler `Error:` line, maps instance IDs that appear as component references, and, for singular linear systems, names the signal blocks on a direct-feedthrough cycle (a block whose equations use `der`, `sample`, `delay`, or `pre` breaks the cycle). Engine start-up failures are `engine` diagnostics. Once a run folder exists, a failure also writes `diagnostics.json` beside `model.mo`, and `GET /api/runs/{runId}/diagnostics` returns it. Successful runs parse solver warnings into `result.problems` and keep the raw `diagnostics` string.
+
 The job registry is in memory. API job statuses are `queued`, `running`, `complete`, `failed`, and `cancelled`. At most four operations are active across simulation/component/export jobs. Engine execution has its own two-slot semaphore. Restarting the service loses job status; it does not delete completed run directories. There is no durable queue or automatic resume.
 
 ## Engine supervision
@@ -23,7 +25,7 @@ Manual models support stop times up to 86,400 simulated seconds for slow thermal
 
 ## Results
 
-`result.json` includes run ID, engine label, project key, model hash, revision, full input snapshot, stop time, elapsed time, sample count, a common time array, signal series, and diagnostics. Series use component/variable keys such as `voltageProbe.y`.
+`result.json` includes run ID, engine label, project key, model hash, revision, full input snapshot, stop time, elapsed time, sample count, a common time array, signal series, the raw solver diagnostics string, and the structured warnings in `problems`. Series use component/variable keys such as `voltageProbe.y`.
 
 The preview combines a reduced overview with event pairs, extrema, and a dense final window. All series use the same sample indices. The preview is not the full numerical output, and event-heavy models can still make it large. CSV downloads retain the full output file. OpenModelica can emit an extra grid row beyond the requested stop time; preview data excludes it.
 

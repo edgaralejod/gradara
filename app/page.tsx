@@ -141,6 +141,8 @@ import NetLayer from '@/components/gradara/net-layer';
 import {
   api,
   waitForJob,
+  JobFailure,
+  type RunFailure,
   type SimulationResult,
   type Job,
 } from '@/lib/gradara/api';
@@ -273,6 +275,7 @@ function Workbench() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState('');
+  const [runFailure, setRunFailure] = useState<RunFailure | null>(null);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [resultSignature, setResultSignature] = useState('');
   const [notice, setNotice] = useState('');
@@ -587,6 +590,7 @@ function Workbench() {
     setEquationBlock(null);
     setInspectorOpen(false);
     setRunError('');
+    setRunFailure(null);
     setSaveError('');
     setResult(null);
     setResultSignature('');
@@ -843,6 +847,7 @@ function Workbench() {
     runController.current = controller;
     setRunning(true);
     setRunError('');
+    setRunFailure(null);
     setResult(null);
     setResultSignature('');
     const snapshot = structuredClone(projectRef.current);
@@ -873,8 +878,17 @@ function Workbench() {
         runController.current === controller &&
         !controller.signal.aborted &&
         (e as Error).name !== 'AbortError'
-      )
+      ) {
         setRunError((e as Error).message);
+        if (e instanceof JobFailure)
+          setRunFailure({
+            runId: e.jobId,
+            modelId: snapshot.modelId,
+            signature: currentSignature,
+            message: e.message,
+            diagnostics: e.diagnostics,
+          });
+      }
     } finally {
       if (runController.current === controller) {
         runController.current = null;

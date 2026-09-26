@@ -24,7 +24,7 @@ Run the launcher to build the image if it is missing. A first build needs networ
 
 Read the error detail first. Unconnected scalar inputs should name the block and port. A graph can be saved while incomplete; it is checked again before Run. Mux/demux and subsystem placeholders do not yet execute their intended behavior.
 
-Inspect emitted source and the failing run folder's diagnostics. Check parameter ranges, equation balance, initial conditions, feedback sign, and physical references. Ideal switch networks can be singular for particular configurations. Do not treat partial CSV output as a successful solution or weaken completion checks to remove the error.
+Inspect emitted source and the failing run folder's `diagnostics.json`, which holds the same structured problems the job reported, with the raw solver text in each `detail`. An algebraic-loop failure lists the signal blocks it found on a cycle without state; that list is a best-effort hint, not solver output. Check parameter ranges, equation balance, initial conditions, feedback sign, and physical references. Ideal switch networks can be singular for particular configurations. Do not treat partial CSV output as a successful solution or weaken completion checks to remove the error.
 
 ## Results are missing after editing or reopening
 

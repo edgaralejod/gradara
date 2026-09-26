@@ -14,19 +14,20 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | `GET /project` | None | `{project: Project \| null, saveVersion: string \| null}` for the last activated document, resolved from its canonical saved file. |
 | `PUT /project` | Project | Legacy creation/idempotent retry only. Changing an existing document returns 409 with a reload instruction; use versioned model saves. |
 | `GET /models` | Optional `?trashed=true` | `{models: [{id, name, blocks, exampleId, updatedAt}]}`, newest saved first. Trash is separate from My models. |
-| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, `flyback`, or `datacenter`. |
+| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, `flyback`, `datacenter`, or `servo`. |
 | `GET /models/{modelId}` | Saved ID | Returns `{project, saveVersion}` without activating it. |
 | `PUT /models/{modelId}` | `{project, expectedVersion}` | Writes that document without changing active selection; returns `{project, saveVersion}`. ID must match the path. Stale versions return 409. |
 | `POST /models/{modelId}/activate` | None | Opens an existing model as the last active document; returns `{project, saveVersion}`. |
 | `POST /models/copy` | `{project, name}` | Creates and activates an independent saved copy with a unique name; returns `{project, saveVersion}`. Used for import and copy recovery. |
 | `POST /models/{modelId}/trash` | None | Moves an inactive model to recoverable Trash. Returns `{trashed: true}`; removing the active model returns 409. |
 | `POST /models/{modelId}/restore` | None | Restores a trashed model with its original identity, without activating it; returns `{project, saveVersion}`. |
-| `GET /examples/{template}` | `dc`, `foc`, `buck`, `flyback`, or `datacenter` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
+| `GET /examples/{template}` | `dc`, `foc`, `buck`, `flyback`, `datacenter`, or `servo` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
 | `POST /source` | Project | `{source}` containing emitted Modelica. Does not run a solver. |
 | `POST /runs` | Project | Queues a simulation and returns a job. |
 | `GET /jobs/{jobId}` | Job ID | Current job, with result or error once finished. |
 | `DELETE /jobs/{jobId}` | Job ID | Requests cancellation, returns `{cancelled: true}`; poll for terminal status. |
 | `GET /results/latest?model={modelId}` | Optional document ID | `{result: Result \| null}` matching the saved document and source hash. Omitting the ID uses the active model. |
+| `GET /runs/{runId}/diagnostics` | Run ID | `{error, diagnostics}` recorded for a failed run once its folder exists; 404 when none were recorded. |
 | `GET /results/{runId}/csv` | Run ID | Full CSV attachment, when available. |
 | `GET /results/{runId}/data` | Run ID | Stored result metadata with full-resolution time and series from CSV. |
 | `GET /components/library` | None | `{components: [...]}` of saved AI-block definitions. |
@@ -53,7 +54,15 @@ Normal responses currently use HTTP 200, including accepted jobs. Save conflicts
 {"id":"opaque-job-id","kind":"simulation","status":"queued"}
 ```
 
-`kind` is `simulation`, `component`, `model`, or `export`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`. Jobs disappear from the registry on service restart. A result file is durable only if the operation completed and wrote it. See [execution details](architecture/EXECUTION.md).
+`kind` is `simulation`, `component`, `model`, or `export`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
+
+```json
+{"id":"d1","severity":"error","source":"runtime","message":"The model has an algebraic loop the solver cannot resolve.",
+ "detail":"<raw solver text with instance IDs replaced by block names>","blockIds":["gain","error"],
+ "ports":[],"netIds":["net_3"],"wireIds":["w_2","w_4"],"hint":"OpenModelica could not solve an algebraic loop. …"}
+```
+
+`severity` is `error`, `warning`, or `info`. `source` is `validation` (unconnected inputs, drawing-only blocks), `safety` (forbidden constructs), `compiler` (one entry per OpenModelica `Error:` line), `runtime` (solver failure, early stop, non-finite values), or `engine` (the engine could not start or finish). `blockIds`, `ports` (`{blockId, portId}`), `netIds`, and `wireIds` identify what the problem is about when Gradara can tell. Instance IDs are matched only as component references (`gain.k`, `System.gain`), and an algebraic loop names the signal blocks on a cycle without state. The mapping is best effort; `detail` always keeps the full text. A successful simulation result carries warnings the same way in `problems`. Jobs disappear from the registry on service restart. A result file is durable only if the operation completed and wrote it. See [execution details](architecture/EXECUTION.md).
 
 ## Run a checked-in example without changing saved models
 
