@@ -1,6 +1,6 @@
 {
   "name": "gradara-workbench",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -16,7 +16,12 @@
     "engine:test": ".venv/bin/python -m pytest -q",
     "local": "python3 scripts/start.py",
     "postinstall": "node scripts/patch-react-flow.mjs",
-    "report:blocks": "tsx scripts/report-blocks.ts"
+    "report:blocks": "tsx scripts/report-blocks.ts",
+    "desktop:web": "vite build -c vite.desktop.config.ts --mode desktop",
+    "desktop:backend": "python3 packaging/build_backend.py",
+    "desktop:prepare": "npm run desktop:web && npm run desktop:backend",
+    "desktop:start": "npm run desktop:web && cd desktop && npm start",
+    "desktop:dist": "npm run desktop:prepare && cd desktop && npm run dist"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

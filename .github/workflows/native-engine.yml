@@ -1,0 +1,43 @@
+name: Native OpenModelica
+
+# Real-engine tests against OpenModelica installed on the host (no Docker),
+# the path installed desktop builds use on Windows and Linux.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      GRADARA_ENGINE: native
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: OpenModelica/setup-openmodelica@419f31141aa79a22f7033def5626047dd3bb5069 # v1.2.0
+        with:
+          version: '1.27'
+          packages: |
+            'omc'
+          libraries: |
+            'Modelica 4.1.0'
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r server/requirements-dev.txt
+      - name: Engine status
+        shell: bash
+        run: python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
+      - name: Unit and real-engine tests
+        run: python -m pytest -q

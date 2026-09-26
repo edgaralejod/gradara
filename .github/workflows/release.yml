@@ -1,0 +1,107 @@
+name: Desktop installers
+
+# Builds Windows, macOS, and Linux installers. Tag pushes (v*) attach them to a
+# draft GitHub Release; manual runs upload them as workflow artifacts only.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            builder: --win nsis --x64
+          - name: macOS Apple silicon
+            os: macos-15
+            builder: --mac dmg zip --arm64
+          - name: macOS Intel
+            os: macos-15-intel
+            builder: --mac dmg zip --x64
+          # 22.04 keeps the bundled service compatible with older Linux glibc versions.
+          - name: Linux x64
+            os: ubuntu-22.04
+            builder: --linux AppImage deb --x64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            desktop/package-lock.json
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: server/requirements*.txt
+      - name: Install dependencies
+        shell: bash
+        run: |
+          npm ci
+          python -m pip install -r server/requirements.txt pyinstaller==6.22.3
+          cd desktop && npm ci
+      - name: Build workbench and local service
+        shell: bash
+        run: |
+          npm run desktop:web
+          python packaging/build_backend.py
+      - name: Smoke-test the bundled service
+        shell: bash
+        run: python packaging/smoke_backend.py
+      - name: Build installer
+        shell: bash
+        working-directory: desktop
+        env:
+          # Optional signing secrets; builds are unsigned when these are empty.
+          CSC_LINK: ${{ runner.os == 'macOS' && secrets.MAC_CERTIFICATE_P12 || secrets.WIN_CERTIFICATE_PFX }}
+          CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.MAC_CERTIFICATE_PASSWORD || secrets.WIN_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.MAC_CERTIFICATE_P12 && 'true' || 'false' }}
+        run: npx electron-builder ${{ matrix.builder }} --publish never
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gradara-${{ matrix.os }}
+          path: |
+            desktop/dist/*.exe
+            desktop/dist/*.dmg
+            desktop/dist/*.zip
+            desktop/dist/*.AppImage
+            desktop/dist/*.deb
+            desktop/dist/*.yml
+            desktop/dist/*.blockmap
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft \
+            --title "Gradara ${GITHUB_REF_NAME#v}" --notes "Draft: review the notes and known limitations before publishing." \
+            artifacts/*
