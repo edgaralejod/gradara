@@ -20,7 +20,7 @@ Point a source checkout or desktop build at it with `GRADARA_GATEWAY_URL=http://
 | Variable | Production value |
 | --- | --- |
 | `GATEWAY_ENV` | `production` (enables the startup checks below) |
-| `PUBLIC_URL` | `https://ai.virtu-services.us` |
+| `PUBLIC_URL` | `https://api.gradara.app` |
 | `DATABASE_URL` | `postgresql+psycopg://gateway:…@/gradara?host=/cloudsql/PROJECT:REGION:INSTANCE` |
 | `AUTH_MODE` | `firebase` |
 | `FIREBASE_PROJECT_ID`, `FIREBASE_WEB_API_KEY`, `FIREBASE_AUTH_DOMAIN` | From the Firebase console (web app config; the web API key is public by design) |
@@ -53,8 +53,8 @@ One-time setup, in the Virtu Services Google Cloud project:
 
 1. **Database.** Create a Cloud SQL PostgreSQL instance (smallest shared-core tier is enough to start), a `gradara` database, and a `gateway` user. Tables are created on first start.
 2. **Secrets.** Store the model vendor key, Stripe keys, database password, and admin token in Secret Manager.
-3. **Firebase Authentication.** In the Firebase console, enable the Google provider and Email link (passwordless). Add `ai.virtu-services.us` to authorized domains. Copy the web app config values.
-4. **Stripe.** Create a "Gradara AI credits" product with one one-time Price per pack. Add a webhook endpoint `https://ai.virtu-services.us/v1/billing/webhook` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`, and store its signing secret. Set the statement descriptor and support email. Enable Stripe Tax when registrations are in place.
+3. **Firebase Authentication.** In the Firebase console, enable the Google provider and Email link (passwordless). Add `api.gradara.app` to authorized domains. Copy the web app config values.
+4. **Stripe.** Create a "Gradara AI credits" product with one one-time Price per pack. Add a webhook endpoint `https://api.gradara.app/v1/billing/webhook` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`, and store its signing secret. Set the statement descriptor and support email. Enable Stripe Tax when registrations are in place.
 5. **Model vendor.** Use a dedicated API organization or workspace for production. Request zero data retention, set spend limits and alerts, and record the terms in the operations notes.
 
 Build and deploy from the repository root:
@@ -67,9 +67,9 @@ gcloud run deploy gradara-gateway \
   --region REGION --allow-unauthenticated --timeout 600 --concurrency 20 \
   --min-instances 0 --max-instances 3 --memory 512Mi \
   --add-cloudsql-instances PROJECT:REGION:INSTANCE \
-  --set-env-vars GATEWAY_ENV=production,PUBLIC_URL=https://ai.virtu-services.us,AUTH_MODE=firebase,LLM_PROVIDER=anthropic,LLM_MODEL=claude-sonnet-5,… \
+  --set-env-vars GATEWAY_ENV=production,PUBLIC_URL=https://api.gradara.app,AUTH_MODE=firebase,LLM_PROVIDER=anthropic,LLM_MODEL=claude-sonnet-5,… \
   --set-secrets ANTHROPIC_API_KEY=anthropic-key:latest,STRIPE_SECRET_KEY=stripe-secret:latest,STRIPE_WEBHOOK_SECRET=stripe-webhook:latest,ADMIN_TOKEN=gateway-admin:latest,DATABASE_URL=gateway-db-url:latest
-gcloud run domain-mappings create --service gradara-gateway --domain ai.virtu-services.us --region REGION
+gcloud run domain-mappings create --service gradara-gateway --domain api.gradara.app --region REGION
 ```
 
 The 600-second timeout covers long model-build calls. The in-memory per-account concurrency limit is per instance; keep `--max-instances` small until a shared limiter is needed.

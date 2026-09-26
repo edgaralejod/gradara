@@ -7,7 +7,7 @@ One repository produces three things: the developer checkout, installable deskto
 | Source checkout | Contributors, tinkerers, forks | `scripts/start.py`: Vite dev server plus the local service | Codex CLI if installed, otherwise Gradara AI |
 | Desktop app | Engineers who want to install and go | Electron shell plus a frozen local service and static workbench | Gradara AI (prepaid credits) |
 | Gradara AI service (`cloud/`) | Desktop and source users who choose it | Container on Cloud Run with PostgreSQL | Not applicable |
-| Website (`site/`) | Visitors choosing and downloading Gradara | Static files on Firebase Hosting, [gradara-web.web.app](https://gradara-web.web.app/) | Not applicable |
+| Website (`site/`) | Visitors choosing and downloading Gradara | Static files on Firebase Hosting, [gradara.app](https://gradara.app/) | Not applicable |
 
 Everything is Apache-2.0. The paid product is the hosted service and the convenience of signed, updating installers, not closed code. Anyone can use their own API key or build their own copy; the "Gradara" name and official builds identify the maintained distribution.
 

@@ -10,7 +10,7 @@ from typing import Any
 from .paths import SETTINGS_FILE, FROZEN
 from .workspace import atomic_write
 
-DEFAULT_GATEWAY = 'https://ai.virtu-services.us'
+DEFAULT_GATEWAY = 'https://api.gradara.app'
 _lock = threading.Lock()
 
 DEFAULTS: dict[str, Any] = {

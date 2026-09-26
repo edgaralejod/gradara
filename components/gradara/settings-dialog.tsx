@@ -758,7 +758,7 @@ function PrivacySettings({ dataDirectory }: { dataDirectory?: string }) {
       <Button
         variant="outline"
         onClick={() =>
-          openExternal('https://gradara-web.web.app/privacy')
+          openExternal('https://gradara.app/privacy')
         }
       >
         <ExternalLink />
