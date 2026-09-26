@@ -205,7 +205,17 @@ jobs:
           exe=/Applications/Gradara.app/Contents/MacOS/Gradara
           file "$exe"
           file /Applications/Gradara.app/Contents/Resources/backend/gradara-backend
-          codesign -dv /Applications/Gradara.app 2>&1 || true
+          signature=$(codesign -dv /Applications/Gradara.app 2>&1 || true)
+          echo "$signature"
+          if grep -q "Developer ID Application" <<<"$signature"; then
+            # Signed builds must pass the same checks a user's Mac runs on first open.
+            codesign --verify --deep --strict --verbose=2 /Applications/Gradara.app
+            spctl --assess --type execute --verbose=4 /Applications/Gradara.app
+            xcrun stapler validate /Applications/Gradara.app
+            echo "Signed, notarized, and accepted by Gatekeeper"
+          else
+            echo "::notice::Unsigned macOS build: users must allow it in System Settings > Privacy & Security on first open"
+          fi
           echo "GRADARA_EXE=$exe" >> "$GITHUB_ENV"
 
       # Linux: the .deb through apt, like a double-click install.

@@ -55,7 +55,7 @@ Signing secrets (optional until configured; unsigned builds warn users):
 
 | Secret | Purpose |
 | --- | --- |
-| `MAC_CERTIFICATE_P12`, `MAC_CERTIFICATE_PASSWORD` | Developer ID Application certificate (base64 .p12) |
+| `MAC_CERTIFICATE_P12`, `MAC_CERTIFICATE_PASSWORD` | Developer ID Application certificate (base64 .p12). Create it in Xcode (Settings → Accounts → Manage Certificates → Developer ID Application; Account Holder role), export it from Keychain Access as .p12, and store `base64 -i cert.p12`. When set, the macOS install test also runs `codesign --verify`, `spctl --assess`, and `xcrun stapler validate`. |
 | `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Notarization |
 | `WIN_CERTIFICATE_PFX`, `WIN_CERTIFICATE_PASSWORD` | Windows code signing certificate, or configure Azure Trusted Signing in `electron-builder.yml` |
 
