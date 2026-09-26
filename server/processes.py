@@ -1,9 +1,29 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Platform-specific cleanup for the isolated generation subprocess."""
+"""Platform-specific process spawning and cleanup for engine and agent subprocesses."""
 import asyncio
 import os
 import signal
 import subprocess
+
+
+def spawn_options(new_group: bool = True) -> dict:
+    """Keyword arguments for child processes started by the local service.
+
+    New process groups let cancellation stop a whole tree (omc, make, gcc and the
+    simulation executable). On Windows, CREATE_NO_WINDOW keeps an installed GUI
+    app from flashing console windows for every child.
+    """
+    if os.name == 'nt':
+        flags = subprocess.CREATE_NO_WINDOW
+        if new_group:
+            flags |= subprocess.CREATE_NEW_PROCESS_GROUP
+        return {'creationflags': flags}
+    return {'start_new_session': new_group}
+
+
+async def terminate_tree(process):
+    """Stop a child process and everything it started; wait for it to exit."""
+    await terminate_generation(process)
 
 
 async def terminate_generation(process):

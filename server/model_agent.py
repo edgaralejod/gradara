@@ -4,7 +4,8 @@ import json
 from pydantic import BaseModel, ConfigDict, Field
 from . import agent
 from .component_library import list_components
-from .engine import ROOT, simulate
+from .engine import simulate
+from .paths import DATA
 from .models import BlockType, Definition, Project
 
 
@@ -117,12 +118,12 @@ def assemble(plan: Plan, assembly: Assembly, catalog: dict[str, Definition]) -> 
 
 
 async def generate_model(request: ModelGenerateRequest, job_id: str, progress=lambda message: None):
-    catalog = catalog_snapshot(request, ROOT/'projects')
+    catalog = catalog_snapshot(request, DATA)
     progress('Inspecting the built-in and AI libraries')
     instructions = '''You plan complete runnable models for Gradara. Return only schema JSON; do not use tools.
 Reuse catalog components whenever their behavior fits, including parameter variations. Never recreate a resistor, gain, source, sensor, etc. already available. Missing blocks are only genuinely absent behaviors; at most four. Give each missing block an alias id and a self-contained request for the existing typed component creator. No whole-circuit mega-block to bypass assembly. Supported physics: electrical, rotational mechanical, thermal, scalar signals and couplings. Unsupported domains (including translational mechanics, hydraulic connectors, vector signals) must be explained in unsupported, not silently approximated. Otherwise unsupported is empty. Plan a self-contained simulation with sources, loads, references/grounds, and sensors for quantities requested. Assumptions must be concise and explicit. reuse lists exact library IDs. Missing definitions will be generated and checked BEFORE assembly.
 User request:\n'''+request.prompt+'\nAvailable catalog:\n'+describe(catalog)
-    plan = Plan.model_validate(await agent.structured_generation(instructions, Plan.model_json_schema(), job_id+'-plan'))
+    plan = Plan.model_validate(await agent.structured_generation(instructions, Plan.model_json_schema(), job_id+'-plan', task='model-plan'))
     if plan.unsupported:
         raise ValueError(plan.unsupported)
     if any(key not in catalog for key in plan.reuse):
@@ -139,7 +140,7 @@ User request:\n'''+request.prompt+'\nAvailable catalog:\n'+describe(catalog)
     prompt = '''Assemble a complete runnable Gradara model using ONLY these exact library IDs and port/parameter IDs. Return schema JSON, no tools. Never change definitions or invent equations here. Parameters array contains only overrides (empty allowed). Unique instance IDs; short human names. One block per grid cell. Arrange left-to-right signal flow, shared horizontal rows, return paths/grounds below. A source may connect to multiple inputs; physical terminals may branch. Signal connections must run from output to input. Include physical reference/ground and all required scalar inputs. Add available sensors to expose requested physical measurements. Choose a useful duration <=60 s, especially short for switching circuits.\nUser request:\n'''+request.prompt+'\nPlan:\n'+plan.model_dump_json()+'\nAvailable definitions (complete model will be simulated):\n'+describe(available)
     for attempt in range(2):
         progress('Assembling connections and layout' if attempt == 0 else 'Repairing the model from simulation diagnostics')
-        data = await agent.structured_generation(prompt, Assembly.model_json_schema(), f'{job_id}-assembly{attempt}')
+        data = await agent.structured_generation(prompt, Assembly.model_json_schema(), f'{job_id}-assembly{attempt}', task='model-assembly')
         try:
             project = assemble(plan, Assembly.model_validate(data), available)
             progress('Checking the complete model in OpenModelica')

@@ -1,42 +1,24 @@
-"""Local Codex adapter. Generation returns data, never edits the workspace directly."""
+"""AI component authoring. Generation returns data, never edits the workspace directly."""
 import copy
-import asyncio
 import json
-import os
-from pathlib import Path
-import shutil
 from .models import BlockType, Definition
-from .engine import ROOT, check_component
+from .engine import check_component
 from .component_library import save_component
-from .processes import terminate_generation
-
-AGENT_DIR = ROOT/'projects'/'agent'
-AGENT_DIR.mkdir(parents=True, exist_ok=True)
-CODEX = os.environ.get('GRADARA_CODEX_BIN') or os.environ.get('FLUX_CODEX_BIN') or shutil.which('codex') or '/Applications/ChatGPT.app/Contents/Resources/codex'
+from .paths import DATA
+from .llm import dispatch
 
 PARAM_SCHEMA = {'type':'object','additionalProperties':False,'properties':{'id':{'type':'string'},'name':{'type':'string'},'value':{'type':'number'},'unit':{'type':'string'}},'required':['id','name','value','unit']}
 PORT_SCHEMA = {'type':'object','additionalProperties':False,'properties':{'id':{'type':'string'},'name':{'type':'string'},'direction':{'type':'string','enum':['input','output']},'domain':{'type':'string','enum':['signal']}},'required':['id','name','direction','domain']}
 BLOCK_SCHEMA = {'type':'object','additionalProperties':False,'properties':{'kind':{'type':'string'},'name':{'type':'string'},'description':{'type':'string'},'domain':{'type':'string','enum':['signal']},'symbol':{'type':'string'},'ports':{'type':'array','items':PORT_SCHEMA},'parameters':{'type':'array','items':PARAM_SCHEMA},'declarations':{'type':'string'},'equations':{'type':'string'},'controller':{'type':'boolean'}},'required':['kind','name','description','domain','symbol','ports','parameters','declarations','equations','controller']}
 
-async def structured_generation(prompt: str, schema: dict, job_id: str):
-    folder = AGENT_DIR/job_id
-    folder.mkdir(parents=True, exist_ok=True)
-    schema_path = folder/'schema.json'
-    result_path = folder/'response.json'
-    schema_path.write_text(json.dumps(schema))
-    (folder/'prompt.txt').write_text(prompt)
-    command = [CODEX,'exec','--ephemeral','--ignore-user-config','--skip-git-repo-check','--sandbox','read-only','-c','features.shell_tool=false','--output-schema',str(schema_path),'--output-last-message',str(result_path),'--color','never','-']
-    env = {k:v for k,v in os.environ.items() if not k.startswith('CODEX_') or k=='CODEX_HOME'}
-    process = await asyncio.create_subprocess_exec(*command,cwd=folder,env=env,stdin=asyncio.subprocess.PIPE,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE,start_new_session=True)
-    try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(prompt.encode()), 180)
-    except (asyncio.CancelledError, asyncio.TimeoutError):
-        await terminate_generation(process)
-        raise
-    (folder/'agent.log').write_bytes(stderr)
-    if process.returncode != 0 or not result_path.exists():
-        raise RuntimeError('Component generation did not finish. '+stderr.decode(errors='replace')[-1200:])
-    return json.loads(result_path.read_text())
+async def structured_generation(prompt: str, schema: dict, job_id: str, task: str = 'component') -> dict:
+    """Route one schema-constrained generation to the configured AI provider."""
+    return await dispatch.generate(prompt, schema, job_id, task=task)
+
+
+def provider_label() -> str:
+    from .settings import ai_provider
+    return dispatch.LABELS.get(ai_provider(), 'AI')
 
 def infer_block_type(definition: Definition | None) -> BlockType:
     if definition is None:
@@ -108,8 +90,8 @@ Declarations contain only internal Real/Integer/Boolean variables and initial va
             definition = Definition.model_validate({**data,'generated':True})
             validate_generated_type(definition, selected, existing)
             await check_component(definition, f'{job_id}-{attempt}')
-            entry = save_component(ROOT/'projects', definition)
-            return {'libraryId':entry['id'], 'definition':definition.model_dump(exclude_none=True),'provider':'Codex','checked':True,'blockType':selected}
+            entry = save_component(DATA, definition)
+            return {'libraryId':entry['id'], 'definition':definition.model_dump(exclude_none=True),'provider':provider_label(),'checked':True,'blockType':selected}
         except Exception as exc:
             errors.append(str(exc))
             instructions += '\nYour prior candidate:\n'+json.dumps(data)+'\nCorrect this integration error while preserving SELECTED BLOCK TYPE '+selected+':\n'+str(exc)[-4000:]

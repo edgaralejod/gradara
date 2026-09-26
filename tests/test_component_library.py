@@ -51,7 +51,7 @@ def test_only_successful_generation_is_archived(tmp_path, monkeypatch):
     from unittest.mock import AsyncMock
     from server import agent
     candidate = definition().model_dump()
-    monkeypatch.setattr(agent, 'ROOT', tmp_path)
+    monkeypatch.setattr(agent, 'DATA', tmp_path/'projects')
     monkeypatch.setattr(agent, 'structured_generation', AsyncMock(return_value=candidate))
     monkeypatch.setattr(agent, 'check_component', AsyncMock(side_effect=ValueError('Invalid equations')))
     import pytest
