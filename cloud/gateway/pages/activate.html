@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in to Gradara AI</title>
+  <link rel="stylesheet" href="/static/gateway.css">
+</head>
+<body>
+<main>
+  <div class="brand"><span>G</span>Gradara AI</div>
+
+  <section id="step-code">
+    <h1>Connect Gradara on your computer</h1>
+    <p>Check that this code matches the one shown in Gradara. Only continue if you started sign-in yourself.</p>
+    <label for="code">Sign-in code</label>
+    <input id="code" class="code" autocomplete="off" spellcheck="false" maxlength="9" placeholder="XXXX-XXXX">
+  </section>
+
+  <section id="step-signin" hidden>
+    <div id="firebase-signin" hidden>
+      <button id="google" class="primary" type="button">Continue with Google</button>
+      <p class="or">or get a sign-in link by email</p>
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" placeholder="you@company.com">
+      <button id="send-link" type="button">Email me a sign-in link</button>
+    </div>
+    <div id="dev-signin" hidden>
+      <p>Development server: enter any email to create a test account.</p>
+      <label for="dev-email">Email</label>
+      <input id="dev-email" type="email" autocomplete="email" placeholder="you@example.com">
+    </div>
+  </section>
+
+  <section id="step-approve" hidden>
+    <p id="signed-in-as"></p>
+    <button id="approve" class="primary" type="button">Approve this computer</button>
+    <button id="switch" type="button">Use a different account</button>
+  </section>
+
+  <section id="step-done" hidden>
+    <h1>You're connected</h1>
+    <p>Return to Gradara. Your credits and sign-in now appear in Settings.</p>
+  </section>
+
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <p class="fine">Gradara AI stores your email, credit balance, and usage counts. It never stores your prompts, models, or AI responses. <a href="https://virtu-services.us/gradara/privacy">Privacy</a></p>
+</main>
+<script type="module" src="/static/activate.js"></script>
+</body>
+</html>
