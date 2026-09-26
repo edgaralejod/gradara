@@ -280,6 +280,27 @@ export const extraBlocks: Definition[] = [
     ),
     controller: true,
   },
+  {
+    ...signal(
+      'discretePID',
+      'Discrete PID',
+      'PID(z)',
+      [input('reference', 'ref'), input('measured', 'meas'), output('y')],
+      'when sample(0, samplePeriod) then\n  e = reference - measured;\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*e));\n  derivative = (filterTime*pre(derivative) + kd*(e - pre(errorPrev)))/(filterTime + samplePeriod);\n  errorPrev = e;\n  y = max(-limit, min(limit, kp*e + integral + derivative));\nend when;',
+      [
+        p('kp', 'Proportional gain', 1),
+        p('ki', 'Integral gain', 0.5),
+        p('kd', 'Derivative gain', 0.05),
+        p('filterTime', 'Derivative filter', 0.01, 's', 0.0001),
+        p('limit', 'Output limit', 10, '', 0.001),
+        p('samplePeriod', 'Sample period', 0.001, 's', 0.0001),
+      ],
+      'discrete Real e(start=0, fixed=true);\ndiscrete Real integral(start=0, fixed=true);\ndiscrete Real derivative(start=0, fixed=true);\ndiscrete Real errorPrev(start=0, fixed=true);',
+      'Sampled PID with a filtered derivative, a clamped integral, and output saturation. Every state updates at the sample instant, so exported C reproduces it exactly.',
+      ['control', 'regulator', 'discrete', 'sampled', 'export', 'c'],
+    ),
+    controller: true,
+  },
   signal(
     'unitDelay',
     'Unit delay',
@@ -538,5 +559,20 @@ export const extraBlocks: Definition[] = [
     parameters: [],
     equations: 'y = tau;',
     keywords: ['mechanical', 'sensor'],
+  },
+  {
+    kind: 'angleSensor',
+    name: 'Angle sensor',
+    symbol: 'θ',
+    domain: 'mechanical',
+    description:
+      'Measures shaft angle in radians without loading the mechanical system.',
+    ports: [
+      physical('flange', 'shaft', 'mechanical', 'right'),
+      output('y', 'y', 'rad', 'left'),
+    ],
+    parameters: [],
+    equations: 'y = flange.phi;\nflange.tau = 0;',
+    keywords: ['mechanical', 'sensor', 'position', 'encoder'],
   },
 ];

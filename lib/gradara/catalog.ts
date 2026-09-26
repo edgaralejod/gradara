@@ -47,6 +47,7 @@ const kindCategory: Record<string, LibraryCategoryId> = {
   secondOrder: 'continuous',
   delay: 'continuous',
   pid: 'control',
+  discretePID: 'control',
   pi: 'control',
   currentPI: 'control',
   clarke: 'control',
@@ -81,6 +82,7 @@ const kindCategory: Record<string, LibraryCategoryId> = {
   sensor: 'mechanical',
   springDamper: 'mechanical',
   torqueSensor: 'mechanical',
+  angleSensor: 'mechanical',
 };
 
 export function categoryOf(definition: Definition): LibraryCategoryId {

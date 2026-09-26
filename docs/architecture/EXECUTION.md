@@ -43,11 +43,13 @@ Successful generation establishes schema/compiler compatibility. It does not ind
 
 ## Controller C export
 
-`server/exporter.py` requires a selected block whose definition has `controller: true`. It builds a package with project name/revision, the block definition and values, emitted controller source, adjacent connections, and an explicit C11 double-precision init/step target.
+`server/exporter.py` requires a selected block whose definition has `controller: true`. It builds a package with project name/revision, the block definition and values, emitted controller source, adjacent connections, and an explicit C11 double-precision init/step target. The target also states the detected sample-period parameter (`samplePeriod` or `Ts`, with value and unit), the `discrete` states named in the declarations, and whether the equations are sampled, so the prompt does not have to infer timing.
 
-The agent returns a header, source, and integration notes. A C compiler checks `-std=c11 -Wall -Wextra -Werror` through the selected backend (GCC in the engine container, or the host `gcc`/`cc` with the native backend); one compiler-driven repair is allowed. Files are stored exactly and zipped with the original controller contract. The C is compiled, not executed against the Modelica trajectory. Continuous-state discretization is chosen and described by the generator.
+The agent returns a header, source, and integration notes. A C compiler checks `-std=c11 -Wall -Wextra -Werror` through the selected backend (GCC in the engine container, or the host `gcc`/`cc` with the native backend); one compiler-driven repair is allowed. Files are stored exactly and zipped with the original controller contract and a README containing the notes. The job result returns `{id, blockId, header, source, notes, compiled, compiler}`, where `compiler` is the exact compile command; the Export dialog previews the files from it. Generated C is compiled, not executed against the Modelica trajectory. Continuous-state discretization is chosen and described by the generator.
 
-Current gaps include behavioral comparison, whole-subsystem boundaries, clock/rate analysis, fixed-point formats, HDL targets, and complete cancellation cleanup in the C compilation path. These are explicit [roadmap](../../ROADMAP.md) items. Generated source can be rebuilt; asking an LLM to regenerate it is not a deterministic rebuild.
+For sampled controllers, the repository has a behavioral reference. The [Servo position example](../examples/SERVO.md) ships a hand-reviewed C implementation of its Discrete PID in `tests/fixtures/servo-controller/`. An integration test in `tests/test_exporter.py` replays the solver's sampled controller inputs through that C and requires the outputs to match the simulated controller at every sample instant. This checks the reference and the block semantics, not each newly generated export.
+
+Current gaps include behavioral comparison of generated exports, whole-subsystem boundaries, clock/rate analysis, fixed-point formats, HDL targets, and complete cancellation cleanup in the C compilation path. These are explicit [roadmap](../../ROADMAP.md) items. Generated source can be rebuilt; asking an LLM to regenerate it is not a deterministic rebuild.
 
 ## Extension rules
 

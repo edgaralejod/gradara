@@ -99,6 +99,8 @@ export function BlockSymbol({
     );
   if (kind === 'pid' || kind === 'pi' || kind === 'currentPI')
     return <span className="pid-symbol">{kind === 'pid' ? 'PID' : 'PI'}</span>;
+  if (kind === 'discretePID')
+    return <span className="pid-symbol">PID(z)</span>;
   if (kind === 'step') return <Icon path="M5 35H26V9H55" />;
   if (kind === 'ramp') return <Icon path="M6 36H20L54 8" />;
   if (kind === 'sine')
@@ -261,6 +263,7 @@ export function BlockSymbol({
   if (kind === 'inertia' || kind === 'shaftLoad')
     return <span className="math-op">J</span>;
   if (kind === 'sensor') return <span className="math-op">ω</span>;
+  if (kind === 'angleSensor') return <span className="math-op">θ</span>;
   if (['clarke', 'park', 'inversePark'].includes(kind)) {
     const [a, b] = d.symbol.split('→');
     return (

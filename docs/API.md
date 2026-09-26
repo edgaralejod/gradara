@@ -32,7 +32,7 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | `GET /components/library` | None | `{components: [...]}` of saved AI-block definitions. |
 | `POST /components/generate` | `{prompt, existing?}` | Queues component generation; `existing` is an optional Definition to refine. |
 | `POST /models/generate` | `{prompt, catalog}` | Queues full-model generation; poll the job of kind `model`. |
-| `POST /exports` | `{project, blockId}` | Queues C generation for one controller block. |
+| `POST /exports` | `{project, blockId}` | Queues C generation for one controller block. The job result is `{id, blockId, header, source, notes, compiled, compiler}`. |
 | `GET /exports/{exportId}/download` | Export ID | ZIP with C source/header, original contract, and integration notes. |
 | `GET /engine` | None | Engine status: `backend` (`native` or `docker`), `preference`, `ready`, `label`, `detail`, suggested `actions`, `version`. |
 | `PUT /engine` | `{engine}` | `auto`, `native`, or `docker`; returns the new status. |

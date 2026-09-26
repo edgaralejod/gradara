@@ -6,6 +6,7 @@ import {
   ChevronRight,
   CircuitBoard,
   Copy,
+  Crosshair,
   FilePlus2,
   FileText,
   FolderOpen,
@@ -38,6 +39,7 @@ const icons = {
   buck: Zap,
   flyback: Zap,
   datacenter: Thermometer,
+  servo: Crosshair,
 };
 const dateLabel = (date: string) => {
   const value = new Date(date);

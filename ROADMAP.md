@@ -63,7 +63,7 @@ Build reproducible 100- and 1,000-block interaction workloads and record frame t
 
 1. Design hierarchical subsystems with stable boundary ports, explicit controller selection, and document migrations.
 2. Define scalar/vector/bus and sample-clock semantics before enabling placeholders as executable blocks.
-3. Compare generated controller C against Modelica trajectories for supported timing/discretization contracts.
+3. Replay *generated* controller C against Modelica trajectories automatically after export. A hand-reviewed reference for the sampled servo controller is already replayed in tests; continuous controllers still rely on the generator's documented discretization, and closed-loop C co-simulation is not implemented.
 4. Extend physical domains through tested Modelica components and examples; the current thermal domain identifier is not a full thermal library, and hydraulics/fluid support is not implemented.
 5. Add HDL only with explicit clock/reset, numeric, and latency contracts and toolchain validation.
 

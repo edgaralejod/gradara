@@ -25,6 +25,14 @@ export const modelTemplates = [
     detail: 'Control · Electrical · Mechanical',
   },
   {
+    id: 'servo',
+    title: 'Servo position',
+    name: 'Servo position control',
+    description:
+      'Sampled PID position loop on a DC motor, built to export its controller to C.',
+    detail: 'Control · Electrical · Mechanical · C export',
+  },
+  {
     id: 'foc',
     title: 'AC motor · FOC',
     name: 'FOC motor control',

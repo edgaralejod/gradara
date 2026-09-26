@@ -46,6 +46,7 @@ A fresh workspace opens with one empty **Untitled model**. Click its title to re
 | --- | --- |
 | Blank model | Add blocks from the library, connect ports, set parameters, and run. |
 | [DC motor control](models/DC.md) | A sampled PI controller, electrical motor, rotational load, and speed feedback. |
+| [Servo position control](docs/examples/SERVO.md) | A 1 kHz sampled PID position loop on a DC motor, built to export its controller to C and compare it with the simulation. |
 | [AC motor · FOC](models/FOC.md) | PMSM field-oriented control, d/q transforms, current loops, and an averaged inverter. |
 | [Buck converter](models/BUCK.md) | A 24 V to 12 V synchronous converter with actual ideal switches; inspect switching ripple with **Last 1 ms**. |
 | [480 VAC flyback](docs/examples/FLYBACK.md) | Bridge rectification, magnetizing energy storage, and 50 kHz switching to 24 V / 1 A. |

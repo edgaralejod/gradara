@@ -371,6 +371,28 @@
 .export-dialog .controller-export { padding: 12px; border-color: #d4dde4; }
 .export-dialog .controller-export h3 { font-size: var(--text-ui); }
 .export-dialog :is(.export-option p,.controller-export p,.export-note) { color: #637987; }
+.export-dialog.has-artifact { max-width: 760px !important; }
+.export-dialog .controller-picker { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; margin: 4px 0 2px; }
+.export-dialog .controller-picker > span { font-weight: 600; color: #354b5b; }
+.export-dialog .controller-picker select {
+  height: 28px; border: 1px solid #cfd9e0; border-radius: 2px; background: white; padding: 0 6px; color: #27333d;
+}
+.export-dialog .export-artifact { display: grid; margin: 8px 0 4px; border: 1px solid #cfd9e0; border-radius: 2px; background: white; }
+.export-dialog .export-artifact-tabs { display: flex; align-items: stretch; border-bottom: 1px solid #d9e2e8; background: #f7f9fa; }
+.export-dialog .export-artifact-tabs > button {
+  border: 0; border-bottom: 2px solid transparent; background: none; padding: 6px 10px; color: #526979;
+  font: 500 var(--text-ui)/1.2 var(--font-code); cursor: pointer;
+}
+.export-dialog .export-artifact-tabs > button.is-active { color: #27333d; border-bottom-color: var(--primary); }
+.export-dialog .export-artifact-tabs > .export-copy {
+  display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-family: var(--font-ui);
+}
+.export-dialog .export-artifact pre {
+  margin: 0; max-height: 300px; overflow: auto; padding: 10px 12px;
+  font: 12px/1.55 var(--font-code); color: #27333d; white-space: pre; tab-size: 2;
+}
+.export-dialog .export-success code { font-family: var(--font-code); font-size: var(--text-micro); }
+.export-dialog .download-artifact { border-radius: 2px; background: var(--primary); }
 /* Floating creators must sit above overlay sidebars on small workspaces. */
 .agent-composer { z-index: 30; }
 .canvas-wrap:has(.agent-composer) { z-index: 30; }

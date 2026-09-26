@@ -36,7 +36,7 @@ For a named context, add `--context CONTEXT` to the Docker command and set `GRAD
 .venv/bin/python -m pytest -q
 ```
 
-This runs the complete Python suite, including real engine jobs. Integration tests cover the DC motor and parameter response, FOC behavior, ideal buck switching at two duties, flyback startup and regulation, data-center electrical/thermal balances, and singular-model failure handling. They write uniquely named job artifacts under ignored `projects/runs/`. Do not delete that entire directory to clean tests; it also contains user runs.
+This runs the complete Python suite, including real engine jobs. Integration tests cover the DC motor and parameter response, FOC behavior, ideal buck switching at two duties, flyback startup and regulation, data-center electrical/thermal balances, singular-model failure handling, and the servo controller replay. The replay test (`tests/test_exporter.py`) simulates the servo example, feeds the solver's sampled controller inputs to the reference C in `tests/fixtures/servo-controller/` through a host `gcc`/`cc` build, and compares outputs at every sample. It is skipped with a reason when no host C compiler exists. The exporter's unit tests use a fake provider and compiler; a separate unit test compiles the reference with the export flags when a host compiler is present. They write uniquely named job artifacts under ignored `projects/runs/`. Do not delete that entire directory to clean tests; it also contains user runs.
 
 Engine and block changes should add checks with engineering meaning: expected steady-state relations, correct event behavior, conserved connection laws, or a meaningful failure diagnostic. A screenshot or successful compile alone does not prove a changed physical implementation works.
 

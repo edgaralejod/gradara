@@ -132,6 +132,13 @@ equation
   a.tau + b.tau = 0;
   y = a.tau;
 end {name};'''
+PHYSICAL['angleSensor'] = '''model {name}
+  Modelica.Mechanics.Rotational.Interfaces.Flange_a flange;
+  Modelica.Blocks.Interfaces.RealOutput y;
+ equation
+  y = flange.phi;
+  flange.tau = 0;
+ end {name};'''
 PHYSICAL['shaftLoad'] = '''model {name}
   parameter Real J=0.002, damping=0.001, initialLoad=0.05, stepLoad=0.35, loadTime=0.45;
   Modelica.Mechanics.Rotational.Interfaces.Flange_a flange;
