@@ -17,6 +17,7 @@ import {
   Cpu,
 } from 'lucide-react';
 import { api, downloadText, waitForJob, type Job } from '@/lib/gradara/api';
+import { notifyAiChanged, useAiLabel } from '@/lib/gradara/ai';
 import type { Project } from '@/lib/gradara/model';
 export default function ExportDialog({
   project,
@@ -27,6 +28,7 @@ export default function ExportDialog({
   selectedId?: string;
   onClose: () => void;
 }) {
+  const aiLabel = useAiLabel('export');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [artifact, setArtifact] = useState<{
@@ -71,6 +73,7 @@ export default function ExportDialog({
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      notifyAiChanged();
       setBusy('');
     }
   }
@@ -167,6 +170,7 @@ export default function ExportDialog({
               )}
             </Button>
           )}
+          {aiLabel && <span className="export-note">Uses {aiLabel}</span>}
           <span className="export-note">
             Verilog and VHDL are planned for a later milestone.
           </span>

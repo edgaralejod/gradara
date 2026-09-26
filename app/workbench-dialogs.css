@@ -8,6 +8,7 @@
   .source-dialog,
   .shortcuts-dialog,
   .about-dialog,
+  .settings-dialog,
   .agent-composer
 ) {
   border: 1px solid #bfcbd5;
@@ -23,7 +24,8 @@
   .export-dialog,
   .source-dialog,
   .shortcuts-dialog,
-  .about-dialog
+  .about-dialog,
+  .settings-dialog
 ) {
   padding: 14px;
   gap: 12px;
@@ -37,7 +39,8 @@
     .export-dialog,
     .source-dialog,
     .shortcuts-dialog,
-    .about-dialog
+    .about-dialog,
+    .settings-dialog
   )
   [data-slot='dialog-title'] {
   font-size: var(--text-ui);
@@ -51,7 +54,8 @@
     .export-dialog,
     .source-dialog,
     .shortcuts-dialog,
-    .about-dialog
+    .about-dialog,
+    .settings-dialog
   )
   [data-slot='dialog-description'] {
   font-size: var(--text-ui);
@@ -370,3 +374,70 @@
 /* Floating creators must sit above overlay sidebars on small workspaces. */
 .agent-composer { z-index: 30; }
 .canvas-wrap:has(.agent-composer) { z-index: 30; }
+
+/* Settings: engine setup, AI provider, account and credits, privacy. */
+.settings-dialog { width: min(560px, calc(100vw - 32px)); max-width: none; }
+.settings-dialog .settings-tabs { display: flex; gap: 2px; border-bottom: 1px solid #d4dde4; }
+.settings-dialog .settings-tabs button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 0;
+  border-bottom: 2px solid transparent; background: none; color: #637987; font: inherit; cursor: pointer;
+}
+.settings-dialog .settings-tabs button.is-active { color: #1d3342; border-bottom-color: #2f6f9f; font-weight: 600; }
+.settings-dialog .settings-section { display: grid; gap: 12px; }
+.settings-dialog .settings-lead, .settings-dialog .settings-card p, .settings-dialog .settings-step p,
+.settings-dialog .privacy-list p { color: #637987; margin: 0; }
+.settings-dialog .settings-status {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start;
+  padding: 10px 12px; border: 1px solid #d4dde4; border-radius: 3px; background: #fff;
+}
+.settings-dialog .settings-status p { margin: 2px 0 0; color: #637987; }
+.settings-dialog .status-dot-large { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; background: #c9831f; }
+.settings-dialog .settings-status.ok .status-dot-large { background: #2e8b57; }
+.settings-dialog .settings-steps { display: grid; gap: 8px; }
+.settings-dialog :is(.settings-step, .settings-card) {
+  display: grid; gap: 8px; justify-items: start; padding: 12px; border: 1px solid #d4dde4; border-radius: 3px; background: #eef2f5;
+}
+.settings-dialog .settings-card { background: #fff; }
+.settings-dialog .settings-card-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+.settings-dialog .settings-card-row .credit-balance, .settings-dialog .settings-pill {
+  margin-left: auto; padding: 2px 8px; border-radius: 999px; background: #e3eef7; color: #1d4d73; font-weight: 600;
+}
+.settings-dialog .settings-field { display: grid; gap: 4px; width: 100%; }
+.settings-dialog .settings-field > span { font-weight: 600; }
+.settings-dialog :is(select, input) {
+  width: 100%; min-height: 30px; padding: 4px 8px; border: 1px solid #bfcbd5; border-radius: 3px;
+  background: #fff; color: #304757; font: inherit;
+}
+.settings-dialog .settings-inline { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+.settings-dialog .settings-inline input { flex: 1 1 200px; width: auto; }
+.settings-dialog .settings-hint { color: #637987; font-size: var(--text-ui); margin: 0; display: flex; align-items: center; gap: 6px; }
+.settings-dialog .settings-ok { color: #2e7d4f; margin: 0; }
+.settings-dialog .provider-list { display: grid; gap: 6px; }
+.settings-dialog .provider-option {
+  display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; text-align: left; width: 100%;
+  padding: 9px 10px; border: 1px solid #d4dde4; border-radius: 3px; background: #fff; color: inherit; font: inherit; cursor: pointer;
+}
+.settings-dialog .provider-option.is-selected { border-color: #2f6f9f; box-shadow: inset 0 0 0 1px #2f6f9f; }
+.settings-dialog .provider-option small { display: block; color: #637987; }
+.settings-dialog .provider-radio {
+  display: grid; place-items: center; width: 16px; height: 16px; margin-top: 1px; border-radius: 50%;
+  border: 1px solid #93a6b4; color: #fff;
+}
+.settings-dialog .provider-option.is-selected .provider-radio { background: #2f6f9f; border-color: #2f6f9f; }
+.settings-dialog .provider-badge {
+  margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: #e3eef7; color: #1d4d73;
+  font-style: normal; font-size: 11px; font-weight: 600;
+}
+.settings-dialog .signin-code {
+  font: 600 22px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.14em; color: #1d3342;
+  padding: 8px 14px; border: 1px dashed #93a6b4; border-radius: 3px; background: #f8fafb;
+}
+.settings-dialog .credit-packs { display: flex; flex-wrap: wrap; gap: 6px; }
+.settings-dialog .settings-danger { display: grid; gap: 8px; padding: 10px; border: 1px solid #e3b4ae; border-radius: 3px; background: #fbefed; }
+.settings-dialog .settings-danger p { color: #7a2e25; }
+.settings-dialog .privacy-list { gap: 14px; }
+.settings-dialog .privacy-list > div { display: grid; gap: 3px; }
+.settings-dialog code { font-size: 11px; word-break: break-all; }
+.statusbar .engine-setup-link {
+  margin-left: 6px; padding: 0; border: 0; background: none; color: #2f6f9f; font: inherit; text-decoration: underline; cursor: pointer;
+}

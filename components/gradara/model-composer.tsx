@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, LoaderCircle, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { notifyAiChanged, useAiLabel } from '@/lib/gradara/ai';
 import { Textarea } from '@/components/ui/textarea';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
 import { library, domainColors, type Project } from '@/lib/gradara/model';
@@ -122,6 +123,7 @@ export default function ModelComposer({
   onBlockMode: () => void;
   onInsert: (project: Project) => Promise<void>;
 }) {
+  const aiLabel = useAiLabel('model');
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
   const [opening, setOpening] = useState(false);
@@ -171,6 +173,7 @@ export default function ModelComposer({
       jobId.current = '';
       setBusy(false);
       refreshGeneratedLibrary();
+      notifyAiChanged();
     }
   }
   async function open() {
@@ -300,7 +303,7 @@ export default function ModelComposer({
                     {progress}
                   </>
                 ) : (
-                  'Codex · Uses your local sign-in'
+                  aiLabel
                 )}
               </output>
               <Button

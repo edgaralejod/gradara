@@ -34,7 +34,7 @@ show('step-signin');
 if (config.authMode === 'dev') {
   show('dev-signin');
   show('step-approve');
-  $('signed-in-as').textContent = 'Test account';
+  $('signed-in-as').hidden = true;
   $('switch').hidden = true;
   $('approve').onclick = () => approve({ devEmail: $('dev-email').value });
 } else {

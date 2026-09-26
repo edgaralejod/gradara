@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { notifyAiChanged, useAiLabel } from '@/lib/gradara/ai';
 import { Textarea } from '@/components/ui/textarea';
 import { refreshGeneratedLibrary } from '@/lib/gradara/generated-library';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
@@ -39,6 +40,7 @@ export default function AgentComposer({
   onBusy?: (busy: boolean) => void;
   onModelMode?: () => void;
 }) {
+  const aiLabel = useAiLabel('component');
   const [blockType, setBlockType] = useState<BlockType>(() =>
     inferBlockType(context.existing?.definition),
   );
@@ -97,6 +99,7 @@ export default function AgentComposer({
       setBusy(false);
       onBusy?.(false);
       jobId.current = '';
+      notifyAiChanged();
     }
   }
   return (
@@ -260,11 +263,7 @@ export default function AgentComposer({
                   · {seconds}s
                 </>
               ) : (
-                <>
-                  Codex
-                  <span className="tiny-dot" />
-                  Uses your local sign-in
-                </>
+                <>{aiLabel}</>
               )}
             </span>
             <Button

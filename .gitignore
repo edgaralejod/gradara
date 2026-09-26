@@ -48,3 +48,8 @@ __pycache__/
 *.tsbuildinfo
 .env*
 !.env.example
+/dist-desktop/
+/desktop/dist/
+/desktop/node_modules/
+/build/
+*.spec.bak

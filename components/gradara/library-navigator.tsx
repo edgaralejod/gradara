@@ -269,7 +269,7 @@ export default function LibraryNavigator({
           </p>
         </div>
       )}
-      {variant === 'panel' && (
+      {variant === 'panel' && import.meta.env.MODE !== 'desktop' && (
         <a
           className="library-catalog-link"
           href="/block-catalog"
