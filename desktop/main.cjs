@@ -17,11 +17,16 @@ const REPO = path.resolve(__dirname, '..');
 const RESOURCES = DEV ? REPO : process.resourcesPath;
 const PRIVACY_URL = 'https://gradara.app/privacy';
 const ISSUES_URL = 'https://github.com/edgaralejod/gradara/issues';
+// Installer tests set this to a file path: the app checks itself once the
+// workbench loads, writes a JSON report there, and quits (no dialogs).
+const SELF_TEST_REPORT = process.env.GRADARA_SELF_TEST_REPORT || '';
 
 let backend = null;
 let port = 0;
 let mainWindow = null;
 let quitting = false;
+// True once the workbench has loaded; startup failures are reported by launch().
+let serviceReady = false;
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -97,38 +102,56 @@ function startBackend() {
     windowsHide: true,
     detached: process.platform !== 'win32',
   });
-  backend.on('exit', (code) => {
-    fs.closeSync(log);
-    backend = null;
-    if (!quitting) {
-      const choice = dialog.showMessageBoxSync({
-        type: 'error',
-        message: 'The Gradara service stopped unexpectedly.',
-        detail: `Exit code ${code}. Your saved models are safe. The service log may explain what happened.`,
-        buttons: ['Restart', 'Open logs', 'Quit'],
-        defaultId: 0,
-      });
-      if (choice === 0) restart();
-      else if (choice === 1) {
-        void shell.openPath(logDir());
-        app.quit();
-      } else app.quit();
+  const child = backend;
+  let ended = false;
+  const onEnded = (detail) => {
+    if (ended) return;
+    ended = true;
+    try {
+      fs.closeSync(log);
+    } catch {
+      /* already closed */
     }
-  });
+    if (backend === child) backend = null;
+    if (quitting) return;
+    if (SELF_TEST_REPORT) {
+      void finishSelfTest({ ok: false, error: `The service stopped: ${detail}.` });
+      return;
+    }
+    if (!serviceReady) return;
+    const choice = dialog.showMessageBoxSync({
+      type: 'error',
+      message: 'The Gradara service stopped unexpectedly.',
+      detail: `${detail}. Your saved models are safe. The service log may explain what happened.`,
+      buttons: ['Restart', 'Open logs', 'Quit'],
+      defaultId: 0,
+    });
+    if (choice === 0) restart();
+    else if (choice === 1) {
+      void shell.openPath(logDir());
+      app.quit();
+    } else app.quit();
+  };
+  // 'error' fires instead of 'exit' when the service cannot be started at all
+  // (missing file, blocked by security software, no execute permission).
+  child.on('error', (error) => onEnded(`It could not be started (${error.code || error.message})`));
+  child.on('exit', (code, signal) => onEnded(signal ? `Stopped by ${signal}` : `Exit code ${code}`));
 }
 
 function stopBackend() {
-  if (!backend || backend.exitCode !== null) return;
+  if (!backend || backend.exitCode !== null) return Promise.resolve();
   const pid = backend.pid;
   if (process.platform === 'win32') {
-    execFile('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { windowsHide: true }, () => {});
-  } else {
-    try {
-      process.kill(-pid, 'SIGTERM');
-    } catch {
-      backend.kill('SIGTERM');
-    }
+    return new Promise((resolve) => {
+      execFile('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { windowsHide: true }, () => resolve());
+    });
   }
+  try {
+    process.kill(-pid, 'SIGTERM');
+  } catch {
+    backend.kill('SIGTERM');
+  }
+  return Promise.resolve();
 }
 
 function waitForService(timeoutMs = 90000) {
@@ -182,6 +205,11 @@ function createWindow() {
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false },
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());
+  if (SELF_TEST_REPORT) {
+    mainWindow.webContents.on('console-message', (details) => {
+      if (details.level === 'error') selfTest.consoleErrors.push(String(details.message).slice(0, 500));
+    });
+  }
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !isLocal(url)) void shell.openExternal(url);
     return { action: 'deny' };
@@ -202,13 +230,17 @@ async function launch() {
   const window = mainWindow || createWindow();
   window.loadURL(SPLASH);
   window.show();
+  serviceReady = false;
   port = await freePort();
   startBackend();
   try {
     await waitForService();
     await window.loadURL(`http://127.0.0.1:${port}/`);
+    serviceReady = true;
+    if (SELF_TEST_REPORT) void runSelfTest(window);
   } catch (error) {
     if (quitting) return;
+    if (SELF_TEST_REPORT) return void finishSelfTest({ ok: false, error: error.message });
     const choice = dialog.showMessageBoxSync(window, {
       type: 'error',
       message: 'Gradara could not start its local service.',
@@ -220,8 +252,96 @@ async function launch() {
   }
 }
 
+function serviceRequest(method, route, body) {
+  return new Promise((resolve, reject) => {
+    const payload = body === undefined ? null : Buffer.from(JSON.stringify(body));
+    const request = http.request({
+      host: '127.0.0.1',
+      port,
+      path: route,
+      method,
+      timeout: 30000,
+      headers: {
+        'X-Gradara-Client': 'self-test',
+        ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': payload.length } : {}),
+      },
+    }, (response) => {
+      const chunks = [];
+      response.on('data', (chunk) => chunks.push(chunk));
+      response.on('end', () => {
+        const text = Buffer.concat(chunks).toString('utf8');
+        if (response.statusCode !== 200) reject(new Error(`${method} ${route}: HTTP ${response.statusCode}`));
+        else {
+          try {
+            resolve(JSON.parse(text));
+          } catch {
+            reject(new Error(`${method} ${route}: not JSON`));
+          }
+        }
+      });
+    });
+    request.on('error', reject);
+    request.on('timeout', () => request.destroy(new Error(`${method} ${route}: timed out`)));
+    if (payload) request.write(payload);
+    request.end();
+  });
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const selfTest = { consoleErrors: [], finished: false };
+
+async function runSelfTest(window) {
+  const checks = {};
+  try {
+    const ai = await serviceRequest('GET', '/api/ai');
+    checks.aiProvider = ai.provider ?? null;
+    const engine = await serviceRequest('GET', '/api/engine');
+    checks.engine = engine.backend ?? null;
+    const created = await serviceRequest('POST', '/api/models', { name: 'Installer self-test', template: 'dc' });
+    checks.modelBlocks = created.project?.blocks?.length ?? 0;
+    if (!checks.modelBlocks) throw new Error('Creating a model from the DC template returned no blocks.');
+    const deadline = Date.now() + 60000;
+    let rendered = false;
+    while (!rendered && Date.now() < deadline) {
+      rendered = await window.webContents.executeJavaScript(
+        "(() => { const root = document.getElementById('root'); return !!root && root.childElementCount > 0 && document.body.innerText.trim().length > 40; })()",
+      );
+      if (!rendered) await sleep(500);
+    }
+    checks.workbenchRendered = rendered;
+    if (!rendered) throw new Error('The workbench did not render within 60 seconds.');
+    await finishSelfTest({ ok: true, checks });
+  } catch (error) {
+    await finishSelfTest({ ok: false, checks, error: error.message });
+  }
+}
+
+async function finishSelfTest(result) {
+  if (selfTest.finished) return;
+  selfTest.finished = true;
+  const report = {
+    ...result,
+    version: app.getVersion(),
+    platform: process.platform,
+    arch: process.arch,
+    executable: process.execPath,
+    resources: RESOURCES,
+    userData: app.getPath('userData'),
+    backendPid: backend?.pid ?? null,
+    consoleErrors: selfTest.consoleErrors.slice(0, 20),
+  };
+  quitting = true;
+  await stopBackend();
+  try {
+    fs.writeFileSync(SELF_TEST_REPORT, JSON.stringify(report, null, 2));
+  } catch (error) {
+    process.stderr.write(`Could not write the self-test report: ${error.message}\n`);
+  }
+  app.exit(report.ok ? 0 : 1);
+}
+
 function restart() {
-  stopBackend();
+  void stopBackend();
   setTimeout(() => void launch(), 500);
 }
 
@@ -261,7 +381,7 @@ function buildMenu() {
 }
 
 function checkForUpdates() {
-  if (DEV || process.env.GRADARA_DISABLE_UPDATES === '1') return;
+  if (DEV || SELF_TEST_REPORT || process.env.GRADARA_DISABLE_UPDATES === '1') return;
   try {
     const { autoUpdater } = require('electron-updater');
     autoUpdater.autoDownload = true;
@@ -281,6 +401,10 @@ void app.whenReady().then(() => {
   // The workbench needs no camera, microphone, location, or notifications.
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
   buildMenu();
+  if (SELF_TEST_REPORT) {
+    // Watchdog: a hung start still produces a report instead of a stuck CI job.
+    setTimeout(() => void finishSelfTest({ ok: false, error: 'Self-test timed out after 240 seconds.' }), 240000).unref();
+  }
   void launch();
   checkForUpdates();
   app.on('activate', () => {
@@ -296,5 +420,5 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   quitting = true;
-  stopBackend();
+  void stopBackend();
 });

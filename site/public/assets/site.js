@@ -41,7 +41,7 @@ async function detect() {
   return null;
 }
 
-detect().then((os) => {
+void detect().then((os) => {
   if (!os) return;
   document.querySelectorAll('[data-download="primary"]').forEach((link) => {
     link.href = RELEASES + FILES[os].file;

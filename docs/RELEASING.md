@@ -43,9 +43,11 @@ After a GitHub repository exists, enable Issues, choose whether Discussions are 
 ## Desktop installers
 
 1. Bump `version` in `package.json` and `desktop/package.json` together.
-2. Push a tag `vX.Y.Z`. The **Desktop installers** workflow builds Windows (NSIS), macOS (DMG and ZIP for Apple silicon and Intel), and Linux (AppImage and deb), smoke-tests the frozen service on each OS, and attaches everything to a **draft** GitHub Release.
-3. Install each artifact on a clean machine or VM: first-run engine setup, open an example, run it, sign in to Gradara AI (staging gateway), generate a block, quit and confirm no service process remains.
+2. Push a tag `vX.Y.Z`. The **Desktop installers** workflow builds Windows (NSIS), macOS (DMG and ZIP for Apple silicon and Intel), and Linux (AppImage and deb) and smoke-tests the frozen service. It then installs each package on a clean runner (Windows, both macOS architectures, Ubuntu 22.04 and 24.04), launches it twice in self-test mode, uninstalls it, and checks that program files, shortcuts, and the Add/Remove Programs entry are gone while the user's data folder is kept. Only when every install test passes does it attach the installers to a **draft** GitHub Release. The same build and install tests run on pull requests that touch the app.
+3. Before publishing, check what CI cannot: install on a real machine, go through first-run engine setup, open an example, run it, sign in to Gradara AI (staging gateway), and generate a block.
 4. Write release notes with known limitations, then publish the draft. Published releases feed auto-update and the stable `/download/{platform}` links.
+
+Self-test mode: launching the app with `GRADARA_SELF_TEST_REPORT=<file>` makes it start its service, create a model, wait for the workbench to render, write a JSON report to that file, and quit without dialogs. `packaging/installer_selftest.py --exe <installed executable>` wraps this and also fails if a service process outlives the app.
 
 Signing secrets (optional until configured; unsigned builds warn users):
 

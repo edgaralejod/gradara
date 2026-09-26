@@ -136,6 +136,6 @@ npm run desktop:prepare             # workbench + PyInstaller service → build/
 cd desktop && npx electron-builder --publish never
 ```
 
-Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service. Installers for all platforms are built by the **Desktop installers** workflow on tag pushes. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
+Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service, and `python packaging/installer_selftest.py --exe <path to the built app>` checks a built or installed app end to end. Installers for all platforms are built by the **Desktop installers** workflow on tag pushes. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
 
 The repository retains optional Sites/Cloudflare build scaffolding with no database or bucket bindings. You do not need to register or publish a site to run Gradara locally. `npm run build` verifies the web bundle; it does not package the Python service or engine.
