@@ -53,3 +53,4 @@ __pycache__/
 /desktop/node_modules/
 /build/
 *.spec.bak
+/site/.firebase/
