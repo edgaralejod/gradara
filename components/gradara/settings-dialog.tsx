@@ -650,7 +650,8 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
       <p>
         Block generation costs {account.prices.component} credits, a full model
         build {account.prices.model}, and a C export {account.prices.export}.
-        Automatic repair attempts are included. Failed requests are not charged.
+        Automatic repair attempts are included. If the AI service fails before
+        returning a result, you are not charged.
       </p>
       <div className="credit-packs">
         {account.packs.map((pack) => (
