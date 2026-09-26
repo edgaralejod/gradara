@@ -20,8 +20,8 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# Top-level folders whose backticked paths must exist (from the repository root or
-# the document's own folder). Data folders that only
+# Top-level folders whose backticked paths must be tracked in git (from the repository
+# root or the document's own folder). Git-ignored build outputs are allowed. Data folders that only
 # exist at run time (projects/, .runtime/, build outputs) are not listed.
 PATH_ROOTS = ('app', 'components', 'lib', 'server', 'scripts', 'packaging', 'desktop', 'cloud',
               'site', 'docs', 'models', 'tests', 'patches', '.github', 'hooks', 'public')
@@ -54,14 +54,27 @@ def check_links(name: str, text: str) -> list[str]:
     return failures
 
 
-def check_paths(name: str, text: str) -> list[str]:
+def in_repo(path: str, files: set[str], folders: set[str]) -> bool:
+    """A tracked file or a folder containing tracked files (not whatever is on disk)."""
+    return path.rstrip('/') in files or path.rstrip('/') in folders
+
+
+def ignored(path: str) -> bool:
+    """Build outputs and run-time folders (desktop/dist/, projects/) are git-ignored."""
+    return subprocess.run(['git', 'check-ignore', '-q', '--no-index', path], cwd=ROOT).returncode == 0
+
+
+def check_paths(name: str, text: str, files: set[str], folders: set[str]) -> list[str]:
     failures = []
+    base = str(Path(name).parent)
     for match in BACKTICK_PATH.finditer(text):
         path = match.group(1).rstrip('.,:;')
         if any(ch in path for ch in '*<>{}'):
             continue  # a pattern or placeholder, not a concrete path
-        if not (ROOT/path).exists() and not ((ROOT/name).parent/path).exists():
-            failures.append(f'{name}: path does not exist: {path}')
+        relative = str(Path(base)/path) if base != '.' else path
+        if in_repo(path, files, folders) or in_repo(relative, files, folders) or ignored(path):
+            continue
+        failures.append(f'{name}: path does not exist in the repository: {path}')
     return failures
 
 
@@ -84,12 +97,14 @@ def main() -> int:
     deploy = (ROOT/'cloud'/'deploy.sh').read_text()
     deploy_commands = set(re.findall(r'^\s{2}([a-z]+)\)', deploy, re.MULTILINE))
 
+    file_set = set(files)
+    folders = {str(parent) for f in files for parent in Path(f).parents if str(parent) != '.'}
     failures: list[str] = []
     documented: set[str] = set()
     for name in docs:
         text = (ROOT/name).read_text(encoding='utf-8')
         failures += check_links(name, text)
-        failures += check_paths(name, text)
+        failures += check_paths(name, text, file_set, folders)
         failures += check_commands(name, text, scripts, deploy_commands)
         documented |= set(ENV_VAR.findall(text))
     documented |= set(ENV_VAR.findall((ROOT/'.env.example').read_text()))
