@@ -33,6 +33,19 @@ GC=(gcloud --project "$PROJECT" --quiet)
 say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 exists() { "$@" >/dev/null 2>&1; }
 
+bind_role() { # member role: retried, because a new service account takes a moment to propagate
+  local member=$1 role=$2 attempt
+  for attempt in 1 2 3 4 5 6 7 8; do
+    if "${GC[@]}" projects add-iam-policy-binding "$PROJECT" --member="$member" --role="$role" \
+      --condition=None >/dev/null 2>&1; then
+      return 0
+    fi
+    [[ $attempt == 1 ]] && echo "  waiting for the new account to be visible to IAM…"
+    sleep 10
+  done
+  "${GC[@]}" projects add-iam-policy-binding "$PROJECT" --member="$member" --role="$role" --condition=None >/dev/null
+}
+
 secret_exists() { exists "${GC[@]}" secrets describe "$1"; }
 
 store_secret() { # name value-on-stdin
@@ -146,9 +159,7 @@ cmd_setup() {
   local number
   number=$("${GC[@]}" projects describe "$PROJECT" --format='value(projectNumber)')
   for role in roles/artifactregistry.writer roles/logging.logWriter roles/storage.objectViewer; do
-    "${GC[@]}" projects add-iam-policy-binding "$PROJECT" \
-      --member="serviceAccount:${number}-compute@developer.gserviceaccount.com" --role="$role" \
-      --condition=None >/dev/null
+    bind_role "serviceAccount:${number}-compute@developer.gserviceaccount.com" "$role"
   done
   echo "  Cloud Build can push images"
 
@@ -156,8 +167,7 @@ cmd_setup() {
   exists "${GC[@]}" iam service-accounts describe "$RUNTIME_SA" ||
     "${GC[@]}" iam service-accounts create gradara-gateway --display-name="Gradara AI gateway" >/dev/null
   for role in roles/cloudsql.client roles/secretmanager.secretAccessor; do
-    "${GC[@]}" projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$RUNTIME_SA" \
-      --role="$role" --condition=None >/dev/null
+    bind_role "serviceAccount:$RUNTIME_SA" "$role"
   done
   echo "  $RUNTIME_SA"
 
