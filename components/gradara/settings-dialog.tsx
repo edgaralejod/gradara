@@ -100,18 +100,23 @@ function EngineSettings({ onChange }: { onChange?: () => void }) {
   const [busy, setBusy] = useState('');
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
-  const refresh = useCallback(async () => {
-    setBusy((b) => b || 'check');
-    setError('');
-    try {
-      setStatus(await api<EngineStatus>('/engine'));
-      onChange?.();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy((b) => (b === 'check' ? '' : b));
-    }
-  }, [onChange]);
+  const refresh = useCallback(
+    async (force = false) => {
+      setBusy((b) => b || 'check');
+      setError('');
+      try {
+        setStatus(
+          await api<EngineStatus>(force ? '/engine?refresh=true' : '/engine'),
+        );
+        onChange?.();
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setBusy((b) => (b === 'check' ? '' : b));
+      }
+    },
+    [onChange],
+  );
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -173,7 +178,7 @@ function EngineSettings({ onChange }: { onChange?: () => void }) {
           variant="ghost"
           size="sm"
           disabled={!!busy}
-          onClick={() => void refresh()}
+          onClick={() => void refresh(true)}
           aria-label="Check again"
         >
           {busy === 'check' ? <LoaderCircle className="spin" /> : <RefreshCw />}

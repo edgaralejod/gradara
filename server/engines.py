@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -242,6 +243,7 @@ class NativeBackend:
     def __init__(self):
         self._library_ready: dict[str, bool] = {}
         self._versions: dict[str, str] = {}
+        self._library_checked: dict[str, float] = {}
 
     def omc(self) -> Path | None:
         candidates = _om_candidates()
@@ -277,6 +279,11 @@ class NativeBackend:
         key = str(omc)
         if self._library_ready.get(key):
             return True
+        # Loading MSL takes seconds; do not repeat a failed check on every health poll.
+        checked = self._library_checked.get(key)
+        if checked is not None and time.monotonic() - checked < 60:
+            return False
+        self._library_checked[key] = time.monotonic()
         from .paths import DATA
         folder = DATA/'engine-check'
         folder.mkdir(parents=True, exist_ok=True)
@@ -316,6 +323,7 @@ class NativeBackend:
         code, output = await self.script(
             omc, folder, f'installPackage(Modelica, "{MSL_VERSION}", exactMatch=true);\ngetErrorString();\n', 1800)
         self._library_ready.pop(str(omc), None)
+        self._library_checked.pop(str(omc), None)
         if code or not output.lstrip().startswith('true') or not await self.library_ready(omc):
             raise EngineError('OpenModelica could not install the Modelica Standard Library: ' + output[-1500:])
 
@@ -452,7 +460,9 @@ async def select() -> DockerBackend | NativeBackend:
     return BACKENDS[platform_default()]
 
 
-async def status() -> dict:
+async def status(refresh: bool = False) -> dict:
+    if refresh:
+        NATIVE._library_checked.clear()
     backend = await select()
     current = await backend.status()
     return {'preference': preference(), 'platform': sys.platform, 'recommended': platform_default(),

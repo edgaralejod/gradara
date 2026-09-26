@@ -300,8 +300,8 @@ class EngineChoice(BaseModel):
     engine: str = Field(pattern='^(auto|native|docker)$')
 
 @app.get('/api/engine')
-async def engine_status():
-    return await engines.status()
+async def engine_status(refresh: bool = False):
+    return await engines.status(refresh)
 
 @app.put('/api/engine')
 async def choose_engine(choice: EngineChoice):
