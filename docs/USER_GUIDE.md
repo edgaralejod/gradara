@@ -1,5 +1,13 @@
 # Modeling with Gradara
 
+## Settings
+
+The gear button opens **Settings**:
+
+- **Engine** shows whether simulation is ready and walks through one-time setup: OpenModelica and its standard library on Windows and Linux, or a container runtime and engine image on macOS. Automatic selection prefers a native install.
+- **AI** chooses the provider for AI features: Gradara AI (sign in, prepaid credits), your own OpenAI or Anthropic API key, the Codex CLI, or Off. Signed-in accounts show the credit balance, prices, and credit packs.
+- **Privacy & data** summarizes what stays on your computer and what AI requests send. See [privacy](PRIVACY.md).
+
 ## Create, save, and share
 
 Click **New model** to open a fresh empty canvas immediately. Its initial name is **Untitled model**, with a suffix when needed. Click the title in the header to rename it; Enter or clicking away commits the name, and Escape cancels editing.
@@ -52,7 +60,7 @@ The model inspector exposes blocks and logical nets in a compact tree. The tree 
 
 ## Simulate and inspect
 
-Set the stop time and press **Run**. Compilation and simulation happen asynchronously. You can cancel from the run controls. Unconnected signal inputs and unsupported executable placeholders produce diagnostics; invalid or incomplete simulations do not become successful partial plots.
+Set the stop time and press **Run**. Manual models accept stop times greater than 0 and at most 86,400 seconds. Compilation and simulation happen asynchronously. You can cancel from the run controls. Unconnected signal inputs and unsupported executable placeholders produce diagnostics; invalid or incomplete simulations do not become successful partial plots. The solver still uses 6,000 output intervals and a 120-second wall-clock timeout; a longer horizon is not a guarantee of adequate event resolution or completion. Full-model agent planning retains a separate 60-second bound.
 
 After a successful run, the workspace automatically switches to the **Results** tab (also called Data Inspector), which provides a dedicated view for inspecting simulation output. Switch between **Diagram** and **Results** tabs using the workspace tabs in the toolbar, or press ⌘/Ctrl+1 for Diagram and ⌘/Ctrl+2 for Results.
 
@@ -62,7 +70,7 @@ Moving blocks or labels does not invalidate simulation behavior. Changing equati
 
 ## Ask for a component or export
 
-Follow [AI feature setup](AGENT_SETUP.md) to connect your own Codex CLI account. A hosted Gradara account or Cursor installation is not required.
+Choose a provider in **Settings → AI**: sign in to Gradara AI (20 free credits, then prepaid packs), paste your own OpenAI or Anthropic key, use the Codex CLI, or turn AI off. [AI feature setup](AGENT_SETUP.md) explains each option. Simulation never needs an AI provider.
 
 Describe the inputs, outputs, state, and timing you want, for example: “A first-order low-pass filter with a 50 ms time constant.” First choose the block type: Signal / control, Electrical, Mechanical (rotational), Thermal, or Multiple physical domains. For example, choose Electrical and ask for an ideal transformer to get physical winding terminals rather than signal inputs and outputs. The preview identifies each terminal domain. Refining a block preserves its type and existing terminal interface. It validates and compiler-checks a candidate before insertion. Ordinary editing and simulation still work when the agent is unavailable.
 
@@ -94,6 +102,8 @@ Review the diagram, library choices, and assumptions, then choose **Open as new 
 
 Currently the builder supports flat models with up to 80 instances and four newly created component types per request. Supported domains match the block creator: scalar signals, electrical, rotational mechanical, thermal, and their couplings. Unsupported domains are reported instead of substituted. A simulation failure gets one assembly repair; unresolved diagnostics remain visible. Missing blocks that completed successfully remain in the AI library even if later assembly fails or is cancelled. Generation is not resumable after closing the creator or restarting the service.
 
-## Flyback power-supply example
+## Built-in examples
 
 **Examples → 480 VAC flyback** opens a hand-authored 480 V RMS single-phase to 24 V / 1 A switching model with bridge rectification, magnetizing energy storage, soft start, and PI regulation. See the [flyback example guide](examples/FLYBACK.md) for assumptions, expected signals, and modeling limits.
+
+**Examples → Data center cooling** opens a one-hour electrical–thermal benchmark with workload and cooling-capacity disturbances. Compare temperatures, electricity, and PI recovery using the [cooling example guide](examples/DATACENTER.md). This is a lumped control model, not a detailed facility model.

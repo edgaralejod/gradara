@@ -1,6 +1,6 @@
 # Local development setup
 
-Run commands from the repository root. Use a checkout or source download of this repository; no Codex application or hosted Gradara account is required.
+Run commands from the repository root. This guide is for working on Gradara from source. To just use it, install the desktop app from [gradara.app](https://gradara.app/). No AI account is required for either.
 
 ## Prerequisites and platform status
 
@@ -8,10 +8,16 @@ Run commands from the repository root. Use a checkout or source download of this
 | --- | --- |
 | Node.js / npm | Node 22.13 or newer. CI uses the Node 22 line. Use the committed npm lockfile. |
 | Python | Python 3.12 is the development and CI baseline. Use a repository-local virtual environment. |
-| Docker | A running Docker-compatible Linux engine for simulation and C compilation. No host OpenModelica installation is required. |
-| Codex CLI | Optional, installed and signed in, for component generation and controller C export. |
+| Simulation engine | Either native OpenModelica 1.27 with the Modelica Standard Library 4.1.0 (Windows, Linux), or a running Docker-compatible engine for the `gradara-engine` image (macOS default, optional elsewhere). Settings → Engine in the app sets up either one. |
+| AI provider | Optional, for block generation, model building, and C export: Gradara AI (sign in), your own OpenAI or Anthropic key, or the Codex CLI. See [agent setup](../AGENT_SETUP.md). |
 
-macOS with Colima has been exercised end to end. Linux uses the active Docker context; its hosted CI jobs are configured but must be observed after publication. On Windows, use WSL2 with Linux Node/Python and a Docker engine available inside WSL for the complete workflow. Native Windows process-group cancellation in the agent adapter is not implemented, and the launcher is not fully verified there. Do not interpret passing frontend tests on an OS as validation of its complete runtime.
+| Platform | Status |
+| --- | --- |
+| macOS | Source runs exercised end to end with Colima. The desktop app is built and install-tested in CI on Apple silicon and Intel. |
+| Windows | Native OpenModelica is the default engine, covered by the Native OpenModelica workflow. The desktop app is built and install-tested in CI. |
+| Linux | Native OpenModelica or Docker. The desktop app (deb and AppImage) is install-tested in CI on Ubuntu 22.04 and 24.04. |
+
+CI install tests start the app, render the workbench, and create a model; they do not run a simulation with a real engine. Do not treat passing tests on an OS as validation of its complete runtime.
 
 ## Install
 
@@ -37,6 +43,12 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r server/requirements-dev.txt
 .\.venv\Scripts\python.exe -m pytest -q -m "not integration"
 ```
+
+## Line endings
+
+The repository stores **LF** for text files and checks them out as LF on Windows, macOS, and Linux. `.gitattributes` sets `eol=lf`, which overrides Git for Windows `core.autocrlf`. `.editorconfig` asks editors to save LF. Do not convert unrelated files to CRLF to silence a local Git warning; a fresh clone already has LF working copies.
+
+If an existing Windows checkout still has CRLF files from before this policy, convert those text files to LF (most editors and `dos2unix` can do this), then `git add --renormalize .` after committing or stashing unrelated work. Do not run `git checkout -- .` while you have uncommitted edits.
 
 ## Select the Docker runtime
 
@@ -67,7 +79,7 @@ The launcher checks dependencies, builds `gradara-engine:1.27.0` if missing, sta
 
 - Workbench: [http://localhost:4317](http://localhost:4317)
 - Service health: [http://127.0.0.1:8765/api/health](http://127.0.0.1:8765/api/health)
-- API reference: [http://127.0.0.1:8765/docs](http://127.0.0.1:8765/docs)
+- API reference: [http://127.0.0.1:8765/api/docs](http://127.0.0.1:8765/api/docs)
 
 Keep the launcher terminal running. Use `--no-open` to skip browser opening. If both services already respond, the launcher opens the existing workspace. Logs are in `.runtime/service.log` and `.runtime/workbench.log`.
 
@@ -93,9 +105,13 @@ The Vite proxy forwards `/api` to the service. Keep these ports unless changing 
 
 Frontend-only work requires just `npm ci` and `npm run dev`. The block catalog at `/block-catalog` supports visual work without Docker. The full model workflow needs the Python service; offline save and simulation are not implemented. Pure backend tests do not need Docker or an agent account.
 
-## Optional agent configuration
+## Choose the simulation engine
 
-Follow [AI feature setup](../AGENT_SETUP.md) to install the public Codex CLI, sign into your own account, and try a generated block. The adapter uses the executable from `GRADARA_CODEX_BIN`, PATH, or an older macOS application fallback. If needed:
+`GRADARA_ENGINE=auto` (default) prefers a ready native OpenModelica install, then the Docker image. Force one with `GRADARA_ENGINE=native` or `docker`, or choose it in Settings → Engine. For native use, install OpenModelica 1.27 (official Windows installer or Linux packages) and let Settings → Engine install MSL 4.1.0, or run `omc` with `installPackage(Modelica, "4.1.0", exactMatch=true);`. `GRADARA_OMC` points at a specific `omc` executable.
+
+## Optional AI configuration
+
+Follow [AI feature setup](../AGENT_SETUP.md). Choose a provider in Settings → AI, or set `GRADARA_AI_PROVIDER` (`gradara`, `openai`, `anthropic`, `codex`, `off`). `GRADARA_GATEWAY_URL` points at a local Gradara AI gateway (see [cloud/README.md](../../cloud/README.md)); `GRADARA_CREDENTIAL_STORE=file` keeps secrets in a user-only file instead of the OS keychain. For the Codex CLI:
 
 ```sh
 export GRADARA_CODEX_BIN="/path/to/codex"
@@ -103,10 +119,28 @@ export GRADARA_CODEX_BIN="/path/to/codex"
 
 The service reads process environment variables directly. `.env.example` is documentation; copying it to `.env` does **not** load variables into the Python service. Set variables in the launching shell. Legacy `FLUX_DOCKER_CONTEXT` and `FLUX_CODEX_BIN` remain aliases; prefer current names. Never commit credentials or your CLI configuration.
 
-`agentReady` means an executable was found, not that provider authentication or connectivity was tested. Read [security and data handling](../../SECURITY.md) for what generation sends to the provider.
+`agentReady` means the selected provider is configured (key saved, signed in, or CLI found), not that connectivity was tested. Read [security and data handling](../../SECURITY.md) for what generation sends to the provider.
 
 ## Files you own
 
 `projects/models/` holds documents; `projects/workspace.json` is the active model; run snapshots, CSVs, prompts, and exports also live under `projects/`. These files and `.runtime/`, `.venv/`, build outputs, and local environment files are ignored by Git. Back them up separately. Contributors should use synthetic examples and never force-add a personal workspace to a PR.
+
+## Desktop app
+
+The desktop app is an Electron shell around a frozen copy of the local service and a static build of the workbench. See [distribution](../architecture/DISTRIBUTION.md).
+
+```sh
+cd desktop && npm ci && cd ..       # once: Electron and electron-builder
+npm run desktop:start               # static workbench build + dev shell; uses .venv and the repo code
+```
+
+Build installers for the current OS:
+
+```sh
+python3 -m pip install -r server/requirements.txt pyinstaller==6.22.3   # in .venv
+npm run desktop:dist                # workbench + PyInstaller service + installers for this OS
+```
+
+Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service, and `python packaging/installer_selftest.py --exe <path to the built app>` checks a built or installed app end to end. The **Desktop installers** workflow builds and install-tests all platforms on pull requests and drafts a release on `v*` tags. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
 
 The repository retains optional Sites/Cloudflare build scaffolding with no database or bucket bindings. You do not need to register or publish a site to run Gradara locally. `npm run build` verifies the web bundle; it does not package the Python service or engine.

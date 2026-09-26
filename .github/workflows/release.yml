@@ -1,0 +1,304 @@
+name: Desktop installers
+
+# Builds Windows, macOS, and Linux installers, then installs each one on a clean
+# runner, launches it in self-test mode, and uninstalls it. Tag pushes (v*)
+# attach the installers to a draft GitHub Release only when every install test
+# passes. Pull requests and manual runs build and test without releasing.
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - 'packaging/**'
+      - 'server/**'
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.desktop.config.ts'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: installers-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            builder: --win nsis --x64
+          - name: macOS Apple silicon
+            os: macos-15
+            builder: --mac dmg zip --arm64
+          - name: macOS Intel
+            os: macos-15-intel
+            builder: --mac dmg zip --x64
+          # 22.04 keeps the bundled service compatible with older Linux glibc versions.
+          - name: Linux x64
+            os: ubuntu-22.04
+            builder: --linux AppImage deb --x64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            desktop/package-lock.json
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: server/requirements*.txt
+      - name: Install dependencies
+        shell: bash
+        run: |
+          npm ci
+          python -m pip install -r server/requirements.txt pyinstaller==6.22.3
+          cd desktop && npm ci
+      - name: Build workbench and local service
+        shell: bash
+        run: |
+          npm run desktop:web
+          python packaging/build_backend.py
+      - name: Smoke-test the bundled service
+        shell: bash
+        run: python packaging/smoke_backend.py
+      - name: Build installer
+        shell: bash
+        working-directory: desktop
+        env:
+          # Optional signing secrets; builds are unsigned when these are empty.
+          CSC_LINK: ${{ runner.os == 'macOS' && secrets.MAC_CERTIFICATE_P12 || secrets.WIN_CERTIFICATE_PFX }}
+          CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.MAC_CERTIFICATE_PASSWORD || secrets.WIN_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.MAC_CERTIFICATE_P12 && 'true' || 'false' }}
+        run: npx electron-builder ${{ matrix.builder }} --publish never
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gradara-${{ matrix.os }}
+          path: |
+            desktop/dist/*.exe
+            desktop/dist/*.dmg
+            desktop/dist/*.zip
+            desktop/dist/*.AppImage
+            desktop/dist/*.deb
+            desktop/dist/*.yml
+            desktop/dist/*.blockmap
+          if-no-files-found: error
+
+  install-test:
+    name: Install test / ${{ matrix.name }}
+    needs: build
+    # Test whatever built, even if another platform's build failed.
+    if: ${{ !cancelled() }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            artifact: gradara-windows-latest
+          - name: macOS Apple silicon
+            os: macos-15
+            artifact: gradara-macos-15
+          - name: macOS Intel
+            os: macos-15-intel
+            artifact: gradara-macos-15-intel
+          - name: Ubuntu 22.04
+            os: ubuntu-22.04
+            artifact: gradara-ubuntu-22.04
+          - name: Ubuntu 24.04
+            os: ubuntu-24.04
+            artifact: gradara-ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: packaging
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ matrix.artifact }}
+          path: installers
+      - name: Show installers
+        shell: bash
+        run: ls -la installers
+
+      # Windows: per-user NSIS install, two launches, silent uninstall.
+      - name: Install (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem installers/Gradara-win-x64.exe
+          $p = Start-Process $installer.FullName -ArgumentList '/S', '/currentuser' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Installer exited with $($p.ExitCode)" }
+          $dir = Join-Path $env:LOCALAPPDATA 'Programs\Gradara'
+          if (-not (Test-Path "$dir\Gradara.exe")) { throw "Gradara.exe not found in $dir" }
+          if (-not (Test-Path "$dir\resources\backend\gradara-backend.exe")) { throw 'Bundled service missing' }
+          $key = Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall' |
+            Where-Object { (Get-ItemProperty $_.PSPath).DisplayName -like 'Gradara*' }
+          if (-not $key) { throw 'No Add/Remove Programs entry' }
+          $startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Gradara.lnk'
+          if (-not (Test-Path $startMenu)) { throw 'Start menu shortcut missing' }
+          $desktop = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Gradara.lnk'
+          if (-not (Test-Path $desktop)) { throw 'Desktop shortcut missing' }
+          "GRADARA_EXE=$dir\Gradara.exe" >> $env:GITHUB_ENV
+          "GRADARA_DIR=$dir" >> $env:GITHUB_ENV
+          Write-Host "Installed to $dir"
+
+      # macOS: copy from the DMG to /Applications, as a user would.
+      - name: Install (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg=$(ls installers/Gradara-mac-*.dmg)
+          hdiutil attach "$dmg" -nobrowse -readonly -mountpoint /Volumes/GradaraTest
+          test -L /Volumes/GradaraTest/Applications || { echo 'DMG has no Applications link'; exit 1; }
+          cp -R /Volumes/GradaraTest/Gradara.app /Applications/
+          hdiutil detach /Volumes/GradaraTest
+          exe=/Applications/Gradara.app/Contents/MacOS/Gradara
+          file "$exe"
+          file /Applications/Gradara.app/Contents/Resources/backend/gradara-backend
+          codesign -dv /Applications/Gradara.app 2>&1 || true
+          echo "GRADARA_EXE=$exe" >> "$GITHUB_ENV"
+
+      # Linux: the .deb through apt, like a double-click install.
+      - name: Install (Linux .deb)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq xvfb ./installers/Gradara-linux-amd64.deb
+          test -x /opt/Gradara/gradara
+          test -x /opt/Gradara/resources/backend/gradara-backend
+          test -f /usr/share/applications/gradara.desktop
+          command -v gradara
+          echo "GRADARA_EXE=/opt/Gradara/gradara" >> "$GITHUB_ENV"
+
+      - name: First launch
+        shell: bash
+        run: |
+          mkdir -p reports
+          if [ "$RUNNER_OS" = Linux ]; then
+            xvfb-run -a python packaging/installer_selftest.py --exe "$GRADARA_EXE" --report reports/first-launch.json
+          else
+            python packaging/installer_selftest.py --exe "$GRADARA_EXE" --report reports/first-launch.json
+          fi
+      - name: Second launch (existing data folder)
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            xvfb-run -a python packaging/installer_selftest.py --exe "$GRADARA_EXE" --report reports/second-launch.json
+          else
+            python packaging/installer_selftest.py --exe "$GRADARA_EXE" --report reports/second-launch.json
+          fi
+
+      - name: Uninstall (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $uninstaller = Join-Path $env:GRADARA_DIR 'Uninstall Gradara.exe'
+          Start-Process $uninstaller -ArgumentList '/S', '/currentuser' -Wait
+          # The NSIS uninstaller re-launches itself from a temporary copy; wait for it.
+          $deadline = (Get-Date).AddSeconds(90)
+          while ((Test-Path "$env:GRADARA_DIR\Gradara.exe") -and (Get-Date) -lt $deadline) { Start-Sleep 2 }
+          if (Test-Path "$env:GRADARA_DIR\Gradara.exe") { throw 'Program files remain after uninstall' }
+          $key = Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall' |
+            Where-Object { (Get-ItemProperty $_.PSPath).DisplayName -like 'Gradara*' }
+          if ($key) { throw 'Add/Remove Programs entry remains' }
+          if (Test-Path (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Gradara.lnk')) { throw 'Start menu shortcut remains' }
+          if (Test-Path (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Gradara.lnk')) { throw 'Desktop shortcut remains' }
+          # Models are the user's work: uninstalling keeps them.
+          if (-not (Test-Path (Join-Path $env:APPDATA 'Gradara\data'))) { throw 'User data folder was removed' }
+          Write-Host 'Uninstalled cleanly; user data kept.'
+      - name: Uninstall (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /Applications/Gradara.app
+          test ! -e /Applications/Gradara.app
+          test -d "$HOME/Library/Application Support/Gradara/data"
+          echo 'Removed; user data kept.'
+      - name: Uninstall (Linux .deb)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo DEBIAN_FRONTEND=noninteractive apt-get remove -y -qq gradara
+          status=$(dpkg-query -W -f='${db:Status-Abbrev}' gradara 2>/dev/null || true)
+          if [ "${status:0:2}" = ii ]; then echo 'package still installed'; exit 1; fi
+          test ! -e /opt/Gradara/gradara
+          test ! -e /usr/share/applications/gradara.desktop
+          if command -v gradara; then echo 'gradara still on PATH'; exit 1; fi
+          test -d "$HOME/.config/Gradara/data"
+          echo 'Uninstalled cleanly; user data kept.'
+
+      - name: macOS ZIP (update package) launches
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p zipped && ditto -x -k installers/Gradara-mac-*.zip zipped
+          python packaging/installer_selftest.py --exe zipped/Gradara.app/Contents/MacOS/Gradara --report reports/zip.json
+      - name: AppImage launches
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libfuse2 || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libfuse2t64
+          chmod +x installers/Gradara-linux-x86_64.AppImage
+          xvfb-run -a python packaging/installer_selftest.py --exe installers/Gradara-linux-x86_64.AppImage --report reports/appimage.json
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: install-test-${{ matrix.os }}
+          path: reports
+          if-no-files-found: ignore
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v') && needs.build.result == 'success' && needs.install-test.result == 'success'
+    needs: [build, install-test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: artifacts
+          pattern: gradara-*
+          merge-multiple: true
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft \
+            --title "Gradara ${GITHUB_REF_NAME#v}" --notes "Draft: review the notes and known limitations before publishing." \
+            artifacts/*

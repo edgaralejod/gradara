@@ -17,5 +17,5 @@ List the exact checks run and their results. For interactions, include browser/O
 Does this change saved documents, IDs, port contracts, numerical behavior, or dependencies? Explain migrations and retained upstream notices when relevant. Mention material AI assistance if it helps review; do not include private transcripts.
 
 - [ ] I reviewed the diff and kept unrelated work and generated local artifacts out.
-- [ ] I updated relevant documentation or explained why no update is needed.
+- [ ] I updated the docs this change owns (see the doc map in AGENTS.md) and searched for the old behavior, names, and commands, or I explained why no update is needed.
 - [ ] Any screenshots, fixtures, and diagnostics use shareable synthetic data.

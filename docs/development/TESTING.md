@@ -12,9 +12,10 @@ npm audit --audit-level=high
 python3 scripts/check-docs.py
 python3 scripts/check-repo.py
 npm run build
+(cd cloud && ../.venv/bin/python -m pytest -q)   # after pip install -r cloud/requirements.txt
 ```
 
-`npm test` runs Node/tsx tests of serialized document saves/recovery, immutable edits, geometry, gestures, selection, net identity, naming, block design, plots, and templates. These are not browser interaction tests. Python unit tests cover schemas, source emission, document persistence, diagnostics, and result handling. They create synthetic fixtures and do not require provider credentials.
+`npm test` runs Node/tsx tests of serialized document saves/recovery, immutable edits, geometry, gestures, selection, net identity, naming, block design, plots, and templates. These are not browser interaction tests. Python unit tests cover schemas, source emission, document persistence, diagnostics, and result handling. They create synthetic fixtures and do not require provider credentials. They also cover the local API boundary (host, origin, and client-header checks), keychain-free secret storage, provider request shapes with mocked HTTP, and the native engine plumbing with a stand-in `omc`. The gateway suite in `cloud/tests` covers sign-in, credit charging and refunds, Stripe webhook idempotency, account deletion, and that request content never reaches logs or the database.
 
 `check-docs.py` checks relative Markdown file links, excluding code fences. `check-repo.py` checks repository candidates for accidental local artifacts, private absolute paths, and a limited set of credential patterns without printing suspected secret values. It is not a comprehensive security audit or dependency vulnerability scanner.
 
@@ -35,7 +36,7 @@ For a named context, add `--context CONTEXT` to the Docker command and set `GRAD
 .venv/bin/python -m pytest -q
 ```
 
-This runs the complete Python suite, including real engine jobs. Integration tests cover the DC motor and parameter response, FOC behavior, ideal buck switching at two duties, and singular-model failure handling. They write uniquely named job artifacts under ignored `projects/runs/`. Do not delete that entire directory to clean tests; it also contains user runs.
+This runs the complete Python suite, including real engine jobs. Integration tests cover the DC motor and parameter response, FOC behavior, ideal buck switching at two duties, flyback startup and regulation, data-center electrical/thermal balances, and singular-model failure handling. They write uniquely named job artifacts under ignored `projects/runs/`. Do not delete that entire directory to clean tests; it also contains user runs.
 
 Engine and block changes should add checks with engineering meaning: expected steady-state relations, correct event behavior, conserved connection laws, or a meaningful failure diagnostic. A screenshot or successful compile alone does not prove a changed physical implementation works.
 
@@ -48,11 +49,11 @@ Use the real browser whenever a change affects interactions. Start from a new di
 3. Move connected blocks and junctions, straighten near-horizontal runs, resize a block, and drag its label. Confirm no leftover stubs or unexpected geometry changes after reload.
 4. Ctrl-drag a block and a connected selection. Names and IDs must be unique, originals unchanged, and undo atomic.
 5. Name a net, inspect its connected blocks, move its label, and save/reopen.
-6. Open all three fresh templates and check block sizing, readable labels, ports, and routes at normal zoom. Run relevant templates and inspect actual result traces.
+6. Open each fresh template (DC motor, FOC, buck, flyback, and data center cooling) and check block sizing, readable labels, ports, and routes at normal zoom. Run relevant templates and inspect actual result traces.
 7. Test a narrow window, keyboard focus, Escape, and text fields. Canvas shortcuts must not consume normal text editing.
 8. Inspect browser errors and service logs. Do not hide observer, promise, or script errors to make a test look clean.
 
-For agent changes, separately test generation/refinement with a configured provider. Preserve compatible port identities. For C-export changes, inspect the contract and compile result, and verify cancellation/resource cleanup. Agent calls are intentionally absent from automated CI.
+For agent changes, separately test generation/refinement with a configured provider. Preserve compatible port identities. For C-export changes, inspect the contract and compile result, and verify cancellation/resource cleanup. Process-tree cancellation without a provider is covered by `tests/test_processes.py`. Agent provider calls are intentionally absent from automated CI.
 
 Record OS/browser, precise gestures, expected/observed behavior, and checks run in the PR. Use the [wiring contract](../architecture/WIRING.md) for implemented behavior and the [roadmap](../../ROADMAP.md) for open gaps. A passing geometry suite or a small smooth diagram does not establish performance or feature parity with another tool.
 
@@ -74,6 +75,8 @@ Repeat affected gestures at 25%, 100%, and 200% zoom, including Escape, focus lo
 ```sh
 npm run report:blocks
 npx tsx scripts/build-buck-example.ts
+npx tsx scripts/build-flyback-example.ts
+npx tsx scripts/build-datacenter-example.ts
 npx tsx scripts/style-examples.ts
 ```
 
@@ -83,6 +86,6 @@ The example builders rewrite checked-in template files, not user documents. Revi
 
 ## CI
 
-[Core CI](../../.github/workflows/ci.yml) runs typecheck, frontend tests, npm audit at high severity, web build, Python unit tests, documentation links, and repository hygiene on hosted Ubuntu. Lint is advisory. [Engine CI](../../.github/workflows/engine.yml) is manually dispatched and builds the Docker image before running the full Python suite. Neither workflow publishes artifacts or invokes an agent provider. They use read-only repository permissions and do not run pull requests on a maintainer's personal machine.
+[Core CI](../../.github/workflows/ci.yml) runs typecheck, frontend tests, npm audit at high severity, web build, Python unit tests, documentation checks, and repository hygiene on hosted Ubuntu. `scripts/check-docs.py` fails when docs mention a missing file, path, `npm run` script, or `cloud/deploy.sh` command, or when `GRADARA_*` variables in the docs and the code differ. On pull requests, `scripts/check-doc-drift.py` also warns (without failing) when code changes without the docs mapped to it in [AGENTS.md](../../AGENTS.md#keep-documentation-current). Lint is advisory. [Engine CI](../../.github/workflows/engine.yml) is manually dispatched and builds the Docker image before running the full Python suite. [Native OpenModelica](../../.github/workflows/native-engine.yml) installs OpenModelica on Ubuntu and Windows and runs the full suite with `GRADARA_ENGINE=native`. [Gradara AI gateway](../../.github/workflows/cloud.yml) runs the gateway tests and builds its image. [Desktop installers](../../.github/workflows/release.yml) builds the installers, then installs, launches, and uninstalls each one on clean Windows, macOS, and Ubuntu runners. [Website](../../.github/workflows/site.yml) checks the site files and deploys them when a deploy key is configured. None of these invoke an AI provider or run on a maintainer's personal machine. All are read-only except the draft-release job in Desktop installers and the Website deploy.
 
 Inspect [GitHub Actions](https://github.com/edgaralejod/gradara/actions) for results on the exact commit under review. Workflow files are configuration, not evidence of a successful hosted run. Observe checks before making them required, and dispatch engine CI when validating a release candidate. The [release checklist](../RELEASING.md) separates source availability, hosted checks, and supported distributions.

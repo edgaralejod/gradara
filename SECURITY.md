@@ -2,29 +2,31 @@
 
 ## Intended environment
 
-Gradara is currently a **trusted, single-user local application**. The launcher binds FastAPI to `127.0.0.1:8765` and the browser workbench to localhost. There is no authentication, authorization, tenant isolation, TLS termination, or public-service hardening. Do not expose the service through a public bind address, port forwarding, or an unauthenticated tunnel.
+The desktop app and local service are a **trusted, single-user local application**. The service binds to the loopback interface only (`127.0.0.1:8765` from the source launcher, a random free port in the desktop app). There is no authentication, authorization, tenant isolation, or TLS. Do not expose it through a public bind address, port forwarding, or a tunnel.
 
-The service checks browser Origin headers against local origins and configures CORS. Requests without an Origin header are accepted. These checks reduce some accidental browser access; they do not authenticate a caller or make an internet deployment safe. A local process that can reach the API can operate the workspace and invoke configured generation features.
+Browser-facing protections: requests must use a loopback Host name (blocking DNS-rebinding pages), a browser Origin must be the workbench itself, and every state-changing request must carry the `X-Gradara-Client` header. Browsers cannot add that header cross-origin without a CORS preflight, which is refused, so other websites cannot trigger simulations or paid AI requests. A local process that can reach the port can still operate the workspace; this is not authentication.
+
+The hosted Gradara AI service (`cloud/`) is separate: it has per-user authentication, a credit ledger, rate limits, and a task allowlist. See [privacy](docs/PRIVACY.md) and [the gateway guide](cloud/README.md).
 
 ## Files and execution
 
-Saved documents, generated Modelica, full results, prompts, agent responses/logs, and controller exports live under `projects/`. Runtime logs live under `.runtime/`. They are ignored by Git, but not encrypted or automatically deleted. Back up important models and remove sensitive artifacts deliberately. Do not attach these directories wholesale to bug reports.
+Saved documents, generated Modelica, full results, and controller exports live in the data folder: `projects/` in a source checkout, the OS application-data folder in the desktop app. Runtime logs live under `.runtime/` or the app's `logs/` folder. API keys and the Gradara AI token are kept in the OS keychain, which the operating system protects, or in a user-only (0600) file in the data folder when no keychain is available or `GRADARA_CREDENTIAL_STORE=file` is set. The data folder itself is ignored by Git but not encrypted, and nothing in it is deleted automatically. Back up important models and remove sensitive artifacts deliberately. Do not attach these directories wholesale to bug reports.
 
-The service can access the host filesystem and Docker daemon. Simulation containers use an unprivileged user, network isolation, resource limits, dropped capabilities, and a job-directory mount. These controls reduce exposure; they are not a guarantee that arbitrary hostile model files or compiler exploits are safe. Imported documents and equation snippets should come from trusted sources. The equation validator is a bounded input filter, not a complete Modelica security parser.
+The service can access the host filesystem and Docker daemon. With the **native** engine, OpenModelica runs as the user without container isolation; `server/safety.py` therefore rejects external functions, `Modelica.Utilities`, annotations, imports, class definitions, and string literals in definition text before any compiler runs, in addition to the document schema's own checks. Simulation containers use an unprivileged user, network isolation, resource limits, dropped capabilities, and a job-directory mount. These controls reduce exposure; they are not a guarantee that arbitrary hostile model files or compiler exploits are safe. Imported documents and equation snippets should come from trusted sources. The equation validator is a bounded input filter, not a complete Modelica security parser.
 
-Agent and export subprocesses have separate lifecycle code. Native Windows agent cancellation and C-export timeout/cancellation cleanup remain areas for improvement. Do not claim all subprocesses are hardened identically to the simulation adapter.
+Agent and export subprocesses have separate lifecycle code. Native Windows agent cancellation uses `taskkill.exe /T /F` for its process tree; this is cleanup, not additional sandboxing. Full native Windows provider validation and C-export timeout/cancellation cleanup remain areas for improvement. Do not claim all subprocesses are hardened identically to the simulation adapter.
 
 ## What leaves the machine
 
-Ordinary local simulation does not call an LLM provider. Dependency installation and the first Docker image/library build download upstream packages. The optional agent features contact the configured Codex provider using the user's existing CLI authentication.
+Ordinary local simulation does not call an LLM provider. Engine setup downloads OpenModelica's library or the engine image. The desktop app checks GitHub Releases for updates. AI features contact the provider selected in Settings → AI: Gradara AI, OpenAI or Anthropic with the user's key, or the Codex CLI.
 
 - Component creation sends the request text; refinement also sends the existing component definition.
 - Full-model creation sends the request, built-in catalog snapshot, and local AI library definitions to the configured provider for planning and assembly. It does not send unrelated saved models.
 - Repair attempts may send the candidate and compiler diagnostics.
 - Controller export sends project name/revision, the selected block's equations, parameters and definition, nearby connection metadata, and target-interface instructions.
-- Generation prompts and responses are also retained locally for diagnostics.
+- With the Codex CLI, prompts and responses are also kept locally for diagnostics. Other providers keep no local copy unless `GRADARA_KEEP_AI_TRANSCRIPTS=1` is set.
 
-Do not submit confidential equations or model metadata unless using the configured provider for that content is acceptable to you. Provider retention and account terms are outside this repository's control. Gradara does not need provider credentials for normal editing or simulation. Never commit CLI authentication files, API keys, environment files, or provider logs.
+Do not submit confidential equations or model metadata unless using the configured provider for that content is acceptable to you. With your own key, vendor retention and account terms apply. Gradara AI does not store prompts or responses; see [privacy](docs/PRIVACY.md). Gradara does not need provider credentials for normal editing or simulation. Never commit CLI authentication files, API keys, environment files, or provider logs.
 
 ## Reporting a vulnerability
 

@@ -30,6 +30,7 @@ import {
   Redo2,
   ChevronRight,
   BookOpen,
+  Settings as SettingsIcon,
   AlertCircle,
   RotateCw,
   Settings2,
@@ -119,6 +120,9 @@ import AgentComposer, {
 } from '@/components/gradara/agent-composer';
 import EquationEditor from '@/components/gradara/equation-editor';
 import ExportDialog from '@/components/gradara/export-dialog';
+import SettingsDialog, {
+  type SettingsTab,
+} from '@/components/gradara/settings-dialog';
 import {
   library,
   domainColors,
@@ -217,11 +221,20 @@ function Workbench() {
   const switchingRef = useRef(false);
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [saving, setSaving] = useState('Loading');
-  const [health, setHealth] = useState({
+  const [health, setHealth] = useState<{
+    engineReady: boolean;
+    agentReady: boolean;
+    engine: string;
+    provider?: string;
+    version?: string;
+    projectDirectory?: string;
+  }>({
     engineReady: false,
     agentReady: false,
     engine: 'OpenModelica 1.27.0',
   });
+  const [settingsTab, setSettingsTab] = useState<SettingsTab | null>(null);
+  const [healthChecked, setHealthChecked] = useState(false);
   const [history, setHistory] = useState<Project[]>([]);
   const [future, setFuture] = useState<Project[]>([]);
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
@@ -466,7 +479,10 @@ function Workbench() {
     const update = () =>
       api<typeof health>('/health')
         .then((h) => {
-          if (alive) setHealth(h);
+          if (alive) {
+            setHealth(h);
+            setHealthChecked(true);
+          }
         })
         .catch(() => {
           if (alive)
@@ -479,6 +495,22 @@ function Workbench() {
       clearInterval(timer);
     };
   }, []);
+  const refreshHealth = useCallback(() => {
+    api<typeof health>('/health')
+      .then(setHealth)
+      .catch(() => {});
+  }, []);
+  // First run: open engine setup once per session when simulation is not ready.
+  useEffect(() => {
+    if (!healthChecked || health.engineReady) return;
+    try {
+      if (sessionStorage.getItem('gradara.setupShown')) return;
+      sessionStorage.setItem('gradara.setupShown', '1');
+    } catch {
+      /* storage unavailable: still show setup once */
+    }
+    setSettingsTab('engine');
+  }, [healthChecked, health.engineReady]);
   const saveCurrent = async () => {
     const snapshot = projectRef.current;
     setSaving('Saving');
@@ -1259,6 +1291,14 @@ function Workbench() {
               <ArrowUpRight />
               Export
             </Button>
+            <Button
+              variant="ghost"
+              aria-label="Settings"
+              title="Settings"
+              onClick={() => setSettingsTab('engine')}
+            >
+              <SettingsIcon size={15} />
+            </Button>
           </div>
         </header>
         {startupError && (
@@ -1413,7 +1453,7 @@ function Workbench() {
                   value={project.duration}
                   onChange={(duration) => commit((p) => ({ ...p, duration }))}
                   min={0.000001}
-                  max={60}
+                  max={86400}
                   ariaLabel="Simulation stop time"
                 />
                 <span>s</span>
@@ -2042,7 +2082,7 @@ function Workbench() {
                     ariaLabel="Model stop time"
                     value={project.duration}
                     min={0.000001}
-                    max={60}
+                    max={86400}
                     onChange={(duration) => commit((p) => ({ ...p, duration }))}
                   />
                 </label>
@@ -2067,8 +2107,16 @@ function Workbench() {
               className={`status-dot ${health.engineReady ? '' : 'offline'}`}
             />
             {health.engineReady
-              ? 'OpenModelica ready'
-              : 'OpenModelica unavailable · Check the local service'}
+              ? `${health.engine} ready`
+              : 'Simulation engine not set up'}
+            {!health.engineReady && (
+              <button
+                className="engine-setup-link"
+                onClick={() => setSettingsTab('engine')}
+              >
+                Set up
+              </button>
+            )}
           </span>
           <span>
             {project.blocks.length} components · {nets.length} nets
@@ -2173,6 +2221,17 @@ function Workbench() {
             project={project}
             selectedId={active?.id}
             onClose={() => setExportOpen(false)}
+          />
+        )}
+        {settingsTab && (
+          <SettingsDialog
+            initialTab={settingsTab}
+            dataDirectory={health.projectDirectory}
+            onClose={() => {
+              setSettingsTab(null);
+              refreshHealth();
+            }}
+            onEngineChange={refreshHealth}
           />
         )}
         <Dialog open={helpOpen} onOpenChange={setHelpOpen}>

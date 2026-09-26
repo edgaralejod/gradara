@@ -19,7 +19,7 @@ def assembly(key='builtin:constant'):
 
 
 def setup(monkeypatch, tmp_path, responses):
-    monkeypatch.setattr(builder, 'ROOT', tmp_path)
+    monkeypatch.setattr(builder, 'DATA', tmp_path)
     monkeypatch.setattr(builder, 'list_components', lambda _: [])
     provider = AsyncMock(side_effect=responses)
     monkeypatch.setattr(builder.agent, 'structured_generation', provider)
@@ -48,7 +48,7 @@ def test_awaits_typed_dependency_before_assembly(monkeypatch, tmp_path):
     p = plan(); p['missing']=[missing]
     events=[]
     _, _ = setup(monkeypatch,tmp_path,[])
-    async def provider(prompt, schema, ident):
+    async def provider(prompt, schema, ident, task=None):
         events.append(ident)
         if ident.endswith('plan'): return p
         assert events == ['test-plan','component-start','component-ready','test-assembly0']
@@ -132,7 +132,7 @@ def test_model_generation_api_is_a_job_and_never_saves(monkeypatch, tmp_path):
         progress('Assembling')
         return {'checked': True}
     monkeypatch.setattr(service, 'generate_model', generate)
-    with TestClient(service.app) as client:
+    with TestClient(service.app, headers={'X-Gradara-Client': 'test'}) as client:
         response = client.post('/api/models/generate', json={'prompt':'Make a model','catalog':[source().model_dump()]})
         assert response.status_code == 200
         ident = response.json()['id']

@@ -1,0 +1,22 @@
+{
+  "hosting": {
+    "public": "public",
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "ignore": ["firebase.json", "**/.*"],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {"key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"},
+          {"key": "X-Content-Type-Options", "value": "nosniff"},
+          {"key": "Referrer-Policy", "value": "strict-origin-when-cross-origin"},
+          {"key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"},
+          {"key": "Strict-Transport-Security", "value": "max-age=31536000"}
+        ]
+      },
+      {"source": "**/*.html", "headers": [{"key": "Cache-Control", "value": "public, max-age=0, must-revalidate"}]},
+      {"source": "/assets/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=86400"}]}
+    ]
+  }
+}

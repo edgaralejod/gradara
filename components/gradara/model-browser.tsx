@@ -12,6 +12,7 @@ import {
   Gauge,
   LoaderCircle,
   Search,
+  Thermometer,
   Trash2,
   RotateCcw,
   Upload,
@@ -30,7 +31,14 @@ import { modelTemplates, type TemplateId } from '@/lib/gradara/workspace';
 import type { ModelSummary } from '@/lib/gradara/document-store';
 
 export type BrowserSection = 'models' | 'examples' | 'trash';
-const icons = { blank: FilePlus2, dc: Gauge, foc: CircuitBoard, buck: Zap, flyback: Zap };
+const icons = {
+  blank: FilePlus2,
+  dc: Gauge,
+  foc: CircuitBoard,
+  buck: Zap,
+  flyback: Zap,
+  datacenter: Thermometer,
+};
 const dateLabel = (date: string) => {
   const value = new Date(date);
   return value.getTime() > 0

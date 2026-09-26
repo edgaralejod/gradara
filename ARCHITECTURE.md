@@ -18,8 +18,11 @@ Agents author inspectable, saved component definitions and export artifacts. Ord
 | Diagram | React Flow plus custom orthogonal net rendering | Transient pointer state and screen geometry; not the execution graph. |
 | Model operations | `lib/gradara/` | Serializable document, names, nets, ports, routing, selection, immutable edit operations. |
 | Equation editor | Monaco | Edits bounded component declarations and equations. |
-| Local service | Python 3.12, FastAPI, Pydantic | Persistence, validation, source emission, asynchronous jobs, agent and export adapters. |
-| Simulation | OpenModelica 1.27.0, OMPython, MSL 4.1.0 in Docker | Equation processing, initialization, integration, and events. |
+| Local service | Python 3.12, FastAPI, Pydantic | Persistence, validation, source emission, asynchronous jobs, agent and export adapters. Loopback only; refuses cross-site requests. |
+| Simulation | OpenModelica 1.27.0 and MSL 4.1.0, native install or Docker image (`server/engines.py`) | Equation processing, initialization, integration, and events. |
+| AI providers | `server/llm/`: Gradara AI, OpenAI, Anthropic, Codex CLI | One schema-constrained generation interface; provider chosen in Settings. |
+| Desktop app | Electron shell, PyInstaller-frozen service, static workbench build | Installers per OS; see [distribution](docs/architecture/DISTRIBUTION.md). |
+| Gradara AI service | `cloud/`: FastAPI, PostgreSQL, Firebase Auth, Stripe | Accounts and prepaid credits; never stores prompts or responses. |
 | Storage | JSON documents and per-job filesystem directories | Single-user local persistence; no database or collaboration server. |
 
 The Vite configuration retains Sites/Cloudflare build scaffolding. Its optional D1/R2 bindings are unset; application persistence and simulation use FastAPI and the local filesystem. A successful web build is not a deployable hosted simulation service.
@@ -31,7 +34,7 @@ flowchart LR
     DOC --> SAVE[Local filesystem persistence]
     DOC --> EMIT[Modelica emitter]
     EMIT --> JOB[Immutable run directory]
-    JOB --> OM[OpenModelica container]
+    JOB --> OM[OpenModelica<br>native or container]
     OM --> RESULT[CSV and result preview]
     RESULT --> UI
     ASK[Component request] --> AGENT[Optional agent adapter]
@@ -63,7 +66,7 @@ Smooth interaction is a product requirement. Large-model frame-rate and latency 
 
 ## Simulation boundary
 
-The Python service validates the document, checks connected scalar inputs, emits Modelica, and launches a supervised container using an immutable snapshot. Signal nets have at most one output driver; physical nets use Modelica potential/flow connection semantics. A visual junction is not an executable block, and canvas order is not evaluation order.
+The Python service validates the document, checks connected scalar inputs, emits Modelica, and runs OpenModelica under supervision (native install or container) on an immutable snapshot. Signal nets have at most one output driver; physical nets use Modelica potential/flow connection semantics. A visual junction is not an executable block, and canvas order is not evaluation order.
 
 Built-in, non-generated physical `kind` values select canonical wrappers in `server/modelica.py`. Their display equations are explanatory; editing that text does not replace their physical implementation. Signal definitions and generated physical definitions use their bounded declarations and equations. Generated physical ports emit standard electrical pins, rotational flanges, or heat ports. Built-in physical additions use the canonical wrapper contract; generated additions use typed standard connectors and bounded equations. Assigning a domain color alone does not create physical connectivity.
 
@@ -73,7 +76,7 @@ The API exposes jobs rather than blocking the editor. Current concurrency, cance
 
 The component adapter returns structured JSON constrained by the user-selected signal, electrical, rotational mechanical, thermal, or multidomain type. The server enforces terminal domains and directions independently of the provider, and refinement preserves the existing wired interface. Pydantic validates the definition, and OpenModelica checks it before insertion. Compiler diagnostics can trigger one repair attempt. The generated response is data, not a project-editing command. The browser applies the accepted component through its normal operations.
 
-C export currently targets **one block marked `controller`**. The package includes its equations, parameters, local connection information, project revision, and a C11 init/step interface. Generated source is compiled in a container; the package retains the exact source and integration notes. Generation itself is not reproducible, and compile success proves neither behavioral equivalence nor hardware readiness.
+C export currently targets **one block marked `controller`**. The package includes its equations, parameters, local connection information, project revision, and a C11 init/step interface. Generated source is compiled with a C compiler through the selected engine backend (GCC in the container, the host compiler with native OpenModelica); the package retains the exact source and integration notes. Generation itself is not reproducible, and compile success proves neither behavioral equivalence nor hardware readiness.
 
 This export is separate from OpenModelica's generated simulation C. A future controller-subsystem boundary must preserve controller structure and sample timing before the simulation compiler flattens the plant and controller.
 
@@ -88,7 +91,7 @@ Full-model creation uses `server/model_agent.py` to plan against a catalog snaps
 | Remote execution | Authentication, authorization, isolation, quotas, durable jobs, versioned requests and artifacts. |
 | FMI or another numerical backend | A concrete interoperability requirement and a capability contract; Modelica equation semantics are not universally interchangeable. |
 | Verilog/VHDL | Clocks, resets, numeric representation, latency, synthesis checks, and behavioral comparisons. |
-| Desktop distribution | Verified installers and process lifecycle on each OS, plus dependency/license packaging. Electron is an option, not an implemented commitment. |
+| Bundled engine | A Windows installer that includes OpenModelica, and an embedded Linux VM for macOS, each with license packaging and update behavior. The desktop app itself is implemented; see [distribution](docs/architecture/DISTRIBUTION.md). |
 
 Keep these boundaries modular within the current application. Microservices, an intermediate language, or a Rust solver are not prerequisites for improving the workbench. The [roadmap](ROADMAP.md) orders the next work.
 

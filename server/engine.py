@@ -1,73 +1,35 @@
-import asyncio
 import csv
 import json
 import math
 from pathlib import Path
-import shutil
 import time
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
-from .runtime import IMAGE, LEGACY_IMAGE, docker_argv
+from .runtime import IMAGE, LEGACY_IMAGE
 from .diagnostics import validate_simulation, explain_failure
+from .paths import ROOT, RUNS
+from .safety import check_definition, check_project
+from . import engines
 
-ROOT = Path(__file__).resolve().parent.parent
-RUNS = ROOT/'projects'/'runs'
-RUNS.mkdir(parents=True, exist_ok=True)
-SEMAPHORE = asyncio.Semaphore(2)
+__all__ = ['ROOT', 'RUNS', 'IMAGE', 'LEGACY_IMAGE', 'engine_available', 'execute', 'simulate', 'check_component']
 
-async def _image_present(tag: str) -> bool:
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            *docker_argv(), 'image', 'inspect', tag,
-            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL,
-        )
-        return await asyncio.wait_for(proc.wait(), 6) == 0
-    except (OSError, asyncio.TimeoutError):
-        return False
 
 async def engine_available():
-    if await _image_present(IMAGE):
-        return True
-    if not await _image_present(LEGACY_IMAGE):
-        return False
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            *docker_argv(), 'tag', LEGACY_IMAGE, IMAGE,
-            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL,
-        )
-        return await asyncio.wait_for(proc.wait(), 6) == 0
-    except (OSError, asyncio.TimeoutError):
-        return False
+    return await engines.available()
+
 
 async def execute(folder: Path, config: dict, name: str):
-    folder.mkdir(parents=True, exist_ok=True)
-    (folder/'request.json').write_text(json.dumps(config))
-    shutil.copyfile(ROOT/'server'/'engine_runner.py', folder/'runner.py')
-    command = [*docker_argv(), 'run', '--rm', '--name', name, '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=256', '--memory=2g', '--cpus=2', '-v', f'{folder}:/work', '-w', '/work', IMAGE, 'python3', '/work/runner.py']
-    async with SEMAPHORE:
-        process = await asyncio.create_subprocess_exec(*command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
-        try:
-            output, _ = await asyncio.wait_for(process.communicate(), 120)
-        except (asyncio.CancelledError, asyncio.TimeoutError) as exc:
-            cleanup = await asyncio.create_subprocess_exec(*docker_argv(), 'rm', '-f', name, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
-            await cleanup.wait()
-            if process.returncode is None:
-                process.kill()
-            await process.wait()
-            if isinstance(exc, asyncio.TimeoutError):
-                raise RuntimeError("OpenModelica exceeded the 120-second execution limit. Try a shorter duration or check stiff equations and initial conditions.") from exc
-            raise
-    (folder/'engine.log').write_bytes(output)
-    report = folder/'engine.json'
-    if not report.exists():
-        raise RuntimeError(output.decode(errors='replace')[-5000:] or 'The numerical engine could not start.')
-    result = json.loads(report.read_text())
+    try:
+        result = await engines.execute(folder, config, name)
+    except engines.EngineError as exc:
+        raise RuntimeError(str(exc)) from exc
     if result.get('error'):
         raise RuntimeError(result['error'])
     return result
 
 async def simulate(project: Project, job_id: str):
     validate_simulation(project)
+    check_project(project)
     started = time.monotonic()
     folder = RUNS/job_id
     folder.mkdir(parents=True, exist_ok=True)
@@ -126,11 +88,12 @@ async def simulate(project: Project, job_id: str):
     sample_indices=sorted(set(sample_indices))
     for series in outputs:
         series['values']=[series['values'][i] for i in sample_indices]
-    result = {'id':job_id,'engine':'OpenModelica 1.27.0','projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'samples':len(rows)}
+    result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'samples':len(rows)}
     (folder/'result.json').write_text(json.dumps(result, allow_nan=False))
     return result
 
 async def check_component(definition: Definition, job_id: str):
+    check_definition(definition)
     folder = RUNS/f'check-{job_id}'
     folder.mkdir(parents=True, exist_ok=True)
     (folder/'model.mo').write_text('within;\npackage Gradara\n'+component_source(definition,'Component')+'\nend Gradara;')

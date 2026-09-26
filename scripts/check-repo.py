@@ -35,6 +35,9 @@ def forbidden(name):
 def inspect_text(name, data, problems):
     if b'\0' in data:
         return
+    path = PurePosixPath(name.split(':', 1)[-1] if name.startswith('history ') else name)
+    if path.suffix.lower() not in {'.bat', '.cmd'} and b'\r' in data:
+        problems.add(f'{name}: CRLF or CR line endings; repository text uses LF')
     text = data.decode('utf-8', errors='replace')
     for label, pattern in PATTERNS.items():
         for match in pattern.finditer(text):

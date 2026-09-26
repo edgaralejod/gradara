@@ -1,0 +1,7 @@
+*
+!cloud/requirements.txt
+!cloud/gateway
+!server/__init__.py
+!server/llm
+**/__pycache__
+**/*.db

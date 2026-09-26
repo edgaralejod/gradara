@@ -36,15 +36,32 @@ Repository-wide `npm run lint` currently reports an existing backlog; record it 
 
 ## Host configuration
 
-The repository includes PR and issue templates and read-only GitHub Actions workflows. They can be adapted for another host. The workflows use ordinary pull-request events and hosted runners; they do not run a provider agent, publish a site, push an image, or expose local credentials.
+The repository includes PR and issue templates and GitHub Actions workflows on hosted runners. Most are read-only. Two write: **Desktop installers** creates a draft release on `v*` tags, and **Website** deploys `site/` to Firebase Hosting (live on pushes to `main` and manual runs, a preview channel for pull requests) when its deploy key is configured. No workflow calls an AI provider, pushes an engine image, or sees local credentials.
 
 After a GitHub repository exists, enable Issues, choose whether Discussions are useful, enable private vulnerability reporting and available secret scanning, and set a short description/topics. Add actual maintainers to access rules deliberately. Avoid a `CODEOWNERS` file containing guessed identities. Consider dependency update tooling after the initial checks are stable; dependency upgrades must respect the pinned React Flow patch.
 
-## Binary images and desktop installers
+## Desktop installers
 
-Treat a packaged numerical engine or installer as a separate release artifact. Inventory all included compiler/runtime/library/OS components, retain notices, and satisfy applicable source-distribution requirements. Record engine and MSL versions, supported host architectures, startup/shutdown behavior, storage paths, and update/rollback behavior.
+1. Bump `version` in `package.json` and `desktop/package.json` together.
+2. Push a tag `vX.Y.Z`. The **Desktop installers** workflow builds Windows (NSIS), macOS (DMG and ZIP for Apple silicon and Intel), and Linux (AppImage and deb) and smoke-tests the frozen service. It then installs each package on a clean runner (Windows, both macOS architectures, Ubuntu 22.04 and 24.04), launches it twice in self-test mode, uninstalls it, and checks that program files, shortcuts, and the Add/Remove Programs entry are gone while the user's data folder is kept. Only when every install test passes does it attach the installers to a **draft** GitHub Release. The same build and install tests run on pull requests that touch the app.
+3. Before publishing, check what CI cannot: install on a real machine, go through first-run engine setup, open an example, run it, sign in to Gradara AI (staging gateway), and generate a block.
+4. Write release notes with known limitations, then publish the draft. Published releases feed auto-update and the stable `/download/{platform}` links.
 
-The current `npm run build` output is only a web bundle. It is not an authenticated hosted simulation service or a complete cross-platform desktop application. A future remote service needs its own security and operations design before deployment.
+Self-test mode: launching the app with `GRADARA_SELF_TEST_REPORT=<file>` makes it start its service, create a model, wait for the workbench to render, write a JSON report to that file, and quit without dialogs. `packaging/installer_selftest.py --exe <installed executable>` wraps this and also fails if a service process outlives the app.
+
+Signing secrets (optional until configured; unsigned builds warn users):
+
+| Secret | Purpose |
+| --- | --- |
+| `MAC_CERTIFICATE_P12`, `MAC_CERTIFICATE_PASSWORD` | Developer ID Application certificate (base64 .p12) |
+| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Notarization |
+| `WIN_CERTIFICATE_PFX`, `WIN_CERTIFICATE_PASSWORD` | Windows code signing certificate, or configure Azure Trusted Signing in `electron-builder.yml` |
+
+Installers bundle Electron, a Python runtime, and the service dependencies; see [third-party notices](../THIRD_PARTY_NOTICES.md). They do not bundle OpenModelica: users install it (Windows, Linux) or use the container engine (macOS, optional elsewhere).
+
+## Gradara AI service
+
+Deploy from `cloud/` following [its runbook](../cloud/README.md). Before live payments: run `pytest` in `cloud/`, verify sign-in and Checkout in Stripe test mode end to end with a desktop build pointed at the staging gateway, confirm the webhook grants credits once, and confirm logs contain no request content. Update [privacy](PRIVACY.md) and the public notice together whenever stored data or subprocessors change.
 
 ## Release status and evidence
 

@@ -1,23 +1,36 @@
 import asyncio
 import json
-from pathlib import Path
-import shutil
+import os
 import uuid
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from .models import Project, GenerateRequest, NewModelRequest, SaveModelRequest, CopyModelRequest
-from . import workspace
-from .modelica import emit_project, project_key, semantic_hash
-from .engine import ROOT, RUNS, engine_available, simulate
-from .agent import generate_component, CODEX
-from .model_agent import ModelGenerateRequest, generate_model
+from pydantic import BaseModel, Field
+from .platform_env import extend_path
 
-PROJECT_DIR = ROOT/'projects'
+extend_path()
+
+from .models import Project, GenerateRequest, NewModelRequest, SaveModelRequest, CopyModelRequest
+from . import workspace, settings, engines, credentials
+from .modelica import emit_project, project_key, semantic_hash
+from .engine import RUNS, engine_available, simulate
+from .agent import generate_component
+from .model_agent import ModelGenerateRequest, generate_model
+from .paths import DATA, EXAMPLES, STATIC
+from .llm import dispatch, gradara as gradara_ai
+from .llm.providers import ProviderError, verify_key
+
+VERSION = os.environ.get('GRADARA_VERSION', '0.2.0')
+PROJECT_DIR = DATA
 PROJECT_FILE = PROJECT_DIR/'workspace.json'
 JOBS: dict[str,dict] = {}
 TASKS: dict[str,asyncio.Task] = {}
+SIGNINS: dict[str, dict] = {}
+PORT = os.environ.get('GRADARA_PORT', '8765')
+LOCAL_ORIGINS = {f'http://{host}:{port}' for host in ('localhost', '127.0.0.1') for port in {'4317', '8765', PORT}}
+LOCAL_HOSTS = {'localhost', '127.0.0.1', '[::1]', 'testserver'}
+CLIENT_HEADER = 'x-gradara-client'
 
 @asynccontextmanager
 async def lifespan(app):
@@ -26,21 +39,44 @@ async def lifespan(app):
         if not task.done(): task.cancel()
     await asyncio.gather(*TASKS.values(), return_exceptions=True)
 
-app = FastAPI(title='Gradara local workspace', lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=['http://localhost:4317','http://127.0.0.1:4317'],allow_methods=['GET','POST','PUT','DELETE'],allow_headers=['Content-Type'])
+app = FastAPI(title='Gradara local workspace', lifespan=lifespan, docs_url='/api/docs', openapi_url='/api/openapi.json')
+app.add_middleware(CORSMiddleware, allow_origins=sorted(LOCAL_ORIGINS),allow_methods=['GET','POST','PUT','DELETE'],allow_headers=['Content-Type','X-Gradara-Client'])
+
+def _hostname(host: str) -> str:
+    if host.startswith('['):
+        return host.split(']')[0] + ']'
+    return host.rsplit(':', 1)[0]
 
 @app.middleware('http')
-async def local_origin(request:Request, call_next):
-    origin = request.headers.get('origin')
-    if origin and origin not in {'http://localhost:4317','http://127.0.0.1:4317','http://localhost:8765','http://127.0.0.1:8765'}:
-        from fastapi.responses import JSONResponse
+async def local_only(request:Request, call_next):
+    """Accept requests only from this computer's Gradara window.
+
+    * Host must be a loopback name, which defeats DNS-rebinding pages.
+    * A browser Origin, when present, must be the workbench itself.
+    * State-changing requests must carry X-Gradara-Client. Browsers cannot add
+      that header cross-origin without a CORS preflight, which is refused, so
+      other websites cannot trigger simulations or paid AI calls.
+    """
+    if _hostname(request.headers.get('host') or '') not in LOCAL_HOSTS:
         return JSONResponse({'detail':'This workspace only accepts local requests.'},status_code=403)
+    origin = request.headers.get('origin')
+    same_origin = origin == f"http://{request.headers.get('host')}"
+    if origin and not same_origin and origin not in LOCAL_ORIGINS:
+        return JSONResponse({'detail':'This workspace only accepts local requests.'},status_code=403)
+    if request.method in {'POST','PUT','DELETE','PATCH'} and request.url.path.startswith('/api/') and not request.headers.get(CLIENT_HEADER):
+        return JSONResponse({'detail':'Missing Gradara client header.'},status_code=403)
     return await call_next(request)
+
+@app.exception_handler(ProviderError)
+async def provider_error(request: Request, exc: ProviderError):
+    return JSONResponse({'detail': str(exc)}, status_code=exc.status if 400 <= exc.status < 600 else 502)
 
 @app.get('/api/health')
 async def health():
     ready = await engine_available()
-    return {'engine': 'OpenModelica 1.27.0','engineReady':ready,'agentReady':Path(CODEX).exists() or shutil.which(CODEX) is not None,'provider':'Codex','projectDirectory':str(PROJECT_DIR)}
+    ai = dispatch.status()
+    return {'engine': 'OpenModelica','engineReady':ready,'agentReady':ai['ready'],'provider':ai['label'],
+            'aiProvider':ai['provider'],'version':VERSION,'projectDirectory':str(PROJECT_DIR)}
 
 def document_response(project):
     return {'project': project.model_dump(exclude_none=True) if project else None,
@@ -72,7 +108,7 @@ async def list_models(trashed: bool = False):
 @app.post('/api/models')
 async def create_model(request: NewModelRequest):
     try:
-        project = workspace.new_model(PROJECT_DIR, ROOT/'models'/'examples', request.name, request.template)
+        project = workspace.new_model(PROJECT_DIR, EXAMPLES, request.name, request.template)
     except ValueError as exc:
         raise HTTPException(422,str(exc)) from exc
     return document_response(project)
@@ -125,8 +161,8 @@ async def load_model(model_id: str):
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):
-    if example_id not in {'dc','foc','buck','flyback'}: raise HTTPException(404,'Example not found.')
-    path = ROOT/'models'/'examples'/f'{example_id}.json'
+    if example_id not in {'dc','foc','buck','flyback','datacenter'}: raise HTTPException(404,'Example not found.')
+    path = EXAMPLES/f'{example_id}.json'
     if not path.exists(): raise HTTPException(404,'Example is unavailable.')
     data = json.loads(path.read_text())
     data['modelId'] = uuid.uuid4().hex
@@ -144,6 +180,8 @@ async def source(project:Project):
 
 async def perform(job_id, operation):
     JOBS[job_id]['status']='running'
+    # One top-level operation is one billable AI job, including its repairs.
+    dispatch.current_job.set({'id': job_id, 'kind': JOBS[job_id]['kind']})
     try:
         result = await operation
         JOBS[job_id].update(status='complete',result=result)
@@ -151,6 +189,15 @@ async def perform(job_id, operation):
         JOBS[job_id].update(status='cancelled')
     except Exception as exc:
         JOBS[job_id].update(status='failed',error=str(exc))
+    finally:
+        # Operation closures can hold full models; drop them once finished.
+        TASKS.pop(job_id, None)
+        _trim_jobs()
+
+def _trim_jobs(limit: int = 200):
+    finished = [key for key, job in JOBS.items() if job['status'] in {'complete','failed','cancelled'}]
+    for key in finished[:-limit]:
+        JOBS.pop(key, None)
 
 async def start_job(kind, operation_factory):
     active = sum(1 for j in JOBS.values() if j['status'] in {'running','queued'})
@@ -233,7 +280,8 @@ async def generate(request:GenerateRequest):
     return await start_job('component',lambda i:generate_component(request.prompt,request.existing,i,request.blockType))
 
 from .models import ExportRequest
-from .exporter import export_controller, EXPORTS
+from .exporter import export_controller
+from .paths import EXPORTS
 
 @app.post('/api/exports')
 async def export(request:ExportRequest):
@@ -245,3 +293,114 @@ async def export_download(export_id:str):
     path=EXPORTS/export_id/'gradara-controller.zip'
     if not path.exists(): raise HTTPException(404,'Export not found.')
     return FileResponse(path,media_type='application/zip',filename='gradara-controller.zip')
+
+
+# ------------------------------------------------------------------ engine
+
+class EngineChoice(BaseModel):
+    engine: str = Field(pattern='^(auto|native|docker)$')
+
+@app.get('/api/engine')
+async def engine_status(refresh: bool = False):
+    return await engines.status(refresh)
+
+@app.put('/api/engine')
+async def choose_engine(choice: EngineChoice):
+    settings.update({'engine': choice.engine})
+    return await engines.status()
+
+@app.post('/api/engine/prepare')
+async def prepare_engine():
+    if any(j['kind'] == 'engine' and j['status'] in {'queued','running'} for j in JOBS.values()):
+        raise HTTPException(409, 'Engine setup is already running.')
+    return await start_job('engine', lambda i: engines.prepare(lambda message: JOBS[i].update(progress=message)))
+
+# ---------------------------------------------------------------------- AI
+
+class AIChoice(BaseModel):
+    provider: str | None = Field(default=None, pattern='^(gradara|openai|anthropic|codex|off)$')
+    openaiModel: str | None = Field(default=None, max_length=100)
+    anthropicModel: str | None = Field(default=None, max_length=100)
+
+class APIKey(BaseModel):
+    key: str = Field(min_length=8, max_length=400)
+
+@app.get('/api/ai')
+async def ai_status():
+    return dispatch.status()
+
+@app.put('/api/ai')
+async def choose_ai(choice: AIChoice):
+    settings.update({'ai': choice.model_dump(exclude_none=True)})
+    return dispatch.status()
+
+@app.put('/api/ai/keys/{provider}')
+async def save_key(provider: str, body: APIKey):
+    if provider not in dispatch.KEY_NAMES: raise HTTPException(404, 'Unknown provider.')
+    key = body.key.strip()
+    await verify_key(provider, key)
+    credentials.put(dispatch.KEY_NAMES[provider], key)
+    return dispatch.status()
+
+@app.delete('/api/ai/keys/{provider}')
+async def remove_key(provider: str):
+    if provider not in dispatch.KEY_NAMES: raise HTTPException(404, 'Unknown provider.')
+    credentials.delete(dispatch.KEY_NAMES[provider])
+    return dispatch.status()
+
+# ------------------------------------------------------- Gradara AI account
+
+class CheckoutRequest(BaseModel):
+    pack: str = Field(min_length=1, max_length=40)
+
+@app.post('/api/account/signin')
+async def begin_sign_in():
+    data = await gradara_ai.start_sign_in()
+    signin = uuid.uuid4().hex
+    SIGNINS.clear()
+    SIGNINS[signin] = {'deviceCode': data['deviceCode']}
+    return {'id': signin, 'userCode': data['userCode'], 'verificationUrl': data['verificationUrl'],
+            'expiresIn': data.get('expiresIn', 600), 'interval': data.get('interval', 3)}
+
+@app.get('/api/account/signin/{signin}')
+async def sign_in_progress(signin: str):
+    pending = SIGNINS.get(signin)
+    if pending is None: raise HTTPException(404, 'Start sign-in again.')
+    data = await gradara_ai.poll_sign_in(pending['deviceCode'])
+    if data.get('status') in {'approved', 'expired', 'denied'}:
+        SIGNINS.pop(signin, None)
+    return data
+
+@app.get('/api/account')
+async def account():
+    if not credentials.present('gradara_token'):
+        return {'signedIn': False}
+    return {'signedIn': True, **await gradara_ai.account()}
+
+@app.post('/api/account/checkout')
+async def checkout(request: CheckoutRequest):
+    return await gradara_ai.checkout(request.pack)
+
+@app.post('/api/account/signout')
+async def sign_out():
+    await gradara_ai.sign_out()
+    return {'signedIn': False}
+
+@app.delete('/api/account')
+async def delete_account():
+    return await gradara_ai.delete_account()
+
+# ------------------------------------------------------ installed workbench
+
+if STATIC is not None and (STATIC/'index.html').exists():
+    from fastapi.staticfiles import StaticFiles
+    app.mount('/assets', StaticFiles(directory=STATIC/'assets', check_dir=False), name='assets')
+
+    @app.get('/{path:path}', include_in_schema=False)
+    async def workbench(path: str):
+        if path.startswith('api/'):
+            raise HTTPException(404, 'Not found.')
+        candidate = (STATIC/path).resolve()
+        if path and candidate.is_file() and STATIC.resolve() in candidate.parents:
+            return FileResponse(candidate)
+        return FileResponse(STATIC/'index.html', headers={'Cache-Control': 'no-store'})

@@ -16,8 +16,8 @@ The repository is hosted at [edgaralejod/gradara on GitHub](https://github.com/e
 2. Read the [architecture](ARCHITECTURE.md), [agent/repository guidance](AGENTS.md), and relevant subsystem docs.
 3. Implement the change using existing model operations and shared visual primitives. Preserve legacy documents and user geometry.
 4. Run appropriate [tests and manual checks](docs/development/TESTING.md). Add a regression for a behavior or contract that could break, rather than a test that simply repeats the implementation.
-5. Update user/developer docs where behavior changed. Generate a local catalog report when reviewing block changes; do not commit generated reports or session logs.
-6. Review your diff for unrelated formatting, generated files, private models, and license notices. Fill in the PR template on GitHub with what changed and how it was checked. Keep the git commit and merge messages short; the template is not the commit.
+5. Update the docs your change owns in the same pull request; the [doc map](AGENTS.md#keep-documentation-current) lists them, and CI warns when mapped code changes without them. Generate a local catalog report when reviewing block changes; do not commit generated reports or session logs.
+6. Review your diff for unrelated formatting, generated files, private models, and license notices. Keep LF line endings; `.gitattributes` is the shared contract across Windows, macOS, and Linux. Fill in the PR template on GitHub with what changed and how it was checked. Keep the git commit and merge messages short; the template is not the commit.
 
 The core checks are TypeScript typecheck/tests/build, Python tests without the integration marker, documentation links, and repository hygiene. Real-engine tests run separately when relevant. Whole-repository lint has an existing backlog and is currently advisory; keep new code clean and report pre-existing failures honestly.
 

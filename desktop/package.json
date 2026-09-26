@@ -1,0 +1,28 @@
+{
+  "name": "gradara-desktop",
+  "productName": "Gradara",
+  "version": "0.2.0",
+  "description": "Graphical multidomain simulation with OpenModelica",
+  "main": "main.cjs",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Virtu Services LLC",
+    "email": "support@virtu-services.us",
+    "url": "https://virtu-services.us"
+  },
+  "homepage": "https://gradara.app/",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never",
+    "dist:dir": "electron-builder --dir --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9"
+  },
+  "devDependencies": {
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3"
+  },
+  "desktopName": "gradara.desktop"
+}

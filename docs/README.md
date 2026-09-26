@@ -6,8 +6,8 @@
 - [Enable AI features: accounts, infrastructure, and troubleshooting](AGENT_SETUP.md)
 - [Modeling workflow and controls](USER_GUIDE.md)
 - [Troubleshooting](development/TROUBLESHOOTING.md)
-- Examples: [DC motor](../models/DC.md), [field-oriented control](../models/FOC.md), [ideal-switch buck](../models/BUCK.md)
-- [Security and data handling](../SECURITY.md)
+- Examples: [DC motor](../models/DC.md), [field-oriented control](../models/FOC.md), [ideal-switch buck](../models/BUCK.md), [480 VAC flyback](examples/FLYBACK.md), [data center cooling](examples/DATACENTER.md)
+- [Security](../SECURITY.md) and [privacy and data handling](PRIVACY.md)
 
 ## Contribute
 
@@ -20,6 +20,7 @@
 ## Understand and extend the code
 
 - [Architecture and decisions](../ARCHITECTURE.md)
+- [Desktop distribution, AI providers, and the Gradara AI service](architecture/DISTRIBUTION.md) ([gateway operations](../cloud/README.md))
 - [Document format, identity, and persistence](architecture/MODEL_FORMAT.md)
 - [Simulation, agents, and exports](architecture/EXECUTION.md)
 - [Local API](API.md)

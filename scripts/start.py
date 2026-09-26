@@ -30,19 +30,7 @@ def reachable(url):
         return False
 
 
-def main():
-    parser=argparse.ArgumentParser()
-    parser.add_argument('--no-open',action='store_true')
-    args=parser.parse_args()
-    if reachable(URL) and reachable(API):
-        print('Gradara is already running at '+URL,flush=True)
-        if not args.no_open:webbrowser.open(URL)
-        return
-    python=ROOT/'.venv'/('Scripts/python.exe' if os.name=='nt' else 'bin/python')
-    if not python.exists():
-        raise RuntimeError('Install the Python environment first. See README.md.')
-    if not shutil.which('npm'):
-        raise RuntimeError('Node.js is required. See README.md.')
+def prepare_docker():
     docker=docker_argv()
     if platform.system()=='Darwin':
         check=subprocess.run([*docker,'info'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
@@ -57,6 +45,25 @@ def main():
         else:
             print('Preparing OpenModelica and the component library…',flush=True)
             subprocess.run([*docker,'build','-f','Dockerfile.engine','--build-arg',f'ENGINE_UID={os.getuid() if hasattr(os,"getuid") else 1000}','-t',IMAGE,'.'],cwd=ROOT,check=True)
+
+
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--no-open',action='store_true')
+    args=parser.parse_args()
+    if reachable(URL) and reachable(API):
+        print('Gradara is already running at '+URL,flush=True)
+        if not args.no_open:webbrowser.open(URL)
+        return
+    python=ROOT/'.venv'/('Scripts/python.exe' if os.name=='nt' else 'bin/python')
+    if not python.exists():
+        raise RuntimeError('Install the Python environment first. See README.md.')
+    if not shutil.which('npm'):
+        raise RuntimeError('Node.js is required. See README.md.')
+    if shutil.which('docker') and os.environ.get('GRADARA_ENGINE')!='native':
+        prepare_docker()
+    else:
+        print('Docker was not found; Gradara will use a native OpenModelica install if present. Open Settings → Engine for setup.',flush=True)
     commands=[('service',[str(python),'-m','uvicorn','server.app:app','--host','127.0.0.1','--port','8765']),('workbench',[shutil.which('npm'),'run','dev','--','--port','4317'])]
     children=[]
     logs=[]

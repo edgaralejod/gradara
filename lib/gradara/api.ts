@@ -12,13 +12,16 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const headers = new Headers(options?.headers);
   if (!headers.has('Content-Type'))
     headers.set('Content-Type', 'application/json');
+  // The local service refuses state-changing requests without this header,
+  // which other websites cannot send cross-origin.
+  headers.set('X-Gradara-Client', 'workbench');
   let response: Response;
   try {
     response = await fetch(`/api${path}`, { ...options, headers });
   } catch (error) {
     if ((error as Error).name === 'AbortError') throw error;
     throw new Error(
-      'Cannot reach the local simulation service. Check that the Gradara launcher is running, then try again.',
+      'Cannot reach the local Gradara service. Restart Gradara, then try again.',
     );
   }
   const text = await response.text();
