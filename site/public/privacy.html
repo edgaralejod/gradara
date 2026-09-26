@@ -58,21 +58,21 @@
 <tr><td>Sign-ins</td><td>A one-way hash of each computer's token, and the day it was last used</td><td>Until revoked, then 30 days</td></tr>
 </tbody>
 </table>
-<p class="after-table">Server logs contain only the request type, status, timing, and a random request id.</p>
+<p class="after-table">Server logs contain only the request type, status, timing, and a random request id. We also turn off our hosting platform's request logs, so our server logs do not contain IP addresses. Sign-in (Firebase) and payments (Stripe) see your IP address under their own policies.</p>
 
 <h2>Service providers</h2>
 <ul>
 <li><b>Google Cloud</b> hosts the service and database.</li>
 <li><b>Firebase Authentication</b> handles sign-in with Google or an email link. We never see passwords.</li>
 <li><b>Stripe</b> processes payments, tax, and receipts. We never receive card details.</li>
-<li><b>Our AI model provider</b> (Anthropic or OpenAI) processes request content to produce a result, under commercial API terms that do not use it for training.</li>
+<li><b>Our AI model provider</b> (Anthropic or OpenAI) processes request content to produce a result, under commercial API terms that do not use it for training. The provider may keep it for a limited period for abuse monitoring, as its terms describe.</li>
 <li><b>GitHub</b> hosts downloads and update checks.</li>
 <li><b>Firebase Hosting</b> serves this website. We add no cookies or analytics to it.</li>
 </ul>
 
 <h2>Your choices and rights</h2>
 <ul>
-<li><b>Delete</b> your Gradara AI account from Settings → AI in the app. This erases your email, sign-ins, and usage records. Remaining credits are forfeited. Stripe keeps payment records as the law requires.</li>
+<li><b>Delete</b> your Gradara AI account from Settings → AI in the app. This erases your email and usage records and revokes all sign-ins. Remaining credits are forfeited. Stripe keeps payment records as the law requires.</li>
 <li><b>Export</b> your account data (account, purchases, usage, devices) by asking us, or through the service's export endpoint.</li>
 <li><b>Sign out</b> revokes access for that computer only.</li>
 <li>Depending on where you live, you may have additional rights to access, correct, or delete personal data. Contact us and we will respond within the time the law requires.</li>

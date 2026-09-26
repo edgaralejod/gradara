@@ -1,6 +1,10 @@
 # Troubleshooting
 
-## Workbench cannot connect
+## Desktop app does not start
+
+The app shows an error and offers to open its logs folder. Help → Open Logs Folder opens it too: `service.log` there is the local service's log (`Gradara/logs` under the OS application-data folder). If security software quarantined `gradara-backend`, restore it and reinstall. On macOS, unsigned builds must be opened once with right-click → Open.
+
+## Workbench cannot connect (source checkout)
 
 Check [service health](http://127.0.0.1:8765/api/health). If it is unreachable, inspect `.runtime/service.log` and the launcher terminal. Check `.runtime/workbench.log` for frontend startup errors. Avoid starting a second launcher while the first is still running. Ports 4317 and 8765 must be free or occupied by the intended Gradara processes.
 
@@ -8,7 +12,11 @@ The backend origin allowlist expects localhost/127.0.0.1 at the documented ports
 
 ## Engine unavailable
 
-Check Docker in the context Gradara uses. On macOS that may be `colima-gradara` or `colima-flux`, even when Docker Desktop is your shell's active context. Use `GRADARA_DOCKER_CONTEXT` to select it explicitly, then restart the service so its cached context changes.
+Open **Settings → Engine**: it shows which backend is selected and what is missing, and **Set up now** installs the Modelica Standard Library (native) or prepares the engine image (Docker). `auto` prefers a ready native OpenModelica, then a ready Docker image.
+
+For native OpenModelica, install version 1.27 from openmodelica.org. If `omc` is not on PATH or in a standard location, set `GRADARA_OMC` to its path. Library installation needs network access once.
+
+For Docker, check in the context Gradara uses. On macOS that may be `colima-gradara` or `colima-flux`, even when Docker Desktop is your shell's active context. Use `GRADARA_DOCKER_CONTEXT` to select it explicitly, then restart the service so its cached context changes.
 
 Run the launcher to build the image if it is missing. A first build needs network access. Ensure the runtime can mount the repository's run directories and has sufficient disk/memory. On Linux the image's `ENGINE_UID` should match the user creating run folders. The [setup guide](SETUP.md) and [manual engine build](TESTING.md) describe both paths.
 
@@ -26,9 +34,9 @@ Jobs are in memory. A backend restart can make a job ID return 404 even though a
 
 ## Agent unavailable or generation fails
 
-The CLI must be installed, signed in, and able to reach its provider. `agentReady` checks executable presence only. Set `GRADARA_CODEX_BIN` in the service's environment if executable discovery is wrong. Generation may take tens of seconds and has a timeout.
+Check **Settings → AI**. `agentReady` means the selected provider is configured (key saved, signed in, or CLI found), not that it is reachable. Provider errors keep their meaning: a rejected key (401), not enough Gradara AI credits (402), rate limiting (429), or the provider being unavailable (503). The [AI feature setup](../AGENT_SETUP.md) table lists what each provider needs. For the Codex CLI, it must be installed, signed in, and able to reach its provider; set `GRADARA_CODEX_BIN` if executable discovery is wrong. Generation may take tens of seconds and has a timeout.
 
-Review diagnostics in the UI. Local prompts, responses, and agent logs are under `projects/agent/`; they may contain proprietary model content, so redact before sharing. The generator accepts the selected block type: scalar signal, electrical, rotational mechanical, thermal, or multidomain. It does not accept arbitrary Modelica packages, extra connector families, or whole subsystems. Editing and ordinary simulation remain available without an agent.
+Review diagnostics in the UI. Codex runs keep their prompts and logs under the data folder's `agent/` directory (`projects/agent/` in a source checkout); other providers keep nothing unless `GRADARA_KEEP_AI_TRANSCRIPTS=1`. These files may contain proprietary model content, so redact before sharing. The generator accepts the selected block type: scalar signal, electrical, rotational mechanical, thermal, or multidomain. It does not accept arbitrary Modelica packages, extra connector families, or whole subsystems. Editing and ordinary simulation remain available without an agent.
 
 ## Install fails at the React Flow patch
 

@@ -144,6 +144,19 @@ cmd_stripe() {
   echo "  $url"
 }
 
+ensure_log_exclusion() {
+  say "Privacy: no platform request logs"
+  # Cloud Run's own request logs include client IP and user agent. The gateway
+  # writes its own privacy-safe log line, so exclude the platform's.
+  local existing
+  existing=$("${GC[@]}" logging sinks describe _Default --format='value(exclusions[].name)')
+  if [[ $existing != *gradara-gateway-requests* ]]; then
+    "${GC[@]}" logging sinks update _Default \
+      --add-exclusion="name=gradara-gateway-requests,filter=resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"$SERVICE\" AND log_id(\"run.googleapis.com/requests\")" >/dev/null
+  fi
+  echo "  Cloud Run request logs for $SERVICE are excluded"
+}
+
 cmd_setup() {
   say "Enabling APIs (first run takes a minute)"
   "${GC[@]}" services enable run.googleapis.com sqladmin.googleapis.com secretmanager.googleapis.com \
@@ -194,6 +207,8 @@ cmd_setup() {
     echo "  database connection secret already exists"
   fi
 
+  ensure_log_exclusion
+
   secret_exists gateway-admin-token || openssl rand -hex 32 | tr -d '\n' | store_secret gateway-admin-token
 
   cmd_secrets
@@ -238,6 +253,7 @@ cmd_deploy() {
   "${GC[@]}" builds submit --config cloud/cloudbuild.yaml --ignore-file cloud/.gcloudignore \
     --substitutions "_IMAGE=$image" .
 
+  ensure_log_exclusion
   say "Deploying $SERVICE"
   "${GC[@]}" run deploy "$SERVICE" --image "$image" --region "$REGION" \
     --service-account "$RUNTIME_SA" --allow-unauthenticated \

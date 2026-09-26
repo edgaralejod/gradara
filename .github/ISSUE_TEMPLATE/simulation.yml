@@ -29,6 +29,6 @@ body:
     id: environment
     attributes:
       label: Versions
-      description: Gradara commit, OS, Docker runtime/context, and OpenModelica version.
+      description: Gradara version or commit, installer or source checkout, OS, engine backend (native or Docker, from Settings → Engine), Docker runtime/context if used, and OpenModelica version.
     validations:
       required: true

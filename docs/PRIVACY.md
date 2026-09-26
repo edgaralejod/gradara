@@ -9,7 +9,7 @@ Gradara is operated by Virtu Services LLC. Contact: support@virtu-services.us.
 1. **Local first.** Modeling, simulation, results, and files stay on the user's computer. The app works fully without an account.
 2. **AI only on request.** Nothing is sent to an AI provider until the user asks for an AI feature.
 3. **No content retention in Gradara AI.** The hosted service processes prompts and responses in memory and never writes them to disk, logs, or a database.
-4. **Collect the minimum for billing.** The service stores identity, balance, purchases, and request counts. Nothing more.
+4. **Collect the minimum for billing.** The service stores identity, balance, purchases, sign-in token hashes, and per-request usage metadata (listed below). Never content.
 5. **No analytics, tracking, or advertising** in the app, the service, or the sign-in pages.
 
 ## Desktop app
@@ -47,15 +47,15 @@ An AI request contains Gradara's instructions, the user's description, and the m
 | --- | --- | --- |
 | Account | Internal id, identity provider user id, email, credit balance, creation date | Until the account is deleted |
 | Sign-in tokens | SHA-256 hash, client label, creation date, last-used **day**, revocation date | Revoked tokens are removed 30 days after revocation |
-| Sign-in codes | Code hashes and status | Removed one day after expiry |
-| Credit ledger | Amount, reason (welcome, purchase, charge, refund, adjust, forfeit), reference (Stripe Checkout Session id), date | Kept for accounting; identity is erased when the account is deleted |
-| Usage | Task type, model name, input/output token counts, latency, success flag, operation id, date | About 13 months (400 days) |
+| Sign-in codes | Device-code hash, short user code, client label, account, status | Removed one day after expiry |
+| Credit ledger | Amount, reason (welcome, purchase, charge, refund, adjust, forfeit), reference (Stripe Checkout Session id or an internal operation id), date | Kept for accounting; identity is erased when the account is deleted |
+| Usage | Task type, model name, input/output token counts, latency, success flag, short error code, operation id, date | About 13 months (400 days) |
 | Operation counters | Operation id, kind, call count, amount charged | 7 days |
 | Processed Stripe event ids | Event id, date | For deduplication |
 
 ### What is never stored
 
-Prompts, model files, equations, generated blocks, generated C, AI responses, provider error text, IP addresses in the database, or request bodies in logs. Application logs contain the HTTP method, route template, status, latency, and a random request id. The web server's access log (which would include query strings) is disabled.
+Prompts, model files, equations, generated blocks, generated C, AI responses, provider error text, IP addresses in the database, or request bodies in logs. Application logs contain the HTTP method, route template, status, latency, and a random request id. The web server's access log (which would include query strings) is disabled, and every `cloud/deploy.sh deploy` ensures Cloud Run's platform request logs for the service (which would include IP addresses and user agents) are excluded from Cloud Logging. Firebase Authentication and Stripe see client IP addresses under their own policies.
 
 Automated tests enforce this: `cloud/tests/test_gateway.py` sends a confidential marker string through a generation and verifies that it appears in neither the logs nor the database file.
 
@@ -77,7 +77,7 @@ Model provider settings for the Gradara AI account:
 ### User rights
 
 - **Export:** `GET /v1/account/export` returns the account, ledger, usage, and device records in JSON.
-- **Delete:** Settings → AI → Delete account (or `DELETE /v1/account`). This erases email and identity, revokes all sign-ins, deletes usage and operation records, forfeits remaining credits, and removes the Firebase user. Ledger amounts remain without identity for accounting. Stripe keeps its own payment records as required by law.
+- **Delete:** Settings → AI → Delete account (or `DELETE /v1/account`). This erases email and identity, revokes all sign-ins (their hashes are purged 30 days later), deletes usage and operation records, forfeits remaining credits, and removes the Firebase user. Ledger amounts remain without identity for accounting. Stripe keeps its own payment records as required by law.
 - **Sign out:** revokes the token for that computer only.
 
 ## Operating rules

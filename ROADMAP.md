@@ -4,18 +4,18 @@ Gradara's priority is a polished, usable diagram-to-simulation workflow. This is
 
 ## Before the first public release
 
-- Make the Apache-2.0 source accessible to public contributors and verify reporting channels and repository settings in the [release checklist](docs/RELEASING.md).
-- Exercise a clean install and the complete new-model/run/reopen/export workflow on Linux and Windows/WSL as well as macOS; record actual platform results.
-- Run the configured core and engine CI workflows on the public host. Resolve the lint backlog before promoting lint to a required check.
-- Review dependency inventory and attribution for the source distribution and for each installer.
-- Sign and notarize installers (Apple Developer ID; Windows code signing such as Azure Trusted Signing) so they open without security warnings, and enable auto-update on signed builds.
-- Deploy the Gradara AI service, verify the Firebase sign-in, Stripe checkout, and webhook flows in test mode, then in live mode. Publish the privacy notice and terms of service after legal review.
+Done: the Apache-2.0 source is public, CI runs on GitHub, installers for Windows, macOS, and Linux are built and pass install tests in CI (first observed on pull request #2), gradara.app is live with a draft privacy notice and terms, and the Gradara AI service has a scripted deployment (`cloud/deploy.sh`). Remaining:
+
+- Run the complete new-model/run/reopen/export workflow with a real engine from each installer (CI install tests start the app and create a model, but do not simulate); record actual platform results.
+- Deploy the Gradara AI service in live mode and verify sign-in, one real purchase, a refund, and the webhook. Have the privacy notice and terms of service reviewed by counsel.
+- Sign and notarize installers (Apple Developer ID; Windows code signing such as Azure Trusted Signing) so they open without security warnings. Auto-update already runs on Windows and the Linux AppImage; macOS applies updates only to signed builds.
+- Review dependency inventory and attribution for the source distribution and each installer. Resolve the lint backlog before promoting lint to a required check.
 
 ## Near-term, bounded work
 
 | Task | Scope | Done when |
 | --- | --- | --- |
-| Agent onboarding | CLI discovery/version, authentication, explicit model selection, and useful provider errors. | A first-time user can distinguish missing installation, sign-in, engine, and account failures; documented public-CLI generation succeeds on a clean setup. Status probes do not silently trigger paid generations. |
+| AI onboarding | Settings → AI already covers provider choice, key verification, and Gradara AI sign-in. Remaining: per-provider model selection and in-context messages for rejected keys, exhausted credits, and vendor outages. | A first-time user can distinguish missing setup, sign-in, credit, and vendor failures from the composer itself. Status probes never trigger paid generations. |
 | Preserve route intent through save/load | Python Wire defaults currently erase the distinction between absent and empty waypoints. | A versioned or backward-compatible solution preserves auto versus explicit straight intent through API round trips, without changing saved geometry unexpectedly. |
 | Keyboard and screen-reader access | Focus, discoverable actions, model dialogs, and canvas navigation. | A new user can create/open/run a model using the keyboard; assistive-technology sessions verify accessible names, focus return, and error recovery. |
 | Lint cleanup | Small groups of existing workspace, editor, and UI primitive findings. | The strict lint command passes without blanket rule suppression; interaction regressions are checked. |
@@ -49,7 +49,7 @@ Build reproducible 100- and 1,000-block interaction workloads and record frame t
 
 - **Windows:** ship OpenModelica and MSL inside the installer (or chain the official installer silently) so no separate download is needed.
 - **macOS:** embed a small Linux VM (Lima on Apple Virtualization) with a prebuilt engine image so Docker is not required; revisit Apple's `container` tool and native OpenModelica builds as they mature.
-- Publish the engine image to GitHub Container Registry from CI so the container path downloads instead of building.
+- Publish the engine image to GitHub Container Registry from CI. The app already tries `ghcr.io/edgaralejod/gradara-engine:1.27.0` first, but no workflow pushes it yet, so every Docker setup falls back to building the image locally.
 - Record per-platform install results, including slow disks, proxies, and non-admin accounts.
 
 ## AI service

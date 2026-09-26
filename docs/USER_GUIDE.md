@@ -70,7 +70,7 @@ Moving blocks or labels does not invalidate simulation behavior. Changing equati
 
 ## Ask for a component or export
 
-Follow [AI feature setup](AGENT_SETUP.md) to connect your own Codex CLI account. A hosted Gradara account or Cursor installation is not required.
+Choose a provider in **Settings → AI**: sign in to Gradara AI (20 free credits, then prepaid packs), paste your own OpenAI or Anthropic key, use the Codex CLI, or turn AI off. [AI feature setup](AGENT_SETUP.md) explains each option. Simulation never needs an AI provider.
 
 Describe the inputs, outputs, state, and timing you want, for example: “A first-order low-pass filter with a 50 ms time constant.” First choose the block type: Signal / control, Electrical, Mechanical (rotational), Thermal, or Multiple physical domains. For example, choose Electrical and ask for an ideal transformer to get physical winding terminals rather than signal inputs and outputs. The preview identifies each terminal domain. Refining a block preserves its type and existing terminal interface. It validates and compiler-checks a candidate before insertion. Ordinary editing and simulation still work when the agent is unavailable.
 

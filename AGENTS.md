@@ -17,7 +17,11 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | Wiring / selection / routing | `lib/gradara/net-*.ts`, `routing.ts`, `selection.ts`, canvas/net components | `docs/architecture/WIRING.md`, model format, browser acceptance checks. |
 | Definitions and physical blocks | `lib/gradara/*blocks.ts`, `model.ts`, `server/modelica.py` | Block guide and simulation execution guide. |
 | Save/load and API | `server/workspace.py`, `server/app.py`, `lib/gradara/api.ts` | Model format and API guide. |
-| Simulation / agents / export | `server/engine*.py`, `agent.py`, `processes.py`, `exporter.py` | `server/AGENTS.md`, execution guide, `SECURITY.md`. |
+| Simulation engines | `server/engine.py`, `server/engines.py` (native and Docker backends), `safety.py`, `processes.py` | `server/AGENTS.md`, execution guide, `SECURITY.md`. |
+| AI features and export | `agent.py`, `model_agent.py`, `exporter.py`, `server/llm/` (dispatch and providers) | Execution guide, distribution guide, `docs/PRIVACY.md`. |
+| Desktop app and installers | `desktop/`, `packaging/`, `vite.desktop.config.ts`, `.github/workflows/release.yml` | Distribution guide, release checklist. |
+| Gradara AI service | `cloud/` (gateway, sign-in pages, `deploy.sh`) | `cloud/README.md`, `docs/PRIVACY.md`. Privacy rules are enforced by its tests. |
+| Website | `site/` | `site/README.md`. Keep claims in step with `docs/PRIVACY.md` and the code. |
 | Templates | `models/examples/`, `scripts/style-examples.ts`, buck/flyback/datacenter builders | Example notes, block design, template tests. |
 
 ## Invariants

@@ -36,7 +36,7 @@ Repository-wide `npm run lint` currently reports an existing backlog; record it 
 
 ## Host configuration
 
-The repository includes PR and issue templates and read-only GitHub Actions workflows. They can be adapted for another host. The workflows use ordinary pull-request events and hosted runners; they do not run a provider agent, publish a site, push an image, or expose local credentials.
+The repository includes PR and issue templates and GitHub Actions workflows on hosted runners. Most are read-only. Two write: **Desktop installers** creates a draft release on `v*` tags, and **Website** deploys `site/` to Firebase Hosting (live on pushes to `main` and manual runs, a preview channel for pull requests) when its deploy key is configured. No workflow calls an AI provider, pushes an engine image, or sees local credentials.
 
 After a GitHub repository exists, enable Issues, choose whether Discussions are useful, enable private vulnerability reporting and available secret scanning, and set a short description/topics. Add actual maintainers to access rules deliberately. Avoid a `CODEOWNERS` file containing guessed identities. Consider dependency update tooling after the initial checks are stable; dependency upgrades must respect the pinned React Flow patch.
 

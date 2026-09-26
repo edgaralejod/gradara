@@ -36,7 +36,7 @@ python3 -m venv .venv
 .venv/bin/python scripts/start.py
 ```
 
-Open **[localhost:4317](http://localhost:4317)**. With Docker, the first start builds the OpenModelica image; allow several minutes and network access. On macOS, **Start Gradara.command** also launches an installed checkout. See [setup and platform notes](docs/development/SETUP.md) for the desktop build, engine choices, and separate service startup.
+Open **[localhost:4317](http://localhost:4317)**. With Docker, the first start builds the OpenModelica image; allow several minutes and network access. On macOS, double-clicking **Start Gradara.command** launches this checkout the same way. See [setup and platform notes](docs/development/SETUP.md) for the desktop build, engine choices, and separate service startup.
 
 ## Start with a model
 

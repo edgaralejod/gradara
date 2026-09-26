@@ -1,6 +1,6 @@
 # Distribution, AI service, and monetization
 
-One repository produces three things: the developer checkout, installable desktop apps, and the hosted Gradara AI service. The code is shared. The builds and their defaults are what differ.
+One repository produces four things: the developer checkout, installable desktop apps, the hosted Gradara AI service, and the gradara.app website. The code is shared. The builds and their defaults are what differ.
 
 | Product | Who uses it | How it runs | AI default |
 | --- | --- | --- | --- |
@@ -25,8 +25,9 @@ server/                      Local service (FastAPI)
 desktop/                     Electron shell and electron-builder config
   web/                       Static entry for the desktop workbench build
 packaging/                   PyInstaller entry, build, and smoke test for the service
-cloud/                       Gradara AI gateway, sign-in pages, Dockerfile, tests
-.github/workflows/           ci, engine, native-engine, cloud, release
+cloud/                       Gradara AI gateway, sign-in pages, Dockerfile, deploy.sh, tests
+site/                        gradara.app (static files for Firebase Hosting)
+.github/workflows/           ci, engine, native-engine, cloud, release, site
 ```
 
 ## Desktop app
@@ -34,13 +35,13 @@ cloud/                       Gradara AI gateway, sign-in pages, Dockerfile, test
 ```mermaid
 flowchart LR
   subgraph App[Gradara desktop app]
-    E[Electron shell] -->|spawns, loopback port| S[Local service\nPyInstaller build]
-    E -->|loads| W[Workbench\nstatic files served by S]
+    E[Electron shell] -->|spawns, loopback port| S[Local service<br>PyInstaller build]
+    E -->|loads| W[Workbench<br>static files served by S]
   end
-  S --> D[(Data folder\nmodels, runs, library)]
-  S --> K[(OS keychain\nkeys, token)]
-  S -->|native| OM[OpenModelica\nhost install]
-  S -->|docker| C[gradara-engine\ncontainer]
+  S --> D[(Data folder<br>models, runs, library)]
+  S --> K[(OS keychain<br>keys, token)]
+  S -->|native| OM[OpenModelica<br>host install]
+  S -->|docker| C[gradara-engine<br>container]
   S -->|AI, on request| G[Gradara AI]
   S -->|AI, own key| P[OpenAI / Anthropic]
 ```
@@ -48,7 +49,7 @@ flowchart LR
 - The shell picks a free loopback port, starts the service with `GRADARA_DATA_DIR`, `GRADARA_STATIC_DIR`, and `GRADARA_RESOURCES`, waits for it, then loads the workbench. Quitting stops the service and its process tree.
 - The data folder is `<OS app data>/Gradara/data`. Logs are in `<OS app data>/Gradara/logs`. Help menu entries open both.
 - The workbench is the same React app built without server rendering (`vite.desktop.config.ts`, mode `desktop`).
-- Installers: NSIS on Windows, DMG and ZIP per architecture on macOS, AppImage and deb on Linux. Updates use electron-updater against GitHub Releases.
+- Installers: NSIS on Windows, DMG and ZIP per architecture on macOS, AppImage and deb on Linux. Updates use electron-updater against published GitHub Releases (drafts are never offered). Windows and the Linux AppImage update in place; macOS can only apply updates to signed builds, so unsigned Mac builds keep working but must be updated by downloading the new DMG. `GRADARA_DISABLE_UPDATES=1` turns update checks off.
 
 ### Simulation engine per platform
 

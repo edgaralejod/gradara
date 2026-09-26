@@ -1,6 +1,6 @@
 # Gradara website
 
-Static product site served by Firebase Hosting (project `gradara-2e47a`) at **https://gradara.app**, with `www.gradara.app` redirecting to it. Plain HTML and CSS with self-hosted fonts: no build step, no cookies, no analytics, and no third-party requests (enforced by the Content-Security-Policy in `firebase.json`).
+Static product site served by Firebase Hosting (project `gradara-2e47a`) at **https://gradara.app**, with `www.gradara.app` redirecting to it (the redirect is configured in the Firebase Hosting console, not in `firebase.json`). Plain HTML and CSS with self-hosted fonts: no build step, no cookies, no analytics, and no third-party requests (enforced by the Content-Security-Policy in `firebase.json`).
 
 | Page | File |
 | --- | --- |

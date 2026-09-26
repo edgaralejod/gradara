@@ -44,7 +44,8 @@ win:
     - target: nsis
       arch: [x64]
   icon: build/icon.png
-  # Signing: set WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD, or configure Azure Trusted Signing
+  # Signing: the release workflow maps the WIN_CERTIFICATE_PFX / WIN_CERTIFICATE_PASSWORD secrets
+  # to CSC_LINK / CSC_KEY_PASSWORD, or configure Azure Trusted Signing
   # (azureSignOptions) in CI. Unsigned builds show a SmartScreen warning.
 nsis:
   oneClick: false

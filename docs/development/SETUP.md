@@ -1,6 +1,6 @@
 # Local development setup
 
-Run commands from the repository root. Use a checkout or source download of this repository; no Codex application or hosted Gradara account is required.
+Run commands from the repository root. This guide is for working on Gradara from source. To just use it, install the desktop app from [gradara.app](https://gradara.app/). No AI account is required for either.
 
 ## Prerequisites and platform status
 
@@ -8,10 +8,16 @@ Run commands from the repository root. Use a checkout or source download of this
 | --- | --- |
 | Node.js / npm | Node 22.13 or newer. CI uses the Node 22 line. Use the committed npm lockfile. |
 | Python | Python 3.12 is the development and CI baseline. Use a repository-local virtual environment. |
-| Docker | A running Docker-compatible Linux engine for simulation and C compilation. No host OpenModelica installation is required. |
-| Codex CLI | Optional, installed and signed in, for component generation and controller C export. |
+| Simulation engine | Either native OpenModelica 1.27 with the Modelica Standard Library 4.1.0 (Windows, Linux), or a running Docker-compatible engine for the `gradara-engine` image (macOS default, optional elsewhere). Settings → Engine in the app sets up either one. |
+| AI provider | Optional, for block generation, model building, and C export: Gradara AI (sign in), your own OpenAI or Anthropic key, or the Codex CLI. See [agent setup](../AGENT_SETUP.md). |
 
-macOS with Colima has been exercised end to end. Linux uses the active Docker context; its hosted CI jobs are configured but must be observed after publication. On Windows, use WSL2 with Linux Node/Python and a Docker engine available inside WSL for the complete workflow. Native Windows agent cancellation uses `taskkill.exe /T /F` to stop the generation process tree; the launcher and full provider workflow are not fully verified there. Do not interpret passing frontend tests on an OS as validation of its complete runtime.
+| Platform | Status |
+| --- | --- |
+| macOS | Source runs exercised end to end with Colima. The desktop app is built and install-tested in CI on Apple silicon and Intel. |
+| Windows | Native OpenModelica is the default engine, covered by the Native OpenModelica workflow. The desktop app is built and install-tested in CI. |
+| Linux | Native OpenModelica or Docker. The desktop app (deb and AppImage) is install-tested in CI on Ubuntu 22.04 and 24.04. |
+
+CI install tests start the app, render the workbench, and create a model; they do not run a simulation with a real engine. Do not treat passing tests on an OS as validation of its complete runtime.
 
 ## Install
 
@@ -73,7 +79,7 @@ The launcher checks dependencies, builds `gradara-engine:1.27.0` if missing, sta
 
 - Workbench: [http://localhost:4317](http://localhost:4317)
 - Service health: [http://127.0.0.1:8765/api/health](http://127.0.0.1:8765/api/health)
-- API reference: [http://127.0.0.1:8765/docs](http://127.0.0.1:8765/docs)
+- API reference: [http://127.0.0.1:8765/api/docs](http://127.0.0.1:8765/api/docs)
 
 Keep the launcher terminal running. Use `--no-open` to skip browser opening. If both services already respond, the launcher opens the existing workspace. Logs are in `.runtime/service.log` and `.runtime/workbench.log`.
 
@@ -124,18 +130,17 @@ The service reads process environment variables directly. `.env.example` is docu
 The desktop app is an Electron shell around a frozen copy of the local service and a static build of the workbench. See [distribution](../architecture/DISTRIBUTION.md).
 
 ```sh
-npm run desktop:web                 # static workbench → dist-desktop/web
-cd desktop && npm ci && npm start   # dev shell; uses .venv and the repo code
+cd desktop && npm ci && cd ..       # once: Electron and electron-builder
+npm run desktop:start               # static workbench build + dev shell; uses .venv and the repo code
 ```
 
 Build installers for the current OS:
 
 ```sh
 python3 -m pip install -r server/requirements.txt pyinstaller==6.22.3   # in .venv
-npm run desktop:prepare             # workbench + PyInstaller service → build/backend
-cd desktop && npx electron-builder --publish never
+npm run desktop:dist                # workbench + PyInstaller service + installers for this OS
 ```
 
-Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service, and `python packaging/installer_selftest.py --exe <path to the built app>` checks a built or installed app end to end. Installers for all platforms are built by the **Desktop installers** workflow on tag pushes. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
+Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service, and `python packaging/installer_selftest.py --exe <path to the built app>` checks a built or installed app end to end. The **Desktop installers** workflow builds and install-tests all platforms on pull requests and drafts a release on `v*` tags. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
 
 The repository retains optional Sites/Cloudflare build scaffolding with no database or bucket bindings. You do not need to register or publish a site to run Gradara locally. `npm run build` verifies the web bundle; it does not package the Python service or engine.

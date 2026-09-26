@@ -20,13 +20,13 @@ The optional Sites Vite plugin is a public dependency of the build scaffold. Its
 
 ## Desktop installers and the AI service
 
-Desktop installers bundle Electron (MIT, with Chromium's notices in `LICENSES.chromium.html` inside the app), electron-updater (MIT), a Python runtime (PSF License) frozen with PyInstaller (GPL-2.0 with the bootloader exception, which permits distributing frozen applications), and the service's Python dependencies: FastAPI, Starlette, Pydantic, Uvicorn, httpx (BSD-3-Clause), and keyring (MIT). Gradara's own license files are copied to the app's `legal/` resources. Generate and review a full dependency license report for each release before publishing installers.
+Desktop installers bundle Electron (MIT, with Chromium's notices in `LICENSES.chromium.html` inside the app), electron-updater (MIT), a Python runtime (PSF License) frozen with PyInstaller (GPL-2.0 with the bootloader exception, which permits distributing frozen applications), and the service's Python dependencies: FastAPI, Starlette, Pydantic, Uvicorn, httpx (BSD-3-Clause), and keyring (MIT). Installers also include Gradara's example models, `engine_runner.py`, and `Dockerfile.engine` (for building the engine image on the user's machine). Gradara's own license files are copied to the app's `legal/` resources. Generate and review a full dependency license report for each release before publishing installers.
 
 The Gradara AI service (`cloud/`) additionally uses SQLAlchemy (MIT), psycopg (LGPL-3.0, used as an unmodified library), the Stripe Python library (MIT), google-auth and firebase-admin (Apache-2.0). The service is operated, not distributed, but the container image contents should still be inventoried.
 
 ## Numerical engine
 
-The Dockerfile references an upstream engine image; this source repository does not contain the engine binaries. It downloads MSL during the local image build. A later downloadable engine image or desktop installer must inventory everything it includes and satisfy applicable attribution, license, and source-distribution obligations.
+Neither this repository nor the installers contain OpenModelica binaries. Users install OpenModelica themselves (native backend), or the app pulls `ghcr.io/edgaralejod/gradara-engine:1.27.0` and otherwise builds the image locally from `Dockerfile.engine`, which starts from an upstream OpenModelica image and downloads MSL. Before that image is published to the registry, inventory its contents and satisfy the attribution, license, and source-distribution obligations for everything it includes.
 
 | Component | Pinned version | Primary license source |
 | --- | --- | --- |

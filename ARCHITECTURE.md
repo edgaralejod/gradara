@@ -34,7 +34,7 @@ flowchart LR
     DOC --> SAVE[Local filesystem persistence]
     DOC --> EMIT[Modelica emitter]
     EMIT --> JOB[Immutable run directory]
-    JOB --> OM[OpenModelica container]
+    JOB --> OM[OpenModelica<br>native or container]
     OM --> RESULT[CSV and result preview]
     RESULT --> UI
     ASK[Component request] --> AGENT[Optional agent adapter]
@@ -66,7 +66,7 @@ Smooth interaction is a product requirement. Large-model frame-rate and latency 
 
 ## Simulation boundary
 
-The Python service validates the document, checks connected scalar inputs, emits Modelica, and launches a supervised container using an immutable snapshot. Signal nets have at most one output driver; physical nets use Modelica potential/flow connection semantics. A visual junction is not an executable block, and canvas order is not evaluation order.
+The Python service validates the document, checks connected scalar inputs, emits Modelica, and runs OpenModelica under supervision (native install or container) on an immutable snapshot. Signal nets have at most one output driver; physical nets use Modelica potential/flow connection semantics. A visual junction is not an executable block, and canvas order is not evaluation order.
 
 Built-in, non-generated physical `kind` values select canonical wrappers in `server/modelica.py`. Their display equations are explanatory; editing that text does not replace their physical implementation. Signal definitions and generated physical definitions use their bounded declarations and equations. Generated physical ports emit standard electrical pins, rotational flanges, or heat ports. Built-in physical additions use the canonical wrapper contract; generated additions use typed standard connectors and bounded equations. Assigning a domain color alone does not create physical connectivity.
 
@@ -76,7 +76,7 @@ The API exposes jobs rather than blocking the editor. Current concurrency, cance
 
 The component adapter returns structured JSON constrained by the user-selected signal, electrical, rotational mechanical, thermal, or multidomain type. The server enforces terminal domains and directions independently of the provider, and refinement preserves the existing wired interface. Pydantic validates the definition, and OpenModelica checks it before insertion. Compiler diagnostics can trigger one repair attempt. The generated response is data, not a project-editing command. The browser applies the accepted component through its normal operations.
 
-C export currently targets **one block marked `controller`**. The package includes its equations, parameters, local connection information, project revision, and a C11 init/step interface. Generated source is compiled in a container; the package retains the exact source and integration notes. Generation itself is not reproducible, and compile success proves neither behavioral equivalence nor hardware readiness.
+C export currently targets **one block marked `controller`**. The package includes its equations, parameters, local connection information, project revision, and a C11 init/step interface. Generated source is compiled with a C compiler through the selected engine backend (GCC in the container, the host compiler with native OpenModelica); the package retains the exact source and integration notes. Generation itself is not reproducible, and compile success proves neither behavioral equivalence nor hardware readiness.
 
 This export is separate from OpenModelica's generated simulation C. A future controller-subsystem boundary must preserve controller structure and sample timing before the simulation compiler flattens the plant and controller.
 

@@ -21,7 +21,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Gradara commit, OS, browser/version, and input device.
+      description: Gradara version (desktop app: Gradara → About on macOS, Help → About elsewhere) or commit (source checkout), OS, browser/version if running from source, and input device.
     validations:
       required: true
   - type: textarea

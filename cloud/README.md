@@ -49,24 +49,26 @@ With `GATEWAY_ENV=production` the service refuses to start with development sign
 
 ## Deploy on Google Cloud
 
-One-time setup, in the Virtu Services Google Cloud project:
-
-1. **Database.** Create a Cloud SQL PostgreSQL instance (smallest shared-core tier is enough to start), a `gradara` database, and a `gateway` user. Tables are created on first start.
-2. **Secrets.** Store the model vendor key, Stripe keys, database password, and admin token in Secret Manager.
-3. **Firebase Authentication.** In the Firebase console, enable the Google provider and Email link (passwordless). Add `api.gradara.app` to authorized domains. Copy the web app config values.
-4. **Stripe.** Create a "Gradara AI credits" product with one one-time Price per pack. Add a webhook endpoint `https://api.gradara.app/v1/billing/webhook` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`, and store its signing secret. Set the statement descriptor and support email. Enable Stripe Tax when registrations are in place.
-5. **Model vendor.** Use a dedicated API organization or workspace for production. Request zero data retention, set spend limits and alerts, and record the terms in the operations notes.
-
-`cloud/deploy.sh` does the rest from the repository root, with `gcloud` signed in. Non-secret settings (project, region, Firebase web config, model, Stripe price ids) are in `cloud/deploy.env`. Secrets are typed at hidden prompts and go straight to Secret Manager.
+The service runs in the Google Cloud project `gradara-2e47a` (the same project as the Firebase sign-in and the website), region `us-central1`. `cloud/deploy.sh` does the work from the repository root with `gcloud` signed in. Non-secret settings (project, region, Firebase web config, model, Stripe price ids) are in `cloud/deploy.env`. Secrets are typed at hidden prompts and go straight to Secret Manager; the script never prints them.
 
 ```sh
-cloud/deploy.sh setup     # once: APIs, Cloud SQL (db-f1-micro), service accounts, secrets
-cloud/deploy.sh deploy    # build this checkout with Cloud Build and deploy to Cloud Run
-cloud/deploy.sh secrets   # replace the vendor or Stripe secrets (for example test to live keys)
+cloud/deploy.sh setup     # once: APIs, Cloud SQL (db-f1-micro), service accounts, log exclusion,
+                          # secrets, then the Stripe step below
+cloud/deploy.sh stripe    # credit prices (by lookup key) and the payment webhook; its signing
+                          # secret goes straight to Secret Manager
+cloud/deploy.sh deploy    # build this checkout with Cloud Build and deploy to Cloud Run (also
+                          # re-checks the request-log exclusion)
+cloud/deploy.sh domain    # map api.gradara.app (after `gcloud domains verify gradara.app`)
+cloud/deploy.sh secrets   # replace the vendor or Stripe keys (then it reruns the Stripe step)
 cloud/deploy.sh status    # service URL, health, and pricing
 ```
 
-Map the domain once with `gcloud beta run domain-mappings create --service gradara-gateway --domain api.gradara.app --region us-central1` after verifying `gradara.app` in Search Console, then add the `CNAME api → ghs.googlehosted.com.` record it prints. Start with Stripe test keys and test prices, run a purchase with a Stripe test card, then switch `deploy.env` to live prices, run `secrets` with live keys, and deploy again.
+Set up by hand, once:
+
+1. **Firebase Authentication.** Google and Email link (passwordless) providers enabled, `api.gradara.app` in authorized domains, and a web app whose config values are in `deploy.env`. Done for `gradara-2e47a`.
+2. **Stripe.** Products and prices are created by `deploy.sh stripe` (lookup keys `gradara_credits_100` and `gradara_credits_550`). Set the support email and statement descriptor in the Stripe dashboard, and enable Stripe Tax when registrations are in place.
+3. **Model vendor.** Use a dedicated API organization or workspace for production. Request zero data retention, set spend limits and alerts, and record the terms in the operations notes.
+4. **Domain.** Verify `gradara.app` in Search Console (`gcloud domains verify gradara.app`), run `deploy.sh domain`, and add the DNS record it prints.
 
 The 600-second timeout covers long model-build calls. The in-memory per-account concurrency limit is per instance; keep `--max-instances` small until a shared limiter is needed.
 
