@@ -57,20 +57,16 @@ One-time setup, in the Virtu Services Google Cloud project:
 4. **Stripe.** Create a "Gradara AI credits" product with one one-time Price per pack. Add a webhook endpoint `https://api.gradara.app/v1/billing/webhook` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`, and store its signing secret. Set the statement descriptor and support email. Enable Stripe Tax when registrations are in place.
 5. **Model vendor.** Use a dedicated API organization or workspace for production. Request zero data retention, set spend limits and alerts, and record the terms in the operations notes.
 
-Build and deploy from the repository root:
+`cloud/deploy.sh` does the rest from the repository root, with `gcloud` signed in. Non-secret settings (project, region, Firebase web config, model, Stripe price ids) are in `cloud/deploy.env`. Secrets are typed at hidden prompts and go straight to Secret Manager.
 
 ```sh
-gcloud builds submit --config cloud/cloudbuild.yaml --ignore-file cloud/.gcloudignore \
-  --substitutions _IMAGE=REGION-docker.pkg.dev/PROJECT/gradara/gateway:VERSION .
-gcloud run deploy gradara-gateway \
-  --image REGION-docker.pkg.dev/PROJECT/gradara/gateway:VERSION \
-  --region REGION --allow-unauthenticated --timeout 600 --concurrency 20 \
-  --min-instances 0 --max-instances 3 --memory 512Mi \
-  --add-cloudsql-instances PROJECT:REGION:INSTANCE \
-  --set-env-vars GATEWAY_ENV=production,PUBLIC_URL=https://api.gradara.app,AUTH_MODE=firebase,LLM_PROVIDER=anthropic,LLM_MODEL=claude-sonnet-5,… \
-  --set-secrets ANTHROPIC_API_KEY=anthropic-key:latest,STRIPE_SECRET_KEY=stripe-secret:latest,STRIPE_WEBHOOK_SECRET=stripe-webhook:latest,ADMIN_TOKEN=gateway-admin:latest,DATABASE_URL=gateway-db-url:latest
-gcloud run domain-mappings create --service gradara-gateway --domain api.gradara.app --region REGION
+cloud/deploy.sh setup     # once: APIs, Cloud SQL (db-f1-micro), service accounts, secrets
+cloud/deploy.sh deploy    # build this checkout with Cloud Build and deploy to Cloud Run
+cloud/deploy.sh secrets   # replace the vendor or Stripe secrets (for example test to live keys)
+cloud/deploy.sh status    # service URL, health, and pricing
 ```
+
+Map the domain once with `gcloud beta run domain-mappings create --service gradara-gateway --domain api.gradara.app --region us-central1` after verifying `gradara.app` in Search Console, then add the `CNAME api → ghs.googlehosted.com.` record it prints. Start with Stripe test keys and test prices, run a purchase with a Stripe test card, then switch `deploy.env` to live prices, run `secrets` with live keys, and deploy again.
 
 The 600-second timeout covers long model-build calls. The in-memory per-account concurrency limit is per instance; keep `--max-instances` small until a shared limiter is needed.
 

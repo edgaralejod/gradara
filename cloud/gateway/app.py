@@ -345,6 +345,9 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
             raise HTTPException(404, 'Not found.')
         return await asyncio.to_thread(store.purge)
 
+    # Cloud Run's front end reserves some paths ending in "z", so /health is
+    # the one to probe there; /healthz stays for local tooling.
+    @app.get('/health')
     @app.get('/healthz')
     async def healthz():
         return {'ok': True}
