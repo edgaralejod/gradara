@@ -121,7 +121,7 @@ export default function ModelExplorer({
             }}
           />
           {query && (
-            <ul className="explorer-hits" role="listbox">
+            <ul className="explorer-hits">
               {hits.length ? (
                 hits.map((hit, i) => (
                   <li key={`${hit.kind}-${hit.sheetId}-${hit.label}-${i}`}>
@@ -497,7 +497,7 @@ function ParametersView({
         </form>
         {note && <span className="table-note">{note}</span>}
       </div>
-      <div className="table-head param-grid" role="row">
+      <div className="table-head param-grid">
         <span>Location</span>
         <span>Block</span>
         <span>Parameter</span>
@@ -515,7 +515,7 @@ function ParametersView({
             <div
               key={r.key}
               className="table-row param-grid"
-              role="row"
+
               onDoubleClick={() =>
                 onReveal({ sheetId: r.sheetId, blockId: r.blockId })
               }
@@ -831,7 +831,7 @@ function SignalsView({
           <LineChart size={12} /> Open Results
         </button>
       </div>
-      <div className="table-head signal-grid" role="row">
+      <div className="table-head signal-grid">
         <span>Log</span>
         <span>Signal</span>
         <span>Location</span>
@@ -843,7 +843,7 @@ function SignalsView({
         {rows.map((n) => {
           const range = ranges.get(n.net.id);
           return (
-            <div key={n.key} className="table-row signal-grid" role="row">
+            <div key={n.key} className="table-row signal-grid">
               <input
                 type="checkbox"
                 checked={!!n.net.logged}
