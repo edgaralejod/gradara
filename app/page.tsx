@@ -19,6 +19,7 @@ import {
   Background,
   ViewportPortal,
   Controls,
+  ControlButton,
   SelectionMode,
   useReactFlow,
 } from '@xyflow/react';
@@ -71,7 +72,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
-import ModelCanvas from '@/components/gradara/model-canvas';
+import ModelCanvas, { FIT_VIEW_EVENT } from '@/components/gradara/model-canvas';
 import { normalizeProject } from '@/lib/gradara/normalize-project';
 import { describeNets, renameNet } from '@/lib/gradara/net-registry';
 import { setNetLabel } from '@/lib/gradara/net-label';
@@ -1520,6 +1521,32 @@ function Workbench() {
   const toggleDockRef = useRef(() => {});
   toggleDockRef.current = () => updateDock({ open: !dock.open });
   useEffect(() => {
+    // A tap on Space fits the view (as in Simulink); holding Space and dragging still pans.
+    let spaceDown = 0;
+    let spacePanned = false;
+    const spaceTarget = (t: EventTarget | null) =>
+      !(t as HTMLElement)?.closest?.(
+        'input,textarea,select,button,a,[contenteditable=true],.monaco-editor,[role=dialog]',
+      );
+    const spacePress = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat || !spaceTarget(e.target)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      spaceDown = performance.now();
+      spacePanned = false;
+    };
+    const spacePointer = () => {
+      if (spaceDown) spacePanned = true;
+    };
+    const spaceRelease = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || !spaceDown) return;
+      const tap = performance.now() - spaceDown < 350 && !spacePanned;
+      spaceDown = 0;
+      if (tap && workspaceMode === 'diagram')
+        window.dispatchEvent(new Event(FIT_VIEW_EVENT));
+    };
+    window.addEventListener('keydown', spacePress);
+    window.addEventListener('keyup', spaceRelease);
+    window.addEventListener('pointerdown', spacePointer);
     const key = (e: KeyboardEvent) => {
       const input = (e.target as HTMLElement)?.closest(
         'input,textarea,select,[contenteditable=true],.monaco-editor,[role=dialog]',
@@ -1624,7 +1651,12 @@ function Workbench() {
       } else if (e.key === '?' && !command) setHelpOpen(true);
     };
     window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
+    return () => {
+      window.removeEventListener('keydown', key);
+      window.removeEventListener('keydown', spacePress);
+      window.removeEventListener('keyup', spaceRelease);
+      window.removeEventListener('pointerdown', spacePointer);
+    };
   }, [
     undo,
     redo,
@@ -1643,6 +1675,7 @@ function Workbench() {
     ungroupSelected,
     leaveSubsystem,
     inserter,
+    workspaceMode,
   ]);
   const insertGenerated = (definition: Definition) => {
     if (!composer) return;
@@ -2329,7 +2362,18 @@ function Workbench() {
                           onDeleteSelection={deleteSelected}
                           onCommit={commit}
                         />
-                        <Controls showInteractive={false} />
+                        <Controls showInteractive={false} showFitView={false}>
+                          <ControlButton
+                            className="react-flow__controls-fitview"
+                            title="Fit view · Space"
+                            aria-label="Fit view"
+                            onClick={() =>
+                              window.dispatchEvent(new Event(FIT_VIEW_EVENT))
+                            }
+                          >
+                            <Maximize size={12} />
+                          </ControlButton>
+                        </Controls>
                       </ModelCanvas>
                     </VariantSwitchContext.Provider>
                   </SubsystemLookupContext.Provider>
@@ -2983,7 +3027,7 @@ function Workbench() {
                   <Button
                     variant="outline"
                     onClick={() =>
-                      void flow.fitView({ padding: 0.2, duration: 200 })
+                      window.dispatchEvent(new Event(FIT_VIEW_EVENT))
                     }
                   >
                     <Maximize size={13} />
@@ -3215,6 +3259,7 @@ function Workbench() {
                 ['Fit model to canvas', 'F'],
                 ['Select several components', 'Shift + click / Drag'],
                 ['Select / pan tools', 'V / H'],
+                ['Fit the model to the view', 'Space (tap)'],
                 ['Pan canvas', 'Space + drag / Trackpad'],
                 ['Resize a block', 'Drag a corner or edge'],
                 ['Move a block name', 'Drag the label'],

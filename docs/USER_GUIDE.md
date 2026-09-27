@@ -63,6 +63,8 @@ Select blocks, wires, or junctions and use the **arrow keys** to nudge them by o
 
 Nearby parallel segments snap together and shed redundant bends. Junctions should follow their horizontal run as connected blocks move. One completed gesture should be one undo step. Report a minimal reproduction when a gesture behaves differently; see the [wiring contract](architecture/WIRING.md) for expected behavior and limitations.
 
+Tap **Space**, or use the fit button in the canvas controls, to fit the whole sheet in view; holding Space and dragging still pans. A fitted view stays fitted when you open or close the library, the inspector, or the Problems dock, or resize the window. After you pan or zoom yourself, those changes keep the same point at the center of the canvas instead.
+
 The model inspector exposes blocks and logical nets in a compact tree. The tree and property pane scroll independently. Select the model root, a block, or a net to switch the property pane; component parameters use aligned name/value rows. Expand Description to read model or component notes. Nets receive stable IDs plus automatic names derived from their connection. Give a net a custom name when the engineering meaning is clearer than the default; its label and identity belong to the connected net, not each drawn segment.
 
 ## Subsystems
