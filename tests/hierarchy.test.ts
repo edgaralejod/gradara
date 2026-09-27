@@ -98,3 +98,25 @@ void test('a flat document passes through unchanged', () => {
   assert.equal(syncInstances(dc), dc);
   assert.equal(scopeView(dc, []), dc);
 });
+
+void test('a promoted parameter appears on every instance, which keeps its own value', async () => {
+  const { promoteParameter, demoteParameter } = await import('../lib/gradara/hierarchy');
+  const dc = example('dc');
+  const grouped = groupIntoSubsystem(dc, ['controller'], 'PI')!;
+  let doc = syncInstances(grouped.project);
+  doc = syncInstances(promoteParameter(doc, grouped.subsystemId, 'controller', 'kp'));
+  const instance = () => doc.blocks.find((b) => b.id === grouped.instanceId)!;
+  const kp = instance().definition.parameters[0];
+  assert.equal(kp.value, 0.6);
+  doc = syncInstances({
+    ...doc,
+    blocks: doc.blocks.map((b) =>
+      b.id === grouped.instanceId
+        ? { ...b, definition: { ...b.definition, parameters: [{ ...kp, value: 1.5 }] } }
+        : b,
+    ),
+  });
+  assert.equal(instance().definition.parameters[0].value, 1.5);
+  doc = syncInstances(demoteParameter(doc, grouped.subsystemId, kp.id));
+  assert.deepEqual(instance().definition.parameters, []);
+});

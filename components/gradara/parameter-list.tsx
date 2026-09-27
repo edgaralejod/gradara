@@ -13,6 +13,9 @@ export default function ParameterList({
   firstInputRef,
   live = false,
   onEnter,
+  promoted,
+  onPromote,
+  onDemote,
 }: {
   blockId: string;
   parameters: Parameter[];
@@ -21,6 +24,10 @@ export default function ParameterList({
   firstInputRef?: Ref<HTMLInputElement>;
   live?: boolean;
   onEnter?: () => void;
+  /** Parameters set per instance by a subsystem parameter (inside a subsystem). */
+  promoted?: Map<string, { id: string; name: string }>;
+  onPromote?: (id: string) => void;
+  onDemote?: (promotedId: string) => void;
 }) {
   if (!parameters.length)
     return (
@@ -29,11 +36,20 @@ export default function ParameterList({
   return parameters.map((param, index) => {
     const initial = defaults?.[param.id];
     const canReset = initial !== undefined && initial !== param.value;
+    const setBy = promoted?.get(param.id);
     return (
       <label className="parameter" key={`${blockId}-${param.id}`}>
-        <span>{param.name}</span>
+        <span>
+          {param.name}
+          {setBy && (
+            <small className="promoted-note" title="Each instance of this subsystem sets its own value.">
+              set per instance
+            </small>
+          )}
+        </span>
         <div>
           <NumberField
+            disabled={!!setBy}
             value={param.value}
             min={param.min}
             max={param.max}
@@ -44,6 +60,25 @@ export default function ParameterList({
             onChange={(value) => onChange(param.id, value)}
           />
           <span>{param.unit}</span>
+          {(onPromote || onDemote) && (
+            <button
+              type="button"
+              className="parameter-promote"
+              title={
+                setBy
+                  ? `Stop exposing “${setBy.name}” on the subsystem block`
+                  : 'Promote: expose this parameter on the subsystem block'
+              }
+              aria-label={setBy ? `Unpromote ${param.name}` : `Promote ${param.name}`}
+              onClick={(e) => {
+                e.preventDefault();
+                if (setBy) onDemote?.(setBy.id);
+                else onPromote?.(param.id);
+              }}
+            >
+              {setBy ? '↓' : '↑'}
+            </button>
+          )}
           {defaults && (
             <button
               type="button"

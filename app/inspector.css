@@ -206,3 +206,20 @@
   gap: 6px;
 }
 .inspector-properties .identity-field > span { margin: 0; }
+
+.parameter .promoted-note {
+  display: block;
+  color: #6a5aa6;
+  font-size: var(--text-meta);
+}
+.parameter-promote {
+  border: 0;
+  background: none;
+  color: #6b7782;
+  cursor: pointer;
+  padding: 0 4px;
+  font: inherit;
+}
+.parameter-promote:hover {
+  color: #1f3a4d;
+}

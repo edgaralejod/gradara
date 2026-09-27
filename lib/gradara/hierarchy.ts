@@ -895,3 +895,62 @@ export function setBoundarySide(
     ),
   };
 }
+
+/** Expose an inner block parameter on the subsystem block; each instance sets its own value. */
+export function promoteParameter(
+  view: Project,
+  subsystemId: string,
+  blockId: string,
+  parameterId: string,
+): Project {
+  const sub = findSubsystem(view, subsystemId);
+  const block = sub?.blocks.find((b) => b.id === blockId);
+  const parameter = block?.definition.parameters.find((p) => p.id === parameterId);
+  if (!sub || !block || !parameter) return view;
+  const existing = sub.parameters ?? [];
+  if (existing.some((p) => p.targets.some((t) => t.blockId === blockId && t.parameterId === parameterId)))
+    return view;
+  const taken = new Set(existing.map((p) => p.id));
+  const base = `${block.definition.name}_${parameter.id}`.replace(/[^A-Za-z0-9_]/g, '_').replace(/^[^A-Za-z]/, 'p');
+  let id = base;
+  for (let i = 2; taken.has(id); i++) id = `${base}${i}`;
+  const promoted = {
+    id,
+    name: `${block.definition.name} ${parameter.name.toLowerCase()}`,
+    value: parameter.value,
+    unit: parameter.unit,
+    ...(parameter.min !== undefined ? { min: parameter.min } : {}),
+    ...(parameter.max !== undefined ? { max: parameter.max } : {}),
+    targets: [{ blockId, parameterId }],
+  };
+  return {
+    ...view,
+    subsystems: subsystemsOf(view).map((s) =>
+      s.id === subsystemId ? { ...s, parameters: [...existing, promoted] } : s,
+    ),
+  };
+}
+
+/** Stop exposing a parameter; the inner block keeps the value it had inside. */
+export function demoteParameter(view: Project, subsystemId: string, promotedId: string): Project {
+  return {
+    ...view,
+    subsystems: subsystemsOf(view).map((s) =>
+      s.id === subsystemId
+        ? { ...s, parameters: (s.parameters ?? []).filter((p) => p.id !== promotedId) }
+        : s,
+    ),
+  };
+}
+
+/** For blocks inside `subsystemId`: blockId → parameterId → the promoted parameter that sets it. */
+export function promotedTargets(project: Project, subsystemId: string | undefined) {
+  const out = new Map<string, Map<string, { id: string; name: string }>>();
+  const sub = subsystemId ? findSubsystem(project, subsystemId) : undefined;
+  for (const p of sub?.parameters ?? [])
+    for (const t of p.targets) {
+      if (!out.has(t.blockId)) out.set(t.blockId, new Map());
+      out.get(t.blockId)!.set(t.parameterId, { id: p.id, name: p.name });
+    }
+  return out;
+}

@@ -182,6 +182,10 @@ import {
   writeScope,
   setBoundaryDomain,
   setBoundarySide,
+  subsystemAt,
+  promoteParameter,
+  demoteParameter,
+  promotedTargets,
 } from '@/lib/gradara/hierarchy';
 import { boundaryDomains, type BoundaryKind } from '@/lib/gradara/port-blocks';
 import { useAiLabel } from '@/lib/gradara/ai';
@@ -235,6 +239,7 @@ function Workbench() {
   const scopeRef = useRef(scope);
   scopeRef.current = scope;
   const project = useMemo(() => scopeView(doc, scope), [doc, scope]);
+  const currentSubsystem = useMemo(() => subsystemAt(doc, scope), [doc, scope]);
   const projectRef = useRef(project);
   projectRef.current = project;
   const setProject = useCallback((next: Project) => {
@@ -2521,6 +2526,17 @@ function Workbench() {
                     <ParameterList
                       blockId={active.id}
                       parameters={active.definition.parameters}
+                      {...(currentSubsystem && !isBoundary(active)
+                        ? {
+                            promoted: promotedTargets(doc, currentSubsystem).get(active.id),
+                            onPromote: (id: string) =>
+                              commit((p) =>
+                                promoteParameter(p, currentSubsystem, active.id, id),
+                              ),
+                            onDemote: (id: string) =>
+                              commit((p) => demoteParameter(p, currentSubsystem, id)),
+                          }
+                        : {})}
                       onChange={(id, value) =>
                         commit((p) =>
                           applyBlockEdits(p, active.id, {
