@@ -261,6 +261,19 @@ function InspectorSession({
       (!onlyLogged || s.netId) &&
       `${s.name} ${s.unit}`.toLowerCase().includes(query.toLowerCase()),
   );
+  // Signals inside subsystems are named by path ("Drive › Inverter › iq"); group them by that path.
+  const groups = (() => {
+    const out = new Map<string, typeof shown>();
+    for (const s of shown) {
+      const name = s.name.replace(/^\[[^\]]*\]\s*/, '');
+      const cut = name.lastIndexOf(' › ');
+      const group = cut > 0 ? name.slice(0, cut) : 'Top level';
+      out.set(group, [...(out.get(group) ?? []), s]);
+    }
+    return [...out.entries()].sort(([a], [b]) =>
+      a === 'Top level' ? -1 : b === 'Top level' ? 1 : a.localeCompare(b),
+    );
+  })();
   return (
     <section className="data-inspector" aria-label="Data Inspector">
       <header className="di-heading">
@@ -422,40 +435,49 @@ function InspectorSession({
                 />
                 Logged nets only
               </label>
-              {shown.map((s) => (
-                <div
-                  key={s.key}
-                  className={`di-signal ${config.plots[active].signals.includes(s.key) ? 'is-assigned' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    aria-label={`Plot ${s.name} in plot ${active + 1}`}
-                    checked={config.plots[active].signals.includes(s.key)}
-                    onChange={(e) => assign(active, s.key, e.target.checked)}
-                  />
-                  <button
-                    className="di-drag-signal"
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData(
-                        'application/gradara-signal',
-                        s.key,
-                      );
-                      e.dataTransfer.effectAllowed = 'copy';
-                    }}
-                    onClick={() =>
-                      assign(
-                        active,
-                        s.key,
-                        !config.plots[active].signals.includes(s.key),
-                      )
-                    }
-                    title={`${s.name} · ${s.unit || 'unitless'}${s.netId ? ' · logged' : ''} — Drag onto a plot or click to toggle`}
-                  >
-                    <i style={{ background: s.color }} />
-                    <span>{s.name}</span>
-                    <small>{s.unit || '—'}</small>
-                  </button>
+              {groups.map(([group, signals]) => (
+                <div key={group} className="di-group">
+                  {groups.length > 1 && (
+                    <div className="di-group-title">{group}</div>
+                  )}
+                  {signals.map((s) => (
+                    <div
+                      key={s.key}
+                      className={`di-signal ${config.plots[active].signals.includes(s.key) ? 'is-assigned' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        aria-label={`Plot ${s.name} in plot ${active + 1}`}
+                        checked={config.plots[active].signals.includes(s.key)}
+                        onChange={(e) =>
+                          assign(active, s.key, e.target.checked)
+                        }
+                      />
+                      <button
+                        className="di-drag-signal"
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData(
+                            'application/gradara-signal',
+                            s.key,
+                          );
+                          e.dataTransfer.effectAllowed = 'copy';
+                        }}
+                        onClick={() =>
+                          assign(
+                            active,
+                            s.key,
+                            !config.plots[active].signals.includes(s.key),
+                          )
+                        }
+                        title={`${s.name} · ${s.unit || 'unitless'}${s.netId ? ' · logged' : ''} — Drag onto a plot or click to toggle`}
+                      >
+                        <i style={{ background: s.color }} />
+                        <span>{s.name}</span>
+                        <small>{s.unit || '—'}</small>
+                      </button>
+                    </div>
+                  ))}
                 </div>
               ))}
               {!shown.length && (

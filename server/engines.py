@@ -380,7 +380,8 @@ class NativeBackend:
             'writeFile("om_file_errors.txt", getErrorString());',
         ]
         if config.get('checkOnly'):
-            lines += ['gCheck := checkModel(Gradara.Component);',
+            target = {'component': 'Gradara.Component', 'system': 'Gradara.System'}[config.get('checkTarget', 'component')]
+            lines += [f'gCheck := checkModel({target});',
                       'writeFile("om_check.txt", gCheck);',
                       'writeFile("om_check_errors.txt", getErrorString());']
         else:

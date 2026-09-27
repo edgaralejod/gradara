@@ -11,7 +11,7 @@ from .platform_env import extend_path
 
 extend_path()
 
-from .models import Project, GenerateRequest, NewModelRequest, SaveModelRequest, CopyModelRequest
+from .models import Definition, Project, GenerateRequest, NewModelRequest, SaveModelRequest, CopyModelRequest
 from . import workspace, settings, engines, credentials
 from .modelica import emit_project, project_key, semantic_hash
 from .engine import RUNS, engine_available, simulate
@@ -339,12 +339,28 @@ async def code_archive(request: _codegen.CodegenRequest):
     return Response(_codegen.archive(generated), media_type='application/zip',
                     headers={'Content-Disposition': f'attachment; filename="{request.options.prefix}.zip"'})
 
+class TemplateRequest(BaseModel):
+    definition: Definition
+
+
+@app.post('/api/codegen/template')
+async def write_c_template(request: TemplateRequest):
+    from .ctemplate import write_template
+    return await start_job('export', lambda i: write_template(request.definition, i, lambda message: JOBS[i].update(progress=message)))
+
+
 @app.post('/api/codegen/verify')
 async def verify_code(request: _codegen.CodegenRequest):
     try:
         return await _codegen.verify(request, RUNS, engines.run_c)
     except _codegen.CodegenError as exc:
         return _codegen_failure(exc)
+
+
+@app.post('/api/variants/check')
+async def check_inactive_variants(project: Project):
+    from .variant_check import check_variants
+    return await start_job('variants', lambda i: check_variants(project, i, lambda message: JOBS[i].update(progress=message)))
 
 
 # ------------------------------------------------------------------ engine

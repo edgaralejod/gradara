@@ -163,8 +163,8 @@ def test_gateway_accepts_every_task_and_job_kind_the_app_sends():
     kind_pattern = re.search(r"kind: str = Field\(pattern='([^']+)'", gateway).group(1)
     source = '\n'.join(p.read_text() for p in (root/'server').rglob('*.py'))
     tasks = set(re.findall(r"task='([a-z-]+)'", source)) | {'component'}
-    # Jobs started through the local job runner, plus the fallback kind from the task name.
-    kinds = {k for k in re.findall(r"start_job\('([a-z]+)'", (root/'server'/'app.py').read_text()) if k not in ('engine', 'simulation')}
+    # Jobs started through the local job runner (engine-only jobs never reach the gateway), plus the task-name fallback.
+    kinds = {k for k in re.findall(r"start_job\('([a-z]+)'", (root/'server'/'app.py').read_text()) if k not in ('engine', 'simulation', 'variants')}
     kinds |= {task.split('-')[0] for task in tasks}
     task_kinds = eval(re.search(r'TASK_KINDS = (\{.*?\}\})', gateway, re.S).group(1))  # literal dict
     assert tasks, 'no Gradara AI tasks found in server/'

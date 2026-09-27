@@ -53,6 +53,8 @@ Inside a subsystem, **Subsystem input**, **Subsystem output**, and **Subsystem t
 
 A subsystem with variants shows a segmented switch centered just above its body. Each segment is a variant name (default A, B, C), the active one is filled, and clicking a segment switches variants. The switch uses the 10 px micro size and truncates long names; keep variant names short. It is canvas chrome, not part of the block's geometry, so it never moves ports or changes the body size.
 
+Hovering a subsystem block for 0.6 s shows a preview card below it: the inside's name and block count over a 240 × 150 drawing of its blocks (outlines in their domain colors, pills rounded) and wire routes. It is drawn above wires and labels, ignores the pointer, and disappears on leave, press, or selection.
+
 ## Library and catalog
 
 The compact library uses the same face, uniformly scaled to fit a 36 × 28 thumbnail envelope with no enlargement; other miniature specimens can use 56 × 42. The text next to that supplementary thumbnail uses the shared 12 px UI size at medium weight; descriptions appear in a fixed detail area for the hovered or keyboard-focused part. Rows are 40 px tall with single-line names; availability warnings remain visible. A category selector filters the list, and sticky group headings organize the all-categories view. Terminal captions are omitted at thumbnail scale except input signs on sums. The silhouette and glyph still come from the shared renderer. Simple thumbnail text has a 12 px optical size so it remains recognizable; long second-order notation uses the conventional `H(s)` shorthand. Fractions and pictograms scale with the specimen. These are thumbnail detail rules, not alternative canvas typography.

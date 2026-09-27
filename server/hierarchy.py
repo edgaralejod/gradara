@@ -143,3 +143,28 @@ def instances(project: 'Project') -> Iterator[tuple[str, str, 'Block', str]]:
             if ref in by_id:
                 yield from walk(by_id[ref], f'{prefix}{block.id}.', f'{label}{block.definition.name} › ', owner)
     yield from walk(project, '', '', None)
+
+
+def with_variant(project: 'Project', sheet_id: str, block_id: str, variant_id: str) -> 'Project':
+    """A copy of `project` with one instance switched to another variant (as the workbench switch does)."""
+    from .models import Project as ProjectModel
+    data = project.model_dump(exclude_none=True, by_alias=True)
+    sheet = data if not sheet_id else next(s for s in data['subsystems'] if s['id'] == sheet_id)
+    block = next(b for b in sheet['blocks'] if b['id'] == block_id)
+    ref = block['definition']['subsystem']
+    variant = next(v for v in ref['variants'] if v['id'] == variant_id)
+    target = next(s for s in data['subsystems'] if s['id'] == variant['ref'])
+    ref['ref'], ref['active'] = variant['ref'], variant['id']
+    values = variant.get('values', {})
+    block['definition']['parameters'] = [
+        {k: v for k, v in p.items() if k != 'targets'} | {'value': values.get(p['id'], p['value'])}
+        for p in target.get('parameters', [])]
+    return ProjectModel.model_validate(data)
+
+
+def variant_choices(project: 'Project') -> Iterator[tuple[str, 'Block']]:
+    """(sheet ID or '', instance) for every instance with variants."""
+    for owner, diagram in diagrams(project):
+        for block in diagram.blocks:
+            if block.definition.subsystem is not None and block.definition.subsystem.variants:
+                yield owner or '', block

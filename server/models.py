@@ -103,6 +103,27 @@ class Boundary(BaseModel):
 BOUNDARY_KINDS = {'inport': 'input', 'outport': 'output', 'connport': 'physical'}
 
 
+class TemplateState(BaseModel):
+    name: str = Field(pattern=r'^[a-z][A-Za-z0-9]{0,30}$')
+    type: Literal['real', 'bool', 'int'] = 'real'
+    init: float = Field(default=0, allow_inf_nan=False)
+
+
+class CTemplate(BaseModel):
+    """C for one custom block, written once by the AI and reused by deterministic code generation.
+
+    Statements are `target = expression;` over placeholders ({u.port}, {y.port},
+    {p.param}, {x.state}, {h}, {t}); `server/ctemplate.py` checks them. The
+    signature ties the template to the definition it was written for.
+    """
+    signature: str = Field(pattern=r'^[0-9a-f]{16}$')
+    state: list[TemplateState] = Field(default_factory=list, max_length=20)
+    output: list[str] = Field(default_factory=list, max_length=40)
+    update: list[str] = Field(default_factory=list, max_length=40)
+    feedthrough: bool = True
+    notes: str = Field(default='', max_length=600)
+
+
 class Definition(BaseModel):
     kind: str = Field(pattern=IDENTIFIER, max_length=80)
     name: str = Field(min_length=1, max_length=100)
@@ -122,6 +143,8 @@ class Definition(BaseModel):
     subsystem: 'SubsystemRef | None' = None
     # A boundary block inside a subsystem (kinds inport, outport, connport).
     boundary: 'Boundary | None' = None
+    # C for code generation of a custom block (see server/ctemplate.py).
+    ctemplate: CTemplate | None = None
 
     @field_validator('equations', 'declarations')
     @classmethod

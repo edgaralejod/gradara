@@ -51,6 +51,9 @@ import {
   variantInstances,
 } from '@/lib/gradara/variants';
 import NumberField from './number-field';
+import type { useVariantChecks } from './use-variant-checks';
+
+type VariantChecks = ReturnType<typeof useVariantChecks>;
 
 export type ExplorerTarget = {
   sheetId: string;
@@ -76,9 +79,11 @@ export default function ModelExplorer({
   onCommit,
   onReveal,
   onRunAll,
+  variantChecks,
   onOpenResults,
 }: {
   doc: Project;
+  variantChecks: VariantChecks;
   result: SimulationResult | null;
   problems: Diagnostic[];
   /** The block selected in the Diagram, so both tabs agree. */
@@ -184,6 +189,7 @@ export default function ModelExplorer({
             <VariantsView
               doc={doc}
               index={index}
+              checks={variantChecks}
               onCommit={onCommit}
               onRunAll={onRunAll}
             />
@@ -625,11 +631,13 @@ function VirtualRows({
 function VariantsView({
   doc,
   index,
+  checks,
   onCommit,
   onRunAll,
 }: {
   doc: Project;
   index: ExplorerIndex;
+  checks: VariantChecks;
   onCommit: (change: (doc: Project) => Project) => void;
   onRunAll: () => void;
 }) {
@@ -669,7 +677,37 @@ function VariantsView({
         >
           <Play size={11} /> Run all configurations
         </button>
+        <label className="table-check">
+          <input
+            type="checkbox"
+            checked={checks.enabled}
+            onChange={(e) => checks.setEnabled(e.target.checked)}
+          />
+          Compile inactive variants in the background
+        </label>
+        <button
+          className="tool-button"
+          disabled={checks.running}
+          onClick={() => void checks.run()}
+        >
+          {checks.running ? 'Compiling…' : 'Compile now'}
+        </button>
       </div>
+      {(checks.results.length > 0 || checks.error) && (
+        <ul className="variant-checks">
+          {checks.error && <li className="is-bad">{checks.error}</li>}
+          {checks.results.map((r) => (
+            <li
+              key={`${r.key}-${r.variantId}`}
+              className={r.ok ? 'is-ok' : 'is-bad'}
+              title={r.message}
+            >
+              <strong>{r.name}</strong>{' '}
+              {r.ok ? 'compiles' : r.message.split('\n')[0]}
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="variants-table-wrap">
         <table className="variants-table">
           <thead>

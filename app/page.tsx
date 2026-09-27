@@ -127,6 +127,8 @@ import BlockDialog, {
 import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import VariantPanel from '@/components/gradara/variant-panel';
+import { useVariantChecks } from '@/components/gradara/use-variant-checks';
+import { SubsystemLookupContext } from '@/components/gradara/subsystem-preview';
 import ExplorerWorkspace, {
   type ExplorerTarget,
 } from '@/components/gradara/model-explorer';
@@ -341,9 +343,7 @@ function Workbench() {
   const [inspectorOpen, updateInspectorOpen] = useState(true);
   const [workspaceMode, setWorkspaceMode] = useState<
     'diagram' | 'results' | 'explorer'
-  >(
-    'diagram',
-  );
+  >('diagram');
   const setLibraryOpen = useCallback((open: boolean) => {
     if (open && window.innerWidth < 1100) updateInspectorOpen(false);
     updateLibraryOpen(open);
@@ -452,6 +452,10 @@ function Workbench() {
     setDoc(changed);
   }, []);
   const [searchSignal, setSearchSignal] = useState(0);
+  const lookupSubsystem = useCallback(
+    (ref: string) => findSubsystem(doc, ref),
+    [doc],
+  );
   const switchVariantOnSheet = useCallback(
     (blockId: string, variantId: string) =>
       commit((p) => switchVariant(p, blockId, variantId)),
@@ -518,6 +522,12 @@ function Workbench() {
     );
     return () => clearTimeout(timer);
   }, [signature, scope]);
+  const variantChecks = useVariantChecks({
+    doc,
+    signature,
+    engineReady: health.engineReady,
+    busy: running,
+  });
   const problemSections = useMemo<ProblemSection[]>(() => {
     const sections: ProblemSection[] = [
       { id: 'live', title: 'Model checks', items: liveProblems },
@@ -562,8 +572,16 @@ function Workbench() {
         items: result.problems,
       });
     }
+    if (variantChecks.problems.length)
+      sections.push({
+        id: 'variants',
+        title: 'Inactive variants',
+        note: 'compiled in the background',
+        items: variantChecks.problems,
+      });
     return sections;
   }, [
+    variantChecks.problems,
     liveProblems,
     runFailure,
     result,
@@ -639,7 +657,9 @@ function Workbench() {
   const assistant = useAssistant(project.modelId, getProject);
   const requestEdit = (prompt: string, blockIds: string[]) => {
     if (scopeRef.current.length) {
-      notify('The assistant edits the top level for now. Press ⌘↑ to go up, then ask again.');
+      notify(
+        'The assistant edits the top level for now. Press ⌘↑ to go up, then ask again.',
+      );
       return;
     }
     const current = projectRef.current;
@@ -661,7 +681,9 @@ function Workbench() {
   const askAi = (diagnostics: Diagnostic[], proposeFix: boolean) => {
     if (!diagnostics.length || assistant.busy) return;
     if (scopeRef.current.length) {
-      notify('The assistant works on the top level for now. Press ⌘↑ to go up, then ask again.');
+      notify(
+        'The assistant works on the top level for now. Press ⌘↑ to go up, then ask again.',
+      );
       return;
     }
     const current = projectRef.current;
@@ -1044,13 +1066,18 @@ function Workbench() {
       connection?: { blockId: string; portId: string },
     ) => {
       if (definition.boundary && !scopeRef.current.length) {
-        notify('Subsystem ports go inside a subsystem. Open one, or select blocks and press ⌘G.');
+        notify(
+          'Subsystem ports go inside a subsystem. Open one, or select blocks and press ⌘G.',
+        );
         return;
       }
       if (definition.boundary) {
         // A new port goes after the existing ones.
         const order = projectRef.current.blocks.filter(isBoundary).length;
-        definition = { ...definition, boundary: { ...definition.boundary, order } };
+        definition = {
+          ...definition,
+          boundary: { ...definition.boundary, order },
+        };
       }
       const id = `b_${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`;
       const current = projectRef.current;
@@ -1305,7 +1332,12 @@ function Workbench() {
   /** Run every configuration in turn and overlay their results, labelled by configuration. */
   async function runAllConfigurations() {
     const configurations = docRef.current.configurations ?? [];
-    if (runController.current || switching || !ready || configurations.length < 2)
+    if (
+      runController.current ||
+      switching ||
+      !ready ||
+      configurations.length < 2
+    )
       return;
     const controller = new AbortController();
     runController.current = controller;
@@ -1983,7 +2015,9 @@ function Workbench() {
                   >
                     <span />
                   </TooltipTrigger>
-                  <TooltipContent>Model Explorer · ⌘3 · search ⌘K</TooltipContent>
+                  <TooltipContent>
+                    Model Explorer · ⌘3 · search ⌘K
+                  </TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -2035,9 +2069,7 @@ function Workbench() {
                 onSave={(name) =>
                   commitDoc((d) => saveConfiguration(d, name).project)
                 }
-                onRemove={(c) =>
-                  commitDoc((d) => removeConfiguration(d, c.id))
-                }
+                onRemove={(c) => commitDoc((d) => removeConfiguration(d, c.id))}
                 onRunAll={() => void runAllConfigurations()}
               />
               <Button
@@ -2170,121 +2202,137 @@ function Workbench() {
                     </div>
                   )}
                 {ready && (
-                  <VariantSwitchContext.Provider value={switchVariantOnSheet}>
-                  <ModelCanvas
-                  sheet={scope.join('/')}
-                    key={project.modelId ?? 'workspace'}
-                    blocks={project.blocks}
-                    project={project}
-                    selection={selection}
-                    onCopyDrop={({ project: next, selection: selected }) => {
-                      commit(next);
-                      select(selected);
-                    }}
-                    selectedIds={selectedIds}
-                    onSelectedIdsChange={(ids) =>
-                      setSelectedIds((prev) =>
-                        prev.length === ids.length &&
-                        prev.every((id, i) => id === ids[i])
-                          ? prev
-                          : ids,
-                      )
-                    }
-                    onLayout={updateLayout}
-                    onLabelOffset={(id, offset) =>
-                      commit((p) => setLabelOffset(p, id, offset))
-                    }
-                    onLabelSelect={(id) => {
-                      select({ ...emptySelection(), blockIds: [id] });
-                    }}
-                    edges={[]}
-                    nodesConnectable={false}
-                    onNodeClick={(event, node) => {
-                      if (event.shiftKey || event.metaKey || event.ctrlKey) {
-                        // Apply the click's intent idempotently: React Flow may
-                        // already have delivered its own selection change.
-                        setSelectedIds(
-                          node.selected
-                            ? selectedIds.filter((id) => id !== node.id)
-                            : [...new Set([...selectedIds, node.id])],
-                        );
-                      } else {
-                        select({ ...emptySelection(), blockIds: [node.id] });
-                        setInspectorOpen(true);
-                      }
-                    }}
-                    onNodeDoubleClick={(e, n) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (n.type === 'tap') return;
-                      if (openSubsystem(n.id)) return;
-                      setEquationBlock({ id: n.id, tab: 'properties' });
-                    }}
-                    onPaneClick={() => {
-                      setInserter(null);
-                      select(emptySelection());
-                    }}
-                    onBeforeDelete={async ({ nodes, edges }) => {
-                      commit((p) =>
-                        removeSelection(
-                          p,
-                          nodes.map((n) => n.id),
-                          edges.map((e) => e.id),
-                        ),
-                      );
-                      setSelectedIds([]);
-                      setSelectedEdges([]);
-                      return false;
-                    }}
-                    fitViewOptions={{ padding: 0.16, maxZoom: 1.15 }}
-                    minZoom={0.25}
-                    maxZoom={2}
-                    deleteKeyCode={null}
-                    zoomOnDoubleClick={false}
-                    selectionMode={SelectionMode.Partial}
-                    selectionOnDrag={canvasTool === 'select'}
-                    panOnDrag={canvasTool === 'pan' ? [0, 1, 2] : [1, 2]}
-                    panOnScroll
-                    zoomOnScroll={false}
-                    nodeDragThreshold={2}
-                    panActivationKeyCode="Space"
-                    multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
-                  >
-                    <Background gap={20} size={0.7} color="#dde3e8" />
-                    <ViewportPortal>
-                      {project.annotations?.map((a, i) => (
-                        <div
-                          key={i}
-                          className="diagram-annotation"
-                          style={{ transform: `translate(${a.x}px, ${a.y}px)` }}
-                        >
-                          <strong>{a.text}</strong>
-                          {a.detail && <span>{a.detail}</span>}
-                        </div>
-                      ))}
-                    </ViewportPortal>
-                    <NetLayer
-                      project={project}
-                      selected={selectedEdges}
-                      selection={selection}
-                      groupSelection={groupSelection || selectedIds.length > 1}
-                      onRegionSelect={(next) => {
-                        select(next);
-                        setGroupSelection(true);
-                      }}
-                      onSelect={(ids, additive) => {
-                        select({
-                          ...emptySelection(),
-                          blockIds: additive ? selectedIds : [],
-                          wireIds: ids,
-                        });
-                      }}
-                      onDeleteSelection={deleteSelected}
-                      onCommit={commit}
-                    />
-                    <Controls showInteractive={false} />
-                  </ModelCanvas>
-                  </VariantSwitchContext.Provider>
+                  <SubsystemLookupContext.Provider value={lookupSubsystem}>
+                    <VariantSwitchContext.Provider value={switchVariantOnSheet}>
+                      <ModelCanvas
+                        sheet={scope.join('/')}
+                        key={project.modelId ?? 'workspace'}
+                        blocks={project.blocks}
+                        project={project}
+                        selection={selection}
+                        onCopyDrop={({
+                          project: next,
+                          selection: selected,
+                        }) => {
+                          commit(next);
+                          select(selected);
+                        }}
+                        selectedIds={selectedIds}
+                        onSelectedIdsChange={(ids) =>
+                          setSelectedIds((prev) =>
+                            prev.length === ids.length &&
+                            prev.every((id, i) => id === ids[i])
+                              ? prev
+                              : ids,
+                          )
+                        }
+                        onLayout={updateLayout}
+                        onLabelOffset={(id, offset) =>
+                          commit((p) => setLabelOffset(p, id, offset))
+                        }
+                        onLabelSelect={(id) => {
+                          select({ ...emptySelection(), blockIds: [id] });
+                        }}
+                        edges={[]}
+                        nodesConnectable={false}
+                        onNodeClick={(event, node) => {
+                          if (
+                            event.shiftKey ||
+                            event.metaKey ||
+                            event.ctrlKey
+                          ) {
+                            // Apply the click's intent idempotently: React Flow may
+                            // already have delivered its own selection change.
+                            setSelectedIds(
+                              node.selected
+                                ? selectedIds.filter((id) => id !== node.id)
+                                : [...new Set([...selectedIds, node.id])],
+                            );
+                          } else {
+                            select({
+                              ...emptySelection(),
+                              blockIds: [node.id],
+                            });
+                            setInspectorOpen(true);
+                          }
+                        }}
+                        onNodeDoubleClick={(e, n) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (n.type === 'tap') return;
+                          if (openSubsystem(n.id)) return;
+                          setEquationBlock({ id: n.id, tab: 'properties' });
+                        }}
+                        onPaneClick={() => {
+                          setInserter(null);
+                          select(emptySelection());
+                        }}
+                        onBeforeDelete={async ({ nodes, edges }) => {
+                          commit((p) =>
+                            removeSelection(
+                              p,
+                              nodes.map((n) => n.id),
+                              edges.map((e) => e.id),
+                            ),
+                          );
+                          setSelectedIds([]);
+                          setSelectedEdges([]);
+                          return false;
+                        }}
+                        fitViewOptions={{ padding: 0.16, maxZoom: 1.15 }}
+                        minZoom={0.25}
+                        maxZoom={2}
+                        deleteKeyCode={null}
+                        zoomOnDoubleClick={false}
+                        selectionMode={SelectionMode.Partial}
+                        selectionOnDrag={canvasTool === 'select'}
+                        panOnDrag={canvasTool === 'pan' ? [0, 1, 2] : [1, 2]}
+                        panOnScroll
+                        zoomOnScroll={false}
+                        nodeDragThreshold={2}
+                        panActivationKeyCode="Space"
+                        multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
+                      >
+                        <Background gap={20} size={0.7} color="#dde3e8" />
+                        <ViewportPortal>
+                          {project.annotations?.map((a, i) => (
+                            <div
+                              key={i}
+                              className="diagram-annotation"
+                              style={{
+                                transform: `translate(${a.x}px, ${a.y}px)`,
+                              }}
+                            >
+                              <strong>{a.text}</strong>
+                              {a.detail && <span>{a.detail}</span>}
+                            </div>
+                          ))}
+                        </ViewportPortal>
+                        <NetLayer
+                          project={project}
+                          selected={selectedEdges}
+                          selection={selection}
+                          groupSelection={
+                            groupSelection || selectedIds.length > 1
+                          }
+                          onRegionSelect={(next) => {
+                            select(next);
+                            setGroupSelection(true);
+                          }}
+                          onSelect={(ids, additive) => {
+                            select({
+                              ...emptySelection(),
+                              blockIds: additive ? selectedIds : [],
+                              wireIds: ids,
+                            });
+                          }}
+                          onDeleteSelection={deleteSelected}
+                          onCommit={commit}
+                        />
+                        <Controls showInteractive={false} />
+                      </ModelCanvas>
+                    </VariantSwitchContext.Provider>
+                  </SubsystemLookupContext.Provider>
                 )}
                 {selectedIds.length === 0 && (
                   <div className="canvas-hint">
@@ -2363,13 +2411,17 @@ function Workbench() {
                 problems={liveProblems}
                 focusedBlock={
                   selectedIds[0]
-                    ? { sheetId: currentSubsystem ?? '', blockId: selectedIds[0] }
+                    ? {
+                        sheetId: currentSubsystem ?? '',
+                        blockId: selectedIds[0],
+                      }
                     : undefined
                 }
                 searchSignal={searchSignal}
                 onCommit={commitDoc}
                 onReveal={revealTarget}
                 onRunAll={() => void runAllConfigurations()}
+                variantChecks={variantChecks}
                 onOpenResults={() => setWorkspaceMode('results')}
               />
             ) : (
@@ -2719,13 +2771,23 @@ function Workbench() {
                       parameters={active.definition.parameters}
                       {...(currentSubsystem && !isBoundary(active)
                         ? {
-                            promoted: promotedTargets(doc, currentSubsystem).get(active.id),
+                            promoted: promotedTargets(
+                              doc,
+                              currentSubsystem,
+                            ).get(active.id),
                             onPromote: (id: string) =>
                               commit((p) =>
-                                promoteParameter(p, currentSubsystem, active.id, id),
+                                promoteParameter(
+                                  p,
+                                  currentSubsystem,
+                                  active.id,
+                                  id,
+                                ),
                               ),
                             onDemote: (id: string) =>
-                              commit((p) => demoteParameter(p, currentSubsystem, id)),
+                              commit((p) =>
+                                demoteParameter(p, currentSubsystem, id),
+                              ),
                           }
                         : {})}
                       onChange={(id, value) =>
@@ -3092,6 +3154,7 @@ function Workbench() {
             project={project}
             selectedIds={selectedIds}
             runId={result?.comparison ? undefined : result?.id}
+            onCommit={(change) => commit(change)}
             onShowBlocks={(ids) => {
               setExportOpen(false);
               selectBlocks(ids);

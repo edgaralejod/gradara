@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { api, downloadText, waitForJob, type Job } from '@/lib/gradara/api';
 import { notifyAiChanged, useAiLabel } from '@/lib/gradara/ai';
-import type { Project } from '@/lib/gradara/model';
+import type { CTemplate, Project } from '@/lib/gradara/model';
 import { isInstance } from '@/lib/gradara/hierarchy';
 import {
   codegenBody,
@@ -35,15 +35,6 @@ import {
   type CodegenResult,
   type VerifyResult,
 } from '@/lib/gradara/codegen';
-
-type AiArtifact = {
-  id: string;
-  blockId: string;
-  header: string;
-  source: string;
-  notes: string;
-  compiler: string;
-};
 
 type UnitChoice = { id: string; label: string; unit: CodeUnit };
 
@@ -59,8 +50,11 @@ export default function ExportDialog({
   selectedIds,
   runId,
   onShowBlocks,
+  onCommit,
   onClose,
 }: {
+  /** Apply an edit to the open sheet as one undo step. */
+  onCommit: (change: (view: Project) => Project) => void;
   /** The whole document, subsystems included. */
   doc: Project;
   /** Subsystem instance IDs down to the open sheet. */
@@ -112,7 +106,6 @@ export default function ExportDialog({
   const [verified, setVerified] = useState<VerifyResult | null>(null);
   const [file, setFile] = useState('');
   const [copied, setCopied] = useState(false);
-  const [ai, setAi] = useState<AiArtifact | null>(null);
 
   const step = Number(stepText);
   const effective: CodegenOptions = {
@@ -133,7 +126,6 @@ export default function ExportDialog({
           if (!live) return;
           setGenerated(r);
           setVerified(null);
-          setAi(null);
           if (r.ok) setFile((f) => (f in r.files ? f : `${options.prefix}.c`));
         })
         .catch((e) => live && setError((e as Error).message));
@@ -215,20 +207,28 @@ export default function ExportDialog({
           (b) => b.id === failed.blockIds[0] && b.definition.generated,
         )
       : undefined;
-  async function aiExport() {
+  // The AI writes a C template for that one block; it is stored with the block and reused from then on.
+  async function writeTemplate() {
     if (!customGap) return;
     setBusy('ai');
     setError('');
     try {
-      const j = await api<Job<unknown>>('/exports', {
+      const j = await api<Job<unknown>>('/codegen/template', {
         method: 'POST',
-        body: JSON.stringify({
-          project,
-          blockId: customGap.id,
-          target: 'c',
-        }),
+        body: JSON.stringify({ definition: customGap.definition }),
       });
-      setAi(await waitForJob<AiArtifact>(j.id));
+      const { ctemplate } = await waitForJob<{
+        ctemplate: CTemplate;
+      }>(j.id);
+      const kind = customGap.definition.kind;
+      onCommit((view) => ({
+        ...view,
+        blocks: view.blocks.map((b) =>
+          b.definition.generated && b.definition.kind === kind
+            ? { ...b, definition: { ...b.definition, ctemplate } }
+            : b,
+        ),
+      }));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -237,17 +237,11 @@ export default function ExportDialog({
     }
   }
 
-  const files: [string, string][] = ai
-    ? [
-        ['gradara_controller.h', ai.header],
-        ['gradara_controller.c', ai.source],
-        ['Notes', ai.notes],
-      ]
-    : generated?.ok
-      ? Object.entries(generated.files).sort(([a], [b]) =>
-          a.endsWith('.h') ? -1 : b.endsWith('.h') ? 1 : a.localeCompare(b),
-        )
-      : [];
+  const files: [string, string][] = generated?.ok
+    ? Object.entries(generated.files).sort(([a], [b]) =>
+        a.endsWith('.h') ? -1 : b.endsWith('.h') ? 1 : a.localeCompare(b),
+      )
+    : [];
   const shown = files.find(([name]) => name === file)?.[1] ?? files[0]?.[1];
   const shownName = files.find(([name]) => name === file)?.[0] ?? files[0]?.[0];
 
@@ -396,7 +390,7 @@ export default function ExportDialog({
               blocks, or a subsystem, and open Export again.
             </p>
           )}
-          {failed && !ai && (
+          {failed && (
             <div className="codegen-problem" role="alert">
               <TriangleAlert size={14} />
               <span>{failed.error}</span>
@@ -408,21 +402,21 @@ export default function ExportDialog({
               )}
             </div>
           )}
-          {customGap && !ai && (
+          {customGap && (
             <Button
               variant="outline"
-              onClick={() => void aiExport()}
+              onClick={() => void writeTemplate()}
               disabled={!!busy || !aiLabel}
             >
               {busy === 'ai' ? <LoaderCircle className="spin" /> : <Sparkles />}
               {aiLabel
-                ? `Write ${customGap.definition.name} in C with ${aiLabel}`
-                : 'Turn on an AI provider to write this custom block in C'}
+                ? `Write a C template for ${customGap.definition.name} with ${aiLabel}`
+                : 'Turn on an AI provider to write a C template for this custom block'}
             </Button>
           )}
           {files.length > 0 && (
             <>
-              {generated?.ok && !ai && (
+              {generated?.ok && (
                 <p className="codegen-summary">
                   {generated.blocks.length} block
                   {generated.blocks.length === 1 ? '' : 's'} ·{' '}
@@ -471,22 +465,7 @@ export default function ExportDialog({
                 </div>
                 <pre aria-label="Generated controller code">{shown}</pre>
               </div>
-              {ai ? (
-                <>
-                  <span className="export-success">
-                    <Check size={14} />
-                    Compiled with <code>{ai.compiler}</code>
-                  </span>
-                  <a
-                    className="download-artifact"
-                    href={`/api/exports/${ai.id}/download`}
-                    download
-                  >
-                    <Download size={15} />
-                    Download C package
-                  </a>
-                </>
-              ) : (
+              {
                 <div className="codegen-actions">
                   <Button onClick={() => void downloadZip()} disabled={!!busy}>
                     {busy === 'zip' ? (
@@ -514,7 +493,7 @@ export default function ExportDialog({
                     Verify against last run
                   </Button>
                 </div>
-              )}
+              }
               {verified && <VerifyReport result={verified} />}
             </>
           )}

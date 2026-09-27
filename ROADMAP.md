@@ -64,8 +64,6 @@ Subsystems, shared definitions, promoted parameters, variants, and configuration
 
 | Task | Acceptance |
 | --- | --- |
-| Subsystem preview | Hovering a subsystem block shows a thumbnail of its inside without opening it. |
-| Compile inactive variants | Inactive variants are compiled by OpenModelica in the background, so their problems include compiler errors. Current checks are structural (ports and unconnected inputs). |
 | Results by subsystem | Results groups series by subsystem instance instead of one flat list of `Instance › Block.port` names. |
 | Library linking | A subsystem definition can live in another file and be linked from several models, with explicit update behavior. Today every definition is stored in its own document. |
 

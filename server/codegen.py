@@ -515,12 +515,39 @@ def t_msl(cls: str, c: Ctx) -> Code | None:
     return None
 
 
+def t_custom(d: Definition, c: Ctx) -> Code | None:
+    """A custom block's own template (written by the AI once), if it still matches the block."""
+    from . import ctemplate
+    tpl = d.ctemplate
+    if tpl is None or tpl.signature != ctemplate.signature(d):
+        return None
+    ctemplate.check(d, tpl)
+    names = {f'u.{p.id}': c.u(p.id) for p in d.ports if p.direction == 'input'}
+    names |= {f'y.{p.id}': c.y(p.id) for p in d.ports if p.direction == 'output'}
+    names |= {f'p.{p.id}': c.p(p.id) for p in d.parameters}
+    names |= {f'x.{s.name}': c.x(s.name) for s in tpl.state}
+    names |= {'h': c.lit(c.h), 't': 's->t'}
+    types = {'real': c.real, 'bool': 'bool', 'int': 'int32_t'}
+    init = lambda s: ('true' if s.init else 'false') if s.type == 'bool' else repr(int(s.init) if s.type == 'int' else float(s.init))
+    return Code(output=[ctemplate.render(line, names) for line in tpl.output],
+                update=[ctemplate.render(line, names) for line in tpl.update],
+                state=[(s.name, types[s.type], init(s)) for s in tpl.state],
+                feedthrough=tpl.feedthrough, note=tpl.notes.strip().rstrip('.') if tpl.notes else 'C template written by AI')
+
+
 def template(node: Node, c: Ctx) -> Code:
     d = node.definition
-    code = t_msl(d.modelica.class_, c) if d.modelica is not None else (None if d.generated else t_signal(d.kind, c))
+    if d.modelica is not None:
+        code = t_msl(d.modelica.class_, c)
+    elif d.generated:
+        code = t_custom(d, c)
+    else:
+        code = t_signal(d.kind, c)
     if code is None:
-        raise CodegenError(f'{d.name} has no C template yet. Replace it with library blocks, or leave it outside the '
-                           'code unit.', [node.block_id])
+        hint = ('Write its C template with AI in the Export dialog' if d.generated
+                else 'Replace it with library blocks')
+        raise CodegenError(f'{d.name} has no C template yet. {hint}, or leave it outside the code unit.',
+                           [node.block_id])
     return code
 
 

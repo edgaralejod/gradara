@@ -1,5 +1,5 @@
 'use client';
-import { memo, useContext, useEffect } from 'react';
+import { memo, useContext, useEffect, useRef, useState } from 'react';
 import {
   NodeResizer,
   ViewportPortal,
@@ -17,6 +17,7 @@ import { portPlacement } from '@/lib/gradara/ports';
 import { BlockFace } from './block-face';
 import BlockLabel from './block-label';
 import { VariantSwitchContext } from './variant-switch-context';
+import { SubsystemPreview } from './subsystem-preview';
 export type { BlockNodeData } from '@/lib/gradara/canvas';
 /** The segmented switch above a subsystem with variants: the active one is always visible. */
 function VariantSwitch({
@@ -69,6 +70,24 @@ function BlockNode({
     const frame = requestAnimationFrame(() => updateInternals(id));
     return () => cancelAnimationFrame(frame);
   }, [id, signature, updateInternals]);
+  // Hovering a subsystem for a moment shows a small drawing of its inside.
+  const [preview, setPreview] = useState(false);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hover = d.subsystem
+    ? {
+        onPointerEnter: () => {
+          hoverTimer.current = setTimeout(() => setPreview(true), 600);
+        },
+        onPointerLeave: () => {
+          if (hoverTimer.current) clearTimeout(hoverTimer.current);
+          setPreview(false);
+        },
+        onPointerDown: () => {
+          if (hoverTimer.current) clearTimeout(hoverTimer.current);
+          setPreview(false);
+        },
+      }
+    : {};
   const rotation = data.rotation ?? 0;
   const min = minimumBlockSize(d, rotation);
   const bounds = {
@@ -82,7 +101,21 @@ function BlockNode({
     <div
       className={`engineering-block notation-${sum ? 'sum' : d.kind} ${selected ? 'is-selected' : ''}`}
       style={{ '--domain': domainColors[d.domain] } as React.CSSProperties}
+      {...hover}
     >
+      {preview && d.subsystem && !selected && (
+        <ViewportPortal>
+          <div
+            className="subsystem-preview-anchor"
+            style={{
+              left: positionAbsoluteX + bounds.width / 2,
+              top: positionAbsoluteY + bounds.height,
+            }}
+          >
+            <SubsystemPreview subsystemRef={d.subsystem.ref} />
+          </div>
+        </ViewportPortal>
+      )}
       <NodeResizer
         isVisible={selected}
         minWidth={min.width}

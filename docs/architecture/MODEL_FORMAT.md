@@ -56,6 +56,8 @@ A definition can instead name a Modelica Standard Library 4.1.0 class in `modeli
 
 Two more optional fields belong to hierarchy: `subsystem` marks an instance of a subsystem, and `boundary` marks a subsystem port block. See [subsystems and variants](#subsystems-and-variants).
 
+`ctemplate` is an optional C template for a custom signal block, used only by C code generation: `{signature, state: [{name, type: real|bool|int, init}], output: [...], update: [...], feedthrough, notes}`. `signature` is 16 hex characters derived from the block's kind, equations, declarations, ports, and parameter IDs; a template whose signature no longer matches is ignored. The statement rules are in [controller C code](EXECUTION.md#controller-c-code). It never affects simulation.
+
 Port IDs and parameter IDs use Modelica-compatible identifiers and must be unique within the definition. Block and junction IDs must be unique across the document. A rename should preserve IDs; duplication should allocate new instance/connection IDs and clone nested definitions so editing the copy cannot mutate the original.
 
 Ports have `direction` (`input`, `output`, or `physical`), their own `domain`, optional side, and optional offset in percent along that side. Domains are:

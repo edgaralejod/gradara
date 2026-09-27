@@ -14,7 +14,7 @@ from .paths import ROOT, RUNS
 from .safety import UnsafeDefinition, check_definition
 from . import engines
 
-__all__ = ['ROOT', 'RUNS', 'IMAGE', 'LEGACY_IMAGE', 'engine_available', 'execute', 'simulate', 'check_component']
+__all__ = ['ROOT', 'RUNS', 'IMAGE', 'LEGACY_IMAGE', 'engine_available', 'execute', 'simulate', 'check_component', 'check_project']
 
 
 async def engine_available():
@@ -116,6 +116,16 @@ async def run(project: Project, job_id: str, folder: Path):
     result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'problems':[d.model_dump() for d in warning_diagnostics(project, report.get('diagnostics',''))],'samples':len(rows)}
     (folder/'result.json').write_text(json.dumps(result, allow_nan=False))
     return result
+
+async def check_project(project: Project, job_id: str) -> dict:
+    """Compile-check a whole model without simulating it (used for inactive variants)."""
+    for block in all_blocks(project):
+        check_definition(block.definition, block.definition.name)
+    folder = RUNS/f'check-{job_id}'
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder/'model.mo').write_text(emit_project(project))
+    return await execute(folder, {'checkOnly': True, 'checkTarget': 'system'}, f'gradara-check-{job_id}')
+
 
 async def check_component(definition: Definition, job_id: str):
     check_definition(definition)

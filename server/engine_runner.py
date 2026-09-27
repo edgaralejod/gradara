@@ -31,7 +31,8 @@ try:
     if not omc.sendExpression('loadFile("/work/model.mo")'):
         raise RuntimeError(omc.sendExpression('getErrorString()'))
     if config.get('checkOnly'):
-        value = omc.sendExpression('checkModel(Gradara.Component)')
+        target = {'component': 'Gradara.Component', 'system': 'Gradara.System'}[config.get('checkTarget', 'component')]
+        value = omc.sendExpression(f'checkModel({target})')
         error = diagnostic_text(omc.sendExpression('getErrorString()'))
         if not value or 'Error:' in error:
             raise RuntimeError(error or 'The component did not pass compilation checks.')

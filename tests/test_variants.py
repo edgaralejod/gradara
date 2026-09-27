@@ -120,3 +120,49 @@ def test_ev_drivetrain_reaches_cruise_speed_in_each_configuration(source):
     speed = next(o for o in result['series'] if o['key'] == 'speed.v')['values']
     assert speed[-1] == pytest.approx(5, rel=0.05)
     assert max(speed) < 6
+
+
+def test_with_variant_switches_one_instance_like_the_workbench():
+    from server.hierarchy import variant_choices, with_variant
+    project = Project.model_validate(variants())
+    assert [(s, b.id) for s, b in variant_choices(project)] == [('', 'a1')]
+    other = with_variant(project, '', 'a1', 'v2')
+    block = other.blocks[1].definition
+    assert block.subsystem.ref == 'amp2' and block.subsystem.active == 'v2'
+    assert [(p.id, p.value) for p in block.parameters] == [('gain', 2)]
+    assert '  Sub_amp2 a1(par_gain=2);' in emit_project(other)
+
+
+def test_inactive_variants_are_checked_one_by_one(monkeypatch):
+    import asyncio
+
+    from server import variant_check
+    checked = []
+
+    async def ready():
+        return True
+
+    async def compile_check(project, job_id):
+        active = project.blocks[1].definition.subsystem.active
+        checked.append(active)
+        return {'error': 'Error: broken'} if active == 'v3' else {'checked': True, 'message': 'ok'}
+    monkeypatch.setattr(variant_check, 'engine_available', ready)
+    monkeypatch.setattr(variant_check, 'check_project', compile_check)
+    report = asyncio.run(variant_check.check_variants(Project.model_validate(variants()), 'job'))
+    assert checked == ['v2', 'v3']
+    assert [(r['variant'], r['ok']) for r in report['variants']] == [('Doubler', True), ('Nine', False)]
+
+
+@pytest.mark.integration
+def test_inactive_variants_compile_with_the_engine():
+    import asyncio
+    import uuid
+
+    from server.variant_check import check_variants
+    doc = variants()
+    doc['subsystems'][1]['blocks'].append(at('stray', copy.deepcopy(doc['subsystems'][1]['blocks'][1]['definition']), 300))
+    report = asyncio.run(check_variants(Project.model_validate(doc), 'vc' + uuid.uuid4().hex[:8]))
+    by_name = {r['variant']: r for r in report['variants']}
+    assert by_name['Nine']['ok'], by_name['Nine']
+    # The Doubler inside now has a gain with an unconnected input, which the check reports.
+    assert not by_name['Doubler']['ok'] and 'not connected' in by_name['Doubler']['message']

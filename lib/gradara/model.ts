@@ -92,6 +92,8 @@ export type Definition = {
   subsystem?: SubsystemRef;
   /** A boundary block inside a subsystem (kinds inport, outport, connport). */
   boundary?: { side?: Port['side']; order: number };
+  /** C for code generation of a custom block, written once by the AI (see server/ctemplate.py). */
+  ctemplate?: CTemplate;
 };
 /**
  * One alternative inside for a subsystem instance. A diagram variant has its own
@@ -116,6 +118,15 @@ export type Configuration = {
   id: string;
   name: string;
   choices: Record<string, string>;
+};
+/** Statements over placeholders ({u.port}, {y.port}, {p.id}, {x.state}, {h}, {t}); checked on the server. */
+export type CTemplate = {
+  signature: string;
+  state: { name: string; type: 'real' | 'bool' | 'int'; init: number }[];
+  output: string[];
+  update: string[];
+  feedthrough: boolean;
+  notes: string;
 };
 /** A subsystem parameter that sets parameters of blocks inside it. */
 export type PromotedParameter = Parameter & {
