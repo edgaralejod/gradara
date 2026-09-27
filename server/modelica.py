@@ -236,7 +236,9 @@ IDLE_EQUATION = {'electrical': '{c}.i = 0;', 'mechanical': '{c}.tau = 0;', 'tran
 
 def idle_class(ref: str, ports) -> str:
     """Name of the wrapper that adds idle connectors for ports the active variant does not use."""
-    return f'Sub_{ref}__' + '_'.join(sorted(p.id for p in ports))
+    # A hash of the port IDs, since joining IDs that may contain "_" could make two sets collide.
+    key = hashlib.sha256('\0'.join(sorted(p.id for p in ports)).encode()).hexdigest()[:8]
+    return f'Sub_{ref}__idle_{key}'
 
 
 def _idle_wrapper(ref: str, ports) -> str:

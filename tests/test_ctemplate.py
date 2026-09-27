@@ -41,6 +41,9 @@ def test_a_numeric_template_passes():
     ('int a = 1;', 'Each statement'),
     ('{y.y} = (1;', 'Unbalanced'),
     ('{y.y} = printf(1);', 'not allowed'),
+    ('{y.y} = 1 //{u.u};', 'Comments'),
+    ('{y.y} = 1 /* {u.u};', 'Comments'),
+    ('{y.y} = 1 * / 2;', 'Comments'),
 ])
 def test_anything_but_arithmetic_is_refused(line, message):
     with pytest.raises(TemplateError, match=message):

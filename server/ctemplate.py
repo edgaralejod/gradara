@@ -86,6 +86,9 @@ def _statement(line: str, known: dict, phase: str) -> str:
 
 
 def _expression(expression: str, known: dict) -> None:
+    # Comment markers would hide the rest of the generated line or later statements.
+    if re.search(r'/\s*[/*]|\*\s*/', expression):
+        raise TemplateError('Comments are not allowed in a template expression.')
     holders = []
 
     def hold(m):

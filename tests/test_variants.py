@@ -38,17 +38,27 @@ def variants(active='v1', unused=('out2',)):
 
 
 def test_active_variant_is_emitted_and_idle_ports_are_terminated():
-    source = emit_project(Project.model_validate(variants()))
-    assert 'model Sub_amp__out2\n  extends Sub_amp;\n  Modelica.Blocks.Interfaces.RealOutput out2;\nequation\n  out2 = 0;' in source
-    assert '  Sub_amp__out2 a1(par_gain=7);' in source
+    from server.modelica import idle_class
+    project = Project.model_validate(variants())
+    wrapper = idle_class('amp', [p for p in project.blocks[1].definition.ports if p.id == 'out2'])
+    source = emit_project(project)
+    assert f'model {wrapper}\n  extends Sub_amp;\n  Modelica.Blocks.Interfaces.RealOutput out2;\nequation\n  out2 = 0;' in source
+    assert f'  {wrapper} a1(par_gain=7);' in source
     assert 'model Sub_amp2' not in source  # inactive insides are not emitted
     other = emit_project(Project.model_validate(variants('v2')))
     assert '  Sub_amp2 a1(par_gain=2);' in other and 'Sub_amp__' not in other
 
 
+def test_idle_wrapper_names_do_not_collide():
+    from server.models import Port
+    from server.modelica import idle_class
+    port = lambda i: Port(id=i, name=i, direction='output', domain='signal')
+    assert idle_class('s', [port('a_b')]) != idle_class('s', [port('a'), port('b')])
+
+
 def test_parameter_variant_shares_the_inside():
     source = emit_project(Project.model_validate(variants('v3')))
-    assert '  Sub_amp__out2 a1(par_gain=9);' in source
+    assert 'Sub_amp__idle_' in source and ' a1(par_gain=9);' in source
 
 
 def test_a_port_the_active_variant_lacks_is_a_problem_unless_marked_unused():
