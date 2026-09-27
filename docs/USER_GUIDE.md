@@ -61,6 +61,10 @@ Select blocks, wires, or junctions and use the **arrow keys** to nudge them by o
 | Move a selection | Drag its blocks; internal geometry follows the group. |
 | Duplicate | Ctrl-drag, or select and use ⌘/Ctrl+D. |
 
+Wires route themselves around blocks and keep off other nets' lines and block names, and they never loop back on themselves. A wire you shaped by hand keeps its shape while it still makes sense; when you move one of its blocks, the run next to that block moves with it, and if the shape would then loop or cross a block the wire goes back to automatic routing. When you move a group selected by dragging a box, wires that only touch the box stretch to the blocks that stay.
+
+**Arrange** (⌘/Ctrl + Shift + A, or the grid button in the canvas controls) redraws the whole sheet, or just the selected blocks when two or more are selected, as one undo step. It reads the model from the terminals: signal flow runs left to right, measurement and feedback paths run underneath, parallel branches of a circuit sit side by side on their rail, grounds sit under their terminal, and a shaft drops straight to its load. Connected terminals are lined up so wires run straight, and every wire is routed afresh. It keeps your rough order where the model does not decide, and arranging again changes nothing. Section notes move to a band above the drawing; block names go back under their blocks.
+
 Nearby parallel segments snap together and shed redundant bends. Junctions should follow their horizontal run as connected blocks move. One completed gesture should be one undo step. Report a minimal reproduction when a gesture behaves differently; see the [wiring contract](architecture/WIRING.md) for expected behavior and limitations.
 
 Tap **Space**, or use the fit button in the canvas controls, to fit the whole sheet in view; holding Space and dragging still pans. A fitted view stays fitted when you open or close the library, the inspector, or the Problems dock, or resize the window. After you pan or zoom yourself, those changes keep the same point at the center of the canvas instead.

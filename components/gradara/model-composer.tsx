@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
 import { library, domainColors, type Project } from '@/lib/gradara/model';
 import { layoutProject } from '@/lib/gradara/auto-layout';
+import { arrangeBlocks } from '@/lib/gradara/arrange';
 import { portPoint, sideToPosition } from '@/lib/gradara/ports';
 import { pointsToPath, routeBetween } from '@/lib/gradara/routing';
 import { refreshGeneratedLibrary } from '@/lib/gradara/generated-library';
@@ -21,8 +22,12 @@ type ModelDraft = {
   samples: number;
 };
 
-/** Generated models get the same house-style layout as agent edits (see auto-layout.ts). */
-const positionDraft = (project: Project): Project => layoutProject(project);
+/**
+ * Generated models get standard sizes and a first house-style layout (auto-layout.ts),
+ * then the same arrangement as the Arrange command (arrange.ts).
+ */
+const positionDraft = (project: Project): Project =>
+  arrangeBlocks(layoutProject(project));
 
 function DiagramPreview({ project }: { project: Project }) {
   const blocks = new Map(project.blocks.map((block) => [block.id, block]));

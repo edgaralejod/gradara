@@ -32,7 +32,7 @@ The [model format](MODEL_FORMAT.md) defines the serialized fields. Rendered poly
 | Reshape | Select a wire and drag a segment, midpoint grip, or bend handle. A segment moves perpendicular to itself; fixed block ports grow connecting elbows. |
 | Reconnect | Drag a selected wire's round endpoint. Preserve the wire ID and the fixed part of its manual route where possible; prune obsolete junctions after commit. |
 | Redraw | D locks the logical endpoints and shows the previous route as a ghost. Click to pin runs; Enter or the highlighted destination commits. Crossed wires are not spliced. |
-| Auto route | R removes manual routing intent for the selected wire. |
+| Auto route | R removes manual routing intent for the selected wire; the sheet router draws it. |
 | Delete | Remove the selected wire and clean up orphaned or degree-two junctions. This is not an automatic bypass of a deleted block. |
 
 Target rings indicate an attachment; alignment guides only indicate coordinates. Snapping to an existing X or Y coordinate does not join a net. Invalid joins remain provisional with an inline explanation. Cancel restores the original document, and a completed edit creates one undo entry.
@@ -41,7 +41,14 @@ Pointer previews are derived from the gesture's original snapshot and painted lo
 
 ## Routing and alignment
 
-Unpinned routes use the same orthogonal router as live drawing: leave in the port's exit direction, follow any pinned corners, and enter the destination along its port normal. When two opposite terminals point away from each other (the target is behind the source), the route is an S with two legs across, so neither stub doubles back. Auto-route does not inject a feedback U, a lane offset, or another preset shape. Explicitly drawn paths keep their vertices. Physical and signal connections share that geometry; they differ only in connection laws.
+One sheet router (`lib/gradara/router.ts`) owns every drawn route. `routeSheet(project)` is a pure, cached function of the sheet: block bodies and names, terminals, connections, and pinned bends. Preview, commit, hit testing, and reload therefore always agree; nothing else computes or repairs geometry.
+
+- **Automatic wires** (no pinned bends; `[]` counts as none) leave along the port's exit direction and enter along the destination's normal. The ordinary orthogonal route is used when it is clean. Otherwise the router searches the orthogonal visibility grid of nearby bodies (lines along each body edge with clearance, below each block past its name, and midlines between them) with A*: each step pays its length, a bend, and the sheet's penalties. Block bodies are walls. Running on another net's line is heavily penalized, running along a block's name (or horizontally through its own name) costs more than a short detour, and a crossing costs a little. Running along the wire's own net is cheaper than open space, so branches share a trunk.
+- **Order.** Pinned wires are placed first. Automatic wires follow, shortest connection first, then by ID, so the same sheet always draws the same way. A route found from a small neighbourhood is memoized by what lies near it, so a move re-routes only the wires around the moved block.
+- **Pinned wires** are the user's drawing: the route through their bends, leaving and entering along the port normals, with any loop cut out. It is used while it is valid (orthogonal, no loop or hairpin, not through any block body). An invalid pinned route is drawn automatically, and the saved-document boundary (`settleRoutes`, in `normalizeProject`) clears its bends, so what is stored is what is drawn.
+- No route loops, crosses itself, or doubles back into a terminal. A dot dropped onto a block, or two terminals on top of each other, are the only cases that cannot be kept out of a body.
+
+Physical and signal connections share this geometry; they differ only in connection laws.
 
 While reshaping, the path's stationary runs and endpoints are preferred alignment targets within eight screen pixels. Candidate alignment favors fewer segments, then shorter travel, then proximity. Free drawing excludes its own net from alignment candidates so a new branch does not collapse onto its parent trunk.
 
@@ -51,13 +58,24 @@ Coalesce nearby parallel runs and remove redundant collinear vertices or retrace
 
 A dragged block snaps each axis on its own: a connected terminal within 16 units of a horizontal line snaps vertically onto it, and one near a vertical line snaps horizontally, so one drag can straighten a signal wire and a shaft together. The line is the adjacent saved bend when the wire has pinned corners, otherwise the far terminal or junction dot; a far block terminal must face along the same axis. Otherwise the block's centerline snaps to the 20-unit grid. The drag preview and the saved move use the same rule, so a block lands where the preview showed it (`lib/gradara/placement.ts`).
 
-After a block moves on its own, `repairMovedRoutes` (`lib/gradara/net-layout.ts`) checks its wires. A pinned route that now doubles back into its terminal or runs through its own block releases the bends next to the moved end, one at a time, until it reads cleanly. An unpinned wire to a junction dot that the block was dragged past gets a route around the block. Good routes and wires of blocks that did not move are untouched; undo restores the previous geometry.
+A moved block carries the first run of each pinned wire (`carryLeads`, `lib/gradara/selection.ts`): the bend at the end of that run shifts with the block across the run, so a vertical lead stays vertical, and the rest of the drawing is kept. If the pinned route still reads badly, the router's rule above applies and the wire becomes automatic. A block moved along its own lead onto or past a junction dot carries the dot ahead of the terminal. Moving blocks with a region selection carries only wires whose both ends move; a wire the region merely touched, with an end on a block that stays, stretches instead of being pushed along. Undo restores the previous geometry.
 
 Junctions attached to an edited endpoint run follow that run perpendicular to its direction. This propagates along straight junction-to-junction paths; every affected branch changes in the same transaction. Moving or resizing a block also carries junctions sharing a whole straight run with the affected port. Conflicting moves on an axis keep the junction in place and bend the incident routes. Incident routes are stretched against the blocks' new positions, and an unpinned wire whose ends line up stays unpinned, so dragging a block away and back restores its junction and wires.
 
 Junction normalization can move an apparent branch point to the first actual divergence of overlapping incident paths, preserving the visible union and connectivity. An unrelated crossing, genuine four-way split, or collision with another terminal must not trigger that cleanup. Apply this rule generally across domain, orientation, stored endpoint order, and zoom.
 
-The router is not obstacle-aware. A newly pinned route overlapping a different net is rejected. Imported geometry or later block/bend movement can still create overlaps with other nets or blocks that require manual correction; the repair above only keeps a moved block's own wires out of its body. Never describe coordinate alignment as guaranteed obstacle avoidance.
+A newly pinned route overlapping a different net is rejected. Automatic routes go around every block; parallel runs of different nets are kept apart where a lane exists, but two nets may still share a line in a crowded area, and crossings are only discouraged.
+
+## Auto arrange
+
+⌘/Ctrl + Shift + A, or the arrange button in the canvas controls, redraws the selection (two or more blocks) or the whole sheet as one undo step (`arrangeBlocks`, `lib/gradara/arrange.ts`). Placement comes from the terminals, net by net: a net is a rail, a terminal facing right starts it, one facing left ends it, and terminals facing up or down hang under or over it. That gives, per net, an order along x (right-facing, then up/down-facing, then left-facing) and along y (down-facing, then right/left-facing, then up-facing). For signals, outputs lead to inputs. Sibling terminals on one net spread along the rail (parallel branches) or stack (fan-out), in flow order.
+
+1. **Columns**: the x orders give each block a column by longest path, after breaking cycles (feedback) greedily in flow order; the current drawing breaks ties. A block nothing orders along x (a ground) takes the column of what it hangs from.
+2. **Stacks**: in each column, blocks are ordered by the y orders and by the average height of what they connect to, then packed as close to their connections' lines as the spacing allows (least squares, block and name heights respected). Two starts (from the sources and from the sinks) are compared and the one with fewer crossings and straighter connections wins.
+3. **Straightening**: connected terminals facing each other are pulled onto one line where that keeps every block and name clear.
+4. **Wiring**: every wire touching an arranged block loses its pinned bends. A net with three or more terminals, all arranged, is drawn again: a signal from its source to each input, a physical net as the shortest tree over its terminals. The router draws the rest, and the saved-document boundary turns the runs a net shares into trunks and dots.
+
+Block names return under their blocks. A whole-sheet arrangement starts at the sheet margin and puts section notes in a band above the drawing, in the order of the blocks they were next to; a selection keeps its top-left corner, steps clear of the blocks that stay, and moves its notes with their blocks. Arranging an arranged sheet again changes nothing.
 
 ## Connected selections
 
@@ -105,12 +123,14 @@ Waypoints, junction positions, names, and label placement are presentation metad
 | --- | --- |
 | Pointer ownership and rendering | [net-layer.tsx](../../components/gradara/net-layer.tsx) |
 | Drawing/reconnect/redraw transaction | [net-session.ts](../../lib/gradara/net-session.ts) |
-| Polylines, targets, and anchors | [net-draw.ts](../../lib/gradara/net-draw.ts), [routing.ts](../../lib/gradara/routing.ts) |
+| Sheet routing (all drawn geometry) | [router.ts](../../lib/gradara/router.ts), [routing.ts](../../lib/gradara/routing.ts) |
+| Auto arrange | [arrange.ts](../../lib/gradara/arrange.ts) |
+| Polylines, targets, and anchors | [net-draw.ts](../../lib/gradara/net-draw.ts) |
 | Segment editing and junction motion | [net-edit.ts](../../lib/gradara/net-edit.ts), [net-layout.ts](../../lib/gradara/net-layout.ts) |
 | Selection and copy gestures | [selection.ts](../../lib/gradara/selection.ts), [copy-drag.ts](../../lib/gradara/copy-drag.ts) |
 | Topology, identity, and naming | [net.ts](../../lib/gradara/net.ts), [net-registry.ts](../../lib/gradara/net-registry.ts), [names.ts](../../lib/gradara/names.ts) |
 
-Geometry and graph regressions live in `tests/wiring.test.ts`, `tests/selection.test.ts`, `tests/nets.test.ts`, and `tests/names.test.ts`. Combine them with the [browser acceptance checks](../development/TESTING.md); coordinate tests alone do not establish smooth interaction. Block rotation is implemented. Edge-pan, insertion into wires, flip, obstacle avoidance, and measured large-diagram performance remain roadmap work.
+Geometry and graph regressions live in `tests/wiring.test.ts`, `tests/selection.test.ts`, `tests/nets.test.ts`, `tests/drag.test.ts`, `tests/arrange.test.ts`, and `tests/names.test.ts`. Combine them with the [browser acceptance checks](../development/TESTING.md); coordinate tests alone do not establish smooth interaction. Block rotation is implemented; a rotated block's wires are routed afresh. Edge-pan, insertion into wires, flip, lane assignment for parallel wires of different nets, and measured large-diagram performance remain roadmap work.
 
 ### Shared terminal runs
 

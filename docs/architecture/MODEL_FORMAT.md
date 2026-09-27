@@ -79,7 +79,7 @@ Ports have `direction` (`input`, `output`, or `physical`), their own `domain`, o
 
 A wire links endpoint IDs plus port handles. An endpoint can name a block or a junction. Waypoints shape the route; they do not define signal evaluation order. A visual crossing is not connectivity unless the graph includes the connection.
 
-In frontend route operations, omitted `waypoints` permits automatic orthogonal routing from the endpoints; an explicit empty array preserves a straight route. The Python `Wire` schema currently defaults absent waypoints to an empty list, so serialized API round trips do not retain that distinction in all cases. Treat this as a known contract gap when editing persistence or routing; do not assume an absence-preserving round trip exists.
+`waypoints` are the bends a user pinned. Omitted or empty, the wire is automatic: the sheet router (`lib/gradara/router.ts`) draws it around blocks from the endpoints. Pinned bends are used while the route through them is valid; the saved-document boundary clears bends the router could not use, so stored and drawn geometry agree. Because absent and empty mean the same thing, the Python `Wire` default of an empty list round-trips without changing any drawing.
 
 A junction has its own ID, position, and domain. The Modelica emitter resolves connected components through junctions into connector equations. Moving the junction changes geometry, not electrical or mechanical laws.
 
