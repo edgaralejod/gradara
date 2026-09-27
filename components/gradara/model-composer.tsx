@@ -7,10 +7,7 @@ import { notifyAiChanged, useAiLabel } from '@/lib/gradara/ai';
 import { Textarea } from '@/components/ui/textarea';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
 import { library, domainColors, type Project } from '@/lib/gradara/model';
-import {
-  defaultBlockSize,
-  snapBlockPosition,
-} from '@/lib/gradara/block-design';
+import { layoutProject } from '@/lib/gradara/auto-layout';
 import { portPoint, sideToPosition } from '@/lib/gradara/ports';
 import { pointsToPath, routeBetween } from '@/lib/gradara/routing';
 import { refreshGeneratedLibrary } from '@/lib/gradara/generated-library';
@@ -24,30 +21,8 @@ type ModelDraft = {
   samples: number;
 };
 
-function positionDraft(project: Project): Project {
-  const sizes = project.blocks.map((block) =>
-    defaultBlockSize(block.definition),
-  );
-  const pitchX = Math.max(320, ...sizes.map((size) => size.width + 120));
-  const pitchY = Math.max(224, ...sizes.map((size) => size.height + 120));
-  return {
-    ...project,
-    blocks: project.blocks.map((block) => {
-      const size = defaultBlockSize(block.definition);
-      return {
-        ...block,
-        size,
-        position: snapBlockPosition(
-          {
-            x: (block.position.x / 320) * pitchX + pitchX / 2 - size.width / 2,
-            y: (block.position.y / 224) * pitchY + pitchY / 2 - size.height / 2,
-          },
-          size,
-        ),
-      };
-    }),
-  };
-}
+/** Generated models get the same house-style layout as agent edits (see auto-layout.ts). */
+const positionDraft = (project: Project): Project => layoutProject(project);
 
 function DiagramPreview({ project }: { project: Project }) {
   const blocks = new Map(project.blocks.map((block) => [block.id, block]));

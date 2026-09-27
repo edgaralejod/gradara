@@ -51,7 +51,7 @@ The compact library uses the same face, uniformly scaled to fit a 36 × 28 thumb
 
 ## Placement alignment
 
-New blocks and dragged blocks snap their horizontal centerline to the 20-unit placement grid, rather than snapping their top-left corner. This lets the standard 80 × 64 body, 40 × 40 Sum, and custom heights share a straight signal line. Connected-port alignment takes precedence on release; grouped blocks retain their relative spacing. Never change port geometry to compensate for placement.
+New blocks and dragged blocks snap their horizontal centerline to the 20-unit placement grid, rather than snapping their top-left corner. This lets the standard 80 × 64 body, 40 × 40 Sum, and custom heights share a straight signal line. Connected-port alignment takes precedence on release; grouped blocks retain their relative spacing. Never change port geometry to compensate for placement. Blocks that an agent adds are placed by `lib/gradara/auto-layout.ts` under the same rules (see the [execution guide](../architecture/EXECUTION.md)); agents never choose coordinates.
 
 ## Saved layout compatibility
 
