@@ -4,10 +4,14 @@ import type { Project, Definition, Wire } from './model';
 import { compatible, portOf } from './model';
 import { connectionError, endpointPort, flattenWires, isTap } from './net';
 import { emptySelection, extractSelection, pasteSelection } from './selection';
-export function semanticSignature(p: Project) {
-  return JSON.stringify({
-    duration: p.duration,
-    loggedNets: (p.nets ?? []).filter((n) => n.logged).map((n) => n.id).sort(),
+function sheetSemantics(
+  p: Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>,
+) {
+  return {
+    loggedNets: (p.nets ?? [])
+      .filter((n) => n.logged)
+      .map((n) => n.id)
+      .sort(),
     blocks: p.blocks.map((b) => ({
       id: b.id,
       kind: b.definition.kind,
@@ -16,10 +20,44 @@ export function semanticSignature(p: Project) {
       parameters: b.definition.parameters.map((x) => [x.id, x.value]),
       declarations: b.definition.declarations ?? '',
       equations: b.definition.equations,
+      ...(b.definition.subsystem
+        ? {
+            subsystem: b.definition.subsystem.ref,
+            variants: (b.definition.subsystem.variants ?? []).map((v) => [
+              v.id,
+              v.ref,
+              v.unused ?? [],
+            ]),
+          }
+        : {}),
+      ...(b.definition.modelica ? { modelica: b.definition.modelica } : {}),
     })),
-    wires: flattenWires(p)
+    wires: flattenWires(p as Project)
       .map((w) => [w.source, w.sourceHandle, w.target, w.targetHandle])
       .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
+  };
+}
+
+export function semanticSignature(p: Project) {
+  const { loggedNets, blocks, wires } = sheetSemantics(p);
+  return JSON.stringify({
+    duration: p.duration,
+    loggedNets,
+    blocks,
+    wires,
+    ...(p.subsystems?.length
+      ? {
+          subsystems: p.subsystems.map((s) => ({
+            id: s.id,
+            parameters: (s.parameters ?? []).map((x) => [
+              x.id,
+              x.value,
+              x.targets,
+            ]),
+            ...sheetSemantics({ ...s, junctions: s.junctions ?? [] }),
+          })),
+        }
+      : {}),
   });
 }
 /** Move a label independently of its block and all connected geometry. */

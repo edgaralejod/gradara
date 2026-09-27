@@ -1,0 +1,3361 @@
+{
+  "version": 2,
+  "name": "EV drivetrain",
+  "exampleId": "ev",
+  "description": "A battery electric vehicle in three levels: vehicle control and powertrain at the top; battery pack and motor drive inside the powertrain; an averaged DC-DC converter inside the motor drive. Two variant subsystems switch battery chemistry (LFP, NMC) and motor type (PM DC machine, simple DC motor); two configurations pick them together.",
+  "duration": 20,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "request",
+      "definition": {
+        "kind": "ramp",
+        "name": "Speed request",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 0.5,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 120
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "cruise",
+      "definition": {
+        "kind": "saturation",
+        "name": "Cruise speed",
+        "description": "Clamp a signal between lower and upper limits.",
+        "domain": "signal",
+        "symbol": "sat",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "lower",
+            "name": "Lower limit",
+            "value": 0,
+            "unit": ""
+          },
+          {
+            "id": "upper",
+            "name": "Upper limit",
+            "value": 5,
+            "unit": ""
+          }
+        ],
+        "equations": "y = max(lower, min(upper, u));"
+      },
+      "position": {
+        "x": 220,
+        "y": 120
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "wheel",
+      "definition": {
+        "kind": "rollingWheel",
+        "name": "Wheel",
+        "description": "Converts rotation to translation without slip: v = r·ω.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "wheel",
+        "ports": [
+          {
+            "id": "flangeR",
+            "name": "rot",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flangeT",
+            "name": "lin",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "radius",
+            "name": "Radius",
+            "value": 0.3,
+            "unit": "m",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.IdealRollingWheel from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "vehicle",
+          "tire",
+          "rack"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.IdealRollingWheel",
+          "modifiers": {
+            "radius": "radius"
+          }
+        }
+      },
+      "position": {
+        "x": 880,
+        "y": 104
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "car",
+      "definition": {
+        "kind": "mass",
+        "name": "Vehicle mass",
+        "description": "A sliding mass with two flanges: m·a = f_a + f_b.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "m",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "m",
+            "name": "Mass",
+            "value": 1200,
+            "unit": "kg",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Mass from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "inertia",
+          "body",
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Mass",
+          "modifiers": {
+            "m": "m"
+          }
+        }
+      },
+      "position": {
+        "x": 1100,
+        "y": 120
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "drag",
+      "definition": {
+        "kind": "transDamper",
+        "name": "Road drag",
+        "description": "Linear damper: f = d·v_rel.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "b",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "d",
+            "name": "Damping",
+            "value": 40,
+            "unit": "N·s/m",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Damper from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "viscous",
+          "shock absorber"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Damper",
+          "modifiers": {
+            "d": "d"
+          }
+        }
+      },
+      "position": {
+        "x": 1300,
+        "y": 120
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "road",
+      "definition": {
+        "kind": "transFixed",
+        "name": "Road",
+        "description": "A translational flange fixed at a constant position.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "top"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "s0",
+            "name": "Position",
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Fixed from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ground",
+          "wall",
+          "reference"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Fixed",
+          "modifiers": {
+            "s0": "s0"
+          }
+        }
+      },
+      "position": {
+        "x": 1316,
+        "y": 300
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "speed",
+      "definition": {
+        "kind": "velocitySensor",
+        "name": "Vehicle speed",
+        "description": "Absolute velocity of the flange.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "v",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "v",
+            "name": "v",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Translational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "speed"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 1100,
+        "y": 300
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "b_6094638ba0",
+      "definition": {
+        "kind": "subsystem",
+        "name": "Powertrain",
+        "description": "Subsystem Powertrain: 3 blocks inside.",
+        "domain": "mechanical",
+        "symbol": "Powertrain",
+        "ports": [
+          {
+            "id": "p_a6d3307198",
+            "name": "duty",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "p_f3c715c228",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "subsystem": {
+          "ref": "sub_43fbabf6ac"
+        }
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "position": {
+        "x": 660,
+        "y": 104
+      }
+    },
+    {
+      "id": "b_e8a4cd96a8",
+      "definition": {
+        "kind": "subsystem",
+        "name": "Vehicle control",
+        "description": "Subsystem Vehicle control: 3 blocks inside.",
+        "domain": "signal",
+        "symbol": "Vehicle control",
+        "ports": [
+          {
+            "id": "p_89eced1c23",
+            "name": "v ref",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "p_9b88ade7a7",
+            "name": "v",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "p_9b3406cb9d",
+            "name": "duty",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "subsystem": {
+          "ref": "sub_be502a6306"
+        }
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "position": {
+        "x": 420,
+        "y": 104
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "8d963eb1-75c6-4add-9432-982d571be87e",
+      "source": "request",
+      "sourceHandle": "y",
+      "target": "cruise",
+      "targetHandle": "u"
+    },
+    {
+      "id": "94be8356-217e-4ce4-9f72-1969ae34700f",
+      "source": "cruise",
+      "sourceHandle": "y",
+      "target": "b_e8a4cd96a8",
+      "targetHandle": "p_89eced1c23"
+    },
+    {
+      "id": "cc98029f-70a5-478f-8191-a1dfb89b53c2",
+      "source": "speed",
+      "sourceHandle": "v",
+      "target": "b_e8a4cd96a8",
+      "targetHandle": "p_9b88ade7a7"
+    },
+    {
+      "id": "dab21800-b1aa-4bef-9431-2986c791a027",
+      "source": "b_e8a4cd96a8",
+      "sourceHandle": "p_9b3406cb9d",
+      "target": "b_6094638ba0",
+      "targetHandle": "p_a6d3307198"
+    },
+    {
+      "id": "4db9f68a-8809-413d-a9e1-4d5739334467",
+      "source": "b_6094638ba0",
+      "sourceHandle": "p_f3c715c228",
+      "target": "wheel",
+      "targetHandle": "flangeR"
+    },
+    {
+      "id": "c9e4afc3-4caa-4e29-b7df-2c8621626c58",
+      "source": "wheel",
+      "sourceHandle": "flangeT",
+      "target": "j_23142b0711484d3fb400eec05c3ca1ca",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "0162cb66-1a25-4607-b96f-616323fece48",
+      "source": "j_23142b0711484d3fb400eec05c3ca1ca",
+      "sourceHandle": "node",
+      "target": "speed",
+      "targetHandle": "flange",
+      "waypoints": [
+        {
+          "x": 1080,
+          "y": 348
+        }
+      ]
+    },
+    {
+      "id": "70555035-e1be-4806-9f22-24910fa3602b",
+      "source": "car",
+      "sourceHandle": "flange_b",
+      "target": "drag",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "227a27cd-fcb3-4b91-822c-1d3ef92a5ccc",
+      "source": "drag",
+      "sourceHandle": "flange_b",
+      "target": "road",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "w_ccd1197d424349beb09d941935e78476",
+      "source": "car",
+      "sourceHandle": "flange_a",
+      "target": "j_23142b0711484d3fb400eec05c3ca1ca",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_23142b0711484d3fb400eec05c3ca1ca",
+      "domain": "translational",
+      "position": {
+        "x": 1080,
+        "y": 152
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_9f7be9f33f954b8e849b25d57d728d36",
+      "anchor": "request.y",
+      "wireIds": [
+        "8d963eb1-75c6-4add-9432-982d571be87e"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_3726f15dce1244318897ddf3729a8b8a",
+      "anchor": "cruise.y",
+      "wireIds": [
+        "94be8356-217e-4ce4-9f72-1969ae34700f"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_1ee534eb3489445f83eb512371bc6a11",
+      "anchor": "speed.v",
+      "wireIds": [
+        "cc98029f-70a5-478f-8191-a1dfb89b53c2"
+      ],
+      "name": "v vehicle",
+      "logged": true
+    },
+    {
+      "id": "net_40fb2d23eef04cc985357911fc96383b",
+      "anchor": "b_e8a4cd96a8.p_9b3406cb9d",
+      "wireIds": [
+        "dab21800-b1aa-4bef-9431-2986c791a027"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_3e6f93e4fdfe4426b57a68a344756cf1",
+      "anchor": "b_6094638ba0.p_f3c715c228",
+      "wireIds": [
+        "4db9f68a-8809-413d-a9e1-4d5739334467"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_f95f2f74ee6e418b9b2e016a29e4fdbb",
+      "anchor": "car.flange_a",
+      "wireIds": [
+        "0162cb66-1a25-4607-b96f-616323fece48",
+        "c9e4afc3-4caa-4e29-b7df-2c8621626c58",
+        "w_ccd1197d424349beb09d941935e78476"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_1b6a5116c1074424b7a597072fb5955f",
+      "anchor": "car.flange_b",
+      "wireIds": [
+        "70555035-e1be-4806-9f22-24910fa3602b"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_367166d8c6bf4ed69ff8e98e2068fcdd",
+      "anchor": "drag.flange_b",
+      "wireIds": [
+        "227a27cd-fcb3-4b91-822c-1d3ef92a5ccc"
+      ],
+      "hidden": true
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "speed",
+      "label": "Vehicle speed",
+      "series": [
+        "speed.v",
+        "cruise.y"
+      ],
+      "labels": [
+        "Vehicle speed",
+        "Speed request"
+      ]
+    }
+  ],
+  "modelId": "510e6664-0194-4b01-89ec-9a8e5b28081f",
+  "subsystems": [
+    {
+      "id": "sub_19524c9994",
+      "name": "Converter",
+      "blocks": [
+        {
+          "id": "vdc",
+          "definition": {
+            "kind": "voltageSensor",
+            "name": "DC voltage",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "V",
+            "description": "Measures voltage between two electrical nodes without loading the circuit.",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "domain": "electrical",
+                "direction": "physical",
+                "side": "top"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "domain": "electrical",
+                "direction": "physical",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "V",
+                "direction": "output",
+                "side": "right",
+                "domain": "signal",
+                "unit": "V"
+              }
+            ],
+            "parameters": [],
+            "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+            "keywords": [
+              "measure",
+              "voltmeter",
+              "probe"
+            ]
+          },
+          "position": {
+            "x": 216,
+            "y": 168
+          },
+          "size": {
+            "width": 48,
+            "height": 80
+          }
+        },
+        {
+          "id": "scale",
+          "definition": {
+            "kind": "product",
+            "name": "d·Vdc",
+            "symbol": "×",
+            "domain": "signal",
+            "description": "Multiply two signals.",
+            "ports": [
+              {
+                "id": "a",
+                "name": "a",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "b",
+                "name": "b",
+                "direction": "input",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = a * b;",
+            "parameters": [],
+            "declarations": "",
+            "keywords": [
+              "math",
+              "multiply"
+            ]
+          },
+          "position": {
+            "x": 560,
+            "y": 424
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "source",
+          "definition": {
+            "kind": "signalVoltage",
+            "name": "Output voltage",
+            "description": "Voltage equal to the input signal.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "v(u)",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "top"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "bottom"
+              },
+              {
+                "id": "v",
+                "name": "v",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "// Electrical.Analog.Sources.SignalVoltage from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "amplifier",
+              "programmable"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sources.SignalVoltage"
+            }
+          },
+          "position": {
+            "x": 760,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "iout",
+          "definition": {
+            "kind": "currentSensor",
+            "name": "Output current",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "A",
+            "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "domain": "electrical",
+                "direction": "physical",
+                "side": "left"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "domain": "electrical",
+                "direction": "physical",
+                "side": "right"
+              },
+              {
+                "id": "y",
+                "name": "A",
+                "direction": "output",
+                "side": "bottom",
+                "domain": "signal",
+                "unit": "A"
+              }
+            ],
+            "parameters": [],
+            "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+            "keywords": [
+              "measure",
+              "ammeter",
+              "probe"
+            ]
+          },
+          "position": {
+            "x": 920,
+            "y": 32
+          },
+          "size": {
+            "width": 80,
+            "height": 48
+          }
+        },
+        {
+          "id": "draw",
+          "definition": {
+            "kind": "product",
+            "name": "d·Iout",
+            "symbol": "×",
+            "domain": "signal",
+            "description": "Multiply two signals.",
+            "ports": [
+              {
+                "id": "a",
+                "name": "a",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "b",
+                "name": "b",
+                "direction": "input",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = a * b;",
+            "parameters": [],
+            "declarations": "",
+            "keywords": [
+              "math",
+              "multiply"
+            ]
+          },
+          "position": {
+            "x": 216,
+            "y": 520
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "sink",
+          "definition": {
+            "kind": "signalCurrent",
+            "name": "DC current",
+            "description": "Current equal to the input signal.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "i(u)",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "top"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "bottom"
+              },
+              {
+                "id": "i",
+                "name": "i",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "// Electrical.Analog.Sources.SignalCurrent from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "load",
+              "programmable"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sources.SignalCurrent"
+            }
+          },
+          "position": {
+            "x": 392,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "outGround",
+          "definition": {
+            "kind": "ground",
+            "name": "Output ground",
+            "description": "Electrical reference potential.",
+            "domain": "electrical",
+            "symbol": "ground",
+            "ports": [
+              {
+                "id": "p",
+                "name": "0 V",
+                "domain": "electrical",
+                "side": "top",
+                "direction": "physical"
+              }
+            ],
+            "parameters": [],
+            "equations": "p.v = 0;"
+          },
+          "position": {
+            "x": 776,
+            "y": 408
+          },
+          "size": {
+            "width": 40,
+            "height": 40
+          }
+        },
+        {
+          "id": "p_5bc8194567",
+          "definition": {
+            "kind": "connport",
+            "name": "dc+",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 48
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_99330b60ca",
+          "definition": {
+            "kind": "connport",
+            "name": "dc−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 328
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_f23b6cde46",
+          "definition": {
+            "kind": "inport",
+            "name": "duty",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "3",
+            "ports": [
+              {
+                "id": "y",
+                "name": "duty",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 456
+          },
+          "size": {
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_1a1fce0995",
+          "definition": {
+            "kind": "connport",
+            "name": "out+",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "out+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 3,
+              "side": "right"
+            }
+          },
+          "position": {
+            "x": 1080,
+            "y": 48
+          },
+          "size": {
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_27f08547f0",
+          "definition": {
+            "kind": "connport",
+            "name": "out−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "out−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 4
+            }
+          },
+          "position": {
+            "x": 1080,
+            "y": 328
+          },
+          "size": {
+            "width": 88,
+            "height": 32
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "21254b70-9d50-4749-b84d-8f7cdc98eade",
+          "source": "p_5bc8194567",
+          "sourceHandle": "p",
+          "target": "j_76717e7e03e34d628d2d9c645b7a7aa5",
+          "targetHandle": "node",
+          "waypoints": [
+            {
+              "x": 240,
+              "y": 64
+            }
+          ]
+        },
+        {
+          "id": "ca561550-b7b5-4f2e-8ad7-7313cc665b7d",
+          "source": "j_76717e7e03e34d628d2d9c645b7a7aa5",
+          "sourceHandle": "node",
+          "target": "sink",
+          "targetHandle": "p",
+          "waypoints": [
+            {
+              "x": 432,
+              "y": 148
+            }
+          ]
+        },
+        {
+          "id": "7776389b-0edb-40da-947a-6b96ff8a8d91",
+          "source": "p_99330b60ca",
+          "sourceHandle": "p",
+          "target": "j_eaa677f65e7a47539a6527045fe77970",
+          "targetHandle": "node",
+          "waypoints": [
+            {
+              "x": 240,
+              "y": 344
+            }
+          ]
+        },
+        {
+          "id": "5419c4a9-50d5-4009-9cc1-847df9faa61f",
+          "source": "j_eaa677f65e7a47539a6527045fe77970",
+          "sourceHandle": "node",
+          "target": "sink",
+          "targetHandle": "n",
+          "waypoints": [
+            {
+              "x": 432,
+              "y": 268
+            }
+          ]
+        },
+        {
+          "id": "baa758c4-d88e-4a45-9352-b7c2024a64e5",
+          "source": "j_c890e93e45f34b5880e00fa7075f3d62",
+          "sourceHandle": "node",
+          "target": "draw",
+          "targetHandle": "a",
+          "waypoints": [
+            {
+              "x": 172,
+              "y": 552
+            }
+          ]
+        },
+        {
+          "id": "b96fc4c1-67a9-4d6b-aefd-4383f3b9b109",
+          "source": "j_c890e93e45f34b5880e00fa7075f3d62",
+          "sourceHandle": "node",
+          "target": "scale",
+          "targetHandle": "a",
+          "waypoints": [
+            {
+              "x": 344,
+              "y": 472
+            },
+            {
+              "x": 344,
+              "y": 456
+            }
+          ]
+        },
+        {
+          "id": "821c35ee-2366-4e4a-875a-8f81a5ba227a",
+          "source": "vdc",
+          "sourceHandle": "y",
+          "target": "scale",
+          "targetHandle": "b"
+        },
+        {
+          "id": "f85c1b02-4f2d-421b-aa57-a56c22eea995",
+          "source": "scale",
+          "sourceHandle": "y",
+          "target": "source",
+          "targetHandle": "v"
+        },
+        {
+          "id": "5c5fb118-a18a-459b-b75c-a3c5b816e49b",
+          "source": "iout",
+          "sourceHandle": "y",
+          "target": "draw",
+          "targetHandle": "b"
+        },
+        {
+          "id": "3df734ff-a0a3-4a5f-9936-584a47db1ee5",
+          "source": "draw",
+          "sourceHandle": "y",
+          "target": "sink",
+          "targetHandle": "i"
+        },
+        {
+          "id": "91f292f6-4df5-4d19-9e09-c112ddcee026",
+          "source": "source",
+          "sourceHandle": "p",
+          "target": "iout",
+          "targetHandle": "p"
+        },
+        {
+          "id": "4cc79812-a791-4aa9-8d52-7f38ff10345d",
+          "source": "iout",
+          "sourceHandle": "n",
+          "target": "p_1a1fce0995",
+          "targetHandle": "p"
+        },
+        {
+          "id": "565643df-bc5d-4ffe-b1d2-2c4dca23512e",
+          "source": "source",
+          "sourceHandle": "n",
+          "target": "j_ddb146599e414a908ae37818d5b05845",
+          "targetHandle": "node",
+          "waypoints": [
+            {
+              "x": 800,
+              "y": 320
+            },
+            {
+              "x": 796,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "398535bb-c616-4190-b499-271d142a474a",
+          "source": "j_ddb146599e414a908ae37818d5b05845",
+          "sourceHandle": "node",
+          "target": "p_27f08547f0",
+          "targetHandle": "p",
+          "waypoints": [
+            {
+              "x": 1188,
+              "y": 388
+            },
+            {
+              "x": 1188,
+              "y": 344
+            }
+          ]
+        },
+        {
+          "id": "w_941f88716d9147b386776ce8dd8963ce",
+          "source": "vdc",
+          "sourceHandle": "p",
+          "target": "j_76717e7e03e34d628d2d9c645b7a7aa5",
+          "targetHandle": "node",
+          "waypoints": []
+        },
+        {
+          "id": "w_c8eb8297756a43ba886e017c6926e805",
+          "source": "vdc",
+          "sourceHandle": "n",
+          "target": "j_eaa677f65e7a47539a6527045fe77970",
+          "targetHandle": "node",
+          "waypoints": []
+        },
+        {
+          "id": "w_f7a1a3491ca44a868d3897f041483b70",
+          "source": "p_f23b6cde46",
+          "sourceHandle": "y",
+          "target": "j_c890e93e45f34b5880e00fa7075f3d62",
+          "targetHandle": "node",
+          "waypoints": []
+        },
+        {
+          "id": "w_426da9f016374b50b653b36efe828112",
+          "source": "outGround",
+          "sourceHandle": "p",
+          "target": "j_ddb146599e414a908ae37818d5b05845",
+          "targetHandle": "node",
+          "waypoints": []
+        }
+      ],
+      "junctions": [
+        {
+          "id": "j_76717e7e03e34d628d2d9c645b7a7aa5",
+          "domain": "electrical",
+          "position": {
+            "x": 240,
+            "y": 148
+          }
+        },
+        {
+          "id": "j_eaa677f65e7a47539a6527045fe77970",
+          "domain": "electrical",
+          "position": {
+            "x": 240,
+            "y": 268
+          }
+        },
+        {
+          "id": "j_c890e93e45f34b5880e00fa7075f3d62",
+          "domain": "signal",
+          "position": {
+            "x": 172,
+            "y": 472
+          }
+        },
+        {
+          "id": "j_ddb146599e414a908ae37818d5b05845",
+          "domain": "electrical",
+          "position": {
+            "x": 796,
+            "y": 388
+          }
+        }
+      ],
+      "nets": [
+        {
+          "id": "net_77088edc67bc49efafde5ec1a439e8d5",
+          "anchor": "p_5bc8194567.p",
+          "wireIds": [
+            "21254b70-9d50-4749-b84d-8f7cdc98eade",
+            "ca561550-b7b5-4f2e-8ad7-7313cc665b7d",
+            "w_941f88716d9147b386776ce8dd8963ce"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_9340b49ca5fa4cae884e04cfcbfc997b",
+          "anchor": "p_99330b60ca.p",
+          "wireIds": [
+            "5419c4a9-50d5-4009-9cc1-847df9faa61f",
+            "7776389b-0edb-40da-947a-6b96ff8a8d91",
+            "w_c8eb8297756a43ba886e017c6926e805"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_cbfa0c238a714d4d990185c8137e16c4",
+          "anchor": "p_f23b6cde46.y",
+          "wireIds": [
+            "b96fc4c1-67a9-4d6b-aefd-4383f3b9b109",
+            "baa758c4-d88e-4a45-9352-b7c2024a64e5",
+            "w_f7a1a3491ca44a868d3897f041483b70"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_3c202e1f6a31493b890c37981aaa416b",
+          "anchor": "vdc.y",
+          "wireIds": [
+            "821c35ee-2366-4e4a-875a-8f81a5ba227a"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_d91c16b3d44a4fdca914ea282b73ec3b",
+          "anchor": "scale.y",
+          "wireIds": [
+            "f85c1b02-4f2d-421b-aa57-a56c22eea995"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_e043c406ec304bc1ad34c286ad0e1de3",
+          "anchor": "iout.y",
+          "wireIds": [
+            "5c5fb118-a18a-459b-b75c-a3c5b816e49b"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_26e71f569f964f37ab8da7e6a402dc54",
+          "anchor": "draw.y",
+          "wireIds": [
+            "3df734ff-a0a3-4a5f-9936-584a47db1ee5"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_6d4a11de52794f01a57e619777158781",
+          "anchor": "iout.p",
+          "wireIds": [
+            "91f292f6-4df5-4d19-9e09-c112ddcee026"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_73b95bf38dd04212a8fb03aee4891367",
+          "anchor": "iout.n",
+          "wireIds": [
+            "4cc79812-a791-4aa9-8d52-7f38ff10345d"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_4df94716f8ff4df6b929c66b9d7744fa",
+          "anchor": "outGround.p",
+          "wireIds": [
+            "398535bb-c616-4190-b499-271d142a474a",
+            "565643df-bc5d-4ffe-b1d2-2c4dca23512e",
+            "w_426da9f016374b50b653b36efe828112"
+          ],
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "sub_e4cb9dd538",
+      "name": "Motor drive",
+      "blocks": [
+        {
+          "id": "machine",
+          "definition": {
+            "kind": "dcPmMachine",
+            "name": "PM DC machine",
+            "description": "Permanent-magnet DC machine with armature resistance and inductance.",
+            "domain": "electrical",
+            "category": "machines",
+            "symbol": "DC",
+            "ports": [
+              {
+                "id": "pin_ap",
+                "name": "a+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "pin_an",
+                "name": "a−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "flange",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "right"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "VaNominal",
+                "name": "Nominal voltage",
+                "value": 100,
+                "unit": "V",
+                "min": 0
+              },
+              {
+                "id": "IaNominal",
+                "name": "Nominal current",
+                "value": 100,
+                "unit": "A",
+                "min": 0
+              },
+              {
+                "id": "wNominal",
+                "name": "Nominal speed",
+                "value": 149.2,
+                "unit": "rad/s",
+                "min": 0
+              },
+              {
+                "id": "Ra",
+                "name": "Armature resistance",
+                "value": 0.05,
+                "unit": "Ω",
+                "min": 0
+              },
+              {
+                "id": "La",
+                "name": "Armature inductance",
+                "value": 0.0015,
+                "unit": "H",
+                "min": 0
+              },
+              {
+                "id": "Jr",
+                "name": "Rotor inertia",
+                "value": 0.15,
+                "unit": "kg·m²",
+                "min": 0
+              }
+            ],
+            "equations": "// Electrical.Machines.BasicMachines.DCMachines.DC_PermanentMagnet from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "motor",
+              "generator",
+              "dc motor"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Machines.BasicMachines.DCMachines.DC_PermanentMagnet",
+              "modifiers": {
+                "TaOperational": "293.15",
+                "TaNominal": "293.15",
+                "TaRef": "293.15",
+                "VaNominal": "VaNominal",
+                "IaNominal": "IaNominal",
+                "wNominal": "wNominal",
+                "Ra": "Ra",
+                "La": "La",
+                "Jr": "Jr"
+              }
+            }
+          },
+          "position": {
+            "x": 480,
+            "y": 104
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          }
+        },
+        {
+          "id": "b_7138b154bc",
+          "definition": {
+            "kind": "subsystem",
+            "name": "Converter",
+            "description": "Subsystem Converter: 7 blocks inside.",
+            "domain": "electrical",
+            "symbol": "Converter",
+            "ports": [
+              {
+                "id": "p_5bc8194567",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_99330b60ca",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_f23b6cde46",
+                "name": "duty",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "p_1a1fce0995",
+                "name": "out+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              },
+              {
+                "id": "p_27f08547f0",
+                "name": "out−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "subsystem": {
+              "ref": "sub_19524c9994"
+            }
+          },
+          "size": {
+            "width": 128,
+            "height": 120
+          },
+          "position": {
+            "x": 240,
+            "y": 96
+          }
+        },
+        {
+          "id": "p_ca38b366fe",
+          "definition": {
+            "kind": "connport",
+            "name": "dc+",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 96
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_57241ddf31",
+          "definition": {
+            "kind": "connport",
+            "name": "dc−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_8cf7b35ef6",
+          "definition": {
+            "kind": "inport",
+            "name": "duty",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "3",
+            "ports": [
+              {
+                "id": "y",
+                "name": "duty",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 240
+          },
+          "size": {
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_2e7bef55d4",
+          "definition": {
+            "kind": "connport",
+            "name": "shaft",
+            "description": "Physical mechanical terminal of the subsystem.",
+            "domain": "mechanical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 3,
+              "side": "right"
+            }
+          },
+          "position": {
+            "x": 720,
+            "y": 136
+          },
+          "size": {
+            "width": 96,
+            "height": 32
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "bc8c2949-4a4e-4273-be93-7a77774ca3cc",
+          "source": "p_ca38b366fe",
+          "sourceHandle": "p",
+          "target": "b_7138b154bc",
+          "targetHandle": "p_5bc8194567"
+        },
+        {
+          "id": "de3c9a99-8968-403a-8e67-31f84204a657",
+          "source": "p_57241ddf31",
+          "sourceHandle": "p",
+          "target": "b_7138b154bc",
+          "targetHandle": "p_99330b60ca"
+        },
+        {
+          "id": "ae21924f-4add-4d15-9645-a395f298e9f8",
+          "source": "p_8cf7b35ef6",
+          "sourceHandle": "y",
+          "target": "b_7138b154bc",
+          "targetHandle": "p_f23b6cde46"
+        },
+        {
+          "id": "976557b5-55ae-4984-91f9-e701f1d349da",
+          "source": "b_7138b154bc",
+          "sourceHandle": "p_1a1fce0995",
+          "target": "machine",
+          "targetHandle": "pin_ap"
+        },
+        {
+          "id": "fc02690b-6db5-499a-a59c-35d0272e4bd4",
+          "source": "b_7138b154bc",
+          "sourceHandle": "p_27f08547f0",
+          "target": "machine",
+          "targetHandle": "pin_an"
+        },
+        {
+          "id": "04978d57-24cf-4e99-8305-b2b777d0487f",
+          "source": "machine",
+          "sourceHandle": "flange",
+          "target": "p_2e7bef55d4",
+          "targetHandle": "p"
+        }
+      ],
+      "junctions": [],
+      "nets": [
+        {
+          "id": "net_5097e924439c4301b0b0cd701e4ae07c",
+          "anchor": "b_7138b154bc.p_5bc8194567",
+          "wireIds": [
+            "bc8c2949-4a4e-4273-be93-7a77774ca3cc"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_3a4d1d7ae6324157a7b5e529cf6ccb98",
+          "anchor": "b_7138b154bc.p_99330b60ca",
+          "wireIds": [
+            "de3c9a99-8968-403a-8e67-31f84204a657"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_175ef44a685e488086e78fab88936dbe",
+          "anchor": "p_8cf7b35ef6.y",
+          "wireIds": [
+            "ae21924f-4add-4d15-9645-a395f298e9f8"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_11368b81158d4734acd0192a561cd751",
+          "anchor": "b_7138b154bc.p_1a1fce0995",
+          "wireIds": [
+            "976557b5-55ae-4984-91f9-e701f1d349da"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_f52675d3c22f4ef5a459ce29e1c191c6",
+          "anchor": "b_7138b154bc.p_27f08547f0",
+          "wireIds": [
+            "fc02690b-6db5-499a-a59c-35d0272e4bd4"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_7469cfa9a54f45b59bebba4e4d38dd6a",
+          "anchor": "machine.flange",
+          "wireIds": [
+            "04978d57-24cf-4e99-8305-b2b777d0487f"
+          ],
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "sub_cc9f1056f8",
+      "name": "Battery pack",
+      "blocks": [
+        {
+          "id": "cells",
+          "definition": {
+            "kind": "batteryStack",
+            "name": "Cells",
+            "description": "Battery stack: open-circuit voltage rising linearly with state of charge, internal resistance, starting full.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "bat",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "top"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "bottom"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "Ns",
+                "name": "Cells in series",
+                "value": 34,
+                "unit": "",
+                "min": 1
+              },
+              {
+                "id": "Np",
+                "name": "Cells in parallel",
+                "value": 1,
+                "unit": "",
+                "min": 1
+              },
+              {
+                "id": "Q",
+                "name": "Cell capacity",
+                "value": 40,
+                "unit": "A·h",
+                "min": 0
+              },
+              {
+                "id": "OCVmax",
+                "name": "Cell voltage when full",
+                "value": 3.6,
+                "unit": "V",
+                "min": 0
+              },
+              {
+                "id": "OCVmin",
+                "name": "Cell voltage when empty",
+                "value": 2.5,
+                "unit": "V",
+                "min": 0
+              },
+              {
+                "id": "Ri",
+                "name": "Cell resistance",
+                "value": 0.002,
+                "unit": "Ω",
+                "min": 0
+              }
+            ],
+            "equations": "// Electrical.Batteries.BatteryStacks.CellStack from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "cell",
+              "lithium",
+              "ev",
+              "soc",
+              "pack"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Batteries.BatteryStacks.CellStack",
+              "modifiers": {
+                "cellData.Qnom": "Q*3600",
+                "cellData.OCVmax": "OCVmax",
+                "cellData.OCVmin": "OCVmin",
+                "cellData.Ri": "Ri",
+                "Ns": "Ns",
+                "Np": "Np"
+              }
+            }
+          },
+          "position": {
+            "x": 120,
+            "y": 96
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "packGround",
+          "definition": {
+            "kind": "ground",
+            "name": "Ground",
+            "description": "Electrical reference potential.",
+            "domain": "electrical",
+            "symbol": "ground",
+            "ports": [
+              {
+                "id": "p",
+                "name": "0 V",
+                "domain": "electrical",
+                "side": "top",
+                "direction": "physical"
+              }
+            ],
+            "parameters": [],
+            "equations": "p.v = 0;"
+          },
+          "position": {
+            "x": 136,
+            "y": 280
+          },
+          "size": {
+            "width": 40,
+            "height": 40
+          }
+        },
+        {
+          "id": "p_ed30cc26fb",
+          "definition": {
+            "kind": "connport",
+            "name": "−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1,
+              "side": "right"
+            }
+          },
+          "position": {
+            "x": 320,
+            "y": 208
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_d315ecef9b",
+          "definition": {
+            "kind": "connport",
+            "name": "+",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0,
+              "side": "right"
+            }
+          },
+          "position": {
+            "x": 320,
+            "y": 64
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "911b3f70-6c90-4e01-833b-301f9da110cd",
+          "source": "cells",
+          "sourceHandle": "n",
+          "target": "j_bb572a05b0a34a97a2bbf260a034956f",
+          "targetHandle": "node",
+          "waypoints": [
+            {
+              "x": 160,
+              "y": 220
+            },
+            {
+              "x": 156,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "a23bea5c-c646-4372-9903-c786aeb2c50e",
+          "source": "j_bb572a05b0a34a97a2bbf260a034956f",
+          "sourceHandle": "node",
+          "target": "p_ed30cc26fb",
+          "targetHandle": "p",
+          "waypoints": []
+        },
+        {
+          "id": "47bdeaa6-1346-4eba-9064-16e6e3f7f379",
+          "source": "cells",
+          "sourceHandle": "p",
+          "target": "p_d315ecef9b",
+          "targetHandle": "p"
+        },
+        {
+          "id": "w_f5b2a16fdc034efcab0fac87e5d47b76",
+          "source": "packGround",
+          "sourceHandle": "p",
+          "target": "j_bb572a05b0a34a97a2bbf260a034956f",
+          "targetHandle": "node",
+          "waypoints": []
+        }
+      ],
+      "junctions": [
+        {
+          "id": "j_bb572a05b0a34a97a2bbf260a034956f",
+          "domain": "electrical",
+          "position": {
+            "x": 156,
+            "y": 224
+          }
+        }
+      ],
+      "nets": [
+        {
+          "id": "net_c7895b7c3ce14f8da94cf6850932875b",
+          "anchor": "cells.n",
+          "wireIds": [
+            "911b3f70-6c90-4e01-833b-301f9da110cd",
+            "a23bea5c-c646-4372-9903-c786aeb2c50e",
+            "w_f5b2a16fdc034efcab0fac87e5d47b76"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_84ac552b2c1944eeabf0d33d6890337d",
+          "anchor": "cells.p",
+          "wireIds": [
+            "47bdeaa6-1346-4eba-9064-16e6e3f7f379"
+          ],
+          "hidden": true
+        }
+      ],
+      "parameters": [
+        {
+          "id": "Cells_Ns",
+          "name": "Cells cells in series",
+          "value": 34,
+          "unit": "",
+          "min": 1,
+          "targets": [
+            {
+              "blockId": "cells",
+              "parameterId": "Ns"
+            }
+          ]
+        },
+        {
+          "id": "Cells_Q",
+          "name": "Cells cell capacity",
+          "value": 40,
+          "unit": "A·h",
+          "min": 0,
+          "targets": [
+            {
+              "blockId": "cells",
+              "parameterId": "Q"
+            }
+          ]
+        },
+        {
+          "id": "Cells_OCVmax",
+          "name": "Cells cell voltage when full",
+          "value": 3.6,
+          "unit": "V",
+          "min": 0,
+          "targets": [
+            {
+              "blockId": "cells",
+              "parameterId": "OCVmax"
+            }
+          ]
+        },
+        {
+          "id": "Cells_OCVmin",
+          "name": "Cells cell voltage when empty",
+          "value": 2.5,
+          "unit": "V",
+          "min": 0,
+          "targets": [
+            {
+              "blockId": "cells",
+              "parameterId": "OCVmin"
+            }
+          ]
+        },
+        {
+          "id": "Cells_Ri",
+          "name": "Cells cell resistance",
+          "value": 0.002,
+          "unit": "Ω",
+          "min": 0,
+          "targets": [
+            {
+              "blockId": "cells",
+              "parameterId": "Ri"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sub_43fbabf6ac",
+      "name": "Powertrain",
+      "blocks": [
+        {
+          "id": "gear",
+          "definition": {
+            "kind": "idealGear",
+            "name": "Final drive",
+            "description": "Lossless gear: φ_a = ratio·φ_b.",
+            "domain": "mechanical",
+            "category": "mechanical",
+            "symbol": "i",
+            "ports": [
+              {
+                "id": "flange_a",
+                "name": "a",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "left"
+              },
+              {
+                "id": "flange_b",
+                "name": "b",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "right"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "ratio",
+                "name": "Ratio",
+                "value": 6,
+                "unit": ""
+              }
+            ],
+            "equations": "// Mechanics.Rotational.Components.IdealGear from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "gearbox",
+              "transmission",
+              "reduction"
+            ],
+            "modelica": {
+              "class": "Modelica.Mechanics.Rotational.Components.IdealGear",
+              "modifiers": {
+                "ratio": "ratio"
+              }
+            }
+          },
+          "position": {
+            "x": 560,
+            "y": 120
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "b_73fc5c6aa8",
+          "definition": {
+            "kind": "subsystem",
+            "name": "Motor drive",
+            "description": "Subsystem Motor drive: 2 blocks inside.",
+            "domain": "electrical",
+            "symbol": "Motor drive",
+            "ports": [
+              {
+                "id": "p_ca38b366fe",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_57241ddf31",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_8cf7b35ef6",
+                "name": "duty",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "p_2e7bef55d4",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "subsystem": {
+              "ref": "sub_e4cb9dd538",
+              "variants": [
+                {
+                  "id": "v_5b0621f417",
+                  "name": "PM DC machine",
+                  "ref": "sub_e4cb9dd538",
+                  "values": {}
+                },
+                {
+                  "id": "v_b213cb1ddd",
+                  "name": "Simple DC motor",
+                  "ref": "sub_2dfa56e429",
+                  "values": {}
+                }
+              ],
+              "active": "v_5b0621f417"
+            }
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          },
+          "position": {
+            "x": 280,
+            "y": 104
+          }
+        },
+        {
+          "id": "b_29f6421f31",
+          "definition": {
+            "kind": "subsystem",
+            "name": "Battery pack",
+            "description": "Subsystem Battery pack: 2 blocks inside.",
+            "domain": "electrical",
+            "symbol": "Battery pack",
+            "ports": [
+              {
+                "id": "p_d315ecef9b",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              },
+              {
+                "id": "p_ed30cc26fb",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "Cells_Ns",
+                "name": "Cells cells in series",
+                "value": 34,
+                "unit": "",
+                "min": 1
+              },
+              {
+                "id": "Cells_Q",
+                "name": "Cells cell capacity",
+                "value": 40,
+                "unit": "A·h",
+                "min": 0
+              },
+              {
+                "id": "Cells_OCVmax",
+                "name": "Cells cell voltage when full",
+                "value": 3.6,
+                "unit": "V",
+                "min": 0
+              },
+              {
+                "id": "Cells_OCVmin",
+                "name": "Cells cell voltage when empty",
+                "value": 2.5,
+                "unit": "V",
+                "min": 0
+              },
+              {
+                "id": "Cells_Ri",
+                "name": "Cells cell resistance",
+                "value": 0.002,
+                "unit": "Ω",
+                "min": 0
+              }
+            ],
+            "equations": "",
+            "category": "routing",
+            "subsystem": {
+              "ref": "sub_cc9f1056f8",
+              "variants": [
+                {
+                  "id": "v_512b8dfb37",
+                  "name": "LFP",
+                  "ref": "sub_cc9f1056f8",
+                  "values": {
+                    "Cells_Ns": 34,
+                    "Cells_Q": 40,
+                    "Cells_OCVmax": 3.6,
+                    "Cells_OCVmin": 2.5,
+                    "Cells_Ri": 0.002
+                  }
+                },
+                {
+                  "id": "v_c0c75f5316",
+                  "name": "NMC",
+                  "ref": "sub_cc9f1056f8",
+                  "values": {
+                    "Cells_Ns": 28,
+                    "Cells_Q": 40,
+                    "Cells_OCVmax": 4.2,
+                    "Cells_OCVmin": 3,
+                    "Cells_Ri": 0.003
+                  }
+                }
+              ],
+              "active": "v_512b8dfb37"
+            }
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          },
+          "position": {
+            "x": 40,
+            "y": 104
+          }
+        },
+        {
+          "id": "p_a6d3307198",
+          "definition": {
+            "kind": "inport",
+            "name": "duty",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "y",
+                "name": "duty",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 288
+          },
+          "size": {
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_f3c715c228",
+          "definition": {
+            "kind": "connport",
+            "name": "shaft",
+            "description": "Physical mechanical terminal of the subsystem.",
+            "domain": "mechanical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1,
+              "side": "right"
+            }
+          },
+          "position": {
+            "x": 760,
+            "y": 136
+          },
+          "size": {
+            "width": 96,
+            "height": 32
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "8f87664a-0862-4a0f-a65e-50c78c6fdd55",
+          "source": "b_29f6421f31",
+          "sourceHandle": "p_ed30cc26fb",
+          "target": "b_73fc5c6aa8",
+          "targetHandle": "p_57241ddf31"
+        },
+        {
+          "id": "03ce66a5-bde3-4fa5-be2c-c9925c02753d",
+          "source": "b_29f6421f31",
+          "sourceHandle": "p_d315ecef9b",
+          "target": "b_73fc5c6aa8",
+          "targetHandle": "p_ca38b366fe"
+        },
+        {
+          "id": "b24cbd9e-7f07-486b-b1eb-33be0bdb3d84",
+          "source": "p_a6d3307198",
+          "sourceHandle": "y",
+          "target": "b_73fc5c6aa8",
+          "targetHandle": "p_8cf7b35ef6"
+        },
+        {
+          "id": "2a4c4677-64eb-464b-8042-60744b0cc9bb",
+          "source": "b_73fc5c6aa8",
+          "sourceHandle": "p_2e7bef55d4",
+          "target": "gear",
+          "targetHandle": "flange_a"
+        },
+        {
+          "id": "232aef4e-d387-418d-a0a2-7247a6b904af",
+          "source": "gear",
+          "sourceHandle": "flange_b",
+          "target": "p_f3c715c228",
+          "targetHandle": "p"
+        }
+      ],
+      "junctions": [],
+      "nets": [
+        {
+          "id": "net_5760dc1db9c345a1ae805870d8d55778",
+          "anchor": "b_29f6421f31.p_ed30cc26fb",
+          "wireIds": [
+            "8f87664a-0862-4a0f-a65e-50c78c6fdd55"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_18ef9b66e99b475a9150e2a15b755f90",
+          "anchor": "b_29f6421f31.p_d315ecef9b",
+          "wireIds": [
+            "03ce66a5-bde3-4fa5-be2c-c9925c02753d"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_10968c41cdf542589920f5be957a3126",
+          "anchor": "p_a6d3307198.y",
+          "wireIds": [
+            "b24cbd9e-7f07-486b-b1eb-33be0bdb3d84"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_fd9ef93e06a74065a83fa4b34191ccf6",
+          "anchor": "b_73fc5c6aa8.p_2e7bef55d4",
+          "wireIds": [
+            "2a4c4677-64eb-464b-8042-60744b0cc9bb"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_7d86c27707a5477ca8c7b8d0d0f98a94",
+          "anchor": "gear.flange_b",
+          "wireIds": [
+            "232aef4e-d387-418d-a0a2-7247a6b904af"
+          ],
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "sub_be502a6306",
+      "name": "Vehicle control",
+      "blocks": [
+        {
+          "id": "error",
+          "definition": {
+            "kind": "subtract",
+            "name": "Speed error",
+            "symbol": "sum",
+            "domain": "signal",
+            "description": "Subtract",
+            "ports": [
+              {
+                "id": "a",
+                "name": "+",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "b",
+                "name": "−",
+                "direction": "input",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = a - b;",
+            "parameters": [],
+            "declarations": ""
+          },
+          "position": {
+            "x": 240,
+            "y": 100
+          },
+          "size": {
+            "width": 40,
+            "height": 40
+          }
+        },
+        {
+          "id": "pi",
+          "definition": {
+            "kind": "pid",
+            "name": "Speed PI",
+            "symbol": "PID",
+            "domain": "signal",
+            "description": "Parallel PID with a filtered derivative term.",
+            "ports": [
+              {
+                "id": "u",
+                "name": "e",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "der(xi) = u;\nder(xf) = (u - xf)/tf;\ny = kp*u + ki*xi + kd*(u - xf)/tf;",
+            "parameters": [
+              {
+                "id": "kp",
+                "name": "Proportional gain",
+                "value": 0.4,
+                "unit": ""
+              },
+              {
+                "id": "ki",
+                "name": "Integral gain",
+                "value": 1,
+                "unit": ""
+              },
+              {
+                "id": "kd",
+                "name": "Derivative gain",
+                "value": 0,
+                "unit": ""
+              },
+              {
+                "id": "tf",
+                "name": "Derivative filter",
+                "value": 0.01,
+                "unit": "s",
+                "min": 0.0001
+              }
+            ],
+            "declarations": "Real xi(start=0, fixed=true);\nReal xf(start=0, fixed=true);",
+            "keywords": [
+              "control",
+              "regulator"
+            ],
+            "controller": true
+          },
+          "position": {
+            "x": 380,
+            "y": 88
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "duty",
+          "definition": {
+            "kind": "saturation",
+            "name": "Duty limit",
+            "description": "Clamp a signal between lower and upper limits.",
+            "domain": "signal",
+            "symbol": "sat",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "lower",
+                "name": "Lower limit",
+                "value": -1,
+                "unit": ""
+              },
+              {
+                "id": "upper",
+                "name": "Upper limit",
+                "value": 1,
+                "unit": ""
+              }
+            ],
+            "equations": "y = max(lower, min(upper, u));"
+          },
+          "position": {
+            "x": 560,
+            "y": 88
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "p_89eced1c23",
+          "definition": {
+            "kind": "inport",
+            "name": "v ref",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "y",
+                "name": "v ref",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 104
+          },
+          "size": {
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_9b88ade7a7",
+          "definition": {
+            "kind": "inport",
+            "name": "v",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "2",
+            "ports": [
+              {
+                "id": "y",
+                "name": "v",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1
+            }
+          },
+          "position": {
+            "x": 100,
+            "y": 220
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_9b3406cb9d",
+          "definition": {
+            "kind": "outport",
+            "name": "duty",
+            "description": "Subsystem output.",
+            "domain": "signal",
+            "symbol": "3",
+            "ports": [
+              {
+                "id": "u",
+                "name": "duty",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 740,
+            "y": 104
+          },
+          "size": {
+            "width": 88,
+            "height": 32
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w_6669dae441",
+          "source": "p_89eced1c23",
+          "sourceHandle": "y",
+          "target": "error",
+          "targetHandle": "a"
+        },
+        {
+          "id": "w_b3be834fee",
+          "source": "p_9b88ade7a7",
+          "sourceHandle": "y",
+          "target": "error",
+          "targetHandle": "b"
+        },
+        {
+          "id": "2aa3130e-44a0-4511-be12-55500f1971d2",
+          "source": "error",
+          "sourceHandle": "y",
+          "target": "pi",
+          "targetHandle": "u"
+        },
+        {
+          "id": "1cb4b414-56c5-4474-839c-4fa966134675",
+          "source": "pi",
+          "sourceHandle": "y",
+          "target": "duty",
+          "targetHandle": "u"
+        },
+        {
+          "id": "w_46ef9c2878",
+          "source": "duty",
+          "sourceHandle": "y",
+          "target": "p_9b3406cb9d",
+          "targetHandle": "u"
+        }
+      ],
+      "junctions": [],
+      "nets": [
+        {
+          "id": "net_69bc60003a2f4afaa21c455356a69c0e",
+          "anchor": "p_89eced1c23.y",
+          "wireIds": [
+            "w_6669dae441"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_a3e1f8163b9540339046576ad57b0359",
+          "anchor": "p_9b88ade7a7.y",
+          "wireIds": [
+            "w_b3be834fee"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_fe83ecc6d04e44eaa43f108252559089",
+          "anchor": "error.y",
+          "wireIds": [
+            "2aa3130e-44a0-4511-be12-55500f1971d2"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_b08e1bde498741178941e6048555b2f6",
+          "anchor": "pi.y",
+          "wireIds": [
+            "1cb4b414-56c5-4474-839c-4fa966134675"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_23a03b12764f483a9b54962c815feac0",
+          "anchor": "duty.y",
+          "wireIds": [
+            "w_46ef9c2878"
+          ],
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "sub_2dfa56e429",
+      "name": "Motor drive Simple DC motor",
+      "blocks": [
+        {
+          "id": "b_7138b154bc",
+          "definition": {
+            "kind": "subsystem",
+            "name": "Converter",
+            "description": "Subsystem Converter: 7 blocks inside.",
+            "domain": "electrical",
+            "symbol": "Converter",
+            "ports": [
+              {
+                "id": "p_5bc8194567",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_99330b60ca",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_f23b6cde46",
+                "name": "duty",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "p_1a1fce0995",
+                "name": "out+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              },
+              {
+                "id": "p_27f08547f0",
+                "name": "out−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "subsystem": {
+              "ref": "sub_19524c9994"
+            }
+          },
+          "size": {
+            "width": 128,
+            "height": 120
+          },
+          "position": {
+            "x": 240,
+            "y": 96
+          }
+        },
+        {
+          "id": "p_ca38b366fe",
+          "definition": {
+            "kind": "connport",
+            "name": "dc+",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 96
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_57241ddf31",
+          "definition": {
+            "kind": "connport",
+            "name": "dc−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_8cf7b35ef6",
+          "definition": {
+            "kind": "inport",
+            "name": "duty",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "3",
+            "ports": [
+              {
+                "id": "y",
+                "name": "duty",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 240
+          },
+          "size": {
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_2e7bef55d4",
+          "definition": {
+            "kind": "connport",
+            "name": "shaft",
+            "description": "Physical mechanical terminal of the subsystem.",
+            "domain": "mechanical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 3,
+              "side": "right"
+            }
+          },
+          "position": {
+            "x": 880,
+            "y": 120
+          },
+          "size": {
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "id": "motor",
+          "definition": {
+            "kind": "motor",
+            "name": "DC motor",
+            "description": "Armature resistance and inductance coupled to a rotational shaft.",
+            "domain": "electrical",
+            "symbol": "M",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "domain": "electrical",
+                "side": "left",
+                "direction": "physical"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "domain": "electrical",
+                "side": "bottom",
+                "direction": "physical"
+              },
+              {
+                "id": "flange",
+                "name": "shaft",
+                "domain": "mechanical",
+                "side": "bottom",
+                "direction": "physical"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "R",
+                "name": "Resistance",
+                "value": 0.05,
+                "unit": "Ω",
+                "min": 0.001
+              },
+              {
+                "id": "L",
+                "name": "Inductance",
+                "value": 0.0015,
+                "unit": "H",
+                "min": 0.00001
+              },
+              {
+                "id": "k",
+                "name": "Motor constant",
+                "value": 0.64,
+                "unit": "N·m/A",
+                "min": 0.0001
+              }
+            ],
+            "equations": "L*der(i) = v - R*i - k*w;\ntau = k*i;"
+          },
+          "position": {
+            "x": 480,
+            "y": 104
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          }
+        },
+        {
+          "id": "rotor",
+          "definition": {
+            "kind": "rotInertia",
+            "name": "Rotor inertia",
+            "description": "Rotating mass with two flanges and no losses.",
+            "domain": "mechanical",
+            "category": "mechanical",
+            "symbol": "J",
+            "ports": [
+              {
+                "id": "flange_a",
+                "name": "a",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "left"
+              },
+              {
+                "id": "flange_b",
+                "name": "b",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "right"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "J",
+                "name": "Inertia",
+                "value": 0.15,
+                "unit": "kg·m²",
+                "min": 0
+              }
+            ],
+            "equations": "// Mechanics.Rotational.Components.Inertia from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "mass",
+              "flywheel",
+              "rotor"
+            ],
+            "modelica": {
+              "class": "Modelica.Mechanics.Rotational.Components.Inertia",
+              "modifiers": {
+                "J": "J"
+              }
+            }
+          },
+          "position": {
+            "x": 680,
+            "y": 104
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "6d1b07c0-6621-4e9c-8e70-1cabede5dbdb",
+          "source": "p_ca38b366fe",
+          "sourceHandle": "p",
+          "target": "b_7138b154bc",
+          "targetHandle": "p_5bc8194567"
+        },
+        {
+          "id": "d7734b8a-8c8f-4600-af15-01127f987137",
+          "source": "p_57241ddf31",
+          "sourceHandle": "p",
+          "target": "b_7138b154bc",
+          "targetHandle": "p_99330b60ca"
+        },
+        {
+          "id": "4aaa56da-7e20-4b53-b0ff-8dd2632dd018",
+          "source": "p_8cf7b35ef6",
+          "sourceHandle": "y",
+          "target": "b_7138b154bc",
+          "targetHandle": "p_f23b6cde46"
+        },
+        {
+          "id": "e2d9229c-0dd9-417f-be3c-b2ad7b30c747",
+          "source": "b_7138b154bc",
+          "sourceHandle": "p_1a1fce0995",
+          "target": "motor",
+          "targetHandle": "p"
+        },
+        {
+          "id": "11301ec3-dfd5-44b9-932d-a38f65bf0f9a",
+          "source": "b_7138b154bc",
+          "sourceHandle": "p_27f08547f0",
+          "target": "motor",
+          "targetHandle": "n"
+        },
+        {
+          "id": "602e22ec-4105-46a2-9f5f-d40088ad1335",
+          "source": "rotor",
+          "sourceHandle": "flange_b",
+          "target": "p_2e7bef55d4",
+          "targetHandle": "p"
+        },
+        {
+          "id": "d9d2ce39-b85d-4006-be29-8a76ca23f7b7",
+          "source": "motor",
+          "sourceHandle": "flange",
+          "target": "rotor",
+          "targetHandle": "flange_a"
+        }
+      ],
+      "junctions": [],
+      "nets": [
+        {
+          "id": "net_c9e13aa6932a447485c0bdf177ba5165",
+          "anchor": "b_7138b154bc.p_5bc8194567",
+          "wireIds": [
+            "6d1b07c0-6621-4e9c-8e70-1cabede5dbdb"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_c6bb811711e24334a72d28b08c1becba",
+          "anchor": "b_7138b154bc.p_99330b60ca",
+          "wireIds": [
+            "d7734b8a-8c8f-4600-af15-01127f987137"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_2d37dea79e7d4962b6c76c9acfd82762",
+          "anchor": "p_8cf7b35ef6.y",
+          "wireIds": [
+            "4aaa56da-7e20-4b53-b0ff-8dd2632dd018"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_ceff40e620664daca2f1c70794b1b078",
+          "anchor": "b_7138b154bc.p_1a1fce0995",
+          "wireIds": [
+            "e2d9229c-0dd9-417f-be3c-b2ad7b30c747"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_425e1dce076a48c4ace94c271accfb46",
+          "anchor": "b_7138b154bc.p_27f08547f0",
+          "wireIds": [
+            "11301ec3-dfd5-44b9-932d-a38f65bf0f9a"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_3f9e1f3f0dac4472ab041559cab4fcb9",
+          "anchor": "p_2e7bef55d4.p",
+          "wireIds": [
+            "602e22ec-4105-46a2-9f5f-d40088ad1335"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_f13d3d74547948ae965f9af9af4a6f91",
+          "anchor": "motor.flange",
+          "wireIds": [
+            "d9d2ce39-b85d-4006-be29-8a76ca23f7b7"
+          ],
+          "hidden": true
+        }
+      ]
+    }
+  ],
+  "configurations": [
+    {
+      "id": "cfg_31c472a79e",
+      "name": "City · LFP",
+      "choices": {
+        "sub_43fbabf6ac/b_73fc5c6aa8": "v_5b0621f417",
+        "sub_43fbabf6ac/b_29f6421f31": "v_512b8dfb37"
+      }
+    },
+    {
+      "id": "cfg_f68abd58d2",
+      "name": "Performance · NMC",
+      "choices": {
+        "sub_43fbabf6ac/b_73fc5c6aa8": "v_b213cb1ddd",
+        "sub_43fbabf6ac/b_29f6421f31": "v_c0c75f5316"
+      }
+    }
+  ]
+}

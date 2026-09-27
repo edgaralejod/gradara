@@ -1,5 +1,5 @@
 import type { Port, Project, Wire } from './model';
-import { portOf } from './model';
+import { isCausal, portOf } from './model';
 import { portPoint } from './ports';
 
 export const TAP_HANDLE = 'node';
@@ -25,7 +25,7 @@ export function endpointPort(
       id: TAP_HANDLE,
       name: 'node',
       direction:
-        tap.domain !== 'signal'
+        !isCausal(tap.domain)
           ? 'physical'
           : role === 'source'
             ? 'output'

@@ -50,7 +50,14 @@ export function BlockFace({
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
       >
-        {shape === 'sum' ? (
+        {shape === 'boundary' ? (
+          <rect x="1" y="1" width="98" height="98" rx="14" ry="48" />
+        ) : shape === 'subsystem' ? (
+          <>
+            <rect className="sheet-behind" x="5" y="1" width="94" height="94" rx="1" />
+            <rect x="1" y="5" width="94" height="94" rx="1" />
+          </>
+        ) : shape === 'sum' ? (
           <ellipse cx="50" cy="50" rx="49" ry="49" />
         ) : shape === 'gain' ? (
           <polygon points="1,1 99,50 1,99" />
@@ -62,9 +69,18 @@ export function BlockFace({
           <rect x="1" y="1" width="98" height="98" rx="1" />
         )}
       </svg>
-      <span className="block-symbol">
-        <BlockSymbol definition={d} thumbnail={thumbnail} />
-      </span>
+      {shape === 'boundary' ? (
+        <span className="boundary-pill">
+          <span className="boundary-glyph" data-domain={d.ports[0]?.domain}>
+            {d.kind === 'connport' ? '' : (d.boundary?.order ?? 0) + 1}
+          </span>
+          <span className="boundary-name">{d.name}</span>
+        </span>
+      ) : (
+        <span className="block-symbol">
+          <BlockSymbol definition={d} thumbnail={thumbnail} />
+        </span>
+      )}
       {d.ports
         .filter((p) => showPortLabel(d, p))
         .map((p) => {

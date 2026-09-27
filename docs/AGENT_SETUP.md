@@ -1,6 +1,6 @@
 # Enable AI features
 
-AI creates blocks, builds complete models from a description, and generates C for controller blocks. Editing, wiring, simulating, and reopening models never need AI or an account.
+AI creates blocks, builds complete models from a description, edits the open model from the Assistant, explains or fixes failed runs, and generates C for controller blocks. Editing, wiring, simulating, and reopening models never need AI or an account.
 
 Choose a provider in **Settings → AI**:
 
@@ -10,11 +10,11 @@ Choose a provider in **Settings → AI**:
 | **OpenAI API key** | Paste a key; Gradara verifies it with a free request and stores it in your OS keychain. Optionally set a model. | OpenAI, under your account |
 | **Anthropic API key** | Same as OpenAI. | Anthropic, under your account |
 | **Codex CLI** (developer option) | Install and sign in to the Codex CLI (below). Shown when found. | Your Codex plan |
-| **Off** | Hides AI generation. | Nobody |
+| **Off** | Turns AI requests off. AI buttons stay visible and report that AI is off. | Nobody |
 
 Gradara AI prices are per operation: a block (2 credits), a full model build (20), a C export (2), an assistant edit (4, plus 2 for each new or rewritten block, at most three), and explaining problems (2). **Fix with AI** costs the explanation plus the edit. Automatic repair attempts are included, and a request, or a block within an edit, that fails before producing output is not charged. The composer and assistant footers show the cost and your balance, and each assistant answer shows what it actually cost.
 
-Every AI request first passes local schema checks, then OpenModelica compiler checks, so the simulation engine must be set up (Settings → Engine). See [privacy](PRIVACY.md) for exactly what is sent and stored.
+Generated blocks pass local schema checks, then an OpenModelica compile check, and assistant edits run a trial simulation of the edited model, so the simulation engine must be set up (Settings → Engine). **Explain** alone only reads the problems and never compiles anything. See [privacy](PRIVACY.md) for exactly what is sent and stored.
 
 ### Codex CLI (developer option)
 
@@ -54,7 +54,7 @@ flowchart LR
     Check --> Model[Editable saved model]
 ```
 
-The agent authors bounded equations. Conventional code packages connectivity, supervises compilation, and executes the simulation. Choose Signal / control, Electrical, Mechanical (rotational), Thermal, or Multiple physical domains before generation. The selected type constrains the provider schema and server validation. Physical blocks have real Modelica terminals, and may also expose scalar signal ports. Refinement preserves the type and existing terminal IDs, domains, and directions. Arbitrary connector families, translational mechanics, whole subsystems, and HDL generation are not implemented. C export targets one controller block and checks compilation; see the [execution contract](architecture/EXECUTION.md).
+The agent authors bounded equations. Conventional code packages connectivity, supervises compilation, and executes the simulation. Choose Signal / control, Electrical, Mechanical · rotational, Mechanical · translational, Magnetic, Thermal, or Multiple physical domains before generation. The selected type constrains the provider schema and server validation. Physical blocks have real Modelica terminals, and may also expose scalar signal ports. Refinement preserves the type and existing terminal IDs, domains, and directions. Boolean and three-phase ports, wrapping Modelica Standard Library classes, whole subsystems, and HDL generation are not implemented for generated blocks; the built-in library already covers many MSL classes. C code for library blocks is generated without an AI provider; the provider only writes C for a custom block that has no template. See the [execution contract](architecture/EXECUTION.md).
 
 Generation sends the prompt and relevant definition to the provider; refinement and repair can include prior candidates and compiler diagnostics. C export includes its controller contract. Editing the open model from the Assistant tab sends the request, the open model without its layout, the names of selected blocks, and the block catalog; its one automatic revision can include the previous plan and run diagnostics. Ordinary simulation does not call a provider. See [privacy](PRIVACY.md) and [security](../SECURITY.md).
 

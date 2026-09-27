@@ -41,6 +41,14 @@ export const modelTemplates = [
     detail: 'Control · Electrical · Mechanical',
   },
   {
+    id: 'ev',
+    title: 'EV drivetrain',
+    name: 'EV drivetrain',
+    description:
+      'Battery, averaged converter, motor, and vehicle in three levels of subsystems, with battery and motor variants.',
+    detail: 'Subsystems · Variants · Electrical · Mechanical',
+  },
+  {
     id: 'buck',
     title: 'Buck converter',
     name: 'Buck converter',

@@ -3,6 +3,8 @@ import json
 import math
 from pathlib import Path
 import time
+from . import msl
+from .hierarchy import all_blocks, instances
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
 from .runtime import IMAGE, LEGACY_IMAGE
@@ -12,7 +14,7 @@ from .paths import ROOT, RUNS
 from .safety import UnsafeDefinition, check_definition
 from . import engines
 
-__all__ = ['ROOT', 'RUNS', 'IMAGE', 'LEGACY_IMAGE', 'engine_available', 'execute', 'simulate', 'check_component']
+__all__ = ['ROOT', 'RUNS', 'IMAGE', 'LEGACY_IMAGE', 'engine_available', 'execute', 'simulate', 'check_component', 'check_project']
 
 
 async def engine_available():
@@ -35,7 +37,7 @@ def run_failure(message: str, block_id: str | None = None) -> SimulationFailure:
 
 async def simulate(project: Project, job_id: str):
     validate_simulation(project)
-    for block in project.blocks:
+    for block in all_blocks(project):
         try:
             check_definition(block.definition, block.definition.name)
         except UnsafeDefinition as exc:
@@ -75,18 +77,18 @@ async def run(project: Project, job_id: str, folder: Path):
     # and final values inside the requested interval; retain the raw CSV.
     rows = [row for row in rows if float(row['time']) <= project.duration + max(1e-12, project.duration * 1e-12)]
     outputs = []
-    for block in project.blocks:
+    for prefix, label, block, owner in instances(project):
         definition = block.definition
         candidates = [(p.id, p.name, p.unit) for p in definition.ports if p.direction == 'output' or (definition.kind in {'scope', 'display'} and p.direction == 'input')]
         if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
         if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
-        for variable,label,unit in candidates:
-            key = f'{block.id}.{variable}'
+        for variable,label_,unit in candidates:
+            key = f'{prefix}{block.id}.{msl.connector(definition, variable)}'
             if key in rows[0]:
                 values = [float(row[key]) for row in rows]
                 if not all(math.isfinite(value) for value in values):
-                    raise run_failure(f'{definition.name}.{label} contains non-finite results.', block.id)
-                outputs.append({'key':key,'name':f'{definition.name}.{label}', 'unit':unit,'blockId':block.id,'values':values})
+                    raise run_failure(f'{label}{definition.name}.{label_} contains non-finite results.', owner)
+                outputs.append({'key':key,'name':f'{label}{definition.name}.{label_}', 'unit':unit,'blockId':owner,'values':values})
     from .logging_signals import logged_signals
     for log in logged_signals(project):
         key = log['key']
@@ -114,6 +116,16 @@ async def run(project: Project, job_id: str, folder: Path):
     result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'problems':[d.model_dump() for d in warning_diagnostics(project, report.get('diagnostics',''))],'samples':len(rows)}
     (folder/'result.json').write_text(json.dumps(result, allow_nan=False))
     return result
+
+async def check_project(project: Project, job_id: str) -> dict:
+    """Compile-check a whole model without simulating it (used for inactive variants)."""
+    for block in all_blocks(project):
+        check_definition(block.definition, block.definition.name)
+    folder = RUNS/f'check-{job_id}'
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder/'model.mo').write_text(emit_project(project))
+    return await execute(folder, {'checkOnly': True, 'checkTarget': 'system'}, f'gradara-check-{job_id}')
+
 
 async def check_component(definition: Definition, job_id: str):
     check_definition(definition)

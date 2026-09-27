@@ -33,23 +33,88 @@ import {
 } from './selection-preview-context';
 
 const nodeTypes = { block: BlockNode };
-function InitialViewport({ blockIds }: { blockIds: string }) {
+export const FIT_VIEW = { padding: 0.16, maxZoom: 1.15 };
+/** Ask the open canvas to fit the whole sheet (the fit button, or a tap on Space). */
+export const FIT_VIEW_EVENT = 'gradara:fit-view';
+
+type ViewState = {
+  /** The view shows the whole sheet and should keep doing so when the canvas resizes. */
+  fitted: boolean;
+};
+
+/**
+ * Keep the model in view when the space around the canvas changes (library,
+ * inspector, or Problems dock opened or closed, window resized). A fitted view
+ * refits; a view the user panned or zoomed keeps the same point at its center.
+ */
+function ViewportKeeper({ view }: { view: React.RefObject<ViewState> }) {
+  const width = useStore((s) => s.width);
+  const height = useStore((s) => s.height);
+  const flow = useReactFlow();
+  const last = useRef<{ width: number; height: number } | null>(null);
+  useEffect(() => {
+    const fit = () => {
+      view.current.fitted = true;
+      void flow.fitView({ ...FIT_VIEW, duration: 200 });
+    };
+    window.addEventListener(FIT_VIEW_EVENT, fit);
+    return () => window.removeEventListener(FIT_VIEW_EVENT, fit);
+  }, [flow, view]);
+  useEffect(() => {
+    const previous = last.current;
+    last.current = { width, height };
+    if (!previous || !width || !height) return;
+    if (previous.width === width && previous.height === height) return;
+    // Wait for the layout to settle (panels slide), then adjust once.
+    const timer = setTimeout(() => {
+      if (view.current.fitted) {
+        void flow.fitView({ ...FIT_VIEW, duration: 150 });
+        return;
+      }
+      const { x, y, zoom } = flow.getViewport();
+      void flow.setViewport({
+        x: x + (width - previous.width) / 2,
+        y: y + (height - previous.height) / 2,
+        zoom,
+      });
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [width, height, flow, view]);
+  return null;
+}
+
+function InitialViewport({
+  blockIds,
+  sheet = '',
+  view,
+}: {
+  blockIds: string;
+  sheet?: string;
+  view: React.RefObject<ViewState>;
+}) {
   const documentReady = useStore(
     (s) => s.nodes.map((n) => n.id).join('|') === blockIds,
   );
   const initialized = useNodesInitialized();
   const hasViewport = useStore((s) => s.width > 0 && s.height > 0);
   const flow = useReactFlow();
-  const fitted = useRef(false);
+  // Fit once per sheet: on open, and again when entering or leaving a subsystem.
+  const fitted = useRef<string | null>(null);
   useEffect(() => {
-    if (!documentReady || !initialized || !hasViewport || fitted.current)
+    if (
+      !documentReady ||
+      !initialized ||
+      !hasViewport ||
+      fitted.current === sheet
+    )
       return;
     const frame = requestAnimationFrame(() => {
-      fitted.current = true;
-      void flow.fitView({ padding: 0.16, maxZoom: 1.15 });
+      fitted.current = sheet;
+      view.current.fitted = true;
+      void flow.fitView(FIT_VIEW);
     });
     return () => cancelAnimationFrame(frame);
-  }, [documentReady, initialized, hasViewport, flow]);
+  }, [documentReady, initialized, hasViewport, flow, sheet, view]);
   return null;
 }
 type Props = Omit<
@@ -65,6 +130,8 @@ type Props = Omit<
   onLayout: (layouts: BlockLayout[]) => void;
   onLabelOffset: (id: string, offset: Block['labelOffset']) => void;
   onLabelSelect: (id: string) => void;
+  /** The open sheet (subsystem path); the view refits when it changes. */
+  sheet?: string;
 };
 
 /** Pointer-rate state belongs to the canvas, not autosave, history, inspector, or plots. */
@@ -78,9 +145,20 @@ export default function ModelCanvas({
   onLayout,
   onLabelOffset,
   onLabelSelect,
+  sheet,
   ...props
 }: Props) {
   const [preview, setPreview] = useState<SelectionPreview | null>(null);
+  const view = useRef<ViewState>({ fitted: true });
+  const { onMoveStart, onMoveEnd } = props;
+  const moveStart = useCallback<NonNullable<ReactFlowProps['onMoveStart']>>(
+    (event, viewport) => {
+      // A pan or zoom by the user ends the fitted state; programmatic moves carry no event.
+      if (event) view.current.fitted = false;
+      onMoveStart?.(event, viewport);
+    },
+    [onMoveStart],
+  );
   const blocks = preview?.project.blocks ?? documentBlocks;
   const selectedIds = preview?.selection.blockIds ?? documentSelectedIds;
   const [nodes, setNodes] = useState<CanvasNode[]>(() =>
@@ -160,8 +238,15 @@ export default function ModelCanvas({
           nodes={nodes}
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
+          onMoveStart={moveStart}
+          onMoveEnd={onMoveEnd}
         >
-          <InitialViewport blockIds={blocks.map((b) => b.id).join('|')} />
+          <ViewportKeeper view={view} />
+          <InitialViewport
+            blockIds={blocks.map((b) => b.id).join('|')}
+            sheet={sheet}
+            view={view}
+          />
           <CopyDragLayer
             project={project}
             selection={selection}

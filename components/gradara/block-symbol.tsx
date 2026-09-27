@@ -38,6 +38,14 @@ export function BlockSymbol({
   const vertical =
     d.ports.find((p) => p.direction === 'physical')?.side === 'top';
   if (kind === 'sum' || kind === 'subtract') return null;
+  if (d.subsystem)
+    return (
+      <svg viewBox="0 0 60 44" className="subsystem-symbol">
+        <rect x="14" y="8" width="32" height="24" rx="1" />
+        <path d="M20 16H28M20 22H36M32 16H40" />
+        <path d="M8 20H14M46 20H52" />
+      </svg>
+    );
   if (kind === 'gain') {
     const k = d.parameters.find((p) => p.id === 'k')?.value ?? 1;
     return (

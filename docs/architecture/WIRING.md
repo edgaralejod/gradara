@@ -41,17 +41,23 @@ Pointer previews are derived from the gesture's original snapshot and painted lo
 
 ## Routing and alignment
 
-Unpinned routes use the same orthogonal router as live drawing: leave in the port's exit direction, follow any pinned corners, and enter the destination along its port normal. Auto-route does not inject a feedback U, a lane offset, or another preset shape. Explicitly drawn paths keep their vertices. Physical and signal connections share that geometry; they differ only in connection laws.
+Unpinned routes use the same orthogonal router as live drawing: leave in the port's exit direction, follow any pinned corners, and enter the destination along its port normal. When two opposite terminals point away from each other (the target is behind the source), the route is an S with two legs across, so neither stub doubles back. Auto-route does not inject a feedback U, a lane offset, or another preset shape. Explicitly drawn paths keep their vertices. Physical and signal connections share that geometry; they differ only in connection laws.
 
 While reshaping, the path's stationary runs and endpoints are preferred alignment targets within eight screen pixels. Candidate alignment favors fewer segments, then shorter travel, then proximity. Free drawing excludes its own net from alignment candidates so a new branch does not collapse onto its parent trunk.
 
 Coalesce nearby parallel runs and remove redundant collinear vertices or retraced hairpins. Preserve orthogonality, endpoint normals, real branches, and intentional bends. Block ports remain fixed during wire editing; different endpoint rows still need an elbow. Display, hit testing, and stored geometry must agree after normalization and reload.
 
-Junctions attached to an edited endpoint run follow that run perpendicular to its direction. This propagates along straight junction-to-junction paths; every affected branch changes in the same transaction. Moving or resizing a block also carries junctions sharing a whole straight run with the affected port. Conflicting moves on an axis keep the junction in place and bend the incident routes.
+## Moving blocks
+
+A dragged block snaps each axis on its own: a connected terminal within 16 units of a horizontal line snaps vertically onto it, and one near a vertical line snaps horizontally, so one drag can straighten a signal wire and a shaft together. The line is the adjacent saved bend when the wire has pinned corners, otherwise the far terminal or junction dot; a far block terminal must face along the same axis. Otherwise the block's centerline snaps to the 20-unit grid. The drag preview and the saved move use the same rule, so a block lands where the preview showed it (`lib/gradara/placement.ts`).
+
+After a block moves on its own, `repairMovedRoutes` (`lib/gradara/net-layout.ts`) checks its wires. A pinned route that now doubles back into its terminal or runs through its own block releases the bends next to the moved end, one at a time, until it reads cleanly. An unpinned wire to a junction dot that the block was dragged past gets a route around the block. Good routes and wires of blocks that did not move are untouched; undo restores the previous geometry.
+
+Junctions attached to an edited endpoint run follow that run perpendicular to its direction. This propagates along straight junction-to-junction paths; every affected branch changes in the same transaction. Moving or resizing a block also carries junctions sharing a whole straight run with the affected port. Conflicting moves on an axis keep the junction in place and bend the incident routes. Incident routes are stretched against the blocks' new positions, and an unpinned wire whose ends line up stays unpinned, so dragging a block away and back restores its junction and wires.
 
 Junction normalization can move an apparent branch point to the first actual divergence of overlapping incident paths, preserving the visible union and connectivity. An unrelated crossing, genuine four-way split, or collision with another terminal must not trigger that cleanup. Apply this rule generally across domain, orientation, stored endpoint order, and zoom.
 
-The router is not obstacle-aware. A newly pinned route overlapping a different net is rejected. Imported geometry or later block/bend movement can still create overlaps that require manual correction. Never describe coordinate alignment as guaranteed obstacle avoidance.
+The router is not obstacle-aware. A newly pinned route overlapping a different net is rejected. Imported geometry or later block/bend movement can still create overlaps with other nets or blocks that require manual correction; the repair above only keeps a moved block's own wires out of its body. Never describe coordinate alignment as guaranteed obstacle avoidance.
 
 ## Connected selections
 
@@ -78,6 +84,14 @@ Automatic net names derive from the current anchor block and port, such as `Step
 The model inspector searches blocks and nets by name, ID, domain, or terminal. Selecting a net highlights all its wires; properties expose its full ID, source/destinations or physical terminals, aliases, and label visibility. Locate fits its connected blocks into view.
 
 Double-click a wire or use F2 to name its net. Enter or blur commits, Escape cancels, and an empty name restores the automatic name. Labels store a wire ID, a fraction of routed length, and a side. Dragging a label or using its arrow keys changes label placement without moving wiring; Home resets placement. If its wire disappears, placement falls back to a suitable surviving run. Block labels use a separate per-instance offset and follow block movement/resizing.
+
+## Subsystem sheets
+
+Each subsystem definition is its own sheet with its own wires, junctions, and nets (see the [model format](MODEL_FORMAT.md#subsystems-and-variants)). Wires never cross sheets; connectivity crosses only through a subsystem port. Every drawing, selection, naming, and net rule above applies unchanged inside a subsystem, because the workbench edits the open sheet as an ordinary document and writes it back as one undo step.
+
+Inside, a port pill is a block with one terminal. An input pill's terminal is an output, so it is the driver of its signal net and counts toward the one-driver rule; an output pill's terminal is an input that the inside must drive; a terminal pill joins a physical net like any physical port. Outside, the subsystem block's ports are ordinary ports with the pill's direction and domain. Changing a pill's domain removes wires of the old domain on it, and removing a pill removes the outside wires to its port on every instance.
+
+Grouping (⌘/Ctrl+G) cuts every wire that crosses the selection boundary. The outside part keeps the wire ID, so the outside net keeps its identity, name, label, and logging; the inside part is a new wire in a net with the same name. Each cut net becomes one port, named after the net's custom name or the inside terminal, with pills placed level with what they connect to. Junctions whose connected blocks are all selected move inside. Ungrouping reverses this: the inside blocks return with new IDs only where an ID is already taken, and outside wires reconnect to the terminals the ports led to. Copy and paste carry the subsystem definitions a fragment needs; pasting a definition into its own inside is refused.
 
 ## Numerical boundary
 

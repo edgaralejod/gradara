@@ -14,14 +14,14 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | `GET /project` | None | `{project: Project \| null, saveVersion: string \| null}` for the last activated document, resolved from its canonical saved file. |
 | `PUT /project` | Project | Legacy creation/idempotent retry only. Changing an existing document returns 409 with a reload instruction; use versioned model saves. |
 | `GET /models` | Optional `?trashed=true` | `{models: [{id, name, blocks, exampleId, updatedAt}]}`, newest saved first. Trash is separate from My models. |
-| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, `flyback`, `datacenter`, or `servo`. |
+| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, `flyback`, `datacenter`, `servo`, or `ev`. |
 | `GET /models/{modelId}` | Saved ID | Returns `{project, saveVersion}` without activating it. |
 | `PUT /models/{modelId}` | `{project, expectedVersion}` | Writes that document without changing active selection; returns `{project, saveVersion}`. ID must match the path. Stale versions return 409. |
 | `POST /models/{modelId}/activate` | None | Opens an existing model as the last active document; returns `{project, saveVersion}`. |
 | `POST /models/copy` | `{project, name}` | Creates and activates an independent saved copy with a unique name; returns `{project, saveVersion}`. Used for import and copy recovery. |
 | `POST /models/{modelId}/trash` | None | Moves an inactive model to recoverable Trash. Returns `{trashed: true}`; removing the active model returns 409. |
 | `POST /models/{modelId}/restore` | None | Restores a trashed model with its original identity, without activating it; returns `{project, saveVersion}`. |
-| `GET /examples/{template}` | `dc`, `foc`, `buck`, `flyback`, `datacenter`, or `servo` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
+| `GET /examples/{template}` | `dc`, `foc`, `buck`, `flyback`, `datacenter`, `servo`, or `ev` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
 | `POST /source` | Project | `{source}` containing emitted Modelica. Does not run a solver. |
 | `POST /runs` | Project | Queues a simulation and returns a job. |
 | `GET /jobs/{jobId}` | Job ID | Current job, with result or error once finished. |
@@ -35,7 +35,12 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | `POST /models/generate` | `{prompt, catalog}` | Queues full-model generation; poll the job of kind `model`. |
 | `POST /models/edit` | `{prompt, project, catalog, selection?, verify?, context?}` | Queues an edit of the open model (job kind `edit`, with `progress`). The result is a proposal `{project, summary, assumptions, changes, generated, verified, diagnostics, samples, provider}`; nothing is saved. See [model editing](architecture/EXECUTION.md#model-editing). |
 | `POST /diagnose` | `{project, diagnostics, runId?, catalog, question?, proposeFix}` | Queues a diagnosis (job kind `diagnose`, with `progress`). The result is `{diagnosis, proposal, provider, fixError?}`; `proposal` has the model-edit shape when a fix was requested and built. See [diagnosis](architecture/EXECUTION.md#diagnosis). |
-| `POST /exports` | `{project, blockId}` | Queues C generation for one controller block. The job result is `{id, blockId, header, source, notes, compiled, compiler}`. |
+| `POST /codegen` | `{project, path?, instanceId?, blockIds?, options?}` | Generates C for a subsystem instance or a set of blocks on the sheet at `path`. `options` is `{step?, method: forward\|backward\|tustin, real: double\|float, prefix}`. Returns `{ok: true, files, step, inputs, outputs, blocks, notes}`, or `{ok: false, error, blockIds}` when the unit cannot be generated. See [controller C code](architecture/EXECUTION.md#controller-c-code). |
+| `POST /codegen/archive` | Same as `/codegen` | ZIP of the generated files; 422 with the reason when the unit cannot be generated. |
+| `POST /codegen/verify` | Same as `/codegen`, plus `runId` | Compiles the code and replays that run's inputs through it: `{ok, steps, step, tolerance, outputs: [{output, maxError, relative, passed}]}`, or `{ok: false, error, blockIds}`. |
+| `POST /codegen/template` | `{definition}` | Queues an AI-written C template for one custom signal block (job kind `export`). The result is `{ctemplate, notes}`; store `ctemplate` in the block's definition. See [controller C code](architecture/EXECUTION.md#controller-c-code). |
+| `POST /variants/check` | Project | Queues a compile check of every inactive variant (job kind `variants`, with `progress`). The result is `{variants: [{key, sheetId, blockId, variantId, variant, name, ok, message}]}`. |
+| `POST /exports` | `{project, blockId}` | Queues AI-written C for one controller or custom signal block as a whole file. The workbench uses `/codegen/template` instead. The job result is `{id, blockId, header, source, notes, compiled, compiler}`. |
 | `GET /exports/{exportId}/download` | Export ID | ZIP with C source/header, original contract, and integration notes. |
 | `GET /engine` | None | Engine status: `backend` (`native` or `docker`), `preference`, `ready`, `label`, `detail`, suggested `actions`, `version`. |
 | `PUT /engine` | `{engine}` | `auto`, `native`, or `docker`; returns the new status. |
@@ -56,7 +61,7 @@ Normal responses currently use HTTP 200, including accepted jobs. Save conflicts
 {"id":"opaque-job-id","kind":"simulation","status":"queued"}
 ```
 
-`kind` is `simulation`, `component`, `model`, `edit`, `diagnose`, or `export`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
+`kind` is `simulation`, `component`, `model`, `edit`, `diagnose`, `export`, or `engine`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
 
 ```json
 {"id":"d1","severity":"error","source":"runtime","message":"The model has an algebraic loop the solver cannot resolve.",
@@ -64,7 +69,7 @@ Normal responses currently use HTTP 200, including accepted jobs. Save conflicts
  "ports":[],"netIds":["net_3"],"wireIds":["w_2","w_4"],"hint":"OpenModelica could not solve an algebraic loop. …"}
 ```
 
-`severity` is `error`, `warning`, or `info`. `source` is `validation` (unconnected inputs, drawing-only blocks), `safety` (forbidden constructs), `compiler` (one entry per OpenModelica `Error:` line), `runtime` (solver failure, early stop, non-finite values), or `engine` (the engine could not start or finish). `blockIds`, `ports` (`{blockId, portId}`), `netIds`, and `wireIds` identify what the problem is about when Gradara can tell. Instance IDs are matched only as component references (`gain.k`, `System.gain`), and an algebraic loop names the signal blocks on a cycle without state. The mapping is best effort; `detail` always keeps the full text. A successful simulation result carries warnings the same way in `problems`. Jobs disappear from the registry on service restart. A result file is durable only if the operation completed and wrote it. See [execution details](architecture/EXECUTION.md).
+`severity` is `error`, `warning`, or `info`. `source` is `validation` (unconnected inputs, drawing-only blocks, subsystem ports the active variant lacks), `safety` (forbidden constructs), `compiler` (one entry per OpenModelica `Error:` line), `runtime` (solver failure, early stop, non-finite values), or `engine` (the engine could not start or finish). `blockIds`, `ports` (`{blockId, portId}`), `netIds`, and `wireIds` identify what the problem is about when Gradara can tell. Instance IDs are matched only as component references (`gain.k`, `System.gain`), and an algebraic loop names the signal blocks on a cycle without state. The mapping is best effort; `detail` always keeps the full text. A successful simulation result carries warnings the same way in `problems`. Jobs disappear from the registry on service restart. A result file is durable only if the operation completed and wrote it. See [execution details](architecture/EXECUTION.md).
 
 ## Run a checked-in example without changing saved models
 
@@ -104,11 +109,13 @@ print(result["engine"], result["elapsed"], "seconds")
 print([series["key"] for series in result["series"]])
 ```
 
+Every endpoint that takes a `Project` accepts format version 1 (flat) and version 2 (with `subsystems` and optional `configurations`); the [model format](architecture/MODEL_FORMAT.md#subsystems-and-variants) describes both. Validation rejects a document whose subsystem instances do not match their definitions, a definition that contains itself, and MSL wrapper blocks that do not match their library class. `POST /runs` and `POST /source` emit only the active variant of each subsystem; to compare configurations, apply each one to a copy of the document and submit it as its own run, as the workbench does. Result series for blocks inside subsystems use dotted instance paths such as `drive.gain.y`.
+
 API request models validate identifiers, domains, net ownership, finite values, and bounded equation text. They do not implement a general Modelica parser or a security boundary for hostile model files. Saved documents omit unset optional values in responses. Preserve this serialization behavior when adding endpoints.
 
 ### Component generation types
 
-`POST /api/components/generate` accepts `prompt`, optional `existing`, and optional `blockType`: `signal`, `electrical`, `mechanical` (rotational), `thermal`, or `multidomain`. Omission defaults to signal for new blocks and infers the type for refinement. Physical choices require matching physical terminals; multidomain requires at least two physical domains. A wrong-type response is rejected and gets one repair attempt. Successful job results include `definition`, `provider`, `checked`, and `blockType`. `checked` means OpenModelica accepted the component, not that its physical behavior has been proven.
+`POST /api/components/generate` accepts `prompt`, optional `existing`, and optional `blockType`: `signal`, `electrical`, `mechanical` (rotational), `translational`, `magnetic`, `thermal`, or `multidomain`. Omission defaults to signal for new blocks and infers the type for refinement. Physical choices require matching physical terminals; multidomain requires at least two physical domains. A wrong-type response is rejected and gets one repair attempt. Successful job results include `definition`, `provider`, `checked`, and `blockType`. `checked` means OpenModelica accepted the component, not that its physical behavior has been proven.
 
 ### Generated component library
 

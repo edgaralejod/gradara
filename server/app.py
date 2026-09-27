@@ -4,14 +4,14 @@ import os
 import uuid
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .platform_env import extend_path
 
 extend_path()
 
-from .models import Project, GenerateRequest, NewModelRequest, SaveModelRequest, CopyModelRequest
+from .models import Definition, Project, GenerateRequest, NewModelRequest, SaveModelRequest, CopyModelRequest
 from . import workspace, settings, engines, credentials
 from .modelica import emit_project, project_key, semantic_hash
 from .engine import RUNS, engine_available, simulate
@@ -164,7 +164,7 @@ async def load_model(model_id: str):
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):
-    if example_id not in {'dc','foc','buck','flyback','datacenter','servo'}: raise HTTPException(404,'Example not found.')
+    if example_id not in {'dc','foc','buck','flyback','datacenter','servo','ev'}: raise HTTPException(404,'Example not found.')
     path = EXAMPLES/f'{example_id}.json'
     if not path.exists(): raise HTTPException(404,'Example is unavailable.')
     data = json.loads(path.read_text())
@@ -313,6 +313,54 @@ async def export_download(export_id:str):
     path=EXPORTS/export_id/'gradara-controller.zip'
     if not path.exists(): raise HTTPException(404,'Export not found.')
     return FileResponse(path,media_type='application/zip',filename='gradara-controller.zip')
+
+
+from . import codegen as _codegen
+
+
+def _codegen_failure(exc: Exception) -> dict:
+    return {'ok': False, 'error': str(exc), 'blockIds': getattr(exc, 'block_ids', [])}
+
+
+@app.post('/api/codegen')
+async def generate_code(request: _codegen.CodegenRequest):
+    try:
+        generated = _codegen.generate(request.project, request.path, request.instanceId, request.blockIds, request.options)
+    except _codegen.CodegenError as exc:
+        return _codegen_failure(exc)
+    return {'ok': True, **_codegen.describe(generated)}
+
+@app.post('/api/codegen/archive')
+async def code_archive(request: _codegen.CodegenRequest):
+    try:
+        generated = _codegen.generate(request.project, request.path, request.instanceId, request.blockIds, request.options)
+    except _codegen.CodegenError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return Response(_codegen.archive(generated), media_type='application/zip',
+                    headers={'Content-Disposition': f'attachment; filename="{request.options.prefix}.zip"'})
+
+class TemplateRequest(BaseModel):
+    definition: Definition
+
+
+@app.post('/api/codegen/template')
+async def write_c_template(request: TemplateRequest):
+    from .ctemplate import write_template
+    return await start_job('export', lambda i: write_template(request.definition, i, lambda message: JOBS[i].update(progress=message)))
+
+
+@app.post('/api/codegen/verify')
+async def verify_code(request: _codegen.CodegenRequest):
+    try:
+        return await _codegen.verify(request, RUNS, engines.run_c)
+    except _codegen.CodegenError as exc:
+        return _codegen_failure(exc)
+
+
+@app.post('/api/variants/check')
+async def check_inactive_variants(project: Project):
+    from .variant_check import check_variants
+    return await start_job('variants', lambda i: check_variants(project, i, lambda message: JOBS[i].update(progress=message)))
 
 
 # ------------------------------------------------------------------ engine

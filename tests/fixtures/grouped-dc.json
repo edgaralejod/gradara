@@ -1,0 +1,1005 @@
+{
+  "version": 2,
+  "name": "Motor speed control",
+  "blocks": [
+    {
+      "id": "reference",
+      "definition": {
+        "kind": "step",
+        "name": "Speed reference",
+        "description": "A step change in the requested motor speed.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Target speed",
+            "value": 100,
+            "unit": "rad/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0.2,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;"
+      },
+      "position": {
+        "x": 40,
+        "y": 192
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "inertia",
+        "name": "Inertia & load",
+        "description": "A rotating load with inertia and viscous friction.",
+        "domain": "mechanical",
+        "symbol": "J",
+        "ports": [
+          {
+            "id": "a",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "b",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "left",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 0.02,
+            "unit": "kg·m²",
+            "min": 0.00001
+          },
+          {
+            "id": "damping",
+            "name": "Viscous friction",
+            "value": 0.002,
+            "unit": "N·m·s",
+            "min": 0
+          }
+        ],
+        "equations": "J*der(w) = tau - damping*w;"
+      },
+      "position": {
+        "x": 736,
+        "y": 416
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "sensor",
+      "definition": {
+        "kind": "sensor",
+        "name": "Speed sensor",
+        "description": "Measures shaft speed without loading the mechanical system.",
+        "domain": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = der(flange.phi);\nflange.tau = 0;"
+      },
+      "position": {
+        "x": 240,
+        "y": 416
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "ground",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 584,
+        "y": 336
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    },
+    {
+      "id": "b_2f80d45f5e",
+      "definition": {
+        "kind": "subsystem",
+        "name": "Drivetrain",
+        "description": "Subsystem Drivetrain: 2 blocks inside.",
+        "domain": "electrical",
+        "symbol": "Drivetrain",
+        "ports": [
+          {
+            "id": "p_803d28e0ba",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "p_f42ef79d3d",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "p_f4e34b6423",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "p_d52aeef3f9",
+            "name": "ω measured",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "subsystem": {
+          "ref": "sub_9e4b8793f3"
+        }
+      },
+      "size": {
+        "width": 136,
+        "height": 120
+      },
+      "position": {
+        "x": 460,
+        "y": 160
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "w_db27069958",
+      "source": "reference",
+      "sourceHandle": "y",
+      "target": "b_2f80d45f5e",
+      "targetHandle": "p_803d28e0ba"
+    },
+    {
+      "id": "w_4bfba6afb6",
+      "source": "b_2f80d45f5e",
+      "sourceHandle": "p_f42ef79d3d",
+      "target": "dc_return",
+      "targetHandle": "node"
+    },
+    {
+      "id": "w_2cb170b4f4",
+      "source": "b_2f80d45f5e",
+      "sourceHandle": "p_f4e34b6423",
+      "target": "load",
+      "targetHandle": "a"
+    },
+    {
+      "id": "wire6",
+      "source": "load",
+      "sourceHandle": "b",
+      "target": "sensor",
+      "targetHandle": "flange",
+      "waypoints": []
+    },
+    {
+      "id": "w_6066a831c1",
+      "source": "sensor",
+      "sourceHandle": "y",
+      "target": "b_2f80d45f5e",
+      "targetHandle": "p_d52aeef3f9"
+    },
+    {
+      "id": "dc_ground",
+      "source": "dc_return",
+      "sourceHandle": "node",
+      "target": "ground",
+      "targetHandle": "p",
+      "waypoints": []
+    }
+  ],
+  "duration": 4,
+  "revision": 1,
+  "exampleId": "dc",
+  "junctions": [
+    {
+      "id": "dc_return",
+      "domain": "electrical",
+      "position": {
+        "x": 604,
+        "y": 320
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "x": 40,
+      "y": 64,
+      "text": "01  SPEED CONTROL",
+      "detail": "100 rad/s reference · bounded PI"
+    },
+    {
+      "x": 472,
+      "y": 64,
+      "text": "02  ELECTRICAL DRIVE",
+      "detail": "24 V drive · armature dynamics"
+    },
+    {
+      "x": 240,
+      "y": 552,
+      "text": "03  MECHANICAL LOAD",
+      "detail": "Shaft inertia · damping · measured speed"
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_dc_0",
+      "anchor": "reference.y",
+      "wireIds": [
+        "w_db27069958"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_3",
+      "anchor": "b_2f80d45f5e.p_f42ef79d3d",
+      "wireIds": [
+        "dc_ground",
+        "w_4bfba6afb6"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_4",
+      "anchor": "load.a",
+      "wireIds": [
+        "w_2cb170b4f4"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_5",
+      "anchor": "load.b",
+      "wireIds": [
+        "wire6"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_dc_6",
+      "anchor": "sensor.y",
+      "wireIds": [
+        "w_6066a831c1"
+      ],
+      "name": "ω measured"
+    }
+  ],
+  "plots": [
+    {
+      "id": "speed",
+      "label": "Speed",
+      "series": [
+        "load.w",
+        "reference.y"
+      ],
+      "labels": [
+        "Rotor speed",
+        "Speed command"
+      ]
+    },
+    {
+      "id": "voltage",
+      "label": "Control voltage",
+      "series": [
+        "controller.y"
+      ],
+      "labels": [
+        "Control voltage"
+      ]
+    },
+    {
+      "id": "current",
+      "label": "Armature current",
+      "series": [
+        "motor.i"
+      ],
+      "labels": [
+        "Armature current"
+      ]
+    }
+  ],
+  "modelId": "9fab8a8e-a5cf-4b41-9283-b845e521ee66",
+  "subsystems": [
+    {
+      "id": "sub_9e4b8793f3",
+      "name": "Drivetrain",
+      "blocks": [
+        {
+          "id": "controller",
+          "definition": {
+            "kind": "pi",
+            "name": "PI controller",
+            "description": "Sampled speed control with output saturation and a bounded integral state.",
+            "domain": "signal",
+            "symbol": "PI",
+            "controller": true,
+            "ports": [
+              {
+                "id": "reference",
+                "name": "ref",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "measured",
+                "name": "meas",
+                "direction": "input",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "kp",
+                "name": "Proportional gain",
+                "value": 0.6,
+                "unit": ""
+              },
+              {
+                "id": "ki",
+                "name": "Integral gain",
+                "value": 2,
+                "unit": ""
+              },
+              {
+                "id": "limit",
+                "name": "Voltage limit",
+                "value": 24,
+                "unit": "V",
+                "min": 0.1
+              },
+              {
+                "id": "samplePeriod",
+                "name": "Sample period",
+                "value": 0.001,
+                "unit": "s",
+                "min": 0.0001
+              }
+            ],
+            "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
+            "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+          },
+          "position": {
+            "x": 240,
+            "y": 176
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          },
+          "labelOffset": {
+            "x": 0,
+            "y": -132
+          }
+        },
+        {
+          "id": "p_803d28e0ba",
+          "definition": {
+            "kind": "inport",
+            "name": "ref",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "y",
+                "name": "ref",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0
+            }
+          },
+          "position": {
+            "x": 60,
+            "y": 188
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "p_f42ef79d3d",
+          "definition": {
+            "kind": "connport",
+            "name": "−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1
+            }
+          },
+          "position": {
+            "x": 60,
+            "y": 248
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "p_f4e34b6423",
+          "definition": {
+            "kind": "connport",
+            "name": "shaft",
+            "description": "Physical mechanical terminal of the subsystem.",
+            "domain": "mechanical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 20,
+            "y": 232
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          }
+        },
+        {
+          "id": "p_d52aeef3f9",
+          "definition": {
+            "kind": "inport",
+            "name": "ω measured",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "4",
+            "ports": [
+              {
+                "id": "y",
+                "name": "ω measured",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 3
+            }
+          },
+          "position": {
+            "x": 60,
+            "y": 248
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "b_7172235648",
+          "definition": {
+            "kind": "subsystem",
+            "name": "Power stage",
+            "description": "Subsystem Power stage: 2 blocks inside.",
+            "domain": "electrical",
+            "symbol": "Power stage",
+            "ports": [
+              {
+                "id": "p_b895268ba2",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "p_e2532ff9c3",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_e6b2e5ee09",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "subsystem": {
+              "ref": "sub_7ec4b7bc48"
+            }
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          },
+          "position": {
+            "x": 580,
+            "y": 172
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w_44c20866ad",
+          "source": "p_803d28e0ba",
+          "sourceHandle": "y",
+          "target": "controller",
+          "targetHandle": "reference"
+        },
+        {
+          "id": "w_506bb3318e",
+          "source": "controller",
+          "sourceHandle": "y",
+          "target": "b_7172235648",
+          "targetHandle": "p_b895268ba2"
+        },
+        {
+          "id": "w_8249cab8e3",
+          "source": "b_7172235648",
+          "sourceHandle": "p_e2532ff9c3",
+          "target": "p_f42ef79d3d",
+          "targetHandle": "p"
+        },
+        {
+          "id": "w_0820a7a9e0",
+          "source": "b_7172235648",
+          "sourceHandle": "p_e6b2e5ee09",
+          "target": "p_f4e34b6423",
+          "targetHandle": "p"
+        },
+        {
+          "id": "w_f87d336272",
+          "source": "p_d52aeef3f9",
+          "sourceHandle": "y",
+          "target": "controller",
+          "targetHandle": "measured"
+        }
+      ],
+      "junctions": [],
+      "nets": [
+        {
+          "id": "net_dc_1",
+          "anchor": "controller.y",
+          "wireIds": [
+            "w_506bb3318e"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_fa278c5217ce4187931b7a9e9c072d6d",
+          "anchor": "p_803d28e0ba.y",
+          "wireIds": [
+            "w_44c20866ad"
+          ]
+        },
+        {
+          "id": "net_265de9b5e71747ee98532af741843193",
+          "anchor": "b_7172235648.p_e2532ff9c3",
+          "wireIds": [
+            "w_8249cab8e3"
+          ]
+        },
+        {
+          "id": "net_cbdca7fb0d08422a93fadca17c379167",
+          "anchor": "b_7172235648.p_e6b2e5ee09",
+          "wireIds": [
+            "w_0820a7a9e0"
+          ]
+        },
+        {
+          "id": "net_717a509b19d049ed8d85b084de3bb8d2",
+          "anchor": "p_d52aeef3f9.y",
+          "wireIds": [
+            "w_f87d336272"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sub_7ec4b7bc48",
+      "name": "Power stage",
+      "blocks": [
+        {
+          "id": "drive",
+          "definition": {
+            "kind": "voltage",
+            "name": "Voltage drive",
+            "description": "An ideal voltage source driven by a control signal.",
+            "domain": "electrical",
+            "symbol": "V",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "p",
+                "name": "+",
+                "domain": "electrical",
+                "side": "right",
+                "direction": "physical"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "domain": "electrical",
+                "side": "bottom",
+                "direction": "physical"
+              }
+            ],
+            "parameters": [],
+            "equations": "v = u;"
+          },
+          "position": {
+            "x": 472,
+            "y": 176
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          },
+          "labelOffset": {
+            "x": 0,
+            "y": -132
+          }
+        },
+        {
+          "id": "motor",
+          "definition": {
+            "kind": "motor",
+            "name": "DC motor",
+            "description": "Armature resistance and inductance coupled to a rotational shaft.",
+            "domain": "electrical",
+            "symbol": "M",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "domain": "electrical",
+                "side": "left",
+                "direction": "physical"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "domain": "electrical",
+                "side": "bottom",
+                "direction": "physical",
+                "offset": 25
+              },
+              {
+                "id": "flange",
+                "name": "shaft",
+                "domain": "mechanical",
+                "side": "bottom",
+                "direction": "physical",
+                "offset": 75
+              }
+            ],
+            "parameters": [
+              {
+                "id": "R",
+                "name": "Resistance",
+                "value": 1.2,
+                "unit": "Ω",
+                "min": 0.001
+              },
+              {
+                "id": "L",
+                "name": "Inductance",
+                "value": 0.02,
+                "unit": "H",
+                "min": 0.00001
+              },
+              {
+                "id": "k",
+                "name": "Motor constant",
+                "value": 0.15,
+                "unit": "N·m/A",
+                "min": 0.0001
+              }
+            ],
+            "equations": "L*der(i) = v - R*i - k*w;\ntau = k*i;"
+          },
+          "position": {
+            "x": 704,
+            "y": 176
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          },
+          "labelOffset": {
+            "x": 0,
+            "y": -132
+          }
+        },
+        {
+          "id": "p_b895268ba2",
+          "definition": {
+            "kind": "inport",
+            "name": "in",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "y",
+                "name": "in",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0
+            }
+          },
+          "position": {
+            "x": 300,
+            "y": 188
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "p_e2532ff9c3",
+          "definition": {
+            "kind": "connport",
+            "name": "−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1
+            }
+          },
+          "position": {
+            "x": 300,
+            "y": 248
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "p_e6b2e5ee09",
+          "definition": {
+            "kind": "connport",
+            "name": "shaft",
+            "description": "Physical mechanical terminal of the subsystem.",
+            "domain": "mechanical",
+            "symbol": "⊙",
+            "ports": [
+              {
+                "id": "p",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 240,
+            "y": 232
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w_aaf44c3d78",
+          "source": "p_b895268ba2",
+          "sourceHandle": "y",
+          "target": "drive",
+          "targetHandle": "u"
+        },
+        {
+          "id": "wire2",
+          "source": "drive",
+          "sourceHandle": "p",
+          "target": "motor",
+          "targetHandle": "p",
+          "waypoints": []
+        },
+        {
+          "id": "w_9b20941136",
+          "source": "p_e2532ff9c3",
+          "sourceHandle": "p",
+          "target": "drive",
+          "targetHandle": "n"
+        },
+        {
+          "id": "w_51cf6bbc48",
+          "source": "p_e2532ff9c3",
+          "sourceHandle": "p",
+          "target": "motor",
+          "targetHandle": "n"
+        },
+        {
+          "id": "w_ac7b333aec",
+          "source": "p_e6b2e5ee09",
+          "sourceHandle": "p",
+          "target": "motor",
+          "targetHandle": "flange"
+        }
+      ],
+      "junctions": [],
+      "nets": [
+        {
+          "id": "net_dc_2",
+          "anchor": "drive.p",
+          "wireIds": [
+            "wire2"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_e603374a81c94fa5a2f8138916ad699c",
+          "anchor": "p_b895268ba2.y",
+          "wireIds": [
+            "w_aaf44c3d78"
+          ]
+        },
+        {
+          "id": "net_878afcb668734bd8b22995a7099406a3",
+          "anchor": "drive.n",
+          "wireIds": [
+            "w_51cf6bbc48",
+            "w_9b20941136"
+          ]
+        },
+        {
+          "id": "net_4f3562a23af649a0a501d1df75ac6073",
+          "anchor": "motor.flange",
+          "wireIds": [
+            "w_ac7b333aec"
+          ]
+        }
+      ]
+    }
+  ]
+}

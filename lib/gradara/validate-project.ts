@@ -74,7 +74,7 @@ export function validateProject(project: Project): Diagnostic[] {
             hint: 'Connect a signal source to this input, or remove the block.',
           }),
         );
-    if (!d.generated && DRAWING_ONLY.has(d.kind))
+    if (!d.generated && !d.subsystem && DRAWING_ONLY.has(d.kind))
       out.push(
         problem(`v-drawing-${block.id}`, {
           message: `${d.name} is drawing-only and cannot be simulated yet.`,

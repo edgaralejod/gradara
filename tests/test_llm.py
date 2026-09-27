@@ -151,3 +151,34 @@ def test_off_blocks_generation(isolated):
     with pytest.raises(ProviderError, match='turned off'):
         asyncio.run(dispatch.generate('p', SCHEMA, 'a1', task='component'))
     assert dispatch.status()['ready'] is False
+
+
+def test_gateway_accepts_every_task_and_job_kind_the_app_sends():
+    """A release must not use a Gradara AI task the gateway would reject with a 422."""
+    import re
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    gateway = (root/'cloud'/'gateway'/'app.py').read_text()
+    task_pattern = re.search(r"task: str = Field\(pattern='([^']+)'", gateway).group(1)
+    kind_pattern = re.search(r"kind: str = Field\(pattern='([^']+)'", gateway).group(1)
+    source = '\n'.join(p.read_text() for p in (root/'server').rglob('*.py'))
+    tasks = set(re.findall(r"task='([a-z-]+)'", source)) | {'component'}
+    # Jobs started through the local job runner (engine-only jobs never reach the gateway), plus the task-name fallback.
+    kinds = {k for k in re.findall(r"start_job\('([a-z]+)'", (root/'server'/'app.py').read_text()) if k not in ('engine', 'simulation', 'variants')}
+    kinds |= {task.split('-')[0] for task in tasks}
+    task_kinds = eval(re.search(r'TASK_KINDS = (\{.*?\}\})', gateway, re.S).group(1))  # literal dict
+    assert tasks, 'no Gradara AI tasks found in server/'
+    for task in tasks:
+        assert re.fullmatch(task_pattern, task), f'gateway rejects task {task!r}'
+        assert task in task_kinds, f'gateway has no TASK_KINDS entry for {task!r}'
+    for kind in kinds:
+        assert re.fullmatch(kind_pattern, kind), f'gateway rejects job kind {kind!r}'
+
+
+def test_outdated_gateway_validation_error_is_explained():
+    from server.llm import gradara
+    response = httpx.Response(422, json={'detail': [{'loc': ['body', 'task'], 'msg': "String should match pattern"}]})
+    assert gradara._detail(response, '/v1/generate') == gradara.OUTDATED_SERVICE
+    other = httpx.Response(422, json={'detail': [{'loc': ['body', 'prompt'], 'msg': 'too long'}]})
+    assert gradara._detail(other, '/v1/generate') == 'Gradara AI rejected the request: too long'
+    assert gradara._detail(httpx.Response(402, json={'detail': 'Not enough credits.'})) == 'Not enough credits.'

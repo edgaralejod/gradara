@@ -518,3 +518,34 @@
   .block-dialog-properties { grid-template-columns: 1fr; }
   .block-dialog-properties > section:nth-child(2) { grid-column: 1; grid-row: auto; }
 }
+
+.settings-dialog .settings-note { margin-top: 4px; font-size: 12px; color: #5b7182; }
+
+/* Export: C code generation. */
+.export-dialog .codegen-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0 4px; }
+.export-dialog .codegen-options label { display: grid; gap: 3px; }
+.export-dialog .codegen-options label > span { font-size: var(--text-micro); color: #637987; }
+.export-dialog .codegen-options :is(select, input) {
+  height: 28px; min-width: 0; border: 1px solid #cfd9e0; border-radius: 2px; background: white; padding: 0 6px; color: #27333d;
+  font: var(--text-ui) var(--font-ui);
+}
+.export-dialog .codegen-options input { font-family: var(--font-code); }
+.export-dialog .codegen-problem {
+  display: flex; align-items: flex-start; gap: 6px; margin: 8px 0 4px; padding: 8px 10px; border: 1px solid #e3c9a6;
+  border-radius: 2px; background: #fbf4ea; color: #6b4a1f; font-size: var(--text-ui); line-height: 1.4;
+}
+.export-dialog .codegen-problem > svg { flex: none; margin-top: 2px; }
+.export-dialog .codegen-problem > span { flex: 1; }
+.export-dialog :is(.codegen-problem, .codegen-summary) button {
+  display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 0 2px; color: var(--primary);
+  font: 500 var(--text-ui) var(--font-ui); cursor: pointer;
+}
+.export-dialog .codegen-summary { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: var(--text-ui); }
+.export-dialog .codegen-actions { display: flex; gap: 8px; margin-top: 6px; }
+.export-dialog .codegen-verify { margin-top: 8px; padding: 8px 10px; border: 1px solid #cfd9e0; border-radius: 2px; background: white; }
+.export-dialog .codegen-verify strong { display: flex; align-items: center; gap: 6px; font-size: var(--text-ui); }
+.export-dialog .codegen-verify.is-ok strong { color: #2f6b3a; }
+.export-dialog .codegen-verify.is-bad strong { color: #9b3b26; }
+.export-dialog .codegen-verify table { width: 100%; margin-top: 4px; border-collapse: collapse; font-size: var(--text-micro); color: #526979; }
+.export-dialog .codegen-verify td { padding: 2px 8px 2px 0; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .export-dialog .codegen-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

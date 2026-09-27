@@ -34,7 +34,7 @@ Debug copies of AI prompts and responses are written locally only when `GRADARA_
 
 ## AI requests
 
-An AI request contains Gradara's instructions, the user's description, and the model context the task needs. That context might be the component being refined, the block catalog for a model build, or the controller equations for C export. Editing or diagnosing the open model from the Assistant sends that model's blocks, parameters, equations, and connections without its layout, the names of selected blocks, and the block catalog. Diagnosis also sends the problems you ask about and, for a failed run of the same model, the emitted Modelica source and the solver's messages. It does not include unrelated models or files.
+An AI request contains Gradara's instructions, the user's description, and the model context the task needs. That context might be the component being refined, the block catalog for a model build, or a custom block's equations when you ask the AI to write it in C (C code for library blocks is generated locally). Editing or diagnosing the open model from the Assistant sends that model's blocks, parameters, equations, and connections without its layout, the names of selected blocks, and the block catalog. Diagnosis also sends the problems you ask about and, for a failed run of the same model, the emitted Modelica source and the solver's messages. It does not include unrelated models or files.
 
 - **Own API key (OpenAI or Anthropic).** Requests go directly from the computer to the provider under the user's own account and terms. OpenAI requests set `store: false`.
 - **Gradara AI.** Requests go to the Gradara AI service, which forwards them to its configured model provider (Anthropic or OpenAI) and returns the result. See below.

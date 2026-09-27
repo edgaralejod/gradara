@@ -1,12 +1,12 @@
 # Document format and identity
 
-The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation lives in [server/models.py](../../server/models.py). Both must evolve together. FastAPI exposes the server schema at `/openapi.json`. The current document version is `1`; there is no promise that new schema changes are automatically backward compatible.
+The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation lives in [server/models.py](../../server/models.py). Both must evolve together. FastAPI exposes the server schema at `/openapi.json`. Documents use version `1` (flat) or `2` (with subsystems); there is no promise that new schema changes are automatically backward compatible.
 
 ## Project
 
 | Field | Meaning |
 | --- | --- |
-| `version` | Format version; currently 1. |
+| `version` | Format version: `1` for a flat document, `2` when it has subsystems. The workbench sets it; the server rejects `subsystems` in a version 1 document. |
 | `modelId` | Stable saved-document identity. Missing only in legacy/unassigned documents. |
 | `name`, `description` | Human-facing document information. |
 | `blocks` | Instances with embedded definitions and presentation data. |
@@ -16,6 +16,8 @@ The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation li
 | `revision` | Edit/undo revision. Save concurrency instead uses a separate content-hash `saveVersion` token. |
 | `exampleId` | Optional template origin, not document identity. |
 | `annotations`, `plots` | Diagram explanations and named result-series groups. |
+| `subsystems` | Version 2 only. Subsystem definitions, each stored once. See [subsystems and variants](#subsystems-and-variants). |
+| `configurations` | Optional named choices of variant for every subsystem instance with variants. |
 
 An empty document is valid to save, but cannot be simulated:
 
@@ -38,11 +40,40 @@ Saving assigns a document identity. For realistic fixtures, start with a checked
 
 A block has an `id`, embedded `definition`, `position`, optional `size`, and optional `labelOffset`. Instances carry their own parameter values and definitions; changing the library does not silently rewrite saved instances. `definition.name` currently doubles as the human instance name. `definition.kind` chooses behavior/symbol conventions and must not change just to rename a block.
 
-Definitions contain `kind`, name/description, primary domain, symbol, ports, parameters, declarations, equations, and optional generated/controller/category metadata. Scalar signal definitions are wrapped as Modelica components. Canonical physical kinds select backend wrappers, which are authoritative for their implementation.
+Definitions contain `kind`, name/description, primary domain, symbol, ports, parameters, declarations, equations, and optional generated/controller/category/keywords metadata. Scalar signal definitions are wrapped as Modelica components. Canonical physical kinds select backend wrappers, which are authoritative for their implementation.
+
+A definition can instead name a Modelica Standard Library 4.1.0 class in `modelica`:
+
+```json
+"modelica": {
+  "class": "Modelica.Mechanics.Translational.Components.Spring",
+  "modifiers": {"c": "c", "s_rel0": "s_rel0"},
+  "ports": {"ib": "i[2]"}
+}
+```
+
+`modifiers` maps MSL parameter names to plain numeric expressions over the block's parameter IDs; a dotted key such as `cellData.Qnom` sets a field of a record parameter. `ports` maps block port IDs to MSL connector names when they differ, including one element of a vector connector such as `i[2]`. The emitter instantiates the class directly. `server/msl.py` checks every wrapper against `server/msl_index.json` before emitting: the class must be in the index, each modifier must name a parameter of the class and use only the block's parameters, literals, and a few math functions, each port must map to a connector with the same domain and direction, vector connectors need an index, and a conditional connector needs a `use…` modifier that enables it. Generated definitions cannot carry `modelica`. The `equations` text of a wrapper block is a comment for display.
+
+Two more optional fields belong to hierarchy: `subsystem` marks an instance of a subsystem, and `boundary` marks a subsystem port block. See [subsystems and variants](#subsystems-and-variants).
+
+`ctemplate` is an optional C template for a custom signal block, used only by C code generation: `{signature, state: [{name, type: real|bool|int, init}], output: [...], update: [...], feedthrough, notes}`. `signature` is 16 hex characters derived from the block's kind, equations, declarations, ports, and parameter IDs; a template whose signature no longer matches is ignored. The statement rules are in [controller C code](EXECUTION.md#controller-c-code). It never affects simulation.
 
 Port IDs and parameter IDs use Modelica-compatible identifiers and must be unique within the definition. Block and junction IDs must be unique across the document. A rename should preserve IDs; duplication should allocate new instance/connection IDs and clone nested definitions so editing the copy cannot mutate the original.
 
-Ports have `direction` (`input`, `output`, or `physical`), their own `domain`, optional side, and optional offset in percent along that side. Never derive connector semantics only from the block color. Offsets must agree between renderer and router. Omit unset optional geometry values in API responses: an explicit `null` can accidentally behave like zero in frontend arithmetic.
+Ports have `direction` (`input`, `output`, or `physical`), their own `domain`, optional side, and optional offset in percent along that side. Domains are:
+
+| Domain | Direction | Modelica connector |
+| --- | --- | --- |
+| `signal` | input/output | `RealInput` / `RealOutput` |
+| `boolean` | input/output | `BooleanInput` / `BooleanOutput` |
+| `electrical` | physical | Analog `Pin` |
+| `mechanical` (rotational) | physical | Rotational `Flange_a` |
+| `translational` | physical | Translational `Flange_a` |
+| `thermal` | physical | `HeatPort_a` |
+| `magnetic` | physical | FluxTubes `MagneticPort` |
+| `threePhase` | physical | Polyphase `Plug` |
+
+`signal` and `boolean` are the causal domains; every other domain is a physical terminal. Validation rejects an input or output port with a physical domain and a physical port with a causal domain. Never derive connector semantics only from the block color. Offsets must agree between renderer and router. Omit unset optional geometry values in API responses: an explicit `null` can accidentally behave like zero in frontend arithmetic.
 
 ## Wires, junctions, and nets
 
@@ -66,9 +97,38 @@ Each wire belongs to exactly one net in documents with a net registry. Each net 
 
 Use [net-registry.ts](../../lib/gradara/net-registry.ts) reconciliation after graph edits rather than allocating a new ID on every render. Test merge, split, deletion, duplication, label placement, undo, and reload. The [wiring document](WIRING.md) records the detailed naming and identity policy.
 
+## Subsystems and variants
+
+A subsystem is a block whose inside is another diagram of the same document. [hierarchy.ts](../../lib/gradara/hierarchy.ts) holds the editing rules and [server/hierarchy.py](../../server/hierarchy.py) the server checks.
+
+**Definitions.** Each entry in `Project.subsystems` has an `id`, a `name`, its own `blocks`, `wires`, `junctions`, and `nets`, and optional promoted `parameters`. A definition is stored once however many instances use it. Definitions that no instance reaches from the top level are dropped when the document is edited; a document without subsystems returns to version 1.
+
+**Boundary blocks.** Inside a definition, blocks of kind `inport`, `outport`, and `connport` (library names **Subsystem input**, **Subsystem output**, and **Subsystem terminal**) carry `definition.boundary = {order, side?}`. Each has one port: an inport has an output `y` that drives the inside, an outport an input `u` that the inside drives, and a connport a physical `p`. Inports and outports take `signal` or `boolean`; connports take a physical domain. Boundary blocks are refused on the top level.
+
+**Instances.** An instance block has `definition.kind = "subsystem"` and `definition.subsystem.ref` set to a definition ID. Its ports are derived from the boundary blocks in `order`: the port ID is the boundary block's ID, the name is the boundary block's name, the direction is `input`, `output`, or `physical`, and the domain is the inner port's domain. `boundary.side` places a physical port on the outside. The server rejects an instance whose ports or parameter IDs do not match its definition, a reference to a missing definition, and any definition that contains itself directly or through others.
+
+**Promoted parameters.** A definition's `parameters` are ordinary parameters plus `targets: [{blockId, parameterId}]`, the inner block parameters they set. Instances list the same parameter IDs and hold their own values. The inner block keeps a value of its own, which is used when the parameter is demoted.
+
+**Variants.** An instance can have alternative insides behind one set of ports:
+
+```json
+"subsystem": {
+  "ref": "sub_b",
+  "active": "v_b",
+  "variants": [
+    {"id": "v_a", "name": "A", "ref": "sub_a", "values": {"Gain_k": 5}},
+    {"id": "v_b", "name": "B", "ref": "sub_b", "values": {"Gain_k": 2}, "unused": ["p_z"]}
+  ]
+}
+```
+
+`variants` has 2–12 entries with unique IDs, and `active` must name one whose `ref` equals the instance's `ref`. So the instance's `ref` is always the active variant's inside, and emission, results, and other hierarchy code see an ordinary instance. A diagram variant has its own definition; a parameter variant shares another variant's `ref` and differs only in `values`, the promoted parameter values it restores when chosen. The instance's ports are the union of every variant's ports: the active inside's ports first, then ports only other variants have. `unused` lists ports that variant leaves idle on purpose. A port the active inside lacks and does not list in `unused` fails simulation.
+
+**Configurations.** `Project.configurations` holds up to 30 entries `{id, name, choices}`. `choices` maps `<sheet>/<instance ID>` to a variant ID, where the sheet is a subsystem definition ID, or empty for the top level (`/drive`). Keys for instances that no longer exist are ignored. Configurations do not change emitted source; only the active variants do.
+
 ## Normalization and persistence
 
-[normalize-project.ts](../../lib/gradara/normalize-project.ts) assigns missing document identity, normalizes block names and junctions, and reconciles nets. It is used around document loading and editing. Backend [workspace.py](../../server/workspace.py) handles document creation, save/load, and legacy files.
+[normalize-project.ts](../../lib/gradara/normalize-project.ts) assigns missing document identity, normalizes block names and junctions, and reconciles nets. It also turns a library **Subsystem** block, or a subsystem placeholder in an older document, into a real subsystem whose inside passes each input to the output in the same position, so its ports and wires stay. It is used around document loading and editing. Backend [workspace.py](../../server/workspace.py) handles document creation, save/load, and legacy files.
 
 | Path under `projects/` | Ownership |
 | --- | --- |
@@ -99,7 +159,7 @@ When adding fields, decide whether they affect physics, presentation, provenance
 
 ## Signal logging
 
-`Net.logged?: boolean` records a signal/control net in the next simulation. Physical nets cannot be logged directly; select the physical quantity with a sensor and log its signal output. Reconciliation retains logging with the net identity on split and enables it on a merged net if any contributing net was logged. Logging is undoable and changes observation/result identity; geometry and label edits do not. Modelica emits an output observation per logged net, while the solver continues to determine execution order.
+`Net.logged?: boolean` records a signal/control net in the next simulation. Physical nets cannot be logged directly; select the physical quantity with a sensor and log its signal output. Reconciliation retains logging with the net identity on split and enables it on a merged net if any contributing net was logged. Logging is undoable and changes observation/result identity; geometry and label edits do not. Modelica emits an output observation per logged net, while the solver continues to determine execution order. Nets inside a subsystem definition can be logged too; each instance of that definition records its own copy, keyed by the instance path (see [results](EXECUTION.md#results)).
 
 ### Block rotation
 

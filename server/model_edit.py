@@ -8,7 +8,7 @@ from .diagnostics import Diagnostic, SimulationFailure, validate_simulation
 from .engine import simulate
 from .llm import dispatch
 from .model_agent import ParameterValue, Strict, catalog_snapshot, describe
-from .models import Block, BlockType, Definition, Net, Project, Wire, flatten_connects
+from .models import CAUSAL_DOMAINS, Block, BlockType, Definition, Net, Project, Wire, flatten_connects
 from .paths import DATA
 
 MAX_CREATED = 2
@@ -244,7 +244,7 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
                 raise ValueError('A port cannot connect to itself.')
             if pa.domain != pb.domain:
                 raise ValueError(f'Cannot connect {pa.domain} {name_of(a)}.{pa.name} to {pb.domain} {name_of(b)}.{pb.name}.')
-            if pa.domain == 'signal':
+            if pa.domain in CAUSAL_DOMAINS:
                 if pa.direction == 'input' and pb.direction == 'output':
                     a, pa, b, pb = b, pb, a, pa
                 if (pa.direction, pb.direction) != ('output', 'input'):
@@ -306,8 +306,8 @@ Operations run in order:
 - remove_block, rename_block (blockId, name), set_parameter (blockId, parameterId, value), set_duration (duration in s).
 - connect (source, sourcePort, target, targetPort): signal connections run from an output port to an input port, and an input has one source; physical terminals connect only to the same domain. Block references may be existing IDs or aliases added earlier in this edit.
 - disconnect: wireId, or the four endpoint fields.
-Prefer catalog blocks and parameter changes over new definitions. Keep physical references (ground) and connect every signal input you add. Set unused fields to null.
-If the request cannot be done with these operations or the supported physics (electrical, rotational mechanical, thermal, scalar signals), explain why in unsupported and return one set_duration operation with the current stop time. Otherwise unsupported is empty.
+Prefer catalog blocks and parameter changes over new definitions. Gradara places new blocks and draws new wires in its house style, so never describe positions; give new blocks short names of 1-3 words. Keep physical references (ground) and connect every signal input you add. Set unused fields to null.
+If the request cannot be done with these operations or the supported physics (electrical including 3-phase, rotational and translational mechanical, thermal, magnetic, scalar Real and Boolean signals), explain why in unsupported and return one set_duration operation with the current stop time. Otherwise unsupported is empty.
 summary is one or two sentences for the user. assumptions are short and explicit.'''
 
 
@@ -333,6 +333,9 @@ async def realize(plan: EditPlan, project: Project, job_id: str, progress, cache
         existing = blocks.get(op.blockId) if op.op == 'revise_definition' else None
         if op.op == 'revise_definition' and existing is None:
             raise ValueError(f'Unknown block "{op.blockId}" to revise.')
+        if existing is not None and existing.definition.modelica is not None:
+            raise ValueError(f'{existing.definition.name} is a Modelica Standard Library block; set its parameters or '
+                             'replace it with create_block instead of rewriting it.')
         key = (op.op, op.alias or op.blockId, op.prompt)
         label = op.alias if op.op == 'create_block' else existing.definition.name
         if key not in cache:

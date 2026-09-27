@@ -1,5 +1,6 @@
 import type { Diagnostic } from './api';
-import { defaultBlockSize, snapBlockPosition } from './block-design';
+import { layoutNewBlocks } from './auto-layout';
+import { defaultBlockSize } from './block-design';
 import type { Block, Project, Wire } from './model';
 
 export type EditChange = {
@@ -23,7 +24,8 @@ export type EditProposal = {
   credits?: number;
 };
 
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+const same = (a: unknown, b: unknown) =>
+  JSON.stringify(a) === JSON.stringify(b);
 
 function sameEnds(a: Wire, b: Wire) {
   return (
@@ -39,6 +41,7 @@ function sameEnds(a: Wire, b: Wire) {
  * moves existing blocks or reroutes existing wires, so untouched objects are
  * kept exactly (routes, labels, sizes, nets); only definitions, new blocks,
  * new wires, removals, the name, and the stop time come from the proposal.
+ * New blocks are placed by `layoutNewBlocks`, ignoring the server's rough position.
  */
 export function mergeProposal(current: Project, proposed: Project) {
   const blocks = new Map(current.blocks.map((b) => [b.id, b]));
@@ -49,8 +52,7 @@ export function mergeProposal(current: Project, proposed: Project) {
     const existing = blocks.get(block.id);
     if (!existing) {
       added.push(block.id);
-      const size = defaultBlockSize(block.definition);
-      return { ...block, size, position: snapBlockPosition(block.position, size) };
+      return { ...block, size: defaultBlockSize(block.definition) };
     }
     if (same(existing.definition, block.definition)) return existing;
     changed.push(block.id);
@@ -66,15 +68,17 @@ export function mergeProposal(current: Project, proposed: Project) {
   const nets = current.nets
     ?.map((n) => ({ ...n, wireIds: n.wireIds.filter((id) => kept.has(id)) }))
     .filter((n) => n.wireIds.length);
+  const merged: Project = {
+    ...current,
+    name: proposed.name,
+    duration: proposed.duration,
+    blocks: nextBlocks,
+    wires: nextWires,
+    ...(nets ? { nets } : {}),
+  };
   return {
-    project: {
-      ...current,
-      name: proposed.name,
-      duration: proposed.duration,
-      blocks: nextBlocks,
-      wires: nextWires,
-      ...(nets ? { nets } : {}),
-    },
+    // The agent never picks coordinates: new blocks get the house-style layout here.
+    project: layoutNewBlocks(merged, added),
     added,
     changed,
   };

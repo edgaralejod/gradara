@@ -11,6 +11,7 @@ directories:
   buildResources: build
 files:
   - main.cjs
+  - preload.cjs
   - package.json
   - "!**/*.map"
 asar: true

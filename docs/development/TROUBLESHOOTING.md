@@ -22,7 +22,7 @@ Run the launcher to build the image if it is missing. A first build needs networ
 
 ## Model does not simulate
 
-Read the error detail first. Unconnected scalar inputs should name the block and port. A graph can be saved while incomplete; it is checked again before Run. Mux/demux and subsystem placeholders do not yet execute their intended behavior.
+Read the error detail first. Unconnected scalar inputs should name the block and port. A graph can be saved while incomplete; it is checked again before Run. Mux and demux are drawing-only and do not simulate. Problems inside a subsystem name the block inside it; open the subsystem to see them on its sheet. If a subsystem with variants reports that it has no inside for a port, add that port inside the active variant or mark it **not used here** in the inspector's Variants section.
 
 Inspect emitted source and the failing run folder's `diagnostics.json`, which holds the same structured problems the job reported, with the raw solver text in each `detail`. An algebraic-loop failure lists the signal blocks it found on a cycle without state; that list is a best-effort hint, not solver output. Check parameter ranges, equation balance, initial conditions, feedback sign, and physical references. Ideal switch networks can be singular for particular configurations. Do not treat partial CSV output as a successful solution or weaken completion checks to remove the error.
 
@@ -36,7 +36,7 @@ Jobs are in memory. A backend restart can make a job ID return 404 even though a
 
 Check **Settings → AI**. `agentReady` means the selected provider is configured (key saved, signed in, or CLI found), not that it is reachable. Provider errors keep their meaning: a rejected key (401), not enough Gradara AI credits (402), rate limiting (429), or the provider being unavailable (503). The [AI feature setup](../AGENT_SETUP.md) table lists what each provider needs. For the Codex CLI, it must be installed, signed in, and able to reach its provider; set `GRADARA_CODEX_BIN` if executable discovery is wrong. Generation may take tens of seconds and has a timeout.
 
-Review diagnostics in the UI. Codex runs keep their prompts and logs under the data folder's `agent/` directory (`projects/agent/` in a source checkout); other providers keep nothing unless `GRADARA_KEEP_AI_TRANSCRIPTS=1`. These files may contain proprietary model content, so redact before sharing. The generator accepts the selected block type: scalar signal, electrical, rotational mechanical, thermal, or multidomain. It does not accept arbitrary Modelica packages, extra connector families, or whole subsystems. Editing and ordinary simulation remain available without an agent.
+Review diagnostics in the UI. Codex runs keep their prompts and logs under the data folder's `agent/` directory (`projects/agent/` in a source checkout); other providers keep nothing unless `GRADARA_KEEP_AI_TRANSCRIPTS=1`. These files may contain proprietary model content, so redact before sharing. The generator accepts the selected block type: scalar signal, electrical, rotational or translational mechanical, magnetic, thermal, or multidomain. It does not accept arbitrary Modelica packages, Boolean or three-phase ports, or whole subsystems. Editing and ordinary simulation remain available without an agent.
 
 ## Install fails at the React Flow patch
 

@@ -11,6 +11,7 @@ export default function NumberField({
   inputRef,
   live = false,
   onEnter,
+  disabled = false,
 }: {
   value: number;
   onChange: (value: number) => void;
@@ -23,6 +24,7 @@ export default function NumberField({
   live?: boolean;
   /** Called after Enter commits a valid value. */
   onEnter?: () => void;
+  disabled?: boolean;
 }) {
   const [text, setText] = useState(String(value));
   const [invalid, setInvalid] = useState(false);
@@ -53,6 +55,7 @@ export default function NumberField({
   return (
     <Input
       ref={inputRef}
+      disabled={disabled}
       className={className}
       type="number"
       step="any"

@@ -180,8 +180,9 @@ export function routeBetween(
     const facing =
       (exit === Position.Right && entry === Position.Left && a.x <= b.x) ||
       (exit === Position.Left && entry === Position.Right && a.x >= b.x);
-    // Closely stacked opposite ports need two legs so the entry is not a hairpin.
-    if (!facing && exit !== entry && Math.abs(a.x - b.x) < EXIT_STUB * 2) {
+    // Opposite ports that point away from each other (the target is behind the source)
+    // need an S: two legs across, so neither stub doubles back on itself.
+    if (!facing && exit !== entry) {
       const y = nearly(a.y, b.y) ? a.y + EXIT_STUB : (a.y + b.y) / 2;
       return simplifyPoints([from, a, { x: a.x, y }, { x: b.x, y }, b, to]);
     }
@@ -200,7 +201,7 @@ export function routeBetween(
     const facing =
       (exit === Position.Bottom && entry === Position.Top && a.y <= b.y) ||
       (exit === Position.Top && entry === Position.Bottom && a.y >= b.y);
-    if (!facing && exit !== entry && Math.abs(a.y - b.y) < EXIT_STUB * 2) {
+    if (!facing && exit !== entry) {
       const x = nearly(a.x, b.x) ? a.x + EXIT_STUB : (a.x + b.x) / 2;
       return simplifyPoints([from, a, { x, y: a.y }, { x, y: b.y }, b, to]);
     }

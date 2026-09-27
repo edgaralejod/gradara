@@ -5,7 +5,7 @@
 // checks against GitHub Releases (disable with GRADARA_DISABLE_UPDATES=1).
 'use strict';
 
-const { app, BrowserWindow, Menu, dialog, shell, session } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell, session } = require('electron');
 const { spawn, execFile } = require('node:child_process');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -202,7 +202,14 @@ function createWindow() {
     title: 'Gradara',
     backgroundColor: '#f3f6f8',
     show: false,
-    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false },
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      spellcheck: false,
+      // Exposes update status and two update actions to the workbench, nothing else.
+      preload: path.join(__dirname, 'preload.cjs'),
+    },
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());
   if (SELF_TEST_REPORT) {
@@ -310,6 +317,13 @@ async function runSelfTest(window) {
     }
     checks.workbenchRendered = rendered;
     if (!rendered) throw new Error('The workbench did not render within 60 seconds.');
+    // The preload bridge must reach the page; self-test builds report updates as disabled.
+    checks.updateBridge = await window.webContents.executeJavaScript(
+      "(async () => { const u = window.gradaraDesktop && window.gradaraDesktop.updates; if (!u) return 'missing'; const s = await u.getState(); return s ? s.status : 'no state'; })()",
+    );
+    if (checks.updateBridge !== 'disabled') {
+      throw new Error(`The update bridge is not working (got ${checks.updateBridge}).`);
+    }
     await finishSelfTest({ ok: true, checks });
   } catch (error) {
     await finishSelfTest({ ok: false, checks, error: error.message });
@@ -370,6 +384,7 @@ function buildMenu() {
         { label: 'Open Data Folder', click: () => void shell.openPath(dataDir()) },
         { label: 'Open Logs Folder', click: () => void shell.openPath(logDir()) },
         { label: 'Restart Local Service', click: () => restart() },
+        ...(UPDATES_ENABLED ? [{ label: 'Check for Updates', click: () => void checkNow() }] : []),
         { type: 'separator' },
         { label: 'Privacy', click: () => void shell.openExternal(PRIVACY_URL) },
         { label: 'Report an Issue', click: () => void shell.openExternal(ISSUES_URL) },
@@ -380,16 +395,81 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-function checkForUpdates() {
-  if (DEV || SELF_TEST_REPORT || process.env.GRADARA_DISABLE_UPDATES === '1') return;
-  try {
-    const { autoUpdater } = require('electron-updater');
-    autoUpdater.autoDownload = true;
-    autoUpdater.checkForUpdatesAndNotify().catch(() => {});
-  } catch {
-    /* updater unavailable for this package format */
+// ------------------------------------------------------------------ updates
+// Like the Claude and ChatGPT desktop apps: check at launch and every few hours,
+// download in the background, show "Restart to update" in the workbench, and
+// install on restart or on the next quit. The .deb package cannot replace itself
+// without a password prompt, so it only reports that a new version exists.
+const UPDATES_ENABLED = !DEV && !SELF_TEST_REPORT && process.env.GRADARA_DISABLE_UPDATES !== '1';
+const MANUAL_UPDATES = process.platform === 'linux' && !process.env.APPIMAGE;
+const DOWNLOAD_PAGE = 'https://gradara.app/#download';
+const updateState = {
+  status: UPDATES_ENABLED ? 'idle' : 'disabled',
+  currentVersion: app.getVersion(),
+  version: null,
+  percent: 0,
+  checkedAt: null,
+  error: '',
+};
+let updater = null;
+
+function publishUpdate(patch) {
+  Object.assign(updateState, patch);
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed()) window.webContents.send('gradara:update', { ...updateState });
   }
 }
+
+function checkNow() {
+  if (!updater || updateState.status === 'downloading' || updateState.status === 'ready') return Promise.resolve();
+  return updater.checkForUpdates().then(
+    () => undefined,
+    (error) => publishUpdate({ status: 'error', error: String(error?.message || error).slice(0, 200) }),
+  );
+}
+
+function setUpUpdates() {
+  if (!UPDATES_ENABLED) return;
+  try {
+    ({ autoUpdater: updater } = require('electron-updater'));
+  } catch {
+    publishUpdate({ status: 'disabled' });
+    return;
+  }
+  updater.autoDownload = !MANUAL_UPDATES;
+  updater.autoInstallOnAppQuit = true;
+  updater.on('checking-for-update', () => publishUpdate({ status: 'checking', error: '' }));
+  updater.on('update-not-available', () => publishUpdate({ status: 'current', checkedAt: Date.now() }));
+  updater.on('update-available', (info) =>
+    publishUpdate({ status: MANUAL_UPDATES ? 'manual' : 'downloading', version: info.version, percent: 0, checkedAt: Date.now() }),
+  );
+  updater.on('download-progress', (progress) => publishUpdate({ status: 'downloading', percent: progress.percent }));
+  updater.on('update-downloaded', (info) => publishUpdate({ status: 'ready', version: info.version, percent: 100 }));
+  updater.on('error', (error) => publishUpdate({ status: 'error', error: String(error?.message || error).slice(0, 200) }));
+  setTimeout(() => void checkNow(), 10000).unref();
+  setInterval(() => void checkNow(), 4 * 60 * 60 * 1000).unref();
+}
+
+// Only the workbench served by our own service may call these.
+const trusted = (event) => isLocal(event.senderFrame?.url || '');
+ipcMain.handle('gradara:update:state', (event) => (trusted(event) ? { ...updateState } : null));
+ipcMain.handle('gradara:update:check', async (event) => {
+  if (!trusted(event)) return null;
+  await checkNow();
+  return { ...updateState };
+});
+ipcMain.handle('gradara:update:install', async (event) => {
+  if (!trusted(event)) return false;
+  if (updateState.status === 'manual') {
+    void shell.openExternal(DOWNLOAD_PAGE);
+    return true;
+  }
+  if (updateState.status !== 'ready' || !updater) return false;
+  quitting = true;
+  await stopBackend();
+  setImmediate(() => updater.quitAndInstall(false, true));
+  return true;
+});
 
 void app.whenReady().then(() => {
   app.setAboutPanelOptions({
@@ -406,7 +486,7 @@ void app.whenReady().then(() => {
     setTimeout(() => void finishSelfTest({ ok: false, error: 'Self-test timed out after 240 seconds.' }), 240000).unref();
   }
   void launch();
-  checkForUpdates();
+  setUpUpdates();
   app.on('activate', () => {
     if (!mainWindow && backend) {
       void createWindow().loadURL(`http://127.0.0.1:${port}/`);

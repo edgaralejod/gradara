@@ -1,7 +1,42 @@
 import { controlBlocks } from './control-blocks';
 import { extraBlocks } from './extra-blocks';
+import { mslBlocks } from './msl-blocks';
+import { portBlocks } from './port-blocks';
 import { powerBlocks } from './power-blocks';
-export type Domain = 'signal' | 'electrical' | 'mechanical' | 'thermal';
+export type Domain =
+  | 'signal'
+  | 'boolean'
+  | 'electrical'
+  | 'mechanical'
+  | 'translational'
+  | 'thermal'
+  | 'magnetic'
+  | 'threePhase';
+/** Domains carried by input/output ports; every other domain is a physical terminal. */
+export const causalDomains: ReadonlySet<Domain> = new Set([
+  'signal',
+  'boolean',
+]);
+export const isCausal = (domain: Domain) => causalDomains.has(domain);
+/** Readable names for the domains, used in the library, inspector, and legends. */
+export const domainLabels: Record<Domain, string> = {
+  signal: 'signal',
+  boolean: 'Boolean',
+  electrical: 'electrical',
+  mechanical: 'rotational',
+  translational: 'translational',
+  thermal: 'thermal',
+  magnetic: 'magnetic',
+  threePhase: '3-phase',
+};
+/** A built-in block that instantiates a Modelica Standard Library class (see server/msl.py). */
+export type ModelicaWrapper = {
+  class: string;
+  /** MSL parameter name → expression over this block's parameter IDs. */
+  modifiers?: Record<string, string>;
+  /** Block port ID → MSL connector name, when they differ. */
+  ports?: Record<string, string>;
+};
 export type Port = {
   id: string;
   name: string;
@@ -29,7 +64,15 @@ export type LibraryCategoryId =
   | 'control'
   | 'sinks'
   | 'electrical'
-  | 'mechanical';
+  | 'semiconductors'
+  | 'converters'
+  | 'machines'
+  | 'threePhase'
+  | 'mechanical'
+  | 'translational'
+  | 'thermal'
+  | 'magnetic'
+  | 'logic';
 export type Definition = {
   kind: string;
   name: string;
@@ -44,6 +87,60 @@ export type Definition = {
   controller?: boolean;
   category?: LibraryCategoryId;
   keywords?: string[];
+  modelica?: ModelicaWrapper;
+  /** A subsystem instance; its ports mirror the boundary blocks of `subsystem.ref` (of every variant). */
+  subsystem?: SubsystemRef;
+  /** A boundary block inside a subsystem (kinds inport, outport, connport). */
+  boundary?: { side?: Port['side']; order: number };
+  /** C for code generation of a custom block, written once by the AI (see server/ctemplate.py). */
+  ctemplate?: CTemplate;
+};
+/**
+ * One alternative inside for a subsystem instance. A diagram variant has its own
+ * definition; a parameter variant shares another variant's `ref` with different
+ * promoted `values`. `unused` lists instance ports this variant leaves idle.
+ */
+export type Variant = {
+  id: string;
+  name: string;
+  ref: string;
+  values: Record<string, number>;
+  unused?: string[];
+};
+/** An instance's definition reference; with variants, `ref` is the active variant's. */
+export type SubsystemRef = {
+  ref: string;
+  variants?: Variant[];
+  active?: string;
+};
+/** A named choice of variant per instance, keyed `<sheet>/<instance ID>` (sheet empty at the top). */
+export type Configuration = {
+  id: string;
+  name: string;
+  choices: Record<string, string>;
+};
+/** Statements over placeholders ({u.port}, {y.port}, {p.id}, {x.state}, {h}, {t}); checked on the server. */
+export type CTemplate = {
+  signature: string;
+  state: { name: string; type: 'real' | 'bool' | 'int'; init: number }[];
+  output: string[];
+  update: string[];
+  feedthrough: boolean;
+  notes: string;
+};
+/** A subsystem parameter that sets parameters of blocks inside it. */
+export type PromotedParameter = Parameter & {
+  targets: { blockId: string; parameterId: string }[];
+};
+/** The inside of a subsystem, stored once per document and shared by its instances. */
+export type SubsystemDefinition = {
+  id: string;
+  name: string;
+  blocks: Block[];
+  wires: Wire[];
+  junctions?: Junction[];
+  nets?: Net[];
+  parameters?: PromotedParameter[];
 };
 export type Block = {
   id: string;
@@ -86,7 +183,11 @@ export type Net = {
   logged?: boolean;
 };
 export type Project = {
-  version: 1;
+  /** 2 when the document has subsystems; version 1 documents are flat. */
+  version: 1 | 2;
+  subsystems?: SubsystemDefinition[];
+  /** Named variant choices; see Configuration. */
+  configurations?: Configuration[];
   name: string;
   blocks: Block[];
   wires: Wire[];
@@ -107,6 +208,10 @@ export const domainColors: Record<Domain, string> = {
   electrical: '#aa6b20',
   mechanical: '#298b82',
   thermal: '#cf6b68',
+  boolean: '#6a5aa6',
+  translational: '#5f7f2a',
+  magnetic: '#a24f86',
+  threePhase: '#b8522b',
 };
 const p = (
   id: string,
@@ -273,6 +378,8 @@ export const library: Definition[] = [
     equations: 'y = max(lower, min(upper, u));',
   },
   ...extraBlocks,
+  ...mslBlocks,
+  ...portBlocks,
 ];
 const block = (kind: string, id: string, x: number, y: number): Block => ({
   id,

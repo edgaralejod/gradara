@@ -55,8 +55,8 @@ function overlap(a: Run, b: Run) {
     0.001
   );
 }
-/** Displayed geometry is the drawing route: pinned waypoints, or orthogonal auto-route. */
-function routedPolylines(project: Project): Map<string, Pt[]> {
+/** Every wire's drawn route, keyed by wire ID: pinned waypoints, or orthogonal auto-route. */
+export function routedPolylines(project: Project): Map<string, Pt[]> {
   const cached = routeCache.get(project);
   if (cached) return cached;
   const routes = new Map<string, Pt[]>();

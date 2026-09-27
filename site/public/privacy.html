@@ -54,9 +54,11 @@
 <tbody>
 <tr><td>Account</td><td>Email, sign-in provider user id, credit balance</td><td>Until you delete your account</td></tr>
 <tr><td>Purchases</td><td>Credits added and the payment reference</td><td>As required for accounting</td></tr>
-<tr><td>Usage</td><td>Task type, model name, token counts, time, success</td><td>About 13 months</td></tr>
-<tr><td>Operation counters</td><td>Operation id, kind, number of calls, credits charged, and for edits which priced parts were charged (for example "block:1")</td><td>7 days</td></tr>
+<tr><td>Usage</td><td>Task type, AI model name, token counts, latency, success, a short error code, the operation id, and the time</td><td>About 13 months</td></tr>
+<tr><td>Operation counters</td><td>Operation id, kind, number of calls, credits charged, and for edits and fixes which priced parts were charged (for example "block:1")</td><td>7 days</td></tr>
 <tr><td>Sign-ins</td><td>A one-way hash of each computer's token, and the day it was last used</td><td>Until revoked, then 30 days</td></tr>
+<tr><td>Sign-in codes</td><td>A one-way hash of the device code, the short code you approve, the computer's label, and its status</td><td>One day after they expire</td></tr>
+<tr><td>Payment events</td><td>Stripe event ids, so a payment is never credited twice</td><td>Kept to prevent double credits</td></tr>
 </tbody>
 </table>
 <p class="after-table">Server logs contain only the request type, status, timing, and a random request id. We also turn off our hosting platform's request logs, so our server logs do not contain IP addresses. Sign-in (Firebase) and payments (Stripe) see your IP address under their own policies.</p>

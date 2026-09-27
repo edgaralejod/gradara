@@ -46,6 +46,7 @@ A fresh workspace opens with one empty **Untitled model**. Click its title to re
 | --- | --- |
 | Blank model | Add blocks from the library, connect ports, set parameters, and run. |
 | [DC motor control](models/DC.md) | A sampled PI controller, electrical motor, rotational load, and speed feedback. |
+| [EV drivetrain](docs/examples/EV.md) | Battery, averaged converter, motor, and vehicle in three levels of subsystems, with battery-chemistry and motor-type variants and two configurations. |
 | [Servo position control](docs/examples/SERVO.md) | A 1 kHz sampled PID position loop on a DC motor, built to export its controller to C and compare it with the simulation. |
 | [AC motor · FOC](models/FOC.md) | PMSM field-oriented control, d/q transforms, current loops, and an averaged inverter. |
 | [Buck converter](models/BUCK.md) | A 24 V to 12 V synchronous converter with actual ideal switches; inspect switching ripple with **Last 1 ms**. |
@@ -60,11 +61,12 @@ The repository includes only the curated example templates. Personal models, Tra
 
 - Orthogonal wires with snapping, branching onto existing wires, junctions, reconnecting, segment editing, redraw, and undo. Nets have stable IDs and readable automatic or custom names.
 - A shared block design system, searchable library, model inspector, resize handles, movable labels, selection tools, and Ctrl-drag duplication.
-- Signal/control components alongside electrical and rotational mechanical components. Physical ports can cross block domains through explicit sensors and actuators.
+- A library of 218 blocks: signal, Boolean logic, electrical, semiconductor, converter, machine, 3-phase, rotational and translational mechanical, thermal, and magnetic. Most physical blocks are Modelica Standard Library 4.1.0 components. Physical ports can cross block domains through explicit sensors and actuators.
+- Hierarchical subsystems: group a selection with ⌘/Ctrl+G, open and navigate nested sheets, share one definition between instances, and promote parameters. Variants keep alternative insides behind one set of ports, and configurations switch them together or run them all for comparison.
 - Asynchronous OpenModelica simulation, cancellation, saved runs, plots, and complete CSV downloads. A Problems dock lists live model checks and block-mapped run diagnostics; click one to select the blocks involved.
-- Agent-created signal, electrical, rotational mechanical, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.
+- Agent-created signal, electrical, rotational and translational mechanical, magnetic, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.
 - An Assistant that proposes checked edits to the open model and explains or fixes failed runs; every proposal is reviewed and applied as one undo step.
-- Modelica source export, portable project export, and agent-generated, compile-checked C11 for **one controller block**, with a code preview. The servo example ships a reviewed reference export that tests replay against the simulation.
+- Modelica source export, portable project export, and deterministic C11 for a controller: a subsystem or a set of signal blocks, with Tustin, backward, or forward Euler discretization, and a check that replays the last run through the compiled code.
 - Desktop installers with first-run engine setup, a native OpenModelica or container engine, and a choice of Gradara AI credits, your own OpenAI or Anthropic key, or no AI.
 
 Drawing, dragging, and routing stay in the workbench. The local FastAPI service saves project documents and supervises OpenModelica jobs, using a native OpenModelica install or the pinned container image. The authoring representation is currently **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.
@@ -79,7 +81,7 @@ Drag empty canvas to select. Pan with the middle/right mouse button or Space. **
 
 This is a trusted, single-user local application. **Do not expose the local service to a public network.** It accepts only loopback requests from its own workbench and has no multi-user authorization. Models and runs live in your data folder (`projects/` in a source checkout). See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
-Hierarchical subsystems, vector/bus execution, arbitrary Modelica import and round trips, general solver interchangeability, FMI, remote simulation, and HDL generation are future work. Mux/demux and subsystem placeholders are visible but report their simulation limitations. C compilation does not establish behavioral equivalence or target-hardware correctness. The [roadmap](ROADMAP.md) describes bounded opportunities to help.
+Vector/bus execution, arbitrary Modelica import and round trips, general solver interchangeability, FMI, remote simulation, and HDL generation are future work. Mux/demux blocks are visible but drawing-only, and report that when you run. C compilation does not establish behavioral equivalence or target-hardware correctness. The [roadmap](ROADMAP.md) describes bounded opportunities to help.
 
 ## Develop and contribute
 

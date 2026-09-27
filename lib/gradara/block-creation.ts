@@ -31,6 +31,25 @@ export const blockTypes = {
       'Ideal angular velocity sensor',
     ],
   },
+  translational: {
+    label: 'Mechanical · translational',
+    description:
+      'Linear flanges with position and force. Optional signal ports.',
+    suggestions: [
+      'Linear spring with a preload',
+      'Coulomb friction between two flanges',
+      'Ideal linear velocity sensor',
+    ],
+  },
+  magnetic: {
+    label: 'Magnetic',
+    description:
+      'Magnetic ports with magnetic potential and flux. Optional signal ports.',
+    suggestions: [
+      'Air gap reluctance from length and area',
+      'Permanent magnet as an MMF source with internal reluctance',
+    ],
+  },
   thermal: {
     label: 'Thermal',
     description:
@@ -44,7 +63,7 @@ export const blockTypes = {
   multidomain: {
     label: 'Multiple physical domains',
     description:
-      'Connect at least two of electrical, rotational mechanical, and thermal physics.',
+      'Connect at least two of electrical, rotational, translational, thermal, and magnetic physics.',
     suggestions: [
       'Resistor with a thermal port for dissipated heat',
       'Ideal electromechanical motor',
@@ -61,5 +80,8 @@ export function inferBlockType(definition?: Definition): BlockType {
       .filter((port) => port.direction === 'physical')
       .map((port) => port.domain),
   );
-  return domains.size > 1 ? 'multidomain' : definition.domain;
+  if (domains.size > 1) return 'multidomain';
+  const domain = definition.domain;
+  if (domain in blockTypes) return domain as BlockType;
+  return domain === 'boolean' ? 'signal' : 'electrical';
 }
