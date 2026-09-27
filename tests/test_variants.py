@@ -104,3 +104,19 @@ def test_switching_variants_changes_the_simulation():
         return next(o for o in result['series'] if o['key'] == 'sink.y')['values'][-1]
     five, two, nine = final(variants('v1')), final(variants('v2')), final(variants('v3'))
     assert two == pytest.approx(five * 2 / 7) and nine == pytest.approx(five * 9 / 7)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize('source', ['models/examples/ev.json', 'tests/fixtures/ev-performance.json'])
+def test_ev_drivetrain_reaches_cruise_speed_in_each_configuration(source):
+    """The reference example: three levels of subsystems, battery and motor variants, both configurations."""
+    import asyncio
+    import uuid
+    from pathlib import Path
+
+    from server.engine import simulate
+    project = Project.model_validate_json((Path(__file__).parent.parent/source).read_text())
+    result = asyncio.run(simulate(project, 'ev' + uuid.uuid4().hex[:10]))
+    speed = next(o for o in result['series'] if o['key'] == 'speed.v')['values']
+    assert speed[-1] == pytest.approx(5, rel=0.05)
+    assert max(speed) < 6

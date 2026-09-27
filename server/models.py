@@ -411,7 +411,7 @@ class ExportRequest(BaseModel):
 
 class NewModelRequest(BaseModel):
     name: str = Field(default='Untitled model', min_length=1, max_length=100)
-    template: Literal['blank', 'dc', 'foc', 'buck', 'flyback', 'datacenter', 'servo'] = 'blank'
+    template: Literal['blank', 'dc', 'foc', 'buck', 'flyback', 'datacenter', 'servo', 'ev'] = 'blank'
 
 
 class SaveModelRequest(BaseModel):

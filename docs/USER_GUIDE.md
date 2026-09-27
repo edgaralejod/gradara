@@ -168,6 +168,8 @@ Currently the builder supports flat models with up to 80 instances and four newl
 
 ## Built-in examples
 
+**Examples → EV drivetrain** opens a battery electric vehicle built from nested subsystems: vehicle control and powertrain at the top, battery pack and motor drive inside the powertrain, and a converter inside the motor drive. The battery (LFP or NMC) and the motor (PM DC machine or simple DC motor) are variants, and two configurations switch them together. The [EV example guide](examples/EV.md) describes each level.
+
 **Examples → Servo position** opens a DC motor position loop with a 1 kHz **Discrete PID** and an **Angle sensor**. It is built to export its controller to C. The [servo example guide](examples/SERVO.md) walks through the export and explains how the repository's reference C is checked against the simulation.
 
 **Examples → 480 VAC flyback** opens a hand-authored 480 V RMS single-phase to 24 V / 1 A switching model with bridge rectification, magnetizing energy storage, soft start, and PI regulation. See the [flyback example guide](examples/FLYBACK.md) for assumptions, expected signals, and modeling limits.

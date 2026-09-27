@@ -89,7 +89,7 @@ export function instanceDefinition(
   const values = new Map(previous?.parameters.map((p) => [p.id, p.value]));
   return {
     kind: 'subsystem',
-    name: previous?.name ?? subsystem.name,
+    name: previous?.name ?? subsystem.name.slice(0, 100),
     description: `Subsystem ${subsystem.name}: ${subsystem.blocks.filter((b) => !isBoundary(b)).length} blocks inside.`,
     domain:
       physical?.domain ??
@@ -97,7 +97,7 @@ export function instanceDefinition(
       !ports.some((p) => p.domain === 'signal')
         ? 'boolean'
         : 'signal'),
-    symbol: subsystem.name,
+    symbol: subsystem.name.slice(0, 24),
     ports,
     parameters: (subsystem.parameters ?? []).map(
       ({ targets: _targets, ...p }) => ({
@@ -935,6 +935,13 @@ export function setBoundaryDomain(
 }
 
 /** Which side of the subsystem block a physical port sits on. */
+const mirror = {
+  left: 'right',
+  right: 'left',
+  top: 'bottom',
+  bottom: 'top',
+} as const;
+
 export function setBoundarySide(
   view: Project,
   id: string,
@@ -951,6 +958,11 @@ export function setBoundarySide(
             definition: {
               ...b.definition,
               boundary: { ...b.definition.boundary!, side },
+              // The pill sits on that side of the sheet, so its terminal faces inward.
+              ports: b.definition.ports.map((p) => ({
+                ...p,
+                side: mirror[side],
+              })),
             },
           }
         : b,

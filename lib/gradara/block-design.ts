@@ -66,7 +66,8 @@ function roundGrid(n: number) {
 export function defaultBlockSize(d: Definition) {
   const shape = blockShape(d);
   if (shape === 'boundary')
-    return { width: roundGrid(Math.min(160, 48 + d.name.length * 8)), height: 32 };
+    // Side padding, the domain glyph, and about 8 units per character.
+    return { width: roundGrid(Math.min(176, 56 + d.name.length * 8)), height: 32 };
   if (shape === 'sum' || shape === 'ground') return { width: 40, height: 40 };
   if (shape === 'physical')
     return ['top', 'bottom'].includes(

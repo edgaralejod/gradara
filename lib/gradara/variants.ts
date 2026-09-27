@@ -200,7 +200,7 @@ export function addDiagramVariant(
     ref: copy.id,
     values: values(block),
   };
-  copy.name = `${sub.name} ${variant.name}`;
+  copy.name = `${sub.name} ${variant.name}`.slice(0, 120);
   const withVariants = mapInstance(
     { ...view, version: 2, subsystems: [...subsystemsOf(view), copy] },
     instanceId,

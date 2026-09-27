@@ -20,7 +20,7 @@ Enlarging a block changes the space around its symbol, not its text size. Zoom s
 | Mux / demux | 40 × 96 | Narrow tapered body; indexed terminals replace redundant internal text |
 | Electrical primitive | 80 × 48 horizontal; 48 × 80 vertical | Unboxed circuit symbol; leads reach the exact terminal coordinates |
 | Ground | 40 × 40 | Unboxed reference glyph with its lead at the top terminal |
-| Subsystem port pill | 32 high; width 48 + 8 per name character, on the 8-unit grid, at most 160 | A rounded pill inside a subsystem; its default size is also its minimum |
+| Subsystem port pill | 32 high; width 56 + 8 per name character, on the 8-unit grid, at most 176 | A rounded pill inside a subsystem; its default size is also its minimum |
 | Subsystem | Labeled-terminal family (80 × 64 up, 128 × 96 or larger with several ports) | Always shows port captions, since they are the inside's port names |
 
 These are deliberate semantic exceptions, not permission to invent dimensions for every new kind. `defaultBlockSize()` computes defaults and `minimumDesignedSize()` sets resizing limits. New registered or agent-created blocks inherit this system automatically. Generic signal blocks with one input and one output use the standard body; multiple or mixed-domain terminals reserve more room. Explicit unusual terminal offsets still need visual review for spacing.
