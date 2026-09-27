@@ -614,6 +614,58 @@ function place(
   return position;
 }
 
+/**
+ * Section notes follow the block they were written next to. After a whole-sheet
+ * arrangement they become headings in a band above the drawing, left to right in the
+ * order of their blocks; for a selection, a note moves with its block.
+ */
+function placeAnnotations(
+  before: Project,
+  blocks: Block[],
+  set: Set<string>,
+  whole: boolean,
+): Project['annotations'] {
+  const notes = before.annotations;
+  if (!notes?.length || !before.blocks.length) return notes;
+  const distance = (p: Pt, b: Block) => {
+    const r = { ...b.position, ...blockSize(b) };
+    const dx = Math.max(r.x - p.x, 0, p.x - r.x - r.width);
+    const dy = Math.max(r.y - p.y, 0, p.y - r.y - r.height);
+    return Math.hypot(dx, dy);
+  };
+  const anchors = notes.map(
+    (n) =>
+      [...before.blocks].sort(
+        (a, b) => distance(n, a) - distance(n, b) || a.id.localeCompare(b.id),
+      )[0],
+  );
+  const after = new Map(blocks.map((b) => [b.id, b]));
+  if (!whole)
+    return notes.map((n, i) => {
+      const anchor = anchors[i];
+      if (!set.has(anchor.id)) return n;
+      const moved = after.get(anchor.id)!.position;
+      return {
+        ...n,
+        x: n.x + moved.x - anchor.position.x,
+        y: n.y + moved.y - anchor.position.y,
+      };
+    });
+  const top = Math.min(...blocks.map((b) => b.position.y)) - 120;
+  const order = notes
+    .map((n, i) => ({ n, x: after.get(anchors[i].id)!.position.x, i }))
+    .sort((a, b) => a.x - b.x || a.i - b.i);
+  const out = [...notes];
+  let right = -Infinity;
+  for (const { n, x, i } of order) {
+    const width = Math.max(n.text.length, n.detail?.length ?? 0) * 8 + 40;
+    const at = Math.max(x, right);
+    out[i] = { ...n, x: at, y: top };
+    right = at + width;
+  }
+  return out;
+}
+
 /** Wires that the arrangement redraws: every wire touching a moved block. */
 function freeWires(project: Project, moved: Set<string>): Wire[] {
   return project.wires.map((w) => {
@@ -781,21 +833,11 @@ export function arrangeBlocks(
       );
     }
   }
-  const moved = new Set(
-    blocks
-      .filter((b, i) => {
-        const old = project.blocks[i];
-        return (
-          b.position.x !== old.position.x || b.position.y !== old.position.y
-        );
-      })
-      .map((b) => b.id),
-  );
   const next = {
     ...project,
     blocks,
     wires: freeWires({ ...project, blocks }, set),
+    annotations: placeAnnotations(project, blocks, set, whole),
   };
-  void moved;
   return redrawInternalNets(next, set);
 }
