@@ -32,6 +32,34 @@ def instance_ports(subsystem: 'Subsystem') -> list[Port]:
     return ports
 
 
+def variant_refs(definition) -> list[str]:
+    """Every subsystem definition an instance can show: its variants' refs, or just its own."""
+    sub = definition.subsystem
+    if sub is None:
+        return []
+    refs = [sub.ref] + [v.ref for v in sub.variants or []]
+    return list(dict.fromkeys(refs))
+
+
+def union_ports(subsystems: dict, definition) -> list[Port]:
+    """An instance's ports: the active inside's ports, then ports only other variants have."""
+    ports: dict[str, Port] = {}
+    for ref in variant_refs(definition):
+        if ref in subsystems:
+            for port in instance_ports(subsystems[ref]):
+                ports.setdefault(port.id, port)
+    return list(ports.values())
+
+
+def missing_ports(subsystems: dict, block) -> list[Port]:
+    """Instance ports the active inside does not have (idle when the variant marks them unused)."""
+    definition = block.definition
+    if definition.subsystem is None or definition.subsystem.ref not in subsystems:
+        return []
+    present = {p.id for p in instance_ports(subsystems[definition.subsystem.ref])}
+    return [p for p in definition.ports if p.id not in present]
+
+
 def diagrams(project: 'Project') -> Iterator[tuple[str | None, 'Diagram']]:
     yield None, project
     for subsystem in (project.subsystems or []):
@@ -57,11 +85,12 @@ def check_hierarchy(project: 'Project') -> None:
             if definition.subsystem is None:
                 continue
             ref = definition.subsystem.ref
-            if ref not in subsystems:
+            refs = variant_refs(definition)
+            if any(r not in subsystems for r in refs):
                 raise ValueError(f'{definition.name} refers to a missing subsystem.')
             if owner is not None:
-                uses[owner].add(ref)
-            expected = [(p.id, p.direction, p.domain) for p in instance_ports(subsystems[ref])]
+                uses[owner].update(refs)
+            expected = [(p.id, p.direction, p.domain) for p in union_ports(subsystems, definition)]
             actual = [(p.id, p.direction, p.domain) for p in definition.ports]
             if sorted(expected) != sorted(actual):
                 raise ValueError(f'{definition.name} is out of date with its subsystem ports.')

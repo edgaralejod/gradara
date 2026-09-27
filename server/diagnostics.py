@@ -68,6 +68,10 @@ def validate_simulation(project: Project):
                         ports=[PortRef(blockId=b.id, portId=p.id)],
                         hint='Connect a signal source to this input, or remove the block.')
              for name, (b, p) in zip(names, missing)])
+    idle_problems = variant_port_problems(project)
+    if idle_problems:
+        raise SimulationFailure('Some active variants leave subsystem ports without an inside:\n'
+                                + '\n'.join(f'• {d.message}' for d in idle_problems), idle_problems)
     unfinished = [b for _, diagram in diagrams(project) for b in diagram.blocks
                   if not b.definition.generated and b.definition.subsystem is None
                   and b.definition.kind in {'mux', 'demux', 'subsystem'}]
@@ -77,6 +81,26 @@ def validate_simulation(project: Project):
             + '. Replace them with explicit signal connections before running.',
             [Diagnostic(source='validation', message=f'{b.definition.name} is drawing-only and cannot be simulated yet.',
                         blockIds=[b.id], hint='Replace it with explicit signal connections.') for b in unfinished])
+
+
+def variant_port_problems(project: Project) -> list[Diagnostic]:
+    """Ports the active variant of an instance lacks and has not marked as not used here."""
+    from .hierarchy import diagrams, missing_ports
+    subsystems = {s.id: s for s in (project.subsystems or [])}
+    problems = []
+    for _, diagram in diagrams(project):
+        for block in diagram.blocks:
+            variant = block.definition.subsystem.active_variant_of() if block.definition.subsystem else None
+            unused = set(variant.unused) if variant else set()
+            for port in missing_ports(subsystems, block):
+                if port.id in unused:
+                    continue
+                label = f'{block.definition.name} [{variant.name}]' if variant else block.definition.name
+                problems.append(Diagnostic(
+                    source='validation', message=f'{label} has no inside for port {port.name}.', blockIds=[block.id],
+                    ports=[PortRef(blockId=block.id, portId=port.id)],
+                    hint='Add the port inside this variant, or mark it “not used here” so it stays idle.'))
+    return problems
 
 
 def reference(identifier: str) -> re.Pattern:

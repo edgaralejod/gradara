@@ -57,8 +57,41 @@ class ModelicaWrapper(BaseModel):
         return values
 
 
+class Variant(BaseModel):
+    """One alternative inside for a subsystem instance.
+
+    A diagram variant has its own definition (`ref`); a parameter variant shares
+    another variant's `ref` and differs only in the promoted parameter `values`.
+    `unused` lists instance ports this variant leaves idle on purpose.
+    """
+    id: str = Field(pattern=IDENTIFIER, max_length=80)
+    name: str = Field(min_length=1, max_length=60)
+    ref: str = Field(pattern=IDENTIFIER, max_length=80)
+    values: dict[str, float] = Field(default_factory=dict, max_length=30)
+    unused: list[str] = Field(default_factory=list, max_length=50)
+
+
 class SubsystemRef(BaseModel):
     ref: str = Field(pattern=IDENTIFIER, max_length=80)
+    variants: list[Variant] | None = Field(default=None, min_length=2, max_length=12)
+    active: str | None = Field(default=None, pattern=IDENTIFIER, max_length=80)
+
+    @model_validator(mode='after')
+    def active_variant(self):
+        if self.variants is None:
+            if self.active is not None:
+                raise ValueError('Only a subsystem with variants has an active variant.')
+            return self
+        ids = [v.id for v in self.variants]
+        if len(set(ids)) != len(ids):
+            raise ValueError('Variant identifiers must be unique.')
+        active = next((v for v in self.variants if v.id == self.active), None)
+        if active is None or active.ref != self.ref:
+            raise ValueError('The active variant must be one of the variants and match the subsystem shown.')
+        return self
+
+    def active_variant_of(self) -> 'Variant | None':
+        return next((v for v in self.variants or [] if v.id == self.active), None)
 
 
 class Boundary(BaseModel):
@@ -290,6 +323,18 @@ class Subsystem(Diagram):
     parameters: list[PromotedParameter] = Field(default_factory=list, max_length=30)
 
 
+class Configuration(BaseModel):
+    """A named choice of variant for every subsystem instance with variants.
+
+    Keys are `<sheet>/<instance block ID>`, where the sheet is a subsystem ID or
+    empty for the top level; values are variant IDs. Keys for instances that no
+    longer exist are ignored.
+    """
+    id: str = Field(pattern=IDENTIFIER, max_length=80)
+    name: str = Field(min_length=1, max_length=60)
+    choices: dict[str, str] = Field(default_factory=dict, max_length=300)
+
+
 class Project(Diagram):
     modelId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
     exampleId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
@@ -301,6 +346,7 @@ class Project(Diagram):
     duration: float = Field(gt=0, le=86400, allow_inf_nan=False)
     revision: int = Field(ge=0)
     subsystems: list[Subsystem] | None = Field(default=None, max_length=500)
+    configurations: list['Configuration'] | None = Field(default=None, max_length=30)
 
     @model_validator(mode='after')
     def hierarchy(self):

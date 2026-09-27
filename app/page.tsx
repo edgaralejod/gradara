@@ -177,6 +177,7 @@ import {
   ungroupSubsystem,
   usageCount,
   subsystemClosure,
+  refsOf,
   validPath,
   withPastedSubsystems,
   writeScope,
@@ -1141,9 +1142,7 @@ function Workbench() {
         ...fragment,
         subsystems: subsystemClosure(
           docRef.current,
-          fragment.blocks.flatMap((b) =>
-            b.definition.subsystem ? [b.definition.subsystem.ref] : [],
-          ),
+          fragment.blocks.flatMap((b) => refsOf(b.definition)),
         ),
       } as ModelFragment;
       setCanPaste(true);

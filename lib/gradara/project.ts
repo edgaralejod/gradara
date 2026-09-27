@@ -4,9 +4,14 @@ import type { Project, Definition, Wire } from './model';
 import { compatible, portOf } from './model';
 import { connectionError, endpointPort, flattenWires, isTap } from './net';
 import { emptySelection, extractSelection, pasteSelection } from './selection';
-function sheetSemantics(p: Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>) {
+function sheetSemantics(
+  p: Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>,
+) {
   return {
-    loggedNets: (p.nets ?? []).filter((n) => n.logged).map((n) => n.id).sort(),
+    loggedNets: (p.nets ?? [])
+      .filter((n) => n.logged)
+      .map((n) => n.id)
+      .sort(),
     blocks: p.blocks.map((b) => ({
       id: b.id,
       kind: b.definition.kind,
@@ -15,7 +20,16 @@ function sheetSemantics(p: Pick<Project, 'blocks' | 'wires' | 'junctions' | 'net
       parameters: b.definition.parameters.map((x) => [x.id, x.value]),
       declarations: b.definition.declarations ?? '',
       equations: b.definition.equations,
-      ...(b.definition.subsystem ? { subsystem: b.definition.subsystem.ref } : {}),
+      ...(b.definition.subsystem
+        ? {
+            subsystem: b.definition.subsystem.ref,
+            variants: (b.definition.subsystem.variants ?? []).map((v) => [
+              v.id,
+              v.ref,
+              v.unused ?? [],
+            ]),
+          }
+        : {}),
       ...(b.definition.modelica ? { modelica: b.definition.modelica } : {}),
     })),
     wires: flattenWires(p as Project)
@@ -35,7 +49,11 @@ export function semanticSignature(p: Project) {
       ? {
           subsystems: p.subsystems.map((s) => ({
             id: s.id,
-            parameters: (s.parameters ?? []).map((x) => [x.id, x.value, x.targets]),
+            parameters: (s.parameters ?? []).map((x) => [
+              x.id,
+              x.value,
+              x.targets,
+            ]),
             ...sheetSemantics({ ...s, junctions: s.junctions ?? [] }),
           })),
         }

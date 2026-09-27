@@ -38,7 +38,7 @@ export const isBoundary = (block: Block) =>
 
 export const isInstance = (block: Block) => !!block.definition.subsystem;
 
-const newId = (prefix: string) =>
+export const newId = (prefix: string) =>
   `${prefix}${crypto.randomUUID().replaceAll('-', '').slice(0, 10)}`;
 
 export const subsystemsOf = (project: Project) => project.subsystems ?? [];
@@ -111,6 +111,53 @@ export function instanceDefinition(
   };
 }
 
+/** Every definition an instance can show: its variants' insides, or just its own. */
+export function refsOf(definition: Definition): string[] {
+  const sub = definition.subsystem;
+  if (!sub) return [];
+  return [...new Set([sub.ref, ...(sub.variants ?? []).map((v) => v.ref)])];
+}
+
+/**
+ * An instance's definition brought up to date: the active inside's ports, then
+ * ports only other variants have, and the active variant's remembered values
+ * kept equal to the instance's parameter values.
+ */
+export function instanceDefinitionFor(
+  project: Project,
+  block: Block,
+): Definition | undefined {
+  const ref = block.definition.subsystem?.ref;
+  const sub = ref ? findSubsystem(project, ref) : undefined;
+  if (!sub) return undefined;
+  const base = instanceDefinition(sub, block.definition);
+  const current = block.definition.subsystem!;
+  if (!current.variants) return base;
+  const ports = [...base.ports];
+  const seen = new Set(ports.map((p) => p.id));
+  for (const v of current.variants) {
+    const other = v.ref === ref ? undefined : findSubsystem(project, v.ref);
+    for (const p of other ? instancePorts(other) : [])
+      if (!seen.has(p.id)) {
+        seen.add(p.id);
+        ports.push(p);
+      }
+  }
+  const values = Object.fromEntries(
+    base.parameters.map((p) => [p.id, p.value]),
+  );
+  return {
+    ...base,
+    ports,
+    subsystem: {
+      ...current,
+      variants: current.variants.map((v) =>
+        v.id === current.active ? { ...v, values } : v,
+      ),
+    },
+  };
+}
+
 /** Subsystem definition ID that a path of instance IDs ends in (undefined at the top). */
 export function subsystemAt(project: Project, path: string[]) {
   let diagram: { blocks: Block[] } = project;
@@ -142,7 +189,14 @@ export function breadcrumb(project: Project, path: string[]) {
       ? findSubsystem(project, block.definition.subsystem.ref)
       : undefined;
     if (!block || !sub) return;
-    crumbs.push({ path: path.slice(0, i + 1), name: block.definition.name });
+    const sr = block.definition.subsystem!;
+    const variant = sr.variants?.find((v) => v.id === sr.active);
+    crumbs.push({
+      path: path.slice(0, i + 1),
+      name: variant
+        ? `${block.definition.name} [${variant.name}]`
+        : block.definition.name,
+    });
     diagram = sub;
   });
   return crumbs;
@@ -169,10 +223,8 @@ type Sheet = Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>;
 function syncSheet<T extends Sheet>(project: Project, sheet: T): T {
   let changed = false;
   const blocks = sheet.blocks.map((block) => {
-    const ref = block.definition.subsystem?.ref;
-    const sub = ref ? findSubsystem(project, ref) : undefined;
-    if (!sub) return block;
-    const definition = instanceDefinition(sub, block.definition);
+    const definition = instanceDefinitionFor(project, block);
+    if (!definition) return block;
     if (JSON.stringify(definition) === JSON.stringify(block.definition))
       return block;
     changed = true;
@@ -208,13 +260,13 @@ function syncSheet<T extends Sheet>(project: Project, sheet: T): T {
 function referenced(project: Project) {
   const used = new Set<string>();
   const visit = (sheet: Sheet) => {
-    for (const block of sheet.blocks) {
-      const ref = block.definition.subsystem?.ref;
-      if (!ref || used.has(ref)) continue;
-      used.add(ref);
-      const sub = findSubsystem(project, ref);
-      if (sub) visit(sub);
-    }
+    for (const block of sheet.blocks)
+      for (const ref of refsOf(block.definition)) {
+        if (used.has(ref)) continue;
+        used.add(ref);
+        const sub = findSubsystem(project, ref);
+        if (sub) visit(sub);
+      }
   };
   visit(project);
   return used;
@@ -268,7 +320,7 @@ export function writeScope(
 export const usageCount = (project: Project, id: string) =>
   [project, ...subsystemsOf(project)].reduce(
     (n, sheet) =>
-      n + sheet.blocks.filter((b) => b.definition.subsystem?.ref === id).length,
+      n + sheet.blocks.filter((b) => refsOf(b.definition).includes(id)).length,
     0,
   );
 
@@ -720,11 +772,24 @@ export function makeUnique(view: Project, instanceId: string): Project {
     id: newId('sub_'),
     name: instance.definition.name,
   };
+  // Variants that showed the shared inside (parameter variants of it) move to the copy too.
+  const current = instance.definition.subsystem!;
+  const subsystem = {
+    ...current,
+    ref: copy.id,
+    ...(current.variants
+      ? {
+          variants: current.variants.map((v) =>
+            v.ref === sub.id ? { ...v, ref: copy.id } : v,
+          ),
+        }
+      : {}),
+  };
   return {
     ...view,
     blocks: view.blocks.map((b) =>
       b.id === instanceId
-        ? { ...b, definition: { ...b.definition, subsystem: { ref: copy.id } } }
+        ? { ...b, definition: { ...b.definition, subsystem } }
         : b,
     ),
     subsystems: [...subsystemsOf(view), copy],
@@ -808,8 +873,7 @@ export function subsystemClosure(project: Project, refs: string[]) {
     const sub = findSubsystem(project, ref);
     if (!sub) return;
     out.set(ref, sub);
-    for (const b of sub.blocks)
-      if (b.definition.subsystem) visit(b.definition.subsystem.ref);
+    for (const b of sub.blocks) refsOf(b.definition).forEach(visit);
   };
   refs.forEach(visit);
   return [...out.values()];
@@ -828,9 +892,7 @@ export function withPastedSubsystems(
   path: string[],
   fragment: { blocks: Block[]; subsystems?: SubsystemDefinition[] },
 ): Project | 'recursive' {
-  const refs = fragment.blocks.flatMap((b) =>
-    b.definition.subsystem ? [b.definition.subsystem.ref] : [],
-  );
+  const refs = fragment.blocks.flatMap((b) => refsOf(b.definition));
   if (!refs.length) return view;
   const incoming = fragment.subsystems ?? [];
   const closure = new Set([...refs, ...incoming.map((s) => s.id)]);
@@ -905,13 +967,23 @@ export function promoteParameter(
 ): Project {
   const sub = findSubsystem(view, subsystemId);
   const block = sub?.blocks.find((b) => b.id === blockId);
-  const parameter = block?.definition.parameters.find((p) => p.id === parameterId);
+  const parameter = block?.definition.parameters.find(
+    (p) => p.id === parameterId,
+  );
   if (!sub || !block || !parameter) return view;
   const existing = sub.parameters ?? [];
-  if (existing.some((p) => p.targets.some((t) => t.blockId === blockId && t.parameterId === parameterId)))
+  if (
+    existing.some((p) =>
+      p.targets.some(
+        (t) => t.blockId === blockId && t.parameterId === parameterId,
+      ),
+    )
+  )
     return view;
   const taken = new Set(existing.map((p) => p.id));
-  const base = `${block.definition.name}_${parameter.id}`.replace(/[^A-Za-z0-9_]/g, '_').replace(/^[^A-Za-z]/, 'p');
+  const base = `${block.definition.name}_${parameter.id}`
+    .replace(/[^A-Za-z0-9_]/g, '_')
+    .replace(/^[^A-Za-z]/, 'p');
   let id = base;
   for (let i = 2; taken.has(id); i++) id = `${base}${i}`;
   const promoted = {
@@ -932,19 +1004,29 @@ export function promoteParameter(
 }
 
 /** Stop exposing a parameter; the inner block keeps the value it had inside. */
-export function demoteParameter(view: Project, subsystemId: string, promotedId: string): Project {
+export function demoteParameter(
+  view: Project,
+  subsystemId: string,
+  promotedId: string,
+): Project {
   return {
     ...view,
     subsystems: subsystemsOf(view).map((s) =>
       s.id === subsystemId
-        ? { ...s, parameters: (s.parameters ?? []).filter((p) => p.id !== promotedId) }
+        ? {
+            ...s,
+            parameters: (s.parameters ?? []).filter((p) => p.id !== promotedId),
+          }
         : s,
     ),
   };
 }
 
 /** For blocks inside `subsystemId`: blockId → parameterId → the promoted parameter that sets it. */
-export function promotedTargets(project: Project, subsystemId: string | undefined) {
+export function promotedTargets(
+  project: Project,
+  subsystemId: string | undefined,
+) {
   const out = new Map<string, Map<string, { id: string; name: string }>>();
   const sub = subsystemId ? findSubsystem(project, subsystemId) : undefined;
   for (const p of sub?.parameters ?? [])

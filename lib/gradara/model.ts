@@ -13,7 +13,10 @@ export type Domain =
   | 'magnetic'
   | 'threePhase';
 /** Domains carried by input/output ports; every other domain is a physical terminal. */
-export const causalDomains: ReadonlySet<Domain> = new Set(['signal', 'boolean']);
+export const causalDomains: ReadonlySet<Domain> = new Set([
+  'signal',
+  'boolean',
+]);
 export const isCausal = (domain: Domain) => causalDomains.has(domain);
 /** Readable names for the domains, used in the library, inspector, and legends. */
 export const domainLabels: Record<Domain, string> = {
@@ -85,10 +88,34 @@ export type Definition = {
   category?: LibraryCategoryId;
   keywords?: string[];
   modelica?: ModelicaWrapper;
-  /** A subsystem instance; its ports mirror the boundary blocks of `subsystem.ref`. */
-  subsystem?: { ref: string };
+  /** A subsystem instance; its ports mirror the boundary blocks of `subsystem.ref` (of every variant). */
+  subsystem?: SubsystemRef;
   /** A boundary block inside a subsystem (kinds inport, outport, connport). */
   boundary?: { side?: Port['side']; order: number };
+};
+/**
+ * One alternative inside for a subsystem instance. A diagram variant has its own
+ * definition; a parameter variant shares another variant's `ref` with different
+ * promoted `values`. `unused` lists instance ports this variant leaves idle.
+ */
+export type Variant = {
+  id: string;
+  name: string;
+  ref: string;
+  values: Record<string, number>;
+  unused?: string[];
+};
+/** An instance's definition reference; with variants, `ref` is the active variant's. */
+export type SubsystemRef = {
+  ref: string;
+  variants?: Variant[];
+  active?: string;
+};
+/** A named choice of variant per instance, keyed `<sheet>/<instance ID>` (sheet empty at the top). */
+export type Configuration = {
+  id: string;
+  name: string;
+  choices: Record<string, string>;
 };
 /** A subsystem parameter that sets parameters of blocks inside it. */
 export type PromotedParameter = Parameter & {
@@ -148,6 +175,8 @@ export type Project = {
   /** 2 when the document has subsystems; version 1 documents are flat. */
   version: 1 | 2;
   subsystems?: SubsystemDefinition[];
+  /** Named variant choices; see Configuration. */
+  configurations?: Configuration[];
   name: string;
   blocks: Block[];
   wires: Wire[];

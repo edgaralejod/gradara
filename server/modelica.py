@@ -229,12 +229,40 @@ def _terminal(diagram, definitions: dict, block_id: str, port_id: str) -> str:
     return f'{block_id}.{msl.connector(definition, port_id)}'
 
 
-def _declaration(block, class_name: str, promoted: dict[str, str]) -> str:
+IDLE_EQUATION = {'electrical': '{c}.i = 0;', 'mechanical': '{c}.tau = 0;', 'translational': '{c}.f = 0;',
+                 'thermal': '{c}.Q_flow = 0;', 'magnetic': '{c}.Phi = 0;',
+                 'threePhase': 'for k in 1:{c}.m loop {c}.pin[k].i = 0; end for;'}
+
+
+def idle_class(ref: str, ports) -> str:
+    """Name of the wrapper that adds idle connectors for ports the active variant does not use."""
+    return f'Sub_{ref}__' + '_'.join(sorted(p.id for p in ports))
+
+
+def _idle_wrapper(ref: str, ports) -> str:
+    """The active inside plus idle connectors: inputs are left unread, outputs give 0, physical ports carry no flow."""
+    lines = [f'model {idle_class(ref, ports)}', f'  extends Sub_{ref};']
+    equations = []
+    for port in sorted(ports, key=lambda p: p.id):
+        if port.direction == 'physical':
+            lines.append(f'  {PHYSICAL_CONNECTORS[port.domain]} {port.id};')
+            equations.append('  ' + IDLE_EQUATION[port.domain].format(c=port.id))
+        else:
+            kind = 'Boolean' if port.domain == 'boolean' else 'Real'
+            lines.append(f'  Modelica.Blocks.Interfaces.{kind}{"Input" if port.direction == "input" else "Output"} {port.id};')
+            if port.direction == 'output':
+                equations.append(f'  {port.id} = {"false" if kind == "Boolean" else "0"};')
+    return '\n'.join(lines + (['equation'] + equations if equations else []) + [f'end {idle_class(ref, ports)};'])
+
+
+def _declaration(block, class_name: str, promoted: dict[str, str], idle: dict | None = None) -> str:
     """Component declaration; `promoted` maps inner parameter IDs to a parent parameter name."""
     definition = block.definition
     if definition.subsystem is not None:
         mods = ', '.join(f'par_{p.id}={promoted.get(p.id, f"{p.value:.16g}")}' for p in definition.parameters)
-        return f'  Sub_{definition.subsystem.ref} {block.id}' + (f'({mods})' if mods else '') + ';'
+        ports = (idle or {}).get(block.id)
+        cls = idle_class(definition.subsystem.ref, ports) if ports else f'Sub_{definition.subsystem.ref}'
+        return f'  {cls} {block.id}' + (f'({mods})' if mods else '') + ';'
     if definition.modelica is not None:
         return msl.instance(definition, block.id, promoted)
     params = ', '.join(f'{p.id}={promoted.get(p.id, f"{p.value:.16g}")}' for p in definition.parameters)
@@ -253,6 +281,18 @@ BOUNDARY_CONNECTOR = {('inport', 'signal'): 'Modelica.Blocks.Interfaces.RealInpu
                       ('outport', 'boolean'): 'Modelica.Blocks.Interfaces.BooleanOutput'}
 
 
+def _idle_ports(project: Project, diagram) -> dict:
+    """Block ID → ports its active variant leaves idle, for instances on `diagram`."""
+    from .hierarchy import missing_ports
+    subsystems = {s.id: s for s in (project.subsystems or [])}
+    found = {}
+    for block in diagram.blocks:
+        ports = missing_ports(subsystems, block)
+        if ports:
+            found[block.id] = ports
+    return found
+
+
 def _used_subsystems(project: Project) -> list:
     """Definitions reachable from the top level, children before parents."""
     by_id = {s.id: s for s in (project.subsystems or [])}
@@ -269,7 +309,7 @@ def _used_subsystems(project: Project) -> list:
     return ordered
 
 
-def _emit_subsystem(subsystem) -> list[str]:
+def _emit_subsystem(subsystem, idle: dict) -> list[str]:
     parts = []
     for block in subsystem.blocks:
         d = block.definition
@@ -290,7 +330,7 @@ def _emit_subsystem(subsystem) -> list[str]:
                 raise ValueError(f'Subsystem port {d.name} has an unsupported domain.')
             lines.append(f'  {connector} {block.id};')
             continue
-        lines.append(_declaration(block, f'C_{subsystem.id}_{block.id}', promoted.get(block.id, {})))
+        lines.append(_declaration(block, f'C_{subsystem.id}_{block.id}', promoted.get(block.id, {}), idle))
     lines.append('equation')
     lines.extend(_connects(subsystem))
     lines.append(f'end Sub_{subsystem.id};')
@@ -302,11 +342,21 @@ def emit_project(project: Project) -> str:
     for block in project.blocks:
         if block.definition.modelica is None and block.definition.subsystem is None:
             parts.append(component_source(block.definition, f'Component_{block.id}'))
+    wrappers: dict[str, str] = {}
     for subsystem in _used_subsystems(project):
-        parts.extend(_emit_subsystem(subsystem))
+        idle = _idle_ports(project, subsystem)
+        for block_id, ports in idle.items():
+            ref = next(b for b in subsystem.blocks if b.id == block_id).definition.subsystem.ref
+            wrappers.setdefault(idle_class(ref, ports), _idle_wrapper(ref, ports))
+        parts.extend(_emit_subsystem(subsystem, idle))
+    top_idle = _idle_ports(project, project)
+    for block_id, ports in top_idle.items():
+        ref = next(b for b in project.blocks if b.id == block_id).definition.subsystem.ref
+        wrappers.setdefault(idle_class(ref, ports), _idle_wrapper(ref, ports))
+    parts.extend(wrappers[k] for k in sorted(wrappers))
     parts.append('model System')
     for block in project.blocks:
-        parts.append(_declaration(block, f'Component_{block.id}', {}))
+        parts.append(_declaration(block, f'Component_{block.id}', {}, top_idle))
     logs = logged_signals(project)
     for log in logs:
         parts.append(f"  output Real {log['key']};")
