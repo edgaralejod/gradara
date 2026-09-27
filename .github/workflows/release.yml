@@ -67,6 +67,16 @@ jobs:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: server/requirements*.txt
+      - name: Tag matches the app version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          app=$(node -p "require('./desktop/package.json').version")
+          root=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_NAME#v}" != "$app" ] || [ "$root" != "$app" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the app version (desktop/package.json $app, package.json $root). Run 'npm version X.Y.Z --no-git-tag-version' in both folders, merge, then tag."
+            exit 1
+          fi
       - name: Install dependencies
         shell: bash
         run: |
@@ -114,6 +124,12 @@ jobs:
             echo "No signing certificate configured; building unsigned"
           fi
           npx electron-builder ${{ matrix.builder }} --publish never
+      - name: Name macOS update metadata by architecture
+        if: runner.os == 'macOS'
+        shell: bash
+        working-directory: desktop/dist
+        # Both Mac jobs write latest-mac.yml; the release job merges them.
+        run: mv latest-mac.yml "latest-mac-$(uname -m).yml"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: gradara-${{ matrix.os }}
@@ -125,6 +141,7 @@ jobs:
             desktop/dist/*.deb
             desktop/dist/*.yml
             desktop/dist/*.blockmap
+            !desktop/dist/builder-debug.yml
           if-no-files-found: error
 
   install-test:
@@ -327,6 +344,28 @@ jobs:
           path: artifacts
           pattern: gradara-*
           merge-multiple: true
+      - name: Merge macOS update metadata
+        run: |
+          python3 -m pip install --quiet pyyaml==6.0.2
+          python3 - <<'EOF'
+          import glob, os, yaml
+          parts = sorted(glob.glob('artifacts/latest-mac-*.yml'))
+          if len(parts) != 2:
+              raise SystemExit(f'expected two macOS update files, found {parts}')
+          docs = [yaml.safe_load(open(path)) for path in parts]
+          if docs[0]['version'] != docs[1]['version']:
+              raise SystemExit('macOS builds report different versions')
+          # Keep the Intel entry as the legacy top-level path; electron-updater
+          # picks the file for the running architecture from the files list.
+          base = next((d for d in docs if 'x64' in d['path']), docs[0])
+          merged = dict(base)
+          merged['files'] = [f for d in docs for f in d['files']]
+          with open('artifacts/latest-mac.yml', 'w') as out:
+              yaml.safe_dump(merged, out, sort_keys=False)
+          for path in parts:
+              os.remove(path)
+          print(open('artifacts/latest-mac.yml').read())
+          EOF
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
