@@ -14,6 +14,7 @@ charge once per operation, including its internal repair attempts.
 """
 from __future__ import annotations
 
+import contextlib
 import contextvars
 import json
 import os
@@ -28,6 +29,17 @@ current_job: contextvars.ContextVar[dict | None] = contextvars.ContextVar('grada
 LABELS = {'gradara': 'Gradara AI', 'openai': 'OpenAI (your key)', 'anthropic': 'Anthropic (your key)',
           'codex': 'Codex CLI', 'off': 'Off'}
 KEY_NAMES = {'openai': 'openai_api_key', 'anthropic': 'anthropic_api_key'}
+
+
+@contextlib.contextmanager
+def job_part(part: str):
+    """Label provider calls for one priced part of the current job, such as a generated block."""
+    job = current_job.get()
+    token = current_job.set({**job, 'part': part} if job else None)
+    try:
+        yield
+    finally:
+        current_job.reset(token)
 
 
 def _keep_transcript(attempt_id: str, prompt: str, generation: Generation) -> None:

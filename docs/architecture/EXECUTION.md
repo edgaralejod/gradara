@@ -43,6 +43,18 @@ Codex CLI calls have a 180-second timeout; HTTP providers have their own request
 
 Successful generation establishes schema/compiler compatibility. It does not independently verify the user's intended physics. The design intentionally supports rapid authoring without inserting a separate physics-approval workflow.
 
+## Model editing
+
+`POST /api/models/edit` (`server/model_edit.py`) edits the open model through bounded operations; the agent never returns a Project. The request carries the prompt, the current `Project`, the UI catalog, an optional selection of block IDs, an optional `context` (Phase 4 passes run diagnostics), and `verify` (default true). The prompt contains the model without layout (no positions, sizes, routes, junctions, plots, or annotations), the selected block names, and the catalog description shared with full-model generation.
+
+The agent returns an `EditPlan`: a summary, assumptions, `unsupported` (non-empty refuses the request), and 1–40 operations applied in order. The operations are `add_block`, `create_block` (at most two), `revise_definition`, `remove_block`, `rename_block`, `set_parameter`, `connect`, `disconnect`, and `set_duration`. At most three definitions per edit are created or rewritten; each goes through the typed component generator, with its compile check and port-preserving refinement.
+
+`apply_operations` applies every operation or none. It resolves aliases of added blocks and rejects unknown blocks, ports, and parameters, out-of-range values, a second driver on a signal input, input-to-input or cross-domain connections, duplicate connections, and self connections. It re-validates parameter ranges and the whole document. Existing IDs, wires, nets, labels, plots, `modelId`, and `revision` are unchanged unless an operation targets them. Removed wires leave their nets, and each new wire joins (and may merge) the nets its ports are on, or gets a new hidden net.
+
+The pipeline has two attempts. A plan that cannot be applied, or an edited model that fails `validate_simulation` or a trial `simulate`, is sent back with the error for one revision. If the second attempt fails its check, the proposal is returned with `verified: false` and structured `diagnostics` instead of failing the job. A second plan that cannot be applied fails the job; cancellation never becomes a revision. The job result is `{project, summary, assumptions, changes, generated, verified, diagnostics, samples, provider}`, with `changes` as `{op, blockIds, wireIds, description}`.
+
+The client applies a proposal with `mergeProposal` (`lib/gradara/proposal.ts`). It keeps its own objects for untouched blocks and wires, so routes and the absent-versus-empty waypoint distinction survive, and takes definitions, new blocks (snapped at standard size), new wires (without routes), removals, the name, and the stop time from the proposal. The result goes through one `commit`, which is one undo step. A proposal made for an earlier `revision` cannot be applied.
+
 ## Controller C export
 
 `server/exporter.py` requires a selected block whose definition has `controller: true`. It builds a package with project name/revision, the block definition and values, emitted controller source, adjacent connections, and an explicit C11 double-precision init/step target. The target also states the detected sample-period parameter (`samplePeriod` or `Ts`, with value and unit), the `discrete` states named in the declarations, and whether the equations are sampled, so the prompt does not have to infer timing.

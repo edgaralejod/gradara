@@ -152,7 +152,7 @@ User request:\n'''+request.prompt+'\nAvailable catalog:\n'+describe(catalog)
             used = list(dict.fromkeys(instance['libraryId'] for instance in data['instances']))
             return dict(project=document, assumptions=plan.assumptions, generated=generated,
                         reused=[catalog[key].name for key in used if not key.startswith('new:')],
-                        checked=True, samples=result['samples'], provider='Codex')
+                        checked=True, samples=result['samples'], provider=agent.provider_label())
         except Exception as exc:
             if attempt:
                 raise RuntimeError('Model assembly needs a revision: '+str(exc)) from exc

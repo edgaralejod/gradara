@@ -157,6 +157,10 @@ import DiagnosticsDock, {
 import ProblemsPanel, {
   type ProblemSection,
 } from '@/components/gradara/problems-panel';
+import AssistantPanel, {
+  useAssistant,
+} from '@/components/gradara/assistant-panel';
+import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
 import {
   semanticSignature,
   setLabelOffset,
@@ -462,14 +466,16 @@ function Workbench() {
       ),
     [problemSections],
   );
-  const selectProblem = (d: Diagnostic, only?: string[]) => {
+  const selectProblem = (d: Diagnostic, only?: string[]) =>
+    selectBlocks(only ?? d.blockIds, only ? [] : d.wireIds);
+  const selectBlocks = (ids: string[], wires: string[] = []) => {
     const current = projectRef.current;
-    const blockIds = (only ?? d.blockIds).filter((id) =>
+    const blockIds = ids.filter((id) =>
       current.blocks.some((b) => b.id === id),
     );
-    const wireIds = only
-      ? []
-      : d.wireIds.filter((id) => current.wires.some((w) => w.id === id));
+    const wireIds = wires.filter((id) =>
+      current.wires.some((w) => w.id === id),
+    );
     if (!blockIds.length && !wireIds.length) return;
     if (workspaceMode !== 'diagram') setWorkspaceMode('diagram');
     select({ ...emptySelection(), blockIds, wireIds });
@@ -500,6 +506,39 @@ function Workbench() {
     void navigator.clipboard
       .writeText(text || 'No problems.')
       .then(() => notify('Problems copied.'));
+  };
+  const getProject = useCallback(() => projectRef.current, []);
+  const assistant = useAssistant(project.modelId, getProject);
+  const requestEdit = (prompt: string, blockIds: string[]) => {
+    const current = projectRef.current;
+    const names = blockIds
+      .map((id) => current.blocks.find((b) => b.id === id)?.definition.name)
+      .filter(Boolean);
+    void assistant.edit(
+      prompt,
+      { project: current, catalog: library, selection: blockIds },
+      names.length ? `Selection · ${names.join(', ')}` : 'Whole model',
+    );
+  };
+  const applyProposal = (proposal: EditProposal, baseRevision: number) => {
+    const current = projectRef.current;
+    if (current.revision !== baseRevision) {
+      notify('The model changed since this proposal. Ask again.');
+      return false;
+    }
+    const { project: next, added, changed } = mergeProposal(
+      current,
+      proposal.project,
+    );
+    commit(next);
+    const touched = [...added, ...changed].filter((id) =>
+      projectRef.current.blocks.some((b) => b.id === id),
+    );
+    if (touched.length) select({ ...emptySelection(), blockIds: touched });
+    notify(
+      `Applied ${proposal.changes.length} ${proposal.changes.length === 1 ? 'change' : 'changes'}. Undo with ⌘Z.`,
+    );
+    return true;
   };
   const restoreDocument = (loaded: SavedDocument, recover = true) => {
     store.remember(loaded);
@@ -1937,10 +1976,17 @@ function Workbench() {
                   }
                 />
               }
+              assistantActive={!!assistant.busy}
               assistant={
-                <div className="problems-empty">
-                  The assistant is not available yet.
-                </div>
+                <AssistantPanel
+                  assistant={assistant}
+                  project={project}
+                  selectedIds={selectedIds}
+                  onEdit={requestEdit}
+                  onApply={applyProposal}
+                  onSelect={(blockIds) => selectBlocks(blockIds)}
+                  onOpenSettings={() => setSettingsTab('ai')}
+                />
               }
             />
           </section>

@@ -102,6 +102,14 @@ Use **Pan**, **Box zoom**, or **Cursor**, with **X only**, **Y only**, or **X + 
 
 The inspector loads full stored CSV samples, retaining repeated event times. If that request fails, it explicitly shows the reduced preview and offers Retry. CSV export retains the complete run. Plot layout, signal assignments, and axis ranges are saved locally in this browser per model; they do not change the simulation or get embedded in exported model documents. Signals unavailable in a later run remain identified rather than being silently replaced. Different units on one plot share a numeric Y axis; use separate plots when their scales differ.
 
+## Edit the open model with the assistant
+
+Open the **Assistant** tab in the dock and describe a change, for example "Add a scope on the measured angle and connect it" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to tell the assistant which blocks the request concerns, or **Whole model**.
+
+The assistant can add catalog blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, and connect or disconnect ports. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model was checked in OpenModelica; if the check failed after one automatic revision, the proposal is marked **Not verified** and shows the diagnostics.
+
+Nothing changes until you choose **Apply**. The whole proposal is one undo step, and existing routes, labels, and net names are kept. Added blocks are placed next to related blocks; you may want to move them. If you edit the model after asking, Apply is disabled and you are asked to try again. **Refine** starts a follow-up request; **Discard** dismisses the proposal. The thread belongs to the open model, is cleared when you switch models, and is not saved. Cancel stops a request that is still running.
+
 ## Ask an agent for a complete model
 
 Open **Ask agent**, choose **Full model / circuit**, and describe the system, inputs, component values, measurements, and simulation duration. This creates a separate model; it does not modify the open diagram.

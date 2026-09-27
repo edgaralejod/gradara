@@ -2590,4 +2590,89 @@
 .statusbar .problems-summary > span { display: inline-flex; flex-direction: row; align-items: center; gap: 3px; }
 .statusbar .problems-summary .is-error { color: #a8474a; }
 .statusbar .problems-summary .is-warning { color: #8a6414; }
+.assistant-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.assistant-thread { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
+.assistant-intro { display: flex; gap: 10px; max-width: 720px; color: #354b5b; }
+.assistant-intro > svg { flex: none; margin-top: 2px; color: var(--primary); }
+.assistant-intro p { margin: 3px 0 8px; color: #637987; line-height: 1.5; }
+.assistant-suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
+.assistant-suggestions button, .assistant-context button {
+  height: 22px; padding: 0 9px; border: 1px solid #d4dde4; border-radius: 11px; background: white;
+  color: #354b5b; font: 500 var(--text-micro)/1 var(--font-ui); cursor: pointer;
+}
+.assistant-suggestions button:hover, .assistant-context button:hover { border-color: #9bb7ca; background: #eef5fa; }
+.assistant-request {
+  align-self: flex-end; max-width: min(70%, 640px); padding: 6px 10px; border-radius: 3px;
+  background: #e8f0f6; color: #27333d; line-height: 1.45;
+}
+.assistant-request em { display: block; margin-top: 2px; color: #637987; font: 500 var(--text-micro)/1.3 var(--font-ui); font-style: normal; }
+.assistant-error {
+  display: flex; align-items: center; gap: 8px; max-width: 760px; padding: 7px 10px;
+  border-left: 2px solid #c16c6e; background: #fbefef; color: #7d3a3c;
+}
+.assistant-error > svg { flex: none; }
+.assistant-error button { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border: 1px solid #e3b4ae; border-radius: 3px; background: white; color: #7d3a3c; font: 500 var(--text-micro)/1 var(--font-ui); cursor: pointer; }
+.assistant-working { display: flex; align-items: center; gap: 8px; color: #526979; }
+.assistant-working button { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border: 1px solid #d4dde4; border-radius: 3px; background: white; color: #354b5b; font: 500 var(--text-micro)/1 var(--font-ui); cursor: pointer; }
+.assistant-composer { flex: none; display: grid; gap: 5px; padding: 7px 12px 8px; border-top: 1px solid #e3e9ed; background: #f7f9fa; }
+.assistant-context { display: flex; gap: 5px; }
+.assistant-context button.is-active { border-color: var(--primary); background: #e8f0f6; color: #1d4d73; }
+.assistant-input { display: flex; align-items: flex-end; gap: 6px; }
+.assistant-input textarea {
+  flex: 1; min-height: 36px; max-height: 96px; resize: vertical; padding: 6px 8px;
+  border: 1px solid #cfd9e0; border-radius: 3px; background: white; color: #27333d;
+  font: var(--text-ui)/1.45 var(--font-ui);
+}
+.assistant-input textarea:focus-visible { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px #226b9d22; }
+.assistant-send {
+  display: grid; place-items: center; width: 30px; height: 30px; flex: none; border: 0; border-radius: 3px;
+  background: var(--primary); color: white; cursor: pointer;
+}
+.assistant-send:disabled { background: #a9bccb; cursor: default; }
+.assistant-footer { color: #637987; font-size: var(--text-micro); }
+
+.proposal-card, .diagnosis-card {
+  max-width: 760px; border: 1px solid #d4dde4; border-radius: 3px; background: white; color: #27333d;
+}
+.proposal-card > header, .diagnosis-card > header {
+  display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #e8edf1; background: #f7f9fa;
+}
+.diagnosis-card > header > svg { color: var(--primary); }
+.proposal-badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border-radius: 9px; font: 600 var(--text-micro)/1.4 var(--font-ui); }
+.proposal-badge.is-verified { background: #e3f1e9; color: #2f6b4b; }
+.proposal-badge.is-unverified { background: #f7efdc; color: #8a6414; }
+.proposal-summary { margin: 8px 10px 4px; line-height: 1.5; }
+.proposal-assumptions, .diagnosis-steps { margin: 0 10px 6px; padding-left: 18px; color: #526979; }
+.proposal-changes { display: grid; gap: 6px; padding: 4px 10px 8px; }
+.proposal-changes h4, .diagnosis-card h4 {
+  display: flex; align-items: center; gap: 5px; margin: 4px 0 2px; color: #637987;
+  font: 600 var(--text-micro)/1.4 var(--font-ui); letter-spacing: .04em; text-transform: uppercase;
+}
+.diagnosis-card h4 { margin: 6px 10px 2px; }
+.proposal-changes ul, .diagnosis-causes { margin: 0; padding: 0; list-style: none; }
+.diagnosis-causes { margin: 0 10px 6px; counter-reset: cause; }
+.proposal-changes li, .diagnosis-causes li {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 26px;
+  padding: 2px 0; border-bottom: 1px solid #f0f3f5;
+}
+.proposal-changes li:last-child, .diagnosis-causes li:last-child { border-bottom: 0; }
+.proposal-diagnostics { margin: 0 10px 8px; padding: 6px 9px; list-style: none; border-left: 2px solid #c9a24e; background: #fbf6ea; color: #6d5316; }
+.proposal-diagnostics li { display: flex; align-items: center; gap: 6px; }
+.proposal-card > footer {
+  display: flex; align-items: center; gap: 6px; padding: 7px 10px; border-top: 1px solid #e8edf1; background: #fbfcfd;
+}
+.proposal-card > footer button {
+  display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #d4dde4;
+  border-radius: 3px; background: white; color: #354b5b; font: 500 var(--text-micro)/1 var(--font-ui); cursor: pointer;
+}
+.proposal-card > footer button:hover:not(:disabled) { background: #eef5fa; border-color: #9bb7ca; }
+.proposal-card > footer button.is-primary { background: var(--primary); border-color: var(--primary); color: white; }
+.proposal-card > footer button.is-primary:hover:not(:disabled) { background: #1d5d89; }
+.proposal-card > footer button:disabled { opacity: .5; cursor: default; }
+.proposal-stale { color: #8a6414; font-size: var(--text-micro); }
+.proposal-status { display: inline-flex; align-items: center; gap: 5px; color: #526979; font-size: var(--text-micro); }
+.proposal-provider { margin-left: auto; color: #8193a0; font-size: var(--text-micro); }
+.proposal-card.is-applied, .proposal-card.is-discarded { opacity: .78; }
+.proposal-card.is-applied { border-color: #b9d6c4; }
+.diagnosis-note { margin: 0 10px 8px; color: #637987; font-size: var(--text-micro); }
 @media (max-width: 700px) { .diagnostics-dock { display: none; } }
