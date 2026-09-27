@@ -142,10 +142,21 @@ import {
   api,
   waitForJob,
   JobFailure,
+  type Diagnostic,
   type RunFailure,
   type SimulationResult,
   type Job,
 } from '@/lib/gradara/api';
+import {
+  countBySeverity,
+  validateProject,
+} from '@/lib/gradara/validate-project';
+import DiagnosticsDock, {
+  useDockState,
+} from '@/components/gradara/diagnostics-dock';
+import ProblemsPanel, {
+  type ProblemSection,
+} from '@/components/gradara/problems-panel';
 import {
   semanticSignature,
   setLabelOffset,
@@ -390,6 +401,106 @@ function Workbench() {
     });
   };
   const signature = useMemo(() => semanticSignature(project), [project]);
+  const [dock, updateDock] = useDockState();
+  const [liveProblems, setLiveProblems] = useState<Diagnostic[]>([]);
+  useEffect(() => {
+    // Recheck after edits settle, not on every pointer move.
+    const timer = setTimeout(
+      () => setLiveProblems(validateProject(projectRef.current)),
+      300,
+    );
+    return () => clearTimeout(timer);
+  }, [signature]);
+  const problemSections = useMemo<ProblemSection[]>(() => {
+    const sections: ProblemSection[] = [
+      { id: 'live', title: 'Model checks', items: liveProblems },
+    ];
+    if (runFailure && runFailure.modelId === project.modelId) {
+      const stale = runFailure.signature !== signature;
+      const live = new Set(liveProblems.map((d) => d.message));
+      const items = runFailure.diagnostics.length
+        ? runFailure.diagnostics.filter(
+            (d) => !(d.source === 'validation' && live.has(d.message)),
+          )
+        : [
+            {
+              id: 'run',
+              severity: 'error' as const,
+              source: 'runtime' as const,
+              message: runFailure.message.split('\n')[0],
+              detail: runFailure.message,
+              blockIds: [],
+              ports: [],
+              netIds: [],
+              wireIds: [],
+            },
+          ];
+      sections.push({
+        id: 'run',
+        title: 'Last run',
+        note: stale ? 'stale · model changed since this run' : 'from the last run',
+        stale,
+        items,
+      });
+    }
+    if (result?.problems?.length) {
+      const stale = signature !== resultSignature;
+      sections.push({
+        id: 'warnings',
+        title: 'Run warnings',
+        note: stale ? 'stale · model changed since this run' : undefined,
+        stale,
+        items: result.problems,
+      });
+    }
+    return sections;
+  }, [liveProblems, runFailure, result, signature, resultSignature, project.modelId]);
+  const problemCounts = useMemo(
+    () =>
+      countBySeverity(
+        problemSections.filter((s) => !s.stale).flatMap((s) => s.items),
+      ),
+    [problemSections],
+  );
+  const selectProblem = (d: Diagnostic, only?: string[]) => {
+    const current = projectRef.current;
+    const blockIds = (only ?? d.blockIds).filter((id) =>
+      current.blocks.some((b) => b.id === id),
+    );
+    const wireIds = only
+      ? []
+      : d.wireIds.filter((id) => current.wires.some((w) => w.id === id));
+    if (!blockIds.length && !wireIds.length) return;
+    if (workspaceMode !== 'diagram') setWorkspaceMode('diagram');
+    select({ ...emptySelection(), blockIds, wireIds });
+    if (blockIds.length)
+      requestAnimationFrame(() => {
+        void flow.fitView({
+          nodes: blockIds.map((id) => ({ id })),
+          padding: 0.6,
+          maxZoom: 1.5,
+          duration: 250,
+        });
+      });
+  };
+  const copyProblems = () => {
+    const text = problemSections
+      .filter((s) => s.items.length)
+      .map(
+        (s) =>
+          `${s.title}${s.note ? ` (${s.note})` : ''}\n` +
+          s.items
+            .map(
+              (d) =>
+                `- [${d.severity}] ${d.message}${d.hint ? `\n  Hint: ${d.hint}` : ''}`,
+            )
+            .join('\n'),
+      )
+      .join('\n\n');
+    void navigator.clipboard
+      .writeText(text || 'No problems.')
+      .then(() => notify('Problems copied.'));
+  };
   const restoreDocument = (loaded: SavedDocument, recover = true) => {
     store.remember(loaded);
     let next = loaded.project;
@@ -888,6 +999,7 @@ function Workbench() {
             message: e.message,
             diagnostics: e.diagnostics,
           });
+        updateDock({ open: true, tab: 'problems' });
       }
     } finally {
       if (runController.current === controller) {
@@ -1010,6 +1122,8 @@ function Workbench() {
   }, [commit, workspaceMode, composer, inserter]);
   const runRef = useRef(runSimulation);
   runRef.current = runSimulation;
+  const toggleDockRef = useRef(() => {});
+  toggleDockRef.current = () => updateDock({ open: !dock.open });
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       const input = (e.target as HTMLElement)?.closest(
@@ -1048,6 +1162,9 @@ function Workbench() {
       } else if (command && e.key === 'Enter') {
         e.preventDefault();
         void runRef.current();
+      } else if (command && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        toggleDockRef.current();
       } else if (e.key.toLowerCase() === 'r' && !command && !e.altKey && selectionRef.current.blockIds.length) {
         e.preventDefault();
         if (!e.repeat) commit((p) => rotateBlocks(p, selectionRef.current.blockIds));
@@ -1796,6 +1913,36 @@ function Workbench() {
                 />
               </div>
             )}
+            <DiagnosticsDock
+              state={dock}
+              onChange={updateDock}
+              counts={problemCounts}
+              actions={
+                dock.tab === 'problems' ? (
+                  <button type="button" onClick={copyProblems}>
+                    <Copy size={12} />
+                    Copy
+                  </button>
+                ) : undefined
+              }
+              problems={
+                <ProblemsPanel
+                  project={project}
+                  sections={problemSections}
+                  onSelect={selectProblem}
+                  empty={
+                    project.blocks.length
+                      ? 'No problems. Run the model to check it in OpenModelica.'
+                      : 'Add blocks from the library to start a model.'
+                  }
+                />
+              }
+              assistant={
+                <div className="problems-empty">
+                  The assistant is not available yet.
+                </div>
+              }
+            />
           </section>
           <aside className="inspector-panel">
             <div className="panel-heading">
@@ -2117,6 +2264,34 @@ function Workbench() {
               </button>
             )}
           </span>
+          <button
+            type="button"
+            className="problems-summary"
+            onClick={() => updateDock({ open: !dock.open, tab: 'problems' })}
+            title="Toggle the Problems panel · ⌘J"
+          >
+            {problemCounts.error || problemCounts.warning ? (
+              <>
+                {problemCounts.error > 0 && (
+                  <span className="is-error">
+                    <AlertCircle size={11} /> {problemCounts.error}{' '}
+                    {problemCounts.error === 1 ? 'error' : 'errors'}
+                  </span>
+                )}
+                {problemCounts.error > 0 && problemCounts.warning > 0 && ' · '}
+                {problemCounts.warning > 0 && (
+                  <span className="is-warning">
+                    {problemCounts.warning}{' '}
+                    {problemCounts.warning === 1 ? 'warning' : 'warnings'}
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <Check size={11} /> No problems
+              </>
+            )}
+          </button>
           <span>
             {project.blocks.length} components · {nets.length} nets
           </span>

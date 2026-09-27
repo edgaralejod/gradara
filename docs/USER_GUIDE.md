@@ -62,6 +62,16 @@ The model inspector exposes blocks and logical nets in a compact tree. The tree 
 
 Set the stop time and press **Run**. Manual models accept stop times greater than 0 and at most 86,400 seconds. Compilation and simulation happen asynchronously. You can cancel from the run controls. Unconnected signal inputs and unsupported executable placeholders produce diagnostics; invalid or incomplete simulations do not become successful partial plots. The solver still uses 6,000 output intervals and a 120-second wall-clock timeout; a longer horizon is not a guarantee of adequate event resolution or completion. Full-model agent planning retains a separate 60-second bound.
 
+### Problems
+
+The dock under the canvas has a **Problems** tab. Open or collapse it from the status bar summary ("No problems", or a count of errors and warnings), from its header, or with ⌘/Ctrl+J. Drag its top edge (or focus it and use the arrow keys) to resize it; its height and open tab are remembered in this browser. It is hidden in very narrow windows, where the status bar counts remain.
+
+- **Model checks** update while you edit: unconnected signal inputs, drawing-only blocks, wires that end on a missing port (errors), and blocks with nothing connected (notes). They mirror what Run rejects before simulating.
+- **Last run** appears when a run fails. The dock opens automatically and the workspace stays where it is. Each row has a source (Validation, Safety, Compiler, Runtime, Engine) and chips for the blocks or ports it concerns. Click a row or chip to select those blocks and center them on the canvas. Expand a row (▸, or Space on a focused row) for the hint and the full solver text. After you change the model, this section is marked stale and no longer counts toward the totals.
+- **Run warnings** lists solver warnings from a successful run.
+
+Up/Down moves between rows and Enter selects. **Copy** copies every problem as text. Block mapping for solver messages is best effort; the expandable text is always the complete output. The Results tab still shows the raw failure text.
+
 After a successful run, the workspace automatically switches to the **Results** tab (also called Data Inspector), which provides a dedicated view for inspecting simulation output. Switch between **Diagram** and **Results** tabs using the workspace tabs in the toolbar, or press ⌘/Ctrl+1 for Diagram and ⌘/Ctrl+2 for Results.
 
 In Results view, choose a preset plot or available signal, optionally overlay a second series, and select a time window. **Fit Y** fits the displayed range. The buck template's **Last 1 ms** view reveals switching ripple. Download CSV when you need every output row; the interactive preview is reduced for responsiveness.

@@ -49,9 +49,10 @@ Use the real browser whenever a change affects interactions. Start from a new di
 3. Move connected blocks and junctions, straighten near-horizontal runs, resize a block, and drag its label. Confirm no leftover stubs or unexpected geometry changes after reload.
 4. Ctrl-drag a block and a connected selection. Names and IDs must be unique, originals unchanged, and undo atomic.
 5. Name a net, inspect its connected blocks, move its label, and save/reopen.
-6. Open each fresh template (DC motor, FOC, buck, flyback, and data center cooling) and check block sizing, readable labels, ports, and routes at normal zoom. Run relevant templates and inspect actual result traces.
+6. Open each fresh template (DC motor, servo position, FOC, buck, flyback, and data center cooling) and check block sizing, readable labels, ports, and routes at normal zoom. Run relevant templates and inspect actual result traces.
 7. Test a narrow window, keyboard focus, Escape, and text fields. Canvas shortcuts must not consume normal text editing.
-8. Inspect browser errors and service logs. Do not hide observer, promise, or script errors to make a test look clean.
+8. Problems dock: build a positive-feedback loop (Step → Subtract with `y = a + b`, Gain 1 back into Subtract) and run it. The dock opens on Problems, the workspace stays on Diagram, and the Last run row names Subtract and Gain; clicking a chip selects and centers that block, and expanding the row shows the hint and full solver text. Delete a source: Model checks shows the unconnected input and Last run turns stale. Resize and collapse the dock, reload, and confirm both persist. ⌘/Ctrl+J toggles it except while typing in a field. Below 700 px the dock is hidden and the status bar counts remain.
+9. Inspect browser errors and service logs. Do not hide observer, promise, or script errors to make a test look clean.
 
 For agent changes, separately test generation/refinement with a configured provider. Preserve compatible port identities. For C-export changes, inspect the contract and compile result, and verify cancellation/resource cleanup. Process-tree cancellation without a provider is covered by `tests/test_processes.py`. Agent provider calls are intentionally absent from automated CI.
 
