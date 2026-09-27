@@ -2,6 +2,7 @@ name: Gradara AI gateway
 
 on:
   push:
+    branches: [main]
     paths: ['cloud/**', 'server/llm/**', '.github/workflows/cloud.yml']
   pull_request:
     paths: ['cloud/**', 'server/llm/**', '.github/workflows/cloud.yml']

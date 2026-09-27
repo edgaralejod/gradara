@@ -1,7 +1,10 @@
 name: Core CI
 
 on:
+  # Branch pushes are covered by their pull request, and a tag points at a
+  # commit main already tested, so only main pushes run here.
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 

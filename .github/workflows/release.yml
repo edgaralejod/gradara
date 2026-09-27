@@ -4,6 +4,11 @@ name: Desktop installers
 # runner, launches it in self-test mode, and uninstalls it. Tag pushes (v*)
 # attach the installers to a draft GitHub Release only when every install test
 # passes. Pull requests and manual runs build and test without releasing.
+#
+# Pull requests run this only when they change packaging itself: other app
+# changes are covered by Core CI and are built on the tag, which releases
+# nothing unless every install test passes. Version bumps alone (the two
+# package files) do not trigger it. Use Run workflow to build any branch.
 on:
   push:
     tags: ['v*']
@@ -11,13 +16,10 @@ on:
     branches: [main]
     paths:
       - 'desktop/**'
+      - '!desktop/package.json'
+      - '!desktop/package-lock.json'
       - 'packaging/**'
-      - 'server/**'
-      - 'app/**'
-      - 'components/**'
-      - 'lib/**'
-      - 'package.json'
-      - 'package-lock.json'
+      - 'server/requirements.txt'
       - 'vite.desktop.config.ts'
       - '.github/workflows/release.yml'
   workflow_dispatch:
