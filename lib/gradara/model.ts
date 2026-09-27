@@ -1,7 +1,38 @@
 import { controlBlocks } from './control-blocks';
 import { extraBlocks } from './extra-blocks';
+import { mslBlocks } from './msl-blocks';
 import { powerBlocks } from './power-blocks';
-export type Domain = 'signal' | 'electrical' | 'mechanical' | 'thermal';
+export type Domain =
+  | 'signal'
+  | 'boolean'
+  | 'electrical'
+  | 'mechanical'
+  | 'translational'
+  | 'thermal'
+  | 'magnetic'
+  | 'threePhase';
+/** Domains carried by input/output ports; every other domain is a physical terminal. */
+export const causalDomains: ReadonlySet<Domain> = new Set(['signal', 'boolean']);
+export const isCausal = (domain: Domain) => causalDomains.has(domain);
+/** Readable names for the domains, used in the library, inspector, and legends. */
+export const domainLabels: Record<Domain, string> = {
+  signal: 'signal',
+  boolean: 'Boolean',
+  electrical: 'electrical',
+  mechanical: 'rotational',
+  translational: 'translational',
+  thermal: 'thermal',
+  magnetic: 'magnetic',
+  threePhase: '3-phase',
+};
+/** A built-in block that instantiates a Modelica Standard Library class (see server/msl.py). */
+export type ModelicaWrapper = {
+  class: string;
+  /** MSL parameter name → expression over this block's parameter IDs. */
+  modifiers?: Record<string, string>;
+  /** Block port ID → MSL connector name, when they differ. */
+  ports?: Record<string, string>;
+};
 export type Port = {
   id: string;
   name: string;
@@ -29,7 +60,15 @@ export type LibraryCategoryId =
   | 'control'
   | 'sinks'
   | 'electrical'
-  | 'mechanical';
+  | 'semiconductors'
+  | 'converters'
+  | 'machines'
+  | 'threePhase'
+  | 'mechanical'
+  | 'translational'
+  | 'thermal'
+  | 'magnetic'
+  | 'logic';
 export type Definition = {
   kind: string;
   name: string;
@@ -44,6 +83,7 @@ export type Definition = {
   controller?: boolean;
   category?: LibraryCategoryId;
   keywords?: string[];
+  modelica?: ModelicaWrapper;
 };
 export type Block = {
   id: string;
@@ -107,6 +147,10 @@ export const domainColors: Record<Domain, string> = {
   electrical: '#aa6b20',
   mechanical: '#298b82',
   thermal: '#cf6b68',
+  boolean: '#6a5aa6',
+  translational: '#5f7f2a',
+  magnetic: '#a24f86',
+  threePhase: '#b8522b',
 };
 const p = (
   id: string,
@@ -273,6 +317,7 @@ export const library: Definition[] = [
     equations: 'y = max(lower, min(upper, u));',
   },
   ...extraBlocks,
+  ...mslBlocks,
 ];
 const block = (kind: string, id: string, x: number, y: number): Block => ({
   id,

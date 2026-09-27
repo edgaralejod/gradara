@@ -2,6 +2,7 @@
 from .logging_signals import logged_signals
 import hashlib
 import json
+from . import msl
 from .models import Definition, Project, flatten_connects
 
 PHYSICAL = {
@@ -186,6 +187,16 @@ equation
   y = sensor.i;
 end {name};'''
 
+PHYSICAL_CONNECTORS = {
+    'electrical': 'Modelica.Electrical.Analog.Interfaces.Pin',
+    'mechanical': 'Modelica.Mechanics.Rotational.Interfaces.Flange_a',
+    'translational': 'Modelica.Mechanics.Translational.Interfaces.Flange_a',
+    'thermal': 'Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a',
+    'magnetic': 'Modelica.Magnetic.FluxTubes.Interfaces.MagneticPort',
+    'threePhase': 'Modelica.Electrical.Polyphase.Interfaces.Plug',
+}
+
+
 def component_source(definition: Definition, name: str) -> str:
     if definition.kind in PHYSICAL and not definition.generated:
         return PHYSICAL[definition.kind].format(name=name)
@@ -193,18 +204,14 @@ def component_source(definition: Definition, name: str) -> str:
     lines = [f'{"model" if physical else "block"} {name}']
     for port in definition.ports:
         if port.direction == 'physical':
-            connectors = {
-                'electrical': 'Modelica.Electrical.Analog.Interfaces.Pin',
-                'mechanical': 'Modelica.Mechanics.Rotational.Interfaces.Flange_a',
-                'thermal': 'Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a',
-            }
-            if port.domain not in connectors:
-                raise ValueError('Physical terminals require an electrical, mechanical, or thermal domain.')
-            connector = connectors[port.domain]
+            if port.domain not in PHYSICAL_CONNECTORS:
+                raise ValueError('Physical terminals require a physical domain.')
+            connector = PHYSICAL_CONNECTORS[port.domain]
         else:
-            if port.domain != 'signal':
-                raise ValueError('Input/output ports must use the signal domain; physical terminals use physical direction.')
-            connector = 'Modelica.Blocks.Interfaces.' + ('RealInput' if port.direction == 'input' else 'RealOutput')
+            kind = {'signal': 'Real', 'boolean': 'Boolean'}.get(port.domain)
+            if kind is None:
+                raise ValueError('Input/output ports must use the signal or Boolean domain; physical terminals use physical direction.')
+            connector = f'Modelica.Blocks.Interfaces.{kind}' + ('Input' if port.direction == 'input' else 'Output')
         lines.append(f'  {connector} {port.id};')
     for param in definition.parameters:
         lines.append(f'  parameter Real {param.id} = {param.value:.16g};')
@@ -217,9 +224,13 @@ def component_source(definition: Definition, name: str) -> str:
 def emit_project(project: Project) -> str:
     parts = ['within;\npackage Gradara']
     for block in project.blocks:
-        parts.append(component_source(block.definition, f'Component_{block.id}'))
+        if block.definition.modelica is None:
+            parts.append(component_source(block.definition, f'Component_{block.id}'))
     parts.append('model System')
     for block in project.blocks:
+        if block.definition.modelica is not None:
+            parts.append(msl.instance(block.definition, block.id))
+            continue
         params = ', '.join(f'{p.id}={p.value:.16g}' for p in block.definition.parameters)
         parts.append(f'  Component_{block.id} {block.id}({params});')
     logs = logged_signals(project)
@@ -228,8 +239,11 @@ def emit_project(project: Project) -> str:
     parts.append('equation')
     for log in logs:
         parts.append(f"  {log['key']} = {log['expression']};")
+    definitions = {b.id: b.definition for b in project.blocks}
     for source, source_handle, target, target_handle in flatten_connects(project):
-        parts.append(f'  connect({source}.{source_handle}, {target}.{target_handle});')
+        a = msl.connector(definitions[source], source_handle)
+        b = msl.connector(definitions[target], target_handle)
+        parts.append(f'  connect({source}.{a}, {target}.{b});')
     parts.append(f'  annotation(experiment(StartTime=0, StopTime={project.duration}, Tolerance=1e-6));')
     parts.append('end System;\nend Gradara;\n')
     return '\n'.join(parts)

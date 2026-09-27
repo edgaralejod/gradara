@@ -2151,7 +2151,10 @@ function Workbench() {
                   <Button
                     className="refine-button"
                     variant="outline"
-                    disabled={active.definition.domain !== 'signal'}
+                    disabled={
+                      active.definition.domain !== 'signal' ||
+                      !!active.definition.modelica
+                    }
                     onClick={() =>
                       setComposer({
                         position: active.position,

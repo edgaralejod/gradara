@@ -16,8 +16,16 @@ export const libraryCategories: {
   { id: 'routing', label: 'Routing', hint: 'Mux, switch, subsystem' },
   { id: 'control', label: 'Control', hint: 'PI, PID, transforms' },
   { id: 'sinks', label: 'Sinks', hint: 'Scopes and displays' },
-  { id: 'electrical', label: 'Electrical', hint: 'Circuits and machines' },
-  { id: 'mechanical', label: 'Mechanical', hint: 'Inertia, sensors, load' },
+  { id: 'logic', label: 'Logic', hint: 'Boolean gates, comparators, triggers' },
+  { id: 'electrical', label: 'Electrical', hint: 'Passives, sources, sensors' },
+  { id: 'semiconductors', label: 'Semiconductors', hint: 'Diodes, transistors, switches' },
+  { id: 'converters', label: 'Converters', hint: 'Choppers, rectifiers, inverters, PWM' },
+  { id: 'machines', label: 'Machines', hint: 'DC, induction, synchronous' },
+  { id: 'threePhase', label: '3-phase', hint: 'Sources, loads, transformers' },
+  { id: 'mechanical', label: 'Rotational', hint: 'Inertia, springs, gears, sources' },
+  { id: 'translational', label: 'Translational', hint: 'Mass, spring, damper, force' },
+  { id: 'thermal', label: 'Thermal', hint: 'Heat capacity, conduction, sources' },
+  { id: 'magnetic', label: 'Magnetic', hint: 'Reluctance, windings, MMF' },
 ];
 
 const kindCategory: Record<string, LibraryCategoryId> = {
@@ -93,7 +101,15 @@ export function categoryOf(definition: Definition): LibraryCategoryId {
       ? 'electrical'
       : definition.domain === 'mechanical'
         ? 'mechanical'
-        : 'math')
+        : definition.domain === 'translational' ||
+            definition.domain === 'thermal' ||
+            definition.domain === 'magnetic'
+          ? definition.domain
+          : definition.domain === 'threePhase'
+            ? 'threePhase'
+            : definition.domain === 'boolean'
+              ? 'logic'
+              : 'math')
   );
 }
 

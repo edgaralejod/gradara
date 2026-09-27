@@ -77,7 +77,9 @@ export default function BlockDialog({
   const [tab, setTab] = useState<BlockDialogTab>(initialTab);
   const [Editor, setEditor] = useState<ComponentType<any> | null>(null);
   const firstParameter = useRef<HTMLInputElement>(null);
-  const readonly = !definition.generated && definition.domain !== 'signal';
+  const readonly =
+    !definition.generated &&
+    (definition.domain !== 'signal' || !!definition.modelica);
   const defaults = libraryDefaults(definition);
   const dirty = isDirty(definition, draft);
 

@@ -1,5 +1,6 @@
 """Log signal nets only. Physical quantities are selected through sensor blocks."""
-from .models import Project
+from . import msl
+from .models import CAUSAL_DOMAINS, Project
 
 
 def logged_signals(project: Project):
@@ -22,13 +23,16 @@ def logged_signals(project: Project):
         if key is None:
             continue
         block, port = terminals[key]
-        if port.domain != 'signal':
+        if port.domain not in CAUSAL_DOMAINS:
             raise ValueError('Only signal/control nets can be logged. Add a sensor and log its signal output.')
         field, unit = '', port.unit
         variable = f'gradara_log_{net.id}'
         while variable in used:
             variable += '_value'
         used.add(variable)
-        result.append(dict(key=variable, expression=key + ('.'+field if field else ''), netId=net.id,
+        expression = f'{block.id}.{msl.connector(block.definition, port.id)}' + ('.'+field if field else '')
+        if port.domain == 'boolean':
+            expression = f'(if {expression} then 1.0 else 0.0)'
+        result.append(dict(key=variable, expression=expression, netId=net.id,
             blockId=block.id, name=(net.name or f'{block.definition.name}.{port.id}') + (f' · {field}' if field else ''), unit=unit))
     return result

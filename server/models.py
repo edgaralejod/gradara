@@ -5,8 +5,10 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 IDENTIFIER = r'^[A-Za-z][A-Za-z0-9_]*$'
-Domain = Literal['signal', 'electrical', 'mechanical', 'thermal']
-BlockType = Literal['signal', 'electrical', 'mechanical', 'thermal', 'multidomain']
+Domain = Literal['signal', 'boolean', 'electrical', 'mechanical', 'translational', 'thermal', 'magnetic', 'threePhase']
+# Domains carried by input/output ports; every other domain is a physical (acausal) connector.
+CAUSAL_DOMAINS = {'signal', 'boolean'}
+BlockType = Literal['signal', 'electrical', 'mechanical', 'translational', 'thermal', 'magnetic', 'multidomain']
 
 class Port(BaseModel):
     id: str = Field(pattern=IDENTIFIER, max_length=60)
@@ -33,6 +35,28 @@ class Parameter(BaseModel):
             raise ValueError(f'{self.name} must be at most {self.max}')
         return self
 
+class ModelicaWrapper(BaseModel):
+    """A built-in block that is an instance of a Modelica Standard Library class.
+
+    `modifiers` maps MSL parameter names to expressions over the block's parameter
+    IDs; `ports` maps block port IDs to MSL connector names when they differ.
+    """
+    model_config = {'populate_by_name': True, 'serialize_by_alias': True}
+    class_: str = Field(alias='class', pattern=r'^Modelica(\.[A-Za-z_][A-Za-z0-9_]*)+$', max_length=200)
+    modifiers: dict[str, str] = Field(default_factory=dict, max_length=40)
+    ports: dict[str, str] = Field(default_factory=dict, max_length=40)
+
+    @field_validator('modifiers')
+    @classmethod
+    def plain_expressions(cls, values):
+        for key, value in values.items():
+            if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?', key):
+                raise ValueError('Modifier names must be Modelica identifiers.')
+            if len(value) > 200 or not re.fullmatch(r'[A-Za-z0-9_.+\-*/(), {}^]+', value):
+                raise ValueError('Modifier values must be plain numeric expressions.')
+        return values
+
+
 class Definition(BaseModel):
     kind: str = Field(pattern=IDENTIFIER, max_length=80)
     name: str = Field(min_length=1, max_length=100)
@@ -47,6 +71,7 @@ class Definition(BaseModel):
     controller: bool = False
     category: str = Field(default='', max_length=40)
     keywords: list[str] = Field(default_factory=list, max_length=24)
+    modelica: ModelicaWrapper | None = None
 
     @field_validator('equations', 'declarations')
     @classmethod
@@ -57,6 +82,15 @@ class Definition(BaseModel):
         if '"' in text or '\\' in text:
             raise ValueError('Component equations must be numeric Modelica expressions.')
         return text
+
+    @model_validator(mode='after')
+    def causal_ports(self):
+        for port in self.ports:
+            if (port.direction == 'physical') == (port.domain in CAUSAL_DOMAINS):
+                raise ValueError('Input/output ports carry signal or Boolean values; physical terminals use a physical domain.')
+        if self.generated and self.modelica is not None:
+            raise ValueError('Generated blocks define their own equations; they cannot wrap a library class.')
+        return self
 
     @model_validator(mode='after')
     def unique_names(self):
@@ -204,7 +238,7 @@ class Project(BaseModel):
                 if net.logged:
                     first = by_wire[net.wireIds[0]]
                     domain = ports[(first.source, first.sourceHandle)].domain if first.source in blocks else taps[first.source].domain
-                    if domain != 'signal':
+                    if domain not in CAUSAL_DOMAINS:
                         raise ValueError('Only signal/control nets can be logged. Add a sensor and log its signal output.')
                 adj = {}
                 for ident in net.wireIds:

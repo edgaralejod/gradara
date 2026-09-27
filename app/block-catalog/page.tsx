@@ -5,7 +5,7 @@ import { useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Search, Shapes } from 'lucide-react';
 import { BlockPreview } from '@/components/gradara/block-face';
-import { library, domainColors } from '@/lib/gradara/model';
+import { library, domainColors, domainLabels } from '@/lib/gradara/model';
 import { categoryOf, libraryCategories } from '@/lib/gradara/catalog';
 import { defaultBlockSize } from '@/lib/gradara/block-design';
 import './catalog.css';
@@ -172,7 +172,7 @@ export default function BlockCatalog() {
                       <footer>
                         <span className="catalog-domain">
                           <i style={{ background: domainColors[d.domain] }} />
-                          {d.domain}
+                          {domainLabels[d.domain]}
                         </span>
                         {drawingOnly ? (
                           <span className="catalog-warning">Drawing only</span>
