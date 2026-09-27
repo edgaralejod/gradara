@@ -101,7 +101,7 @@ async def diagnose(request: DiagnoseRequest, job_id: str, progress=lambda messag
     diagnosis = clean(Diagnosis.model_validate(data), request)
     result = {'diagnosis': diagnosis.model_dump(), 'proposal': None, 'provider': agent.provider_label()}
     if not (request.proposeFix and diagnosis.fixable and diagnosis.editPrompt):
-        return result
+        return with_credits(result)
     selection = list(dict.fromkeys(i for c in diagnosis.causes for i in c.blockIds))
     evidence = '\n'.join(f'- {d.message}' + (f' (hint: {d.hint})' if d.hint else '') for d in request.diagnostics)
     edit = ModelEditRequest(prompt=diagnosis.editPrompt, project=request.project, catalog=request.catalog,
@@ -112,4 +112,9 @@ async def diagnose(request: DiagnoseRequest, job_id: str, progress=lambda messag
             result['proposal'] = await edit_model(edit, f'{job_id}fix', progress)
     except (Unsupported, ValueError) as exc:
         result['fixError'] = str(exc)[-1500:]
-    return result
+    return with_credits(result)
+
+
+def with_credits(result: dict) -> dict:
+    credits = dispatch.credits_for_current_job()
+    return result | {'credits': credits} if credits is not None else result

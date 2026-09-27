@@ -50,7 +50,7 @@ An AI request contains Gradara's instructions, the user's description, and the m
 | Sign-in codes | Device-code hash, short user code, client label, account, status | Removed one day after expiry |
 | Credit ledger | Amount, reason (welcome, purchase, charge, refund, adjust, forfeit), reference (Stripe Checkout Session id or an internal operation id), date | Kept for accounting; identity is erased when the account is deleted |
 | Usage | Task type, model name, input/output token counts, latency, success flag, short error code, operation id, date | About 13 months (400 days) |
-| Operation counters | Operation id, kind, call count, amount charged | 7 days |
+| Operation counters | Operation id, kind, call count, amount charged; for edits and fixes, each priced part's label (`edit` or `block:1`…`block:3`) and amount | 7 days |
 | Processed Stripe event ids | Event id, date | For deduplication |
 
 ### What is never stored

@@ -68,7 +68,8 @@ async def generate(prompt: str, schema: dict, *, task: str, job: dict) -> Genera
     })
     usage = data.get('usage') or {}
     generation = Generation(data['data'], 'gradara', data.get('model', ''),
-                            Usage(usage.get('inputTokens', 0), usage.get('outputTokens', 0)))
+                            Usage(usage.get('inputTokens', 0), usage.get('outputTokens', 0)),
+                            data.get('jobCharged'))
     return generation
 
 

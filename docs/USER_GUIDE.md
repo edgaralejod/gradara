@@ -122,6 +122,8 @@ Currently the builder supports flat models with up to 80 instances and four newl
 
 ## Built-in examples
 
+**Examples → Servo position** opens a DC motor position loop with a 1 kHz **Discrete PID** and an **Angle sensor**. It is built to export its controller to C. The [servo example guide](examples/SERVO.md) walks through the export and explains how the repository's reference C is checked against the simulation.
+
 **Examples → 480 VAC flyback** opens a hand-authored 480 V RMS single-phase to 24 V / 1 A switching model with bridge rectification, magnetizing energy storage, soft start, and PI regulation. See the [flyback example guide](examples/FLYBACK.md) for assumptions, expected signals, and modeling limits.
 
 **Examples → Data center cooling** opens a one-hour electrical–thermal benchmark with workload and cooling-capacity disturbances. Compare temperatures, electricity, and PI recovery using the [cooling example guide](examples/DATACENTER.md). This is a lumped control model, not a detailed facility model.

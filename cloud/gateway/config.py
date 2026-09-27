@@ -19,6 +19,11 @@ def _bool(name: str, default: bool = False) -> bool:
     return os.environ.get(name, str(default)).lower() in {'1', 'true', 'yes', 'on'}
 
 
+# Credits per operation, charged once per job with repairs included. An edit
+# also pays surcharges['edit']['block'] per generated block; a fix pays
+# diagnose plus the edit price.
+DEFAULT_PRICES = {'component': 2, 'model': 20, 'export': 2, 'edit': 4, 'diagnose': 2}
+
 DEFAULT_PACKS = [
     {'id': 'starter', 'credits': 100, 'amount': 1000, 'currency': 'usd', 'label': '100 credits'},
     {'id': 'pro', 'credits': 550, 'amount': 5000, 'currency': 'usd', 'label': '550 credits'},
@@ -41,8 +46,11 @@ class Config:
     stripe_webhook_secret: str = ''
     stripe_automatic_tax: bool = False
     packs: list = field(default_factory=lambda: list(DEFAULT_PACKS))
-    prices: dict = field(default_factory=lambda: {'component': 2, 'model': 20, 'export': 2})
-    max_calls: dict = field(default_factory=lambda: {'component': 4, 'model': 24, 'export': 3})
+    prices: dict = field(default_factory=lambda: dict(DEFAULT_PRICES))
+    # Extra credits for priced parts of a job; the edit stage of a fix costs prices['edit'].
+    surcharges: dict = field(default_factory=lambda: {'edit': {'block': 2}})
+    max_calls: dict = field(default_factory=lambda: {'component': 4, 'model': 24, 'export': 3, 'edit': 12, 'diagnose': 14})
+    max_parts: dict = field(default_factory=lambda: {'block': 3})
     free_credits: int = 20
     rate_per_minute: int = 20
     max_concurrent: int = 3
@@ -55,6 +63,9 @@ class Config:
     @property
     def production(self) -> bool:
         return self.env == 'production'
+
+    def part_price(self, family: str) -> int:
+        return self.prices['edit'] if family == 'edit' else self.surcharges['edit'][family]
 
     def pack(self, pack_id: str) -> dict | None:
         return next((p for p in self.packs if p['id'] == pack_id), None)
@@ -84,7 +95,9 @@ def load() -> Config:
     provider = os.environ.get('LLM_PROVIDER', 'anthropic')
     key_var = {'anthropic': 'ANTHROPIC_API_KEY', 'openai': 'OPENAI_API_KEY'}.get(provider, 'LLM_API_KEY')
     packs = json.loads(os.environ['CREDIT_PACKS']) if os.environ.get('CREDIT_PACKS') else list(DEFAULT_PACKS)
-    prices = json.loads(os.environ['CREDIT_PRICES']) if os.environ.get('CREDIT_PRICES') else None
+    # Overrides merge onto the defaults, so a new operation kind always has a price.
+    prices = {**DEFAULT_PRICES, **json.loads(os.environ['CREDIT_PRICES'])} if os.environ.get('CREDIT_PRICES') else None
+    surcharges = json.loads(os.environ['CREDIT_SURCHARGES']) if os.environ.get('CREDIT_SURCHARGES') else None
     config = Config(
         env=os.environ.get('GATEWAY_ENV', 'development'),
         public_url=os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8900').rstrip('/'),
@@ -109,6 +122,7 @@ def load() -> Config:
         download_base=os.environ.get('DOWNLOAD_BASE', 'https://github.com/edgaralejod/gradara/releases/latest/download'),
         source_url=os.environ.get('SOURCE_URL', 'https://github.com/edgaralejod/gradara'),
         **({'prices': prices} if prices else {}),
+        **({'surcharges': surcharges} if surcharges else {}),
     )
     config.validate()
     return config

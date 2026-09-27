@@ -361,7 +361,8 @@ def proposal(project: Project, original: Project, plan: EditPlan, changes: list[
                 changes=[c.model_dump() for c in changes],
                 generated=[dict(alias=alias, name=d.name) for alias, d in generated.items()],
                 verified=verified, diagnostics=[d.model_dump() for d in diagnostics], samples=samples,
-                provider=agent.provider_label())
+                provider=agent.provider_label(),
+                **({'credits': credits} if (credits := dispatch.credits_for_current_job()) is not None else {}))
 
 
 async def edit_model(request: ModelEditRequest, job_id: str, progress=lambda message: None):

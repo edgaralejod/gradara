@@ -655,6 +655,23 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
       <p>
         Block generation costs {account.prices.component} credits, a full model
         build {account.prices.model}, and a C export {account.prices.export}.
+        {account.prices.edit !== undefined && (
+          <>
+            {' '}
+            An assistant edit costs {account.prices.edit}
+            {account.surcharges?.edit?.block
+              ? `, plus ${account.surcharges.edit.block} per new or rewritten block`
+              : ''}
+            .
+          </>
+        )}
+        {account.prices.diagnose !== undefined && (
+          <>
+            {' '}
+            Explaining problems costs {account.prices.diagnose}; Fix with AI
+            costs that plus the edit.
+          </>
+        )}{' '}
         Automatic repair attempts are included. If the AI service fails before
         returning a result, you are not charged.
       </p>
@@ -737,8 +754,11 @@ function PrivacySettings({ dataDirectory }: { dataDirectory?: string }) {
         <strong>Sent when you use AI</strong>
         <p>
           Only when you ask for AI help, the request and the relevant model data
-          are sent to the AI provider you chose. With your own API key they go
-          directly to OpenAI or Anthropic under your account terms.
+          are sent to the AI provider you chose. Assistant edits and diagnoses
+          send the open model without its layout; a diagnosis of a failed run
+          also sends that run&apos;s Modelica source and solver messages. With
+          your own API key they go directly to OpenAI or Anthropic under your
+          account terms.
         </p>
       </div>
       <div>

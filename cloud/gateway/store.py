@@ -12,7 +12,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 
 from .config import Config
-from .db import access_tokens, accounts, device_codes, jobs, ledger, now, stripe_events, usage
+from .db import access_tokens, accounts, device_codes, job_parts, jobs, ledger, now, stripe_events, usage
 
 USER_ALPHABET = 'BCDFGHJKLMNPQRSTVWXZ'   # no vowels or look-alikes
 DEVICE_TTL = timedelta(minutes=10)
@@ -141,14 +141,17 @@ class Store:
                                                  accounts.c.deleted_at.is_(None))
                           .values(balance=accounts.c.balance - price))
         if paid.rowcount != 1:
-            raise InsufficientCredits()
+            raise InsufficientCredits(price)
         db.execute(insert(ledger).values(account_id=account.id, delta=-price, reason='charge', ref=ref, created_at=now()))
 
-    def begin_job_call(self, account: Account, job_id: str, kind: str) -> dict:
+    def begin_job_call(self, account: Account, job_id: str, kind: str, part: str | None = None) -> dict:
         """Register one provider call. A job pays its price once, on its first call.
 
         Repair attempts inside the same job are included. If a job was refunded
-        because its first call failed, the next call pays again.
+        because its first call failed, the next call pays again. A call labelled
+        with a priced part (a generated block, or the edit stage of a fix) also
+        pays that part's price once, on the part's first call, in the same
+        transaction, so a job is never charged for half of a call.
         """
         price = self.config.prices[kind]
         limit = self.config.max_calls[kind]
@@ -158,27 +161,73 @@ class Store:
                 self._charge(db, account, price, f'job:{account.id}:{job_id}:1')
                 job_row = db.execute(insert(jobs).values(account_id=account.id, job_id=job_id, kind=kind, calls=1,
                                                          succeeded=False, charged=price, created_at=now())).inserted_primary_key[0]
-                return {'row': job_row, 'charged': price, 'first': True}
-            if row['kind'] != kind:
-                raise ValueError('This operation id was already used for a different kind of request.')
-            if row['calls'] >= limit:
-                raise PermissionError('This operation reached its retry limit.')
-            charged = 0
-            if not row['charged']:
-                self._charge(db, account, price, f'job:{account.id}:{job_id}:{row["calls"] + 1}')
-                charged = price
-            db.execute(update(jobs).where(jobs.c.id == row['id']).values(calls=jobs.c.calls + 1,
-                                                                        charged=jobs.c.charged + charged))
-            return {'row': row['id'], 'charged': charged, 'first': bool(charged)}
+                call = {'row': job_row, 'charged': price, 'first': True}
+            else:
+                if row['kind'] != kind:
+                    raise ValueError('This operation id was already used for a different kind of request.')
+                if row['calls'] >= limit:
+                    raise PermissionError('This operation reached its retry limit.')
+                charged = 0
+                if not row['charged']:
+                    self._charge(db, account, price, f'job:{account.id}:{job_id}:{row["calls"] + 1}')
+                    charged = price
+                db.execute(update(jobs).where(jobs.c.id == row['id']).values(calls=jobs.c.calls + 1,
+                                                                            charged=jobs.c.charged + charged))
+                call = {'row': row['id'], 'charged': charged, 'first': bool(charged)}
+            if part:
+                call |= self._charge_part(db, account, call['row'], job_id, part)
+                call['charged'] += call['partCharged']
+            call['jobCharged'] = self._job_total(db, call['row'])
+            return call
+
+    def _charge_part(self, db, account: Account, job_row: int, job_id: str, part: str) -> dict:
+        family = part.split(':')[0]
+        price = self.config.part_price(family)
+        existing = db.execute(select(job_parts).where(job_parts.c.job_row == job_row,
+                                                      job_parts.c.part == part)).mappings().first()
+        if existing is None:
+            limit = self.config.max_parts.get(family)
+            if limit is not None:
+                used = db.execute(select(func.count()).select_from(job_parts).where(
+                    job_parts.c.job_row == job_row, job_parts.c.part.like(family + ':%'))).scalar_one()
+                if used >= limit:
+                    raise PermissionError(f'This operation can generate at most {limit} blocks.')
+            self._charge(db, account, price, f'part:{account.id}:{job_id}:{part}:1'[:120])
+            part_row = db.execute(insert(job_parts).values(job_row=job_row, part=part, succeeded=False, charged=price,
+                                                           created_at=now())).inserted_primary_key[0]
+            return {'part': part_row, 'partCharged': price, 'partFirst': True}
+        if not existing['charged']:
+            # Refunded after a failed first call: the next call for this part pays again.
+            self._charge(db, account, price, f'part:{account.id}:{job_id}:{part}:{secrets.token_hex(4)}'[:120])
+            db.execute(update(job_parts).where(job_parts.c.id == existing['id']).values(charged=price))
+            return {'part': existing['id'], 'partCharged': price, 'partFirst': True}
+        return {'part': existing['id'], 'partCharged': 0, 'partFirst': False}
+
+    def _job_total(self, db, job_row: int) -> int:
+        base = db.execute(select(jobs.c.charged).where(jobs.c.id == job_row)).scalar_one()
+        parts = db.execute(select(func.coalesce(func.sum(job_parts.c.charged), 0)).where(
+            job_parts.c.job_row == job_row)).scalar_one()
+        return base + parts
 
     def finish_job_call(self, account: Account, call: dict, ok: bool) -> None:
-        """Refund a job whose first call failed on our side, before any output was delivered."""
+        """Refund a job or part whose first call failed on our side, before any output was delivered."""
         with self.engine.begin() as db:
             job = db.execute(select(jobs).where(jobs.c.id == call['row'])).mappings().first()
             if ok:
                 if not job['succeeded']:
                     db.execute(update(jobs).where(jobs.c.id == call['row']).values(succeeded=True))
+                if call.get('part'):
+                    db.execute(update(job_parts).where(job_parts.c.id == call['part']).values(succeeded=True))
                 return
+            if call.get('partFirst'):
+                part = db.execute(select(job_parts).where(job_parts.c.id == call['part'])).mappings().first()
+                if not part['succeeded'] and part['charged']:
+                    refund = part['charged']
+                    db.execute(update(job_parts).where(job_parts.c.id == part['id']).values(charged=0))
+                    db.execute(update(accounts).where(accounts.c.id == account.id).values(balance=accounts.c.balance + refund))
+                    db.execute(insert(ledger).values(account_id=account.id, delta=refund, reason='refund',
+                                                     ref=f'refund:{account.id}:{job["job_id"]}:{part["part"]}:{secrets.token_hex(4)}'[:120],
+                                                     created_at=now()))
             if call['first'] and not job['succeeded'] and job['charged']:
                 refund = job['charged']
                 db.execute(update(jobs).where(jobs.c.id == call['row']).values(charged=0))
@@ -260,6 +309,8 @@ class Store:
             db.execute(update(access_tokens).where(access_tokens.c.account_id == account.id, access_tokens.c.revoked_at.is_(None))
                        .values(revoked_at=now()))
             db.execute(delete(usage).where(usage.c.account_id == account.id))
+            db.execute(delete(job_parts).where(job_parts.c.job_row.in_(
+                select(jobs.c.id).where(jobs.c.account_id == account.id))))
             db.execute(delete(jobs).where(jobs.c.account_id == account.id))
             db.execute(delete(device_codes).where(device_codes.c.account_id == account.id))
             if account.balance:
@@ -275,6 +326,8 @@ class Store:
         with self.engine.begin() as db:
             old_usage = db.execute(delete(usage).where(usage.c.created_at < cutoff)).rowcount
             old_codes = db.execute(delete(device_codes).where(device_codes.c.expires_at < now() - timedelta(days=1))).rowcount
+            finished = select(jobs.c.id).where(jobs.c.created_at < now() - timedelta(days=7))
+            db.execute(delete(job_parts).where(job_parts.c.job_row.in_(finished)))
             old_jobs = db.execute(delete(jobs).where(jobs.c.created_at < now() - timedelta(days=7))).rowcount
             old_tokens = db.execute(delete(access_tokens).where(and_(access_tokens.c.revoked_at.is_not(None),
                                                                      access_tokens.c.revoked_at < now() - timedelta(days=30)))).rowcount

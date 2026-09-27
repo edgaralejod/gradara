@@ -12,7 +12,7 @@ Choose a provider in **Settings → AI**:
 | **Codex CLI** (developer option) | Install and sign in to the Codex CLI (below). Shown when found. | Your Codex plan |
 | **Off** | Hides AI generation. | Nobody |
 
-Gradara AI prices are per operation: a block, a full model build, or a C export. Automatic repair attempts are included, and a request that fails before producing output is not charged. The composer footer shows the cost and your balance.
+Gradara AI prices are per operation: a block (2 credits), a full model build (20), a C export (2), an assistant edit (4, plus 2 for each new or rewritten block, at most three), and explaining problems (2). **Fix with AI** costs the explanation plus the edit. Automatic repair attempts are included, and a request, or a block within an edit, that fails before producing output is not charged. The composer and assistant footers show the cost and your balance, and each assistant answer shows what it actually cost.
 
 Every AI request first passes local schema checks, then OpenModelica compiler checks, so the simulation engine must be set up (Settings → Engine). See [privacy](PRIVACY.md) for exactly what is sent and stored.
 
