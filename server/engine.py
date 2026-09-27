@@ -3,6 +3,7 @@ import json
 import math
 from pathlib import Path
 import time
+from . import msl
 from .hierarchy import all_blocks, instances
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
@@ -82,7 +83,7 @@ async def run(project: Project, job_id: str, folder: Path):
         if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
         if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
         for variable,label_,unit in candidates:
-            key = f'{prefix}{block.id}.{variable}'
+            key = f'{prefix}{block.id}.{msl.connector(definition, variable)}'
             if key in rows[0]:
                 values = [float(row[key]) for row in rows]
                 if not all(math.isfinite(value) for value in values):

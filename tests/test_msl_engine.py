@@ -78,13 +78,156 @@ def harness(data: dict) -> Project:
                                    'blocks': blocks, 'wires': wires})
 
 
+def _block(ident, data):
+    return {'id': ident, 'definition': data, 'position': {'x': 0, 'y': 0}}
+
+
+def _w(n, a, ah, b, bh):
+    return {'id': f'c{n}', 'source': a, 'sourceHandle': ah, 'target': b, 'targetHandle': bh}
+
+
+E = 'electrical'
+GROUND = wrap('Modelica.Electrical.Analog.Basic.Ground', [('p', 'physical', E)], {}, E)
+SINE = wrap('Modelica.Electrical.Analog.Sources.SineVoltage', [('p', 'physical', E), ('n', 'physical', E)], {'V': '1', 'f': '50'}, E)
+
+
+def R(value):
+    return wrap('Modelica.Electrical.Analog.Basic.Resistor', [('p', 'physical', E), ('n', 'physical', E)], {'R': str(value)}, E)
+
+
+T3 = 'threePhase'
+SINE3 = wrap('Modelica.Electrical.Polyphase.Sources.SineVoltage', [('plug_p', 'physical', T3), ('plug_n', 'physical', T3)],
+             {'V': 'fill(1, 3)', 'f': 'fill(50, 3)'}, T3)
+R3 = wrap('Modelica.Electrical.Polyphase.Basic.Resistor', [('plug_p', 'physical', T3), ('plug_n', 'physical', T3)], {'R': 'fill(10, 3)'}, T3)
+STAR = wrap('Modelica.Electrical.Polyphase.Basic.Star', [('plug_p', 'physical', T3), ('pin_n', 'physical', E)], {}, T3)
+
+
+def _two_port(data):
+    """Controlled sources: a sine source drives the input port through a resistor; a resistor loads the output."""
+    blocks = [_block('dut', data), _block('src', SINE), _block('r1', R(10)), _block('r2', R(10)), _block('g', GROUND)]
+    wires = [_w(1, 'src', 'p', 'dut', 'p1'), _w(2, 'dut', 'n1', 'r1', 'p'), _w(3, 'r1', 'n', 'g', 'p'),
+             _w(4, 'src', 'n', 'g', 'p'), _w(5, 'dut', 'p2', 'r2', 'p'), _w(6, 'r2', 'n', 'g', 'p'), _w(7, 'dut', 'n2', 'g', 'p')]
+    return blocks, wires
+
+
+def _op_amp(data):
+    """Inverting amplifier with a gain of −10."""
+    blocks = [_block('dut', data), _block('src', SINE), _block('rin', R(1000)), _block('rf', R(10000)),
+              _block('load', R(1000)), _block('g', GROUND)]
+    wires = [_w(1, 'src', 'p', 'rin', 'p'), _w(2, 'rin', 'n', 'dut', 'in_n'), _w(3, 'dut', 'out', 'rf', 'p'),
+             _w(4, 'rf', 'n', 'dut', 'in_n'), _w(5, 'dut', 'in_p', 'g', 'p'), _w(6, 'src', 'n', 'g', 'p'),
+             _w(7, 'dut', 'out', 'load', 'p'), _w(8, 'load', 'n', 'g', 'p')]
+    return blocks, wires
+
+
+def _power_sensor(data):
+    """The current path feeds a load; the voltage path measures across it."""
+    blocks = [_block('dut', data), _block('src', SINE), _block('load', R(10)), _block('g', GROUND)]
+    wires = [_w(1, 'src', 'p', 'dut', 'pc'), _w(2, 'dut', 'nc', 'load', 'p'), _w(3, 'load', 'n', 'g', 'p'),
+             _w(4, 'src', 'n', 'g', 'p'), _w(5, 'dut', 'pv', 'dut', 'nc'), _w(6, 'dut', 'nv', 'g', 'p')]
+    return blocks, wires
+
+
+def _three_phase_supply(extra_blocks, extra_wires):
+    blocks = [_block('src', SINE3), _block('star', STAR), _block('g', GROUND)] + extra_blocks
+    wires = [_w(1, 'src', 'plug_n', 'star', 'plug_p'), _w(2, 'star', 'pin_n', 'g', 'p')] + extra_wires
+    return blocks, wires
+
+
+def _three_phase_through(data):
+    """Sensors in series with a star-connected load; power sensors also measure the phase voltages."""
+    blocks, wires = _three_phase_supply([_block('dut', data), _block('load', R3), _block('ls', STAR)], [
+        _w(10, 'src', 'plug_p', 'dut', 'plug_p' if data['kind'] != 'threePhasePowerSensor' else 'pc'),
+        _w(11, 'dut', 'plug_n' if data['kind'] != 'threePhasePowerSensor' else 'nc', 'load', 'plug_p'),
+        _w(12, 'load', 'plug_n', 'ls', 'plug_p'), _w(13, 'ls', 'pin_n', 'g', 'p')])
+    if data['kind'] == 'threePhasePowerSensor':
+        wires += [_w(14, 'dut', 'pv', 'dut', 'nc'), _w(15, 'dut', 'nv', 'src', 'plug_n')]
+    return blocks, wires
+
+
+def _delta(data):
+    """A resistor bank connected in delta across the supply."""
+    return _three_phase_supply([_block('dut', data), _block('load', R3)], [
+        _w(10, 'src', 'plug_p', 'load', 'plug_p'), _w(11, 'load', 'plug_n', 'dut', 'plug_p'),
+        _w(12, 'dut', 'plug_n', 'load', 'plug_p')])
+
+
+def _phase_tap(data):
+    """One phase of the supply drives a single-phase load."""
+    return _three_phase_supply([_block('dut', data), _block('load', R(10))], [
+        _w(10, 'src', 'plug_p', 'dut', 'plug_p'), _w(11, 'dut', 'pin_p', 'load', 'p'), _w(12, 'load', 'n', 'g', 'p')])
+
+
+# Blocks that only make sense inside a working circuit get one; the rest use the generic harness.
+CIRCUITS = {'vcvs': _two_port, 'vccs': _two_port, 'ccvs': _two_port, 'cccs': _two_port, 'opAmp': _op_amp,
+            'powerSensor': _power_sensor, 'delta': _delta, 'phaseA': _phase_tap, 'phaseB': _phase_tap,
+            'phaseC': _phase_tap, 'threePhaseCurrentSensor': _three_phase_through,
+            'threePhaseVoltageSensor': _three_phase_through, 'threePhasePowerSensor': _three_phase_through}
+
+
+def circuit(data: dict) -> Project:
+    if data['kind'] not in CIRCUITS:
+        return harness(data)
+    blocks, wires = CIRCUITS[data['kind']](data)
+    covered = {(w['source'], w['sourceHandle']) for w in wires if w['source'] == 'dut'} | \
+              {(w['target'], w['targetHandle']) for w in wires if w['target'] == 'dut'}
+    # Sensor outputs stay open; every input is driven.
+    for port in data['ports']:
+        if port['direction'] == 'input' and ('dut', port['id']) not in covered:
+            raise AssertionError(f'{data["kind"]}.{port["id"]} is not driven')
+    return Project.model_validate({'version': 1, 'name': data['kind'], 'duration': 0.02, 'revision': 0,
+                                   'blocks': blocks, 'wires': wires})
+
+
 def test_harness_is_valid_for_every_block():
     for data in library():
-        harness(data)
+        circuit(data)
 
 
 @pytest.mark.integration
 @pytest.mark.parametrize('data', library(), ids=lambda d: d['kind'])
 def test_block_compiles_and_runs(data):
-    result = asyncio.run(simulate(harness(data), 'msl' + uuid.uuid4().hex[:12]))
+    result = asyncio.run(simulate(circuit(data), 'msl' + uuid.uuid4().hex[:12]))
     assert result['samples'] > 1
+
+
+def _run(blocks, wires, duration):
+    project = Project.model_validate({'version': 1, 'name': 'physics', 'duration': duration, 'revision': 0,
+                                      'blocks': blocks, 'wires': wires})
+    result = asyncio.run(simulate(project, 'phys' + uuid.uuid4().hex[:10]))
+    return {s['key']: s['values'] for s in result['series']}
+
+
+def _lib(kind):
+    return next(d for d in library() if d['kind'] == kind)
+
+
+@pytest.mark.integration
+def test_spring_mass_settles_at_force_over_stiffness():
+    blocks = [_block('wall', _lib('transFixed')), _block('k', _lib('transSpringDamper')), _block('m', _lib('mass')),
+              _block('f', _lib('constantForce')), _block('s', _lib('positionSensor'))]
+    wires = [_w(1, 'wall', 'flange', 'k', 'flange_a'), _w(2, 'k', 'flange_b', 'm', 'flange_a'),
+             _w(3, 'f', 'flange', 'm', 'flange_b'), _w(4, 's', 'flange', 'm', 'flange_b')]
+    # 1 N on 1000 N/m settles at 1 mm; damping 10 N·s/m on 1 kg settles well within 5 s.
+    assert _run(blocks, wires, 5)['s.s'][-1] == pytest.approx(1e-3, rel=1e-3)
+
+
+@pytest.mark.integration
+def test_heat_capacitor_integrates_heat_flow():
+    blocks = [_block('c', _lib('heatCapacitor')), _block('q', _lib('fixedHeatFlow')), _block('t', _lib('temperatureSensor'))]
+    wires = [_w(1, 'q', 'port', 'c', 'port'), _w(2, 't', 'port', 'c', 'port')]
+    values = _run(blocks, wires, 10)['t.T']
+    # 10 W into 1000 J/K for 10 s raises the temperature by 0.1 K.
+    assert values[-1] - values[0] == pytest.approx(0.1, rel=1e-3)
+
+
+@pytest.mark.integration
+def test_inverting_amplifier_has_gain_minus_ten():
+    blocks, wires = _op_amp(_lib('opAmp'))
+    sense = wrap('Modelica.Electrical.Analog.Sensors.VoltageSensor', [('p', 'physical', E), ('n', 'physical', E), ('v', 'output', 'signal')], {}, E)
+    vin = wrap('Modelica.Electrical.Analog.Sensors.VoltageSensor', [('p', 'physical', E), ('n', 'physical', E), ('v', 'output', 'signal')], {}, E)
+    blocks += [_block('vout', sense), _block('vin', vin)]
+    wires += [_w(20, 'vout', 'p', 'dut', 'out'), _w(21, 'vout', 'n', 'g', 'p'), _w(22, 'vin', 'p', 'src', 'p'), _w(23, 'vin', 'n', 'g', 'p')]
+    values = _run(blocks, wires, 0.02)
+    for a, b in zip(values['vout.v'], values['vin.v']):
+        assert a == pytest.approx(-10 * b, abs=1e-6)
