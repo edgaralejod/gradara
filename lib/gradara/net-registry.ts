@@ -159,6 +159,9 @@ export function reconcileNets(
       ...(label ? { label } : {}),
       ...(choices.some(({ net }) => net.logged) ? { logged: true } : {}),
       ...(retained?.hidden ? { hidden: true } : {}),
+      ...(!retained?.hidden && choices.some(({ net }) => net.showName)
+        ? { showName: true }
+        : {}),
     };
   });
   // Retain order and references for geometry-only edits and idempotent loads.

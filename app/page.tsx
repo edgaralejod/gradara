@@ -75,7 +75,7 @@ import {
 import ModelCanvas, { FIT_VIEW_EVENT } from '@/components/gradara/model-canvas';
 import { normalizeProject } from '@/lib/gradara/normalize-project';
 import { describeNets, renameNet } from '@/lib/gradara/net-registry';
-import { setNetLabel } from '@/lib/gradara/net-label';
+import { setNetLabel, setNetLabelShown } from '@/lib/gradara/net-label';
 import {
   IdentityField,
   ModelExplorer,
@@ -2599,14 +2599,9 @@ function Workbench() {
                     commit((p) => renameNet(p, activeNet.net.id, name))
                   }
                   onVisibility={(visible) =>
-                    commit((p) => ({
-                      ...p,
-                      nets: p.nets?.map((n) =>
-                        n.id === activeNet.net.id
-                          ? { ...n, hidden: !visible }
-                          : n,
-                      ),
-                    }))
+                    commit((p) =>
+                      setNetLabelShown(p, activeNet.net.id, visible),
+                    )
                   }
                   onLogging={(logged) =>
                     commit((p) => ({

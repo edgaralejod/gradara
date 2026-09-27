@@ -83,7 +83,7 @@ Automatic net names derive from the current anchor block and port, such as `Step
 
 The model inspector searches blocks and nets by name, ID, domain, or terminal. Selecting a net highlights all its wires; properties expose its full ID, source/destinations or physical terminals, aliases, and label visibility. Locate fits its connected blocks into view.
 
-Double-click a wire or use F2 to name its net. Enter or blur commits, Escape cancels, and an empty name restores the automatic name. Labels store a wire ID, a fraction of routed length, and a side. Dragging a label or using its arrow keys changes label placement without moving wiring; Home resets placement. If its wire disappears, placement falls back to a suitable surviving run. Block labels use a separate per-instance offset and follow block movement/resizing.
+Net labels are off by default. A net shows its label once it has a custom name, or when **Show name on diagram** is turned on in its properties; turning that off hides even a custom name. Double-click a wire or use F2 to name its net. Enter or blur commits, Escape cancels, and an empty name restores the automatic name. Labels store a wire ID, a fraction of routed length, and a side. Dragging a label or using its arrow keys changes label placement without moving wiring; Home resets placement. If its wire disappears, placement falls back to a suitable surviving run. Block labels use a separate per-instance offset and follow block movement/resizing.
 
 ## Subsystem sheets
 

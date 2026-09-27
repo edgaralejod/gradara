@@ -16,7 +16,9 @@ import {
 import {
   labelPosition,
   nearestLabelAnchor,
+  netLabelShown,
   setNetLabel,
+  setNetLabelShown,
 } from '../lib/gradara/net-label';
 import { duplicateBlocks, semanticSignature } from '../lib/gradara/project';
 import {
@@ -565,4 +567,24 @@ void test('unrelated geometric crossings never become nodes', () => {
   const after = materializeBranches(p);
   assert.equal(after, p);
   assert.deepEqual(after, before);
+});
+
+void test('net labels are off by default and follow names and the show toggle', () => {
+  const p = branched();
+  const id = p.nets![0].id;
+  const net = (q: Project) => q.nets!.find((n) => n.id === id)!;
+  assert.equal(netLabelShown(net(p)), false);
+  const shown = setNetLabelShown(p, id, true);
+  assert.equal(netLabelShown(net(shown)), true);
+  assert.equal(net(shown).showName, true);
+  assert.equal(netLabelShown(net(reconcileNets(shown, shown))), true);
+  const hidden = setNetLabelShown(shown, id, false);
+  assert.equal(netLabelShown(net(hidden)), false);
+  assert.equal(net(hidden).showName, undefined);
+  const named = renameNet(p, id, 'speed');
+  assert.equal(netLabelShown(net(named)), true);
+  assert.equal(netLabelShown(net(setNetLabelShown(named, id, false))), false);
+  // Saved documents carry hidden: false for every net; that alone does not show a label.
+  assert.equal(netLabelShown({ ...net(p), hidden: false }), false);
+  assert.equal(semanticSignature(shown), semanticSignature(p));
 });

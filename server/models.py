@@ -215,6 +215,7 @@ class Net(BaseModel):
     wireIds: list[str] = Field(min_length=1, max_length=3000)
     label: NetLabel | None = None
     hidden: bool = False
+    showName: bool | None = None
     logged: bool = False
 
     @field_validator('aliases')

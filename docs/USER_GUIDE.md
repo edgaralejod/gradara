@@ -65,7 +65,7 @@ Nearby parallel segments snap together and shed redundant bends. Junctions shoul
 
 Tap **Space**, or use the fit button in the canvas controls, to fit the whole sheet in view; holding Space and dragging still pans. A fitted view stays fitted when you open or close the library, the inspector, or the Problems dock, or resize the window. After you pan or zoom yourself, those changes keep the same point at the center of the canvas instead.
 
-The model inspector exposes blocks and logical nets in a compact tree. The tree and property pane scroll independently. Select the model root, a block, or a net to switch the property pane; component parameters use aligned name/value rows. Expand Description to read model or component notes. Nets receive stable IDs plus automatic names derived from their connection. Give a net a custom name when the engineering meaning is clearer than the default; its label and identity belong to the connected net, not each drawn segment.
+The model inspector exposes blocks and logical nets in a compact tree. The tree and property pane scroll independently. Select the model root, a block, or a net to switch the property pane; component parameters use aligned name/value rows. Expand Description to read model or component notes. Nets receive stable IDs plus automatic names derived from their connection. Give a net a custom name when the engineering meaning is clearer than the default; its label and identity belong to the connected net, not each drawn segment. Net names are hidden on the diagram until you give a net a custom name; turn **Show name on diagram** on or off in a net's properties to change that.
 
 ## Subsystems
 
