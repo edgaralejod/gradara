@@ -64,7 +64,6 @@ Subsystems, shared definitions, promoted parameters, variants, and configuration
 
 | Task | Acceptance |
 | --- | --- |
-| Model Explorer tab | In progress, not shipped. A tab that shows the whole hierarchy (sheets, subsystem instances, and shared definitions) and opens any level. The inspector's model tree lists only the open sheet. |
 | Subsystem preview | Hovering a subsystem block shows a thumbnail of its inside without opening it. |
 | Compile inactive variants | Inactive variants are compiled by OpenModelica in the background, so their problems include compiler errors. Current checks are structural (ports and unconnected inputs). |
 | Results by subsystem | Results groups series by subsystem instance instead of one flat list of `Instance › Block.port` names. |

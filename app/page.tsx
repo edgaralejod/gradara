@@ -25,6 +25,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import {
   Activity,
+  ListTree,
   Play,
   Sparkles,
   Stethoscope,
@@ -126,6 +127,10 @@ import BlockDialog, {
 import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import VariantPanel from '@/components/gradara/variant-panel';
+import ExplorerWorkspace, {
+  type ExplorerTarget,
+} from '@/components/gradara/model-explorer';
+import { explorerIndex } from '@/lib/gradara/explorer';
 import ConfigurationMenu from '@/components/gradara/configuration-menu';
 import { mergeRuns, type ComparisonRun } from '@/lib/gradara/compare';
 import {
@@ -334,7 +339,9 @@ function Workbench() {
   const [exportOpen, setExportOpen] = useState(false);
   const [libraryOpen, updateLibraryOpen] = useState(true);
   const [inspectorOpen, updateInspectorOpen] = useState(true);
-  const [workspaceMode, setWorkspaceMode] = useState<'diagram' | 'results'>(
+  const [workspaceMode, setWorkspaceMode] = useState<
+    'diagram' | 'results' | 'explorer'
+  >(
     'diagram',
   );
   const setLibraryOpen = useCallback((open: boolean) => {
@@ -444,6 +451,7 @@ function Workbench() {
     projectRef.current = scopeView(changed, scopeRef.current);
     setDoc(changed);
   }, []);
+  const [searchSignal, setSearchSignal] = useState(0);
   const switchVariantOnSheet = useCallback(
     (blockId: string, variantId: string) =>
       commit((p) => switchVariant(p, blockId, variantId)),
@@ -570,6 +578,22 @@ function Workbench() {
       ),
     [problemSections],
   );
+  /** Open a place the Explorer points at: its sheet in the Diagram, then the block or net. */
+  const revealTarget = (target: ExplorerTarget) => {
+    const sheet = explorerIndex(docRef.current).sheets.find(
+      (s) => s.id === target.sheetId,
+    );
+    if (!sheet?.path) {
+      notify('That inside belongs to an inactive variant. Switch to it first.');
+      return;
+    }
+    enterScope(sheet.path);
+    setWorkspaceMode('diagram');
+    setTimeout(() => {
+      if (target.blockId) selectBlocks([target.blockId]);
+      else if (target.netId) focusNet(target.netId);
+    }, 60);
+  };
   const selectProblem = (d: Diagnostic, only?: string[]) =>
     selectBlocks(only ?? d.blockIds, only ? [] : d.wireIds);
   const selectBlocks = (ids: string[], wires: string[] = []) => {
@@ -1558,6 +1582,13 @@ function Workbench() {
       } else if (e.key === '2' && command) {
         e.preventDefault();
         setWorkspaceMode('results');
+      } else if (e.key === '3' && command) {
+        e.preventDefault();
+        setWorkspaceMode('explorer');
+      } else if (e.key.toLowerCase() === 'k' && command) {
+        e.preventDefault();
+        setWorkspaceMode('explorer');
+        setSearchSignal((n) => n + 1);
       } else if (e.key === '?' && !command) setHelpOpen(true);
     };
     window.addEventListener('keydown', key);
@@ -1936,6 +1967,24 @@ function Workbench() {
                   </TooltipTrigger>
                   <TooltipContent>Results view · ⌘2</TooltipContent>
                 </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        role="tab"
+                        aria-selected={workspaceMode === 'explorer'}
+                        aria-label="Explorer view"
+                        onClick={() => setWorkspaceMode('explorer')}
+                      >
+                        <ListTree size={15} />
+                        <span>Explorer</span>
+                      </button>
+                    }
+                  >
+                    <span />
+                  </TooltipTrigger>
+                  <TooltipContent>Model Explorer · ⌘3 · search ⌘K</TooltipContent>
+                </Tooltip>
               </div>
             </div>
             <div className="toolbar-actions">
@@ -2307,6 +2356,22 @@ function Workbench() {
                   )
                 )}
               </div>
+            ) : workspaceMode === 'explorer' ? (
+              <ExplorerWorkspace
+                doc={doc}
+                result={result}
+                problems={liveProblems}
+                focusedBlock={
+                  selectedIds[0]
+                    ? { sheetId: currentSubsystem ?? '', blockId: selectedIds[0] }
+                    : undefined
+                }
+                searchSignal={searchSignal}
+                onCommit={commitDoc}
+                onReveal={revealTarget}
+                onRunAll={() => void runAllConfigurations()}
+                onOpenResults={() => setWorkspaceMode('results')}
+              />
             ) : (
               <div className="results-view-wrap">
                 <Results
@@ -3080,6 +3145,10 @@ function Workbench() {
                 ['Delete selection', 'Delete / Backspace'],
                 ['Switch to Diagram view', '⌘ / Ctrl + 1'],
                 ['Switch to Results view', '⌘ / Ctrl + 2'],
+                ['Switch to Model Explorer', '⌘ / Ctrl + 3'],
+                ['Search the model', '⌘ / Ctrl + K'],
+                ['Make subsystem · ungroup', '⌘ / Ctrl + G · ⇧G'],
+                ['Leave a subsystem', 'Esc · ⌘ / Ctrl + ↑'],
                 ['Fit model to canvas', 'F'],
                 ['Select several components', 'Shift + click / Drag'],
                 ['Select / pan tools', 'V / H'],

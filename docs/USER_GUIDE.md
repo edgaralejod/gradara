@@ -88,6 +88,18 @@ Only the active variant is simulated. The block has every port any variant has. 
 
 When a model has variants, a configuration menu appears left of **Run**. It shows the saved configuration that matches the current choices, or **Custom**. **Save current choices…** stores which variant every subsystem uses, including subsystems inside others; choosing a configuration switches all of them in one undo step. **Run all configurations** (two or more saved) runs each one in turn without changing the open model, then opens Results with every signal overlaid and named `[Configuration] signal`. Later runs are resampled onto the first run's time points. The overlay is not saved with the model; run again to see it after reopening.
 
+## Model Explorer
+
+The **Explorer** tab (⌘/Ctrl+3), beside Diagram and Results, shows the whole model at once. The right-hand inspector stays for quick edits while drawing.
+
+- **Tree.** The left pane lists the blocks of the top level. A subsystem expands to its inside; a subsystem with variants expands to its variants, and each variant to its inside. Badges show the active variant and **Used N×**; a red dot marks a block with problems. The block selected in the Diagram is underlined. Double-click a row to open that place in the Diagram.
+- **Parameters.** Every parameter under the selected tree node (the whole model when the root is selected) as one sheet: location, block, parameter, value, unit, and range. Edit a value in place; each edit is one undo step. **Filter** matches block, parameter, and unit words. **Find value** and **Replace with** change every listed parameter whose value equals the one you enter. ↑ promotes a parameter inside a subsystem to the subsystem block; a promoted parameter shows its subsystem parameter's name and is set per instance on the block instead.
+- **Variants.** One row per subsystem with variants, one column per configuration. **Current** switches the active variant; each configuration's column sets its choice, and **Apply** switches the model to it. Rename a configuration in its header. **Configuration from current choices** adds one; **Run all configurations** runs and overlays them.
+- **Signals.** Every signal net in the model with its location and unit. Check **Log** to record it on the next run; after a run, the range of each logged signal is shown. **Open Results** switches to the Data Inspector.
+- **Search.** ⌘/Ctrl+K opens the Explorer and focuses search. It finds blocks, ports, parameters, nets, subsystems, and variants anywhere in the hierarchy; Enter or a click opens the first or chosen match in the Diagram and selects it. An inside that belongs only to an inactive variant cannot be opened until you switch to it.
+
+The tables draw only the rows in view, so a model with a thousand blocks stays responsive.
+
 ## Simulate and inspect
 
 Set the stop time and press **Run**. Manual models accept stop times greater than 0 and at most 86,400 seconds. Compilation and simulation happen asynchronously. You can cancel from the run controls. Unconnected signal inputs, drawing-only blocks (mux and demux), and subsystem ports the active variant does not provide produce diagnostics; invalid or incomplete simulations do not become successful partial plots. The solver still uses 6,000 output intervals and a 120-second wall-clock timeout; a longer horizon is not a guarantee of adequate event resolution or completion. Full-model agent planning retains a separate 60-second bound.
