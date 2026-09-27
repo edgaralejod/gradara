@@ -18,7 +18,7 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | Definitions and physical blocks | `lib/gradara/*blocks.ts`, `model.ts`, `server/modelica.py` | Block guide and simulation execution guide. |
 | Save/load and API | `server/workspace.py`, `server/app.py`, `lib/gradara/api.ts` | Model format and API guide. |
 | Simulation engines | `server/engine.py`, `server/engines.py` (native and Docker backends), `safety.py`, `processes.py` | `server/AGENTS.md`, execution guide, `SECURITY.md`. |
-| AI features and export | `agent.py`, `model_agent.py`, `exporter.py`, `server/llm/` (dispatch and providers) | Execution guide, distribution guide, `docs/PRIVACY.md`. |
+| AI features and export | `agent.py`, `model_agent.py`, `model_edit.py`, `diagnose_agent.py`, `diagnostics.py`, `exporter.py`, `server/llm/` (dispatch and providers), `lib/gradara/proposal.ts` | Execution guide, distribution guide, `docs/PRIVACY.md`. |
 | Desktop app and installers | `desktop/`, `packaging/`, `vite.desktop.config.ts`, `.github/workflows/release.yml` | Distribution guide, release checklist. |
 | Gradara AI service | `cloud/` (gateway, sign-in pages, `deploy.sh`) | `cloud/README.md`, `docs/PRIVACY.md`. Privacy rules are enforced by its tests. |
 | Website | `site/` | `site/README.md`. Keep claims in step with `docs/PRIVACY.md` and the code. |
@@ -56,6 +56,9 @@ Pull requests get an advisory warning (`scripts/check-doc-drift.py`) when they c
 | `server/models.py`, `lib/gradara/model.ts`, `server/workspace.py` | `docs/architecture/MODEL_FORMAT.md`, `docs/API.md` |
 | `server/engine.py`, `server/engines.py`, `server/engine_runner.py`, `server/safety.py`, `Dockerfile.engine` | `docs/architecture/EXECUTION.md`, `docs/development/TROUBLESHOOTING.md`, `SECURITY.md` |
 | `server/llm/`, `server/agent.py`, `server/model_agent.py`, `server/exporter.py` | `docs/architecture/EXECUTION.md`, `docs/architecture/DISTRIBUTION.md`, `docs/AGENT_SETUP.md`, `docs/PRIVACY.md` |
+| `server/model_edit.py`, `server/diagnose_agent.py`, `server/diagnostics.py` | `docs/architecture/EXECUTION.md`, `docs/API.md`, `docs/AGENT_SETUP.md`, `docs/PRIVACY.md`, `SECURITY.md` |
+| `components/gradara/problems-panel.tsx`, `components/gradara/assistant-panel.tsx`, `components/gradara/diagnostics-dock.tsx` | `docs/USER_GUIDE.md` |
+| `cloud/gateway/config.py` | `docs/AGENT_SETUP.md`, `docs/architecture/DISTRIBUTION.md`, `site/public/index.html`, `site/public/terms.html` |
 | `server/credentials.py`, `server/settings.py`, `server/paths.py` | `SECURITY.md`, `docs/development/SETUP.md`, `.env.example` |
 | `lib/gradara/net-*.ts`, `lib/gradara/routing.ts`, `lib/gradara/selection.ts` | `docs/architecture/WIRING.md` |
 | `lib/gradara/block-design.ts`, `components/gradara/block-face.tsx` | `docs/blocks/DESIGN.md` |

@@ -16,7 +16,18 @@ import httpx
 from .. import credentials, settings
 from .providers import Generation, ProviderError, Usage
 
-VERSION = os.environ.get('GRADARA_VERSION', '0.2.0')
+def _version() -> str:
+    if os.environ.get('GRADARA_VERSION'):
+        return os.environ['GRADARA_VERSION']
+    try:  # source checkout: the repository's package.json
+        import json
+        from pathlib import Path
+        return json.loads((Path(__file__).resolve().parents[2]/'package.json').read_text())['version']
+    except (OSError, ValueError, KeyError):
+        return 'dev'
+
+
+VERSION = _version()
 TIMEOUT = httpx.Timeout(connect=15.0, read=330.0, write=60.0, pool=15.0)
 
 

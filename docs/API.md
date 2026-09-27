@@ -56,7 +56,7 @@ Normal responses currently use HTTP 200, including accepted jobs. Save conflicts
 {"id":"opaque-job-id","kind":"simulation","status":"queued"}
 ```
 
-`kind` is `simulation`, `component`, `model`, `edit`, `diagnose`, or `export`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
+`kind` is `simulation`, `component`, `model`, `edit`, `diagnose`, `export`, or `engine`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
 
 ```json
 {"id":"d1","severity":"error","source":"runtime","message":"The model has an algebraic loop the solver cannot resolve.",

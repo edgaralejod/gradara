@@ -23,6 +23,7 @@ Ordinary local simulation does not call an LLM provider. Engine setup downloads 
 - Component creation sends the request text; refinement also sends the existing component definition.
 - Full-model creation sends the request, built-in catalog snapshot, and local AI library definitions to the configured provider for planning and assembly. It does not send unrelated saved models.
 - Repair attempts may send the candidate and compiler diagnostics.
+- Assistant edits and diagnoses send the open model's blocks, parameters, equations, and connections without its layout, the selected block names, and the block catalog. Diagnosis also sends the problems you ask about and, for a failed run of the same model, the emitted Modelica source and solver messages.
 - Controller export sends project name/revision, the selected block's equations, parameters and definition, nearby connection metadata, and target-interface instructions.
 - With the Codex CLI, prompts and responses are also kept locally for diagnostics. Other providers keep no local copy unless `GRADARA_KEEP_AI_TRANSCRIPTS=1` is set.
 

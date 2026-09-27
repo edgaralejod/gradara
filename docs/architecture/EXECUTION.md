@@ -11,7 +11,7 @@
 
 Failures raise `SimulationFailure` (`server/diagnostics.py`). Its message is the readable text stored as the job `error`; its structured `Diagnostic` list is stored as the job `diagnostics` (see the [job contract](../API.md#job-contract)). Validation and safety problems name their blocks and ports directly. For solver text, `failure_diagnostics` makes one entry per compiler `Error:` line, maps instance IDs that appear as component references, and, for singular linear systems, names the signal blocks on a direct-feedthrough cycle (a block whose equations use `der`, `sample`, `delay`, or `pre` breaks the cycle). Engine start-up failures are `engine` diagnostics. Once a run folder exists, a failure also writes `diagnostics.json` beside `model.mo`, and `GET /api/runs/{runId}/diagnostics` returns it. Successful runs parse solver warnings into `result.problems` and keep the raw `diagnostics` string.
 
-The job registry is in memory. API job statuses are `queued`, `running`, `complete`, `failed`, and `cancelled`. At most four operations are active across simulation/component/export jobs. Engine execution has its own two-slot semaphore. Restarting the service loses job status; it does not delete completed run directories. There is no durable queue or automatic resume.
+The job registry is in memory. API job statuses are `queued`, `running`, `complete`, `failed`, and `cancelled`. At most four operations are active across all job kinds. Engine execution has its own two-slot semaphore. Restarting the service loses job status; it does not delete completed run directories. There is no durable queue or automatic resume.
 
 ## Engine supervision
 
@@ -45,7 +45,7 @@ Successful generation establishes schema/compiler compatibility. It does not ind
 
 ## Model editing
 
-`POST /api/models/edit` (`server/model_edit.py`) edits the open model through bounded operations; the agent never returns a Project. The request carries the prompt, the current `Project`, the UI catalog, an optional selection of block IDs, an optional `context` (Phase 4 passes run diagnostics), and `verify` (default true). The prompt contains the model without layout (no positions, sizes, routes, junctions, plots, or annotations), the selected block names, and the catalog description shared with full-model generation.
+`POST /api/models/edit` (`server/model_edit.py`) edits the open model through bounded operations; the agent never returns a Project. The request carries the prompt, the current `Project`, the UI catalog, an optional selection of block IDs, an optional `context` (a fix passes the run's problems), and `verify` (default true). The prompt contains the model without layout (no positions, sizes, routes, junctions, plots, or annotations), the selected block names, and the catalog description shared with full-model generation.
 
 The agent returns an `EditPlan`: a summary, assumptions, `unsupported` (non-empty refuses the request), and 1–40 operations applied in order. The operations are `add_block`, `create_block` (at most two), `revise_definition`, `remove_block`, `rename_block`, `set_parameter`, `connect`, `disconnect`, and `set_duration`. At most three definitions per edit are created or rewritten; each goes through the typed component generator, with its compile check and port-preserving refinement.
 

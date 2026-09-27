@@ -15,7 +15,7 @@ Done: the Apache-2.0 source is public, CI runs on GitHub, installers for Windows
 
 | Task | Scope | Done when |
 | --- | --- | --- |
-| AI onboarding | Settings → AI already covers provider choice, key verification, and Gradara AI sign-in. Remaining: per-provider model selection and in-context messages for rejected keys, exhausted credits, and vendor outages. | A first-time user can distinguish missing setup, sign-in, credit, and vendor failures from the composer itself. Status probes never trigger paid generations. |
+| AI onboarding | Settings → AI already covers provider choice, per-provider model selection, key verification, and Gradara AI sign-in, and the composers point to Settings when setup or sign-in is missing. Remaining: in-context messages for rejected keys, exhausted credits, and vendor outages, and hiding AI controls when AI is off. | A first-time user can distinguish missing setup, sign-in, credit, and vendor failures from the composer itself. Status probes never trigger paid generations. |
 | Preserve route intent through save/load | Python Wire defaults currently erase the distinction between absent and empty waypoints. | A versioned or backward-compatible solution preserves auto versus explicit straight intent through API round trips, without changing saved geometry unexpectedly. |
 | Keyboard and screen-reader access | Focus, discoverable actions, model dialogs, and canvas navigation. | A new user can create/open/run a model using the keyboard; assistive-technology sessions verify accessible names, focus return, and error recovery. |
 | Lint cleanup | Small groups of existing workspace, editor, and UI primitive findings. | The strict lint command passes without blanket rule suppression; interaction regressions are checked. |
