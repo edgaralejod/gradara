@@ -63,7 +63,7 @@ Installers bundle Electron, a Python runtime, and the service dependencies; see 
 
 ## Gradara AI service
 
-Deploy from `cloud/` following [its runbook](../cloud/README.md). Before live payments: run `pytest` in `cloud/`, verify sign-in and Checkout in Stripe test mode end to end with a desktop build pointed at the staging gateway, confirm the webhook grants credits once, and confirm logs contain no request content. Update [privacy](PRIVACY.md) and the public notice together whenever stored data or subprocessors change.
+Deploy from `cloud/` following [its runbook](../cloud/README.md). The app only works with a gateway that accepts every AI task it sends: before publishing a release, run `cloud/deploy.sh status` and, when it reports the gateway code changed since the deployed revision, run `cloud/deploy.sh deploy` first. `tests/test_llm.py` fails when the app uses a task or job kind the gateway code rejects; an older deployed gateway answers such requests with a 422, which the app reports as the service being older than the app. Before live payments: run `pytest` in `cloud/`, verify sign-in and Checkout in Stripe test mode end to end with a desktop build pointed at the staging gateway, confirm the webhook grants credits once, and confirm logs contain no request content. Update [privacy](PRIVACY.md) and the public notice together whenever stored data or subprocessors change.
 
 ## Release status and evidence
 

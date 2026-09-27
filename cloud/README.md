@@ -36,6 +36,7 @@ Point a source checkout or desktop build at it with `GRADARA_GATEWAY_URL=http://
 | `USAGE_RETENTION_DAYS` | Default 400 |
 | `ADMIN_TOKEN` | Secret Manager; enables `POST /internal/purge` |
 | `DOWNLOAD_BASE`, `SOURCE_URL` | Targets for `/download/{platform}` and `/source` redirects |
+| `GATEWAY_REVISION` | Set by `deploy.sh deploy` to the deployed commit; `GET /health` reports it with the accepted task types |
 
 With `GATEWAY_ENV=production` the service refuses to start with development sign-in, SQLite, missing keys, packs without Stripe prices, or a non-HTTPS public URL.
 
@@ -61,7 +62,8 @@ cloud/deploy.sh deploy    # build this checkout with Cloud Build and deploy to C
                           # re-checks the request-log exclusion)
 cloud/deploy.sh domain    # map api.gradara.app (after `gcloud domains verify gradara.app`)
 cloud/deploy.sh secrets   # replace the vendor or Stripe keys (then it reruns the Stripe step)
-cloud/deploy.sh status    # service URL, health, and pricing
+cloud/deploy.sh status    # service URL, health, pricing, and whether the deployed revision
+                          # is behind this checkout's gateway code
 ```
 
 Set up by hand, once:

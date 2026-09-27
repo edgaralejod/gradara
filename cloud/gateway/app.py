@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import logging
 import re
 import secrets
@@ -358,7 +359,9 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
     @app.get('/health')
     @app.get('/healthz')
     async def healthz():
-        return {'ok': True}
+        # The deployed commit and accepted task types let `cloud/deploy.sh status`
+        # and the app notice a gateway that is older than the code using it.
+        return {'ok': True, 'revision': os.environ.get('GATEWAY_REVISION', 'dev'), 'tasks': sorted(TASK_KINDS)}
 
     # -------------------------------------------------------------- pages
 

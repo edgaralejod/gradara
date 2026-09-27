@@ -258,7 +258,7 @@ cmd_setup() {
   say "Setup finished. Next: cloud/deploy.sh deploy"
 }
 
-env_file() { # writes the Cloud Run env-vars YAML to $1
+env_file() { # writes the Cloud Run env-vars YAML to $1; $2 is the deployed revision
   local packs
   [[ -n $STRIPE_PRICE_STARTER && -n $STRIPE_PRICE_PRO ]] || {
     echo "Set STRIPE_PRICE_STARTER and STRIPE_PRICE_PRO in cloud/deploy.env first."; exit 1; }
@@ -278,6 +278,7 @@ STRIPE_AUTOMATIC_TAX: "$STRIPE_AUTOMATIC_TAX"
 FREE_CREDITS: "$FREE_CREDITS"
 SUPPORT_EMAIL: "$SUPPORT_EMAIL"
 CREDIT_PACKS: '$packs'
+GATEWAY_REVISION: "${2:-dev}"
 EOF
 }
 
@@ -288,7 +289,7 @@ cmd_deploy() {
   image="${REPOSITORY}/gateway:${version}"
   envs=$(mktemp)
   trap 'rm -f "$envs"' RETURN
-  env_file "$envs"
+  env_file "$envs" "$version"
   key_var=$([[ $LLM_PROVIDER == openai ]] && echo OPENAI_API_KEY || echo ANTHROPIC_API_KEY)
 
   say "Building $image"
@@ -343,7 +344,19 @@ cmd_status() {
   local url
   url=$("${GC[@]}" run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')
   say "Service: $url"
-  curl -fsS "$url/health" && echo
+  local health revision
+  health=$(curl -fsS "$url/health") && echo "$health"
+  revision=$(sed -n 's/.*"revision":"\([^"]*\)".*/\1/p' <<<"$health")
+  revision=${revision%-dirty}
+  if [[ -z $revision || $revision == dev ]]; then
+    echo "  The deployed gateway does not report its revision; run: cloud/deploy.sh deploy"
+  elif ! git cat-file -e "$revision^{commit}" 2>/dev/null; then
+    echo "  Deployed revision $revision is not in this checkout (git fetch, then check again)."
+  elif ! git diff --quiet "$revision" HEAD -- cloud/gateway cloud/Dockerfile server/llm; then
+    echo "  The gateway code changed since the deployed revision $revision; run: cloud/deploy.sh deploy"
+  else
+    echo "  Deployed revision $revision matches this checkout's gateway code"
+  fi
   curl -fsS "$url/v1/pricing" && echo
   if curl -fsS -m 10 "$PUBLIC_URL/health" >/dev/null 2>&1; then
     echo "  $PUBLIC_URL is live"
