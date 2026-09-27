@@ -743,19 +743,41 @@ def replay_inputs(csv_path: Path, generated: Generated, duration: float):
     if steps > MAX_SIL_STEPS:
         raise CodegenError(f'The run needs {steps} controller steps to replay; the check stops at {MAX_SIL_STEPS}. '
                            'Shorten the run or use a longer step.')
+    gap = 1e-9 * max(1.0, times[-1])
     held_in, expected, j = [], [], 0
     for k in range(steps):
         t = k * generated.step
         while j + 1 < len(times) and times[j + 1] <= t + 1e-12:
             j += 1
-        if j + 1 < len(times) and times[j + 1] > times[j] and t > times[j]:
-            w = (t - times[j]) / (times[j + 1] - times[j])
-            pick = lambda col: col[j] + w * (col[j + 1] - col[j])
+        if j + 1 < len(times) and times[j + 1] - times[j] > gap and t > times[j]:
+            pick = _cubic(times, j, t, gap)
         else:
             pick = lambda col: col[j]
         held_in.append([pick(c) for c in ins])
         expected.append([pick(c) for c in outs])
     return held_in, expected
+
+
+def _cubic(times: list[float], j: int, t: float, gap: float):
+    """Cubic Hermite interpolation on [t_j, t_j+1] with Catmull-Rom slopes.
+
+    Linear interpolation of a fast sinusoid (a motor current, say) is biased toward
+    zero; a controller that integrates it drifts in an open-loop replay. Next to an
+    event (two rows at one time) the slope falls back to the interval's own secant.
+    """
+    t0, t1 = times[j], times[j + 1]
+    h = t1 - t0
+    s = (t - t0) / h
+    h00, h10, h01, h11 = 2*s**3 - 3*s**2 + 1, s**3 - 2*s**2 + s, -2*s**3 + 3*s**2, s**3 - s**2
+    before = j > 0 and t0 - times[j - 1] > gap
+    after = j + 2 < len(times) and times[j + 2] - t1 > gap
+
+    def pick(col):
+        secant = (col[j + 1] - col[j]) / h
+        m0 = (col[j + 1] - col[j - 1]) / (t1 - times[j - 1]) if before else secant
+        m1 = (col[j + 2] - col[j]) / (times[j + 2] - t0) if after else secant
+        return h00 * col[j] + h10 * h * m0 + h01 * col[j + 1] + h11 * h * m1
+    return pick
 
 
 def parse_outputs(text: str, width: int) -> list[list[float]]:
