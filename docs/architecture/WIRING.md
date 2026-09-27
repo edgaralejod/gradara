@@ -41,17 +41,23 @@ Pointer previews are derived from the gesture's original snapshot and painted lo
 
 ## Routing and alignment
 
-Unpinned routes use the same orthogonal router as live drawing: leave in the port's exit direction, follow any pinned corners, and enter the destination along its port normal. Auto-route does not inject a feedback U, a lane offset, or another preset shape. Explicitly drawn paths keep their vertices. Physical and signal connections share that geometry; they differ only in connection laws.
+Unpinned routes use the same orthogonal router as live drawing: leave in the port's exit direction, follow any pinned corners, and enter the destination along its port normal. When two opposite terminals point away from each other (the target is behind the source), the route is an S with two legs across, so neither stub doubles back. Auto-route does not inject a feedback U, a lane offset, or another preset shape. Explicitly drawn paths keep their vertices. Physical and signal connections share that geometry; they differ only in connection laws.
 
 While reshaping, the path's stationary runs and endpoints are preferred alignment targets within eight screen pixels. Candidate alignment favors fewer segments, then shorter travel, then proximity. Free drawing excludes its own net from alignment candidates so a new branch does not collapse onto its parent trunk.
 
 Coalesce nearby parallel runs and remove redundant collinear vertices or retraced hairpins. Preserve orthogonality, endpoint normals, real branches, and intentional bends. Block ports remain fixed during wire editing; different endpoint rows still need an elbow. Display, hit testing, and stored geometry must agree after normalization and reload.
 
-Junctions attached to an edited endpoint run follow that run perpendicular to its direction. This propagates along straight junction-to-junction paths; every affected branch changes in the same transaction. Moving or resizing a block also carries junctions sharing a whole straight run with the affected port. Conflicting moves on an axis keep the junction in place and bend the incident routes.
+## Moving blocks
+
+A dragged block snaps each axis on its own: a connected terminal within 16 units of a horizontal line snaps vertically onto it, and one near a vertical line snaps horizontally, so one drag can straighten a signal wire and a shaft together. The line is the adjacent saved bend when the wire has pinned corners, otherwise the far terminal or junction dot; a far block terminal must face along the same axis. Otherwise the block's centerline snaps to the 20-unit grid. The drag preview and the saved move use the same rule, so a block lands where the preview showed it (`lib/gradara/placement.ts`).
+
+After a block moves on its own, `repairMovedRoutes` (`lib/gradara/net-layout.ts`) checks its wires. A pinned route that now doubles back into its terminal or runs through its own block releases the bends next to the moved end, one at a time, until it reads cleanly. An unpinned wire to a junction dot that the block was dragged past gets a route around the block. Good routes and wires of blocks that did not move are untouched; undo restores the previous geometry.
+
+Junctions attached to an edited endpoint run follow that run perpendicular to its direction. This propagates along straight junction-to-junction paths; every affected branch changes in the same transaction. Moving or resizing a block also carries junctions sharing a whole straight run with the affected port. Conflicting moves on an axis keep the junction in place and bend the incident routes. Incident routes are stretched against the blocks' new positions, and an unpinned wire whose ends line up stays unpinned, so dragging a block away and back restores its junction and wires.
 
 Junction normalization can move an apparent branch point to the first actual divergence of overlapping incident paths, preserving the visible union and connectivity. An unrelated crossing, genuine four-way split, or collision with another terminal must not trigger that cleanup. Apply this rule generally across domain, orientation, stored endpoint order, and zoom.
 
-The router is not obstacle-aware. A newly pinned route overlapping a different net is rejected. Imported geometry or later block/bend movement can still create overlaps that require manual correction. Never describe coordinate alignment as guaranteed obstacle avoidance.
+The router is not obstacle-aware. A newly pinned route overlapping a different net is rejected. Imported geometry or later block/bend movement can still create overlaps with other nets or blocks that require manual correction; the repair above only keeps a moved block's own wires out of its body. Never describe coordinate alignment as guaranteed obstacle avoidance.
 
 ## Connected selections
 
