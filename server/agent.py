@@ -1,6 +1,7 @@
 """AI component authoring. Generation returns data, never edits the workspace directly."""
 import copy
 import json
+from .block_style import house_style
 from .models import BlockType, Definition
 from .engine import check_component
 from .component_library import save_component
@@ -77,7 +78,7 @@ async def generate_component(prompt: str, existing: Definition | None, job_id: s
         raise ValueError('Refinement cannot change the block type. Create a new component instead.')
     instructions = '''You create a component for Gradara, a graphical Modelica simulation workbench. Return only the requested JSON. Do not call tools, read files, or execute commands. The selected type is a hard contract, not a color or category label.
 Use valid Modelica 3.6 equation syntax. Our wrapper declares all ports and Real parameters. Signal input/output ports use RealInput/RealOutput. Physical electrical pins expose .v (V) and flow .i (A, positive INTO the component). Rotational mechanical flanges expose .phi (rad) and flow .tau (N.m, into the component); angular velocity is der(port.phi). Thermal ports expose .T (K) and flow .Q_flow (W, into the component). Write constitutive and conservation equations referencing these connector fields. Never redeclare ports, connectors, or parameters, and never replace physical terminals with scalar signals. Ground/reference connections belong in the surrounding model unless explicitly part of the requested component.
-Declarations contain only internal Real/Integer/Boolean variables and initial values. Equations contain equation clauses, including when sample(...) if needed. Do not include model, block, external, annotation, function, import, strings, or file operations. IDs start with a letter, use letters/digits/underscores, and are unique. Use a short human-readable name without an instance suffix. Symbol is compact engineering notation (ideally 1-6 characters, at most 12). Use short port names and choose useful left/right/top/bottom sides; corresponding transformer winding pins should have matching rows on opposite sides. Gradara supplies size, fonts, colors and geometry. No vector ports. Parameter units are metadata only. Use samplePeriod for sampled controllers. Initialize state with start=..., fixed=true; no imperative := in equations. Set controller=false for physical components. When refining preserve every existing port ID, direction and domain, and parameter IDs/values unless asked to change parameters. Describe behavior and material assumptions concisely.
+Declarations contain only internal Real/Integer/Boolean variables and initial values. Equations contain equation clauses, including when sample(...) if needed. Do not include model, block, external, annotation, function, import, strings, or file operations. IDs start with a letter, use letters/digits/underscores, and are unique. Use a short human-readable name of 1-3 words without an instance suffix. Symbol is compact engineering notation (ideally 1-6 characters, at most 12), never the full equation or the name. Terminal captions (port names) are 1-5 characters such as ref, meas, u, y, p, n, shaft; longer explanations go in the description. Signal inputs sit on the left and outputs on the right (one measured/feedback input may enter from the bottom); a two-terminal physical element has its terminals on opposite sides; choose useful left/right/top/bottom sides for other physical terminals; corresponding transformer winding pins should have matching rows on opposite sides. Gradara supplies size, fonts, colors and geometry. No vector ports. Parameter units are metadata only. Use samplePeriod for sampled controllers. Initialize state with start=..., fixed=true; no imperative := in equations. Set controller=false for physical components. When refining preserve every existing port ID, direction and domain, and parameter IDs/values unless asked to change parameters. Describe behavior and material assumptions concisely.
 '''
     instructions += '\nSELECTED BLOCK TYPE: '+selected+'\n'+TYPE_RULES[selected]
     if existing:
@@ -89,6 +90,9 @@ Declarations contain only internal Real/Integer/Boolean variables and initial va
         try:
             definition = Definition.model_validate({**data,'generated':True})
             validate_generated_type(definition, selected, existing)
+            definition, problems = house_style(definition, existing)
+            if problems:
+                raise ValueError('The block does not follow the Gradara block design contract: ' + ' '.join(problems))
             await check_component(definition, f'{job_id}-{attempt}')
             entry = save_component(DATA, definition)
             return {'libraryId':entry['id'], 'definition':definition.model_dump(exclude_none=True),'provider':provider_label(),'checked':True,'blockType':selected}

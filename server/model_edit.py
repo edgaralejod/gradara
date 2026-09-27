@@ -306,7 +306,7 @@ Operations run in order:
 - remove_block, rename_block (blockId, name), set_parameter (blockId, parameterId, value), set_duration (duration in s).
 - connect (source, sourcePort, target, targetPort): signal connections run from an output port to an input port, and an input has one source; physical terminals connect only to the same domain. Block references may be existing IDs or aliases added earlier in this edit.
 - disconnect: wireId, or the four endpoint fields.
-Prefer catalog blocks and parameter changes over new definitions. Keep physical references (ground) and connect every signal input you add. Set unused fields to null.
+Prefer catalog blocks and parameter changes over new definitions. Gradara places new blocks and draws new wires in its house style, so never describe positions; give new blocks short names of 1-3 words. Keep physical references (ground) and connect every signal input you add. Set unused fields to null.
 If the request cannot be done with these operations or the supported physics (electrical, rotational mechanical, thermal, scalar signals), explain why in unsupported and return one set_duration operation with the current stop time. Otherwise unsupported is empty.
 summary is one or two sentences for the user. assumptions are short and explicit.'''
 

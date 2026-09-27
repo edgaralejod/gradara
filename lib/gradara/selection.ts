@@ -5,7 +5,11 @@ import { portOf } from './model';
 import { blockSize, applyLayout, type BlockLayout } from './canvas';
 import { endpointPoint, netComponents } from './net';
 import { polylineOfWire, samePt } from './net-draw';
-import { followJunctionsForLayout, moveJunctions } from './net-layout';
+import {
+  followJunctionsForLayout,
+  moveJunctions,
+  repairMovedRoutes,
+} from './net-layout';
 import { snapMovedBlocks } from './placement';
 import { sideToPosition } from './ports';
 import {
@@ -207,14 +211,13 @@ export function layoutSelection(
       delta,
     );
   const laidOut = applyLayout(project, updates);
-  return followJunctionsForLayout(
-    project,
-    snap
-      ? snapMovedBlocks(
-          laidOut,
-          updates.map((l) => l.id),
-        )
-      : laidOut,
+  const ids = updates.map((l) => l.id);
+  return repairMovedRoutes(
+    followJunctionsForLayout(
+      project,
+      snap ? snapMovedBlocks(laidOut, ids) : laidOut,
+    ),
+    ids,
   );
 }
 

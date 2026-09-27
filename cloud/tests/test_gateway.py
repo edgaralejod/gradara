@@ -316,3 +316,11 @@ def test_pages_have_restrictive_headers(tmp_path):
     assert page.status_code == 200 and "frame-ancestors 'none'" in page.headers['content-security-policy']
     assert client.get('/static/activate.js').status_code == 200
     assert client.get('/static/../app.py').status_code == 404
+
+
+def test_health_reports_revision_and_tasks(tmp_path, monkeypatch):
+    monkeypatch.setenv('GATEWAY_REVISION', 'abc1234')
+    client = make(tmp_path)[0]
+    body = client.get('/health').json()
+    assert body['ok'] and body['revision'] == 'abc1234'
+    assert {'edit-plan', 'diagnose', 'component'} <= set(body['tasks'])

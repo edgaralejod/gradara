@@ -1,6 +1,7 @@
 import { blockSize } from './canvas';
 import { snapBlockPosition } from './block-design';
 import type { Block, Definition, Port, Project } from './model';
+import { endpointPoint, isTap } from './net';
 import { portPoint, portSide, positionForPortAt } from './ports';
 
 export const GRID = 20;
@@ -85,37 +86,75 @@ export function placeAtDrop(
   return { x: snapX(placed.x), y: placed.y };
 }
 
+/**
+ * The point a block's terminal should line up with on one wire: the adjacent saved bend
+ * when the wire has one (its first leg is what looks crooked), otherwise the far end
+ * (a block terminal or a junction dot).
+ */
+function alignmentTarget(
+  project: Project,
+  wire: Project['wires'][number],
+  mine: 'source' | 'target',
+) {
+  const bends = wire.waypoints ?? [];
+  if (bends.length) {
+    const bend = mine === 'source' ? bends[0] : bends[bends.length - 1];
+    return { x: bend.x, y: bend.y, side: undefined };
+  }
+  const id = mine === 'source' ? wire.target : wire.source;
+  const handle = mine === 'source' ? wire.targetHandle : wire.sourceHandle;
+  const point = endpointPoint(project, id, handle);
+  if (!point) return undefined;
+  return {
+    x: point.x,
+    y: point.y,
+    side: isTap(project, id) ? undefined : point.side,
+  };
+}
+
+/**
+ * Independent snaps for both axes: a connected terminal close to a horizontal line snaps
+ * vertically onto it, and one close to a vertical line snaps horizontally, so a block
+ * can straighten a signal wire and a shaft at the same time.
+ */
 function alignmentShift(project: Project, block: Block) {
-  let best: { x: number; y: number; mag: number; axis: 'x' | 'y' } | undefined;
+  let dy: number | undefined;
+  let dx: number | undefined;
   for (const wire of project.wires) {
-    if (wire.source !== block.id && wire.target !== block.id) continue;
     const mine =
-      wire.source === block.id ? wire.sourceHandle : wire.targetHandle;
-    const theirs =
-      wire.source === block.id ? wire.targetHandle : wire.sourceHandle;
-    const otherId = wire.source === block.id ? wire.target : wire.source;
-    const other = project.blocks.find((b) => b.id === otherId);
-    const a = portPoint(block, mine);
-    const b = other ? portPoint(other, theirs) : undefined;
+      wire.source === block.id
+        ? 'source'
+        : wire.target === block.id
+          ? 'target'
+          : undefined;
+    if (!mine || wire.source === wire.target) continue;
+    const a = portPoint(
+      block,
+      mine === 'source' ? wire.sourceHandle : wire.targetHandle,
+    );
+    const b = alignmentTarget(project, wire, mine);
     if (!a || !b) continue;
-    const horizontal =
-      (a.side === 'left' || a.side === 'right') &&
-      (b.side === 'left' || b.side === 'right');
+    const horizontal = a.side === 'left' || a.side === 'right';
+    // A terminal on the other block must face along the same axis to form a straight run.
+    if (b.side && (b.side === 'left' || b.side === 'right') !== horizontal)
+      continue;
     if (horizontal) {
-      const dy = b.y - a.y;
-      if (Math.abs(dy) <= ALIGN_SNAP && (!best || Math.abs(dy) < best.mag))
-        best = { x: 0, y: dy, mag: Math.abs(dy), axis: 'y' };
-    }
-    const vertical =
-      (a.side === 'top' || a.side === 'bottom') &&
-      (b.side === 'top' || b.side === 'bottom');
-    if (vertical) {
-      const dx = b.x - a.x;
-      if (Math.abs(dx) <= ALIGN_SNAP && (!best || Math.abs(dx) < best.mag))
-        best = { x: dx, y: 0, mag: Math.abs(dx), axis: 'x' };
+      const d = b.y - a.y;
+      if (
+        Math.abs(d) <= ALIGN_SNAP &&
+        (dy === undefined || Math.abs(d) < Math.abs(dy))
+      )
+        dy = d;
+    } else {
+      const d = b.x - a.x;
+      if (
+        Math.abs(d) <= ALIGN_SNAP &&
+        (dx === undefined || Math.abs(d) < Math.abs(dx))
+      )
+        dx = d;
     }
   }
-  return best ?? { x: 0, y: 0 };
+  return { x: dx, y: dy };
 }
 
 /** After a move or resize, pull the block onto a connected port's line if close. */
@@ -126,12 +165,15 @@ export function snapMovedBlocks(project: Project, ids: string[]): Project {
     const block = blocks.find((b) => b.id === id);
     if (!block) continue;
     const shift = alignmentShift({ ...project, blocks }, block);
-    if (shift.x === 0 && shift.y === 0) continue;
+    if (!shift.x && !shift.y) continue;
     blocks = blocks.map((b) =>
       b.id === id
         ? {
             ...b,
-            position: { x: b.position.x + shift.x, y: b.position.y + shift.y },
+            position: {
+              x: b.position.x + (shift.x ?? 0),
+              y: b.position.y + (shift.y ?? 0),
+            },
           }
         : b,
     );
@@ -158,7 +200,7 @@ export function snapDraggedBlockPosition(
     ),
   };
   const shift = alignmentShift(external, block);
-  if ('axis' in shift && shift.axis === 'y') snapped.y = position.y + shift.y;
-  if ('axis' in shift && shift.axis === 'x') snapped.x = position.x + shift.x;
+  if (shift.y !== undefined) snapped.y = position.y + shift.y;
+  if (shift.x !== undefined) snapped.x = position.x + shift.x;
   return snapped;
 }

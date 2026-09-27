@@ -43,13 +43,26 @@ def _headers(token: str | None = None) -> dict:
     return headers
 
 
-def _detail(response: httpx.Response) -> str:
+OUTDATED_SERVICE = ('Gradara AI does not offer this feature yet: the service is older than this version of '
+                    'Gradara. Try again later, or use your own API key in Settings → AI.')
+
+
+def _detail(response: httpx.Response, path: str = '') -> str:
     try:
         detail = response.json().get('detail')
-        if isinstance(detail, str):
-            return detail
-    except ValueError:
-        pass
+    except (ValueError, AttributeError):
+        detail = None
+    if isinstance(detail, str):
+        return detail
+    if isinstance(detail, list):
+        # FastAPI request validation. A task or operation kind the gateway rejects means
+        # the deployed service predates this app; say so instead of showing field errors.
+        fields = {str(item.get('loc', ['', ''])[-1]) for item in detail if isinstance(item, dict)}
+        if path == '/v1/generate' and fields & {'task', 'kind', 'part'}:
+            return OUTDATED_SERVICE
+        messages = [str(item.get('msg', '')) for item in detail if isinstance(item, dict) and item.get('msg')]
+        if messages:
+            return 'Gradara AI rejected the request: ' + '; '.join(messages[:3])
     return f'Gradara AI returned {response.status_code}.'
 
 
@@ -69,7 +82,7 @@ async def request(method: str, path: str, *, auth: bool = True, json: dict | Non
         credentials.delete('gradara_token')
         raise ProviderError('Your Gradara AI sign-in expired or was revoked. Sign in again in Settings → AI.', 401)
     if response.status_code >= 400:
-        raise ProviderError(_detail(response), response.status_code, response.status_code in (429, 503))
+        raise ProviderError(_detail(response, path), response.status_code, response.status_code in (429, 503))
     return response.json()
 
 
