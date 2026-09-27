@@ -1,7 +1,6 @@
 import test from 'node:test';
 import { Position } from '@xyflow/react';
 import {
-  routeAround,
   routeBetween,
   segmentExit,
   segmentHitsRect,
@@ -511,14 +510,15 @@ void test('a right-to-left connection between overlapping rows goes around both 
   assert.ok(pts.length <= 6, 'one detour, not a return rail');
 });
 
-void test('automatic routes keep drawing geometry and are not offset into lanes', () => {
+void test('automatic wires of different nets go around every block and never share a line', () => {
   const p = {
     ...sheet(),
     blocks: [
-      place('gain', 'a', 400, 0),
+      place('gain', 'a', 300, 0),
       place('gain', 'b', 0, 0),
-      place('gain', 'c', 400, 0),
-      place('gain', 'd', 80, 0),
+      place('gain', 'c', 300, 100),
+      place('gain', 'd', 0, 100),
+      place('gain', 'mid', 150, 50),
     ],
     wires: [
       {
@@ -535,23 +535,60 @@ void test('automatic routes keep drawing geometry and are not offset into lanes'
         target: 'd',
         targetHandle: 'u',
       },
+      {
+        id: 'bc',
+        source: 'b',
+        sourceHandle: 'y',
+        target: 'c',
+        targetHandle: 'u',
+      },
     ],
   };
   const s = new NetSession(p);
-  const a = s.pathPoints('ab');
-  const body = (id: string) => {
-    const b = p.blocks.find((x) => x.id === id)!;
-    return { ...b.position, ...blockSize(b) };
-  };
-  const expected = routeAround(
-    port(p, 'a', 'y'),
-    port(p, 'b', 'u'),
-    sideToPosition(port(p, 'a', 'y').side),
-    sideToPosition(port(p, 'b', 'u').side),
-    [body('a'), body('b')],
-  );
-  orthogonal(a);
-  assert.deepEqual(a, expected);
+  const routes = p.wires.map((w) => s.pathPoints(w.id));
+  for (const points of routes) {
+    orthogonal(points);
+    assert.equal(selfIntersects(points), false, JSON.stringify(points));
+    for (const b of p.blocks) {
+      const body = { ...b.position, ...blockSize(b) };
+      points
+        .slice(1)
+        .forEach((q, i) =>
+          assert.equal(
+            segmentHitsRect(points[i], q, body),
+            false,
+            `${b.id} ${JSON.stringify(points)}`,
+          ),
+        );
+    }
+  }
+  const segments = (points: { x: number; y: number }[]) =>
+    points.slice(1).map((q, i) => [points[i], q] as const);
+  for (let i = 0; i < routes.length; i++)
+    for (let j = i + 1; j < routes.length; j++)
+      for (const [a, b] of segments(routes[i]))
+        for (const [c, d] of segments(routes[j])) {
+          const horizontal = a.y === b.y && c.y === d.y && a.y === c.y;
+          const vertical = a.x === b.x && c.x === d.x && a.x === c.x;
+          const [lo1, hi1, lo2, hi2] = horizontal
+            ? [
+                Math.min(a.x, b.x),
+                Math.max(a.x, b.x),
+                Math.min(c.x, d.x),
+                Math.max(c.x, d.x),
+              ]
+            : [
+                Math.min(a.y, b.y),
+                Math.max(a.y, b.y),
+                Math.min(c.y, d.y),
+                Math.max(c.y, d.y),
+              ];
+          assert.ok(
+            !(horizontal || vertical) ||
+              Math.min(hi1, hi2) - Math.max(lo1, lo2) <= 0,
+            `${p.wires[i].id} and ${p.wires[j].id} share a line`,
+          );
+        }
 });
 
 void test('deleting the last branch removes its junction and preserves the original connection', async () => {
@@ -604,7 +641,15 @@ void test('a splice on an auto route uses the displayed polyline', () => {
 });
 
 function editableSheet() {
-  const s = new NetSession(sheet());
+  // The sum sits below the row, so step→gain has a clear straight line (the router
+  // would rightly take a wire around a block in its way).
+  const base = sheet();
+  const s = new NetSession({
+    ...base,
+    blocks: base.blocks.map((b) =>
+      b.id === 'sum' ? { ...b, position: { x: 180, y: 420 } } : b,
+    ),
+  });
   s.pressPort('step', 'y');
   s.release(port(s.project, 'gain', 'u'));
   return s;
@@ -1148,6 +1193,8 @@ void test('a tiny jog from a saved user diagram collapses when its run is nudged
 function pinnedDogleg(): Project {
   const project = sheet();
   project.blocks[2].position.y = 136;
+  // Nothing stands between the two blocks: this is about the pinned leg, not detours.
+  project.blocks = project.blocks.filter((b) => b.id !== 'sum');
   project.wires = [
     {
       id: 'bent',

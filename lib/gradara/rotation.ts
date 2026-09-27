@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { Block, Project } from './model';
 import { blockSize } from './canvas';
-import { polylineOfWire } from './net-draw';
 
 /** Rotate each selected block about its own center in one undoable document edit. */
 export function rotateBlocks(
@@ -26,12 +25,13 @@ export function rotateBlocks(
       };
     }),
   };
+  // Turned terminals face new ways: the router draws their wires afresh.
   return {
     ...next,
-    wires: next.wires.map((w) =>
-      selected.has(w.source) || selected.has(w.target)
-        ? { ...w, waypoints: polylineOfWire(next, w.id).slice(1, -1) }
-        : w,
-    ),
+    wires: next.wires.map((w) => {
+      if (!(selected.has(w.source) || selected.has(w.target))) return w;
+      const { waypoints: _drop, ...rest } = w;
+      return rest;
+    }),
   };
 }

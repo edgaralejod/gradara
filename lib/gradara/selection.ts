@@ -5,12 +5,9 @@ import { portOf } from './model';
 import { blockSize, applyLayout, type BlockLayout } from './canvas';
 import { endpointPoint, netComponents } from './net';
 import { polylineOfWire, samePt, storedPolyline } from './net-draw';
-import {
-  followJunctionsForLayout,
-  moveJunctions,
-  repairMovedRoutes,
-} from './net-layout';
+import { followJunctionsForLayout, moveJunctions } from './net-layout';
 import { snapMovedBlocks } from './placement';
+import { settleRoutes } from './router';
 import { sideToPosition } from './ports';
 import {
   routeBetween,
@@ -179,12 +176,7 @@ export function translateSelection(
     };
   });
   if (!blockIds.size) return next;
-  const rigid = [...blockIds, ...junctionIds];
-  return repairMovedRoutes(
-    carryLeads(project, next, rigid),
-    [...blockIds],
-    rigid,
-  );
+  return settleRoutes(carryLeads(project, next, [...blockIds, ...junctionIds]));
 }
 
 /**
@@ -287,7 +279,8 @@ export function layoutSelection(
     );
   const laidOut = applyLayout(project, updates);
   const ids = updates.map((l) => l.id);
-  return repairMovedRoutes(
+  // Pinned wires keep their shape where they can; the sheet router draws the rest.
+  return settleRoutes(
     carryLeads(
       project,
       followJunctionsForLayout(
@@ -296,7 +289,6 @@ export function layoutSelection(
       ),
       ids,
     ),
-    ids,
   );
 }
 

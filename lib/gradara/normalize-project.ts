@@ -4,6 +4,7 @@ import { materializeBranches } from './net-branches';
 import { normalizeJunctions } from './net-layout';
 import { reconcileNets } from './net-registry';
 import { realizePlaceholders } from './hierarchy';
+import { settleRoutes } from './router';
 
 /** The saved document boundary: instance names, geometry, then net identity. */
 export function normalizeProject(
@@ -13,8 +14,10 @@ export function normalizeProject(
   if (!project.modelId) project = { ...project, modelId: crypto.randomUUID() };
   project = realizePlaceholders(project);
   return reconcileNets(
-    normalizeJunctions(
-      materializeBranches(normalizeBlockNames(project, previous)),
+    settleRoutes(
+      normalizeJunctions(
+        materializeBranches(normalizeBlockNames(project, previous)),
+      ),
     ),
     previous,
   );
