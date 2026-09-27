@@ -11,7 +11,7 @@
 import { Position } from '@xyflow/react';
 import { blockSize } from './canvas';
 import type { Block, Project, Wire } from './model';
-import { endpointPoint, isTap } from './net';
+import { endpointPoint, isTap, netComponents } from './net';
 import { sideToPosition } from './ports';
 import {
   EXIT_STUB,
@@ -37,7 +37,7 @@ const REACH = 240;
 const COST = {
   body: 100000,
   overlap: 20000,
-  label: 150,
+  label: 400,
   crossing: 25,
   bend: 30,
 };
@@ -78,11 +78,16 @@ export function sheetOf(project: Project): Sheet {
   };
 }
 
+/** Which net each wire belongs to, from the connections themselves (never stale). */
 function netOfWire(project: Project) {
-  const map = new Map<string, string>();
-  for (const net of project.nets ?? [])
-    for (const id of net.wireIds) map.set(id, net.id);
-  return (id: string) => map.get(id) ?? `wire:${id}`;
+  const component = new Map<string, number>();
+  netComponents(project).forEach((keys, i) =>
+    keys.forEach((k) => component.set(k, i)),
+  );
+  const keyOf = (id: string, handle: string) =>
+    isTap(project, id) ? `j:${id}` : `${id}.${handle}`;
+  return (wire: Wire) =>
+    `net:${component.get(keyOf(wire.source, wire.sourceHandle)) ?? wire.id}`;
 }
 
 function length(points: Pt[]) {
@@ -132,6 +137,8 @@ function crosses(a: Pt, b: Pt, c: Pt, d: Pt) {
 type Context = {
   rects: Rect[];
   labels: Rect[];
+  /** The wire's own blocks' names: only running along them counts. */
+  ownLabels: Rect[];
   occupied: Segment[];
   net: string;
 };
@@ -152,6 +159,9 @@ function penalty(points: Pt[], ctx: Context) {
     for (const r of ctx.rects) if (segmentHitsRect(a, b, r)) cost += COST.body;
     for (const r of ctx.labels)
       if (segmentHitsRect(a, b, r, 0)) cost += COST.label;
+    if (near(a.y, b.y))
+      for (const r of ctx.ownLabels)
+        if (segmentHitsRect(a, b, r, 0)) cost += COST.label;
     for (const s of ctx.occupied) {
       if (s.net === ctx.net) continue;
       if (shared(a, b, s.a, s.b) > 0.5) cost += COST.overlap;
@@ -178,7 +188,80 @@ type Ends = {
   toStub: number;
 };
 
-function lanes(ends: Ends, rects: Rect[], reach: number) {
+const STEP: Pt[] = [
+  { x: 1, y: 0 },
+  { x: 0, y: 1 },
+  { x: -1, y: 0 },
+  { x: 0, y: -1 },
+];
+const DIR_OF: Record<Position, number> = {
+  [Position.Right]: 0,
+  [Position.Bottom]: 1,
+  [Position.Left]: 2,
+  [Position.Top]: 3,
+};
+
+/** A small binary heap on numbers keyed by priority; ties keep insertion order. */
+class Heap {
+  private items: { f: number; n: number; v: number }[] = [];
+  private count = 0;
+  get size() {
+    return this.items.length;
+  }
+  push(f: number, v: number) {
+    const item = { f, n: this.count++, v };
+    const a = this.items;
+    a.push(item);
+    let i = a.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (a[p].f < f || (a[p].f === f && a[p].n < item.n)) break;
+      a[i] = a[p];
+      i = p;
+    }
+    a[i] = item;
+  }
+  pop() {
+    const a = this.items;
+    const top = a[0];
+    const last = a.pop()!;
+    if (a.length) {
+      const less = (x: typeof last, y: typeof last) =>
+        x.f < y.f || (x.f === y.f && x.n < y.n);
+      let i = 0;
+      for (;;) {
+        const l = 2 * i + 1,
+          r = l + 1;
+        let m = -1;
+        let best = last;
+        if (l < a.length && less(a[l], best)) {
+          m = l;
+          best = a[l];
+        }
+        if (r < a.length && less(a[r], best)) {
+          m = r;
+          best = a[r];
+        }
+        if (m < 0) break;
+        a[i] = a[m];
+        i = m;
+      }
+      a[i] = last;
+    }
+    return top;
+  }
+}
+
+/**
+ * Shortest orthogonal route on the visibility grid of nearby bodies: lines along every
+ * body edge (with clearance) and through both ends. Each step pays its length, a bend,
+ * and the sheet penalties (names, crossings, lines of other nets); bodies are walls.
+ */
+function gridRoute(
+  ends: Ends,
+  ctx: Context,
+  reach: number,
+): { points: Pt[]; exit: Position; entry: Position } | undefined {
   const { from, to } = ends;
   const box = {
     x: Math.min(from.x, to.x) - reach,
@@ -186,23 +269,248 @@ function lanes(ends: Ends, rects: Rect[], reach: number) {
     x1: Math.max(from.x, to.x) + reach,
     y1: Math.max(from.y, to.y) + reach,
   };
+  const starts = ends.exits.map((exit) => ({
+    exit,
+    at: outward(from, exit, ends.fromStub),
+  }));
+  const goals = ends.entries.map((entry) => ({
+    entry,
+    at: outward(to, entry, ends.toStub),
+    /** The direction of the last run, from the goal into the terminal. */
+    last: (DIR_OF[entry] + 2) % 4,
+  }));
   const xs = new Set<number>(),
     ys = new Set<number>();
-  for (const r of rects) {
-    if (
-      r.x > box.x1 ||
-      r.x + r.width < box.x ||
-      r.y > box.y1 ||
-      r.y + r.height < box.y
-    )
-      continue;
+  for (const p of [
+    from,
+    to,
+    ...starts.map((s) => s.at),
+    ...goals.map((g) => g.at),
+  ]) {
+    xs.add(p.x);
+    ys.add(p.y);
+  }
+  for (const r of ctx.rects) {
     xs.add(r.x - LANE);
     xs.add(r.x + r.width + LANE);
     ys.add(r.y - LANE);
     ys.add(r.y + r.height + LANE);
     ys.add(r.y + r.height + NAME_LANE);
   }
-  return { xs, ys };
+  const within = (v: number, lo: number, hi: number) => v >= lo && v <= hi;
+  const X = [...xs]
+    .filter((v) => within(v, box.x, box.x1))
+    .sort((a, b) => a - b);
+  const Y = [...ys]
+    .filter((v) => within(v, box.y, box.y1))
+    .sort((a, b) => a - b);
+  // Midlines between neighbouring lanes give routes room away from both sides.
+  for (const list of [X, Y]) {
+    const mids: number[] = [];
+    for (let i = 1; i < list.length; i++)
+      if (list[i] - list[i - 1] > 2 * LANE)
+        mids.push(Math.round((list[i] + list[i - 1]) / 2));
+    list.push(...mids);
+    list.sort((a, b) => a - b);
+  }
+  const xi = new Map(X.map((v, i) => [v, i])),
+    yi = new Map(Y.map((v, i) => [v, i]));
+  const nx = X.length,
+    ny = Y.length;
+  const inside = (p: Pt) =>
+    ctx.rects.some(
+      (r) =>
+        p.x > r.x + 1 &&
+        p.x < r.x + r.width - 1 &&
+        p.y > r.y + 1 &&
+        p.y < r.y + r.height - 1,
+    );
+  // Other nets' runs, indexed by line (for overlaps) and by position (for crossings).
+  const rows = new Map<number, Segment[]>(),
+    columns = new Map<number, Segment[]>();
+  const verticals: { x: number; lo: number; hi: number }[] = [],
+    horizontals: { y: number; lo: number; hi: number }[] = [];
+  const ownRows = new Map<number, Segment[]>(),
+    ownColumns = new Map<number, Segment[]>();
+  for (const seg of ctx.occupied) {
+    if (seg.net === ctx.net) {
+      const index = near(seg.a.y, seg.b.y) ? ownRows : ownColumns;
+      const k = near(seg.a.y, seg.b.y) ? seg.a.y : seg.a.x;
+      index.set(k, [...(index.get(k) ?? []), seg]);
+      continue;
+    }
+    if (near(seg.a.y, seg.b.y)) {
+      const list = rows.get(seg.a.y) ?? [];
+      list.push(seg);
+      rows.set(seg.a.y, list);
+      horizontals.push({
+        y: seg.a.y,
+        lo: Math.min(seg.a.x, seg.b.x),
+        hi: Math.max(seg.a.x, seg.b.x),
+      });
+    } else {
+      const list = columns.get(seg.a.x) ?? [];
+      list.push(seg);
+      columns.set(seg.a.x, list);
+      verticals.push({
+        x: seg.a.x,
+        lo: Math.min(seg.a.y, seg.b.y),
+        hi: Math.max(seg.a.y, seg.b.y),
+      });
+    }
+  }
+  verticals.sort((p, q) => p.x - q.x);
+  horizontals.sort((p, q) => p.y - q.y);
+  const first = <T>(list: T[], key: (t: T) => number, value: number) => {
+    let lo = 0,
+      hi = list.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (key(list[mid]) <= value) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  };
+  const segCost = new Map<number, number>();
+  const stepCost = (a: Pt, b: Pt, key: number) => {
+    const known = segCost.get(key);
+    if (known !== undefined) return known;
+    let cost = 0;
+    for (const r of ctx.rects)
+      if (segmentHitsRect(a, b, r)) {
+        segCost.set(key, Infinity);
+        return Infinity;
+      }
+    for (const r of ctx.labels)
+      if (segmentHitsRect(a, b, r, 0)) cost += COST.label;
+    const horizontal = near(a.y, b.y);
+    if (horizontal)
+      for (const r of ctx.ownLabels)
+        if (segmentHitsRect(a, b, r, 0)) cost += COST.label;
+    const lo = horizontal ? Math.min(a.x, b.x) : Math.min(a.y, b.y),
+      hi = horizontal ? Math.max(a.x, b.x) : Math.max(a.y, b.y);
+    for (const seg of (horizontal ? rows.get(a.y) : columns.get(a.x)) ?? [])
+      if (shared(a, b, seg.a, seg.b) > 0.5) cost += COST.overlap;
+    // Running along the wire's own net is cheap: branches share a trunk.
+    let along = 0;
+    for (const seg of (horizontal ? ownRows.get(a.y) : ownColumns.get(a.x)) ??
+      [])
+      along = Math.max(along, shared(a, b, seg.a, seg.b));
+    cost -= 0.75 * along;
+    if (horizontal) {
+      for (
+        let i = first(verticals, (v) => v.x, lo + 0.5);
+        i < verticals.length && verticals[i].x < hi - 0.5;
+        i++
+      )
+        if (a.y > verticals[i].lo + 0.5 && a.y < verticals[i].hi - 0.5)
+          cost += COST.crossing;
+    } else {
+      for (
+        let i = first(horizontals, (v) => v.y, lo + 0.5);
+        i < horizontals.length && horizontals[i].y < hi - 0.5;
+        i++
+      )
+        if (a.x > horizontals[i].lo + 0.5 && a.x < horizontals[i].hi - 0.5)
+          cost += COST.crossing;
+    }
+    segCost.set(key, cost);
+    return cost;
+  };
+  const id = (x: number, y: number, d: number) => (y * nx + x) * 5 + d;
+  const g = new Map<number, number>();
+  const parent = new Map<number, number>();
+  const heap = new Heap();
+  const h = (x: number, y: number) =>
+    Math.min(
+      ...goals.map((q) => Math.abs(X[x] - q.at.x) + Math.abs(Y[y] - q.at.y)),
+    );
+  for (const s of starts) {
+    const x = xi.get(s.at.x),
+      y = yi.get(s.at.y);
+    if (x === undefined || y === undefined || inside(s.at)) continue;
+    const lead =
+      ends.fromStub > 0 ? stepCost(from, s.at, -1 - DIR_OF[s.exit]) : 0;
+    if (lead === Infinity) continue;
+    const d = ends.fromStub > 0 ? DIR_OF[s.exit] : 4;
+    const k = id(x, y, d);
+    const cost = ends.fromStub + lead;
+    if (cost < (g.get(k) ?? Infinity)) {
+      g.set(k, cost);
+      heap.push(cost + h(x, y), k);
+    }
+  }
+  let found:
+    { total: number; key: number; goal: (typeof goals)[number] } | undefined;
+  const settled = new Set<number>();
+  while (heap.size) {
+    const { f, v } = heap.pop();
+    if (found && f >= found.total) break;
+    if (settled.has(v)) continue;
+    settled.add(v);
+    const d = v % 5,
+      cell = (v - d) / 5,
+      x = cell % nx,
+      y = (cell - x) / nx;
+    const here = { x: X[x], y: Y[y] };
+    const cost = g.get(v)!;
+    for (const q of goals)
+      if (near(q.at.x, here.x) && near(q.at.y, here.y)) {
+        const free = ends.toStub === 0;
+        const bend = !free && d !== 4 && d !== q.last ? COST.bend : 0;
+        const turnBack = !free && d !== 4 && (d + 2) % 4 === q.last;
+        const tail =
+          ends.toStub > 0 ? stepCost(q.at, to, -10 - DIR_OF[q.entry]) : 0;
+        if (turnBack || tail === Infinity) continue;
+        const total = cost + bend + ends.toStub + tail;
+        if (!found || total < found.total) found = { total, key: v, goal: q };
+      }
+    for (let nd = 0; nd < 4; nd++) {
+      if (d !== 4 && (d + 2) % 4 === nd) continue;
+      const tx = x + STEP[nd].x,
+        ty = y + STEP[nd].y;
+      if (tx < 0 || ty < 0 || tx >= nx || ty >= ny) continue;
+      const there = { x: X[tx], y: Y[ty] };
+      if (inside(there)) continue;
+      const edge = Math.min(y * nx + x, ty * nx + tx) * 2 + (nd % 2);
+      const step = stepCost(here, there, edge);
+      if (step === Infinity) continue;
+      const next =
+        cost +
+        Math.abs(there.x - here.x) +
+        Math.abs(there.y - here.y) +
+        (d !== 4 && d !== nd ? COST.bend : 0) +
+        step;
+      const k = id(tx, ty, nd);
+      if (next < (g.get(k) ?? Infinity)) {
+        g.set(k, next);
+        parent.set(k, v);
+        heap.push(next + h(tx, ty), k);
+      }
+    }
+  }
+  if (!found) return undefined;
+  const cells: Pt[] = [];
+  for (
+    let k: number | undefined = found.key;
+    k !== undefined;
+    k = parent.get(k)
+  ) {
+    const cell = (k - (k % 5)) / 5;
+    cells.push({ x: X[cell % nx], y: Y[Math.floor(cell / nx)] });
+  }
+  cells.reverse();
+  const exit =
+    ends.fromStub > 0
+      ? starts.find(
+          (s) => near(s.at.x, cells[0].x) && near(s.at.y, cells[0].y),
+        )!.exit
+      : ends.exits[0];
+  return {
+    points: simplifyPoints([from, ...cells, to]),
+    exit,
+    entry: found.goal.entry,
+  };
 }
 
 /**
@@ -293,46 +601,12 @@ export function searchRoute(ends: Ends, input: Context): Pt[] {
   // Crossing another net is often unavoidable; anything worse is worth a detour search.
   if (best && penalty(best.points, ctx) < COST.label) return best.points;
   stats.search++;
-  for (const reach of [REACH, 3 * REACH]) {
+  for (const reach of [REACH, 3 * REACH, Infinity]) {
     if (reach > REACH) stats.deep++;
-    // Candidates stay within the lanes' reach, so only what is near can touch them.
     local = narrow(reach + 2 * EXIT_STUB);
     if (best) best = { points: best.points, cost: score(best.points, local) };
-    const { xs, ys } = lanes(ends, ctx.rects, reach);
-    for (const [exit, entry] of pairs) {
-      const a = outward(from, exit, ends.fromStub),
-        b = outward(to, entry, ends.toStub);
-      const X = new Set([...xs, a.x, b.x, (a.x + b.x) / 2]);
-      const Y = new Set([...ys, a.y, b.y, (a.y + b.y) / 2]);
-      const route = (middle: Pt[]) =>
-        consider([from, a, ...middle, b, to], exit, entry);
-      route([]);
-      route([{ x: b.x, y: a.y }]);
-      route([{ x: a.x, y: b.y }]);
-      for (const x of X)
-        route([
-          { x, y: a.y },
-          { x, y: b.y },
-        ]);
-      for (const y of Y)
-        route([
-          { x: a.x, y },
-          { x: b.x, y },
-        ]);
-      for (const x of X)
-        for (const y of Y) {
-          route([
-            { x, y: a.y },
-            { x, y },
-            { x: b.x, y },
-          ]);
-          route([
-            { x: a.x, y },
-            { x, y },
-            { x, y: b.y },
-          ]);
-        }
-    }
+    const found = gridRoute(ends, local, reach);
+    if (found) consider(found.points, found.exit, found.entry);
     // Only a route through a body is worth a wider search; overlaps and names are not.
     if (best && !bodyHits(best.points, local)) break;
   }
@@ -434,6 +708,8 @@ function memoKey(ends: WireEnds, ctx: Context) {
   for (const r of ctx.labels)
     if (inside(r)) parts.push(r.x, r.y, r.width, r.height);
   parts.push('|');
+  for (const r of ctx.ownLabels) parts.push(r.x, r.y, r.width, r.height);
+  parts.push('|');
   for (const seg of ctx.occupied) {
     const r = {
       x: Math.min(seg.a.x, seg.b.x),
@@ -515,7 +791,7 @@ export function routeSheet(project: Project): SheetRoutes {
   const reshaped = new Set<string>();
   const occupied: Segment[] = [];
   const occupy = (wire: Wire, points: Pt[]) => {
-    const net = netOf(wire.id);
+    const net = netOf(wire);
     for (let i = 1; i < points.length; i++)
       occupied.push({ a: points[i - 1], b: points[i], net });
   };
@@ -551,11 +827,12 @@ export function routeSheet(project: Project): SheetRoutes {
   };
   auto.sort((a, b) => span(a) - span(b) || a.id.localeCompare(b.id));
   for (const wire of auto) {
-    const net = netOf(wire.id);
+    const net = netOf(wire);
     const own = new Set([wire.source, wire.target]);
     const points = autoRoute(project, wire, {
       rects,
       labels: labelRects.filter(([id]) => !own.has(id)).map(([, r]) => r),
+      ownLabels: labelRects.filter(([id]) => own.has(id)).map(([, r]) => r),
       occupied,
       net,
     });

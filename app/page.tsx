@@ -1,5 +1,6 @@
 'use client';
 import { rotateBlocks } from '@/lib/gradara/rotation';
+import { arrangeBlocks } from '@/lib/gradara/arrange';
 import { useGeneratedLibrary } from '@/lib/gradara/generated-library';
 import {
   defaultBlockSize,
@@ -52,6 +53,7 @@ import {
   ClipboardPaste,
   Trash2,
   Maximize,
+  LayoutGrid,
   Keyboard,
   Check,
   LoaderCircle,
@@ -1162,6 +1164,22 @@ function Workbench() {
     commit(d.project);
     select(d.selection);
   }, [commit, selectedIds, select]);
+  /** Redraw the selection (two or more blocks) or the whole sheet in house style. */
+  const arrange = useCallback(() => {
+    const picked = selectionRef.current.blockIds;
+    const ids = picked.length > 1 ? picked : [];
+    if (!projectRef.current.blocks.length) return;
+    commit((p) => arrangeBlocks(p, ids));
+    notify(
+      ids.length
+        ? `Arranged ${ids.length} blocks.`
+        : 'Arranged the sheet. Undo restores the previous drawing.',
+    );
+    if (!ids.length)
+      requestAnimationFrame(() =>
+        window.dispatchEvent(new Event(FIT_VIEW_EVENT)),
+      );
+  }, [commit, notify]);
   const groupSelected = useCallback(() => {
     const ids = selectionRef.current.blockIds;
     if (!ids.length) {
@@ -1566,6 +1584,9 @@ function Workbench() {
       } else if (command && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         duplicate();
+      } else if (command && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        if (!e.repeat) arrange();
       } else if (command && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         select({
@@ -1672,6 +1693,7 @@ function Workbench() {
     selectedEdges,
     commit,
     groupSelected,
+    arrange,
     ungroupSelected,
     leaveSubsystem,
     inserter,
@@ -2372,6 +2394,13 @@ function Workbench() {
                             }
                           >
                             <Maximize size={12} />
+                          </ControlButton>
+                          <ControlButton
+                            title="Arrange · ⌘/Ctrl + Shift + A"
+                            aria-label="Arrange blocks and wires"
+                            onClick={arrange}
+                          >
+                            <LayoutGrid size={12} />
                           </ControlButton>
                         </Controls>
                       </ModelCanvas>
@@ -3255,6 +3284,10 @@ function Workbench() {
                 ['Select several components', 'Shift + click / Drag'],
                 ['Select / pan tools', 'V / H'],
                 ['Fit the model to the view', 'Space (tap)'],
+                [
+                  'Arrange the sheet (or the selection)',
+                  '⌘ / Ctrl + Shift + A',
+                ],
                 ['Pan canvas', 'Space + drag / Trackpad'],
                 ['Resize a block', 'Drag a corner or edge'],
                 ['Move a block name', 'Drag the label'],
