@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import {
   Check,
   Cpu,
+  Download,
   ExternalLink,
   KeyRound,
   LoaderCircle,
@@ -21,6 +22,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
+import { describeUpdate, updateBridge, useDesktopUpdates } from '@/lib/gradara/updates';
 import {
   formatPrice,
   notifyAiChanged,
@@ -31,7 +33,7 @@ import {
   type EngineStatus,
 } from '@/lib/gradara/ai';
 
-export type SettingsTab = 'engine' | 'ai' | 'privacy';
+export type SettingsTab = 'engine' | 'ai' | 'privacy' | 'updates';
 
 const OM_DOWNLOAD: Record<string, string> = {
   win32: 'https://openmodelica.org/download/download-windows/',
@@ -64,6 +66,7 @@ export default function SettingsDialog({
               ['engine', 'Engine', Cpu],
               ['ai', 'AI', Sparkles],
               ['privacy', 'Privacy & data', ShieldCheck],
+              ['updates', 'Updates', Download],
             ] as const
           ).map(([id, label, Icon]) => (
             <button
@@ -81,6 +84,7 @@ export default function SettingsDialog({
         {tab === 'engine' && <EngineSettings onChange={onEngineChange} />}
         {tab === 'ai' && <AiSettings />}
         {tab === 'privacy' && <PrivacySettings dataDirectory={dataDirectory} />}
+        {tab === 'updates' && <UpdateSettings />}
       </DialogContent>
     </Dialog>
   );
@@ -729,6 +733,54 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
       )}
       <ErrorLine text={error} />
     </div>
+  );
+}
+
+function UpdateSettings() {
+  const state = useDesktopUpdates();
+  const summary = describeUpdate(state);
+  const [checking, setChecking] = useState(false);
+  const bridge = updateBridge();
+  return (
+    <section className="settings-section">
+      <p className="settings-lead">
+        Gradara checks for a new version at launch and every few hours, downloads it
+        in the background, and installs it when you restart.
+      </p>
+      <div className="settings-card">
+        <div className="settings-card-row">
+          <Download size={15} />
+          <strong>{state ? `Gradara ${state.currentVersion} installed` : 'Gradara'}</strong>
+          {state?.status === 'current' && <span className="settings-pill">Up to date</span>}
+          {state?.status === 'ready' && <span className="settings-pill">Update ready</span>}
+        </div>
+        <p aria-live="polite">{summary.detail}</p>
+        {state?.checkedAt && (
+          <p className="settings-note">
+            Last checked {new Date(state.checkedAt).toLocaleString()}.
+          </p>
+        )}
+        <div className="settings-inline">
+          {state?.status === 'ready' || state?.status === 'manual' ? (
+            <Button onClick={() => void bridge?.install()}>
+              {state.status === 'ready' ? 'Restart and update' : 'Download from gradara.app'}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              disabled={!bridge || !summary.canCheck || checking}
+              onClick={() => {
+                setChecking(true);
+                void bridge?.check().finally(() => setChecking(false));
+              }}
+            >
+              {checking ? <LoaderCircle className="spin" size={14} /> : <RefreshCw size={14} />}
+              Check for updates
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 

@@ -518,3 +518,5 @@
   .block-dialog-properties { grid-template-columns: 1fr; }
   .block-dialog-properties > section:nth-child(2) { grid-column: 1; grid-row: auto; }
 }
+
+.settings-dialog .settings-note { margin-top: 4px; font-size: 12px; color: #5b7182; }

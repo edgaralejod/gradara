@@ -2677,3 +2677,12 @@
 .diagnosis-note { margin: 0 10px 8px; color: #637987; font-size: var(--text-micro); }
 .diagnosis-note.is-error { color: #7d3a3c; }
 @media (max-width: 700px) { .diagnostics-dock { display: none; } }
+
+/* In-app update indicator (desktop app only; hidden until an update is in flight or ready). */
+.update-indicator {
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px;
+  border: 1px solid #c9d6df; border-radius: 15px; background: #fff; color: #304757;
+  font: 600 12px/1 inherit; cursor: pointer;
+}
+.update-indicator.is-ready { border-color: #2f6f9f; background: #2f6f9f; color: #fff; }
+.update-indicator:focus-visible { outline: 2px solid #2f6f9f; outline-offset: 2px; }

@@ -163,6 +163,7 @@ import AssistantPanel, {
 } from '@/components/gradara/assistant-panel';
 import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
 import { useAiLabel } from '@/lib/gradara/ai';
+import UpdateIndicator from '@/components/gradara/update-indicator';
 import {
   semanticSignature,
   setLabelOffset,
@@ -1480,6 +1481,7 @@ function Workbench() {
             </div>
           </div>
           <div className="header-right">
+            <UpdateIndicator onOpenSettings={() => setSettingsTab('updates')} />
             <Button
               className="new-model-button"
               variant="outline"
