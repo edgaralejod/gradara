@@ -30,7 +30,7 @@ Model documents live in `projects/models/`; removed models live in `projects/tra
 
 ## Build a diagram
 
-Click a library component to insert it, or invoke the agent from a selected location or dangling connection. Double-click empty canvas to open the add-block picker at the pointer; it stays fully on the sheet if you click near an edge. Select a component to edit its parameters in the inspector. Double-click a signal block to inspect or edit equations in Monaco; that does not open the add-block picker. Built-in physical implementations use canonical Modelica wrappers; their displayed equations explain behavior.
+Click a library component to insert it, or invoke the agent from a selected location or dangling connection. Double-click empty canvas to open the add-block picker at the pointer; it stays fully on the sheet if you click near an edge. Select a component to edit its parameters in the inspector. Double-click any block to open its block dialog on **Properties**, where you can rename it and change every parameter (for example a gain's `k` or a resistor's `R`); **Reset** restores a built-in block's library default. Changes are staged until you choose **Apply** or press Enter, and the whole dialog session is one undo step; Cancel or Escape discards them. The **Equations** and **State & declarations** tabs edit signal and AI-generated definitions in Monaco. Built-in physical implementations use canonical Modelica wrappers, so their equations are read-only and explain behavior. The inspector's **Edit…** and **Equations → Open** open the same dialog. Double-clicking a block never opens the add-block picker.
 
 Blocks get readable unique names such as Step, Step1, and Step2. IDs remain stable when names change. Drag a block label separately from the symbol; double-click the label to restore its default location. Press **R** to rotate selected blocks clockwise by 90° about their centers. Ports and connected wires follow, while the instance name stays below the symbol. Rotation supports undo/redo and is saved with the model; with only wires selected, R still restores automatic routing. Resize using selection handles, or choose **Use standard size** in the inspector. The library, canvas, and [block catalog](http://localhost:4317/block-catalog) share the same visual design.
 
@@ -62,6 +62,16 @@ The model inspector exposes blocks and logical nets in a compact tree. The tree 
 
 Set the stop time and press **Run**. Manual models accept stop times greater than 0 and at most 86,400 seconds. Compilation and simulation happen asynchronously. You can cancel from the run controls. Unconnected signal inputs and unsupported executable placeholders produce diagnostics; invalid or incomplete simulations do not become successful partial plots. The solver still uses 6,000 output intervals and a 120-second wall-clock timeout; a longer horizon is not a guarantee of adequate event resolution or completion. Full-model agent planning retains a separate 60-second bound.
 
+### Problems
+
+The dock under the canvas has a **Problems** tab. Open or collapse it from the status bar summary ("No problems", or a count of errors and warnings), from its header, or with ⌘/Ctrl+J. Drag its top edge (or focus it and use the arrow keys) to resize it; its height and open tab are remembered in this browser. It is hidden in very narrow windows, where the status bar counts remain.
+
+- **Model checks** update while you edit: unconnected signal inputs, drawing-only blocks, wires that end on a missing port (errors), and blocks with nothing connected (notes). They mirror what Run rejects before simulating.
+- **Last run** appears when a run fails. The dock opens automatically and the workspace stays where it is. Each row has a source (Validation, Safety, Compiler, Runtime, Engine) and chips for the blocks or ports it concerns. Click a row or chip to select those blocks and center them on the canvas. Expand a row (▸, or Space on a focused row) for the hint and the full solver text. After you change the model, this section is marked stale and no longer counts toward the totals.
+- **Run warnings** lists solver warnings from a successful run.
+
+Up/Down moves between rows and Enter selects. **Copy** copies every problem as text. When there are errors or warnings, **Explain** asks the AI provider what is wrong, and **Fix with AI** also asks for a checked fix; the ✦ button on a row asks about that problem only. These are explicit requests: a failed run never calls a provider by itself. Answers appear in the Assistant tab as a diagnosis (likely causes with block chips and steps you can take) and, for a fix, a proposal you review and apply like any other assistant edit. If no safe automatic fix exists, the diagnosis says so. Block mapping for solver messages is best effort; the expandable text is always the complete output. The Results tab still shows the raw failure text.
+
 After a successful run, the workspace automatically switches to the **Results** tab (also called Data Inspector), which provides a dedicated view for inspecting simulation output. Switch between **Diagram** and **Results** tabs using the workspace tabs in the toolbar, or press ⌘/Ctrl+1 for Diagram and ⌘/Ctrl+2 for Results.
 
 In Results view, choose a preset plot or available signal, optionally overlay a second series, and select a time window. **Fit Y** fits the displayed range. The buck template's **Last 1 ms** view reveals switching ripple. Download CSV when you need every output row; the interactive preview is reduced for responsiveness.
@@ -74,7 +84,7 @@ Choose a provider in **Settings → AI**: sign in to Gradara AI (20 free credits
 
 Describe the inputs, outputs, state, and timing you want, for example: “A first-order low-pass filter with a 50 ms time constant.” First choose the block type: Signal / control, Electrical, Mechanical (rotational), Thermal, or Multiple physical domains. For example, choose Electrical and ask for an ideal transformer to get physical winding terminals rather than signal inputs and outputs. The preview identifies each terminal domain. Refining a block preserves its type and existing terminal interface. It validates and compiler-checks a candidate before insertion. Ordinary editing and simulation still work when the agent is unavailable.
 
-For generated C, select one block marked as a controller and use **Export**. The package includes a header, source, original contract, and timing/integration notes. Review the chosen discretization and validate behavior for your application. Whole-subsystem and HDL exports remain future work.
+For generated C, use **Export → Generate C controller**. The dialog exports the selected controller block; when a model has several, choose one in its **Controller** list. After the compile check, preview `gradara_controller.h`, `gradara_controller.c`, and the notes, copy them, or download the package with the header, source, original contract, and timing/integration notes. Sampled controllers such as **Discrete PID** export exactly; continuous ones rely on the discretization the generator documents, so review it and validate behavior for your application. The [Servo position example](examples/SERVO.md) walks through an export and a replay against the simulation. Whole-subsystem and HDL exports remain future work.
 
 See [data handling](../SECURITY.md) before sending proprietary equations or model information to an agent provider.
 
@@ -92,6 +102,14 @@ Use **Pan**, **Box zoom**, or **Cursor**, with **X only**, **Y only**, or **X + 
 
 The inspector loads full stored CSV samples, retaining repeated event times. If that request fails, it explicitly shows the reduced preview and offers Retry. CSV export retains the complete run. Plot layout, signal assignments, and axis ranges are saved locally in this browser per model; they do not change the simulation or get embedded in exported model documents. Signals unavailable in a later run remain identified rather than being silently replaced. Different units on one plot share a numeric Y axis; use separate plots when their scales differ.
 
+## Edit the open model with the assistant
+
+Open the **Assistant** tab in the dock and describe a change, for example "Add a scope on the measured angle and connect it" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to tell the assistant which blocks the request concerns, or **Whole model**.
+
+The assistant can add catalog blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, and connect or disconnect ports. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model was checked in OpenModelica; if the check failed after one automatic revision, the proposal is marked **Not verified** and shows the diagnostics.
+
+Nothing changes until you choose **Apply**. The whole proposal is one undo step, and existing routes, labels, and net names are kept. Added blocks are placed next to related blocks; you may want to move them. If you edit the model after asking, Apply is disabled and you are asked to try again. **Refine** starts a follow-up request; **Discard** dismisses the proposal. The thread belongs to the open model, is cleared when you switch models, and is not saved. Cancel stops a request that is still running.
+
 ## Ask an agent for a complete model
 
 Open **Ask agent**, choose **Full model / circuit**, and describe the system, inputs, component values, measurements, and simulation duration. This creates a separate model; it does not modify the open diagram.
@@ -103,6 +121,8 @@ Review the diagram, library choices, and assumptions, then choose **Open as new 
 Currently the builder supports flat models with up to 80 instances and four newly created component types per request. Supported domains match the block creator: scalar signals, electrical, rotational mechanical, thermal, and their couplings. Unsupported domains are reported instead of substituted. A simulation failure gets one assembly repair; unresolved diagnostics remain visible. Missing blocks that completed successfully remain in the AI library even if later assembly fails or is cancelled. Generation is not resumable after closing the creator or restarting the service.
 
 ## Built-in examples
+
+**Examples → Servo position** opens a DC motor position loop with a 1 kHz **Discrete PID** and an **Angle sensor**. It is built to export its controller to C. The [servo example guide](examples/SERVO.md) walks through the export and explains how the repository's reference C is checked against the simulation.
 
 **Examples → 480 VAC flyback** opens a hand-authored 480 V RMS single-phase to 24 V / 1 A switching model with bridge rectification, magnetizing energy storage, soft start, and PI regulation. See the [flyback example guide](examples/FLYBACK.md) for assumptions, expected signals, and modeling limits.
 

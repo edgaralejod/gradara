@@ -118,6 +118,28 @@ def test_dispatch_sends_job_scope_to_gradara(isolated, monkeypatch):
     assert seen == {'task': 'model-plan', 'job': {'id': 'job1', 'kind': 'model'}}
 
 
+def test_priced_parts_reach_gradara_and_job_credits_are_recorded(isolated, monkeypatch):
+    settings.update({'ai': {'provider': 'gradara'}})
+    jobs = []
+
+    async def fake(prompt, schema, *, task, job):
+        from server.llm.providers import Generation
+        jobs.append(dict(job))
+        return Generation({'ok': True}, 'gradara', 'm', job_charged=4 + 2 * (len(jobs) - 1))
+    from server.llm import gradara
+    monkeypatch.setattr(gradara, 'generate', fake)
+
+    async def run():
+        dispatch.current_job.set({'id': 'edit1', 'kind': 'edit'})
+        await dispatch.generate('p', SCHEMA, 'edit1-edit0', task='edit-plan')
+        with dispatch.job_part('block:1'):
+            await dispatch.generate('p', SCHEMA, 'edit1-block0', task='component')
+        return dispatch.credits_for_current_job(), dispatch.current_job.get()
+    credits, job = asyncio.run(run())
+    assert jobs == [{'id': 'edit1', 'kind': 'edit'}, {'id': 'edit1', 'kind': 'edit', 'part': 'block:1'}]
+    assert credits == 6 and job == {'id': 'edit1', 'kind': 'edit'}
+
+
 def test_gradara_requires_sign_in(isolated):
     settings.update({'ai': {'provider': 'gradara'}})
     with pytest.raises(ProviderError, match='Sign in'):

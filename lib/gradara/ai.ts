@@ -44,7 +44,15 @@ export type Account =
       signedIn: true;
       email: string;
       balance: number;
-      prices: { component: number; model: number; export: number };
+      prices: {
+        component: number;
+        model: number;
+        export: number;
+        edit?: number;
+        diagnose?: number;
+      };
+      /** Extra credits per priced part of a job, e.g. each generated block of an edit. */
+      surcharges?: { edit?: { block?: number } };
       packs: CreditPack[];
       freeCredits: number;
       last30Days?: { creditsUsed: number; calls: Record<string, number> };
@@ -63,8 +71,35 @@ export function formatPrice(pack: CreditPack) {
   }).format(pack.amount / 100);
 }
 
+export type AiOperation =
+  | 'component'
+  | 'model'
+  | 'export'
+  | 'edit'
+  | 'diagnose'
+  | 'fix';
+
+/** The price part of an AI label, or '' when the service did not report one. */
+export function priceText(
+  account: Extract<Account, { signedIn: true }>,
+  kind: AiOperation,
+) {
+  const block = account.surcharges?.edit?.block;
+  const edit =
+    account.prices.edit === undefined
+      ? ''
+      : `${account.prices.edit} credits${block ? `, +${block} per new or rewritten block` : ''}`;
+  if (kind === 'edit') return edit;
+  if (kind === 'fix')
+    return account.prices.diagnose === undefined || !edit
+      ? ''
+      : `${account.prices.diagnose} credits + edit (${edit})`;
+  const price = account.prices[kind];
+  return price === undefined ? '' : `${price} credits`;
+}
+
 /** Short footer text for AI composers, e.g. "Gradara AI · 2 credits · 38 left". */
-export function useAiLabel(kind: 'component' | 'model' | 'export') {
+export function useAiLabel(kind: AiOperation) {
   const [label, setLabel] = useState('');
   useEffect(() => {
     let alive = true;
@@ -83,10 +118,14 @@ export function useAiLabel(kind: 'component' | 'model' | 'export') {
         );
         if (!alive) return;
         if (!account.signedIn) setLabel('Gradara AI · Sign in from Settings');
-        else
+        else {
+          const price = priceText(account, kind);
           setLabel(
-            `Gradara AI · ${account.prices[kind]} credits · ${account.balance} left`,
+            price
+              ? `Gradara AI · ${price} · ${account.balance} left`
+              : `Gradara AI · ${account.balance} credits left`,
           );
+        }
       } catch {
         if (alive) setLabel('');
       }

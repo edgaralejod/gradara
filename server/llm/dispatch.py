@@ -14,6 +14,7 @@ charge once per operation, including its internal repair attempts.
 """
 from __future__ import annotations
 
+import contextlib
 import contextvars
 import json
 import os
@@ -28,6 +29,26 @@ current_job: contextvars.ContextVar[dict | None] = contextvars.ContextVar('grada
 LABELS = {'gradara': 'Gradara AI', 'openai': 'OpenAI (your key)', 'anthropic': 'Anthropic (your key)',
           'codex': 'Codex CLI', 'off': 'Off'}
 KEY_NAMES = {'openai': 'openai_api_key', 'anthropic': 'anthropic_api_key'}
+
+
+# Credits the hosted service reported for each recent top-level job.
+CREDITS: dict[str, int] = {}
+
+
+def credits_for_current_job() -> int | None:
+    job = current_job.get()
+    return CREDITS.get(job['id']) if job else None
+
+
+@contextlib.contextmanager
+def job_part(part: str):
+    """Label provider calls for one priced part of the current job, such as a generated block."""
+    job = current_job.get()
+    token = current_job.set({**job, 'part': part} if job else None)
+    try:
+        yield
+    finally:
+        current_job.reset(token)
 
 
 def _keep_transcript(attempt_id: str, prompt: str, generation: Generation) -> None:
@@ -51,6 +72,10 @@ async def generate(prompt: str, schema: dict, attempt_id: str, *, task: str) -> 
         from . import gradara
         job = current_job.get() or {'id': attempt_id, 'kind': task.split('-')[0]}
         generation = await gradara.generate(prompt, schema, task=task, job=job)
+        if generation.job_charged is not None:
+            CREDITS[job['id']] = generation.job_charged
+            while len(CREDITS) > 200:
+                CREDITS.pop(next(iter(CREDITS)))
     elif provider in KEY_NAMES:
         key = credentials.get(KEY_NAMES[provider])
         if not key:

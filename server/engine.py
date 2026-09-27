@@ -6,9 +6,10 @@ import time
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
 from .runtime import IMAGE, LEGACY_IMAGE
-from .diagnostics import validate_simulation, explain_failure
+from .diagnostics import (Diagnostic, EngineUnavailable, SimulationFailure, explain_failure, failure_diagnostics,
+                          validate_simulation, warning_diagnostics)
 from .paths import ROOT, RUNS
-from .safety import check_definition, check_project
+from .safety import UnsafeDefinition, check_definition
 from . import engines
 
 __all__ = ['ROOT', 'RUNS', 'IMAGE', 'LEGACY_IMAGE', 'engine_available', 'execute', 'simulate', 'check_component']
@@ -22,32 +23,54 @@ async def execute(folder: Path, config: dict, name: str):
     try:
         result = await engines.execute(folder, config, name)
     except engines.EngineError as exc:
-        raise RuntimeError(str(exc)) from exc
+        raise EngineUnavailable(str(exc)) from exc
     if result.get('error'):
         raise RuntimeError(result['error'])
     return result
 
+
+def run_failure(message: str, block_id: str | None = None) -> SimulationFailure:
+    return SimulationFailure(message, [Diagnostic(source='runtime', message=message, blockIds=[block_id] if block_id else [])])
+
+
 async def simulate(project: Project, job_id: str):
     validate_simulation(project)
-    check_project(project)
-    started = time.monotonic()
+    for block in project.blocks:
+        try:
+            check_definition(block.definition, block.definition.name)
+        except UnsafeDefinition as exc:
+            raise SimulationFailure(str(exc), [Diagnostic(source='safety', message=str(exc), blockIds=[block.id],
+                                                          hint='Open the block dialog and remove that construct from its equations.')]) from exc
     folder = RUNS/job_id
     folder.mkdir(parents=True, exist_ok=True)
+    try:
+        return await run(project, job_id, folder)
+    except SimulationFailure as exc:
+        # Kept beside model.mo so a later diagnosis request can cite this exact run.
+        (folder/'diagnostics.json').write_text(json.dumps({'error': str(exc), 'diagnostics': [d.model_dump() for d in exc.diagnostics]}))
+        raise
+
+
+async def run(project: Project, job_id: str, folder: Path):
+    started = time.monotonic()
     (folder/'model.mo').write_text(emit_project(project))
     (folder/'project.json').write_text(project.model_dump_json(indent=2))
     try:
         report = await execute(folder, {'duration':project.duration}, f'gradara-run-{job_id}')
+    except EngineUnavailable as exc:
+        raise SimulationFailure(str(exc), [Diagnostic(source='engine', message=str(exc).splitlines()[0][:1000] if str(exc) else 'The numerical engine is unavailable.',
+                                                      detail=str(exc), hint='Open Settings → Engine to check the simulation engine.')]) from exc
     except RuntimeError as exc:
-        raise RuntimeError(explain_failure(project, str(exc))) from exc
+        raise SimulationFailure(explain_failure(project, str(exc)), failure_diagnostics(project, str(exc))) from exc
     csv_file = folder/'simulation_res.csv'
     with csv_file.open() as file:
         reader = csv.DictReader(file)
         rows = list(reader)
     if not rows:
-        raise RuntimeError('The engine returned no simulation samples.')
+        raise run_failure('The engine returned no simulation samples.')
     end_time = float(rows[-1]['time'])
     if not math.isfinite(end_time) or end_time < project.duration - max(1e-8, project.duration * 1e-8):
-        raise RuntimeError(f'Simulation stopped at {end_time:g} s before the requested {project.duration:g} s.')
+        raise run_failure(f'Simulation stopped at {end_time:g} s before the requested {project.duration:g} s.')
     # DASSL can emit one output-grid row just beyond stopTime. Keep the plot
     # and final values inside the requested interval; retain the raw CSV.
     rows = [row for row in rows if float(row['time']) <= project.duration + max(1e-12, project.duration * 1e-12)]
@@ -62,16 +85,16 @@ async def simulate(project: Project, job_id: str):
             if key in rows[0]:
                 values = [float(row[key]) for row in rows]
                 if not all(math.isfinite(value) for value in values):
-                    raise RuntimeError(f'{label} contains non-finite results.')
+                    raise run_failure(f'{definition.name}.{label} contains non-finite results.', block.id)
                 outputs.append({'key':key,'name':f'{definition.name}.{label}', 'unit':unit,'blockId':block.id,'values':values})
     from .logging_signals import logged_signals
     for log in logged_signals(project):
         key = log['key']
         if key not in rows[0]:
-            raise RuntimeError(f"Logged net {log['name']} is missing from the solver output.")
+            raise run_failure(f"Logged net {log['name']} is missing from the solver output.", log.get('blockId'))
         values = [float(row[key]) for row in rows]
         if not all(math.isfinite(v) for v in values):
-            raise RuntimeError(f"Logged net {log['name']} contains non-finite values.")
+            raise run_failure(f"Logged net {log['name']} contains non-finite values.", log.get('blockId'))
         outputs.append({k:v for k,v in log.items() if k != 'expression'} | {'values':values})
     sample_indices = list(range(0,len(rows),max(1,len(rows)//1800)))
     sample_indices += [len(rows)-1]
@@ -88,7 +111,7 @@ async def simulate(project: Project, job_id: str):
     sample_indices=sorted(set(sample_indices))
     for series in outputs:
         series['values']=[series['values'][i] for i in sample_indices]
-    result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'samples':len(rows)}
+    result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'problems':[d.model_dump() for d in warning_diagnostics(project, report.get('diagnostics',''))],'samples':len(rows)}
     (folder/'result.json').write_text(json.dumps(result, allow_nan=False))
     return result
 

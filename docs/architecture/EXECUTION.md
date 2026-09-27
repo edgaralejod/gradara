@@ -9,6 +9,8 @@
 5. OpenModelica loads MSL, compiles, initializes, and simulates. The adapter requires explicit successful completion, a result file, sufficient coverage, and finite preview data.
 6. The service saves a result preview and retains full CSV output. The browser polls the job and renders results or diagnostics.
 
+Failures raise `SimulationFailure` (`server/diagnostics.py`). Its message is the readable text stored as the job `error`; its structured `Diagnostic` list is stored as the job `diagnostics` (see the [job contract](../API.md#job-contract)). Validation and safety problems name their blocks and ports directly. For solver text, `failure_diagnostics` makes one entry per compiler `Error:` line, maps instance IDs that appear as component references, and, for singular linear systems, names the signal blocks on a direct-feedthrough cycle (a block whose equations use `der`, `sample`, `delay`, or `pre` breaks the cycle). Engine start-up failures are `engine` diagnostics. Once a run folder exists, a failure also writes `diagnostics.json` beside `model.mo`, and `GET /api/runs/{runId}/diagnostics` returns it. Successful runs parse solver warnings into `result.problems` and keep the raw `diagnostics` string.
+
 The job registry is in memory. API job statuses are `queued`, `running`, `complete`, `failed`, and `cancelled`. At most four operations are active across simulation/component/export jobs. Engine execution has its own two-slot semaphore. Restarting the service loses job status; it does not delete completed run directories. There is no durable queue or automatic resume.
 
 ## Engine supervision
@@ -23,7 +25,7 @@ Manual models support stop times up to 86,400 simulated seconds for slow thermal
 
 ## Results
 
-`result.json` includes run ID, engine label, project key, model hash, revision, full input snapshot, stop time, elapsed time, sample count, a common time array, signal series, and diagnostics. Series use component/variable keys such as `voltageProbe.y`.
+`result.json` includes run ID, engine label, project key, model hash, revision, full input snapshot, stop time, elapsed time, sample count, a common time array, signal series, the raw solver diagnostics string, and the structured warnings in `problems`. Series use component/variable keys such as `voltageProbe.y`.
 
 The preview combines a reduced overview with event pairs, extrema, and a dense final window. All series use the same sample indices. The preview is not the full numerical output, and event-heavy models can still make it large. CSV downloads retain the full output file. OpenModelica can emit an extra grid row beyond the requested stop time; preview data excludes it.
 
@@ -41,13 +43,33 @@ Codex CLI calls have a 180-second timeout; HTTP providers have their own request
 
 Successful generation establishes schema/compiler compatibility. It does not independently verify the user's intended physics. The design intentionally supports rapid authoring without inserting a separate physics-approval workflow.
 
+## Model editing
+
+`POST /api/models/edit` (`server/model_edit.py`) edits the open model through bounded operations; the agent never returns a Project. The request carries the prompt, the current `Project`, the UI catalog, an optional selection of block IDs, an optional `context` (Phase 4 passes run diagnostics), and `verify` (default true). The prompt contains the model without layout (no positions, sizes, routes, junctions, plots, or annotations), the selected block names, and the catalog description shared with full-model generation.
+
+The agent returns an `EditPlan`: a summary, assumptions, `unsupported` (non-empty refuses the request), and 1–40 operations applied in order. The operations are `add_block`, `create_block` (at most two), `revise_definition`, `remove_block`, `rename_block`, `set_parameter`, `connect`, `disconnect`, and `set_duration`. At most three definitions per edit are created or rewritten; each goes through the typed component generator, with its compile check and port-preserving refinement.
+
+`apply_operations` applies every operation or none. It resolves aliases of added blocks and rejects unknown blocks, ports, and parameters, out-of-range values, a second driver on a signal input, input-to-input or cross-domain connections, duplicate connections, and self connections. It re-validates parameter ranges and the whole document. Existing IDs, wires, nets, labels, plots, `modelId`, and `revision` are unchanged unless an operation targets them. Removed wires leave their nets, and each new wire joins (and may merge) the nets its ports are on, or gets a new hidden net.
+
+The pipeline has two attempts. A plan that cannot be applied, or an edited model that fails `validate_simulation` or a trial `simulate`, is sent back with the error for one revision. If the second attempt fails its check, the proposal is returned with `verified: false` and structured `diagnostics` instead of failing the job. A second plan that cannot be applied fails the job; cancellation never becomes a revision. The job result is `{project, summary, assumptions, changes, generated, verified, diagnostics, samples, provider}`, with `changes` as `{op, blockIds, wireIds, description}`.
+
+The client applies a proposal with `mergeProposal` (`lib/gradara/proposal.ts`). It keeps its own objects for untouched blocks and wires, so routes and the absent-versus-empty waypoint distinction survive, and takes definitions, new blocks (snapped at standard size), new wires (without routes), removals, the name, and the stop time from the proposal. The result goes through one `commit`, which is one undo step. A proposal made for an earlier `revision` cannot be applied.
+
+## Diagnosis
+
+`POST /api/diagnose` (`server/diagnose_agent.py`) explains problems and can propose a fix. The request carries the `Project`, 1–50 `Diagnostic` entries (live checks, the last run, or one row), an optional `runId`, the UI catalog, an optional question, and `proposeFix`. The run's emitted `model.mo` and saved solver text are added only when the run ID is alphanumeric and its `project.json` has the same `modelId` as the request; otherwise the run ID is ignored.
+
+Stage 1 asks for a `Diagnosis`: a summary, causes (diagnostic IDs, block IDs, explanation), `fixable`, up to eight manual steps, and an `editPrompt` when a fix is possible. Unknown block and diagnostic IDs are removed. Stage 2 runs only when `proposeFix` is set and the diagnosis is fixable. It calls the model-editing pipeline with the edit prompt, the cause blocks as the selection, and the problems as `context`, with verification on. The result is `{diagnosis, proposal, provider}`, plus `fixError` when a requested fix could not be built. The job kind is `diagnose`. The workbench only starts a diagnosis when the user clicks Explain, Fix with AI, or a row's ask button.
+
 ## Controller C export
 
-`server/exporter.py` requires a selected block whose definition has `controller: true`. It builds a package with project name/revision, the block definition and values, emitted controller source, adjacent connections, and an explicit C11 double-precision init/step target.
+`server/exporter.py` requires a selected block whose definition has `controller: true`. It builds a package with project name/revision, the block definition and values, emitted controller source, adjacent connections, and an explicit C11 double-precision init/step target. The target also states the detected sample-period parameter (`samplePeriod` or `Ts`, with value and unit), the `discrete` states named in the declarations, and whether the equations are sampled, so the prompt does not have to infer timing.
 
-The agent returns a header, source, and integration notes. A C compiler checks `-std=c11 -Wall -Wextra -Werror` through the selected backend (GCC in the engine container, or the host `gcc`/`cc` with the native backend); one compiler-driven repair is allowed. Files are stored exactly and zipped with the original controller contract. The C is compiled, not executed against the Modelica trajectory. Continuous-state discretization is chosen and described by the generator.
+The agent returns a header, source, and integration notes. A C compiler checks `-std=c11 -Wall -Wextra -Werror` through the selected backend (GCC in the engine container, or the host `gcc`/`cc` with the native backend); one compiler-driven repair is allowed. Files are stored exactly and zipped with the original controller contract and a README containing the notes. The job result returns `{id, blockId, header, source, notes, compiled, compiler}`, where `compiler` is the exact compile command; the Export dialog previews the files from it. Generated C is compiled, not executed against the Modelica trajectory. Continuous-state discretization is chosen and described by the generator.
 
-Current gaps include behavioral comparison, whole-subsystem boundaries, clock/rate analysis, fixed-point formats, HDL targets, and complete cancellation cleanup in the C compilation path. These are explicit [roadmap](../../ROADMAP.md) items. Generated source can be rebuilt; asking an LLM to regenerate it is not a deterministic rebuild.
+For sampled controllers, the repository has a behavioral reference. The [Servo position example](../examples/SERVO.md) ships a hand-reviewed C implementation of its Discrete PID in `tests/fixtures/servo-controller/`. An integration test in `tests/test_exporter.py` replays the solver's sampled controller inputs through that C and requires the outputs to match the simulated controller at every sample instant. This checks the reference and the block semantics, not each newly generated export.
+
+Current gaps include behavioral comparison of generated exports, whole-subsystem boundaries, clock/rate analysis, fixed-point formats, HDL targets, and complete cancellation cleanup in the C compilation path. These are explicit [roadmap](../../ROADMAP.md) items. Generated source can be rebuilt; asking an LLM to regenerate it is not a deterministic rebuild.
 
 ## Extension rules
 

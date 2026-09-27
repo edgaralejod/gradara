@@ -12,7 +12,7 @@ Choose a provider in **Settings → AI**:
 | **Codex CLI** (developer option) | Install and sign in to the Codex CLI (below). Shown when found. | Your Codex plan |
 | **Off** | Hides AI generation. | Nobody |
 
-Gradara AI prices are per operation: a block, a full model build, or a C export. Automatic repair attempts are included, and a request that fails before producing output is not charged. The composer footer shows the cost and your balance.
+Gradara AI prices are per operation: a block (2 credits), a full model build (20), a C export (2), an assistant edit (4, plus 2 for each new or rewritten block, at most three), and explaining problems (2). **Fix with AI** costs the explanation plus the edit. Automatic repair attempts are included, and a request, or a block within an edit, that fails before producing output is not charged. The composer and assistant footers show the cost and your balance, and each assistant answer shows what it actually cost.
 
 Every AI request first passes local schema checks, then OpenModelica compiler checks, so the simulation engine must be set up (Settings → Engine). See [privacy](PRIVACY.md) for exactly what is sent and stored.
 
@@ -56,7 +56,7 @@ flowchart LR
 
 The agent authors bounded equations. Conventional code packages connectivity, supervises compilation, and executes the simulation. Choose Signal / control, Electrical, Mechanical (rotational), Thermal, or Multiple physical domains before generation. The selected type constrains the provider schema and server validation. Physical blocks have real Modelica terminals, and may also expose scalar signal ports. Refinement preserves the type and existing terminal IDs, domains, and directions. Arbitrary connector families, translational mechanics, whole subsystems, and HDL generation are not implemented. C export targets one controller block and checks compilation; see the [execution contract](architecture/EXECUTION.md).
 
-Generation sends the prompt and relevant definition to the provider; refinement and repair can include prior candidates and compiler diagnostics. C export includes its controller contract. Ordinary simulation does not call a provider. See [privacy](PRIVACY.md) and [security](../SECURITY.md).
+Generation sends the prompt and relevant definition to the provider; refinement and repair can include prior candidates and compiler diagnostics. C export includes its controller contract. Editing the open model from the Assistant tab sends the request, the open model without its layout, the names of selected blocks, and the block catalog; its one automatic revision can include the previous plan and run diagnostics. Ordinary simulation does not call a provider. See [privacy](PRIVACY.md) and [security](../SECURITY.md).
 
 ## If it does not work
 
@@ -75,5 +75,7 @@ Generation sends the prompt and relevant definition to the provider; refinement 
 Successful generations are saved automatically in the local **AI blocks** library. Reuse them without another provider call. The library keeps complete definitions; refinements do not silently alter existing model instances.
 
 **Ask agent → Full model / circuit** uses the same provider. With Gradara AI it costs one model-build price, which covers every block it creates. A request may invoke the provider several times: library planning, each missing block (with optional repair), assembly, and one optional assembly repair. It can therefore take several minutes and consume more provider usage than a single block. OpenModelica must be available for both component checks and the final trial simulation. See the [user guide](USER_GUIDE.md#ask-an-agent-for-a-complete-model) for review, cancellation, and saved-model behavior.
+
+**Assistant → edit the open model** uses the same provider. One request plans the edit, generates any new or rewritten blocks (each with its own compile check), applies the operations locally, and runs a trial simulation, with one automatic revision. It returns a proposal you apply or discard; see the [user guide](USER_GUIDE.md#edit-the-open-model-with-the-assistant). **Problems → Explain** asks for a diagnosis only; **Fix with AI** runs the diagnosis and then the same edit pipeline.
 
 The repository's [AGENTS.md](../AGENTS.md) and [task playbooks](agents/PLAYBOOKS.md) are separate instructions for coding agents contributing to Gradara. End users do not need them.

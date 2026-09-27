@@ -45,7 +45,7 @@
 <p>The app connects to the internet only to check for updates on GitHub, to download the simulation engine when you set it up, to send AI requests when you ask for them, and to open links you click.</p>
 
 <h2>AI requests</h2>
-<p>An AI request contains your description and the model context the task needs, for example the component you are refining, the block catalog for a model build, or a controller's equations for C export. It does not include unrelated models or files.</p>
+<p>An AI request contains your description and the model context the task needs, for example the component you are refining, the block catalog for a model build, or a controller's equations for C export. Editing or diagnosing the open model sends that model's blocks, parameters, equations, and connections without its layout, the names of selected blocks, and the block catalog; diagnosing a failed run also sends the problems you ask about, that run's generated Modelica source, and the solver's messages. It does not include unrelated models or files.</p>
 <p>With your own OpenAI or Anthropic key, the request goes directly from your computer to that provider under your account and their terms. With Gradara AI, the request goes to our service, which forwards it to our model provider and returns the result. We process the content in memory only.</p>
 
 <h2>What Gradara AI keeps</h2>
@@ -55,6 +55,7 @@
 <tr><td>Account</td><td>Email, sign-in provider user id, credit balance</td><td>Until you delete your account</td></tr>
 <tr><td>Purchases</td><td>Credits added and the payment reference</td><td>As required for accounting</td></tr>
 <tr><td>Usage</td><td>Task type, model name, token counts, time, success</td><td>About 13 months</td></tr>
+<tr><td>Operation counters</td><td>Operation id, kind, number of calls, credits charged, and for edits which priced parts were charged (for example "block:1")</td><td>7 days</td></tr>
 <tr><td>Sign-ins</td><td>A one-way hash of each computer's token, and the day it was last used</td><td>Until revoked, then 30 days</td></tr>
 </tbody>
 </table>

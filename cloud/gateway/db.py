@@ -82,6 +82,18 @@ jobs = Table(
     UniqueConstraint('account_id', 'job_id', name='uq_jobs_account_job'),
 )
 
+# Priced parts of one job, e.g. each generated block of a model edit. Each part pays once.
+job_parts = Table(
+    'job_parts', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('job_row', Integer, ForeignKey('jobs.id'), nullable=False, index=True),
+    Column('part', String(40), nullable=False),
+    Column('succeeded', Boolean, nullable=False, default=False),
+    Column('charged', Integer, nullable=False, default=0),
+    Column('created_at', DateTime, nullable=False, default=now),
+    UniqueConstraint('job_row', 'part', name='uq_job_parts_job_part'),
+)
+
 usage = Table(
     'usage', metadata,
     Column('id', Integer, primary_key=True),

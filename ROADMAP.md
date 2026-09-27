@@ -19,7 +19,6 @@ Done: the Apache-2.0 source is public, CI runs on GitHub, installers for Windows
 | Preserve route intent through save/load | Python Wire defaults currently erase the distinction between absent and empty waypoints. | A versioned or backward-compatible solution preserves auto versus explicit straight intent through API round trips, without changing saved geometry unexpectedly. |
 | Keyboard and screen-reader access | Focus, discoverable actions, model dialogs, and canvas navigation. | A new user can create/open/run a model using the keyboard; assistive-technology sessions verify accessible names, focus return, and error recovery. |
 | Lint cleanup | Small groups of existing workspace, editor, and UI primitive findings. | The strict lint command passes without blanket rule suppression; interaction regressions are checked. |
-| Clearer simulation diagnostics | Map compiler/runtime errors to named blocks and ports. | A problems list selects the relevant block or net while preserving expandable raw diagnostics. |
 | Simulation settings | Solver/tolerance, output interval, initialization, and parameter sweeps. | Settings have useful defaults, are validated and recorded with each immutable run, and expose failures clearly. |
 | Result inspection | Multiple-run comparisons, dual cursors, frequency-domain views, independently scaled dual Y axes, and live streaming. | Remaining inspector gaps are closed without losing event pairs, linked X ranges, or browser-local plot preferences. |
 | Export cancellation cleanup | Process/container lifecycle in `server/exporter.py`. | Cancellation and timeout leave no orphan compilation process or container; failure remains visible. |
@@ -63,7 +62,7 @@ Build reproducible 100- and 1,000-block interaction workloads and record frame t
 
 1. Design hierarchical subsystems with stable boundary ports, explicit controller selection, and document migrations.
 2. Define scalar/vector/bus and sample-clock semantics before enabling placeholders as executable blocks.
-3. Compare generated controller C against Modelica trajectories for supported timing/discretization contracts.
+3. Replay *generated* controller C against Modelica trajectories automatically after export. A hand-reviewed reference for the sampled servo controller is already replayed in tests; continuous controllers still rely on the generator's documented discretization, and closed-loop C co-simulation is not implemented.
 4. Extend physical domains through tested Modelica components and examples; the current thermal domain identifier is not a full thermal library, and hydraulics/fluid support is not implemented.
 5. Add HDL only with explicit clock/reset, numeric, and latency contracts and toolchain validation.
 

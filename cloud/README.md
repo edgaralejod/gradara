@@ -29,7 +29,8 @@ Point a source checkout or desktop build at it with `GRADARA_GATEWAY_URL=http://
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Secret Manager |
 | `STRIPE_AUTOMATIC_TAX` | `true` after Stripe Tax registration |
 | `CREDIT_PACKS` | JSON list with a Stripe `priceId` per pack (below) |
-| `CREDIT_PRICES` | Optional JSON, default `{"component": 2, "model": 20, "export": 2}` |
+| `CREDIT_PRICES` | Optional JSON merged onto the defaults `{"component": 2, "model": 20, "export": 2, "edit": 4, "diagnose": 2}` |
+| `CREDIT_SURCHARGES` | Optional JSON, default `{"edit": {"block": 2}}`: credits per new or rewritten block in an edit or fix |
 | `FREE_CREDITS` | Welcome grant per verified identity, default 20 |
 | `RATE_PER_MINUTE`, `MAX_CONCURRENT` | Per-account limits, defaults 20 and 3 |
 | `USAGE_RETENTION_DAYS` | Default 400 |
@@ -82,3 +83,5 @@ Operations:
 ## Pricing model
 
 Costs scale with tokens. Development runs used about 16k tokens per block and 80k to 130k tokens per model build. At mid-tier model prices (about USD 2 per million input tokens and USD 10 per million output tokens), that is roughly USD 0.05 to 0.15 per block and USD 0.40 to 1.20 per model build, before retries. With 100 credits for USD 10, a block (2 credits) is USD 0.20 and a model (20 credits) is USD 2.00, which covers vendor cost, Stripe fees, and hosting with margin. Review these numbers against real usage records after launch; change `CREDIT_PRICES` rather than code.
+
+A job pays its kind's price once, on its first call, with repairs included. Assistant edits (`edit`) and diagnoses (`diagnose`) can also carry priced parts, labelled on the request as `job.part`. Each new or rewritten block is a `block:<n>` part that pays the block surcharge once; at most three per job. The edit stage of a fix is the `edit` part and pays the edit price once. So a simple edit costs 4, an edit with two new blocks costs 8, explaining costs 2, and a fix that adds one block costs 2 + 4 + 2. A part whose first call fails before output is refunded, as a job is. Parts are recorded in `job_parts` (label and amount only) and expire with their job after 7 days. Responses include `jobCharged`, the job's running total, which the app shows beside the answer.

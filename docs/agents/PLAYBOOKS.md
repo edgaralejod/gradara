@@ -14,7 +14,6 @@ Handoff: changed behavior, evidence, limitations, and follow-up work.
 ```
 
 Do not include credentials or an entire personal workspace. Inspect the current code and its tests before deciding which contract needs to change.
-
 ## Wiring or selection fix
 
 Read the [wiring contract](../architecture/WIRING.md), [browser acceptance checks](../development/TESTING.md), and [model format](../architecture/MODEL_FORMAT.md). Trace pointer ownership from canvas/net components into `net-session.ts`, `net-draw.ts`, or `net-edit.ts`, then the immutable project operation and normalization. Keep route geometry distinct from logical net identity.

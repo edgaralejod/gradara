@@ -27,9 +27,10 @@ SECRET_PROMPT = 'Design a PI controller for my confidential motor drive project,
 def make(tmp_path, responder=None, **overrides):
     packs = [{'id': 'starter', 'credits': 100, 'amount': 1000, 'currency': 'usd', 'label': '100 credits',
               'priceId': 'price_123'}]
+    overrides.setdefault('free_credits', 10)
     cfg = Config(database_url=f'sqlite:///{tmp_path}/gw.db', auth_mode='dev', llm_provider='fake',
                  public_url='https://ai.example.test', stripe_secret_key='sk_test_x',
-                 stripe_webhook_secret='whsec_x', packs=packs, free_credits=10, **overrides)
+                 stripe_webhook_secret='whsec_x', packs=packs, **overrides)
     provider = FakeProvider(responder or (lambda prompt, schema: {'name': 'ok'}))
     app = create_app(cfg, provider)
     return TestClient(app), app, provider
@@ -53,9 +54,103 @@ def auth(token):
     return {'Authorization': f'Bearer {token}'}
 
 
-def generate(client, token, job='job-0001', kind='component', task='component', prompt=SECRET_PROMPT):
+def generate(client, token, job='job-0001', kind='component', task='component', prompt=SECRET_PROMPT, part=None):
+    ref = {'id': job, 'kind': kind} | ({'part': part} if part else {})
     return client.post('/v1/generate', headers=auth(token),
-                       json={'task': task, 'job': {'id': job, 'kind': kind}, 'prompt': prompt, 'schema': SCHEMA})
+                       json={'task': task, 'job': ref, 'prompt': prompt, 'schema': SCHEMA})
+
+
+def balance(client, token):
+    return client.get('/v1/account', headers=auth(token)).json()['balance']
+
+
+def test_a_simple_edit_costs_its_base_price_once(tmp_path):
+    client, *_ = make(tmp_path, free_credits=50)
+    token = sign_in(client)
+    plan = generate(client, token, job='edit-0001', kind='edit', task='edit-plan')
+    assert plan.status_code == 200 and plan.json()['charged'] == 4 and plan.json()['jobCharged'] == 4
+    repair = generate(client, token, job='edit-0001', kind='edit', task='edit-plan')
+    assert repair.json()['charged'] == 0 and repair.json()['jobCharged'] == 4
+    assert balance(client, token) == 46
+
+
+def test_each_generated_block_adds_a_surcharge_once(tmp_path):
+    client, *_ = make(tmp_path, free_credits=50)
+    token = sign_in(client)
+    charges = [generate(client, token, job='edit-0002', kind='edit', task=task, part=part).json()['charged']
+               for task, part in [('edit-plan', None), ('component', 'block:1'), ('component', 'block:1'),
+                                  ('component', 'block:2')]]
+    assert charges == [4, 2, 0, 2]  # the repeated call for block 1 is its repair
+    assert balance(client, token) == 42
+    for n in (3,):
+        assert generate(client, token, job='edit-0002', kind='edit', task='component', part=f'block:{n}').status_code == 200
+    fourth = generate(client, token, job='edit-0002', kind='edit', task='component', part='block:4')
+    assert fourth.status_code == 429 and 'at most 3 blocks' in fourth.json()['detail']
+    assert balance(client, token) == 40  # a rejected part is not charged
+
+
+def test_explain_and_fix_prices(tmp_path):
+    client, *_ = make(tmp_path, free_credits=50)
+    token = sign_in(client)
+    explain = generate(client, token, job='diag-0001', kind='diagnose', task='diagnose')
+    assert explain.json()['charged'] == 2 and balance(client, token) == 48
+    steps = [('diagnose', None), ('edit-plan', 'edit'), ('component', 'block:1'), ('edit-plan', 'edit')]
+    fix = [generate(client, token, job='diag-0002', kind='diagnose', task=t, part=p).json() for t, p in steps]
+    assert [r['charged'] for r in fix] == [2, 4, 2, 0]
+    assert fix[-1]['jobCharged'] == 8 and balance(client, token) == 40
+
+
+def test_a_part_whose_first_call_fails_is_refunded(tmp_path):
+    calls = {'n': 0}
+    def flaky(prompt, schema):
+        calls['n'] += 1
+        if calls['n'] == 2:
+            raise ProviderError('temporarily unavailable', 503)
+        return {'name': 'ok'}
+    client, *_ = make(tmp_path, flaky, free_credits=50)
+    token = sign_in(client)
+    assert generate(client, token, job='edit-0003', kind='edit', task='edit-plan').json()['charged'] == 4
+    assert generate(client, token, job='edit-0003', kind='edit', task='component', part='block:1').status_code == 503
+    assert balance(client, token) == 46  # the base price stays, the block surcharge is refunded
+    retry = generate(client, token, job='edit-0003', kind='edit', task='component', part='block:1')
+    assert retry.json()['charged'] == 2 and balance(client, token) == 44
+
+
+def test_parts_must_belong_to_their_kind(tmp_path):
+    client, *_ = make(tmp_path, free_credits=50)
+    token = sign_in(client)
+    assert generate(client, token, job='c-0001', part='block:1').status_code == 422
+    assert generate(client, token, job='e-0001', kind='edit', task='edit-plan', part='edit').status_code == 422
+    assert generate(client, token, job='e-0002', kind='edit', task='component', part='block:0').status_code == 422
+    assert generate(client, token, job='e-0003', kind='edit', task='component', part='extra').status_code == 422
+    assert generate(client, token, job='e-0004', kind='edit', task='model-plan').status_code == 422
+    assert generate(client, token, job='d-0001', kind='diagnose', task='export').status_code == 422
+    assert balance(client, token) == 50
+
+
+def test_parts_store_only_labels_and_are_deleted_with_the_account(tmp_path):
+    from gateway.db import job_parts
+    client, app, _ = make(tmp_path, free_credits=50)
+    token = sign_in(client)
+    generate(client, token, job='edit-0004', kind='edit', task='edit-plan')
+    generate(client, token, job='edit-0004', kind='edit', task='component', part='block:1')
+    with app.state.store.engine.connect() as db:
+        rows = db.execute(job_parts.select()).mappings().all()
+    assert [r['part'] for r in rows] == ['block:1']
+    assert set(rows[0].keys()) == {'id', 'job_row', 'part', 'succeeded', 'charged', 'created_at'}
+    database = (tmp_path/'gw.db').read_bytes() + b''.join(p.read_bytes() for p in tmp_path.glob('gw.db-*'))
+    assert b'ORCA-7' not in database and b'confidential' not in database
+    client.delete('/v1/account', headers=auth(token))
+    with app.state.store.engine.connect() as db:
+        assert not db.execute(job_parts.select()).all()
+
+
+def test_pricing_lists_edit_and_diagnose(tmp_path):
+    client, *_ = make(tmp_path)
+    token = sign_in(client)
+    account = client.get('/v1/account', headers=auth(token)).json()
+    assert account['prices']['edit'] == 4 and account['prices']['diagnose'] == 2
+    assert account['surcharges'] == {'edit': {'block': 2}}
 
 
 def test_device_sign_in_and_welcome_credits(tmp_path):

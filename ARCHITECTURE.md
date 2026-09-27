@@ -17,7 +17,7 @@ Agents author inspectable, saved component definitions and export artifacts. Ord
 | Workbench | React 19, TypeScript, Vinext/Vite | Document/history orchestration in `app/page.tsx`; UI in `components/gradara/`. |
 | Diagram | React Flow plus custom orthogonal net rendering | Transient pointer state and screen geometry; not the execution graph. |
 | Model operations | `lib/gradara/` | Serializable document, names, nets, ports, routing, selection, immutable edit operations. |
-| Equation editor | Monaco | Edits bounded component declarations and equations. |
+| Block dialog | Monaco | Edits a block's name and parameters, and bounded component declarations and equations. |
 | Local service | Python 3.12, FastAPI, Pydantic | Persistence, validation, source emission, asynchronous jobs, agent and export adapters. Loopback only; refuses cross-site requests. |
 | Simulation | OpenModelica 1.27.0 and MSL 4.1.0, native install or Docker image (`server/engines.py`) | Equation processing, initialization, integration, and events. |
 | AI providers | `server/llm/`: Gradara AI, OpenAI, Anthropic, Codex CLI | One schema-constrained generation interface; provider chosen in Settings. |
@@ -76,11 +76,13 @@ The API exposes jobs rather than blocking the editor. Current concurrency, cance
 
 The component adapter returns structured JSON constrained by the user-selected signal, electrical, rotational mechanical, thermal, or multidomain type. The server enforces terminal domains and directions independently of the provider, and refinement preserves the existing wired interface. Pydantic validates the definition, and OpenModelica checks it before insertion. Compiler diagnostics can trigger one repair attempt. The generated response is data, not a project-editing command. The browser applies the accepted component through its normal operations.
 
-C export currently targets **one block marked `controller`**. The package includes its equations, parameters, local connection information, project revision, and a C11 init/step interface. Generated source is compiled with a C compiler through the selected engine backend (GCC in the container, the host compiler with native OpenModelica); the package retains the exact source and integration notes. Generation itself is not reproducible, and compile success proves neither behavioral equivalence nor hardware readiness.
+C export currently targets **one block marked `controller`**. The package includes its equations, parameters, local connection information, project revision, and a C11 init/step interface. Generated source is compiled with a C compiler through the selected engine backend (GCC in the container, the host compiler with native OpenModelica); the package retains the exact source and integration notes. Generation itself is not reproducible, and compile success proves neither behavioral equivalence nor hardware readiness. The servo example's sampled controller has a reviewed reference C implementation that tests replay against the simulation; see the [execution contract](docs/architecture/EXECUTION.md).
 
 This export is separate from OpenModelica's generated simulation C. A future controller-subsystem boundary must preserve controller structure and sample timing before the simulation compiler flattens the plant and controller.
 
 Full-model creation uses `server/model_agent.py` to plan against a catalog snapshot, await checked missing components through the existing creator, assemble catalog references into a validated document, and require a successful trial simulation. The browser previews the result and saves it as a separate model on acceptance. See [execution](docs/architecture/EXECUTION.md#full-model-generation) for limits and ownership.
+
+Editing the open model (`server/model_edit.py`) and diagnosis (`server/diagnose_agent.py`) keep the same boundary: the agent returns bounded operations or an explanation, conventional code applies the operations all-or-nothing and runs the trial simulation, and the browser merges an accepted proposal into the document as one undo step. See [model editing](docs/architecture/EXECUTION.md#model-editing) and [diagnosis](docs/architecture/EXECUTION.md#diagnosis).
 
 ## Growth decisions
 

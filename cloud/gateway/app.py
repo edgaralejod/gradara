@@ -36,8 +36,11 @@ if str(ROOT) not in sys.path:
 from server.llm.providers import Generation, ProviderError, Usage, make_provider  # noqa: E402
 
 PAGES = Path(__file__).parent/'pages'
-TASK_KINDS = {'component': {'component', 'model'}, 'model-plan': {'model'}, 'model-assembly': {'model'},
-              'export': {'export'}}
+TASK_KINDS = {'component': {'component', 'model', 'edit', 'diagnose'}, 'model-plan': {'model'},
+              'model-assembly': {'model'}, 'export': {'export'}, 'edit-plan': {'edit', 'diagnose'},
+              'diagnose': {'diagnose'}}
+# Priced parts a job kind may carry: generated blocks, and the edit stage of a fix.
+PART_KINDS = {'edit': {'block'}, 'diagnose': {'edit', 'block'}}
 MAX_BODY = 1_500_000
 MAX_PROMPT = 400_000
 MAX_SCHEMA = 64_000
@@ -67,10 +70,11 @@ class Approve(BaseModel):
 
 class JobRef(BaseModel):
     id: str = Field(max_length=80)
-    kind: str = Field(pattern='^(component|model|export)$')
+    kind: str = Field(pattern='^(component|model|export|edit|diagnose)$')
+    part: str | None = Field(default=None, max_length=40, pattern=r'^(edit|block:[1-9][0-9]?)$')
 
 class GenerateBody(BaseModel):
-    task: str = Field(pattern='^(component|model-plan|model-assembly|export)$')
+    task: str = Field(pattern='^(component|model-plan|model-assembly|export|edit-plan|diagnose)$')
     job: JobRef
     prompt: str = Field(min_length=10, max_length=MAX_PROMPT)
     schema_: dict[str, Any] = Field(alias='schema')
@@ -209,7 +213,7 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
     # ------------------------------------------------------------- account
 
     def pricing() -> dict:
-        return {'prices': cfg.prices, 'packs': [{k: v for k, v in p.items() if k != 'priceId'} for p in cfg.packs],
+        return {'prices': cfg.prices, 'surcharges': cfg.surcharges, 'packs': [{k: v for k, v in p.items() if k != 'priceId'} for p in cfg.packs],
                 'freeCredits': cfg.free_credits}
 
     @app.get('/v1/pricing')
@@ -247,6 +251,8 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
         account = auth[0]
         if body.job.kind not in TASK_KINDS[body.task]:
             raise HTTPException(422, 'This task does not belong to that kind of operation.')
+        if body.job.part and body.job.part.split(':')[0] not in PART_KINDS.get(body.job.kind, set()):
+            raise HTTPException(422, 'This operation cannot have that priced part.')
         if not JOB_ID.match(body.job.id):
             raise HTTPException(422, 'Invalid operation id.')
         if body.schema_.get('type') != 'object' or len(json.dumps(body.schema_)) > MAX_SCHEMA:
@@ -256,9 +262,10 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
         if await asyncio.to_thread(store.calls_last_minute, account) >= cfg.rate_per_minute:
             raise HTTPException(429, 'Too many AI requests. Wait a minute and try again.')
         try:
-            call = await asyncio.to_thread(store.begin_job_call, account, body.job.id, body.job.kind)
-        except InsufficientCredits:
-            raise HTTPException(402, f'Not enough credits. This costs {cfg.prices[body.job.kind]} credits; '
+            call = await asyncio.to_thread(store.begin_job_call, account, body.job.id, body.job.kind, body.job.part)
+        except InsufficientCredits as exc:
+            cost = exc.args[0] if exc.args else cfg.prices[body.job.kind]
+            raise HTTPException(402, f'Not enough credits. This costs {cost} credits; '
                                      f'you have {account.balance}. Buy credits in Settings → AI.')
         except PermissionError as exc:
             raise HTTPException(429, str(exc))
@@ -283,7 +290,8 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
                                 result.usage.input_tokens, result.usage.output_tokens,
                                 int((time.monotonic() - started) * 1000), True)
         balance = (await asyncio.to_thread(store.account, account.id)).balance
-        return {'data': result.data, 'model': result.model, 'charged': call['charged'], 'balance': balance,
+        return {'data': result.data, 'model': result.model, 'charged': call['charged'], 'jobCharged': call['jobCharged'],
+                'balance': balance,
                 'usage': {'inputTokens': result.usage.input_tokens, 'outputTokens': result.usage.output_tokens}}
 
     # ------------------------------------------------------------- billing

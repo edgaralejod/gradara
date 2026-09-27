@@ -55,6 +55,8 @@ class Generation:
     provider: str
     model: str
     usage: Usage = field(default_factory=Usage)
+    # Gradara AI only: credits charged to the whole job so far.
+    job_charged: int | None = None
 
 
 class Provider(Protocol):

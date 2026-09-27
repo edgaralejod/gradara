@@ -1,0 +1,621 @@
+{
+  "version": 1,
+  "name": "Servo position control",
+  "exampleId": "servo",
+  "description": "DC motor position servo: a 1 rad step at 0.2 s, a sampled PID at 1 kHz with a clamped integral and a ±24 V output limit, an ideal voltage drive, and a measured shaft angle. The controller is built for C export; its exported step function reproduces the sampled equations exactly.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "reference",
+      "definition": {
+        "kind": "step",
+        "name": "Position request",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.2,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 192
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "controller",
+      "definition": {
+        "kind": "discretePID",
+        "name": "Position controller",
+        "symbol": "PID(z)",
+        "domain": "signal",
+        "description": "Sampled PID with a filtered derivative, a clamped integral, and output saturation. Every state updates at the sample instant, so exported C reproduces it exactly.",
+        "ports": [
+          {
+            "id": "reference",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "measured",
+            "name": "meas",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "when sample(0, samplePeriod) then\n  e = reference - measured;\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*e));\n  derivative = (filterTime*pre(derivative) + kd*(e - pre(errorPrev)))/(filterTime + samplePeriod);\n  errorPrev = e;\n  y = max(-limit, min(limit, kp*e + integral + derivative));\nend when;",
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 30,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "kd",
+            "name": "Derivative gain",
+            "value": 3,
+            "unit": ""
+          },
+          {
+            "id": "filterTime",
+            "name": "Derivative filter",
+            "value": 0.01,
+            "unit": "s",
+            "min": 0.0001
+          },
+          {
+            "id": "limit",
+            "name": "Output limit",
+            "value": 24,
+            "unit": "",
+            "min": 0.001
+          },
+          {
+            "id": "samplePeriod",
+            "name": "Sample period",
+            "value": 0.001,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "discrete Real e(start=0, fixed=true);\ndiscrete Real integral(start=0, fixed=true);\ndiscrete Real derivative(start=0, fixed=true);\ndiscrete Real errorPrev(start=0, fixed=true);",
+        "keywords": [
+          "control",
+          "regulator",
+          "discrete",
+          "sampled",
+          "export",
+          "c"
+        ],
+        "controller": true
+      },
+      "position": {
+        "x": 240,
+        "y": 176
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
+      }
+    },
+    {
+      "id": "drive",
+      "definition": {
+        "kind": "voltage",
+        "name": "Voltage drive",
+        "description": "An ideal voltage source driven by a control signal.",
+        "domain": "electrical",
+        "symbol": "V",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "v = u;"
+      },
+      "position": {
+        "x": 472,
+        "y": 176
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
+      }
+    },
+    {
+      "id": "motor",
+      "definition": {
+        "kind": "motor",
+        "name": "DC motor",
+        "description": "Armature resistance and inductance coupled to a rotational shaft.",
+        "domain": "electrical",
+        "symbol": "M",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "bottom",
+            "direction": "physical",
+            "offset": 25
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "bottom",
+            "direction": "physical",
+            "offset": 75
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1.2,
+            "unit": "Ω",
+            "min": 0.001
+          },
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 0.02,
+            "unit": "H",
+            "min": 0.00001
+          },
+          {
+            "id": "k",
+            "name": "Motor constant",
+            "value": 0.15,
+            "unit": "N·m/A",
+            "min": 0.0001
+          }
+        ],
+        "equations": "L*der(i) = v - R*i - k*w;\ntau = k*i;"
+      },
+      "position": {
+        "x": 704,
+        "y": 176
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -132
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "inertia",
+        "name": "Load inertia",
+        "description": "A rotating load with inertia and viscous friction.",
+        "domain": "mechanical",
+        "symbol": "J",
+        "ports": [
+          {
+            "id": "a",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "b",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "left",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 0.02,
+            "unit": "kg·m²",
+            "min": 0.00001
+          },
+          {
+            "id": "damping",
+            "name": "Viscous friction",
+            "value": 0.002,
+            "unit": "N·m·s",
+            "min": 0
+          }
+        ],
+        "equations": "J*der(w) = tau - damping*w;"
+      },
+      "position": {
+        "x": 736,
+        "y": 416
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "sensor",
+      "definition": {
+        "kind": "angleSensor",
+        "name": "Angle sensor",
+        "symbol": "θ",
+        "domain": "mechanical",
+        "description": "Measures shaft angle in radians without loading the mechanical system.",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "rad"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = flange.phi;\nflange.tau = 0;",
+        "keywords": [
+          "mechanical",
+          "sensor",
+          "position",
+          "encoder"
+        ]
+      },
+      "position": {
+        "x": 240,
+        "y": 416
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "ground",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 584,
+        "y": 336
+      },
+      "size": {
+        "width": 40,
+        "height": 40
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "wire0",
+      "source": "reference",
+      "sourceHandle": "y",
+      "target": "controller",
+      "targetHandle": "reference",
+      "waypoints": []
+    },
+    {
+      "id": "wire1",
+      "source": "controller",
+      "sourceHandle": "y",
+      "target": "drive",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "wire2",
+      "source": "drive",
+      "sourceHandle": "p",
+      "target": "motor",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "wire3",
+      "source": "drive",
+      "sourceHandle": "n",
+      "target": "servo_return",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 536,
+          "y": 320
+        }
+      ]
+    },
+    {
+      "id": "wire4",
+      "source": "motor",
+      "sourceHandle": "n",
+      "target": "servo_return",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 736,
+          "y": 320
+        }
+      ]
+    },
+    {
+      "id": "wire5",
+      "source": "motor",
+      "sourceHandle": "flange",
+      "target": "load",
+      "targetHandle": "a",
+      "waypoints": []
+    },
+    {
+      "id": "wire6",
+      "source": "load",
+      "sourceHandle": "b",
+      "target": "sensor",
+      "targetHandle": "flange",
+      "waypoints": []
+    },
+    {
+      "id": "wire7",
+      "source": "sensor",
+      "sourceHandle": "y",
+      "target": "controller",
+      "targetHandle": "measured",
+      "waypoints": [
+        {
+          "x": 176,
+          "y": 464
+        },
+        {
+          "x": 176,
+          "y": 344
+        },
+        {
+          "x": 304,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "servo_ground",
+      "source": "servo_return",
+      "sourceHandle": "node",
+      "target": "ground",
+      "targetHandle": "p",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "servo_return",
+      "domain": "electrical",
+      "position": {
+        "x": 604,
+        "y": 320
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "x": 40,
+      "y": 64,
+      "text": "01  POSITION CONTROL",
+      "detail": "1 rad step · sampled PID at 1 kHz · exportable to C"
+    },
+    {
+      "x": 472,
+      "y": 64,
+      "text": "02  ELECTRICAL DRIVE",
+      "detail": "±24 V drive · armature dynamics"
+    },
+    {
+      "x": 240,
+      "y": 552,
+      "text": "03  MECHANICAL LOAD",
+      "detail": "Shaft inertia · damping · measured angle"
+    }
+  ],
+  "plots": [
+    {
+      "id": "angle",
+      "label": "Shaft angle",
+      "series": [
+        "sensor.y",
+        "reference.y"
+      ],
+      "labels": [
+        "Measured angle",
+        "Position request"
+      ]
+    },
+    {
+      "id": "voltage",
+      "label": "Controller output",
+      "series": [
+        "controller.y"
+      ],
+      "labels": [
+        "Drive voltage command"
+      ]
+    },
+    {
+      "id": "current",
+      "label": "Armature current",
+      "series": [
+        "motor.i"
+      ],
+      "labels": [
+        "Armature current"
+      ]
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_servo_0",
+      "anchor": "reference.y",
+      "wireIds": [
+        "wire0"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_servo_1",
+      "anchor": "controller.y",
+      "wireIds": [
+        "wire1"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_servo_2",
+      "anchor": "drive.p",
+      "wireIds": [
+        "wire2"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_servo_3",
+      "anchor": "drive.n",
+      "wireIds": [
+        "servo_ground",
+        "wire3",
+        "wire4"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_servo_4",
+      "anchor": "load.a",
+      "wireIds": [
+        "wire5"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_servo_5",
+      "anchor": "load.b",
+      "wireIds": [
+        "wire6"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "net_servo_6",
+      "anchor": "sensor.y",
+      "wireIds": [
+        "wire7"
+      ],
+      "hidden": false,
+      "name": "θ measured",
+      "label": {
+        "wireId": "wire7",
+        "fraction": 0.5729166666666666,
+        "side": -1
+      }
+    }
+  ]
+}

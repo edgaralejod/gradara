@@ -15,8 +15,11 @@ from .models import Project, GenerateRequest, NewModelRequest, SaveModelRequest,
 from . import workspace, settings, engines, credentials
 from .modelica import emit_project, project_key, semantic_hash
 from .engine import RUNS, engine_available, simulate
+from .diagnostics import SimulationFailure
 from .agent import generate_component
 from .model_agent import ModelGenerateRequest, generate_model
+from .model_edit import ModelEditRequest, edit_model
+from .diagnose_agent import DiagnoseRequest, diagnose
 from .paths import DATA, EXAMPLES, STATIC
 from .llm import dispatch, gradara as gradara_ai
 from .llm.providers import ProviderError, verify_key
@@ -161,7 +164,7 @@ async def load_model(model_id: str):
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):
-    if example_id not in {'dc','foc','buck','flyback','datacenter'}: raise HTTPException(404,'Example not found.')
+    if example_id not in {'dc','foc','buck','flyback','datacenter','servo'}: raise HTTPException(404,'Example not found.')
     path = EXAMPLES/f'{example_id}.json'
     if not path.exists(): raise HTTPException(404,'Example is unavailable.')
     data = json.loads(path.read_text())
@@ -189,6 +192,8 @@ async def perform(job_id, operation):
         JOBS[job_id].update(status='cancelled')
     except Exception as exc:
         JOBS[job_id].update(status='failed',error=str(exc))
+        if isinstance(exc, SimulationFailure):
+            JOBS[job_id]['diagnostics'] = [d.model_dump() for d in exc.diagnostics]
     finally:
         # Operation closures can hold full models; drop them once finished.
         TASKS.pop(job_id, None)
@@ -240,6 +245,13 @@ async def latest(model: str | None = None):
             return {'result':result}
     return {'result':None}
 
+@app.get('/api/runs/{run_id}/diagnostics')
+async def run_diagnostics(run_id: str):
+    if not run_id.isalnum(): raise HTTPException(400, 'Invalid run ID.')
+    path = RUNS/run_id/'diagnostics.json'
+    if not path.exists(): raise HTTPException(404, 'No diagnostics were recorded for this run.')
+    return json.loads(path.read_text())
+
 @app.get('/api/results/{run_id}/data')
 async def full_result_data(run_id: str):
     if not run_id.isalnum(): raise HTTPException(400, 'Invalid run ID.')
@@ -274,6 +286,14 @@ async def component_library():
 @app.post('/api/models/generate')
 async def generate_full_model(request: ModelGenerateRequest):
     return await start_job('model', lambda i: generate_model(request, i, lambda message: JOBS[i].update(progress=message)))
+
+@app.post('/api/models/edit')
+async def edit_open_model(request: ModelEditRequest):
+    return await start_job('edit', lambda i: edit_model(request, i, lambda message: JOBS[i].update(progress=message)))
+
+@app.post('/api/diagnose')
+async def diagnose_problems(request: DiagnoseRequest):
+    return await start_job('diagnose', lambda i: diagnose(request, i, lambda message: JOBS[i].update(progress=message)))
 
 @app.post('/api/components/generate')
 async def generate(request:GenerateRequest):

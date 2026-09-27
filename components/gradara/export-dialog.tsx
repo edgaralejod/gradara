@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,11 +14,23 @@ import {
   ArrowRight,
   LoaderCircle,
   Check,
+  Copy,
   Cpu,
 } from 'lucide-react';
 import { api, downloadText, waitForJob, type Job } from '@/lib/gradara/api';
 import { notifyAiChanged, useAiLabel } from '@/lib/gradara/ai';
 import type { Project } from '@/lib/gradara/model';
+
+type Artifact = {
+  id: string;
+  blockId: string;
+  header: string;
+  source: string;
+  notes: string;
+  compiler: string;
+};
+type ArtifactFile = 'header' | 'source' | 'notes';
+
 export default function ExportDialog({
   project,
   selectedId,
@@ -31,15 +43,22 @@ export default function ExportDialog({
   const aiLabel = useAiLabel('export');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
-  const [artifact, setArtifact] = useState<{
-    id: string;
-    header: string;
-    source: string;
-  } | null>(null);
-  const controller =
-    project.blocks.find(
-      (b) => b.id === selectedId && b.definition.controller,
-    ) ?? project.blocks.find((b) => b.definition.controller);
+  const [artifact, setArtifact] = useState<Artifact | null>(null);
+  const [file, setFile] = useState<ArtifactFile>('source');
+  const [copied, setCopied] = useState(false);
+  const controllers = project.blocks.filter((b) => b.definition.controller);
+  const [chosenId, setChosenId] = useState(
+    () =>
+      controllers.find((b) => b.id === selectedId)?.id ?? controllers[0]?.id,
+  );
+  const controller = controllers.find((b) => b.id === chosenId);
+  const shown = artifact
+    ? file === 'header'
+      ? artifact.header
+      : file === 'source'
+        ? artifact.source
+        : artifact.notes
+    : '';
   async function source() {
     setBusy('modelica');
     setError('');
@@ -64,12 +83,9 @@ export default function ExportDialog({
         method: 'POST',
         body: JSON.stringify({ project, blockId: controller.id, target: 'c' }),
       });
-      const r = await waitForJob<{
-        id: string;
-        header: string;
-        source: string;
-      }>(j.id);
+      const r = await waitForJob<Artifact>(j.id);
       setArtifact(r);
+      setFile('source');
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -84,7 +100,10 @@ export default function ExportDialog({
         if (!open && !busy) onClose();
       }}
     >
-      <DialogContent className="export-dialog" showCloseButton={!busy}>
+      <DialogContent
+        className={`export-dialog ${artifact ? 'has-artifact' : ''}`}
+        showCloseButton={!busy}
+      >
         <DialogTitle>Export model</DialogTitle>
         <DialogDescription>
           Save an editable model or generate an implementation of your
@@ -130,17 +149,76 @@ export default function ExportDialog({
         </button>
         <div className="controller-export">
           <span className="component-category">Controller implementation</span>
-          <h3>{controller?.definition.name ?? 'No controller selected'}</h3>
+          {controllers.length > 1 ? (
+            <label className="controller-picker">
+              <span>Controller</span>
+              <select
+                value={chosenId}
+                disabled={!!busy}
+                onChange={(e) => {
+                  setChosenId(e.target.value);
+                  setArtifact(null);
+                  setError('');
+                }}
+              >
+                {controllers.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.definition.name} · {b.definition.kind}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <h3>{controller?.definition.name ?? 'No controller in this model'}</h3>
+          )}
           <p>
             {controller
               ? 'Generate C from the saved controller equations, state, and interface. Your physical plant stays in the simulation.'
-              : 'Mark a signal component as a controller in its inspector to export it.'}
+              : 'Mark a signal block as a controller in the inspector to export it.'}
           </p>
           {artifact ? (
             <>
+              <div className="export-artifact">
+                <div className="export-artifact-tabs" role="tablist">
+                  {(
+                    [
+                      ['header', 'gradara_controller.h'],
+                      ['source', 'gradara_controller.c'],
+                      ['notes', 'Notes'],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      key={id}
+                      role="tab"
+                      aria-selected={file === id}
+                      className={file === id ? 'is-active' : ''}
+                      onClick={() => {
+                        setFile(id);
+                        setCopied(false);
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  <button
+                    className="export-copy"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(shown).then(() =>
+                        setCopied(true),
+                      );
+                    }}
+                  >
+                    {copied ? <Check size={13} /> : <Copy size={13} />}
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+                <pre aria-label="Generated controller code">
+                  {shown}
+                </pre>
+              </div>
               <span className="export-success">
                 <Check size={14} />
-                Generated and compiled
+                Compiled with <code>{artifact.compiler}</code>
               </span>
               <a
                 className="download-artifact"

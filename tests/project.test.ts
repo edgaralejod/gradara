@@ -20,6 +20,7 @@ import {
   addWire,
   removeSelection,
   replaceDefinition,
+  applyBlockEdits,
   duplicateBlocks,
   semanticSignature,
 } from '../lib/gradara/project';
@@ -48,6 +49,51 @@ void test('revising a controller preserves its compatible ports and current posi
     replaceDefinition(p, 'controller', removed).wires.length,
     p.wires.length - 1,
   );
+});
+void test('block dialog edits change only the named block values and keep wiring', () => {
+  const p = initialProject();
+  const controller = p.blocks.find((b) => b.id === 'controller')!;
+  const [first, second] = controller.definition.parameters;
+  const next = applyBlockEdits(p, 'controller', {
+    name: 'Speed PI',
+    parameters: { [first.id]: first.value * 2 },
+  });
+  const edited = next.blocks.find((b) => b.id === 'controller')!.definition;
+  assert.equal(edited.name, 'Speed PI');
+  assert.equal(edited.parameters[0].value, first.value * 2);
+  assert.equal(edited.parameters[1].value, second.value);
+  assert.equal(edited.equations, controller.definition.equations);
+  assert.equal(next.wires, p.wires);
+  assert.deepEqual(
+    next.blocks.filter((b) => b.id !== 'controller'),
+    p.blocks.filter((b) => b.id !== 'controller'),
+  );
+  assert.equal(p.blocks.find((b) => b.id === 'controller')!.definition.name, controller.definition.name);
+});
+void test('block dialog edits without changes return the same project', () => {
+  const p = initialProject();
+  const controller = p.blocks.find((b) => b.id === 'controller')!.definition;
+  assert.equal(
+    applyBlockEdits(p, 'controller', {
+      name: controller.name,
+      parameters: Object.fromEntries(controller.parameters.map((x) => [x.id, x.value])),
+      equations: controller.equations,
+      declarations: controller.declarations ?? '',
+    }),
+    p,
+  );
+  assert.equal(applyBlockEdits(p, 'missing', { name: 'X' }), p);
+  assert.equal(applyBlockEdits(p, 'controller', { name: '   ' }), p);
+});
+void test('block dialog equation edits follow replaceDefinition', () => {
+  const p = initialProject();
+  const d = p.blocks.find((b) => b.id === 'controller')!.definition;
+  const next = applyBlockEdits(p, 'controller', { equations: d.equations + '\n' });
+  assert.deepEqual(
+    next,
+    replaceDefinition(p, 'controller', { ...d, equations: d.equations + '\n' }),
+  );
+  assert.equal(next.wires.length, p.wires.length);
 });
 void test('duplicates remap internal wires without connecting copies to the original graph', () => {
   const p = initialProject();

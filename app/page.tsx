@@ -26,6 +26,7 @@ import {
   Activity,
   Play,
   Sparkles,
+  Stethoscope,
   Undo2,
   Redo2,
   ChevronRight,
@@ -118,7 +119,10 @@ import {
 import AgentComposer, {
   type ComposerContext,
 } from '@/components/gradara/agent-composer';
-import EquationEditor from '@/components/gradara/equation-editor';
+import BlockDialog, {
+  type BlockDialogTab,
+} from '@/components/gradara/block-dialog';
+import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import SettingsDialog, {
   type SettingsTab,
@@ -138,15 +142,34 @@ import NetLayer from '@/components/gradara/net-layer';
 import {
   api,
   waitForJob,
+  JobFailure,
+  type Diagnostic,
+  type RunFailure,
   type SimulationResult,
   type Job,
 } from '@/lib/gradara/api';
+import {
+  countBySeverity,
+  validateProject,
+} from '@/lib/gradara/validate-project';
+import DiagnosticsDock, {
+  useDockState,
+} from '@/components/gradara/diagnostics-dock';
+import ProblemsPanel, {
+  type ProblemSection,
+} from '@/components/gradara/problems-panel';
+import AssistantPanel, {
+  useAssistant,
+} from '@/components/gradara/assistant-panel';
+import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
+import { useAiLabel } from '@/lib/gradara/ai';
 import {
   semanticSignature,
   setLabelOffset,
   addWire,
   removeSelection,
   replaceDefinition,
+  applyBlockEdits,
   duplicateBlocks,
 } from '@/lib/gradara/project';
 function IconButton({
@@ -240,7 +263,10 @@ function Workbench() {
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
   const [composer, setComposer] = useState<ComposerContext | null>(null);
   const [inserter, setInserter] = useState<InsertContext | null>(null);
-  const [equationBlock, setEquationBlock] = useState<string | null>(null);
+  const [equationBlock, setEquationBlock] = useState<{
+    id: string;
+    tab: BlockDialogTab;
+  } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [libraryOpen, updateLibraryOpen] = useState(true);
   const [inspectorOpen, updateInspectorOpen] = useState(true);
@@ -266,6 +292,7 @@ function Workbench() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState('');
+  const [runFailure, setRunFailure] = useState<RunFailure | null>(null);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [resultSignature, setResultSignature] = useState('');
   const [notice, setNotice] = useState('');
@@ -380,6 +407,173 @@ function Workbench() {
     });
   };
   const signature = useMemo(() => semanticSignature(project), [project]);
+  const [dock, updateDock] = useDockState();
+  const [liveProblems, setLiveProblems] = useState<Diagnostic[]>([]);
+  useEffect(() => {
+    // Recheck after edits settle, not on every pointer move.
+    const timer = setTimeout(
+      () => setLiveProblems(validateProject(projectRef.current)),
+      300,
+    );
+    return () => clearTimeout(timer);
+  }, [signature]);
+  const problemSections = useMemo<ProblemSection[]>(() => {
+    const sections: ProblemSection[] = [
+      { id: 'live', title: 'Model checks', items: liveProblems },
+    ];
+    if (runFailure && runFailure.modelId === project.modelId) {
+      const stale = runFailure.signature !== signature;
+      const live = new Set(liveProblems.map((d) => d.message));
+      const items = runFailure.diagnostics.length
+        ? runFailure.diagnostics.filter(
+            (d) => !(d.source === 'validation' && live.has(d.message)),
+          )
+        : [
+            {
+              id: 'run',
+              severity: 'error' as const,
+              source: 'runtime' as const,
+              message: runFailure.message.split('\n')[0],
+              detail: runFailure.message,
+              blockIds: [],
+              ports: [],
+              netIds: [],
+              wireIds: [],
+            },
+          ];
+      sections.push({
+        id: 'run',
+        title: 'Last run',
+        note: stale ? 'stale · model changed since this run' : 'from the last run',
+        stale,
+        items,
+      });
+    }
+    if (result?.problems?.length) {
+      const stale = signature !== resultSignature;
+      sections.push({
+        id: 'warnings',
+        title: 'Run warnings',
+        note: stale ? 'stale · model changed since this run' : undefined,
+        stale,
+        items: result.problems,
+      });
+    }
+    return sections;
+  }, [liveProblems, runFailure, result, signature, resultSignature, project.modelId]);
+  const problemCounts = useMemo(
+    () =>
+      countBySeverity(
+        problemSections.filter((s) => !s.stale).flatMap((s) => s.items),
+      ),
+    [problemSections],
+  );
+  const selectProblem = (d: Diagnostic, only?: string[]) =>
+    selectBlocks(only ?? d.blockIds, only ? [] : d.wireIds);
+  const selectBlocks = (ids: string[], wires: string[] = []) => {
+    const current = projectRef.current;
+    const blockIds = ids.filter((id) =>
+      current.blocks.some((b) => b.id === id),
+    );
+    const wireIds = wires.filter((id) =>
+      current.wires.some((w) => w.id === id),
+    );
+    if (!blockIds.length && !wireIds.length) return;
+    if (workspaceMode !== 'diagram') setWorkspaceMode('diagram');
+    select({ ...emptySelection(), blockIds, wireIds });
+    if (blockIds.length)
+      requestAnimationFrame(() => {
+        void flow.fitView({
+          nodes: blockIds.map((id) => ({ id })),
+          padding: 0.6,
+          maxZoom: 1.5,
+          duration: 250,
+        });
+      });
+  };
+  const copyProblems = () => {
+    const text = problemSections
+      .filter((s) => s.items.length)
+      .map(
+        (s) =>
+          `${s.title}${s.note ? ` (${s.note})` : ''}\n` +
+          s.items
+            .map(
+              (d) =>
+                `- [${d.severity}] ${d.message}${d.hint ? `\n  Hint: ${d.hint}` : ''}`,
+            )
+            .join('\n'),
+      )
+      .join('\n\n');
+    void navigator.clipboard
+      .writeText(text || 'No problems.')
+      .then(() => notify('Problems copied.'));
+  };
+  const getProject = useCallback(() => projectRef.current, []);
+  const assistant = useAssistant(project.modelId, getProject);
+  const requestEdit = (prompt: string, blockIds: string[]) => {
+    const current = projectRef.current;
+    const names = blockIds
+      .map((id) => current.blocks.find((b) => b.id === id)?.definition.name)
+      .filter(Boolean);
+    void assistant.edit(
+      prompt,
+      { project: current, catalog: library, selection: blockIds },
+      names.length ? `Selection · ${names.join(', ')}` : 'Whole model',
+    );
+  };
+  const explainLabel = useAiLabel('diagnose');
+  const fixLabel = useAiLabel('fix');
+  const askableProblems = problemSections
+    .filter((s) => !s.stale)
+    .flatMap((s) => s.items)
+    .filter((d) => d.severity !== 'info');
+  const askAi = (diagnostics: Diagnostic[], proposeFix: boolean) => {
+    if (!diagnostics.length || assistant.busy) return;
+    const current = projectRef.current;
+    const runId =
+      runFailure &&
+      runFailure.modelId === current.modelId &&
+      runFailure.signature === semanticSignature(current)
+        ? runFailure.runId
+        : undefined;
+    updateDock({ open: true, tab: 'assistant' });
+    void assistant.diagnose(
+      {
+        project: current,
+        diagnostics: diagnostics.slice(0, 50),
+        runId,
+        catalog: library,
+        proposeFix,
+      },
+      diagnostics.length === 1
+        ? `${proposeFix ? 'Fix' : 'Explain'}: ${diagnostics[0].message}`
+        : proposeFix
+          ? `Fix ${diagnostics.length} problems`
+          : `Explain ${diagnostics.length} problems`,
+      proposeFix ? 'Fix with AI' : 'Explain',
+    );
+  };
+  const applyProposal = (proposal: EditProposal, baseRevision: number) => {
+    const current = projectRef.current;
+    if (current.revision !== baseRevision) {
+      notify('The model changed since this proposal. Ask again.');
+      return false;
+    }
+    const { project: next, added, changed } = mergeProposal(
+      current,
+      proposal.project,
+    );
+    commit(next);
+    const touched = [...added, ...changed].filter((id) =>
+      projectRef.current.blocks.some((b) => b.id === id),
+    );
+    if (touched.length) select({ ...emptySelection(), blockIds: touched });
+    notify(
+      `Applied ${proposal.changes.length} ${proposal.changes.length === 1 ? 'change' : 'changes'}. Undo with ⌘Z.`,
+    );
+    return true;
+  };
   const restoreDocument = (loaded: SavedDocument, recover = true) => {
     store.remember(loaded);
     let next = loaded.project;
@@ -580,6 +774,7 @@ function Workbench() {
     setEquationBlock(null);
     setInspectorOpen(false);
     setRunError('');
+    setRunFailure(null);
     setSaveError('');
     setResult(null);
     setResultSignature('');
@@ -836,6 +1031,7 @@ function Workbench() {
     runController.current = controller;
     setRunning(true);
     setRunError('');
+    setRunFailure(null);
     setResult(null);
     setResultSignature('');
     const snapshot = structuredClone(projectRef.current);
@@ -866,8 +1062,18 @@ function Workbench() {
         runController.current === controller &&
         !controller.signal.aborted &&
         (e as Error).name !== 'AbortError'
-      )
+      ) {
         setRunError((e as Error).message);
+        if (e instanceof JobFailure)
+          setRunFailure({
+            runId: e.jobId,
+            modelId: snapshot.modelId,
+            signature: currentSignature,
+            message: e.message,
+            diagnostics: e.diagnostics,
+          });
+        updateDock({ open: true, tab: 'problems' });
+      }
     } finally {
       if (runController.current === controller) {
         runController.current = null;
@@ -989,6 +1195,8 @@ function Workbench() {
   }, [commit, workspaceMode, composer, inserter]);
   const runRef = useRef(runSimulation);
   runRef.current = runSimulation;
+  const toggleDockRef = useRef(() => {});
+  toggleDockRef.current = () => updateDock({ open: !dock.open });
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       const input = (e.target as HTMLElement)?.closest(
@@ -1027,6 +1235,9 @@ function Workbench() {
       } else if (command && e.key === 'Enter') {
         e.preventDefault();
         void runRef.current();
+      } else if (command && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        toggleDockRef.current();
       } else if (e.key.toLowerCase() === 'r' && !command && !e.altKey && selectionRef.current.blockIds.length) {
         e.preventDefault();
         if (!e.repeat) commit((p) => rotateBlocks(p, selectionRef.current.blockIds));
@@ -1631,7 +1842,7 @@ function Workbench() {
                     e.preventDefault();
                     e.stopPropagation();
                     if (n.type === 'tap') return;
-                    setEquationBlock(n.id);
+                    setEquationBlock({ id: n.id, tab: 'properties' });
                   }}
                   onPaneClick={() => {
                     setInserter(null);
@@ -1775,6 +1986,69 @@ function Workbench() {
                 />
               </div>
             )}
+            <DiagnosticsDock
+              state={dock}
+              onChange={updateDock}
+              counts={problemCounts}
+              actions={
+                dock.tab === 'problems' ? (
+                  <>
+                    {askableProblems.length > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={!!assistant.busy}
+                          title={explainLabel || 'Explain these problems'}
+                          onClick={() => askAi(askableProblems, false)}
+                        >
+                          <Stethoscope size={12} />
+                          Explain
+                        </button>
+                        <button
+                          type="button"
+                          className="is-primary"
+                          disabled={!!assistant.busy}
+                          title={fixLabel || 'Propose a checked fix'}
+                          onClick={() => askAi(askableProblems, true)}
+                        >
+                          <Sparkles size={12} />
+                          Fix with AI
+                        </button>
+                      </>
+                    )}
+                    <button type="button" onClick={copyProblems}>
+                      <Copy size={12} />
+                      Copy
+                    </button>
+                  </>
+                ) : undefined
+              }
+              problems={
+                <ProblemsPanel
+                  project={project}
+                  sections={problemSections}
+                  onSelect={selectProblem}
+                  onAsk={(d) => askAi([d], false)}
+                  empty={
+                    project.blocks.length
+                      ? 'No problems. Run the model to check it in OpenModelica.'
+                      : 'Add blocks from the library to start a model.'
+                  }
+                />
+              }
+              assistantActive={!!assistant.busy}
+              assistant={
+                <AssistantPanel
+                  assistant={assistant}
+                  project={project}
+                  selectedIds={selectedIds}
+                  onEdit={requestEdit}
+                  onApply={applyProposal}
+                  onSelect={(blockIds) => selectBlocks(blockIds)}
+                  onOpenSettings={() => setSettingsTab('ai')}
+                />
+              }
+            />
           </section>
           <aside className="inspector-panel">
             <div className="panel-heading">
@@ -1893,51 +2167,25 @@ function Workbench() {
                 <div className="inspector-section">
                   <div className="section-label">
                     Parameters<span>{active.definition.parameters.length}</span>
+                    <button
+                      onClick={() =>
+                        setEquationBlock({ id: active.id, tab: 'properties' })
+                      }
+                    >
+                      Edit…
+                    </button>
                   </div>
-                  {active.definition.parameters.length ? (
-                    active.definition.parameters.map((param) => (
-                      <label
-                        className="parameter"
-                        key={`${active.id}-${param.id}`}
-                      >
-                        <span>{param.name}</span>
-                        <div>
-                          <NumberField
-                            value={param.value}
-                            min={param.min}
-                            max={param.max}
-                            ariaLabel={param.name}
-                            onChange={(value) =>
-                              commit((p) => ({
-                                ...p,
-                                blocks: p.blocks.map((b) =>
-                                  b.id !== active.id
-                                    ? b
-                                    : {
-                                        ...b,
-                                        definition: {
-                                          ...b.definition,
-                                          parameters:
-                                            b.definition.parameters.map((x) =>
-                                              x.id === param.id
-                                                ? { ...x, value }
-                                                : x,
-                                            ),
-                                        },
-                                      },
-                                ),
-                              }))
-                            }
-                          />
-                          <span>{param.unit}</span>
-                        </div>
-                      </label>
-                    ))
-                  ) : (
-                    <p className="no-parameters">
-                      This component has no parameters.
-                    </p>
-                  )}
+                  <ParameterList
+                    blockId={active.id}
+                    parameters={active.definition.parameters}
+                    onChange={(id, value) =>
+                      commit((p) =>
+                        applyBlockEdits(p, active.id, {
+                          parameters: { [id]: value },
+                        }),
+                      )
+                    }
+                  />
                 </div>
                 <div className="inspector-section block-layout-section">
                   <div className="section-label">
@@ -2024,7 +2272,11 @@ function Workbench() {
                   <div className="section-label">
                     <Code2 size={13} />
                     Equations
-                    <button onClick={() => setEquationBlock(active.id)}>
+                    <button
+                      onClick={() =>
+                        setEquationBlock({ id: active.id, tab: 'equations' })
+                      }
+                    >
                       Open
                       <ArrowUpRight size={11} />
                     </button>
@@ -2118,6 +2370,34 @@ function Workbench() {
               </button>
             )}
           </span>
+          <button
+            type="button"
+            className="problems-summary"
+            onClick={() => updateDock({ open: !dock.open, tab: 'problems' })}
+            title="Toggle the Problems panel · ⌘J"
+          >
+            {problemCounts.error || problemCounts.warning ? (
+              <>
+                {problemCounts.error > 0 && (
+                  <span className="is-error">
+                    <AlertCircle size={11} /> {problemCounts.error}{' '}
+                    {problemCounts.error === 1 ? 'error' : 'errors'}
+                  </span>
+                )}
+                {problemCounts.error > 0 && problemCounts.warning > 0 && ' · '}
+                {problemCounts.warning > 0 && (
+                  <span className="is-warning">
+                    {problemCounts.warning}{' '}
+                    {problemCounts.warning === 1 ? 'warning' : 'warnings'}
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <Check size={11} /> No problems
+              </>
+            )}
+          </button>
           <span>
             {project.blocks.length} components · {nets.length} nets
           </span>
@@ -2182,16 +2462,26 @@ function Workbench() {
           }}
         />
         {equationBlock &&
-          project.blocks.find((b) => b.id === equationBlock) && (
-            <EquationEditor
-              definition={
-                project.blocks.find((b) => b.id === equationBlock)!.definition
-              }
+          project.blocks.find((b) => b.id === equationBlock.id) && (
+            <BlockDialog
+              key={equationBlock.id}
+              block={project.blocks.find((b) => b.id === equationBlock.id)!}
+              initialTab={equationBlock.tab}
               onClose={() => setEquationBlock(null)}
-              onApply={(definition) => {
-                commit((p) => replaceDefinition(p, equationBlock, definition));
+              onApply={(edits) => {
+                const before = projectRef.current.blocks.find(
+                  (b) => b.id === equationBlock.id,
+                )?.definition;
+                commit((p) => applyBlockEdits(p, equationBlock.id, edits));
                 setEquationBlock(null);
-                notify('Equations updated. Run the model to apply them.');
+                if (
+                  before &&
+                  ((edits.equations !== undefined &&
+                    edits.equations !== before.equations) ||
+                    (edits.declarations !== undefined &&
+                      edits.declarations !== (before.declarations ?? '')))
+                )
+                  notify('Equations updated. Run the model to apply them.');
               }}
             />
           )}
