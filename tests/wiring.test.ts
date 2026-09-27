@@ -1,6 +1,12 @@
 import test from 'node:test';
 import { Position } from '@xyflow/react';
-import { routeBetween, segmentExit } from '../lib/gradara/routing';
+import {
+  routeAround,
+  routeBetween,
+  segmentExit,
+  segmentHitsRect,
+  selfIntersects,
+} from '../lib/gradara/routing';
 import assert from 'node:assert/strict';
 import { initialProject, library, type Project } from '../lib/gradara/model';
 import { applyLayout, blockSize } from '../lib/gradara/canvas';
@@ -476,7 +482,7 @@ void test('physical junctions flatten to a unique spanning tree regardless of ed
     flattenWires(s.project),
   );
 });
-void test('right-to-left without a loop uses ordinary routing, not a return rail', () => {
+void test('a right-to-left connection between overlapping rows goes around both blocks, without a loop', () => {
   const p = {
     ...sheet(),
     blocks: [place('gain', 'src', 400, 0), place('gain', 'dst', 0, 40)],
@@ -488,14 +494,21 @@ void test('right-to-left without a loop uses ordinary routing, not a return rail
   assert.equal(s.project.wires.length, 1);
   const pts = s.pathPoints(s.project.wires[0].id);
   orthogonal(pts);
-  const src = port(s.project, 'src', 'y');
-  const dst = port(s.project, 'dst', 'u');
-  const lowest = Math.max(...pts.map((pt) => pt.y));
-  assert.ok(
-    lowest <= Math.max(src.y, dst.y) + 1,
-    `RTL without a loop must stay on the orthogonal route, got ${JSON.stringify(pts)}`,
-  );
+  assert.equal(selfIntersects(pts), false, JSON.stringify(pts));
+  for (const b of s.project.blocks) {
+    const body = { ...b.position, ...blockSize(b) };
+    pts
+      .slice(1)
+      .forEach((q, i) =>
+        assert.equal(
+          segmentHitsRect(pts[i], q, body),
+          false,
+          JSON.stringify(pts),
+        ),
+      );
+  }
   assert.ok(pts[1].x > pts[0].x, 'output still leaves to the right');
+  assert.ok(pts.length <= 6, 'one detour, not a return rail');
 });
 
 void test('automatic routes keep drawing geometry and are not offset into lanes', () => {
@@ -526,11 +539,16 @@ void test('automatic routes keep drawing geometry and are not offset into lanes'
   };
   const s = new NetSession(p);
   const a = s.pathPoints('ab');
-  const expected = routeBetween(
+  const body = (id: string) => {
+    const b = p.blocks.find((x) => x.id === id)!;
+    return { ...b.position, ...blockSize(b) };
+  };
+  const expected = routeAround(
     port(p, 'a', 'y'),
     port(p, 'b', 'u'),
     sideToPosition(port(p, 'a', 'y').side),
     sideToPosition(port(p, 'b', 'u').side),
+    [body('a'), body('b')],
   );
   orthogonal(a);
   assert.deepEqual(a, expected);

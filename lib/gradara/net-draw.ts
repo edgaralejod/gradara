@@ -2,9 +2,13 @@ import { Position } from '@xyflow/react';
 import type { Project } from './model';
 import { endpointPoint, isTap, netComponents, TAP_HANDLE } from './net';
 import { portPoint, sideToPosition } from './ports';
+import { blockSize } from './canvas';
 import {
+  eraseLoops,
+  routeAround,
   routeBetween,
   simplifyRoute,
+  type Rect,
   segmentExit,
   EXIT_STUB,
   rubberBandPoints,
@@ -63,10 +67,15 @@ export function routedPolylines(project: Project): Map<string, Pt[]> {
   for (const w of project.wires) {
     const from = endpointPoint(project, w.source, w.sourceHandle);
     const to = endpointPoint(project, w.target, w.targetHandle);
-    const pts = simplifyRoute(
-      rawPolyline(project, w.id),
-      from && !isTap(project, w.source) ? sideToPosition(from.side) : undefined,
-      to && !isTap(project, w.target) ? sideToPosition(to.side) : undefined,
+    const exit =
+      from && !isTap(project, w.source) ? sideToPosition(from.side) : undefined;
+    const entry =
+      to && !isTap(project, w.target) ? sideToPosition(to.side) : undefined;
+    // No wire is drawn with a loop or a hairpin, however its bends were left by a move.
+    const pts = eraseLoops(
+      simplifyRoute(rawPolyline(project, w.id), exit, entry),
+      exit,
+      entry,
     );
     routes.set(w.id, pts);
   }
@@ -107,7 +116,18 @@ function committedPoints(
       entry,
     );
   }
-  return routeBetween(from, to, exit, entry);
+  if (!entry) return routeBetween(from, to, exit, entry);
+  // An automatic route between two blocks stays out of both bodies.
+  const bodies = [source, target]
+    .map((id) => project.blocks.find((b) => b.id === id))
+    .filter((b) => !!b)
+    .map((b): Rect => ({ ...b.position, ...blockSize(b) }));
+  return routeAround(from, to, exit, entry, bodies);
+}
+
+/** A wire's route as stored, before loops are erased for display. */
+export function storedPolyline(project: Project, wireId: string): Pt[] {
+  return rawPolyline(project, wireId);
 }
 
 export function segmentsOf(pts: Pt[]) {
@@ -220,8 +240,7 @@ export function hitSegment(
   ignoreWireIds: string[] = [],
 ): { wireId: string; point: Pt; dist: number; segment: number } | undefined {
   let best:
-    | { wireId: string; point: Pt; dist: number; segment: number }
-    | undefined;
+    { wireId: string; point: Pt; dist: number; segment: number } | undefined;
   for (const w of project.wires) {
     if (ignoreWireIds.includes(w.id)) continue;
     const pts = polylineOfWire(project, w.id);

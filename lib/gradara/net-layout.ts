@@ -1,9 +1,18 @@
+import { Position } from '@xyflow/react';
 import type { Project, Wire } from './model';
 import { endpointPoint, isTap } from './net';
-import { nearly, polylineOfWire, samePt } from './net-draw';
+import { nearly, polylineOfWire, samePt, storedPolyline } from './net-draw';
 import { sideToPosition } from './ports';
 import { blockSize } from './canvas';
-import { routeBetween, segmentExit, simplifyRoute, type Pt } from './routing';
+import {
+  routeAround,
+  routeBetween,
+  segmentExit,
+  segmentHitsRect,
+  selfIntersects,
+  simplifyRoute,
+  type Pt,
+} from './routing';
 
 type Axis = 'x' | 'y';
 const perpendicular = (a: Pt, b: Pt): Axis => (nearly(a.y, b.y) ? 'y' : 'x');
@@ -231,7 +240,29 @@ export function followJunctionsForLayout(
       if (isTap(before, id)) continue;
       const a = endpointPoint(before, id, handle),
         b = endpointPoint(after, id, handle);
-      if (!a || !b || nearly(a[axis], b[axis])) continue;
+      if (!a || !b) continue;
+      // A block moved along its own lead onto or past the dot: carry the dot out ahead
+      // of the terminal, keeping its spacing, so the lead never folds back into the body.
+      const tapId = id === wire.source ? wire.target : wire.source;
+      const tap = before.junctions.find((j) => j.id === tapId);
+      if (tap) {
+        const along: Axis = axis === 'x' ? 'y' : 'x';
+        const normal = { left: -1, right: 1, top: -1, bottom: 1 }[a.side];
+        const ahead = (tap.position[along] - a[along]) * normal;
+        const aheadAfter = (tap.position[along] - b[along]) * normal;
+        if (ahead > 0 && aheadAfter <= 0) {
+          const proposal = proposals.get(tapId) ?? {};
+          const value = b[along] + normal * ahead;
+          const existing = proposal[along];
+          proposal[along] =
+            existing === undefined ||
+            (existing !== null && nearly(existing, value))
+              ? value
+              : null;
+          proposals.set(tapId, proposal);
+        }
+      }
+      if (nearly(a[axis], b[axis])) continue;
       for (const junctionId of junctionsOnRun(before, wire.id, 0)) {
         const proposal = proposals.get(junctionId) ?? {};
         const value = b[axis];
@@ -277,14 +308,9 @@ function crossesOwnBlock(project: Project, wire: Wire, points: Pt[]) {
   for (const id of [wire.source, wire.target]) {
     const block = project.blocks.find((b) => b.id === id);
     if (!block) continue;
-    const { x, y } = block.position;
-    const { width, height } = blockSize(block);
-    for (let i = 1; i < points.length; i++) {
-      const mx = (points[i - 1].x + points[i].x) / 2,
-        my = (points[i - 1].y + points[i].y) / 2;
-      if (mx > x + 1 && mx < x + width - 1 && my > y + 1 && my < y + height - 1)
-        return true;
-    }
+    const body = { ...block.position, ...blockSize(block) };
+    for (let i = 1; i < points.length; i++)
+      if (segmentHitsRect(points[i - 1], points[i], body)) return true;
   }
   return false;
 }
@@ -297,11 +323,15 @@ function crossesOwnBlock(project: Project, wire: Wire, points: Pt[]) {
 export function repairMovedRoutes(
   project: Project,
   movedIds: readonly string[],
+  /** Only these ends moved rigidly with their wire; a wire between two of them is kept. */
+  rigidIds: readonly string[] = [],
 ): Project {
   const moved = new Set(movedIds);
+  const rigid = new Set(rigidIds);
   let changed = false;
   const wires = project.wires.map((wire) => {
     if (!(moved.has(wire.source) || moved.has(wire.target))) return wire;
+    if (rigid.has(wire.source) && rigid.has(wire.target)) return wire;
     let current = wire;
     const bad = (w: Wire) => {
       const trial = {
@@ -309,7 +339,12 @@ export function repairMovedRoutes(
         wires: project.wires.map((x) => (x.id === w.id ? w : x)),
       };
       const points = polylineOfWire(trial, w.id);
-      return reverses(points) || crossesOwnBlock(trial, w, points);
+      const stored = storedPolyline(trial, w.id);
+      return (
+        reverses(points) ||
+        selfIntersects(stored) ||
+        crossesOwnBlock(trial, w, points)
+      );
     };
     while (current.waypoints?.length && bad(current)) {
       const points = [...current.waypoints];
@@ -321,6 +356,25 @@ export function repairMovedRoutes(
     if (!current.waypoints?.length && bad(current)) {
       const detour = detourToDot(project, current);
       if (detour && !bad(detour)) current = detour;
+      else {
+        const around = aroundFromDot(project, current);
+        if (around && !bad(around)) current = around;
+      }
+    }
+    if (current.waypoints?.length) {
+      // Keep what is stored equal to what is drawn once a loop was cut out of the route.
+      const trial = {
+        ...project,
+        wires: project.wires.map((x) => (x.id === current.id ? current : x)),
+      };
+      const shown = polylineOfWire(trial, current.id);
+      const stored = storedPolyline(trial, current.id);
+      if (
+        shown.length >= 2 &&
+        (shown.length !== stored.length ||
+          shown.some((p, i) => !samePt(p, stored[i])))
+      )
+        current = { ...current, waypoints: shown.slice(1, -1) };
     }
     if (current !== wire) changed = true;
     return current;
@@ -376,4 +430,51 @@ function detourToDot(project: Project, wire: Wire): Wire | undefined {
     ...wire,
     waypoints: blockEnd === 'source' ? bends : bends.reverse(),
   };
+}
+
+/**
+ * The cleanest route from a junction dot to a block terminal that stays out of the block:
+ * the dot may leave in any direction, the terminal is entered along its normal.
+ */
+function aroundFromDot(project: Project, wire: Wire): Wire | undefined {
+  const dotIsSource = isTap(project, wire.source);
+  if (dotIsSource === isTap(project, wire.target)) return undefined;
+  const [dotId, blockId, handle] = dotIsSource
+    ? [wire.source, wire.target, wire.targetHandle]
+    : [wire.target, wire.source, wire.sourceHandle];
+  const dot = endpointPoint(project, dotId, 'node');
+  const port = endpointPoint(project, blockId, handle);
+  const block = project.blocks.find((b) => b.id === blockId);
+  if (!dot || !port || !block) return undefined;
+  const body = { ...block.position, ...blockSize(block) };
+  let best: { points: Pt[]; cost: number } | undefined;
+  for (const exit of [
+    Position.Left,
+    Position.Right,
+    Position.Top,
+    Position.Bottom,
+  ]) {
+    // Leaving the port and arriving at the dot is the same route reversed.
+    const points = routeAround(port, dot, sideToPosition(port.side), exit, [
+      body,
+    ]);
+    if (selfIntersects(points)) continue;
+    let hits = 0;
+    for (let i = 1; i < points.length; i++)
+      if (segmentHitsRect(points[i - 1], points[i], body)) hits++;
+    const cost = hits * 100000 + points.length * 30 + routeLengthOf(points);
+    if (!best || cost < best.cost) best = { points, cost };
+  }
+  if (!best || best.points.length < 3) return undefined;
+  const bends = best.points.slice(1, -1);
+  return { ...wire, waypoints: dotIsSource ? bends.reverse() : bends };
+}
+
+function routeLengthOf(points: Pt[]) {
+  let length = 0;
+  for (let i = 1; i < points.length; i++)
+    length +=
+      Math.abs(points[i].x - points[i - 1].x) +
+      Math.abs(points[i].y - points[i - 1].y);
+  return length;
 }
