@@ -220,6 +220,13 @@ class DockerBackend:
                            '-v', f'{folder}:/work', '-w', '/work', IMAGE, 'gcc', '-std=c11', '-Wall',
                            '-Wextra', '-Werror', '-c', source, '-o', Path(source).stem + '.o'], 45)
 
+    async def run_c(self, folder: Path, sources: list[str]) -> tuple[int, str]:
+        """Compile `sources` into a host program and run it once in `folder` (software-in-the-loop check)."""
+        script = 'gcc -std=c11 -O1 -o sil ' + ' '.join(sources) + ' -lm && ./sil'
+        return await _run([*docker_argv(), 'run', '--rm', '--network=none', '--cap-drop=ALL',
+                           '--security-opt=no-new-privileges', '--memory=512m', '--pids-limit=64',
+                           '-v', f'{folder}:/work', '-w', '/work', IMAGE, 'sh', '-c', script], 90)
+
 
 def timeout_message() -> str:
     return ('OpenModelica exceeded the 120-second execution limit. Try a shorter duration or check '
@@ -419,6 +426,16 @@ class NativeBackend:
         return await _run([compiler, '-std=c11', '-Wall', '-Wextra', '-Werror', '-c', source, '-o',
                            Path(source).stem + '.o'], 45, cwd=folder)
 
+    async def run_c(self, folder: Path, sources: list[str]) -> tuple[int, str]:
+        compiler = self.gcc()
+        if compiler is None:
+            return 127, 'No C compiler was found for the verification. Install a C compiler (gcc or clang).'
+        program = folder/('sil.exe' if os.name == 'nt' else 'sil')
+        code, output = await _run([compiler, '-std=c11', '-O1', '-o', program.name, *sources, '-lm'], 60, cwd=folder)
+        if code:
+            return code, output
+        return await _run([str(program)], 60, cwd=folder)
+
 
 def _read(folder: Path, name: str) -> str:
     try:
@@ -520,6 +537,10 @@ async def compile_c(folder: Path, source: str) -> tuple[int, str]:
     return await (await select()).compile_c(folder, source)
 
 
+async def run_c(folder: Path, sources: list[str]) -> tuple[int, str]:
+    return await (await select()).run_c(folder, sources)
+
+
 async def prepare(progress=lambda message: None) -> dict:
     backend = await select()
     try:
@@ -529,5 +550,5 @@ async def prepare(progress=lambda message: None) -> dict:
     return await status()
 
 
-__all__ = ['EngineError', 'execute', 'available', 'status', 'prepare', 'compile_c', 'select',
+__all__ = ['EngineError', 'execute', 'available', 'status', 'prepare', 'compile_c', 'run_c', 'select',
            'DOCKER', 'NATIVE', 'ROOT', 'subprocess']

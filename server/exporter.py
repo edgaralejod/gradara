@@ -2,7 +2,7 @@ import json
 import re
 import zipfile
 from . import agent
-from .models import Definition, Project
+from .models import CAUSAL_DOMAINS, Definition, Project
 from .modelica import component_source
 from .paths import EXPORTS
 from . import engines
@@ -23,8 +23,11 @@ def timing(definition: Definition) -> dict:
 
 async def export_controller(project:Project,block_id:str,job_id:str):
     block = next((b for b in project.blocks if b.id==block_id),None)
-    if not block or not block.definition.controller:
-        raise ValueError('Choose a component marked as a controller.')
+    # A marked controller, or a custom signal block that the deterministic generator has no template for.
+    custom_signal = block is not None and block.definition.generated and all(
+        p.domain in CAUSAL_DOMAINS for p in block.definition.ports)
+    if not block or not (block.definition.controller or custom_signal):
+        raise ValueError('Choose a component marked as a controller, or a custom signal block.')
     check_definition(block.definition)
     boundary = {'projectName':project.name,'projectRevision':project.revision,'controller':block.model_dump(),'modelica':component_source(block.definition,'Controller'),'connections':[w.model_dump() for w in project.wires if block_id in (w.source,w.target)],'target':{'language':'C11','numeric':'double','interface':'initialization and one synchronous step; host supplies time and sample period',**timing(block.definition)}}
     prompt = '''Generate a self-contained C11 controller implementation from the supplied equations and parameter values. Return only JSON. Do not call tools or read files. Trust the requested behavior. Provide a header named gradara_controller.h and source named gradara_controller.c. The source must include "gradara_controller.h". Use structs for parameters, state, inputs and outputs, plus gradara_controller_init and gradara_controller_step. Initialize all state and expose parameters with documented defaults. Expose sample time explicitly and define whether time is an input. Keep consistent sample/update ordering. For continuous states, choose and document a discrete approximation. C source must compile with gcc -std=c11 -Wall -Wextra -Werror. Avoid unused parameters or cast to void. Use only math.h, stdint.h, stdbool.h, stddef.h, and the local header. No allocation, I/O, external files, or platform dependencies. Header uses an include guard and extern "C" guards for C++. Notes should include concise integration instructions, defaults and timing/discretization choices. Do not generate a main function.\nController package:\n'''+json.dumps(boundary)

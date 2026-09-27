@@ -38,12 +38,13 @@ A continuous controller such as **PID** or **Current PI** has `der()` states. It
 
 ## Export the controller to C
 
-1. Select **Position controller** on the canvas. It is marked as a controller, so no extra step is needed.
-2. Choose **Export**, then **Generate C controller**. When a model has several controllers, pick one in the **Controller** list first.
-3. Review `gradara_controller.h`, `gradara_controller.c`, and the notes in the preview; **Copy** copies the open tab.
-4. **Download C package** saves the header, source, the controller contract the generator received, and a README with the notes.
+1. Run the model once, so there is a run to verify against.
+2. Choose **Export**. Under **C code**, the **Unit** list already shows **Detected controller: Position controller**. Select the block first to pick it explicitly.
+3. The step defaults to the controller's 1 ms sample period. Review `controller.h`, `controller.c`, and `README.md` in the preview; **Copy** copies the open tab.
+4. **Verify against last run** compiles the code and replays the run's position request and measured angle through it at every step. The Discrete PID is sampled, so the C matches the simulated voltage command to rounding error.
+5. **Download .zip** saves the three files.
 
-The generator sees the sample period and the discrete states explicitly in its contract. The result is compiled with `gcc -std=c11 -Wall -Wextra -Werror` before it is offered. Generation uses the AI provider chosen in **Settings → AI**.
+The code comes from the Discrete PID's C template, not from an AI provider, so exporting twice gives identical files.
 
 ## Reference implementation and replay test
 
@@ -62,4 +63,4 @@ outputs->y =
 
 The replay test in [tests/test_exporter.py](../../tests/test_exporter.py) simulates this example in OpenModelica. At each of the 2001 sample instants it reads the reference and measured angle the solver's controller saw, and feeds them to the compiled C through a small harness. It then requires the C output to match the solver's controller output within 1e-6 V; the observed worst case is about 2e-13 V. The run covers the saturated interval, the step, and settling.
 
-What this proves: the reference C and the Modelica controller compute the same outputs from the same sampled inputs. What it does not prove: closed-loop behavior on real hardware, timing jitter or computation delay, fixed-point arithmetic, or that a newly *generated* export is equivalent. Compare a generated package against the reference, or replay it the same way, before relying on it.
+What this proves: the reference C and the Modelica controller compute the same outputs from the same sampled inputs. `tests/test_codegen.py` runs the same kind of replay for the generated code of this example and others, and the **Verify** button does it for your model. Neither proves closed-loop behavior on real hardware, timing jitter or computation delay, or fixed-point arithmetic.

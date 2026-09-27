@@ -64,7 +64,7 @@ The repository includes only the curated example templates. Personal models, Tra
 - Asynchronous OpenModelica simulation, cancellation, saved runs, plots, and complete CSV downloads. A Problems dock lists live model checks and block-mapped run diagnostics; click one to select the blocks involved.
 - Agent-created signal, electrical, rotational mechanical, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.
 - An Assistant that proposes checked edits to the open model and explains or fixes failed runs; every proposal is reviewed and applied as one undo step.
-- Modelica source export, portable project export, and agent-generated, compile-checked C11 for **one controller block**, with a code preview. The servo example ships a reviewed reference export that tests replay against the simulation.
+- Modelica source export, portable project export, and deterministic C11 for a controller: a subsystem or a set of signal blocks, with Tustin, backward, or forward Euler discretization, and a check that replays the last run through the compiled code.
 - Desktop installers with first-run engine setup, a native OpenModelica or container engine, and a choice of Gradara AI credits, your own OpenAI or Anthropic key, or no AI.
 
 Drawing, dragging, and routing stay in the workbench. The local FastAPI service saves project documents and supervises OpenModelica jobs, using a native OpenModelica install or the pinned container image. The authoring representation is currently **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.

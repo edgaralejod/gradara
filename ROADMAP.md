@@ -21,7 +21,7 @@ Done: the Apache-2.0 source is public, CI runs on GitHub, installers for Windows
 | Lint cleanup | Small groups of existing workspace, editor, and UI primitive findings. | The strict lint command passes without blanket rule suppression; interaction regressions are checked. |
 | Simulation settings | Solver/tolerance, output interval, initialization, and parameter sweeps. | Settings have useful defaults, are validated and recorded with each immutable run, and expose failures clearly. |
 | Result inspection | Multiple-run comparisons, dual cursors, frequency-domain views, independently scaled dual Y axes, and live streaming. | Remaining inspector gaps are closed without losing event pairs, linked X ranges, or browser-local plot preferences. |
-| Export cancellation cleanup | Process/container lifecycle in `server/exporter.py`. | Cancellation and timeout leave no orphan compilation process or container; failure remains visible. |
+| Export cancellation cleanup | Process/container lifecycle in `server/exporter.py` (the AI path for custom blocks). | Cancellation and timeout leave no orphan compilation process or container; failure remains visible. |
 | Model folders and organization | Build on the searchable My models / Examples / Trash browser. | Users can organize models into nested folders without changing document identity, physics, or example source files. |
 | Example-driven blocks | Add one useful electrical/mechanical/control block at a time. | Shared design, valid connector contract, documented assumptions, and a meaningful real simulation. |
 | Reusable component libraries | Validation status, saved custom definitions, and refinement review. | A component can be reused and revised without silently changing its existing instances or connections. |
@@ -62,7 +62,7 @@ Build reproducible 100- and 1,000-block interaction workloads and record frame t
 
 1. Design hierarchical subsystems with stable boundary ports, explicit controller selection, and document migrations.
 2. Define scalar/vector/bus and sample-clock semantics before enabling placeholders as executable blocks.
-3. Replay *generated* controller C against Modelica trajectories automatically after export. A hand-reviewed reference for the sampled servo controller is already replayed in tests; continuous controllers still rely on the generator's documented discretization, and closed-loop C co-simulation is not implemented.
+3. Close the loop in C verification: run the generated controller against the simulated plant (co-simulation) instead of replaying recorded plant signals. Add fixed-point formats and multi-rate task scheduling.
 4. Extend physical domains through tested Modelica components and examples; the current thermal domain identifier is not a full thermal library, and hydraulics/fluid support is not implemented.
 5. Add HDL only with explicit clock/reset, numeric, and latency contracts and toolchain validation.
 

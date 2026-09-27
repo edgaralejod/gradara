@@ -4,7 +4,7 @@ import os
 import uuid
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .platform_env import extend_path
@@ -313,6 +313,38 @@ async def export_download(export_id:str):
     path=EXPORTS/export_id/'gradara-controller.zip'
     if not path.exists(): raise HTTPException(404,'Export not found.')
     return FileResponse(path,media_type='application/zip',filename='gradara-controller.zip')
+
+
+from . import codegen as _codegen
+
+
+def _codegen_failure(exc: Exception) -> dict:
+    return {'ok': False, 'error': str(exc), 'blockIds': getattr(exc, 'block_ids', [])}
+
+
+@app.post('/api/codegen')
+async def generate_code(request: _codegen.CodegenRequest):
+    try:
+        generated = _codegen.generate(request.project, request.path, request.instanceId, request.blockIds, request.options)
+    except _codegen.CodegenError as exc:
+        return _codegen_failure(exc)
+    return {'ok': True, **_codegen.describe(generated)}
+
+@app.post('/api/codegen/archive')
+async def code_archive(request: _codegen.CodegenRequest):
+    try:
+        generated = _codegen.generate(request.project, request.path, request.instanceId, request.blockIds, request.options)
+    except _codegen.CodegenError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return Response(_codegen.archive(generated), media_type='application/zip',
+                    headers={'Content-Disposition': f'attachment; filename="{request.options.prefix}.zip"'})
+
+@app.post('/api/codegen/verify')
+async def verify_code(request: _codegen.CodegenRequest):
+    try:
+        return await _codegen.verify(request, RUNS, engines.run_c)
+    except _codegen.CodegenError as exc:
+        return _codegen_failure(exc)
 
 
 # ------------------------------------------------------------------ engine

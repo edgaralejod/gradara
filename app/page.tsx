@@ -2896,8 +2896,15 @@ function Workbench() {
         )}
         {exportOpen && (
           <ExportDialog
+            doc={doc}
+            path={scope}
             project={project}
-            selectedId={active?.id}
+            selectedIds={selectedIds}
+            runId={result?.id}
+            onShowBlocks={(ids) => {
+              setExportOpen(false);
+              selectBlocks(ids);
+            }}
             onClose={() => setExportOpen(false)}
           />
         )}
