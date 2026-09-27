@@ -84,6 +84,24 @@ export type Definition = {
   category?: LibraryCategoryId;
   keywords?: string[];
   modelica?: ModelicaWrapper;
+  /** A subsystem instance; its ports mirror the boundary blocks of `subsystem.ref`. */
+  subsystem?: { ref: string };
+  /** A boundary block inside a subsystem (kinds inport, outport, connport). */
+  boundary?: { side?: Port['side']; order: number };
+};
+/** A subsystem parameter that sets parameters of blocks inside it. */
+export type PromotedParameter = Parameter & {
+  targets: { blockId: string; parameterId: string }[];
+};
+/** The inside of a subsystem, stored once per document and shared by its instances. */
+export type SubsystemDefinition = {
+  id: string;
+  name: string;
+  blocks: Block[];
+  wires: Wire[];
+  junctions?: Junction[];
+  nets?: Net[];
+  parameters?: PromotedParameter[];
 };
 export type Block = {
   id: string;
@@ -126,7 +144,9 @@ export type Net = {
   logged?: boolean;
 };
 export type Project = {
-  version: 1;
+  /** 2 when the document has subsystems; version 1 documents are flat. */
+  version: 1 | 2;
+  subsystems?: SubsystemDefinition[];
   name: string;
   blocks: Block[];
   wires: Wire[];

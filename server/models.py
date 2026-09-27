@@ -57,6 +57,19 @@ class ModelicaWrapper(BaseModel):
         return values
 
 
+class SubsystemRef(BaseModel):
+    ref: str = Field(pattern=IDENTIFIER, max_length=80)
+
+
+class Boundary(BaseModel):
+    """Where the matching port sits on the outside of the subsystem block."""
+    side: Literal['left', 'right', 'top', 'bottom'] | None = None
+    order: float = 0
+
+
+BOUNDARY_KINDS = {'inport': 'input', 'outport': 'output', 'connport': 'physical'}
+
+
 class Definition(BaseModel):
     kind: str = Field(pattern=IDENTIFIER, max_length=80)
     name: str = Field(min_length=1, max_length=100)
@@ -72,6 +85,10 @@ class Definition(BaseModel):
     category: str = Field(default='', max_length=40)
     keywords: list[str] = Field(default_factory=list, max_length=24)
     modelica: ModelicaWrapper | None = None
+    # A subsystem instance: its ports come from the boundary blocks of `subsystem.ref`.
+    subsystem: 'SubsystemRef | None' = None
+    # A boundary block inside a subsystem (kinds inport, outport, connport).
+    boundary: 'Boundary | None' = None
 
     @field_validator('equations', 'declarations')
     @classmethod
@@ -163,20 +180,12 @@ class PlotGroup(BaseModel):
     series: list[str]
     labels: list[str] = Field(default_factory=list)
 
-class Project(BaseModel):
-    modelId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
-    exampleId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
-    description: str = Field(default="", max_length=2000)
-    annotations: list[Annotation] = Field(default_factory=list, max_length=100)
-    plots: list[PlotGroup] = Field(default_factory=list, max_length=30)
-    version: Literal[1] = 1
-    name: str = Field(min_length=1, max_length=120)
+class Diagram(BaseModel):
+    """One sheet: the root model or the inside of a subsystem."""
     blocks: list[Block] = Field(max_length=1000)
     wires: list[Wire] = Field(max_length=3000)
     junctions: list[Junction] = Field(default_factory=list, max_length=2000)
     nets: list[Net] | None = Field(default=None, max_length=3000)
-    duration: float = Field(gt=0, le=86400, allow_inf_nan=False)
-    revision: int = Field(ge=0)
 
     @model_validator(mode='after')
     def structure(self):
@@ -264,6 +273,41 @@ class Project(BaseModel):
                 if net.label and net.label.wireId not in net.wireIds:
                     raise ValueError('A net label must be attached to a wire in that net.')
         return self
+
+class PromotedTarget(BaseModel):
+    blockId: str = Field(pattern=IDENTIFIER, max_length=80)
+    parameterId: str = Field(pattern=IDENTIFIER, max_length=60)
+
+
+class PromotedParameter(Parameter):
+    """A parameter of the subsystem block that sets inner block parameters."""
+    targets: list[PromotedTarget] = Field(min_length=1, max_length=20)
+
+
+class Subsystem(Diagram):
+    id: str = Field(pattern=IDENTIFIER, max_length=80)
+    name: str = Field(min_length=1, max_length=120)
+    parameters: list[PromotedParameter] = Field(default_factory=list, max_length=30)
+
+
+class Project(Diagram):
+    modelId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
+    exampleId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
+    description: str = Field(default="", max_length=2000)
+    annotations: list[Annotation] = Field(default_factory=list, max_length=100)
+    plots: list[PlotGroup] = Field(default_factory=list, max_length=30)
+    version: Literal[1, 2] = 1
+    name: str = Field(min_length=1, max_length=120)
+    duration: float = Field(gt=0, le=86400, allow_inf_nan=False)
+    revision: int = Field(ge=0)
+    subsystems: list[Subsystem] | None = Field(default=None, max_length=500)
+
+    @model_validator(mode='after')
+    def hierarchy(self):
+        from .hierarchy import check_hierarchy
+        check_hierarchy(self)
+        return self
+
 
 def net_components(project: 'Project') -> list[list[tuple[str, str]]]:
     taps = {j.id for j in project.junctions}

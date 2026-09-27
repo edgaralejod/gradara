@@ -1,0 +1,116 @@
+# SPDX-License-Identifier: Apache-2.0
+"""Subsystems: a block whose inside is another diagram of the same document.
+
+A subsystem definition is stored once in `Project.subsystems`; instance blocks
+refer to it with `definition.subsystem.ref`. Boundary blocks inside the
+definition (inport, outport, connport) become the instance's ports, keyed by the
+boundary block's ID. This module checks that structure; `modelica.py` emits each
+used definition as a nested Modelica model.
+"""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Iterator
+
+from .models import BOUNDARY_KINDS, Port
+
+if TYPE_CHECKING:
+    from .models import Block, Diagram, Project, Subsystem
+
+
+def boundary_blocks(diagram: 'Diagram') -> list['Block']:
+    ports = [b for b in diagram.blocks if b.definition.kind in BOUNDARY_KINDS and b.definition.boundary is not None]
+    return sorted(ports, key=lambda b: (b.definition.boundary.order, b.position.y, b.id))
+
+
+def instance_ports(subsystem: 'Subsystem') -> list[Port]:
+    """The ports an instance of `subsystem` exposes, in boundary order."""
+    ports = []
+    for block in boundary_blocks(subsystem):
+        inner = block.definition.ports[0]
+        ports.append(Port(id=block.id, name=block.definition.name, direction=BOUNDARY_KINDS[block.definition.kind],
+                          domain=inner.domain, unit=inner.unit, side=block.definition.boundary.side))
+    return ports
+
+
+def diagrams(project: 'Project') -> Iterator[tuple[str | None, 'Diagram']]:
+    yield None, project
+    for subsystem in (project.subsystems or []):
+        yield subsystem.id, subsystem
+
+
+def check_hierarchy(project: 'Project') -> None:
+    subsystems = {s.id: s for s in (project.subsystems or [])}
+    if len(subsystems) != len(project.subsystems or []):
+        raise ValueError('Subsystem identifiers must be unique.')
+    if project.subsystems and project.version != 2:
+        raise ValueError('Documents with subsystems use format version 2.')
+    uses: dict[str, set[str]] = {sid: set() for sid in subsystems}
+    for owner, diagram in diagrams(project):
+        for block in diagram.blocks:
+            definition = block.definition
+            if definition.kind in BOUNDARY_KINDS and definition.boundary is not None:
+                if owner is None:
+                    raise ValueError('Subsystem ports belong inside a subsystem, not on the top level.')
+                expected = {'inport': 'output', 'outport': 'input', 'connport': 'physical'}[definition.kind]
+                if len(definition.ports) != 1 or definition.ports[0].direction != expected:
+                    raise ValueError(f'Subsystem port {definition.name} must have a single {expected} terminal.')
+            if definition.subsystem is None:
+                continue
+            ref = definition.subsystem.ref
+            if ref not in subsystems:
+                raise ValueError(f'{definition.name} refers to a missing subsystem.')
+            if owner is not None:
+                uses[owner].add(ref)
+            expected = [(p.id, p.direction, p.domain) for p in instance_ports(subsystems[ref])]
+            actual = [(p.id, p.direction, p.domain) for p in definition.ports]
+            if sorted(expected) != sorted(actual):
+                raise ValueError(f'{definition.name} is out of date with its subsystem ports.')
+            promoted = sorted(p.id for p in subsystems[ref].parameters)
+            if sorted(p.id for p in definition.parameters) != promoted:
+                raise ValueError(f'{definition.name} is out of date with its subsystem parameters.')
+    for subsystem in (project.subsystems or []):
+        inner = {b.id: b for b in subsystem.blocks}
+        for parameter in subsystem.parameters:
+            for target in parameter.targets:
+                block = inner.get(target.blockId)
+                if block is None or not any(p.id == target.parameterId for p in block.definition.parameters):
+                    raise ValueError(f'{subsystem.name}.{parameter.name} sets a parameter that does not exist.')
+    # A subsystem must not contain itself, directly or through others.
+    state: dict[str, int] = {}
+
+    def visit(sid: str):
+        if state.get(sid) == 1:
+            raise ValueError('A subsystem cannot contain itself.')
+        if state.get(sid) == 2:
+            return
+        state[sid] = 1
+        for child in uses[sid]:
+            visit(child)
+        state[sid] = 2
+
+    for sid in subsystems:
+        visit(sid)
+
+
+def all_blocks(project: 'Project') -> Iterator['Block']:
+    """Every block of every diagram once (for checks that do not depend on instances)."""
+    for _, diagram in diagrams(project):
+        yield from diagram.blocks
+
+
+def instances(project: 'Project') -> Iterator[tuple[str, str, 'Block', str]]:
+    """(variable prefix, readable prefix, block, top-level block ID) for every block instance reachable from the top.
+
+    A block inside instance `drive` of a subsystem has variable prefix `drive.` and
+    readable prefix `Drive › `; the top-level ID lets results select the instance.
+    """
+    by_id = {s.id: s for s in (project.subsystems or [])}
+
+    def walk(diagram, prefix: str, label: str, top: str | None):
+        for block in diagram.blocks:
+            owner = top or block.id
+            yield prefix, label, block, owner
+            ref = block.definition.subsystem.ref if block.definition.subsystem else None
+            if ref in by_id:
+                yield from walk(by_id[ref], f'{prefix}{block.id}.', f'{label}{block.definition.name} › ', owner)
+    yield from walk(project, '', '', None)

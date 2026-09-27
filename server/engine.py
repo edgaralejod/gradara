@@ -3,6 +3,7 @@ import json
 import math
 from pathlib import Path
 import time
+from .hierarchy import all_blocks, instances
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
 from .runtime import IMAGE, LEGACY_IMAGE
@@ -35,7 +36,7 @@ def run_failure(message: str, block_id: str | None = None) -> SimulationFailure:
 
 async def simulate(project: Project, job_id: str):
     validate_simulation(project)
-    for block in project.blocks:
+    for block in all_blocks(project):
         try:
             check_definition(block.definition, block.definition.name)
         except UnsafeDefinition as exc:
@@ -75,18 +76,18 @@ async def run(project: Project, job_id: str, folder: Path):
     # and final values inside the requested interval; retain the raw CSV.
     rows = [row for row in rows if float(row['time']) <= project.duration + max(1e-12, project.duration * 1e-12)]
     outputs = []
-    for block in project.blocks:
+    for prefix, label, block, owner in instances(project):
         definition = block.definition
         candidates = [(p.id, p.name, p.unit) for p in definition.ports if p.direction == 'output' or (definition.kind in {'scope', 'display'} and p.direction == 'input')]
         if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
         if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
-        for variable,label,unit in candidates:
-            key = f'{block.id}.{variable}'
+        for variable,label_,unit in candidates:
+            key = f'{prefix}{block.id}.{variable}'
             if key in rows[0]:
                 values = [float(row[key]) for row in rows]
                 if not all(math.isfinite(value) for value in values):
-                    raise run_failure(f'{definition.name}.{label} contains non-finite results.', block.id)
-                outputs.append({'key':key,'name':f'{definition.name}.{label}', 'unit':unit,'blockId':block.id,'values':values})
+                    raise run_failure(f'{label}{definition.name}.{label_} contains non-finite results.', owner)
+                outputs.append({'key':key,'name':f'{label}{definition.name}.{label_}', 'unit':unit,'blockId':owner,'values':values})
     from .logging_signals import logged_signals
     for log in logged_signals(project):
         key = log['key']

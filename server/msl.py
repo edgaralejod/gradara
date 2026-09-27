@@ -66,11 +66,16 @@ def check(definition: Definition) -> None:
             raise ValueError(f'{definition.name}: connector {name} is conditional; enable it with a use… modifier.')
 
 
-def instance(definition: Definition, name: str) -> str:
-    """One component declaration, with parameter values substituted into the modifiers."""
+def instance(definition: Definition, name: str, overrides: dict[str, str] | None = None) -> str:
+    """One component declaration, with parameter values substituted into the modifiers.
+
+    `overrides` replaces a parameter's value with an expression, such as a promoted
+    subsystem parameter.
+    """
     check(definition)
     wrapper = definition.modelica
     values = {p.id: f'{p.value:.16g}' for p in definition.parameters}
+    values.update(overrides or {})
 
     def value(expression: str) -> str:
         return IDENT.sub(lambda m: f'({values[m.group(0)]})' if m.group(0) in values else m.group(0), expression)

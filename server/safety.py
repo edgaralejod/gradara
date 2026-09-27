@@ -46,5 +46,6 @@ def check_definition(definition: Definition, label: str | None = None) -> None:
 
 
 def check_project(project: Project) -> None:
-    for block in project.blocks:
+    from .hierarchy import all_blocks
+    for block in all_blocks(project):
         check_definition(block.definition, block.definition.name)

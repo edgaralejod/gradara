@@ -53,9 +53,13 @@ def nets_of(project: Project, wire_ids: list[str]) -> list[str]:
 
 
 def validate_simulation(project: Project):
-    connections = flatten_connects(project)
-    connected = {(a, b) for a, b, _, _ in connections} | {(c, d) for _, _, c, d in connections}
-    missing = [(b, p) for b in project.blocks for p in b.definition.ports if p.direction == 'input' and (b.id, p.id) not in connected]
+    from .hierarchy import diagrams
+    missing = []
+    for _, diagram in diagrams(project):
+        connections = flatten_connects(diagram)
+        connected = {(a, b) for a, b, _, _ in connections} | {(c, d) for _, _, c, d in connections}
+        missing += [(b, p) for b in diagram.blocks for p in b.definition.ports
+                    if p.direction == 'input' and (b.id, p.id) not in connected]
     if missing:
         names = [f'{b.definition.name}.{p.name}' for b, p in missing]
         raise SimulationFailure(
@@ -64,7 +68,9 @@ def validate_simulation(project: Project):
                         ports=[PortRef(blockId=b.id, portId=p.id)],
                         hint='Connect a signal source to this input, or remove the block.')
              for name, (b, p) in zip(names, missing)])
-    unfinished = [b for b in project.blocks if not b.definition.generated and b.definition.kind in {'mux', 'demux', 'subsystem'}]
+    unfinished = [b for _, diagram in diagrams(project) for b in diagram.blocks
+                  if not b.definition.generated and b.definition.subsystem is None
+                  and b.definition.kind in {'mux', 'demux', 'subsystem'}]
     if unfinished:
         raise SimulationFailure(
             'These blocks do not have their full simulation behavior yet: ' + ', '.join(b.definition.name for b in unfinished)
