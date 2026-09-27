@@ -34,6 +34,7 @@ This is an evolving local API, without a versioned compatibility promise or auth
 | `POST /components/generate` | `{prompt, existing?}` | Queues component generation; `existing` is an optional Definition to refine. |
 | `POST /models/generate` | `{prompt, catalog}` | Queues full-model generation; poll the job of kind `model`. |
 | `POST /models/edit` | `{prompt, project, catalog, selection?, verify?, context?}` | Queues an edit of the open model (job kind `edit`, with `progress`). The result is a proposal `{project, summary, assumptions, changes, generated, verified, diagnostics, samples, provider}`; nothing is saved. See [model editing](architecture/EXECUTION.md#model-editing). |
+| `POST /diagnose` | `{project, diagnostics, runId?, catalog, question?, proposeFix}` | Queues a diagnosis (job kind `diagnose`, with `progress`). The result is `{diagnosis, proposal, provider, fixError?}`; `proposal` has the model-edit shape when a fix was requested and built. See [diagnosis](architecture/EXECUTION.md#diagnosis). |
 | `POST /exports` | `{project, blockId}` | Queues C generation for one controller block. The job result is `{id, blockId, header, source, notes, compiled, compiler}`. |
 | `GET /exports/{exportId}/download` | Export ID | ZIP with C source/header, original contract, and integration notes. |
 | `GET /engine` | None | Engine status: `backend` (`native` or `docker`), `preference`, `ready`, `label`, `detail`, suggested `actions`, `version`. |
@@ -55,7 +56,7 @@ Normal responses currently use HTTP 200, including accepted jobs. Save conflicts
 {"id":"opaque-job-id","kind":"simulation","status":"queued"}
 ```
 
-`kind` is `simulation`, `component`, `model`, `edit`, or `export`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
+`kind` is `simulation`, `component`, `model`, `edit`, `diagnose`, or `export`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
 
 ```json
 {"id":"d1","severity":"error","source":"runtime","message":"The model has an algebraic loop the solver cannot resolve.",

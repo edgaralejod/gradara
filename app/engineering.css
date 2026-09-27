@@ -2675,4 +2675,5 @@
 .proposal-card.is-applied, .proposal-card.is-discarded { opacity: .78; }
 .proposal-card.is-applied { border-color: #b9d6c4; }
 .diagnosis-note { margin: 0 10px 8px; color: #637987; font-size: var(--text-micro); }
+.diagnosis-note.is-error { color: #7d3a3c; }
 @media (max-width: 700px) { .diagnostics-dock { display: none; } }

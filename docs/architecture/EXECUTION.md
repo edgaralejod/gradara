@@ -55,6 +55,12 @@ The pipeline has two attempts. A plan that cannot be applied, or an edited model
 
 The client applies a proposal with `mergeProposal` (`lib/gradara/proposal.ts`). It keeps its own objects for untouched blocks and wires, so routes and the absent-versus-empty waypoint distinction survive, and takes definitions, new blocks (snapped at standard size), new wires (without routes), removals, the name, and the stop time from the proposal. The result goes through one `commit`, which is one undo step. A proposal made for an earlier `revision` cannot be applied.
 
+## Diagnosis
+
+`POST /api/diagnose` (`server/diagnose_agent.py`) explains problems and can propose a fix. The request carries the `Project`, 1–50 `Diagnostic` entries (live checks, the last run, or one row), an optional `runId`, the UI catalog, an optional question, and `proposeFix`. The run's emitted `model.mo` and saved solver text are added only when the run ID is alphanumeric and its `project.json` has the same `modelId` as the request; otherwise the run ID is ignored.
+
+Stage 1 asks for a `Diagnosis`: a summary, causes (diagnostic IDs, block IDs, explanation), `fixable`, up to eight manual steps, and an `editPrompt` when a fix is possible. Unknown block and diagnostic IDs are removed. Stage 2 runs only when `proposeFix` is set and the diagnosis is fixable. It calls the model-editing pipeline with the edit prompt, the cause blocks as the selection, and the problems as `context`, with verification on. The result is `{diagnosis, proposal, provider}`, plus `fixError` when a requested fix could not be built. The job kind is `diagnose`. The workbench only starts a diagnosis when the user clicks Explain, Fix with AI, or a row's ask button.
+
 ## Controller C export
 
 `server/exporter.py` requires a selected block whose definition has `controller: true`. It builds a package with project name/revision, the block definition and values, emitted controller source, adjacent connections, and an explicit C11 double-precision init/step target. The target also states the detected sample-period parameter (`samplePeriod` or `Ts`, with value and unit), the `discrete` states named in the declarations, and whether the equations are sampled, so the prompt does not have to infer timing.

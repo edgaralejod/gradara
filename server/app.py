@@ -19,6 +19,7 @@ from .diagnostics import SimulationFailure
 from .agent import generate_component
 from .model_agent import ModelGenerateRequest, generate_model
 from .model_edit import ModelEditRequest, edit_model
+from .diagnose_agent import DiagnoseRequest, diagnose
 from .paths import DATA, EXAMPLES, STATIC
 from .llm import dispatch, gradara as gradara_ai
 from .llm.providers import ProviderError, verify_key
@@ -289,6 +290,10 @@ async def generate_full_model(request: ModelGenerateRequest):
 @app.post('/api/models/edit')
 async def edit_open_model(request: ModelEditRequest):
     return await start_job('edit', lambda i: edit_model(request, i, lambda message: JOBS[i].update(progress=message)))
+
+@app.post('/api/diagnose')
+async def diagnose_problems(request: DiagnoseRequest):
+    return await start_job('diagnose', lambda i: diagnose(request, i, lambda message: JOBS[i].update(progress=message)))
 
 @app.post('/api/components/generate')
 async def generate(request:GenerateRequest):

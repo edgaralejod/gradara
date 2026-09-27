@@ -26,6 +26,7 @@ import {
   Activity,
   Play,
   Sparkles,
+  Stethoscope,
   Undo2,
   Redo2,
   ChevronRight,
@@ -161,6 +162,7 @@ import AssistantPanel, {
   useAssistant,
 } from '@/components/gradara/assistant-panel';
 import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
+import { useAiLabel } from '@/lib/gradara/ai';
 import {
   semanticSignature,
   setLabelOffset,
@@ -518,6 +520,38 @@ function Workbench() {
       prompt,
       { project: current, catalog: library, selection: blockIds },
       names.length ? `Selection · ${names.join(', ')}` : 'Whole model',
+    );
+  };
+  const explainLabel = useAiLabel('diagnose');
+  const fixLabel = useAiLabel('fix');
+  const askableProblems = problemSections
+    .filter((s) => !s.stale)
+    .flatMap((s) => s.items)
+    .filter((d) => d.severity !== 'info');
+  const askAi = (diagnostics: Diagnostic[], proposeFix: boolean) => {
+    if (!diagnostics.length || assistant.busy) return;
+    const current = projectRef.current;
+    const runId =
+      runFailure &&
+      runFailure.modelId === current.modelId &&
+      runFailure.signature === semanticSignature(current)
+        ? runFailure.runId
+        : undefined;
+    updateDock({ open: true, tab: 'assistant' });
+    void assistant.diagnose(
+      {
+        project: current,
+        diagnostics: diagnostics.slice(0, 50),
+        runId,
+        catalog: library,
+        proposeFix,
+      },
+      diagnostics.length === 1
+        ? `${proposeFix ? 'Fix' : 'Explain'}: ${diagnostics[0].message}`
+        : proposeFix
+          ? `Fix ${diagnostics.length} problems`
+          : `Explain ${diagnostics.length} problems`,
+      proposeFix ? 'Fix with AI' : 'Explain',
     );
   };
   const applyProposal = (proposal: EditProposal, baseRevision: number) => {
@@ -1958,10 +1992,35 @@ function Workbench() {
               counts={problemCounts}
               actions={
                 dock.tab === 'problems' ? (
-                  <button type="button" onClick={copyProblems}>
-                    <Copy size={12} />
-                    Copy
-                  </button>
+                  <>
+                    {askableProblems.length > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={!!assistant.busy}
+                          title={explainLabel || 'Explain these problems'}
+                          onClick={() => askAi(askableProblems, false)}
+                        >
+                          <Stethoscope size={12} />
+                          Explain
+                        </button>
+                        <button
+                          type="button"
+                          className="is-primary"
+                          disabled={!!assistant.busy}
+                          title={fixLabel || 'Propose a checked fix'}
+                          onClick={() => askAi(askableProblems, true)}
+                        >
+                          <Sparkles size={12} />
+                          Fix with AI
+                        </button>
+                      </>
+                    )}
+                    <button type="button" onClick={copyProblems}>
+                      <Copy size={12} />
+                      Copy
+                    </button>
+                  </>
                 ) : undefined
               }
               problems={
@@ -1969,6 +2028,7 @@ function Workbench() {
                   project={project}
                   sections={problemSections}
                   onSelect={selectProblem}
+                  onAsk={(d) => askAi([d], false)}
                   empty={
                     project.blocks.length
                       ? 'No problems. Run the model to check it in OpenModelica.'

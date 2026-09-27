@@ -26,6 +26,8 @@ export type DiagnoseResult = {
   proposal: EditProposal | null;
   provider: string;
   credits?: number;
+  /** Set when a fix was requested but the edit could not be built. */
+  fixError?: string;
 };
 
 type Entry =
@@ -425,6 +427,11 @@ function DiagnosisCard({
       {!diagnosis.fixable && (
         <p className="diagnosis-note">
           The assistant did not find a safe automatic fix for this problem.
+        </p>
+      )}
+      {result.fixError && (
+        <p className="diagnosis-note is-error">
+          A fix was not proposed: {result.fixError}
         </p>
       )}
     </article>
