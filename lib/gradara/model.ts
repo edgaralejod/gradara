@@ -178,7 +178,10 @@ export type Net = {
   anchor: string;
   wireIds: string[];
   label?: { wireId: string; fraction: number; side: -1 | 1 };
+  /** Hides the label even when the net has a custom name. */
   hidden?: boolean;
+  /** Shows the label of a net that only has its automatic name. */
+  showName?: boolean;
   /** Capture this signal/control net on the next run; physical nets require sensors. */
   logged?: boolean;
 };

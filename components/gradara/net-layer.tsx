@@ -48,6 +48,8 @@ import {
   labelPosition,
   nearestLabelAnchor,
   setNetLabel,
+  setNetLabelShown,
+  netLabelShown,
   type LabelAnchor,
 } from '@/lib/gradara/net-label';
 import NetLabel from './net-label';
@@ -965,7 +967,7 @@ export default function NetLayer(baseProps: Props) {
         </svg>
         {!drawing &&
           (document.nets ?? [])
-            .filter((net) => !net.hidden || editingNet?.id === net.id)
+            .filter((net) => netLabelShown(net) || editingNet?.id === net.id)
             .map((net) => (
               <NetLabel
                 key={net.id}
@@ -989,13 +991,7 @@ export default function NetLayer(baseProps: Props) {
                   let next = renameNet(original, net.id, name);
                   if (name.trim()) {
                     next = setNetLabel(next, net.id, anchor);
-                    if (net.hidden)
-                      next = {
-                        ...next,
-                        nets: next.nets?.map((n) =>
-                          n.id === net.id ? { ...n, hidden: false } : n,
-                        ),
-                      };
+                    next = setNetLabelShown(next, net.id, true);
                   }
                   if (next !== original) latest.current.onCommit(next);
                 }}

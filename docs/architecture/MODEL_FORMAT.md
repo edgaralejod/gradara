@@ -91,7 +91,8 @@ A net describes one connected component of wires:
 - `name`: optional user name; otherwise a readable name is derived from the anchor connection.
 - `aliases`: retained names when named physical nets merge.
 - `label`: wire ID, fractional position, and side for a displayed label.
-- `hidden`: display preference.
+- `hidden`: hides the label even when the net has a custom name.
+- `showName`: shows the label of a net that only has its automatic name. Labels are off by default: a net shows its label when it has a custom name or `showName`, and not when `hidden` is true.
 
 Each wire belongs to exactly one net in documents with a net registry. Each net must be connected and contain its anchor. Signal nets permit at most one output driver, including connections through junctions; physical nets join compatible physical ports without inventing a signal source. Incomplete signal nets can be saved but fail simulation preflight when required inputs lack a source.
 

@@ -208,6 +208,10 @@ def test_net_metadata_roundtrips_and_cannot_affect_compilation_or_result_cache()
     restored.nets[0].name = 'ω / measured current'
     restored.nets[0].hidden = True
     assert project_key(restored) == project_key(project())
+    assert 'showName' not in restored.model_dump(exclude_none=True)['nets'][0]
+    restored.nets[0].showName = True
+    assert project_key(restored) == project_key(project())
+    assert Project.model_validate_json(restored.model_dump_json(exclude_none=True)).nets[0].showName is True
 
 
 @pytest.mark.parametrize('mutation, message', [

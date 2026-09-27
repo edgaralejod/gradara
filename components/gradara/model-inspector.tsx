@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { Box, Check, Copy, Focus, Network, Search } from 'lucide-react';
 import { domainColors, type Project } from '@/lib/gradara/model';
 import type { NetDescription } from '@/lib/gradara/net-registry';
+import { netLabelShown } from '@/lib/gradara/net-label';
 import type { ModelSelection } from '@/lib/gradara/selection';
 import { Button } from '@/components/ui/button';
 
@@ -235,14 +236,14 @@ export function NetProperties({
         <label>
           <input
             type="checkbox"
-            checked={!net.hidden}
+            checked={netLabelShown(net)}
             onChange={(e) => onVisibility(e.target.checked)}
           />
           Show name on diagram
         </label>
         <p className="size-hint">
-          Double-click a wire to name it. Drag its label along any branch or to
-          either side.
+          Names are hidden until you name a wire or turn this on. Double-click
+          a wire to name it; drag its label along any branch or to either side.
         </p>
         {net.label && (
           <button className="text-action" onClick={onResetLabel}>

@@ -110,6 +110,29 @@ export function nearestLabelAnchor(
   return best?.anchor;
 }
 
+/**
+ * Labels are off by default: a net shows its name when it has a custom name or
+ * the user turned its label on, and not when the user turned it off.
+ */
+export function netLabelShown(net: Net) {
+  return !net.hidden && (!!net.name || !!net.showName);
+}
+
+export function setNetLabelShown(project: Project, id: string, show: boolean) {
+  const net = project.nets?.find((n) => n.id === id);
+  if (!net || netLabelShown(net) === show) return project;
+  return {
+    ...project,
+    nets: project.nets!.map((n) => {
+      if (n.id !== id) return n;
+      const { showName: _, ...rest } = n;
+      return show
+        ? { ...rest, hidden: false, ...(n.name ? {} : { showName: true }) }
+        : { ...rest, hidden: true };
+    }),
+  };
+}
+
 export function setNetLabel(project: Project, id: string, label?: LabelAnchor) {
   const net = project.nets?.find((n) => n.id === id);
   if (!net || JSON.stringify(net.label) === JSON.stringify(label))

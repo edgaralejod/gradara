@@ -5,6 +5,7 @@ import type { Net, Project } from '@/lib/gradara/model';
 import { netDisplayName } from '@/lib/gradara/names';
 import {
   labelPosition,
+  netLabelShown,
   nearestLabelAnchor,
   type LabelAnchor,
 } from '@/lib/gradara/net-label';
@@ -71,7 +72,7 @@ export default function NetLabel(props: Props) {
         if (drag.current) setPreview(drag.current.anchor);
       });
   };
-  if (!position || (!editing && net.hidden)) return null;
+  if (!position || (!editing && !netLabelShown(net))) return null;
   const style = {
     left: position.x,
     top: position.y,
