@@ -7,6 +7,11 @@ The gear button opens **Settings**:
 - **Engine** shows whether simulation is ready and walks through one-time setup: OpenModelica and its standard library on Windows and Linux, or a container runtime and engine image on macOS. Automatic selection prefers a native install.
 - **AI** chooses the provider for AI features: Gradara AI (sign in, prepaid credits), your own OpenAI or Anthropic API key, the Codex CLI, or Off. Signed-in accounts show the credit balance, prices, and credit packs.
 - **Privacy & data** summarizes what stays on your computer and what AI requests send. See [privacy](PRIVACY.md).
+- **Updates** shows the installed version and lets you check for a new one.
+
+### Updates
+
+The desktop app checks for a new version at launch and every four hours, and downloads it in the background while you work (a progress pill shows in the header). When it is ready, the header shows **Restart to update**: your models are already saved, so restarting installs it. If you don't restart, it installs the next time you quit. **Help → Check for Updates** checks right away. The Linux .deb package can't replace itself without your password, so it shows **Update available** and opens the download page instead. Source checkouts update with `git pull`.
 
 ## Create, save, and share
 
