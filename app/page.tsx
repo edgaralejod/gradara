@@ -445,7 +445,9 @@ function Workbench() {
       sections.push({
         id: 'run',
         title: 'Last run',
-        note: stale ? 'stale · model changed since this run' : 'from the last run',
+        note: stale
+          ? 'stale · model changed since this run'
+          : 'from the last run',
         stale,
         items,
       });
@@ -461,7 +463,14 @@ function Workbench() {
       });
     }
     return sections;
-  }, [liveProblems, runFailure, result, signature, resultSignature, project.modelId]);
+  }, [
+    liveProblems,
+    runFailure,
+    result,
+    signature,
+    resultSignature,
+    project.modelId,
+  ]);
   const problemCounts = useMemo(
     () =>
       countBySeverity(
@@ -561,10 +570,11 @@ function Workbench() {
       notify('The model changed since this proposal. Ask again.');
       return false;
     }
-    const { project: next, added, changed } = mergeProposal(
-      current,
-      proposal.project,
-    );
+    const {
+      project: next,
+      added,
+      changed,
+    } = mergeProposal(current, proposal.project);
     commit(next);
     const touched = [...added, ...changed].filter((id) =>
       projectRef.current.blocks.some((b) => b.id === id),
@@ -821,7 +831,9 @@ function Workbench() {
       });
       activateModel(restoreDocument(saved, false));
       setBrowserSection(null);
-      notify('Generated model saved. Run it to view its results in Data Inspector.');
+      notify(
+        'Generated model saved. Run it to view its results in Data Inspector.',
+      );
     } finally {
       endTransition();
     }
@@ -1239,9 +1251,15 @@ function Workbench() {
       } else if (command && e.key.toLowerCase() === 'j') {
         e.preventDefault();
         toggleDockRef.current();
-      } else if (e.key.toLowerCase() === 'r' && !command && !e.altKey && selectionRef.current.blockIds.length) {
+      } else if (
+        e.key.toLowerCase() === 'r' &&
+        !command &&
+        !e.altKey &&
+        selectionRef.current.blockIds.length
+      ) {
         e.preventDefault();
-        if (!e.repeat) commit((p) => rotateBlocks(p, selectionRef.current.blockIds));
+        if (!e.repeat)
+          commit((p) => rotateBlocks(p, selectionRef.current.blockIds));
       } else if (e.key.toLowerCase() === 'a' && !command && !composer) {
         e.preventDefault();
         startComposer();
@@ -1735,244 +1753,253 @@ function Workbench() {
                     ),
                   });
                 }}
-              onDragOver={(e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'copy';
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const kind =
-                  e.dataTransfer.getData('application/gradara-component') ||
-                  e.dataTransfer.getData('application/flux-component');
-                const d =
-                  generatedEntries.find((entry) => entry.id === kind)?.definition ??
-                  library.find((d) => d.kind === kind);
-                if (d)
-                  addComponent(
-                    d,
-                    flow.screenToFlowPosition({ x: e.clientX, y: e.clientY }),
-                  );
-              }}
-            >
-              {ready &&
-                project.blocks.length === 0 &&
-                !composer &&
-                !inserter && (
-                  <div
-                    className="empty-model"
-                    role="region"
-                    aria-label="Empty model"
-                  >
-                    <span className="empty-model-icon">
-                      <FilePlus2 size={28} />
-                    </span>
-                    <h1>Build your first connection</h1>
-                    <p>
-                      Add a source, an operation, or a physical component.
-                      <br />
-                      Connect its ports, then run your model.
-                    </p>
-                    <div>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setLibraryOpen(true);
-                          requestAnimationFrame(() =>
-                            document.getElementById('library-search')?.focus(),
-                          );
-                        }}
-                      >
-                        <FolderOpen size={15} />
-                        Browse blocks
-                      </Button>
-                      <Button variant="outline" onClick={startComposer}>
-                        <Sparkles size={15} />
-                        Ask agent
-                      </Button>
-                    </div>
-                    <button
-                      className="empty-model-examples"
-                      onClick={() => void openBrowser('examples')}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'copy';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const kind =
+                    e.dataTransfer.getData('application/gradara-component') ||
+                    e.dataTransfer.getData('application/flux-component');
+                  const d =
+                    generatedEntries.find((entry) => entry.id === kind)
+                      ?.definition ?? library.find((d) => d.kind === kind);
+                  if (d)
+                    addComponent(
+                      d,
+                      flow.screenToFlowPosition({ x: e.clientX, y: e.clientY }),
+                    );
+                }}
+              >
+                {ready &&
+                  project.blocks.length === 0 &&
+                  !composer &&
+                  !inserter && (
+                    <div
+                      className="empty-model"
+                      role="region"
+                      aria-label="Empty model"
                     >
-                      Or start from an example
-                    </button>
+                      <span className="empty-model-icon">
+                        <FilePlus2 size={28} />
+                      </span>
+                      <h1>Build your first connection</h1>
+                      <p>
+                        Add a source, an operation, or a physical component.
+                        <br />
+                        Connect its ports, then run your model.
+                      </p>
+                      <div>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setLibraryOpen(true);
+                            requestAnimationFrame(() =>
+                              document
+                                .getElementById('library-search')
+                                ?.focus(),
+                            );
+                          }}
+                        >
+                          <FolderOpen size={15} />
+                          Browse blocks
+                        </Button>
+                        <Button variant="outline" onClick={startComposer}>
+                          <Sparkles size={15} />
+                          Ask agent
+                        </Button>
+                      </div>
+                      <button
+                        className="empty-model-examples"
+                        onClick={() => void openBrowser('examples')}
+                      >
+                        Or start from an example
+                      </button>
+                    </div>
+                  )}
+                {ready && (
+                  <ModelCanvas
+                    key={project.modelId ?? 'workspace'}
+                    blocks={project.blocks}
+                    project={project}
+                    selection={selection}
+                    onCopyDrop={({ project: next, selection: selected }) => {
+                      commit(next);
+                      select(selected);
+                    }}
+                    selectedIds={selectedIds}
+                    onSelectedIdsChange={(ids) =>
+                      setSelectedIds((prev) =>
+                        prev.length === ids.length &&
+                        prev.every((id, i) => id === ids[i])
+                          ? prev
+                          : ids,
+                      )
+                    }
+                    onLayout={updateLayout}
+                    onLabelOffset={(id, offset) =>
+                      commit((p) => setLabelOffset(p, id, offset))
+                    }
+                    onLabelSelect={(id) => {
+                      select({ ...emptySelection(), blockIds: [id] });
+                    }}
+                    edges={[]}
+                    nodesConnectable={false}
+                    onNodeClick={(event, node) => {
+                      if (event.shiftKey || event.metaKey || event.ctrlKey) {
+                        // Apply the click's intent idempotently: React Flow may
+                        // already have delivered its own selection change.
+                        setSelectedIds(
+                          node.selected
+                            ? selectedIds.filter((id) => id !== node.id)
+                            : [...new Set([...selectedIds, node.id])],
+                        );
+                      } else {
+                        select({ ...emptySelection(), blockIds: [node.id] });
+                        setInspectorOpen(true);
+                      }
+                    }}
+                    onNodeDoubleClick={(e, n) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (n.type === 'tap') return;
+                      setEquationBlock({ id: n.id, tab: 'properties' });
+                    }}
+                    onPaneClick={() => {
+                      setInserter(null);
+                      select(emptySelection());
+                    }}
+                    onBeforeDelete={async ({ nodes, edges }) => {
+                      commit((p) =>
+                        removeSelection(
+                          p,
+                          nodes.map((n) => n.id),
+                          edges.map((e) => e.id),
+                        ),
+                      );
+                      setSelectedIds([]);
+                      setSelectedEdges([]);
+                      return false;
+                    }}
+                    fitViewOptions={{ padding: 0.16, maxZoom: 1.15 }}
+                    minZoom={0.25}
+                    maxZoom={2}
+                    deleteKeyCode={null}
+                    zoomOnDoubleClick={false}
+                    selectionMode={SelectionMode.Partial}
+                    selectionOnDrag={canvasTool === 'select'}
+                    panOnDrag={canvasTool === 'pan' ? [0, 1, 2] : [1, 2]}
+                    panOnScroll
+                    zoomOnScroll={false}
+                    nodeDragThreshold={2}
+                    panActivationKeyCode="Space"
+                    multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
+                  >
+                    <Background gap={20} size={0.7} color="#dde3e8" />
+                    <ViewportPortal>
+                      {project.annotations?.map((a, i) => (
+                        <div
+                          key={i}
+                          className="diagram-annotation"
+                          style={{ transform: `translate(${a.x}px, ${a.y}px)` }}
+                        >
+                          <strong>{a.text}</strong>
+                          {a.detail && <span>{a.detail}</span>}
+                        </div>
+                      ))}
+                    </ViewportPortal>
+                    <NetLayer
+                      project={project}
+                      selected={selectedEdges}
+                      selection={selection}
+                      groupSelection={groupSelection || selectedIds.length > 1}
+                      onRegionSelect={(next) => {
+                        select(next);
+                        setGroupSelection(true);
+                      }}
+                      onSelect={(ids, additive) => {
+                        select({
+                          ...emptySelection(),
+                          blockIds: additive ? selectedIds : [],
+                          wireIds: ids,
+                        });
+                      }}
+                      onDeleteSelection={deleteSelected}
+                      onCommit={commit}
+                    />
+                    <Controls showInteractive={false} />
+                  </ModelCanvas>
+                )}
+                {selectedIds.length === 0 && (
+                  <div className="canvas-hint">
+                    <MousePointer2 size={11} />
+                    {canvasTool === 'select' ? 'Drag to select' : 'Drag to pan'}
+                    <span>·</span>Drag a wire to branch
+                    <span>·</span>/ to search
                   </div>
                 )}
-              {ready && (
-                <ModelCanvas
-                  key={project.modelId ?? 'workspace'}
-                  blocks={project.blocks}
-                  project={project}
-                  selection={selection}
-                  onCopyDrop={({ project: next, selection: selected }) => {
-                    commit(next);
-                    select(selected);
-                  }}
-                  selectedIds={selectedIds}
-                  onSelectedIdsChange={(ids) =>
-                    setSelectedIds((prev) =>
-                      prev.length === ids.length &&
-                      prev.every((id, i) => id === ids[i])
-                        ? prev
-                        : ids,
-                    )
-                  }
-                  onLayout={updateLayout}
-                  onLabelOffset={(id, offset) =>
-                    commit((p) => setLabelOffset(p, id, offset))
-                  }
-                  onLabelSelect={(id) => {
-                    select({ ...emptySelection(), blockIds: [id] });
-                  }}
-                  edges={[]}
-                  nodesConnectable={false}
-                  onNodeClick={(event, node) => {
-                    if (event.shiftKey || event.metaKey || event.ctrlKey) {
-                      // Apply the click's intent idempotently: React Flow may
-                      // already have delivered its own selection change.
-                      setSelectedIds(
-                        node.selected
-                          ? selectedIds.filter((id) => id !== node.id)
-                          : [...new Set([...selectedIds, node.id])],
-                      );
-                    } else {
-                      select({ ...emptySelection(), blockIds: [node.id] });
-                      setInspectorOpen(true);
+                <div className="canvas-agent-shortcut">
+                  <Button variant="outline" onClick={startComposer}>
+                    <Sparkles size={14} />
+                    Ask agent<kbd>A</kbd>
+                  </Button>
+                </div>
+                {inserter && (
+                  <BlockInserter
+                    context={inserter}
+                    compatibleWith={
+                      inserter.connection
+                        ? portOf(
+                            project,
+                            inserter.connection.blockId,
+                            inserter.connection.portId,
+                          )
+                        : undefined
                     }
-                  }}
-                  onNodeDoubleClick={(e, n) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (n.type === 'tap') return;
-                    setEquationBlock({ id: n.id, tab: 'properties' });
-                  }}
-                  onPaneClick={() => {
-                    setInserter(null);
-                    select(emptySelection());
-                  }}
-                  onBeforeDelete={async ({ nodes, edges }) => {
-                    commit((p) =>
-                      removeSelection(
-                        p,
-                        nodes.map((n) => n.id),
-                        edges.map((e) => e.id),
-                      ),
-                    );
-                    setSelectedIds([]);
-                    setSelectedEdges([]);
-                    return false;
-                  }}
-                  fitViewOptions={{ padding: 0.16, maxZoom: 1.15 }}
-                  minZoom={0.25}
-                  maxZoom={2}
-                  deleteKeyCode={null}
-                  zoomOnDoubleClick={false}
-                  selectionMode={SelectionMode.Partial}
-                  selectionOnDrag={canvasTool === 'select'}
-                  panOnDrag={canvasTool === 'pan' ? [0, 1, 2] : [1, 2]}
-                  panOnScroll
-                  zoomOnScroll={false}
-                  nodeDragThreshold={2}
-                  panActivationKeyCode="Space"
-                  multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
-                >
-                  <Background gap={20} size={0.7} color="#dde3e8" />
-                  <ViewportPortal>
-                    {project.annotations?.map((a, i) => (
-                      <div
-                        key={i}
-                        className="diagram-annotation"
-                        style={{ transform: `translate(${a.x}px, ${a.y}px)` }}
-                      >
-                        <strong>{a.text}</strong>
-                        {a.detail && <span>{a.detail}</span>}
-                      </div>
-                    ))}
-                  </ViewportPortal>
-                  <NetLayer
-                    project={project}
-                    selected={selectedEdges}
-                    selection={selection}
-                    groupSelection={groupSelection || selectedIds.length > 1}
-                    onRegionSelect={(next) => {
-                      select(next);
-                      setGroupSelection(true);
-                    }}
-                    onSelect={(ids, additive) => {
-                      select({
-                        ...emptySelection(),
-                        blockIds: additive ? selectedIds : [],
-                        wireIds: ids,
+                    onClose={() => setInserter(null)}
+                    onAskAgent={() => {
+                      const ctx = inserter;
+                      setInserter(null);
+                      setComposer({
+                        position: ctx.position,
+                        connection: ctx.connection,
                       });
                     }}
-                    onDeleteSelection={deleteSelected}
-                    onCommit={commit}
+                    onAdd={(definition) => {
+                      addComponent(
+                        definition,
+                        inserter.position,
+                        inserter.connection,
+                      );
+                      setInserter(null);
+                    }}
                   />
-                  <Controls showInteractive={false} />
-                </ModelCanvas>
-              )}
-              {selectedIds.length === 0 && (
-                <div className="canvas-hint">
-                  <MousePointer2 size={11} />
-                  {canvasTool === 'select' ? 'Drag to select' : 'Drag to pan'}
-                  <span>·</span>Drag a wire to branch
-                  <span>·</span>/ to search
-                </div>
-              )}
-              <div className="canvas-agent-shortcut">
-                <Button variant="outline" onClick={startComposer}>
-                  <Sparkles size={14} />
-                  Ask agent<kbd>A</kbd>
-                </Button>
-              </div>
-              {inserter && (
-                <BlockInserter
-                  context={inserter}
-                  compatibleWith={
-                    inserter.connection
-                      ? portOf(
-                          project,
-                          inserter.connection.blockId,
-                          inserter.connection.portId,
-                        )
-                      : undefined
-                  }
-                  onClose={() => setInserter(null)}
-                  onAskAgent={() => {
-                    const ctx = inserter;
-                    setInserter(null);
-                    setComposer({
-                      position: ctx.position,
-                      connection: ctx.connection,
-                    });
-                  }}
-                  onAdd={(definition) => {
-                    addComponent(
-                      definition,
-                      inserter.position,
-                      inserter.connection,
-                    );
-                    setInserter(null);
-                  }}
-                />
-              )}
-              {composer?.mode === 'model' ? (
-                <ModelComposer
-                  onClose={() => setComposer(null)}
-                  onBlockMode={() => setComposer({ ...composer, mode: 'block' })}
-                  onInsert={insertGeneratedModel}
-                />
-              ) : composer && (
-                <AgentComposer
-                  key={
-                    composer.existing?.id ?? JSON.stringify(composer.position)
-                  }
-                  context={composer}
-                  onClose={() => setComposer(null)}
-                  onInsert={insertGenerated}
-                  onModelMode={() => setComposer({ ...composer, mode: 'model' })}
-                />
-              )}
+                )}
+                {composer?.mode === 'model' ? (
+                  <ModelComposer
+                    onClose={() => setComposer(null)}
+                    onBlockMode={() =>
+                      setComposer({ ...composer, mode: 'block' })
+                    }
+                    onInsert={insertGeneratedModel}
+                  />
+                ) : (
+                  composer && (
+                    <AgentComposer
+                      key={
+                        composer.existing?.id ??
+                        JSON.stringify(composer.position)
+                      }
+                      context={composer}
+                      onClose={() => setComposer(null)}
+                      onInsert={insertGenerated}
+                      onModelMode={() =>
+                        setComposer({ ...composer, mode: 'model' })
+                      }
+                    />
+                  )
+                )}
               </div>
             ) : (
               <div className="results-view-wrap">
@@ -2081,280 +2108,326 @@ function Workbench() {
               onNet={inspectNet}
               onModel={() => select(emptySelection())}
             />
-            <div className="properties-heading">{active ? 'Component properties' : activeNet ? 'Net properties' : 'Model properties'}</div>
+            <div className="properties-heading">
+              {active
+                ? 'Component properties'
+                : activeNet
+                  ? 'Net properties'
+                  : 'Model properties'}
+            </div>
             <div className="inspector-properties">
-            {activeNet && !active ? (
-              <NetProperties
-                description={activeNet}
-                project={project}
-                onRename={(name) =>
-                  commit((p) => renameNet(p, activeNet.net.id, name))
-                }
-                onVisibility={(visible) =>
-                  commit((p) => ({
-                    ...p,
-                    nets: p.nets?.map((n) =>
-                      n.id === activeNet.net.id
-                        ? { ...n, hidden: !visible }
-                        : n,
-                    ),
-                  }))
-                }
-                onLogging={(logged) => commit((p) => ({ ...p, nets: p.nets?.map((n) => n.id === activeNet.net.id ? { ...n, logged } : n) }))}
-                onOpenData={() => setWorkspaceMode('results')}
-                onResetLabel={() =>
-                  commit((p) => setNetLabel(p, activeNet.net.id, undefined))
-                }
-                onTrace={() => inspectNet(activeNet.net.id)}
-                onFocus={() => focusNet(activeNet.net.id)}
-                onBlock={inspectBlock}
-              />
-            ) : active ? (
-              <>
-                <div className="inspector-intro">
-                  <span
-                    className="component-category"
-                    style={{ color: domainColors[active.definition.domain] }}
-                  >
-                    {active.definition.generated ? (
-                      <>
-                        <Sparkles size={11} />
-                        Agent component
-                      </>
-                    ) : active.definition.controller ? (
-                      'Controller'
-                    ) : (
-                      active.definition.domain
-                    )}
-                  </span>
-                  <NameField
-                    key={active.id}
-                    value={active.definition.name}
-                    onCommit={(name) => {
-                      commit((p) => ({
-                        ...p,
-                        blocks: p.blocks.map((b) =>
-                          b.id === active.id
-                            ? { ...b, definition: { ...b.definition, name } }
-                            : b,
-                        ),
-                      }));
-                      return (
-                        projectRef.current.blocks.find(
-                          (b) => b.id === active.id,
-                        )?.definition.name ?? name
-                      );
-                    }}
-                  />
-                  <IdentityField id={active.id} label="Block ID" />
-                  <details className="property-description"><summary>Description</summary><p>{active.definition.description}</p></details>
-                  <Button
-                    className="refine-button"
-                    variant="outline"
-                    disabled={
-                      active.definition.domain !== 'signal' ||
-                      !!active.definition.modelica
-                    }
-                    onClick={() =>
-                      setComposer({
-                        position: active.position,
-                        existing: {
-                          id: active.id,
-                          definition: active.definition,
-                        },
-                      })
-                    }
-                  >
-                    <Sparkles size={13} />
-                    Refine with agent
-                  </Button>
-                </div>
-                <div className="inspector-section">
-                  <div className="section-label">
-                    Parameters<span>{active.definition.parameters.length}</span>
-                    <button
-                      onClick={() =>
-                        setEquationBlock({ id: active.id, tab: 'properties' })
-                      }
+              {activeNet && !active ? (
+                <NetProperties
+                  description={activeNet}
+                  project={project}
+                  onRename={(name) =>
+                    commit((p) => renameNet(p, activeNet.net.id, name))
+                  }
+                  onVisibility={(visible) =>
+                    commit((p) => ({
+                      ...p,
+                      nets: p.nets?.map((n) =>
+                        n.id === activeNet.net.id
+                          ? { ...n, hidden: !visible }
+                          : n,
+                      ),
+                    }))
+                  }
+                  onLogging={(logged) =>
+                    commit((p) => ({
+                      ...p,
+                      nets: p.nets?.map((n) =>
+                        n.id === activeNet.net.id ? { ...n, logged } : n,
+                      ),
+                    }))
+                  }
+                  onOpenData={() => setWorkspaceMode('results')}
+                  onResetLabel={() =>
+                    commit((p) => setNetLabel(p, activeNet.net.id, undefined))
+                  }
+                  onTrace={() => inspectNet(activeNet.net.id)}
+                  onFocus={() => focusNet(activeNet.net.id)}
+                  onBlock={inspectBlock}
+                />
+              ) : active ? (
+                <>
+                  <div className="inspector-intro">
+                    <span
+                      className="component-category"
+                      style={{ color: domainColors[active.definition.domain] }}
                     >
-                      Edit…
-                    </button>
-                  </div>
-                  <ParameterList
-                    blockId={active.id}
-                    parameters={active.definition.parameters}
-                    onChange={(id, value) =>
-                      commit((p) =>
-                        applyBlockEdits(p, active.id, {
-                          parameters: { [id]: value },
-                        }),
-                      )
-                    }
-                  />
-                </div>
-                <div className="inspector-section block-layout-section">
-                  <div className="section-label">
-                    Block size <span className="subtle">px</span>
-                  </div>
-                  <div className="block-size-fields">
-                    <label>
-                      Width
-                      <NumberField
-                        key={`${active.id}-width`}
-                        value={blockSize(active).width}
-                        min={minimumBlockSize(active.definition, active.rotation).width}
-                        max={1200}
-                        ariaLabel="Block width"
-                        onChange={(width) =>
-                          updateLayout([
-                            {
-                              id: active.id,
-                              position: active.position,
-                              size: { ...blockSize(active), width },
-                            },
-                          ])
-                        }
-                      />
-                    </label>
-                    <label>
-                      Height
-                      <NumberField
-                        key={`${active.id}-height`}
-                        value={blockSize(active).height}
-                        min={minimumBlockSize(active.definition, active.rotation).height}
-                        max={1200}
-                        ariaLabel="Block height"
-                        onChange={(height) =>
-                          updateLayout([
-                            {
-                              id: active.id,
-                              position: active.position,
-                              size: { ...blockSize(active), height },
-                            },
-                          ])
-                        }
-                      />
-                    </label>
-                  </div>
-                  <button
-                    type="button"
-                    className="standard-block-size"
-                    onClick={() =>
-                      updateLayout([
-                        {
-                          id: active.id,
+                      {active.definition.generated ? (
+                        <>
+                          <Sparkles size={11} />
+                          Agent component
+                        </>
+                      ) : active.definition.controller ? (
+                        'Controller'
+                      ) : (
+                        active.definition.domain
+                      )}
+                    </span>
+                    <NameField
+                      key={active.id}
+                      value={active.definition.name}
+                      onCommit={(name) => {
+                        commit((p) => ({
+                          ...p,
+                          blocks: p.blocks.map((b) =>
+                            b.id === active.id
+                              ? { ...b, definition: { ...b.definition, name } }
+                              : b,
+                          ),
+                        }));
+                        return (
+                          projectRef.current.blocks.find(
+                            (b) => b.id === active.id,
+                          )?.definition.name ?? name
+                        );
+                      }}
+                    />
+                    <IdentityField id={active.id} label="Block ID" />
+                    <details className="property-description">
+                      <summary>Description</summary>
+                      <p>{active.definition.description}</p>
+                    </details>
+                    <Button
+                      className="refine-button"
+                      variant="outline"
+                      disabled={
+                        active.definition.domain !== 'signal' ||
+                        !!active.definition.modelica
+                      }
+                      onClick={() =>
+                        setComposer({
                           position: active.position,
-                          size: active.rotation && active.rotation % 180 ? { width: defaultBlockSize(active.definition).height, height: defaultBlockSize(active.definition).width } : defaultBlockSize(active.definition),
-                        },
-                      ])
-                    }
-                  >
-                    Use standard size
-                  </button>
-                  <button type="button" className="standard-block-size" onClick={() => commit((p) => rotateBlocks(p, [active.id]))}>
-                    Rotate 90° · R
-                  </button>
-                  <p className="size-hint">
-                    Drag a corner or edge to resize. Press R to rotate.
-                  </p>
-                </div>
-                <div className="inspector-section">
-                  <div className="section-label">Interface</div>
-                  {active.definition.ports.map((p) => (
-                    <div key={p.id} className="interface-row">
-                      <span
-                        className="port-dot"
-                        style={{ background: domainColors[p.domain] }}
-                      />
-                      <span>{p.name}</span>
-                      <code>
-                        {p.direction === 'physical' ? p.domain : p.direction}
-                      </code>
-                    </div>
-                  ))}
-                </div>
-                <div className="inspector-section">
-                  <div className="section-label">
-                    <Code2 size={13} />
-                    Equations
-                    <button
-                      onClick={() =>
-                        setEquationBlock({ id: active.id, tab: 'equations' })
+                          existing: {
+                            id: active.id,
+                            definition: active.definition,
+                          },
+                        })
                       }
                     >
-                      Open
-                      <ArrowUpRight size={11} />
-                    </button>
+                      <Sparkles size={13} />
+                      Refine with agent
+                    </Button>
                   </div>
-                  <pre className="equation-preview">
-                    {active.definition.equations}
-                  </pre>
-                </div>
-                {active.definition.domain === 'signal' && (
                   <div className="inspector-section">
-                    <div className="section-label">Implementation</div>
-                    {active.definition.controller ? (
-                      <div className="controller-badge">
-                        <Check size={13} />
-                        Controller export boundary
-                      </div>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        className="mark-controller"
+                    <div className="section-label">
+                      Parameters
+                      <span>{active.definition.parameters.length}</span>
+                      <button
                         onClick={() =>
-                          commit((p) => ({
-                            ...p,
-                            blocks: p.blocks.map((b) =>
-                              b.id === active.id
-                                ? {
-                                    ...b,
-                                    definition: {
-                                      ...b.definition,
-                                      controller: true,
-                                    },
-                                  }
-                                : b,
-                            ),
-                          }))
+                          setEquationBlock({ id: active.id, tab: 'properties' })
                         }
                       >
-                        Mark as controller
-                      </Button>
-                    )}
+                        Edit…
+                      </button>
+                    </div>
+                    <ParameterList
+                      blockId={active.id}
+                      parameters={active.definition.parameters}
+                      onChange={(id, value) =>
+                        commit((p) =>
+                          applyBlockEdits(p, active.id, {
+                            parameters: { [id]: value },
+                          }),
+                        )
+                      }
+                    />
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="inspector-empty">
-                <span className="property-field-label">Name</span>
-                <NameField
-                  label="Model name"
-                  value={project.name}
-                  onCommit={(name) => commit((p) => ({ ...p, name }))}
-                />
-                <label className="model-duration-field">
-                  <span>Stop time <small>s</small></span>
-                  <NumberField
-                    ariaLabel="Model stop time"
-                    value={project.duration}
-                    min={0.000001}
-                    max={86400}
-                    onChange={(duration) => commit((p) => ({ ...p, duration }))}
+                  <div className="inspector-section block-layout-section">
+                    <div className="section-label">
+                      Block size <span className="subtle">px</span>
+                    </div>
+                    <div className="block-size-fields">
+                      <label>
+                        Width
+                        <NumberField
+                          key={`${active.id}-width`}
+                          value={blockSize(active).width}
+                          min={
+                            minimumBlockSize(active.definition, active.rotation)
+                              .width
+                          }
+                          max={1200}
+                          ariaLabel="Block width"
+                          onChange={(width) =>
+                            updateLayout([
+                              {
+                                id: active.id,
+                                position: active.position,
+                                size: { ...blockSize(active), width },
+                              },
+                            ])
+                          }
+                        />
+                      </label>
+                      <label>
+                        Height
+                        <NumberField
+                          key={`${active.id}-height`}
+                          value={blockSize(active).height}
+                          min={
+                            minimumBlockSize(active.definition, active.rotation)
+                              .height
+                          }
+                          max={1200}
+                          ariaLabel="Block height"
+                          onChange={(height) =>
+                            updateLayout([
+                              {
+                                id: active.id,
+                                position: active.position,
+                                size: { ...blockSize(active), height },
+                              },
+                            ])
+                          }
+                        />
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      className="standard-block-size"
+                      onClick={() =>
+                        updateLayout([
+                          {
+                            id: active.id,
+                            position: active.position,
+                            size:
+                              active.rotation && active.rotation % 180
+                                ? {
+                                    width: defaultBlockSize(active.definition)
+                                      .height,
+                                    height: defaultBlockSize(active.definition)
+                                      .width,
+                                  }
+                                : defaultBlockSize(active.definition),
+                          },
+                        ])
+                      }
+                    >
+                      Use standard size
+                    </button>
+                    <button
+                      type="button"
+                      className="standard-block-size"
+                      onClick={() =>
+                        commit((p) => rotateBlocks(p, [active.id]))
+                      }
+                    >
+                      Rotate 90° · R
+                    </button>
+                    <p className="size-hint">
+                      Drag a corner or edge to resize. Press R to rotate.
+                    </p>
+                  </div>
+                  <div className="inspector-section">
+                    <div className="section-label">Interface</div>
+                    {active.definition.ports.map((p) => (
+                      <div key={p.id} className="interface-row">
+                        <span
+                          className="port-dot"
+                          style={{ background: domainColors[p.domain] }}
+                        />
+                        <span>{p.name}</span>
+                        <code>
+                          {p.direction === 'physical' ? p.domain : p.direction}
+                        </code>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="inspector-section">
+                    <div className="section-label">
+                      <Code2 size={13} />
+                      Equations
+                      <button
+                        onClick={() =>
+                          setEquationBlock({ id: active.id, tab: 'equations' })
+                        }
+                      >
+                        Open
+                        <ArrowUpRight size={11} />
+                      </button>
+                    </div>
+                    <pre className="equation-preview">
+                      {active.definition.equations}
+                    </pre>
+                  </div>
+                  {active.definition.domain === 'signal' && (
+                    <div className="inspector-section">
+                      <div className="section-label">Implementation</div>
+                      {active.definition.controller ? (
+                        <div className="controller-badge">
+                          <Check size={13} />
+                          Controller export boundary
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="mark-controller"
+                          onClick={() =>
+                            commit((p) => ({
+                              ...p,
+                              blocks: p.blocks.map((b) =>
+                                b.id === active.id
+                                  ? {
+                                      ...b,
+                                      definition: {
+                                        ...b.definition,
+                                        controller: true,
+                                      },
+                                    }
+                                  : b,
+                              ),
+                            }))
+                          }
+                        >
+                          Mark as controller
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="inspector-empty">
+                  <span className="property-field-label">Name</span>
+                  <NameField
+                    label="Model name"
+                    value={project.name}
+                    onCommit={(name) => commit((p) => ({ ...p, name }))}
                   />
-                </label>
-                {project.description && <details className="property-description"><summary>Description</summary><p>{project.description}</p></details>}
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    void flow.fitView({ padding: 0.2, duration: 200 })
-                  }
-                >
-                  <Maximize size={13} />
-                  Fit model to view
-                </Button>
-              </div>
-            )}
+                  <label className="model-duration-field">
+                    <span>
+                      Stop time <small>s</small>
+                    </span>
+                    <NumberField
+                      ariaLabel="Model stop time"
+                      value={project.duration}
+                      min={0.000001}
+                      max={86400}
+                      onChange={(duration) =>
+                        commit((p) => ({ ...p, duration }))
+                      }
+                    />
+                  </label>
+                  {project.description && (
+                    <details className="property-description">
+                      <summary>Description</summary>
+                      <p>{project.description}</p>
+                    </details>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      void flow.fitView({ padding: 0.2, duration: 200 })
+                    }
+                  >
+                    <Maximize size={13} />
+                    Fit model to view
+                  </Button>
+                </div>
+              )}
             </div>
           </aside>
         </div>
