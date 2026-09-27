@@ -306,7 +306,7 @@ export const extraBlocks: Definition[] = [
     'Unit delay',
     'z⁻¹',
     [input('u'), output('y')],
-    'when sample(0, Ts) then\n  y = stored;\n  stored = u;\nend when;',
+    'when sample(0, Ts) then\n  y = pre(stored);\n  stored = u;\nend when;',
     [p('Ts', 'Sample period', 0.001, 's', 0.0001)],
     'discrete Real stored(start=0, fixed=true);',
     'One-sample delay.',
