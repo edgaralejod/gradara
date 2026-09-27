@@ -1,6 +1,6 @@
 # Enable AI features
 
-AI creates blocks, builds complete models from a description, and generates C for controller blocks. Editing, wiring, simulating, and reopening models never need AI or an account.
+AI creates blocks, builds complete models from a description, edits the open model from the Assistant, explains or fixes failed runs, and generates C for controller blocks. Editing, wiring, simulating, and reopening models never need AI or an account.
 
 Choose a provider in **Settings → AI**:
 
@@ -10,11 +10,11 @@ Choose a provider in **Settings → AI**:
 | **OpenAI API key** | Paste a key; Gradara verifies it with a free request and stores it in your OS keychain. Optionally set a model. | OpenAI, under your account |
 | **Anthropic API key** | Same as OpenAI. | Anthropic, under your account |
 | **Codex CLI** (developer option) | Install and sign in to the Codex CLI (below). Shown when found. | Your Codex plan |
-| **Off** | Hides AI generation. | Nobody |
+| **Off** | Turns AI requests off. AI buttons stay visible and report that AI is off. | Nobody |
 
 Gradara AI prices are per operation: a block (2 credits), a full model build (20), a C export (2), an assistant edit (4, plus 2 for each new or rewritten block, at most three), and explaining problems (2). **Fix with AI** costs the explanation plus the edit. Automatic repair attempts are included, and a request, or a block within an edit, that fails before producing output is not charged. The composer and assistant footers show the cost and your balance, and each assistant answer shows what it actually cost.
 
-Every AI request first passes local schema checks, then OpenModelica compiler checks, so the simulation engine must be set up (Settings → Engine). See [privacy](PRIVACY.md) for exactly what is sent and stored.
+Generated blocks pass local schema checks, then an OpenModelica compile check, and assistant edits run a trial simulation of the edited model, so the simulation engine must be set up (Settings → Engine). **Explain** alone only reads the problems and never compiles anything. See [privacy](PRIVACY.md) for exactly what is sent and stored.
 
 ### Codex CLI (developer option)
 

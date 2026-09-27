@@ -76,7 +76,7 @@ Every AI feature calls `server/llm/dispatch.generate(prompt, schema, …)`. Each
 | Codex CLI | Installed and signed in | The user's Codex plan | App → Codex CLI |
 | Off | None | None | None |
 
-A top-level operation (one block, one model build, one C export) sets `current_job`. Gradara AI charges once per operation, on its first call, so repair attempts and the blocks created inside a model build are included.
+A top-level operation (one block, one model build, one C export, one assistant edit, one diagnosis) sets `current_job`. Gradara AI charges an operation on its first call, so repair attempts and the blocks created inside a model build are included. Assistant edits and fixes also have priced parts (`dispatch.job_part`): each new or rewritten block in an edit, and the edit stage of a fix, is charged when it starts, and refunded if its first call fails before producing output.
 
 ## Gradara AI service
 
@@ -113,4 +113,4 @@ Design decisions:
 - **Device-code sign-in.** No custom URL schemes or localhost callbacks, and no passwords in the app.
 - **One provider layer.** `server/llm/providers.py` serves both bring-your-own-key calls and the gateway, so structured-output handling is maintained once.
 
-Current defaults, all configurable on the server: block 2 credits, model build 20, C export 2; packs of 100 credits for USD 10 and 550 credits for USD 50; 20 welcome credits per verified identity. See `cloud/README.md` for deployment and [privacy](../PRIVACY.md) for data handling.
+Current defaults, all configurable on the server: block 2 credits, model build 20, C export 2, assistant edit 4 plus 2 per new or rewritten block (at most three), explaining problems 2 (a fix pays the explanation plus the edit); packs of 100 credits for USD 10 and 550 credits for USD 50; 20 welcome credits per verified identity. See `cloud/README.md` for deployment and [privacy](../PRIVACY.md) for data handling.
