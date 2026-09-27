@@ -60,9 +60,10 @@ The repository includes only the curated example templates. Personal models, Tra
 
 - Orthogonal wires with snapping, branching onto existing wires, junctions, reconnecting, segment editing, redraw, and undo. Nets have stable IDs and readable automatic or custom names.
 - A shared block design system, searchable library, model inspector, resize handles, movable labels, selection tools, and Ctrl-drag duplication.
-- Signal/control components alongside electrical and rotational mechanical components. Physical ports can cross block domains through explicit sensors and actuators.
+- A library of 218 blocks: signal, Boolean logic, electrical, semiconductor, converter, machine, 3-phase, rotational and translational mechanical, thermal, and magnetic. Most physical blocks are Modelica Standard Library 4.1.0 components. Physical ports can cross block domains through explicit sensors and actuators.
+- Hierarchical subsystems: group a selection with ⌘/Ctrl+G, open and navigate nested sheets, share one definition between instances, and promote parameters. Variants keep alternative insides behind one set of ports, and configurations switch them together or run them all for comparison.
 - Asynchronous OpenModelica simulation, cancellation, saved runs, plots, and complete CSV downloads. A Problems dock lists live model checks and block-mapped run diagnostics; click one to select the blocks involved.
-- Agent-created signal, electrical, rotational mechanical, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.
+- Agent-created signal, electrical, rotational and translational mechanical, magnetic, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.
 - An Assistant that proposes checked edits to the open model and explains or fixes failed runs; every proposal is reviewed and applied as one undo step.
 - Modelica source export, portable project export, and deterministic C11 for a controller: a subsystem or a set of signal blocks, with Tustin, backward, or forward Euler discretization, and a check that replays the last run through the compiled code.
 - Desktop installers with first-run engine setup, a native OpenModelica or container engine, and a choice of Gradara AI credits, your own OpenAI or Anthropic key, or no AI.
@@ -79,7 +80,7 @@ Drag empty canvas to select. Pan with the middle/right mouse button or Space. **
 
 This is a trusted, single-user local application. **Do not expose the local service to a public network.** It accepts only loopback requests from its own workbench and has no multi-user authorization. Models and runs live in your data folder (`projects/` in a source checkout). See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
-Hierarchical subsystems, vector/bus execution, arbitrary Modelica import and round trips, general solver interchangeability, FMI, remote simulation, and HDL generation are future work. Mux/demux and subsystem placeholders are visible but report their simulation limitations. C compilation does not establish behavioral equivalence or target-hardware correctness. The [roadmap](ROADMAP.md) describes bounded opportunities to help.
+Vector/bus execution, arbitrary Modelica import and round trips, general solver interchangeability, FMI, remote simulation, and HDL generation are future work. Mux/demux blocks are visible but drawing-only, and report that when you run. C compilation does not establish behavioral equivalence or target-hardware correctness. The [roadmap](ROADMAP.md) describes bounded opportunities to help.
 
 ## Develop and contribute
 

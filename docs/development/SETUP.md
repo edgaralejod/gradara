@@ -121,6 +121,23 @@ The service reads process environment variables directly. `.env.example` is docu
 
 `agentReady` means the selected provider is configured (key saved, signed in, or CLI found), not that connectivity was tested. Read [security and data handling](../../SECURITY.md) for what generation sends to the provider.
 
+## Regenerate the MSL library
+
+Library blocks that wrap Modelica Standard Library classes come from two checked-in generated files. `server/msl_index.json` lists the MSL 4.1.0 classes Gradara may instantiate, with their parameters and connectors; `lib/gradara/msl-blocks.ts` holds the block definitions. Normal work needs neither script. Regenerate the index only when changing MSL versions or the packages it covers, from an MSL source checkout:
+
+```sh
+git clone --depth 1 --branch v4.1.0 https://github.com/modelica/ModelicaStandardLibrary msl
+python3 scripts/msl-index.py msl/Modelica > server/msl_index.json
+```
+
+The argument can be the checkout or its `Modelica` folder. After changing the block list in `scripts/msl-blocks.py`, or the index, regenerate the blocks:
+
+```sh
+python3 scripts/msl-blocks.py > lib/gradara/msl-blocks.ts
+```
+
+It prints the block count on stderr and fails on any class, parameter, or connector missing from the index. `tests/test_msl.py` fails when the generated file differs from the script's output. The [block authoring guide](../blocks/AGENT_BLOCK_GUIDE.md#wrap-a-modelica-standard-library-class) describes adding a block.
+
 ## Files you own
 
 `projects/models/` holds documents; `projects/workspace.json` is the active model; run snapshots, CSVs, prompts, and exports also live under `projects/`. These files and `.runtime/`, `.venv/`, build outputs, and local environment files are ignored by Git. Back them up separately. Contributors should use synthetic examples and never force-add a personal workspace to a PR.

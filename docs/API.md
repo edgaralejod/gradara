@@ -67,7 +67,7 @@ Normal responses currently use HTTP 200, including accepted jobs. Save conflicts
  "ports":[],"netIds":["net_3"],"wireIds":["w_2","w_4"],"hint":"OpenModelica could not solve an algebraic loop. …"}
 ```
 
-`severity` is `error`, `warning`, or `info`. `source` is `validation` (unconnected inputs, drawing-only blocks), `safety` (forbidden constructs), `compiler` (one entry per OpenModelica `Error:` line), `runtime` (solver failure, early stop, non-finite values), or `engine` (the engine could not start or finish). `blockIds`, `ports` (`{blockId, portId}`), `netIds`, and `wireIds` identify what the problem is about when Gradara can tell. Instance IDs are matched only as component references (`gain.k`, `System.gain`), and an algebraic loop names the signal blocks on a cycle without state. The mapping is best effort; `detail` always keeps the full text. A successful simulation result carries warnings the same way in `problems`. Jobs disappear from the registry on service restart. A result file is durable only if the operation completed and wrote it. See [execution details](architecture/EXECUTION.md).
+`severity` is `error`, `warning`, or `info`. `source` is `validation` (unconnected inputs, drawing-only blocks, subsystem ports the active variant lacks), `safety` (forbidden constructs), `compiler` (one entry per OpenModelica `Error:` line), `runtime` (solver failure, early stop, non-finite values), or `engine` (the engine could not start or finish). `blockIds`, `ports` (`{blockId, portId}`), `netIds`, and `wireIds` identify what the problem is about when Gradara can tell. Instance IDs are matched only as component references (`gain.k`, `System.gain`), and an algebraic loop names the signal blocks on a cycle without state. The mapping is best effort; `detail` always keeps the full text. A successful simulation result carries warnings the same way in `problems`. Jobs disappear from the registry on service restart. A result file is durable only if the operation completed and wrote it. See [execution details](architecture/EXECUTION.md).
 
 ## Run a checked-in example without changing saved models
 
@@ -107,11 +107,13 @@ print(result["engine"], result["elapsed"], "seconds")
 print([series["key"] for series in result["series"]])
 ```
 
+Every endpoint that takes a `Project` accepts format version 1 (flat) and version 2 (with `subsystems` and optional `configurations`); the [model format](architecture/MODEL_FORMAT.md#subsystems-and-variants) describes both. Validation rejects a document whose subsystem instances do not match their definitions, a definition that contains itself, and MSL wrapper blocks that do not match their library class. `POST /runs` and `POST /source` emit only the active variant of each subsystem; to compare configurations, apply each one to a copy of the document and submit it as its own run, as the workbench does. Result series for blocks inside subsystems use dotted instance paths such as `drive.gain.y`.
+
 API request models validate identifiers, domains, net ownership, finite values, and bounded equation text. They do not implement a general Modelica parser or a security boundary for hostile model files. Saved documents omit unset optional values in responses. Preserve this serialization behavior when adding endpoints.
 
 ### Component generation types
 
-`POST /api/components/generate` accepts `prompt`, optional `existing`, and optional `blockType`: `signal`, `electrical`, `mechanical` (rotational), `thermal`, or `multidomain`. Omission defaults to signal for new blocks and infers the type for refinement. Physical choices require matching physical terminals; multidomain requires at least two physical domains. A wrong-type response is rejected and gets one repair attempt. Successful job results include `definition`, `provider`, `checked`, and `blockType`. `checked` means OpenModelica accepted the component, not that its physical behavior has been proven.
+`POST /api/components/generate` accepts `prompt`, optional `existing`, and optional `blockType`: `signal`, `electrical`, `mechanical` (rotational), `translational`, `magnetic`, `thermal`, or `multidomain`. Omission defaults to signal for new blocks and infers the type for refinement. Physical choices require matching physical terminals; multidomain requires at least two physical domains. A wrong-type response is rejected and gets one repair attempt. Successful job results include `definition`, `provider`, `checked`, and `blockType`. `checked` means OpenModelica accepted the component, not that its physical behavior has been proven.
 
 ### Generated component library
 

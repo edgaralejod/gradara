@@ -1,5 +1,5 @@
 'use client';
-import { memo, useEffect } from 'react';
+import { memo, useContext, useEffect } from 'react';
 import {
   NodeResizer,
   ViewportPortal,
@@ -16,7 +16,42 @@ import {
 import { portPlacement } from '@/lib/gradara/ports';
 import { BlockFace } from './block-face';
 import BlockLabel from './block-label';
+import { VariantSwitchContext } from './variant-switch-context';
 export type { BlockNodeData } from '@/lib/gradara/canvas';
+/** The segmented switch above a subsystem with variants: the active one is always visible. */
+function VariantSwitch({
+  id,
+  variants,
+  active,
+}: {
+  id: string;
+  variants: { id: string; name: string }[];
+  active?: string;
+}) {
+  const choose = useContext(VariantSwitchContext);
+  return (
+    <div className="variant-switch nodrag nopan">
+      {variants.map((v) => (
+        <button
+          key={v.id}
+          type="button"
+          aria-pressed={v.id === active}
+          className={v.id === active ? 'is-active' : ''}
+          title={v.id === active ? `${v.name} (active)` : `Switch to ${v.name}`}
+          onPointerDown={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (v.id !== active) choose?.(id, v.id);
+          }}
+        >
+          {v.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function BlockNode({
   id,
   data,
@@ -71,6 +106,13 @@ function BlockNode({
       >
         <BlockFace definition={d} />
       </div>
+      {d.subsystem?.variants && (
+        <VariantSwitch
+          id={id}
+          variants={d.subsystem.variants}
+          active={d.subsystem.active}
+        />
+      )}
       {/* A subsystem port shows its name inside its pill. */}
       {!d.boundary && (
         <ViewportPortal>

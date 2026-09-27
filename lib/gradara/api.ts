@@ -139,6 +139,8 @@ export type SimulationResult = {
   diagnostics: string;
   /** Warnings from a successful run; absent on results saved before diagnostics existed. */
   problems?: Diagnostic[];
+  /** Set on an overlay of several configurations' runs (Run all configurations); not a stored run. */
+  comparison?: { name: string; runId: string }[];
 };
 export function downloadText(name: string, text: string, type = 'text/plain') {
   const url = URL.createObjectURL(new Blob([text], { type }));

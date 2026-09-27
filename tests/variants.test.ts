@@ -222,3 +222,44 @@ void test('variants inside a subsystem are switched by configurations too', () =
     'Fast',
   );
 });
+
+void test('Run all overlays configurations on the first run’s time grid', async () => {
+  const { mergeRuns } = await import('../lib/gradara/compare');
+  const run = (id: string, time: number[], values: number[]) => ({
+    id,
+    engine: '',
+    projectKey: '',
+    modelHash: '',
+    projectRevision: 0,
+    duration: 1,
+    elapsed: 1,
+    time,
+    samples: time.length,
+    series: [
+      {
+        key: 'sensor.y',
+        name: 'Speed',
+        unit: 'rad/s',
+        blockId: 'sensor',
+        values,
+      },
+    ],
+    diagnostics: '',
+  });
+  const merged = mergeRuns([
+    { name: 'Prototype', result: run('a', [0, 0.5, 1], [0, 1, 2]) },
+    { name: 'Production', result: run('b', [0, 1], [0, 4]) },
+  ]);
+  assert.deepEqual(merged.time, [0, 0.5, 1]);
+  assert.deepEqual(
+    merged.series.map((s) => [s.key, s.name, s.values]),
+    [
+      ['0::sensor.y', '[Prototype] Speed', [0, 1, 2]],
+      ['1::sensor.y', '[Production] Speed', [0, 2, 4]],
+    ],
+  );
+  assert.deepEqual(
+    merged.comparison?.map((c) => c.runId),
+    ['a', 'b'],
+  );
+});

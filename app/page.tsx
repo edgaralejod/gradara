@@ -125,6 +125,17 @@ import BlockDialog, {
 } from '@/components/gradara/block-dialog';
 import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
+import VariantPanel from '@/components/gradara/variant-panel';
+import ConfigurationMenu from '@/components/gradara/configuration-menu';
+import { mergeRuns, type ComparisonRun } from '@/lib/gradara/compare';
+import {
+  applyConfiguration,
+  removeConfiguration,
+  saveConfiguration,
+  switchVariant,
+  variantProblems,
+} from '@/lib/gradara/variants';
+import { VariantSwitchContext } from '@/components/gradara/variant-switch-context';
 import SettingsDialog, {
   type SettingsTab,
 } from '@/components/gradara/settings-dialog';
@@ -178,6 +189,7 @@ import {
   usageCount,
   subsystemClosure,
   refsOf,
+  syncInstances,
   validPath,
   withPastedSubsystems,
   writeScope,
@@ -416,6 +428,27 @@ function Workbench() {
     },
     [],
   );
+  /** A document-wide edit (configurations, variants on other sheets) as one undo step. */
+  const commitDoc = useCallback((update: (doc: Project) => Project) => {
+    if (switchingRef.current) return;
+    const previousDoc = docRef.current;
+    const next = update(previousDoc);
+    if (next === previousDoc) return;
+    setHistory((h) => [...h.slice(-49), structuredClone(previousDoc)]);
+    setFuture([]);
+    const changed = {
+      ...syncInstances(next),
+      revision: previousDoc.revision + 1,
+    };
+    docRef.current = changed;
+    projectRef.current = scopeView(changed, scopeRef.current);
+    setDoc(changed);
+  }, []);
+  const switchVariantOnSheet = useCallback(
+    (blockId: string, variantId: string) =>
+      commit((p) => switchVariant(p, blockId, variantId)),
+    [commit],
+  );
   const undo = useCallback(() => {
     if (!history.length) return;
     const previous = history[history.length - 1];
@@ -467,7 +500,12 @@ function Workbench() {
   useEffect(() => {
     // Recheck after edits settle, not on every pointer move.
     const timer = setTimeout(
-      () => setLiveProblems(validateProject(projectRef.current)),
+      () =>
+        setLiveProblems([
+          ...validateProject(projectRef.current),
+          // Every variant, active or not, so a broken alternative shows before anyone switches to it.
+          ...variantProblems(docRef.current),
+        ]),
       300,
     );
     return () => clearTimeout(timer);
@@ -1240,6 +1278,76 @@ function Workbench() {
       }
     }
   }
+  /** Run every configuration in turn and overlay their results, labelled by configuration. */
+  async function runAllConfigurations() {
+    const configurations = docRef.current.configurations ?? [];
+    if (runController.current || switching || !ready || configurations.length < 2)
+      return;
+    const controller = new AbortController();
+    runController.current = controller;
+    setRunning(true);
+    setRunError('');
+    setRunFailure(null);
+    setResult(null);
+    setResultSignature('');
+    const base = structuredClone(docRef.current);
+    const currentSignature = semanticSignature(base);
+    const runs: ComparisonRun[] = [];
+    let label = '';
+    try {
+      for (const [i, configuration] of configurations.entries()) {
+        label = configuration.name;
+        notify(`Running ${label} (${i + 1} of ${configurations.length})…`);
+        const snapshot = applyConfiguration(base, configuration);
+        const job = await api<Job<SimulationResult>>('/runs', {
+          method: 'POST',
+          body: JSON.stringify(snapshot),
+        });
+        if (controller.signal.aborted) {
+          await api(`/jobs/${job.id}`, { method: 'DELETE' });
+          return;
+        }
+        runId.current = job.id;
+        await waitForJob<SimulationResult>(job.id, controller.signal);
+        const full = await api<SimulationResult>(`/results/${job.id}/data`, {
+          signal: controller.signal,
+        });
+        runs.push({ name: configuration.name, result: full });
+      }
+      if (
+        runController.current !== controller ||
+        controller.signal.aborted ||
+        docRef.current.modelId !== base.modelId
+      )
+        return;
+      setResult(mergeRuns(runs));
+      setResultSignature(currentSignature);
+      setWorkspaceMode('results');
+    } catch (e) {
+      if (
+        runController.current === controller &&
+        !controller.signal.aborted &&
+        (e as Error).name !== 'AbortError'
+      ) {
+        setRunError(`${label}: ${(e as Error).message}`);
+        if (e instanceof JobFailure)
+          setRunFailure({
+            runId: e.jobId,
+            modelId: base.modelId,
+            signature: currentSignature,
+            message: `${label}: ${e.message}`,
+            diagnostics: e.diagnostics,
+          });
+        updateDock({ open: true, tab: 'problems' });
+      }
+    } finally {
+      if (runController.current === controller) {
+        runController.current = null;
+        setRunning(false);
+        runId.current = '';
+      }
+    }
+  }
   async function cancelRun() {
     runController.current?.abort();
     runController.current = null;
@@ -1871,6 +1979,18 @@ function Workbench() {
                 />
                 <span>s</span>
               </label>
+              <ConfigurationMenu
+                doc={doc}
+                disabled={running || switching}
+                onApply={(c) => commitDoc((d) => applyConfiguration(d, c))}
+                onSave={(name) =>
+                  commitDoc((d) => saveConfiguration(d, name).project)
+                }
+                onRemove={(c) =>
+                  commitDoc((d) => removeConfiguration(d, c.id))
+                }
+                onRunAll={() => void runAllConfigurations()}
+              />
               <Button
                 className={`run-button ${running ? 'running' : ''}`}
                 onClick={() => void (running ? cancelRun() : runSimulation())}
@@ -2001,6 +2121,7 @@ function Workbench() {
                     </div>
                   )}
                 {ready && (
+                  <VariantSwitchContext.Provider value={switchVariantOnSheet}>
                   <ModelCanvas
                   sheet={scope.join('/')}
                     key={project.modelId ?? 'workspace'}
@@ -2114,6 +2235,7 @@ function Workbench() {
                     />
                     <Controls showInteractive={false} />
                   </ModelCanvas>
+                  </VariantSwitchContext.Provider>
                 )}
                 {selectedIds.length === 0 && (
                   <div className="canvas-hint">
@@ -2452,6 +2574,11 @@ function Workbench() {
                           </Button>
                         )}
                       </div>
+                      <VariantPanel
+                        doc={doc}
+                        block={active}
+                        onCommit={(change) => commit(change)}
+                      />
                     </div>
                   )}
                   {isBoundary(active) && (
@@ -2899,7 +3026,7 @@ function Workbench() {
             path={scope}
             project={project}
             selectedIds={selectedIds}
-            runId={result?.id}
+            runId={result?.comparison ? undefined : result?.id}
             onShowBlocks={(ids) => {
               setExportOpen(false);
               selectBlocks(ids);

@@ -41,7 +41,7 @@ flowchart LR
     AGENT --> CHECK[Schema and compiler checks]
     CHECK --> CMD
     DOC --> EXPORT[Selected controller contract]
-    EXPORT --> C[Agent C generation and compile check]
+    EXPORT --> C[Template C generation and replay check]
 ```
 
 ## Model ownership
@@ -68,17 +68,19 @@ Smooth interaction is a product requirement. Large-model frame-rate and latency 
 
 The Python service validates the document, checks connected scalar inputs, emits Modelica, and runs OpenModelica under supervision (native install or container) on an immutable snapshot. Signal nets have at most one output driver; physical nets use Modelica potential/flow connection semantics. A visual junction is not an executable block, and canvas order is not evaluation order.
 
-Built-in, non-generated physical `kind` values select canonical wrappers in `server/modelica.py`. Their display equations are explanatory; editing that text does not replace their physical implementation. Signal definitions and generated physical definitions use their bounded declarations and equations. Generated physical ports emit standard electrical pins, rotational flanges, or heat ports. Built-in physical additions use the canonical wrapper contract; generated additions use typed standard connectors and bounded equations. Assigning a domain color alone does not create physical connectivity.
+Built-in, non-generated physical `kind` values select canonical wrappers in `server/modelica.py`. Their display equations are explanatory; editing that text does not replace their physical implementation. Signal definitions and generated physical definitions use their bounded declarations and equations. Generated physical ports emit standard electrical pins, rotational or translational flanges, heat ports, or magnetic ports. Most built-in physical, logic, and machine blocks instead name a Modelica Standard Library 4.1.0 class (`definition.modelica`); `server/msl.py` checks them against `server/msl_index.json` and the emitter instantiates the class directly. Generated additions use typed standard connectors and bounded equations. Assigning a domain color alone does not create physical connectivity.
+
+Subsystems (document version 2) are emitted as nested Modelica models, one per used definition, with the boundary blocks as real connectors; instances are components, and result keys keep the dotted instance path. Only the active variant of a subsystem is emitted. See [emission](docs/architecture/EXECUTION.md#emission).
 
 The API exposes jobs rather than blocking the editor. Current concurrency, cancellation, diagnostics, result sampling, and file ownership are described in [simulation and agent execution](docs/architecture/EXECUTION.md) and the [API guide](docs/API.md).
 
 ## Agent and export boundary
 
-The component adapter returns structured JSON constrained by the user-selected signal, electrical, rotational mechanical, thermal, or multidomain type. The server enforces terminal domains and directions independently of the provider, and refinement preserves the existing wired interface. Pydantic validates the definition, and OpenModelica checks it before insertion. Compiler diagnostics can trigger one repair attempt. The generated response is data, not a project-editing command. The browser applies the accepted component through its normal operations.
+The component adapter returns structured JSON constrained by the user-selected signal, electrical, rotational or translational mechanical, magnetic, thermal, or multidomain type. The server enforces terminal domains and directions independently of the provider, and refinement preserves the existing wired interface. Pydantic validates the definition, and OpenModelica checks it before insertion. Compiler diagnostics can trigger one repair attempt. The generated response is data, not a project-editing command. The browser applies the accepted component through its normal operations.
 
-C export currently targets **one block marked `controller`**. The package includes its equations, parameters, local connection information, project revision, and a C11 init/step interface. Generated source is compiled with a C compiler through the selected engine backend (GCC in the container, the host compiler with native OpenModelica); the package retains the exact source and integration notes. Generation itself is not reproducible, and compile success proves neither behavioral equivalence nor hardware readiness. The servo example's sampled controller has a reviewed reference C implementation that tests replay against the simulation; see the [execution contract](docs/architecture/EXECUTION.md).
+C export is deterministic and uses no AI provider: `server/codegen.py` turns one subsystem instance, or a set of signal and Boolean blocks, into C11 `init`/`step` code from per-block templates, and can replay the last run's recorded inputs through the compiled code to compare outputs. Only a custom block without a template goes through the older provider-based path. Compile success and an open-loop replay prove neither closed-loop equivalence nor hardware readiness. See [controller C code](docs/architecture/EXECUTION.md#controller-c-code).
 
-This export is separate from OpenModelica's generated simulation C. A future controller-subsystem boundary must preserve controller structure and sample timing before the simulation compiler flattens the plant and controller.
+This export is separate from OpenModelica's generated simulation C. It works from the Gradara document, so controller structure and sample timing are preserved before the simulation compiler flattens the plant and controller.
 
 Full-model creation uses `server/model_agent.py` to plan against a catalog snapshot, await checked missing components through the existing creator, assemble catalog references into a validated document, and require a successful trial simulation. The browser previews the result and saves it as a separate model on acceptance. See [execution](docs/architecture/EXECUTION.md#full-model-generation) for limits and ownership.
 
@@ -88,7 +90,7 @@ Editing the open model (`server/model_edit.py`) and diagnosis (`server/diagnose_
 
 | Future capability | Prerequisite |
 | --- | --- |
-| Hierarchical models and controller export | Explicit subsystem boundaries, port mapping, paths, state and clock ownership, and migrations. |
+| Linked subsystem libraries | A subsystem definition shared across documents, with versioning and explicit update of the documents that use it. |
 | Modelica source round trips | A defined editable subset and a single-authority reconciliation design; no silent dual writing. |
 | Remote execution | Authentication, authorization, isolation, quotas, durable jobs, versioned requests and artifacts. |
 | FMI or another numerical backend | A concrete interoperability requirement and a capability contract; Modelica equation semantics are not universally interchangeable. |

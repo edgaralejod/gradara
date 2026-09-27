@@ -2,6 +2,7 @@
 """Freeze the local service with PyInstaller into build/backend/gradara-backend/."""
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -23,6 +24,8 @@ def main() -> None:
         '--collect-submodules', 'uvicorn',
         '--collect-submodules', 'keyring',
         '--copy-metadata', 'keyring',
+        # The MSL class index is data, which module collection does not pick up.
+        '--add-data', f'{ROOT/"server"/"msl_index.json"}{os.pathsep}server',
         '--exclude-module', 'tkinter',
         '--exclude-module', 'pytest',
     ]
@@ -32,6 +35,8 @@ def main() -> None:
     exe = out/'backend'/'gradara-backend'/('gradara-backend.exe' if sys.platform == 'win32' else 'gradara-backend')
     if not exe.exists():
         raise SystemExit(f'PyInstaller did not produce {exe}')
+    if not list((out/'backend'/'gradara-backend').rglob('msl_index.json')):
+        raise SystemExit('The frozen backend is missing server/msl_index.json')
     print(f'Built {exe}')
 
 

@@ -97,15 +97,22 @@ function InspectorSession({
   stale: boolean;
   modelId?: string;
 }) {
-  const storageKey = `gradara-inspector:${modelId ?? result.snapshot?.modelId ?? 'workspace'}`;
+  const storageKey = `gradara-inspector:${modelId ?? result.snapshot?.modelId ?? 'workspace'}${result.comparison ? ':compare' : ''}`;
   const [resolution, setResolution] = useState<{
     id: string;
     data?: SimulationResult;
     error?: string;
   } | null>(null);
-  const full = resolution?.id === result.id ? resolution.data : undefined;
-  const loading = resolution?.id !== result.id;
-  const dataError = resolution?.id === result.id ? resolution.error : '';
+  // An overlay of several configurations already holds full data; it is not a stored run.
+  const overlay = !!result.comparison;
+  const full = overlay
+    ? result
+    : resolution?.id === result.id
+      ? resolution.data
+      : undefined;
+  const loading = !overlay && resolution?.id !== result.id;
+  const dataError =
+    !overlay && resolution?.id === result.id ? resolution.error : '';
   const [reload, setReload] = useState(0);
   const [config, setConfig] = useState<Config>(() => {
     let stored: unknown;
@@ -124,6 +131,7 @@ function InspectorSession({
   const [storageError, setStorageError] = useState('');
   const resultId = result.id;
   useEffect(() => {
+    if (overlay) return;
     const abort = new AbortController();
     void api<SimulationResult>(`/results/${resultId}/data`, {
       signal: abort.signal,
@@ -134,7 +142,7 @@ function InspectorSession({
           setResolution({ id: resultId, error: e.message });
       });
     return () => abort.abort();
-  }, [resultId, reload]);
+  }, [resultId, reload, overlay]);
   const data = full ?? result;
   useEffect(() => {
     // Debounce synchronous browser storage writes while panning.
@@ -268,9 +276,11 @@ function InspectorSession({
                 ? 'No run yet'
                 : stale
                   ? 'Model changed · Run again'
-                  : 'Completed'}
+                  : result.comparison
+                    ? `Comparing ${result.comparison.map((c) => c.name).join(' · ')}`
+                    : 'Completed'}
         </span>
-        {result && (
+        {result && !result.comparison && (
           <a href={`/api/results/${result.id}/csv`} download>
             <Download size={13} aria-hidden="true" /> Export CSV
           </a>

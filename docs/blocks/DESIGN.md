@@ -20,6 +20,8 @@ Enlarging a block changes the space around its symbol, not its text size. Zoom s
 | Mux / demux | 40 × 96 | Narrow tapered body; indexed terminals replace redundant internal text |
 | Electrical primitive | 80 × 48 horizontal; 48 × 80 vertical | Unboxed circuit symbol; leads reach the exact terminal coordinates |
 | Ground | 40 × 40 | Unboxed reference glyph with its lead at the top terminal |
+| Subsystem port pill | 32 high; width 48 + 8 per name character, on the 8-unit grid, at most 160 | A rounded pill inside a subsystem; its default size is also its minimum |
+| Subsystem | Labeled-terminal family (80 × 64 up, 128 × 96 or larger with several ports) | Always shows port captions, since they are the inside's port names |
 
 These are deliberate semantic exceptions, not permission to invent dimensions for every new kind. `defaultBlockSize()` computes defaults and `minimumDesignedSize()` sets resizing limits. New registered or agent-created blocks inherit this system automatically. Generic signal blocks with one input and one output use the standard body; multiple or mixed-domain terminals reserve more room. Explicit unusual terminal offsets still need visual review for spacing.
 
@@ -39,9 +41,17 @@ These are deliberate semantic exceptions, not permission to invent dimensions fo
 
 ## Domains and terminals
 
-Retain the shared `domainColors`: signal blue, electrical ochre, mechanical teal, thermal coral. The body uses its owning domain. **Each terminal uses its own domain**, so an electrical machine can expose mechanical and signal terminals without ambiguity. Physical connection points retain their distinct square/cross affordance; signal terminals keep their existing wiring affordance. Color alone never replaces direction/domain metadata.
+Retain the shared `domainColors` in `lib/gradara/model.ts`: signal blue, Boolean violet, electrical ochre, rotational mechanical teal, translational olive, thermal coral, magnetic plum, and 3-phase rust. The body uses its owning domain. **Each terminal uses its own domain**, so an electrical machine can expose mechanical and signal terminals without ambiguity. Physical connection points retain their distinct square/cross affordance; signal terminals keep their existing wiring affordance. Color alone never replaces direction/domain metadata.
 
 Rendering must use `portSide`/`portOffset` geometry also used by `portPoint`. Do not position a visual terminal independently from its hit target or routing endpoint. Keep `data-block-id`, `data-port-id`, accessible names, and native pointer ownership intact.
+
+## Subsystems and port pills
+
+A subsystem instance draws a box with a second sheet offset behind it and a generic nested-diagram symbol. It shows every port caption, because captions are the names of the port pills inside. Port sides come from the inside: inputs on the left, outputs on the right, and physical terminals on the side their pill chooses.
+
+Inside a subsystem, **Subsystem input**, **Subsystem output**, and **Subsystem terminal** blocks render as pills instead of boxes. The pill carries the port name inside it, so it has no separate instance label and no terminal captions. A small glyph in the pill shows the position number for inputs and outputs, or a domain mark for terminals, and the pill's tint and glyph use the port's domain color. The name uses the standard 14 px diagram text.
+
+A subsystem with variants shows a segmented switch centered just above its body. Each segment is a variant name (default A, B, C), the active one is filled, and clicking a segment switches variants. The switch uses the 10 px micro size and truncates long names; keep variant names short. It is canvas chrome, not part of the block's geometry, so it never moves ports or changes the body size.
 
 ## Library and catalog
 

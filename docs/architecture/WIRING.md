@@ -85,6 +85,14 @@ The model inspector searches blocks and nets by name, ID, domain, or terminal. S
 
 Double-click a wire or use F2 to name its net. Enter or blur commits, Escape cancels, and an empty name restores the automatic name. Labels store a wire ID, a fraction of routed length, and a side. Dragging a label or using its arrow keys changes label placement without moving wiring; Home resets placement. If its wire disappears, placement falls back to a suitable surviving run. Block labels use a separate per-instance offset and follow block movement/resizing.
 
+## Subsystem sheets
+
+Each subsystem definition is its own sheet with its own wires, junctions, and nets (see the [model format](MODEL_FORMAT.md#subsystems-and-variants)). Wires never cross sheets; connectivity crosses only through a subsystem port. Every drawing, selection, naming, and net rule above applies unchanged inside a subsystem, because the workbench edits the open sheet as an ordinary document and writes it back as one undo step.
+
+Inside, a port pill is a block with one terminal. An input pill's terminal is an output, so it is the driver of its signal net and counts toward the one-driver rule; an output pill's terminal is an input that the inside must drive; a terminal pill joins a physical net like any physical port. Outside, the subsystem block's ports are ordinary ports with the pill's direction and domain. Changing a pill's domain removes wires of the old domain on it, and removing a pill removes the outside wires to its port on every instance.
+
+Grouping (⌘/Ctrl+G) cuts every wire that crosses the selection boundary. The outside part keeps the wire ID, so the outside net keeps its identity, name, label, and logging; the inside part is a new wire in a net with the same name. Each cut net becomes one port, named after the net's custom name or the inside terminal, with pills placed level with what they connect to. Junctions whose connected blocks are all selected move inside. Ungrouping reverses this: the inside blocks return with new IDs only where an ID is already taken, and outside wires reconnect to the terminals the ports led to. Copy and paste carry the subsystem definitions a fragment needs; pasting a definition into its own inside is refused.
+
 ## Numerical boundary
 
 Signal nets permit at most one output driver; required signal inputs must be connected for simulation. Physical nets join compatible terminals through Modelica potential/flow semantics. The frontend and backend flatten connected components consistently; physical emission uses a unique spanning tree. Ports on the same block remain separate graph vertices.

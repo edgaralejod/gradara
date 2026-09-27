@@ -85,6 +85,16 @@ function values(block: Block) {
   );
 }
 
+/** The next free short name: A, B, C, … (names fit the switch on the block). */
+function nextVariantName(variants: Variant[]) {
+  const names = new Set(variants.map((v) => v.name));
+  for (let i = 0; i < 26; i++) {
+    const letter = String.fromCharCode(65 + i);
+    if (!names.has(letter)) return letter;
+  }
+  return uniqueVariantName(variants, 'Variant');
+}
+
 function uniqueVariantName(variants: Variant[], base: string) {
   const names = new Set(variants.map((v) => v.name));
   if (!names.has(base)) return base;
@@ -94,18 +104,10 @@ function uniqueVariantName(variants: Variant[], base: string) {
 }
 
 /** The variant list of an instance, creating the first variant from what it shows now. */
-function variantsOf(view: Project, block: Block): Variant[] {
+function variantsOf(block: Block): Variant[] {
   const sr = block.definition.subsystem!;
   if (sr.variants) return sr.variants;
-  const sub = findSubsystem(view, sr.ref);
-  return [
-    {
-      id: newId('v_'),
-      name: sub?.name ?? 'A',
-      ref: sr.ref,
-      values: values(block),
-    },
-  ];
+  return [{ id: newId('v_'), name: 'A', ref: sr.ref, values: values(block) }];
 }
 
 /** Point the instance at `variant`: its inside, and its remembered parameter values. */
@@ -185,7 +187,7 @@ export function addDiagramVariant(
     ? findSubsystem(view, block.definition.subsystem.ref)
     : undefined;
   if (!block || !sub) return undefined;
-  const variants = variantsOf(view, block);
+  const variants = variantsOf(block);
   const active = variants.find((v) => v.ref === sub.id) ?? variants[0];
   // Boundary block IDs are kept, so the copy has the same ports as the original.
   const copy: SubsystemDefinition = {
@@ -194,11 +196,11 @@ export function addDiagramVariant(
   };
   const variant: Variant = {
     id: newId('v_'),
-    name: uniqueVariantName(variants, name ?? `${sub.name} B`),
+    name: name ? uniqueVariantName(variants, name) : nextVariantName(variants),
     ref: copy.id,
     values: values(block),
   };
-  copy.name = variant.name;
+  copy.name = `${sub.name} ${variant.name}`;
   const withVariants = mapInstance(
     { ...view, version: 2, subsystems: [...subsystemsOf(view), copy] },
     instanceId,
@@ -237,13 +239,13 @@ export function addParameterVariant(
 ): { project: Project; variantId: string } | undefined {
   const block = view.blocks.find((b) => b.id === instanceId);
   if (!block?.definition.subsystem) return undefined;
-  const variants = variantsOf(view, block);
+  const variants = variantsOf(block);
   const active =
     variants.find((v) => v.id === block.definition.subsystem!.active) ??
     variants[0];
   const variant: Variant = {
     id: newId('v_'),
-    name: uniqueVariantName(variants, name ?? `${active.name} (values)`),
+    name: name ? uniqueVariantName(variants, name) : nextVariantName(variants),
     ref: active.ref,
     values: values(block),
   };
