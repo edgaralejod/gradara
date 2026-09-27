@@ -175,4 +175,12 @@ def test_inactive_variants_compile_with_the_engine():
     by_name = {r['variant']: r for r in report['variants']}
     assert by_name['Nine']['ok'], by_name['Nine']
     # The Doubler inside now has a gain with an unconnected input, which the check reports.
-    assert not by_name['Doubler']['ok'] and 'not connected' in by_name['Doubler']['message']
+    assert not by_name['Doubler']['ok'] and 'Connect these signal inputs' in by_name['Doubler']['message']
+
+
+def test_a_run_ignores_problems_inside_inactive_variants():
+    doc = variants()
+    doc['subsystems'][1]['blocks'].append(at('stray', copy.deepcopy(doc['subsystems'][1]['blocks'][1]['definition']), 300))
+    validate_simulation(Project.model_validate(doc))  # the Doubler inside is inactive
+    with pytest.raises(SimulationFailure, match='Connect these signal inputs'):
+        validate_simulation(Project.model_validate(doc | {'blocks': variants('v2')['blocks']}))

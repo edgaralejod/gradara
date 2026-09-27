@@ -388,10 +388,12 @@ class NativeBackend:
             lines += [f'gRes := simulate(Gradara.System, startTime=0, stopTime={float(config["duration"])!r}, '
                       'numberOfIntervals=6000, tolerance=1e-6, method="dassl", outputFormat="csv", '
                       'fileNamePrefix="simulation");',
+                      # Read the compiler's errors first: later calls can clear them.
+                      'gErrors := getErrorString();',
                       'gRes;',
                       'writeFile("om_result.txt", gRes.resultFile);',
                       'writeFile("om_messages.txt", gRes.messages);',
-                      'writeFile("om_sim_errors.txt", getErrorString());']
+                      'writeFile("om_sim_errors.txt", gErrors);']
         return '\n'.join(lines) + '\n'
 
     async def execute(self, folder: Path, config: dict, name: str) -> dict:
@@ -407,7 +409,9 @@ class NativeBackend:
         report = parse_native(folder, config, output)
         report['engine'] = f'OpenModelica {await self.version(omc) or "(native)"}'
         (folder/'engine.json').write_text(json.dumps(report))
-        if report.get('error'):
+        # A library that will not load is an engine problem; anything later is the model's own
+        # failure, reported like the Docker backend's so diagnostics can explain it.
+        if report.get('error') and _read(folder, 'om_load.txt') != 'true':
             raise EngineError(report['error'])
         return report
 

@@ -66,6 +66,22 @@ def diagrams(project: 'Project') -> Iterator[tuple[str | None, 'Diagram']]:
         yield subsystem.id, subsystem
 
 
+def active_diagrams(project: 'Project') -> Iterator[tuple[str | None, 'Diagram']]:
+    """The top level and every definition reachable through active insides: what a run simulates."""
+    by_id = {s.id: s for s in (project.subsystems or [])}
+    yield None, project
+    seen: set[str] = set()
+    stack = [project]
+    while stack:
+        diagram = stack.pop()
+        for block in diagram.blocks:
+            ref = block.definition.subsystem.ref if block.definition.subsystem else None
+            if ref in by_id and ref not in seen:
+                seen.add(ref)
+                yield ref, by_id[ref]
+                stack.append(by_id[ref])
+
+
 def check_hierarchy(project: 'Project') -> None:
     subsystems = {s.id: s for s in (project.subsystems or [])}
     if len(subsystems) != len(project.subsystems or []):

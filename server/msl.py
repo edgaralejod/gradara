@@ -80,8 +80,16 @@ def instance(definition: Definition, name: str, overrides: dict[str, str] | None
     def value(expression: str) -> str:
         return IDENT.sub(lambda m: f'({values[m.group(0)]})' if m.group(0) in values else m.group(0), expression)
 
+    types = index()[wrapper.class_]['parameters']
+
+    def typed(key: str, expression: str) -> str:
+        # Promoted subsystem parameters are Real; an Integer parameter (a cell count, say) needs a conversion.
+        if types.get(key) == 'Integer' and not re.fullmatch(r'\(?-?\d+\)?', expression):
+            return f'integer({expression})'
+        return expression
+
     return f'  {wrapper.class_} {name}' + modification(
-        {key: value(expr) for key, expr in wrapper.modifiers.items()}) + ';'
+        {key: typed(key, value(expr)) for key, expr in wrapper.modifiers.items()}) + ';'
 
 
 def modification(values: dict[str, str]) -> str:

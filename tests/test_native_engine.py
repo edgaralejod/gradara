@@ -88,8 +88,9 @@ def test_native_failure_is_reported_with_compiler_text(fake_omc, tmp_path):
     (fake_omc/'mode').write_text('fail')
     folder = tmp_path/'run'
     folder.mkdir()
-    with pytest.raises(engines.EngineError, match='division by zero'):
-        run(engines.execute(folder, {'duration': 1.0}, 'x'))
+    # A model failure comes back as the report's error, like the Docker backend, so diagnostics can explain it.
+    report = run(engines.execute(folder, {'duration': 1.0}, 'x'))
+    assert 'division by zero' in report['error']
 
 
 def test_native_check_and_status(fake_omc, tmp_path):
