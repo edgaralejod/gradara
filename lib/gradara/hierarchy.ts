@@ -26,12 +26,12 @@ import { defaultBlockSize, snapBlockPosition } from './block-design';
 import { blockSize } from './canvas';
 import { portPoint } from './ports';
 
-export const boundaryKinds = {
-  inport: 'input',
-  outport: 'output',
-  connport: 'physical',
-} as const;
-export type BoundaryKind = keyof typeof boundaryKinds;
+import {
+  boundaryDefinition,
+  boundaryKinds,
+  type BoundaryKind,
+} from './port-blocks';
+export { boundaryDefinition, boundaryKinds, type BoundaryKind };
 
 export const isBoundary = (block: Block) =>
   block.definition.kind in boundaryKinds && !!block.definition.boundary;
@@ -40,43 +40,6 @@ export const isInstance = (block: Block) => !!block.definition.subsystem;
 
 const newId = (prefix: string) =>
   `${prefix}${crypto.randomUUID().replaceAll('-', '').slice(0, 10)}`;
-
-/** A boundary block: the inside end of one subsystem port. */
-export function boundaryDefinition(
-  kind: BoundaryKind,
-  name: string,
-  domain: Domain,
-  order: number,
-  side?: Port['side'],
-): Definition {
-  const inner: Port =
-    kind === 'inport'
-      ? { id: 'y', name, direction: 'output', domain, side: 'right' }
-      : kind === 'outport'
-        ? { id: 'u', name, direction: 'input', domain, side: 'left' }
-        : {
-            id: 'p',
-            name,
-            direction: 'physical',
-            domain,
-            side: side === 'right' ? 'left' : 'right',
-          };
-  return {
-    kind,
-    name,
-    description:
-      kind === 'connport'
-        ? `Physical ${domain} terminal of the subsystem.`
-        : `Subsystem ${kind === 'inport' ? 'input' : 'output'}.`,
-    domain,
-    symbol: kind === 'connport' ? '⊙' : String(order + 1),
-    ports: [inner],
-    parameters: [],
-    equations: '',
-    category: 'routing',
-    boundary: { order, ...(side ? { side } : {}) },
-  };
-}
 
 export const subsystemsOf = (project: Project) => project.subsystems ?? [];
 
@@ -443,6 +406,10 @@ export function groupIntoSubsystem(
 
   const seenInner = new Set<string>();
   const seenOuter = new Set<string>();
+  // A cut wire keeps its ID outside (so its net keeps its name and visibility) and
+  // maps to a new wire inside, which inherits the same net.
+  const innerFor = new Map<string, string>();
+  const outerIds = new Set<string>();
   for (const wire of view.wires) {
     const a = isInside(wire.source),
       b = isInside(wire.target);
@@ -464,8 +431,10 @@ export function groupIntoSubsystem(
       seenInner.add(innerKey);
       // Signal wires run from the driver to the consumer.
       const fromBoundary = boundary.direction === 'input';
+      const innerId = newId('w_');
+      innerFor.set(wire.id, innerId);
       innerWires.push({
-        id: newId('w_'),
+        id: innerId,
         ...(fromBoundary || boundary.direction === 'physical'
           ? {
               source: boundary.block.id,
@@ -484,8 +453,10 @@ export function groupIntoSubsystem(
     const outerKey = `${boundary.block.id}|${outId}.${outHandle}`;
     if (!seenOuter.has(outerKey)) {
       seenOuter.add(outerKey);
+      const outerId = outerIds.has(wire.id) ? newId('w_') : wire.id;
+      outerIds.add(outerId);
       outerWires.push({
-        id: newId('w_'),
+        id: outerId,
         ...(boundary.direction === 'input'
           ? {
               source: outId,
@@ -546,7 +517,9 @@ export function groupIntoSubsystem(
     nets: view.nets
       ?.map((n) => ({
         ...n,
-        wireIds: n.wireIds.filter((w) => innerWires.some((x) => x.id === w)),
+        wireIds: n.wireIds
+          .map((w) => innerFor.get(w) ?? w)
+          .filter((w) => innerWires.some((x) => x.id === w)),
       }))
       .filter((n) => n.wireIds.length),
   } as Project);
@@ -640,11 +613,15 @@ export function ungroupSubsystem(
     }));
   const boundaryIds = new Set(inner.map((b) => b.id));
   const wires: Wire[] = [];
+  const carried = new Map<string, string>();
   for (const w of sub.wires) {
     if (boundaryIds.has(w.source) || boundaryIds.has(w.target)) continue;
+    // Keep wire IDs where free, so net names and visibility survive the round trip.
+    const wireId = view.wires.some((x) => x.id === w.id) ? newId('w_') : w.id;
+    carried.set(w.id, wireId);
     wires.push({
       ...structuredClone(w),
-      id: newId('w_'),
+      id: wireId,
       source: rename.get(w.source) ?? w.source,
       target: rename.get(w.target) ?? w.target,
       waypoints: w.waypoints?.map((p) => ({ x: p.x + dx, y: p.y + dy })),
@@ -719,6 +696,14 @@ export function ungroupSubsystem(
     blocks: [...view.blocks.filter((b) => b.id !== instanceId), ...blocks],
     wires: [...outer, ...wires],
     junctions,
+    // Inner nets come back with their names and visibility.
+    nets: [
+      ...(view.nets ?? []),
+      ...(sub.nets ?? []).map((n) => ({
+        ...n,
+        wireIds: n.wireIds.map((id) => carried.get(id) ?? id),
+      })),
+    ],
   };
   return { project: next, blockIds: blocks.map((b) => b.id) };
 }
@@ -749,3 +734,164 @@ export function makeUnique(view: Project, instanceId: string): Project {
 /** Colour of a boundary pill: the domain colour, shared with its wires and ports. */
 export const boundaryColor = (block: Block) =>
   domainColors[block.definition.ports[0]?.domain ?? 'signal'];
+
+/**
+ * Library "Subsystem" blocks and version 1 placeholders become real subsystems
+ * that pass each input to the output with the same position, so they keep their
+ * ports, wires, and behavior.
+ */
+export function realizePlaceholders(project: Project): Project {
+  const placeholders = project.blocks.filter(
+    (b) =>
+      b.definition.kind === 'subsystem' &&
+      !b.definition.subsystem &&
+      !b.definition.generated,
+  );
+  if (!placeholders.length) return project;
+  let subsystems = subsystemsOf(project);
+  const blocks = project.blocks.map((block) => {
+    if (!placeholders.includes(block)) return block;
+    const inputs = block.definition.ports.filter(
+      (p) => p.direction === 'input',
+    );
+    const outputs = block.definition.ports.filter(
+      (p) => p.direction === 'output',
+    );
+    const inner: Block[] = [
+      ...inputs.map((p, i) => ({
+        id: p.id,
+        definition: boundaryDefinition('inport', p.name, p.domain, i),
+        position: { x: 40, y: 80 + i * 64 },
+      })),
+      ...outputs.map((p, i) => ({
+        id: p.id,
+        definition: boundaryDefinition(
+          'outport',
+          p.name,
+          p.domain,
+          inputs.length + i,
+        ),
+        position: { x: 280, y: 80 + i * 64 },
+      })),
+    ].map((b) => ({ ...b, size: defaultBlockSize(b.definition) }));
+    const wires: Wire[] = inputs.slice(0, outputs.length).map((p, i) => ({
+      id: newId('w_'),
+      source: p.id,
+      sourceHandle: 'y',
+      target: outputs[i].id,
+      targetHandle: 'u',
+    }));
+    const sub: SubsystemDefinition = {
+      id: newId('sub_'),
+      name: nextSubsystemName({ ...project, subsystems }),
+      blocks: inner,
+      wires,
+      junctions: [],
+    };
+    sub.nets = reconcileNets({ ...project, ...sub } as Project).nets;
+    subsystems = [...subsystems, sub];
+    const definition = instanceDefinition(sub, {
+      ...block.definition,
+      name: block.definition.name,
+      parameters: [],
+    });
+    return { ...block, definition };
+  });
+  return { ...project, version: 2, blocks, subsystems };
+}
+
+/** Definitions an instance needs, including those nested inside it. */
+export function subsystemClosure(project: Project, refs: string[]) {
+  const out = new Map<string, SubsystemDefinition>();
+  const visit = (ref: string) => {
+    if (out.has(ref)) return;
+    const sub = findSubsystem(project, ref);
+    if (!sub) return;
+    out.set(ref, sub);
+    for (const b of sub.blocks)
+      if (b.definition.subsystem) visit(b.definition.subsystem.ref);
+  };
+  refs.forEach(visit);
+  return [...out.values()];
+}
+
+/** Definitions the sheet at `path` sits inside: pasting one of them there would nest it in itself. */
+export function ancestorRefs(project: Project, path: string[]) {
+  return path
+    .map((_, i) => subsystemAt(project, path.slice(0, i + 1)))
+    .filter((r): r is string => !!r);
+}
+
+/** Add definitions a pasted fragment brings along; refuse one that would contain itself. */
+export function withPastedSubsystems(
+  view: Project,
+  path: string[],
+  fragment: { blocks: Block[]; subsystems?: SubsystemDefinition[] },
+): Project | 'recursive' {
+  const refs = fragment.blocks.flatMap((b) =>
+    b.definition.subsystem ? [b.definition.subsystem.ref] : [],
+  );
+  if (!refs.length) return view;
+  const incoming = fragment.subsystems ?? [];
+  const closure = new Set([...refs, ...incoming.map((s) => s.id)]);
+  if (ancestorRefs(view, path).some((r) => closure.has(r))) return 'recursive';
+  const known = new Set(subsystemsOf(view).map((s) => s.id));
+  const missing = incoming.filter((s) => !known.has(s.id));
+  return missing.length
+    ? { ...view, version: 2, subsystems: [...subsystemsOf(view), ...missing] }
+    : view;
+}
+
+/** Change a boundary block's domain; wires of the old domain on it go. */
+export function setBoundaryDomain(
+  view: Project,
+  id: string,
+  domain: Domain,
+): Project {
+  const block = view.blocks.find((b) => b.id === id);
+  if (
+    !block ||
+    !isBoundary(block) ||
+    block.definition.ports[0].domain === domain
+  )
+    return view;
+  const d = block.definition;
+  const next = boundaryDefinition(
+    d.kind as BoundaryKind,
+    d.name,
+    domain,
+    d.boundary!.order,
+    d.boundary!.side,
+  );
+  return {
+    ...view,
+    blocks: view.blocks.map((b) =>
+      b.id === id ? { ...b, definition: { ...next, name: d.name } } : b,
+    ),
+    wires: view.wires.filter((w) => w.source !== id && w.target !== id),
+  };
+}
+
+/** Which side of the subsystem block a physical port sits on. */
+export function setBoundarySide(
+  view: Project,
+  id: string,
+  side: NonNullable<Port['side']>,
+): Project {
+  const block = view.blocks.find((b) => b.id === id);
+  if (!block || !isBoundary(block)) return view;
+  return {
+    ...view,
+    blocks: view.blocks.map((b) =>
+      b.id === id
+        ? {
+            ...b,
+            definition: {
+              ...b.definition,
+              boundary: { ...b.definition.boundary!, side },
+            },
+          }
+        : b,
+    ),
+  };
+}

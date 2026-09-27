@@ -71,26 +71,29 @@ function BlockNode({
       >
         <BlockFace definition={d} />
       </div>
-      <ViewportPortal>
-        <div
-          className={`block-label-anchor engineering-label notation-${sum ? 'sum' : d.kind}`}
-          style={{
-            left:
-              positionAbsoluteX +
-              (width ??
-                blockSize({ id, definition: d, position: { x: 0, y: 0 } })
-                  .width) /
-                2,
-            top:
-              positionAbsoluteY +
-              (height ??
-                blockSize({ id, definition: d, position: { x: 0, y: 0 } })
-                  .height),
-          }}
-        >
-          <BlockLabel id={id} name={d.name} offset={data.labelOffset} />
-        </div>
-      </ViewportPortal>
+      {/* A subsystem port shows its name inside its pill. */}
+      {!d.boundary && (
+        <ViewportPortal>
+          <div
+            className={`block-label-anchor engineering-label notation-${sum ? 'sum' : d.kind}`}
+            style={{
+              left:
+                positionAbsoluteX +
+                (width ??
+                  blockSize({ id, definition: d, position: { x: 0, y: 0 } })
+                    .width) /
+                  2,
+              top:
+                positionAbsoluteY +
+                (height ??
+                  blockSize({ id, definition: d, position: { x: 0, y: 0 } })
+                    .height),
+            }}
+          >
+            <BlockLabel id={id} name={d.name} offset={data.labelOffset} />
+          </div>
+        </ViewportPortal>
+      )}
       {d.ports.map((port) => {
         const { side, offset } = portPlacement(d, port, rotation);
         const location =

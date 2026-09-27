@@ -2686,3 +2686,57 @@
 }
 .update-indicator.is-ready { border-color: #2f6f9f; background: #2f6f9f; color: #fff; }
 .update-indicator:focus-visible { outline: 2px solid #2f6f9f; outline-offset: 2px; }
+
+/* Subsystem navigation in the header: Top level › Drivetrain › Inverter. */
+.sheet-path {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--muted-foreground, #5f6b76);
+  font-size: var(--text-ui);
+}
+.sheet-path button {
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sheet-path button:hover {
+  background: #eef3f7;
+  color: #1f3a4d;
+}
+.sheet-path [aria-current='page'] {
+  padding: 2px 4px;
+  color: #1f3a4d;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.subsystem-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.group-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.group-bar kbd {
+  margin-left: 4px;
+  font: inherit;
+  color: #6b7782;
+}
+.subsystem-section .field-row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}

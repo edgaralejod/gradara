@@ -6,6 +6,7 @@ import {
   snapBlockPosition,
 } from '@/lib/gradara/block-design';
 import {
+  Fragment,
   useState,
   useMemo,
   useCallback,
@@ -132,7 +133,11 @@ import {
   domainColors,
   type Project,
   type Definition,
+  type SubsystemDefinition,
+  type Domain,
+  type Port,
   compatible,
+  domainLabels,
   portOf,
 } from '@/lib/gradara/model';
 import { matchingPort } from '@/lib/gradara/catalog';
@@ -162,6 +167,23 @@ import AssistantPanel, {
   useAssistant,
 } from '@/components/gradara/assistant-panel';
 import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
+import {
+  breadcrumb,
+  findSubsystem,
+  groupIntoSubsystem,
+  isBoundary,
+  makeUnique,
+  scopeView,
+  ungroupSubsystem,
+  usageCount,
+  subsystemClosure,
+  validPath,
+  withPastedSubsystems,
+  writeScope,
+  setBoundaryDomain,
+  setBoundarySide,
+} from '@/lib/gradara/hierarchy';
+import { boundaryDomains, type BoundaryKind } from '@/lib/gradara/port-blocks';
 import { useAiLabel } from '@/lib/gradara/ai';
 import UpdateIndicator from '@/components/gradara/update-indicator';
 import {
@@ -205,9 +227,32 @@ function IconButton({
 }
 function Workbench() {
   const { entries: generatedEntries } = useGeneratedLibrary();
-  const [project, setProject] = useState<Project>(blankProject);
+  // The saved document, and the sheet being edited: the top level or the inside of a subsystem.
+  const [doc, setDoc] = useState<Project>(blankProject);
+  const docRef = useRef(doc);
+  docRef.current = doc;
+  const [scope, setScopeState] = useState<string[]>([]);
+  const scopeRef = useRef(scope);
+  scopeRef.current = scope;
+  const project = useMemo(() => scopeView(doc, scope), [doc, scope]);
   const projectRef = useRef(project);
   projectRef.current = project;
+  const setProject = useCallback((next: Project) => {
+    docRef.current = next;
+    projectRef.current = scopeView(next, scopeRef.current);
+    setDoc(next);
+  }, []);
+  /** Open a sheet: [] is the top level, otherwise a path of subsystem instance IDs. */
+  const enterScope = useCallback((path: string[], clear = true) => {
+    scopeRef.current = path;
+    projectRef.current = scopeView(docRef.current, path);
+    setScopeState(path);
+    if (clear) {
+      setSelectedIds([]);
+      setSelectedEdges([]);
+      setSelectedJunctions([]);
+    }
+  }, []);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
   const [selectedJunctions, setSelectedJunctions] = useState<string[]>([]);
@@ -353,33 +398,36 @@ function Workbench() {
         previous,
       );
       if (next === previous) return;
+      const previousDoc = docRef.current;
       if (!options?.mergeHistory)
-        setHistory((h) => [...h.slice(-49), structuredClone(previous)]);
+        setHistory((h) => [...h.slice(-49), structuredClone(previousDoc)]);
       setFuture([]);
-      const changed = { ...next, revision: previous.revision + 1 };
-      projectRef.current = changed;
-      setProject(changed);
+      const written = writeScope(previousDoc, scopeRef.current, next);
+      const changed = { ...written, revision: previousDoc.revision + 1 };
+      docRef.current = changed;
+      projectRef.current = scopeView(changed, scopeRef.current);
+      setDoc(changed);
     },
     [],
   );
   const undo = useCallback(() => {
     if (!history.length) return;
     const previous = history[history.length - 1];
-    const current = structuredClone(projectRef.current);
+    const current = structuredClone(docRef.current);
     setFuture((f) => [...f, current]);
     setHistory((h) => h.slice(0, -1));
-    const restored = { ...previous, revision: projectRef.current.revision + 1 };
-    projectRef.current = restored;
+    const restored = { ...previous, revision: docRef.current.revision + 1 };
+    enterScope(validPath(restored, scopeRef.current), false);
     setProject(restored);
   }, [history]);
   const redo = useCallback(() => {
     if (!future.length) return;
     const next = future[future.length - 1];
-    const current = structuredClone(projectRef.current);
+    const current = structuredClone(docRef.current);
     setHistory((h) => [...h, current]);
     setFuture((f) => f.slice(0, -1));
-    const restored = { ...next, revision: projectRef.current.revision + 1 };
-    projectRef.current = restored;
+    const restored = { ...next, revision: docRef.current.revision + 1 };
+    enterScope(validPath(restored, scopeRef.current), false);
     setProject(restored);
   }, [future]);
   const active = project.blocks.find((b) => b.id === selectedIds[0]);
@@ -407,7 +455,7 @@ function Workbench() {
       duration: 200,
     });
   };
-  const signature = useMemo(() => semanticSignature(project), [project]);
+  const signature = useMemo(() => semanticSignature(doc), [doc]);
   const [dock, updateDock] = useDockState();
   const [liveProblems, setLiveProblems] = useState<Diagnostic[]>([]);
   useEffect(() => {
@@ -417,7 +465,7 @@ function Workbench() {
       300,
     );
     return () => clearTimeout(timer);
-  }, [signature]);
+  }, [signature, scope]);
   const problemSections = useMemo<ProblemSection[]>(() => {
     const sections: ProblemSection[] = [
       { id: 'live', title: 'Model checks', items: liveProblems },
@@ -522,6 +570,10 @@ function Workbench() {
   const getProject = useCallback(() => projectRef.current, []);
   const assistant = useAssistant(project.modelId, getProject);
   const requestEdit = (prompt: string, blockIds: string[]) => {
+    if (scopeRef.current.length) {
+      notify('The assistant edits the top level for now. Press ⌘↑ to go up, then ask again.');
+      return;
+    }
     const current = projectRef.current;
     const names = blockIds
       .map((id) => current.blocks.find((b) => b.id === id)?.definition.name)
@@ -540,6 +592,10 @@ function Workbench() {
     .filter((d) => d.severity !== 'info');
   const askAi = (diagnostics: Diagnostic[], proposeFix: boolean) => {
     if (!diagnostics.length || assistant.busy) return;
+    if (scopeRef.current.length) {
+      notify('The assistant works on the top level for now. Press ⌘↑ to go up, then ask again.');
+      return;
+    }
     const current = projectRef.current;
     const runId =
       runFailure &&
@@ -649,7 +705,7 @@ function Workbench() {
         } catch {
           /* The service still remembers the active document. */
         }
-        projectRef.current = next;
+        enterScope([]);
         setProject(next);
         setReady(true);
         const latest = await api<{ result: SimulationResult | null }>(
@@ -657,7 +713,7 @@ function Workbench() {
         ).catch(() => ({ result: null }));
         if (
           !disposed &&
-          projectRef.current.modelId === next.modelId &&
+          docRef.current.modelId === next.modelId &&
           latest.result
         ) {
           setResult(latest.result);
@@ -717,18 +773,16 @@ function Workbench() {
     setSettingsTab('engine');
   }, [healthChecked, health.engineReady]);
   const saveCurrent = async () => {
-    const snapshot = projectRef.current;
+    const snapshot = docRef.current;
     setSaving('Saving');
     try {
       await persistProject(JSON.stringify(snapshot));
-      if (projectRef.current.modelId === snapshot.modelId) {
+      if (docRef.current.modelId === snapshot.modelId) {
         setSaveError('');
-        setSaving(
-          store.isSaved(projectRef.current) ? 'Saved' : 'Unsaved changes',
-        );
+        setSaving(store.isSaved(docRef.current) ? 'Saved' : 'Unsaved changes');
       }
     } catch (e) {
-      if (projectRef.current.modelId === snapshot.modelId) {
+      if (docRef.current.modelId === snapshot.modelId) {
         setSaving('Not saved');
         setSaveError((e as Error).message);
       }
@@ -739,15 +793,15 @@ function Workbench() {
   saveNowRef.current = saveCurrent;
   useEffect(() => {
     if (!ready || switching) return;
-    if (store.isSaved(project)) {
+    if (store.isSaved(doc)) {
       setSaving('Saved');
       return;
     }
     setSaving('Unsaved changes');
     try {
       sessionStorage.setItem(
-        draftKey(project.modelId!),
-        JSON.stringify(store.draft(project)),
+        draftKey(doc.modelId!),
+        JSON.stringify(store.draft(doc)),
       );
     } catch {
       /* Saving to disk remains available. */
@@ -758,10 +812,10 @@ function Workbench() {
     return () => {
       if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     };
-  }, [project, ready, switching, store]);
+  }, [doc, ready, switching, store]);
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
-      if (ready && !store.isSaved(projectRef.current)) {
+      if (ready && !store.isSaved(docRef.current)) {
         event.preventDefault();
         event.returnValue = '';
       }
@@ -775,7 +829,7 @@ function Workbench() {
     } catch {
       /* The service still remembers the active document. */
     }
-    projectRef.current = next;
+    enterScope([]);
     setProject(next);
     setHistory([]);
     setFuture([]);
@@ -843,7 +897,7 @@ function Workbench() {
     setBrowserSection(section);
   };
   const openModel = async (id: string) => {
-    if (id === projectRef.current.modelId) return;
+    if (id === docRef.current.modelId) return;
     if (!beginTransition()) return;
     try {
       await saveCurrent();
@@ -855,7 +909,7 @@ function Workbench() {
       const latest = await api<{ result: SimulationResult | null }>(
         `/results/latest?model=${next.modelId}`,
       ).catch(() => ({ result: null }));
-      if (projectRef.current.modelId === next.modelId) {
+      if (docRef.current.modelId === next.modelId) {
         setResult(latest.result);
         if (latest.result?.snapshot)
           setResultSignature(semanticSignature(latest.result.snapshot));
@@ -868,10 +922,10 @@ function Workbench() {
     if (!beginTransition()) return;
     try {
       // Preserve the current edits even when saving the original is blocked by a conflict.
-      const originalId = projectRef.current.modelId!;
+      const originalId = docRef.current.modelId!;
       const copied = await api<SavedDocument>('/models/copy', {
         method: 'POST',
-        body: JSON.stringify({ name, project: projectRef.current }),
+        body: JSON.stringify({ name, project: docRef.current }),
       });
       try {
         sessionStorage.removeItem(draftKey(originalId));
@@ -888,7 +942,7 @@ function Workbench() {
   const reloadSaved = async () => {
     if (!beginTransition()) return;
     try {
-      const id = projectRef.current.modelId!;
+      const id = docRef.current.modelId!;
       const loaded = await api<SavedDocument>(`/models/${id}`);
       try {
         sessionStorage.removeItem(draftKey(id));
@@ -921,6 +975,15 @@ function Workbench() {
       position?: { x: number; y: number },
       connection?: { blockId: string; portId: string },
     ) => {
+      if (definition.boundary && !scopeRef.current.length) {
+        notify('Subsystem ports go inside a subsystem. Open one, or select blocks and press ⌘G.');
+        return;
+      }
+      if (definition.boundary) {
+        // A new port goes after the existing ones.
+        const order = projectRef.current.blocks.filter(isBoundary).length;
+        definition = { ...definition, boundary: { ...definition.boundary, order } };
+      }
       const id = `b_${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`;
       const current = projectRef.current;
       const selected = current.blocks.find((b) => b.id === selectedIds[0]);
@@ -986,7 +1049,7 @@ function Workbench() {
       setInspectorOpen(true);
       return id;
     },
-    [commit, newPosition, selectedIds],
+    [commit, newPosition, selectedIds, notify],
   );
   const deleteSelected = useCallback(() => {
     const s = selectionRef.current;
@@ -1003,6 +1066,64 @@ function Workbench() {
     commit(d.project);
     select(d.selection);
   }, [commit, selectedIds, select]);
+  const groupSelected = useCallback(() => {
+    const ids = selectionRef.current.blockIds;
+    if (!ids.length) {
+      notify('Select the blocks to group into a subsystem.');
+      return;
+    }
+    let created: string | undefined;
+    commit((p) => {
+      const grouped = groupIntoSubsystem(p, ids);
+      if (!grouped) return p;
+      created = grouped.instanceId;
+      return grouped.project;
+    });
+    if (created) {
+      select({ ...emptySelection(), blockIds: [created] });
+      notify('Made a subsystem. Double-click it to open; ⌘⇧G ungroups.');
+    }
+  }, [commit, select, notify]);
+  const ungroupSelected = useCallback(() => {
+    const ids = selectionRef.current.blockIds.filter((id) =>
+      projectRef.current.blocks.some(
+        (b) => b.id === id && b.definition.subsystem,
+      ),
+    );
+    if (!ids.length) return;
+    let restored: string[] = [];
+    commit((p) =>
+      ids.reduce((next, id) => {
+        const out = ungroupSubsystem(next, id);
+        if (!out) return next;
+        restored = [...restored, ...out.blockIds];
+        return out.project;
+      }, p),
+    );
+    select({ ...emptySelection(), blockIds: restored });
+  }, [commit, select]);
+  const openSubsystem = useCallback(
+    (id: string) => {
+      const block = projectRef.current.blocks.find((b) => b.id === id);
+      if (!block?.definition.subsystem) return false;
+      enterScope([...scopeRef.current, id]);
+      requestAnimationFrame(
+        () => void flow.fitView({ padding: 0.25, duration: 200 }),
+      );
+      return true;
+    },
+    [enterScope, flow],
+  );
+  const leaveSubsystem = useCallback(() => {
+    if (!scopeRef.current.length) return false;
+    const from = scopeRef.current[scopeRef.current.length - 1];
+    enterScope(scopeRef.current.slice(0, -1));
+    select({ ...emptySelection(), blockIds: [from] });
+    requestAnimationFrame(
+      () => void flow.fitView({ padding: 0.25, duration: 200 }),
+    );
+    return true;
+  }, [enterScope, select, flow]);
   const copySelection = useCallback(
     (cut = false) => {
       const fragment = extractSelection(
@@ -1010,7 +1131,16 @@ function Workbench() {
         selectionRef.current,
       );
       if (!fragment.blocks.length) return;
-      clipboard.current = fragment;
+      // Subsystem definitions travel with their instances, so a copy pastes into another model.
+      clipboard.current = {
+        ...fragment,
+        subsystems: subsystemClosure(
+          docRef.current,
+          fragment.blocks.flatMap((b) =>
+            b.definition.subsystem ? [b.definition.subsystem.ref] : [],
+          ),
+        ),
+      } as ModelFragment;
       setCanPaste(true);
       pasteCount.current = 0;
       if (cut) deleteSelected();
@@ -1023,20 +1153,31 @@ function Workbench() {
   const paste = useCallback(() => {
     if (!clipboard.current) return;
     const step = ++pasteCount.current * 40;
-    const result = pasteSelection(projectRef.current, clipboard.current, {
+    const target = withPastedSubsystems(
+      projectRef.current,
+      scopeRef.current,
+      clipboard.current as ModelFragment & {
+        subsystems?: SubsystemDefinition[];
+      },
+    );
+    if (target === 'recursive') {
+      notify('A subsystem cannot be pasted inside itself.');
+      return;
+    }
+    const result = pasteSelection(target, clipboard.current, {
       x: step,
       y: step,
     });
     commit(result.project);
     select(result.selection);
-  }, [commit, select]);
+  }, [commit, select, notify]);
   const startComposer = useCallback(
     () => setComposer({ position: newPosition() }),
     [newPosition],
   );
   async function runSimulation() {
     if (runController.current || switching || !ready) return;
-    if (!projectRef.current.blocks.length) {
+    if (!docRef.current.blocks.length) {
       notify('Add a block from the library or ask the agent to create one.');
       return;
     }
@@ -1047,7 +1188,7 @@ function Workbench() {
     setRunFailure(null);
     setResult(null);
     setResultSignature('');
-    const snapshot = structuredClone(projectRef.current);
+    const snapshot = structuredClone(docRef.current);
     const currentSignature = semanticSignature(snapshot);
     try {
       // Always receive the job ID, so cancellation during submission can stop the engine too.
@@ -1064,7 +1205,7 @@ function Workbench() {
       if (
         runController.current !== controller ||
         controller.signal.aborted ||
-        projectRef.current.modelId !== snapshot.modelId
+        docRef.current.modelId !== snapshot.modelId
       )
         return;
       setResult(r);
@@ -1220,6 +1361,13 @@ function Workbench() {
       if (command && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         e.shiftKey ? redo() : undo();
+      } else if (command && e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        if (e.shiftKey) ungroupSelected();
+        else groupSelected();
+      } else if (command && e.key === 'ArrowUp') {
+        e.preventDefault();
+        leaveSubsystem();
       } else if (command && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         duplicate();
@@ -1284,9 +1432,14 @@ function Workbench() {
           selectedEdges.reduce((next, id) => resetWireRoute(next, id), p),
         );
       } else if (e.key === 'Escape') {
+        const nothingSelected =
+          !selectionRef.current.blockIds.length &&
+          !selectionRef.current.wireIds.length &&
+          !selectionRef.current.junctionIds.length;
         setComposer(null);
         setInserter(null);
-        select(emptySelection());
+        if (!(nothingSelected && !composer && !inserter && leaveSubsystem()))
+          select(emptySelection());
       } else if (e.key === '1' && command) {
         e.preventDefault();
         setWorkspaceMode('diagram');
@@ -1311,6 +1464,10 @@ function Workbench() {
     flow,
     selectedEdges,
     commit,
+    groupSelected,
+    ungroupSelected,
+    leaveSubsystem,
+    inserter,
   ]);
   const insertGenerated = (definition: Definition) => {
     if (!composer) return;
@@ -1415,7 +1572,7 @@ function Workbench() {
         additionalProperties: false,
       },
       annotations: { readOnlyHint: true },
-      execute: () => structuredClone(projectRef.current),
+      execute: () => structuredClone(docRef.current),
     });
     register({
       name: 'set_gradara_parameter',
@@ -1497,6 +1654,27 @@ function Workbench() {
                 }}
               />
             </div>
+            {scope.length > 0 && (
+              <nav className="sheet-path" aria-label="Subsystem path">
+                {breadcrumb(doc, scope).map((crumb, i, all) => (
+                  <Fragment key={crumb.path.join('/') || 'top'}>
+                    {i > 0 && <ChevronRight size={14} />}
+                    {i === all.length - 1 ? (
+                      <span aria-current="page">
+                        {i === 0 ? 'Top level' : crumb.name}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => enterScope(crumb.path)}
+                      >
+                        {i === 0 ? 'Top level' : crumb.name}
+                      </button>
+                    )}
+                  </Fragment>
+                ))}
+              </nav>
+            )}
           </div>
           <div className="header-right">
             <UpdateIndicator onOpenSettings={() => setSettingsTab('updates')} />
@@ -1820,6 +1998,7 @@ function Workbench() {
                   )}
                 {ready && (
                   <ModelCanvas
+                  sheet={scope.join('/')}
                     key={project.modelId ?? 'workspace'}
                     blocks={project.blocks}
                     project={project}
@@ -1864,6 +2043,7 @@ function Workbench() {
                       e.preventDefault();
                       e.stopPropagation();
                       if (n.type === 'tap') return;
+                      if (openSubsystem(n.id)) return;
                       setEquationBlock({ id: n.id, tab: 'properties' });
                     }}
                     onPaneClick={() => {
@@ -2116,6 +2296,14 @@ function Workbench() {
                   : 'Model properties'}
             </div>
             <div className="inspector-properties">
+              {selectedIds.length > 1 && (
+                <div className="inspector-section group-bar">
+                  <span>{selectedIds.length} blocks selected</span>
+                  <Button variant="outline" size="sm" onClick={groupSelected}>
+                    Make subsystem <kbd>⌘G</kbd>
+                  </Button>
+                </div>
+              )}
               {activeNet && !active ? (
                 <NetProperties
                   description={activeNet}
@@ -2212,6 +2400,112 @@ function Workbench() {
                       Refine with agent
                     </Button>
                   </div>
+                  {active.definition.subsystem && (
+                    <div className="inspector-section subsystem-section">
+                      <div className="section-label">
+                        Subsystem
+                        {usageCount(doc, active.definition.subsystem.ref) >
+                          1 && (
+                          <span title="Other instances share this inside; edits change all of them.">
+                            Used{' '}
+                            {usageCount(doc, active.definition.subsystem.ref)}×
+                          </span>
+                        )}
+                      </div>
+                      <p className="size-hint">
+                        {findSubsystem(
+                          doc,
+                          active.definition.subsystem.ref,
+                        )?.blocks.filter((b) => !isBoundary(b)).length ??
+                          0}{' '}
+                        blocks inside · {active.definition.ports.length} ports
+                      </p>
+                      <div className="subsystem-actions">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openSubsystem(active.id)}
+                        >
+                          Open
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={ungroupSelected}
+                        >
+                          Ungroup
+                        </Button>
+                        {usageCount(doc, active.definition.subsystem.ref) >
+                          1 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              commit((p) => makeUnique(p, active.id))
+                            }
+                          >
+                            Make unique
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {isBoundary(active) && (
+                    <div className="inspector-section subsystem-section">
+                      <div className="section-label">Subsystem port</div>
+                      <label className="field-row">
+                        <span>Domain</span>
+                        <select
+                          value={active.definition.ports[0].domain}
+                          onChange={(e) =>
+                            commit((p) =>
+                              setBoundaryDomain(
+                                p,
+                                active.id,
+                                e.target.value as Domain,
+                              ),
+                            )
+                          }
+                        >
+                          {boundaryDomains(
+                            active.definition.kind as BoundaryKind,
+                          ).map((d) => (
+                            <option key={d} value={d}>
+                              {domainLabels[d]}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {active.definition.kind === 'connport' && (
+                        <label className="field-row">
+                          <span>Side outside</span>
+                          <select
+                            value={active.definition.boundary?.side ?? 'left'}
+                            onChange={(e) =>
+                              commit((p) =>
+                                setBoundarySide(
+                                  p,
+                                  active.id,
+                                  e.target.value as NonNullable<Port['side']>,
+                                ),
+                              )
+                            }
+                          >
+                            {['left', 'right', 'top', 'bottom'].map((side) => (
+                              <option key={side} value={side}>
+                                {side}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+                      <p className="size-hint">
+                        The block name is the port name on the subsystem.
+                        Rewiring a port of another domain removes its outside
+                        wires.
+                      </p>
+                    </div>
+                  )}
                   <div className="inspector-section">
                     <div className="section-label">
                       Parameters

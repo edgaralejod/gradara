@@ -33,23 +33,35 @@ import {
 } from './selection-preview-context';
 
 const nodeTypes = { block: BlockNode };
-function InitialViewport({ blockIds }: { blockIds: string }) {
+function InitialViewport({
+  blockIds,
+  sheet = '',
+}: {
+  blockIds: string;
+  sheet?: string;
+}) {
   const documentReady = useStore(
     (s) => s.nodes.map((n) => n.id).join('|') === blockIds,
   );
   const initialized = useNodesInitialized();
   const hasViewport = useStore((s) => s.width > 0 && s.height > 0);
   const flow = useReactFlow();
-  const fitted = useRef(false);
+  // Fit once per sheet: on open, and again when entering or leaving a subsystem.
+  const fitted = useRef<string | null>(null);
   useEffect(() => {
-    if (!documentReady || !initialized || !hasViewport || fitted.current)
+    if (
+      !documentReady ||
+      !initialized ||
+      !hasViewport ||
+      fitted.current === sheet
+    )
       return;
     const frame = requestAnimationFrame(() => {
-      fitted.current = true;
+      fitted.current = sheet;
       void flow.fitView({ padding: 0.16, maxZoom: 1.15 });
     });
     return () => cancelAnimationFrame(frame);
-  }, [documentReady, initialized, hasViewport, flow]);
+  }, [documentReady, initialized, hasViewport, flow, sheet]);
   return null;
 }
 type Props = Omit<
@@ -65,6 +77,8 @@ type Props = Omit<
   onLayout: (layouts: BlockLayout[]) => void;
   onLabelOffset: (id: string, offset: Block['labelOffset']) => void;
   onLabelSelect: (id: string) => void;
+  /** The open sheet (subsystem path); the view refits when it changes. */
+  sheet?: string;
 };
 
 /** Pointer-rate state belongs to the canvas, not autosave, history, inspector, or plots. */
@@ -78,6 +92,7 @@ export default function ModelCanvas({
   onLayout,
   onLabelOffset,
   onLabelSelect,
+  sheet,
   ...props
 }: Props) {
   const [preview, setPreview] = useState<SelectionPreview | null>(null);
@@ -161,7 +176,10 @@ export default function ModelCanvas({
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
         >
-          <InitialViewport blockIds={blocks.map((b) => b.id).join('|')} />
+          <InitialViewport
+            blockIds={blocks.map((b) => b.id).join('|')}
+            sheet={sheet}
+          />
           <CopyDragLayer
             project={project}
             selection={selection}

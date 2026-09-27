@@ -405,3 +405,65 @@
     filter: none;
   }
 }
+
+/* Subsystem instances: a sheet with a second sheet behind it. */
+.block-face.shape-subsystem .block-outline > .sheet-behind {
+  fill: color-mix(in srgb, var(--domain) 5%, white);
+}
+/* Boundary blocks inside a subsystem: a pill with the port number and name. */
+.block-face.shape-boundary .block-outline > * {
+  fill: color-mix(in srgb, var(--domain) 8%, white);
+}
+.block-face .boundary-pill {
+  position: absolute;
+  inset: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.block-face .boundary-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.block-face .boundary-glyph {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--domain);
+  color: white;
+  font-size: 12px;
+  line-height: 18px;
+}
+.block-face .boundary-glyph[data-domain='electrical'],
+.block-face .boundary-glyph[data-domain='threePhase'] {
+  border-radius: 50%;
+  background: white;
+  box-shadow: inset 0 0 0 2px var(--domain);
+  min-width: 14px;
+  height: 14px;
+}
+.block-face .boundary-glyph[data-domain='mechanical'] {
+  border-radius: 9px 0 0 9px;
+  min-width: 12px;
+}
+.block-face .boundary-glyph[data-domain='translational'] {
+  border-radius: 1px;
+  min-width: 6px;
+}
+.block-face .boundary-glyph[data-domain='thermal'] {
+  min-width: 12px;
+  height: 12px;
+  transform: rotate(45deg);
+  border-radius: 1px;
+}
+.block-face .boundary-glyph[data-domain='magnetic'] {
+  min-width: 14px;
+  height: 12px;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  border-radius: 0;
+}

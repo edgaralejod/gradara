@@ -15,7 +15,9 @@ export type BlockShape =
   | 'mux'
   | 'demux'
   | 'physical'
-  | 'ground';
+  | 'ground'
+  | 'boundary'
+  | 'subsystem';
 const physical = new Set([
   'resistor',
   'capacitor',
@@ -31,6 +33,8 @@ export const sideOf = (p: Port) =>
   p.side ?? (p.direction === 'input' ? 'left' : 'right');
 
 export function blockShape(d: Definition): BlockShape {
+  if (d.boundary) return 'boundary';
+  if (d.subsystem) return 'subsystem';
   if (d.kind === 'sum' || d.kind === 'subtract') return 'sum';
   if (physical.has(d.kind)) return 'physical';
   if (['gain', 'mux', 'demux', 'ground'].includes(d.kind))
@@ -41,6 +45,8 @@ export function blockShape(d: Definition): BlockShape {
 /** Show labels when they disambiguate terminals; don't repeat generic u/y on unary blocks. */
 export function showPortLabel(d: Definition, p: Port) {
   const shape = blockShape(d);
+  if (shape === 'boundary') return false;
+  if (shape === 'subsystem') return true;
   if (shape === 'sum') return p.direction === 'input';
   if (shape !== 'box' && shape !== 'mux' && shape !== 'demux') return false;
   if (commutative.has(d.kind)) return false;
@@ -59,6 +65,8 @@ function roundGrid(n: number) {
 
 export function defaultBlockSize(d: Definition) {
   const shape = blockShape(d);
+  if (shape === 'boundary')
+    return { width: roundGrid(Math.min(160, 48 + d.name.length * 8)), height: 32 };
   if (shape === 'sum' || shape === 'ground') return { width: 40, height: 40 };
   if (shape === 'physical')
     return ['top', 'bottom'].includes(
@@ -107,7 +115,7 @@ export function defaultBlockSize(d: Definition) {
 
 export function minimumDesignedSize(d: Definition) {
   const size = defaultBlockSize(d);
-  if (blockShape(d) === 'sum' || blockShape(d) === 'ground') return size;
+  if (['sum', 'ground', 'boundary'].includes(blockShape(d))) return size;
   if (blockShape(d) === 'box' && size.width === 80)
     return { width: 64, height: 56 };
   return size;

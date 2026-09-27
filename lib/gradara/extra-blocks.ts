@@ -436,8 +436,8 @@ export const extraBlocks: Definition[] = [
     'y1 = u1;\ny2 = u2;',
     [],
     '',
-    'A placeholder for a nested sheet. Passes two signals through until hierarchy lands.',
-    ['routing', 'hierarchy', 'group'],
+    'A block with its own diagram inside. Double-click to open it; add or rename its ports inside.',
+    ['routing', 'hierarchy', 'group', 'submodule', 'nested'],
   ),
   signal(
     'terminator',

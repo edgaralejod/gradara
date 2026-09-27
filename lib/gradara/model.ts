@@ -1,6 +1,7 @@
 import { controlBlocks } from './control-blocks';
 import { extraBlocks } from './extra-blocks';
 import { mslBlocks } from './msl-blocks';
+import { portBlocks } from './port-blocks';
 import { powerBlocks } from './power-blocks';
 export type Domain =
   | 'signal'
@@ -338,6 +339,7 @@ export const library: Definition[] = [
   },
   ...extraBlocks,
   ...mslBlocks,
+  ...portBlocks,
 ];
 const block = (kind: string, id: string, x: number, y: number): Block => ({
   id,
