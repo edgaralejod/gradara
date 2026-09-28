@@ -750,7 +750,7 @@ def replay_inputs(csv_path: Path, generated: Generated, duration: float):
     Values are interpolated linearly between solver output points; at an event,
     where the solver writes two rows with the same time, the later row counts.
     """
-    with csv_path.open() as f:
+    with csv_path.open(encoding='utf-8') as f:
         reader = csv.DictReader(f)
         header = reader.fieldnames or []
         rows = list(reader)
@@ -846,7 +846,7 @@ async def verify(request: CodegenRequest, runs: Path, run_c) -> dict:
     result_file, csv_file = folder/'result.json', folder/'simulation_res.csv'
     if not result_file.exists() or not csv_file.exists():
         raise CodegenError('The last run is no longer available. Run the model, then verify.')
-    result = json.loads(result_file.read_text())
+    result = json.loads(result_file.read_text(encoding='utf-8'))
     if result.get('modelHash') != semantic_hash(request.project):
         raise CodegenError('The model changed since the last run. Run it again, then verify.')
     generated = generate(request.project, request.path, request.instanceId, request.blockIds, request.options)
@@ -855,16 +855,16 @@ async def verify(request: CodegenRequest, runs: Path, run_c) -> dict:
     work.mkdir()
     prefix = request.options.prefix
     for name, text in generated.files.items():
-        (work/name).write_text(text)
-    (work/'main.c').write_text(sil_main(prefix, generated.inputs, generated.outputs, len(held_in)))
-    (work/'inputs.csv').write_text(''.join(','.join(repr(v) for v in row) + '\n' for row in held_in))
+        (work/name).write_text(text, encoding='utf-8')
+    (work/'main.c').write_text(sil_main(prefix, generated.inputs, generated.outputs, len(held_in)), encoding='utf-8')
+    (work/'inputs.csv').write_text(''.join(','.join(repr(v) for v in row) + '\n' for row in held_in), encoding='utf-8')
     try:
         code, output = await run_c(work, [f'{prefix}.c', 'main.c'])
     except TimeoutError:
         raise CodegenError('The generated code did not finish the replay in time.')
     if code:
         raise CodegenError('The generated code did not compile or run: ' + output[-3000:])
-    actual = parse_outputs((work/'outputs.csv').read_text(), len(generated.outputs)) if (work/'outputs.csv').exists() else []
+    actual = parse_outputs((work/'outputs.csv').read_text(encoding='utf-8'), len(generated.outputs)) if (work/'outputs.csv').exists() else []
     if len(actual) < len(held_in):
         raise CodegenError(f'The generated code stopped after {len(actual)} of {len(held_in)} steps.')
     report = compare(expected, actual, generated.outputs)

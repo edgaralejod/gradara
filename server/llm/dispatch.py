@@ -57,8 +57,8 @@ def _keep_transcript(attempt_id: str, prompt: str, generation: Generation) -> No
         return
     folder = AGENT_DIR/attempt_id
     folder.mkdir(parents=True, exist_ok=True)
-    (folder/'prompt.txt').write_text(prompt)
-    (folder/'response.json').write_text(json.dumps(generation.data, indent=2))
+    (folder/'prompt.txt').write_text(prompt, encoding='utf-8')
+    (folder/'response.json').write_text(json.dumps(generation.data, indent=2), encoding='utf-8')
 
 
 async def generate(prompt: str, schema: dict, attempt_id: str, *, task: str) -> dict:

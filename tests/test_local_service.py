@@ -45,7 +45,7 @@ def test_keys_never_leave_the_service(isolated, monkeypatch):
     response = client.put('/api/ai/keys/openai', json={'key': secret})
     assert response.status_code == 200 and response.json()['keys']['openai'] is True
     assert secret not in response.text
-    assert secret not in (isolated/'settings.json').read_text() if (isolated/'settings.json').exists() else True
+    assert secret not in (isolated/'settings.json').read_text(encoding='utf-8') if (isolated/'settings.json').exists() else True
     assert credentials.get('openai_api_key') == secret
     assert oct((isolated/'.credentials.json').stat().st_mode & 0o777) == '0o600'
     client.delete('/api/ai/keys/openai')

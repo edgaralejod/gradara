@@ -102,7 +102,7 @@ def test_failed_jobs_record_diagnostics(monkeypatch, tmp_path):
         assert job['diagnostics'][0]['ports'][0]['blockId']
         assert client.get('/api/runs/'+ident+'/diagnostics').status_code == 404
         (tmp_path/'abc123').mkdir()
-        (tmp_path/'abc123'/'diagnostics.json').write_text(json.dumps({'error': 'x', 'diagnostics': []}))
+        (tmp_path/'abc123'/'diagnostics.json').write_text(json.dumps({'error': 'x', 'diagnostics': []}), encoding='utf-8')
         assert client.get('/api/runs/abc123/diagnostics').json() == {'error': 'x', 'diagnostics': []}
         assert client.get('/api/runs/bad-id/diagnostics').status_code == 400
 
@@ -114,7 +114,7 @@ def test_engine_failures_are_engine_diagnostics(monkeypatch, tmp_path):
         asyncio.run(engine.simulate(feedback(), 'enginedown'))
     [diagnostic] = failure.value.diagnostics
     assert diagnostic.source == 'engine' and 'Start Docker' in diagnostic.message
-    saved = json.loads((tmp_path/'enginedown'/'diagnostics.json').read_text())
+    saved = json.loads((tmp_path/'enginedown'/'diagnostics.json').read_text(encoding='utf-8'))
     assert saved['diagnostics'][0]['source'] == 'engine'
 
 
@@ -139,6 +139,6 @@ def test_real_algebraic_loop_names_the_loop_blocks():
     assert diagnostic.source == 'runtime' and diagnostic.hint == LOOP_HINT
     assert set(diagnostic.blockIds) == {gain.id, summing.id}
     assert len(diagnostic.detail) > 100
-    saved = json.loads((engine.RUNS/job_id/'diagnostics.json').read_text())
+    saved = json.loads((engine.RUNS/job_id/'diagnostics.json').read_text(encoding='utf-8'))
     assert saved['diagnostics'][0]['blockIds'] == diagnostic.blockIds
     assert not (engine.RUNS/job_id/'result.json').exists()

@@ -50,9 +50,9 @@ def fake_omc(tmp_path, monkeypatch):
     tool = tmp_path/'bin'
     tool.mkdir()
     omc = tool/'omc'
-    omc.write_text(FAKE_OMC.format(python=sys.executable))
+    omc.write_text(FAKE_OMC.format(python=sys.executable), encoding='utf-8')
     omc.chmod(omc.stat().st_mode | stat.S_IEXEC)
-    (tool/'mode').write_text('ok')
+    (tool/'mode').write_text('ok', encoding='utf-8')
     monkeypatch.setenv('GRADARA_OMC', str(omc))
     monkeypatch.setenv('GRADARA_ENGINE', 'native')
     monkeypatch.setattr(engines, 'NATIVE', engines.NativeBackend())
@@ -71,13 +71,13 @@ def test_native_simulation_report(fake_omc, tmp_path):
     assert report['result']['messages'].endswith('finished successfully.')
     assert report['diagnostics'] == 'Warning: minor'
     assert report['engine'] == 'OpenModelica 1.27.0'
-    script = (folder/'gradara.mos').read_text()
+    script = (folder/'gradara.mos').read_text(encoding='utf-8')
     assert 'stopTime=1.0' in script and 'loadModel(Modelica, {"4.1.0"})' in script
-    assert json.loads((folder/'engine.json').read_text())['result']
+    assert json.loads((folder/'engine.json').read_text(encoding='utf-8'))['result']
 
 
 def test_native_parses_echoed_record_when_files_absent(fake_omc, tmp_path):
-    (fake_omc/'mode').write_text('echo-only')
+    (fake_omc/'mode').write_text('echo-only', encoding='utf-8')
     folder = tmp_path/'run'
     folder.mkdir()
     report = run(engines.execute(folder, {'duration': 1.0}, 'x'))
@@ -85,7 +85,7 @@ def test_native_parses_echoed_record_when_files_absent(fake_omc, tmp_path):
 
 
 def test_native_failure_is_reported_with_compiler_text(fake_omc, tmp_path):
-    (fake_omc/'mode').write_text('fail')
+    (fake_omc/'mode').write_text('fail', encoding='utf-8')
     folder = tmp_path/'run'
     folder.mkdir()
     # A model failure comes back as the report's error, like the Docker backend, so diagnostics can explain it.
@@ -102,7 +102,7 @@ def test_native_check_and_status(fake_omc, tmp_path):
 
 
 def test_missing_library_offers_setup(fake_omc):
-    (fake_omc/'mode').write_text('nolib')
+    (fake_omc/'mode').write_text('nolib', encoding='utf-8')
     status = run(engines.status())
     assert not status['ready'] and status['actions'] == ['prepare']
 
@@ -118,7 +118,7 @@ def test_simulation_end_to_end_with_native_backend(fake_omc, tmp_path, monkeypat
     from server import engine
     from server.workspace import document
     monkeypatch.setattr(engine, 'RUNS', tmp_path/'runs')
-    project = document(json.loads(open('tests/motor-project.json').read()))
+    project = document(json.loads(open('tests/motor-project.json', encoding='utf-8').read()))
     # The stand-in writes a generic CSV; only check that the pipeline reaches parsing.
     with pytest.raises(RuntimeError, match='before the requested|not'):
         run(engine.simulate(project.model_copy(update={'duration': 2.0}), 'native1'))

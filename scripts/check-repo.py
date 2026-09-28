@@ -63,7 +63,7 @@ def main():
         elif path.is_file():
             inspect_text(name, path.read_bytes(), problems)
 
-    lock = json.loads((ROOT / 'package-lock.json').read_text())
+    lock = json.loads((ROOT / 'package-lock.json').read_text(encoding='utf-8'))
     for name, package in lock.get('packages', {}).items():
         resolved = package.get('resolved', '')
         if resolved:
@@ -87,7 +87,7 @@ def main():
                     inspect_text(f'history {revision[:8]}:{name}', git('cat-file', 'blob', oid), problems)
 
     if args.release:
-        package = json.loads((ROOT / 'package.json').read_text())
+        package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
         if package.get('license') not in {'Apache-2.0', 'MIT', 'AGPL-3.0-only', 'AGPL-3.0-or-later'}:
             problems.add('package.json: original-code license selection/metadata is pending')
         license_path = ROOT / 'LICENSE'

@@ -8,6 +8,8 @@ import { polylineOfWire } from '../lib/gradara/net-draw';
 import { blockSize } from '../lib/gradara/canvas';
 import { segmentHitsRect, selfIntersects } from '../lib/gradara/routing';
 import { semanticSignature } from '../lib/gradara/project';
+import { sheetBounds } from '../lib/gradara/sheet-bounds';
+import { bodyOf, labelOf, routeSheet } from '../lib/gradara/router';
 
 const example = (name: string): Project =>
   normalizeProject(
@@ -130,4 +132,82 @@ void test('arranging a selection leaves every other block where it was', () => {
       );
   clean(next, 'foc selection');
   assert.equal(semanticSignature(next), semanticSignature(p));
+});
+
+void test('Arrange only rearranges when the drawing reads better, and says so otherwise', async () => {
+  const { arrangeIfBetter, layoutCost } =
+    await import('../lib/gradara/arrange');
+  for (const name of names) {
+    const messy = scrambled(example(name));
+    const first = arrangeIfBetter(messy);
+    assert.equal(first.improved, true, `${name}: a scrambled sheet improves`);
+    assert.ok(layoutCost(first.project) < layoutCost(messy), name);
+    // An arranged sheet cannot be improved further.
+    assert.equal(arrangeIfBetter(first.project).improved, false, name);
+  }
+  // The hand-drawn FOC example is cleaner than what Arrange would make of it.
+  const foc = example('foc');
+  const kept = arrangeIfBetter(foc);
+  assert.equal(kept.improved, false);
+  assert.equal(kept.project, foc);
+});
+
+void test('a closed loop keeps its forward path left to right and its feedback underneath', async () => {
+  const { closedLoopBuck } = await import('./fixtures/closed-loop-buck');
+  const p = normalizeProject(closedLoopBuck());
+  const next = arranged(p);
+  clean(next, 'closed-loop buck');
+  const at = (id: string) => next.blocks.find((b) => b.id === id)!.position;
+  const path = [
+    'ref',
+    'error',
+    'pi',
+    'hold',
+    'modulator',
+    'highSide',
+    'inductor',
+    'current',
+    'load',
+  ];
+  for (let i = 1; i < path.length; i++)
+    assert.ok(
+      at(path[i - 1]).x < at(path[i]).x,
+      `${path[i - 1]} before ${path[i]}`,
+    );
+  // The output measurement feeds back from the far end, below the forward path.
+  assert.ok(at('voltageProbe').x > at('current').x);
+});
+
+test('fit to view frames every wire, name, and note, not just the blocks', () => {
+  const project = example('buck');
+  const bounds = sheetBounds(project);
+  assert.ok(bounds);
+  const inside = (x: number, y: number) =>
+    x >= bounds.x - 0.5 &&
+    x <= bounds.x + bounds.width + 0.5 &&
+    y >= bounds.y - 0.5 &&
+    y <= bounds.y + bounds.height + 0.5;
+  for (const points of routeSheet(project).routes.values())
+    for (const p of points)
+      assert.ok(inside(p.x, p.y), `wire point ${p.x},${p.y}`);
+  for (const b of project.blocks) {
+    const r = bodyOf(b);
+    assert.ok(inside(r.x, r.y) && inside(r.x + r.width, r.y + r.height), b.id);
+    const l = labelOf(b);
+    assert.ok(
+      inside(l.x, l.y) && inside(l.x + l.width, l.y + l.height),
+      `${b.id} name`,
+    );
+  }
+  for (const a of project.annotations ?? []) assert.ok(inside(a.x, a.y), a.text);
+  assert.equal(
+    sheetBounds({
+      ...project,
+      blocks: [],
+      wires: [],
+      junctions: [],
+      annotations: [],
+    }),
+    undefined,
+  );
 });

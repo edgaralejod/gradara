@@ -11,7 +11,7 @@ from server.engine import RUNS, simulate
 
 
 def test_flyback_template_has_explicit_energy_storage_and_physical_ports():
-    project = Project.model_validate(json.loads((Path(__file__).parents[1]/'models/examples/flyback.json').read_text()))
+    project = Project.model_validate(json.loads((Path(__file__).parents[1]/'models/examples/flyback.json').read_text(encoding='utf-8')))
     blocks = {block.id: block for block in project.blocks}
     assert blocks['mag'].definition.kind == 'inductor'
     assert len([p for p in blocks['xfmr'].definition.ports if p.direction == 'physical']) == 4
@@ -21,9 +21,9 @@ def test_flyback_template_has_explicit_energy_storage_and_physical_ports():
 
 @pytest.mark.integration
 def test_flyback_switching_startup_and_regulation():
-    project = Project.model_validate(json.loads((Path(__file__).parents[1]/'models/examples/flyback.json').read_text()))
+    project = Project.model_validate(json.loads((Path(__file__).parents[1]/'models/examples/flyback.json').read_text(encoding='utf-8')))
     result = asyncio.run(simulate(project, 'flybacktest'+uuid.uuid4().hex[:10]))
-    with (RUNS/result['id']/'simulation_res.csv').open() as stream:
+    with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:
         rows = list(csv.DictReader(stream))
     rows = [row for row in rows if float(row['time']) <= project.duration + 1e-12]
     assert float(rows[0]['vout.y']) == pytest.approx(0, abs=1e-5)

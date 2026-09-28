@@ -41,18 +41,18 @@ def run_context(request: DiagnoseRequest) -> dict | None:
         return None
     folder = RUNS/run_id
     try:
-        snapshot = json.loads((folder/'project.json').read_text())
+        snapshot = json.loads((folder/'project.json').read_text(encoding='utf-8'))
     except (OSError, ValueError):
         return None
     if not request.project.modelId or snapshot.get('modelId') != request.project.modelId:
         return None
     context = {'source': ''}
     try:
-        context['source'] = (folder/'model.mo').read_text()[-12000:]
+        context['source'] = (folder/'model.mo').read_text(encoding='utf-8')[-12000:]
     except OSError:
         pass
     try:
-        saved = json.loads((folder/'diagnostics.json').read_text())
+        saved = json.loads((folder/'diagnostics.json').read_text(encoding='utf-8'))
         context['solver'] = '\n\n'.join(d.get('detail', '') for d in saved.get('diagnostics', []))[-8000:]
     except (OSError, ValueError):
         context['solver'] = ''

@@ -12,7 +12,7 @@ from server.engine import simulate
 FIXTURE = Path(__file__).with_name('motor-project.json')
 
 def project():
-    return Project.model_validate_json(FIXTURE.read_text())
+    return Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
 
 def test_layout_does_not_change_executable_model():
     p=project()
@@ -24,12 +24,12 @@ def test_layout_does_not_change_executable_model():
     assert semantic_hash(p)!=baseline
 
 def test_connection_domains_and_single_signal_driver():
-    raw=json.loads(FIXTURE.read_text())
+    raw=json.loads(FIXTURE.read_text(encoding='utf-8'))
     raw['wires'][0]['target']='motor'
     raw['wires'][0]['targetHandle']='p'
     with pytest.raises(ValidationError,match='same domain'):
         Project.model_validate(raw)
-    raw=json.loads(FIXTURE.read_text())
+    raw=json.loads(FIXTURE.read_text(encoding='utf-8'))
     controller = next(b for b in raw['blocks'] if b['id']=='controller')
     output = next(p['id'] for p in controller['definition']['ports'] if p['direction']=='output')
     raw['wires'].append({**raw['wires'][0],'id':'duplicateDriver','source':'controller','sourceHandle':output})
@@ -37,11 +37,11 @@ def test_connection_domains_and_single_signal_driver():
         Project.model_validate(raw)
 
 def test_reject_invalid_parameter_and_duplicate_names():
-    raw=json.loads(FIXTURE.read_text())
+    raw=json.loads(FIXTURE.read_text(encoding='utf-8'))
     next(b for b in raw['blocks'] if b['id']=='motor')['definition']['parameters'][0]['value']=-1
     with pytest.raises(ValidationError,match='Resistance'):
         Project.model_validate(raw)
-    raw=json.loads(FIXTURE.read_text())
+    raw=json.loads(FIXTURE.read_text(encoding='utf-8'))
     raw['blocks'][0]['definition']['parameters'][0]['id']='y'
     with pytest.raises(ValidationError,match='unique names'):
         Project.model_validate(raw)
@@ -83,7 +83,7 @@ def test_block_sizes_round_trip_without_changing_execution_identity():
 def test_foc_tracks_speed_rejects_load_and_keeps_phases_balanced():
     fixture=Path(__file__).parents[1]/'models/examples/foc.json'
     async def run():
-        baseline=Project.model_validate_json(fixture.read_text())
+        baseline=Project.model_validate_json(fixture.read_text(encoding='utf-8'))
         slower=baseline.model_copy(deep=True)
         next(b for b in slower.blocks if b.id=='reference').definition.parameters[0].value=1000
         a,b=await asyncio.gather(simulate(baseline,'foc'+uuid.uuid4().hex[:12]),simulate(slower,'foc'+uuid.uuid4().hex[:12]))
@@ -103,7 +103,7 @@ def test_foc_tracks_speed_rejects_load_and_keeps_phases_balanced():
 
 def test_junction_geometry_is_absent_from_execution_and_rejects_two_drivers():
     from server.models import flatten_connects
-    raw = json.loads(FIXTURE.read_text())
+    raw = json.loads(FIXTURE.read_text(encoding='utf-8'))
     w = raw['wires'][0]
     source, target, handle = w['source'], w['target'], w['targetHandle']
     raw['junctions'] = [{'id': 'test_j', 'domain': 'signal', 'position': {'x': 180, 'y': 140}}]
@@ -134,7 +134,7 @@ def test_physical_connection_set_has_no_duplicate_or_reverse_pairs():
 def test_branched_feedback_runs_in_openmodelica():
     fixture = Path(__file__).parent / 'fixtures/feedback-project.json'
     async def run():
-        p = Project.model_validate_json(fixture.read_text())
+        p = Project.model_validate_json(fixture.read_text(encoding='utf-8'))
         result = await simulate(p, 'wiring'+uuid.uuid4().hex[:12])
         traces = {s['key']:s['values'] for s in result['series']}
         assert traces['gain.y'][-1] == pytest.approx(traces['reference.y'][-1]/3, abs=1e-6)
@@ -143,7 +143,7 @@ def test_branched_feedback_runs_in_openmodelica():
         assert next(s for s in result['series'] if s['key'] == 'scope.u')['name'] == 'Scope.u'
         import csv
         from server.engine import RUNS
-        with (RUNS/result['id']/'simulation_res.csv').open() as stream:
+        with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:
             last = list(csv.DictReader(stream))[-1]
         assert float(last['scope.u']) == pytest.approx(traces['gain.y'][-1], abs=1e-6)
         assert float(last['display.u']) == pytest.approx(traces['reference.y'][-1], abs=1e-6)
@@ -152,7 +152,7 @@ def test_branched_feedback_runs_in_openmodelica():
 
 def test_a_disconnected_branch_can_be_saved_and_reconnected_to_one_driver():
     from server.models import flatten_connects
-    raw = json.loads(FIXTURE.read_text())
+    raw = json.loads(FIXTURE.read_text(encoding='utf-8'))
     controller = next(b for b in raw['blocks'] if b['id'] == 'controller')
     inputs = [p['id'] for p in controller['definition']['ports'] if p['direction'] == 'input']
     raw['wires'] = [{'id':'partial','source':'controller','sourceHandle':inputs[0],'target':'controller','targetHandle':inputs[1]}]
@@ -267,7 +267,7 @@ def test_rotation_is_persisted_but_does_not_change_physics():
     from pathlib import Path
     from server.models import Project
     from server.modelica import project_key
-    p = Project.model_validate(json.loads(Path('models/examples/flyback.json').read_text()))
+    p = Project.model_validate(json.loads(Path('models/examples/flyback.json').read_text(encoding='utf-8')))
     before = (semantic_hash(p), project_key(p), emit_project(p))
     p.blocks[0].rotation = 90
     saved = Project.model_validate_json(p.model_dump_json())

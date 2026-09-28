@@ -195,7 +195,7 @@ async def write_template(definition: Definition, job_id: str, progress=lambda me
             with_template = definition.model_copy(update={'ctemplate': template})
             generated = generate(_probe(with_template), [], None, ['block'], CodegenOptions(prefix='probe'))
             for name, text in generated.files.items():
-                (folder/name).write_text(text)
+                (folder/name).write_text(text, encoding='utf-8')
             code, output = await engines.compile_c(folder, 'probe.c')
             if code == 0:
                 return {'ctemplate': template.model_dump(), 'notes': generated.notes}

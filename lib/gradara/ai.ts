@@ -72,12 +72,7 @@ export function formatPrice(pack: CreditPack) {
 }
 
 export type AiOperation =
-  | 'component'
-  | 'model'
-  | 'export'
-  | 'edit'
-  | 'diagnose'
-  | 'fix';
+  'component' | 'model' | 'export' | 'edit' | 'diagnose' | 'fix';
 
 /** The price part of an AI label, or '' when the service did not report one. */
 export function priceText(
@@ -99,24 +94,29 @@ export function priceText(
 }
 
 /** Short footer text for AI composers, e.g. "Gradara AI · 2 credits · 38 left". */
-export function useAiLabel(kind: AiOperation) {
+/** The AI status for one operation: a short label, and whether a request can be made now. */
+export function useAi(kind: AiOperation) {
   const [label, setLabel] = useState('');
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     let alive = true;
     const load = async () => {
       try {
         const ai = await api<AiStatus>('/ai');
         if (ai.provider !== 'gradara') {
-          if (alive)
+          if (alive) {
+            setReady(!!ai.ready);
             setLabel(
               ai.ready ? ai.label : `${ai.label} · finish setup in Settings`,
             );
+          }
           return;
         }
         const account = await api<Account>('/account').catch(
           () => ({ signedIn: false }) as Account,
         );
         if (!alive) return;
+        setReady(account.signedIn);
         if (!account.signedIn) setLabel('Gradara AI · Sign in from Settings');
         else {
           const price = priceText(account, kind);
@@ -127,7 +127,10 @@ export function useAiLabel(kind: AiOperation) {
           );
         }
       } catch {
-        if (alive) setLabel('');
+        if (alive) {
+          setLabel('');
+          setReady(false);
+        }
       }
     };
     void load();
@@ -137,7 +140,11 @@ export function useAiLabel(kind: AiOperation) {
       window.removeEventListener(AI_CHANGED, load);
     };
   }, [kind]);
-  return label;
+  return { label, ready };
+}
+
+export function useAiLabel(kind: AiOperation) {
+  return useAi(kind).label;
 }
 
 export function openExternal(url: string) {

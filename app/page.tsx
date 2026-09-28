@@ -1,6 +1,9 @@
 'use client';
 import { rotateBlocks } from '@/lib/gradara/rotation';
-import { arrangeBlocks } from '@/lib/gradara/arrange';
+import { arrangeIfBetter } from '@/lib/gradara/arrange';
+import CanvasMenu, {
+  type CanvasMenuItem,
+} from '@/components/gradara/canvas-menu';
 import { useGeneratedLibrary } from '@/lib/gradara/generated-library';
 import {
   defaultBlockSize,
@@ -54,6 +57,13 @@ import {
   Trash2,
   Maximize,
   LayoutGrid,
+  Group,
+  Ungroup,
+  Scissors,
+  Plus,
+  CopyPlus,
+  CornerLeftUp,
+  SquareDashedMousePointer,
   Keyboard,
   Check,
   LoaderCircle,
@@ -364,6 +374,14 @@ function Workbench() {
     return () => window.removeEventListener('resize', resize);
   }, [libraryOpen, inspectorOpen]);
   const [helpOpen, setHelpOpen] = useState(false);
+  /** The canvas right-click menu: where it opened, on screen and on the sheet. */
+  const [canvasMenu, setCanvasMenu] = useState<{
+    at: { x: number; y: number };
+    point: { x: number; y: number };
+    bounds: { width: number; height: number };
+    /** Built when the menu opens, from the selection and clipboard at that moment. */
+    items: CanvasMenuItem[];
+  } | null>(null);
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState('');
   const [runFailure, setRunFailure] = useState<RunFailure | null>(null);
@@ -1164,12 +1182,24 @@ function Workbench() {
     commit(d.project);
     select(d.selection);
   }, [commit, selectedIds, select]);
-  /** Redraw the selection (two or more blocks) or the whole sheet in house style. */
+  /**
+   * Redraw the selection (two or more blocks) or the whole sheet in house style, but only
+   * when that reads better; otherwise say the drawing is already as clean as it gets.
+   */
   const arrange = useCallback(() => {
     const picked = selectionRef.current.blockIds;
     const ids = picked.length > 1 ? picked : [];
     if (!projectRef.current.blocks.length) return;
-    commit((p) => arrangeBlocks(p, ids));
+    const result = arrangeIfBetter(projectRef.current, ids);
+    if (!result.improved) {
+      notify(
+        ids.length
+          ? 'These blocks are already arranged as cleanly as Arrange can make them.'
+          : 'This layout is already as clean as Arrange can make it.',
+      );
+      return;
+    }
+    commit(result.project);
     notify(
       ids.length
         ? `Arranged ${ids.length} blocks.`
@@ -1180,6 +1210,207 @@ function Workbench() {
         window.dispatchEvent(new Event(FIT_VIEW_EVENT)),
       );
   }, [commit, notify]);
+  /**
+   * The canvas right-click menu. What is selected comes first, then what can be done
+   * at the pointer, then the sheet and the model. Add new canvas commands here.
+   */
+  const canvasMenuItems = (menu: {
+    at: { x: number; y: number };
+    point: { x: number; y: number };
+  }): CanvasMenuItem[] => {
+    const blocks = selectionRef.current.blockIds;
+    const anything =
+      blocks.length > 0 ||
+      selectionRef.current.wireIds.length > 0 ||
+      selectionRef.current.junctionIds.length > 0;
+    const subsystems = blocks.filter((id) =>
+      projectRef.current.blocks.some(
+        (b) => b.id === id && b.definition.subsystem,
+      ),
+    );
+    const items: CanvasMenuItem[] = [];
+    if (anything) {
+      items.push(
+        {
+          id: 'selection',
+          heading: blocks.length
+            ? `${blocks.length} block${blocks.length === 1 ? '' : 's'} selected`
+            : 'Selection',
+        },
+        {
+          id: 'cut',
+          label: 'Cut',
+          icon: <Scissors size={13} />,
+          shortcut: '⌘X',
+          disabled: !blocks.length,
+          run: () => copySelection(true),
+        },
+        {
+          id: 'copy',
+          label: 'Copy',
+          icon: <Copy size={13} />,
+          shortcut: '⌘C',
+          disabled: !blocks.length,
+          run: () => copySelection(false),
+        },
+        {
+          id: 'duplicate',
+          label: 'Duplicate',
+          icon: <CopyPlus size={13} />,
+          shortcut: '⌘D',
+          disabled: !blocks.length,
+          run: () => duplicate(),
+        },
+        {
+          id: 'rotate',
+          label: 'Rotate',
+          icon: <RotateCw size={13} />,
+          shortcut: 'R',
+          disabled: !blocks.length,
+          run: () =>
+            commit((p) => rotateBlocks(p, selectionRef.current.blockIds)),
+        },
+        {
+          id: 'group',
+          label: 'Make subsystem',
+          icon: <Group size={13} />,
+          shortcut: '⌘G',
+          disabled: !blocks.length,
+          run: () => groupSelected(),
+        },
+        ...(subsystems.length
+          ? [
+              {
+                id: 'ungroup',
+                label: 'Ungroup subsystem',
+                icon: <Ungroup size={13} />,
+                shortcut: '⌘⇧G',
+                run: () => ungroupSelected(),
+              },
+            ]
+          : []),
+        {
+          id: 'arrange-selection',
+          label: 'Arrange selection',
+          icon: <LayoutGrid size={13} />,
+          disabled: blocks.length < 2,
+          hint: 'Select two or more blocks',
+          run: arrange,
+        },
+        {
+          id: 'delete',
+          label: 'Delete',
+          icon: <Trash2 size={13} />,
+          shortcut: '⌫',
+          run: () => deleteSelected(),
+        },
+        { id: 'sep-selection', separator: true },
+      );
+    }
+    const bounds = canvasRef.current?.getBoundingClientRect();
+    items.push(
+      { id: 'here', heading: 'Here' },
+      {
+        id: 'add',
+        label: 'Add block…',
+        icon: <Plus size={13} />,
+        shortcut: 'Double-click',
+        run: () =>
+          setInserter({
+            position: menu.point,
+            screen: clampPopoverPosition(menu.at, {
+              width: bounds?.width ?? 400,
+              height: bounds?.height ?? 300,
+            }),
+          }),
+      },
+      {
+        id: 'agent',
+        label: 'Ask the agent to build here…',
+        icon: <Sparkles size={13} />,
+        shortcut: 'A',
+        run: () => setComposer({ position: menu.point }),
+      },
+      {
+        id: 'paste',
+        label: 'Paste here',
+        icon: <ClipboardPaste size={13} />,
+        shortcut: '⌘V',
+        disabled: !clipboard.current?.blocks.length,
+        hint: 'Copy or cut blocks first',
+        run: () => pasteAt(menu.point),
+      },
+      { id: 'sep-here', separator: true },
+      { id: 'sheet', heading: 'Sheet' },
+      {
+        id: 'select-all',
+        label: 'Select all',
+        icon: <SquareDashedMousePointer size={13} />,
+        shortcut: '⌘A',
+        disabled: !projectRef.current.blocks.length,
+        run: () =>
+          select({
+            blockIds: projectRef.current.blocks.map((b) => b.id),
+            wireIds: projectRef.current.wires.map((w) => w.id),
+            junctionIds: (projectRef.current.junctions ?? []).map((j) => j.id),
+          }),
+      },
+      {
+        id: 'arrange',
+        label: 'Arrange sheet',
+        icon: <LayoutGrid size={13} />,
+        shortcut: '⌘⇧A',
+        disabled: !projectRef.current.blocks.length,
+        run: () => {
+          select(emptySelection());
+          selectionRef.current = emptySelection();
+          arrange();
+        },
+      },
+      {
+        id: 'fit',
+        label: 'Fit to view',
+        icon: <Maximize size={13} />,
+        shortcut: 'Space',
+        run: () => window.dispatchEvent(new Event(FIT_VIEW_EVENT)),
+      },
+      ...(scopeRef.current.length
+        ? [
+            {
+              id: 'leave',
+              label: 'Leave subsystem',
+              icon: <CornerLeftUp size={13} />,
+              shortcut: '⌘↑',
+              run: () => void leaveSubsystem(),
+            },
+          ]
+        : []),
+      { id: 'sep-sheet', separator: true },
+      { id: 'model', heading: 'Model' },
+      {
+        id: 'run',
+        label: running ? 'Running…' : 'Run simulation',
+        icon: <Play size={13} />,
+        shortcut: '⌘↵',
+        disabled: running || !ready || switching,
+        run: () => void runRef.current(),
+      },
+      {
+        id: 'export',
+        label: 'Export…',
+        icon: <ArrowUpRight size={13} />,
+        run: () => setExportOpen(true),
+      },
+      {
+        id: 'shortcuts',
+        label: 'Keyboard shortcuts',
+        icon: <Keyboard size={13} />,
+        shortcut: '?',
+        run: () => setHelpOpen(true),
+      },
+    );
+    return items;
+  };
   const groupSelected = useCallback(() => {
     const ids = selectionRef.current.blockIds;
     if (!ids.length) {
@@ -1220,24 +1451,19 @@ function Workbench() {
     (id: string) => {
       const block = projectRef.current.blocks.find((b) => b.id === id);
       if (!block?.definition.subsystem) return false;
+      // The canvas fits each sheet as it opens.
       enterScope([...scopeRef.current, id]);
-      requestAnimationFrame(
-        () => void flow.fitView({ padding: 0.25, duration: 200 }),
-      );
       return true;
     },
-    [enterScope, flow],
+    [enterScope],
   );
   const leaveSubsystem = useCallback(() => {
     if (!scopeRef.current.length) return false;
     const from = scopeRef.current[scopeRef.current.length - 1];
     enterScope(scopeRef.current.slice(0, -1));
     select({ ...emptySelection(), blockIds: [from] });
-    requestAnimationFrame(
-      () => void flow.fitView({ padding: 0.25, duration: 200 }),
-    );
     return true;
-  }, [enterScope, select, flow]);
+  }, [enterScope, select]);
   const copySelection = useCallback(
     (cut = false) => {
       const fragment = extractSelection(
@@ -1283,6 +1509,31 @@ function Workbench() {
     commit(result.project);
     select(result.selection);
   }, [commit, select, notify]);
+  /** Paste so the copied group's top-left corner lands at `point` on the sheet. */
+  const pasteAt = useCallback(
+    (point: { x: number; y: number }) => {
+      const fragment = clipboard.current;
+      if (!fragment?.blocks.length) return;
+      const left = Math.min(...fragment.blocks.map((b) => b.position.x));
+      const top = Math.min(...fragment.blocks.map((b) => b.position.y));
+      const target = withPastedSubsystems(
+        projectRef.current,
+        scopeRef.current,
+        fragment as ModelFragment & { subsystems?: SubsystemDefinition[] },
+      );
+      if (target === 'recursive') {
+        notify('A subsystem cannot be pasted inside itself.');
+        return;
+      }
+      const result = pasteSelection(target, fragment, {
+        x: Math.round((point.x - left) / 20) * 20,
+        y: Math.round((point.y - top) / 20) * 20,
+      });
+      commit(result.project);
+      select(result.selection);
+    },
+    [commit, select, notify],
+  );
   const startComposer = useCallback(
     () => setComposer({ position: newPosition() }),
     [newPosition],
@@ -1633,7 +1884,7 @@ function Workbench() {
         setCanvasTool('pan');
       } else if (e.key.toLowerCase() === 'f' && !command) {
         e.preventDefault();
-        void flow.fitView({ padding: 0.2, duration: 250 });
+        window.dispatchEvent(new Event(FIT_VIEW_EVENT));
       } else if (e.key === '/' && !command) {
         e.preventDefault();
         setLibraryOpen(true);
@@ -2169,6 +2420,27 @@ function Workbench() {
               <div
                 ref={canvasRef}
                 className={`canvas-wrap tool-${canvasTool}`}
+                onContextMenu={(e) => {
+                  if (!isCanvasInsertDoubleClick(e.target)) return;
+                  e.preventDefault();
+                  const bounds = canvasRef.current?.getBoundingClientRect();
+                  setInserter(null);
+                  const menu = {
+                    at: {
+                      x: e.clientX - (bounds?.left ?? 0),
+                      y: e.clientY - (bounds?.top ?? 0),
+                    },
+                    point: flow.screenToFlowPosition({
+                      x: e.clientX,
+                      y: e.clientY,
+                    }),
+                    bounds: {
+                      width: bounds?.width ?? 800,
+                      height: bounds?.height ?? 600,
+                    },
+                  };
+                  setCanvasMenu({ ...menu, items: canvasMenuItems(menu) });
+                }}
                 onDoubleClick={(e) => {
                   if (e.defaultPrevented) return;
                   if (!isCanvasInsertDoubleClick(e.target)) return;
@@ -2421,6 +2693,14 @@ function Workbench() {
                     Ask agent<kbd>A</kbd>
                   </Button>
                 </div>
+                {canvasMenu && (
+                  <CanvasMenu
+                    at={canvasMenu.at}
+                    bounds={canvasMenu.bounds}
+                    onClose={() => setCanvasMenu(null)}
+                    items={canvasMenu.items}
+                  />
+                )}
                 {inserter && (
                   <BlockInserter
                     context={inserter}
@@ -3227,6 +3507,10 @@ function Workbench() {
               setExportOpen(false);
               selectBlocks(ids);
             }}
+            onOpenSettings={() => {
+              setExportOpen(false);
+              setSettingsTab('ai');
+            }}
             onClose={() => setExportOpen(false)}
           />
         )}
@@ -3280,10 +3564,10 @@ function Workbench() {
                 ['Search the model', '⌘ / Ctrl + K'],
                 ['Make subsystem · ungroup', '⌘ / Ctrl + G · ⇧G'],
                 ['Leave a subsystem', 'Esc · ⌘ / Ctrl + ↑'],
-                ['Fit model to canvas', 'F'],
                 ['Select several components', 'Shift + click / Drag'],
                 ['Select / pan tools', 'V / H'],
-                ['Fit the model to the view', 'Space (tap)'],
+                ['Fit the model to the view', 'Space (tap) / F'],
+                ['Canvas menu', 'Right-click empty space'],
                 [
                   'Arrange the sheet (or the selection)',
                   '⌘ / Ctrl + Shift + A',

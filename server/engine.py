@@ -49,14 +49,14 @@ async def simulate(project: Project, job_id: str):
         return await run(project, job_id, folder)
     except SimulationFailure as exc:
         # Kept beside model.mo so a later diagnosis request can cite this exact run.
-        (folder/'diagnostics.json').write_text(json.dumps({'error': str(exc), 'diagnostics': [d.model_dump() for d in exc.diagnostics]}))
+        (folder/'diagnostics.json').write_text(json.dumps({'error': str(exc), 'diagnostics': [d.model_dump() for d in exc.diagnostics]}), encoding='utf-8')
         raise
 
 
 async def run(project: Project, job_id: str, folder: Path):
     started = time.monotonic()
-    (folder/'model.mo').write_text(emit_project(project))
-    (folder/'project.json').write_text(project.model_dump_json(indent=2))
+    (folder/'model.mo').write_text(emit_project(project), encoding='utf-8')
+    (folder/'project.json').write_text(project.model_dump_json(indent=2), encoding='utf-8')
     try:
         report = await execute(folder, {'duration':project.duration}, f'gradara-run-{job_id}')
     except EngineUnavailable as exc:
@@ -65,7 +65,7 @@ async def run(project: Project, job_id: str, folder: Path):
     except RuntimeError as exc:
         raise SimulationFailure(explain_failure(project, str(exc)), failure_diagnostics(project, str(exc))) from exc
     csv_file = folder/'simulation_res.csv'
-    with csv_file.open() as file:
+    with csv_file.open(encoding='utf-8') as file:
         reader = csv.DictReader(file)
         rows = list(reader)
     if not rows:
@@ -114,7 +114,7 @@ async def run(project: Project, job_id: str, folder: Path):
     for series in outputs:
         series['values']=[series['values'][i] for i in sample_indices]
     result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'problems':[d.model_dump() for d in warning_diagnostics(project, report.get('diagnostics',''))],'samples':len(rows)}
-    (folder/'result.json').write_text(json.dumps(result, allow_nan=False))
+    (folder/'result.json').write_text(json.dumps(result, allow_nan=False), encoding='utf-8')
     return result
 
 async def check_project(project: Project, job_id: str) -> dict:
@@ -123,7 +123,7 @@ async def check_project(project: Project, job_id: str) -> dict:
         check_definition(block.definition, block.definition.name)
     folder = RUNS/f'check-{job_id}'
     folder.mkdir(parents=True, exist_ok=True)
-    (folder/'model.mo').write_text(emit_project(project))
+    (folder/'model.mo').write_text(emit_project(project), encoding='utf-8')
     return await execute(folder, {'checkOnly': True, 'checkTarget': 'system'}, f'gradara-check-{job_id}')
 
 
@@ -131,5 +131,5 @@ async def check_component(definition: Definition, job_id: str):
     check_definition(definition)
     folder = RUNS/f'check-{job_id}'
     folder.mkdir(parents=True, exist_ok=True)
-    (folder/'model.mo').write_text('within;\npackage Gradara\n'+component_source(definition,'Component')+'\nend Gradara;')
+    (folder/'model.mo').write_text('within;\npackage Gradara\n'+component_source(definition,'Component')+'\nend Gradara;', encoding='utf-8')
     return await execute(folder, {'checkOnly':True}, f'gradara-check-{job_id}')

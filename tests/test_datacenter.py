@@ -14,7 +14,7 @@ FIXTURE = Path(__file__).parents[1]/'models/examples/datacenter.json'
 
 
 def example():
-    return Project.model_validate_json(FIXTURE.read_text())
+    return Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
 
 
 def parameter(project, block, name, value):
@@ -48,7 +48,7 @@ def test_cooling_conserves_energy_and_pi_recovers_better_than_proportional():
         ])
         records = []
         for result in results:
-            with (RUNS/result['id']/'simulation_res.csv').open() as stream:
+            with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:
                 rows = [{key: float(value) for key, value in row.items()}
                         for row in csv.DictReader(stream)]
             rows = [row for row in rows if row['time'] <= 3600+1e-8]

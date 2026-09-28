@@ -17,8 +17,9 @@ import { blockSize } from './canvas';
 import type { Block, Project, Wire } from './model';
 import { flattenWires, isTap, netComponents } from './net';
 import { portPoint, type Side } from './ports';
-import type { Pt } from './routing';
-import { labelOf } from './router';
+import { segmentHitsRect, type Pt } from './routing';
+import { labelOf, routeSheet } from './router';
+import { normalizeProject } from './normalize-project';
 
 /** Port-to-port distance of a straight connection; matches the curated templates. */
 const GAP = 96;
@@ -87,8 +88,15 @@ function relations(project: Project, ids: Set<string>) {
           if (p.block !== q.block)
             list.push({ a: p.block, b: q.block, weight: w });
     };
-    add(x, R, [...U, ...D, ...L], weight);
-    add(x, [...U, ...D], L, weight);
+    if (signal) {
+      // A signal into a top or bottom input is feedback or a measurement: it says
+      // over or under, never before or after, so a loop is never cut through its
+      // forward path.
+      add(x, R, L, weight);
+    } else {
+      add(x, R, [...U, ...D, ...L], weight);
+      add(x, [...U, ...D], L, weight);
+    }
     add(y, D, [...R, ...L, ...U], weight);
     add(y, [...R, ...L], U, weight);
     // Siblings: branches along the rail side by side, fan-out one under another.
@@ -124,6 +132,19 @@ function relations(project: Project, ids: Set<string>) {
             axis: 'x',
             weight,
           });
+    // Branches hanging from one rail (all facing up, or all facing down) line up on it.
+    if (!signal)
+      for (const group of [U, D])
+        for (let i = 1; i < group.length; i++)
+          if (group[i - 1].block !== group[i].block)
+            pairs.push({
+              a: group[i - 1].block,
+              portA: group[i - 1].port,
+              b: group[i].block,
+              portB: group[i].port,
+              axis: 'y',
+              weight: 1,
+            });
   }
   return { x, y, pairs, siblings };
 }
@@ -295,12 +316,12 @@ function place(
   const xs = settle('x', cx);
   const x = xs.orders;
   const y = settle('y', cy).orders;
-  const cols = ranks(
+  const byColumn = ranks(
     ids,
     x.map((o) => [o.a, o.b, o.weight]),
     xs.key,
-  ).rank;
-  console.log(JSON.stringify([...cols].sort((a, b) => a[1] - b[1])));
+  );
+  const cols = byColumn.rank;
   // Blocks that nothing orders along x take the column of what they hang from.
   const xTied = new Set(x.flatMap((o) => [o.a, o.b]));
   for (const id of ids) {
@@ -317,6 +338,59 @@ function place(
         ),
       );
   }
+  // Longest path puts a block as far left as its orders allow. Within the room its
+  // orders leave, move it to the middle of what it connects to (feedback and
+  // measurement included), so a sensor sits between what it measures and what reads it.
+  // Everything on a shared net counts as connected, split evenly across the net.
+  const neighbours = new Map(
+    ids.map((id) => [id, [] as { id: string; weight: number }[]]),
+  );
+  for (const keys of netComponents(project)) {
+    const members = [
+      ...new Set(
+        keys
+          .filter((k) => !k.startsWith('j:'))
+          .map((k) => k.slice(0, k.lastIndexOf('.')))
+          .filter((id) => set.has(id)),
+      ),
+    ];
+    for (const a of members)
+      for (const b of members)
+        if (a !== b)
+          neighbours.get(a)!.push({ id: b, weight: 1 / (members.length - 1) });
+  }
+  const kept = x.filter((_, i) => byColumn.kept.has(i));
+  for (let round = 0; round < 6; round++)
+    for (const id of [...ids].sort(
+      (a, b) => cols.get(a)! - cols.get(b)! || a.localeCompare(b),
+    )) {
+      // Weighted middle of what it connects to; a block it hangs straight under or
+      // over (a vertical connection) counts three times, since they share a column.
+      let total = 0,
+        weight = 0;
+      for (const n of neighbours.get(id)!) {
+        const vertical = pairs.some(
+          (p) =>
+            p.axis === 'x' &&
+            ((p.a === id && p.b === n.id) || (p.b === id && p.a === n.id)),
+        );
+        const w = n.weight * (vertical ? 3 : 1);
+        total += cols.get(n.id)! * w;
+        weight += w;
+      }
+      if (!weight) continue;
+      const lo = Math.max(
+        -Infinity,
+        ...kept.filter((o) => o.b === id).map((o) => cols.get(o.a)! + 1),
+      );
+      const hi = Math.min(
+        Infinity,
+        ...kept.filter((o) => o.a === id).map((o) => cols.get(o.b)! - 1),
+      );
+      const middle = Math.round(total / weight);
+      const next = Math.max(lo === -Infinity ? 0 : lo, Math.min(hi, middle));
+      if (Number.isFinite(next)) cols.set(id, next);
+    }
   // Columns sized to the real blocks and their names.
   const colIds = [...new Set(cols.values())].sort((a, b) => a - b);
   const colX = new Map<number, number>();
@@ -574,9 +648,12 @@ function place(
   const apart = (p: Pair) =>
     Math.abs(cols.get(p.a)! - cols.get(p.b)!) * 1000 +
     Math.abs(position.get(p.a)!.y - position.get(p.b)!.y);
+  // In flow order, so a chain straightens from its source downstream.
   const straight = [...pairs].sort(
     (p, q) =>
       q.weight - p.weight ||
+      Math.min(cols.get(p.a)!, cols.get(p.b)!) -
+        Math.min(cols.get(q.a)!, cols.get(q.b)!) ||
       apart(p) - apart(q) ||
       p.a.localeCompare(q.a) ||
       p.b.localeCompare(q.b) ||
@@ -840,4 +917,88 @@ export function arrangeBlocks(
     annotations: placeAnnotations(project, blocks, set, whole),
   };
   return redrawInternalNets(next, set);
+}
+
+/**
+ * How cleanly a sheet reads, lower is cleaner: what a reviewer objects to, weighted by
+ * how much it hurts. Overlapping blocks and wires through blocks dominate, then
+ * crossings, wires over names, bends, and length.
+ */
+export function layoutCost(project: Project): number {
+  const { routes } = routeSheet(project);
+  const bodies = project.blocks.map((b) => ({
+    ...b.position,
+    ...blockSize(b),
+  }));
+  let cost = 0;
+  for (let i = 0; i < bodies.length; i++)
+    for (let j = i + 1; j < bodies.length; j++)
+      if (overlaps(bodies[i], bodies[j])) cost += 5000;
+  const segments: [Pt, Pt][] = [];
+  for (const [id, points] of routes) {
+    const wire = project.wires.find((w) => w.id === id);
+    const own = new Set([wire?.source, wire?.target]);
+    cost += 15 * Math.max(0, points.length - 2);
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1],
+        b = points[i];
+      cost += (Math.abs(a.x - b.x) + Math.abs(a.y - b.y)) / 10;
+      project.blocks.forEach((block, k) => {
+        if (segmentHitsRect(a, b, bodies[k])) cost += 2000;
+        else if (!own.has(block.id) && segmentHitsRect(a, b, labelOf(block), 0))
+          cost += 40;
+      });
+      segments.push([a, b]);
+    }
+  }
+  for (let i = 0; i < segments.length; i++)
+    for (let j = i + 1; j < segments.length; j++) {
+      const [a, b] = segments[i],
+        [c, d] = segments[j];
+      const h1 = a.y === b.y,
+        h2 = c.y === d.y;
+      if (h1 === h2) continue;
+      const [h, hb, v, vb] = h1 ? [a, b, c, d] : [c, d, a, b];
+      if (
+        v.x > Math.min(h.x, hb.x) &&
+        v.x < Math.max(h.x, hb.x) &&
+        h.y > Math.min(v.y, vb.y) &&
+        h.y < Math.max(v.y, vb.y)
+      )
+        cost += 60;
+    }
+  return cost;
+}
+
+/**
+ * Arrange, but only when it reads better. Returns the arranged sheet (normalized, as it
+ * will be saved), or `improved: false` when the drawing is already as clean as Arrange
+ * can make it — including a sheet that is already arranged.
+ */
+export function arrangeIfBetter(
+  project: Project,
+  selection: string[] = [],
+): { project: Project; improved: boolean } {
+  // An arrangement is itself a rough order to start from: repeat while that helps, so
+  // one press reaches what later presses would (they then report nothing to improve).
+  let best = project,
+    bestCost = layoutCost(project);
+  for (let pass = 0; pass < 4; pass++) {
+    const next = normalizeProject(arrangeBlocks(best, selection), best);
+    const moved = next.blocks.some((b) => {
+      const old = best.blocks.find((o) => o.id === b.id);
+      return (
+        !old ||
+        old.position.x !== b.position.x ||
+        old.position.y !== b.position.y
+      );
+    });
+    if (!moved) break;
+    const cost = layoutCost(next);
+    // Only a clear gain is worth rearranging someone's drawing.
+    if (!(cost < bestCost * 0.97 - 1)) break;
+    best = next;
+    bestCost = cost;
+  }
+  return { project: best, improved: best !== project };
 }

@@ -14,11 +14,11 @@ ROOT = Path(__file__).parents[1]
 
 
 def motor() -> Project:
-    return Project.model_validate(json.loads((ROOT/'tests/motor-project.json').read_text()))
+    return Project.model_validate(json.loads((ROOT/'tests/motor-project.json').read_text(encoding='utf-8')))
 
 
 def servo() -> Project:
-    return Project.model_validate(json.loads((ROOT/'models/examples/servo.json').read_text()))
+    return Project.model_validate(json.loads((ROOT/'models/examples/servo.json').read_text(encoding='utf-8')))
 
 
 def catalog() -> dict[str, Definition]:

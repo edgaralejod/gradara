@@ -87,9 +87,9 @@ def test_run_context_requires_the_same_document(monkeypatch, tmp_path, run_id, m
     provider, _ = setup(monkeypatch, tmp_path)
     folder = tmp_path/'run1'
     folder.mkdir()
-    (folder/'project.json').write_text(json.dumps({'modelId': model_id}))
-    (folder/'model.mo').write_text('model System\n  Gradara.Gain gain;\nend System;')
-    (folder/'diagnostics.json').write_text(json.dumps({'diagnostics': [{'detail': 'LOG_ASSERT linear system 12'}]}))
+    (folder/'project.json').write_text(json.dumps({'modelId': model_id}), encoding='utf-8')
+    (folder/'model.mo').write_text('model System\n  Gradara.Gain gain;\nend System;', encoding='utf-8')
+    (folder/'diagnostics.json').write_text(json.dumps({'diagnostics': [{'detail': 'LOG_ASSERT linear system 12'}]}), encoding='utf-8')
     asyncio.run(doctor.diagnose(request(runId=run_id), 'job5'))
     prompt = provider.call_args.args[0]
     assert ('Emitted Modelica source' in prompt) == expected

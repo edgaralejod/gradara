@@ -12,6 +12,7 @@ import {
   useNodesInitialized,
   useReactFlow,
   useStore,
+  useStoreApi,
   type ReactFlowProps,
   type NodeChange,
 } from '@xyflow/react';
@@ -25,6 +26,7 @@ import {
   type CanvasNode,
 } from '@/lib/gradara/canvas';
 import type { Block, Project } from '@/lib/gradara/model';
+import { sheetBounds } from '@/lib/gradara/sheet-bounds';
 import type { ModelSelection } from '@/lib/gradara/selection';
 import CopyDragLayer from './copy-drag-layer';
 import {
@@ -43,23 +45,70 @@ type ViewState = {
 };
 
 /**
+ * Screen space kept clear when fitting: the zoom controls on the left, the Ask agent
+ * button above, the hint line below, plus a margin so nothing touches an edge.
+ */
+const FIT_INSET = { left: 56, right: 56, top: 60, bottom: 44 };
+
+/**
+ * Frame the whole sheet: blocks, names, wires (loops around the blocks included), and
+ * notes, clear of the canvas overlays, with the zoom capped so a small sheet is not
+ * blown up.
+ */
+function fitSheet(
+  flow: ReturnType<typeof useReactFlow>,
+  project: React.RefObject<Project>,
+  size: { width: number; height: number },
+  duration = 0,
+) {
+  const bounds = sheetBounds(project.current);
+  if (!bounds || !size.width || !size.height)
+    return void flow.fitView({ ...FIT_VIEW, duration });
+  const width = Math.max(80, size.width - FIT_INSET.left - FIT_INSET.right);
+  const height = Math.max(80, size.height - FIT_INSET.top - FIT_INSET.bottom);
+  const zoom = Math.max(
+    0.25,
+    Math.min(
+      FIT_VIEW.maxZoom,
+      width / Math.max(1, bounds.width),
+      height / Math.max(1, bounds.height),
+    ),
+  );
+  void flow.setViewport(
+    {
+      x: FIT_INSET.left + (width - bounds.width * zoom) / 2 - bounds.x * zoom,
+      y: FIT_INSET.top + (height - bounds.height * zoom) / 2 - bounds.y * zoom,
+      zoom,
+    },
+    { duration },
+  );
+}
+
+/**
  * Keep the model in view when the space around the canvas changes (library,
  * inspector, or Problems dock opened or closed, window resized). A fitted view
  * refits; a view the user panned or zoomed keeps the same point at its center.
  */
-function ViewportKeeper({ view }: { view: React.RefObject<ViewState> }) {
+function ViewportKeeper({
+  view,
+  project,
+}: {
+  view: React.RefObject<ViewState>;
+  project: React.RefObject<Project>;
+}) {
   const width = useStore((s) => s.width);
   const height = useStore((s) => s.height);
   const flow = useReactFlow();
+  const store = useStoreApi();
   const last = useRef<{ width: number; height: number } | null>(null);
   useEffect(() => {
     const fit = () => {
       view.current.fitted = true;
-      void flow.fitView({ ...FIT_VIEW, duration: 200 });
+      fitSheet(flow, project, store.getState(), 200);
     };
     window.addEventListener(FIT_VIEW_EVENT, fit);
     return () => window.removeEventListener(FIT_VIEW_EVENT, fit);
-  }, [flow, view]);
+  }, [flow, view, project, store]);
   useEffect(() => {
     const previous = last.current;
     last.current = { width, height };
@@ -68,7 +117,7 @@ function ViewportKeeper({ view }: { view: React.RefObject<ViewState> }) {
     // Wait for the layout to settle (panels slide), then adjust once.
     const timer = setTimeout(() => {
       if (view.current.fitted) {
-        void flow.fitView({ ...FIT_VIEW, duration: 150 });
+        fitSheet(flow, project, { width, height }, 150);
         return;
       }
       const { x, y, zoom } = flow.getViewport();
@@ -79,7 +128,7 @@ function ViewportKeeper({ view }: { view: React.RefObject<ViewState> }) {
       });
     }, 80);
     return () => clearTimeout(timer);
-  }, [width, height, flow, view]);
+  }, [width, height, flow, view, project]);
   return null;
 }
 
@@ -87,10 +136,12 @@ function InitialViewport({
   blockIds,
   sheet = '',
   view,
+  project,
 }: {
   blockIds: string;
   sheet?: string;
   view: React.RefObject<ViewState>;
+  project: React.RefObject<Project>;
 }) {
   const documentReady = useStore(
     (s) => s.nodes.map((n) => n.id).join('|') === blockIds,
@@ -98,6 +149,7 @@ function InitialViewport({
   const initialized = useNodesInitialized();
   const hasViewport = useStore((s) => s.width > 0 && s.height > 0);
   const flow = useReactFlow();
+  const store = useStoreApi();
   // Fit once per sheet: on open, and again when entering or leaving a subsystem.
   const fitted = useRef<string | null>(null);
   useEffect(() => {
@@ -111,10 +163,19 @@ function InitialViewport({
     const frame = requestAnimationFrame(() => {
       fitted.current = sheet;
       view.current.fitted = true;
-      void flow.fitView(FIT_VIEW);
+      fitSheet(flow, project, store.getState());
     });
     return () => cancelAnimationFrame(frame);
-  }, [documentReady, initialized, hasViewport, flow, sheet, view]);
+  }, [
+    documentReady,
+    initialized,
+    hasViewport,
+    flow,
+    sheet,
+    view,
+    project,
+    store,
+  ]);
   return null;
 }
 type Props = Omit<
@@ -150,6 +211,11 @@ export default function ModelCanvas({
 }: Props) {
   const [preview, setPreview] = useState<SelectionPreview | null>(null);
   const view = useRef<ViewState>({ fitted: true });
+  // What fit to view frames: the sheet as drawn, read when a fit happens.
+  const latestProject = useRef(project);
+  useEffect(() => {
+    latestProject.current = project;
+  }, [project]);
   const { onMoveStart, onMoveEnd } = props;
   const moveStart = useCallback<NonNullable<ReactFlowProps['onMoveStart']>>(
     (event, viewport) => {
@@ -241,11 +307,12 @@ export default function ModelCanvas({
           onMoveStart={moveStart}
           onMoveEnd={onMoveEnd}
         >
-          <ViewportKeeper view={view} />
+          <ViewportKeeper view={view} project={latestProject} />
           <InitialViewport
             blockIds={blocks.map((b) => b.id).join('|')}
             sheet={sheet}
             view={view}
+            project={latestProject}
           />
           <CopyDragLayer
             project={project}
