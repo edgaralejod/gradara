@@ -32,6 +32,8 @@ extraResources:
     to: legal/NOTICE
   - from: ../THIRD_PARTY_NOTICES.md
     to: legal/THIRD_PARTY_NOTICES.md
+  - from: ../build/legal/THIRD_PARTY_LICENSES.txt
+    to: legal/THIRD_PARTY_LICENSES.txt
   - from: ../LICENSES
     to: legal/LICENSES
 publish:

@@ -1,6 +1,6 @@
 # Gradara website
 
-Static product site served by Firebase Hosting (project `gradara-2e47a`) at **https://gradara.app**, with `www.gradara.app` redirecting to it (the redirect is configured in the Firebase Hosting console, not in `firebase.json`). Plain HTML and CSS with self-hosted fonts: no build step, no cookies, no analytics, and no third-party requests (enforced by the Content-Security-Policy in `firebase.json`).
+Static product site served by Firebase Hosting at **https://gradara.app**, with `www.gradara.app` redirecting to it (the redirect is configured in the Firebase Hosting console, not in `firebase.json`). Plain HTML and CSS with self-hosted fonts: no build step, no cookies, no analytics, and no third-party requests (enforced by the Content-Security-Policy in `firebase.json`).
 
 | Page | File |
 | --- | --- |
@@ -16,17 +16,16 @@ cd site/public && python3 -m http.server 8088
 
 ## First deploy
 
-1. The Firebase project is `gradara-2e47a` (set in `.firebaserc`). The custom domains `gradara.app` and `www.gradara.app` are configured in Firebase Hosting; their DNS records live in GoDaddy: `A @ 199.36.158.100`, `TXT @ hosting-site=gradara-2e47a`, and `CNAME www gradara-2e47a.web.app`.
+1. The Firebase project ID is set in `.firebaserc` (`<firebase-project-id>` below). The custom domains `gradara.app` and `www.gradara.app` are connected in the Firebase Hosting console, which lists the DNS records the domain registrar needs. Check them there, not in this file.
 2. Deploy once from your computer:
 
    ```sh
    npm install -g firebase-tools
    firebase login
-   cd site && firebase deploy --only hosting
+   cd site && firebase deploy --only hosting   # add --project <firebase-project-id> to override .firebaserc
    ```
 
 3. For automatic deploys, run `firebase init hosting:github` in `site/` or create a service account with the Firebase Hosting Admin role, and store its JSON key as the repository secret `FIREBASE_SERVICE_ACCOUNT_GRADARA`. The **Website** workflow then deploys `main` and posts preview links on pull requests.
-
 
 ## Content rules
 

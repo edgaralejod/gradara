@@ -14,10 +14,14 @@
   --muted: #93a2b1;
   --faint: #5f6f7f;
   /* Port-domain colors from the workbench, brightened for a dark canvas. */
-  --signal: #5ea2dc;
-  --electrical: #e6a54f;
+  --signal: #5e9bf0;
+  --boolean: #c79bf5;
+  --electrical: #f0a83a;
+  --three-phase: #aab6c4;
   --mechanical: #3fc5b8;
-  --thermal: #f08d88;
+  --translational: #a8c43a;
+  --thermal: #f06a60;
+  --magnetic: #ef6fbd;
   --accent: #5ea2dc;
   --radius: 14px;
   --max: 1180px;
@@ -119,7 +123,11 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .port.signal { background: var(--signal); border-radius: 50%; }
 .port.electrical { background: var(--electrical); border-radius: 2px; }
 .port.mechanical { background: var(--mechanical); border-radius: 2px; }
-.port.thermal { background: var(--thermal); border-radius: 2px; }
+.port.thermal { background: var(--thermal); border-radius: 2px; transform: rotate(45deg) scale(0.85); }
+.port.boolean { background: var(--boolean); border-radius: 50%; }
+.port.three-phase { background: var(--three-phase); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.port.translational { background: var(--translational); border-radius: 1px; width: 8px; }
+.port.magnetic { background: var(--magnetic); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 
 /* Feature grid */
 .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }

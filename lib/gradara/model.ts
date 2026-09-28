@@ -159,7 +159,7 @@ export type Wire = {
   sourceHandle: string;
   target: string;
   targetHandle: string;
-  /** Undefined permits automatic orthogonal routing; [] explicitly preserves a straight route. */
+  /** Bends the user pinned. Absent or [] means an automatic route from the sheet router. */
   waypoints?: { x: number; y: number }[];
   junctions?: { x: number; y: number }[];
 };

@@ -263,7 +263,7 @@ let foc = prepare('foc');
       text: '03  POWER & MECHANICS',
       detail: '48 V inverter · four-pole-pair PMSM',
     },
-    { x: 1104, y: 368, text: 'CURRENT FEEDBACK', detail: 'abc → αβ → dq' },
+    { x: 1104, y: 336, text: 'CURRENT FEEDBACK', detail: 'abc → αβ → dq' },
   ];
   foc = finish(foc, 'foc');
   for (const [wire, name, point] of [

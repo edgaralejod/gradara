@@ -5,11 +5,12 @@
 // checks against GitHub Releases (disable with GRADARA_DISABLE_UPDATES=1).
 'use strict';
 
-const { app, BrowserWindow, Menu, dialog, ipcMain, shell, session } = require('electron');
+const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, shell, session } = require('electron');
 const { spawn, execFile } = require('node:child_process');
 const fs = require('node:fs');
 const http = require('node:http');
 const net = require('node:net');
+const os = require('node:os');
 const path = require('node:path');
 
 const DEV = !app.isPackaged;
@@ -359,6 +360,41 @@ function restart() {
   setTimeout(() => void launch(), 500);
 }
 
+/**
+ * Help → Copy Diagnostic Info: what a useful bug report needs (versions, OS, engine
+ * status, the end of the service log), with the home folder replaced by "~". No
+ * model content is included; the user pastes it where they choose.
+ */
+async function copyDiagnostics() {
+  const lines = [
+    `Gradara ${app.getVersion()} (Electron ${process.versions.electron})`,
+    `${os.type()} ${os.release()} ${process.arch}`,
+  ];
+  try {
+    const engine = await serviceRequest('GET', '/api/engine');
+    lines.push(`Engine: ${engine.backend ?? 'unknown'} (${engine.preference ?? 'auto'}) · ${engine.ready ? 'ready' : 'not ready'} · ${engine.label ?? ''}`);
+  } catch (error) {
+    lines.push(`Engine: status unavailable (${error.message})`);
+  }
+  try {
+    const log = fs.readFileSync(path.join(logDir(), 'service.log'), 'utf8').split(/\r?\n/).slice(-60);
+    lines.push('', 'Last lines of service.log:', ...log);
+  } catch {
+    lines.push('', 'No service log yet.');
+  }
+  const text = lines.join('\n').split(os.homedir()).join('~');
+  clipboard.writeText(text);
+  const { response } = await dialog.showMessageBox({
+    type: 'info',
+    buttons: ['Report an Issue', 'Close'],
+    defaultId: 0,
+    cancelId: 1,
+    message: 'Diagnostic info copied',
+    detail: 'Versions, engine status, and the end of the service log are on the clipboard. Paste them into your bug report. They contain no model content.',
+  });
+  if (response === 0) void shell.openExternal(ISSUES_URL);
+}
+
 function buildMenu() {
   const isMac = process.platform === 'darwin';
   const template = [
@@ -388,6 +424,8 @@ function buildMenu() {
         { type: 'separator' },
         { label: 'Privacy', click: () => void shell.openExternal(PRIVACY_URL) },
         { label: 'Report an Issue', click: () => void shell.openExternal(ISSUES_URL) },
+        { label: 'Copy Diagnostic Info', click: () => void copyDiagnostics() },
+        { label: 'Third-Party Licenses', click: () => void shell.openPath(path.join(RESOURCES, DEV ? 'THIRD_PARTY_NOTICES.md' : path.join('legal', 'THIRD_PARTY_LICENSES.txt'))) },
         ...(isMac ? [] : [{ role: 'about' }]),
       ],
     },
@@ -475,7 +513,8 @@ void app.whenReady().then(() => {
   app.setAboutPanelOptions({
     applicationName: 'Gradara',
     applicationVersion: app.getVersion(),
-    copyright: 'Copyright 2026 Edgar Duarte and the Gradara contributors. Apache-2.0.',
+    copyright: 'Copyright 2026 Edgar Duarte and the Gradara contributors. Apache-2.0. Published by Virtu Services LLC.',
+    credits: 'Simulation by OpenModelica and the Modelica Standard Library. Gradara and its results are not certified for safety-critical use; verify results independently.',
     website: 'https://gradara.app/',
   });
   // The workbench needs no camera, microphone, location, or notifications.

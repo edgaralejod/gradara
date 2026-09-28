@@ -3615,8 +3615,9 @@ function Workbench() {
                 ['Restore auto route (wires only)', 'R'],
                 ['Name a signal / net', 'Double-click wire / F2'],
                 ['Move a signal label', 'Drag along its net'],
-                ['Create a component', 'A'],
+                ['Ask agent (new block or model)', 'A'],
                 ['Run simulation', '⌘ / Ctrl + Enter'],
+                ['Save now (edits also save automatically)', '⌘ / Ctrl + S'],
                 ['Undo', '⌘ / Ctrl + Z'],
                 ['Redo', '⌘ / Ctrl + Shift + Z'],
                 ['Duplicate selection', '⌘ / Ctrl + D'],
@@ -3632,6 +3633,7 @@ function Workbench() {
                 ['Switch to Results view', '⌘ / Ctrl + 2'],
                 ['Switch to Model Explorer', '⌘ / Ctrl + 3'],
                 ['Search the model', '⌘ / Ctrl + K'],
+                ['Show or hide the Problems dock', '⌘ / Ctrl + J'],
                 ['Make subsystem · ungroup', '⌘ / Ctrl + G · ⇧G'],
                 ['Leave a subsystem', 'Esc · ⌘ / Ctrl + ↑'],
                 ['Select several components', 'Shift + click / Drag'],
@@ -3649,8 +3651,9 @@ function Workbench() {
                 ['Nudge selected blocks / wires', 'Arrow keys'],
                 ['Nudge by 10 diagram units', 'Shift + arrows'],
                 ['Add a block at the pointer', 'Double-click empty canvas'],
-                ['Inspect equations', 'Double-click a block'],
-                ['Save', 'Automatic'],
+                ["Open a block's properties", 'Double-click the block'],
+                ['Open a subsystem', 'Double-click it'],
+                ['Show this list', '?'],
               ].map(([label, key]) => (
                 <div key={label}>
                   <span>{label}</span>

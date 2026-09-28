@@ -18,7 +18,7 @@
     "postinstall": "node scripts/patch-react-flow.mjs",
     "report:blocks": "tsx scripts/report-blocks.ts",
     "desktop:web": "vite build -c vite.desktop.config.ts --mode desktop",
-    "desktop:backend": "python3 packaging/build_backend.py",
+    "desktop:backend": "python3 packaging/build_backend.py && python3 packaging/third_party_licenses.py",
     "desktop:prepare": "npm run desktop:web && npm run desktop:backend",
     "desktop:start": "npm run desktop:web && cd desktop && npm start",
     "desktop:dist": "npm run desktop:prepare && cd desktop && npm run dist"
