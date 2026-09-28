@@ -1,15 +1,9 @@
 import { Position } from '@xyflow/react';
 import type { Project } from './model';
-import { endpointPoint, isTap, netComponents, TAP_HANDLE } from './net';
-import { portPoint, sideToPosition } from './ports';
-import {
-  routeBetween,
-  simplifyRoute,
-  segmentExit,
-  EXIT_STUB,
-  rubberBandPoints,
-  type Pt,
-} from './routing';
+import { isTap, netComponents, TAP_HANDLE } from './net';
+import { portPoint } from './ports';
+import { pinnedRoute, routeSheet } from './router';
+import { EXIT_STUB, rubberBandPoints, type Pt } from './routing';
 
 export const ANCHOR_PX = 8;
 const PORT_HIT_PX = 16;
@@ -28,23 +22,20 @@ export function samePt(a: Pt, b: Pt, eps = 0.000001) {
 
 export type Anchor = { axis: 'x' | 'y'; value: number };
 
-function rawPolyline(project: Project, wireId: string): Pt[] {
-  const w = project.wires.find((x) => x.id === wireId);
-  if (!w) return [];
-  const from = endpointPoint(project, w.source, w.sourceHandle);
-  const to = endpointPoint(project, w.target, w.targetHandle);
-  if (!from || !to) return [];
-  return committedPoints(
-    project,
-    w.source,
-    w.sourceHandle,
-    w.target,
-    w.targetHandle,
-    w.waypoints,
-  );
+/** Every wire's drawn route, keyed by wire ID. The sheet router owns this geometry. */
+export function routedPolylines(project: Project): Map<string, Pt[]> {
+  return routeSheet(project).routes;
+}
+export function polylineOfWire(project: Project, wireId: string): Pt[] {
+  return routedPolylines(project).get(wireId) ?? [];
 }
 
-const routeCache = new WeakMap<Project, Map<string, Pt[]>>();
+/** A wire's route through its pinned bends, as drawn by the user (before any cleanup). */
+export function storedPolyline(project: Project, wireId: string): Pt[] {
+  const wire = project.wires.find((w) => w.id === wireId);
+  return wire ? pinnedRoute(project, wire) : [];
+}
+
 type Run = { a: Pt; b: Pt; axis: 'h' | 'v'; coord: number };
 function overlap(a: Run, b: Run) {
   if (a.axis !== b.axis || !nearly(a.coord, b.coord)) return false;
@@ -54,60 +45,6 @@ function overlap(a: Run, b: Run) {
       Math.max(Math.min(a.a[key], a.b[key]), Math.min(b.a[key], b.b[key])) >
     0.001
   );
-}
-/** Every wire's drawn route, keyed by wire ID: pinned waypoints, or orthogonal auto-route. */
-export function routedPolylines(project: Project): Map<string, Pt[]> {
-  const cached = routeCache.get(project);
-  if (cached) return cached;
-  const routes = new Map<string, Pt[]>();
-  for (const w of project.wires) {
-    const from = endpointPoint(project, w.source, w.sourceHandle);
-    const to = endpointPoint(project, w.target, w.targetHandle);
-    const pts = simplifyRoute(
-      rawPolyline(project, w.id),
-      from && !isTap(project, w.source) ? sideToPosition(from.side) : undefined,
-      to && !isTap(project, w.target) ? sideToPosition(to.side) : undefined,
-    );
-    routes.set(w.id, pts);
-  }
-  routeCache.set(project, routes);
-  return routes;
-}
-export function polylineOfWire(project: Project, wireId: string): Pt[] {
-  return routedPolylines(project).get(wireId) ?? [];
-}
-
-function committedPoints(
-  project: Project,
-  source: string,
-  sourceHandle: string,
-  target: string,
-  targetHandle: string,
-  vertices: Pt[] = [],
-): Pt[] {
-  const from = endpointPoint(project, source, sourceHandle);
-  const to = endpointPoint(project, target, targetHandle);
-  if (!from || !to) return [];
-  const exit = isTap(project, source)
-    ? segmentExit(from, vertices[0] ?? to)
-    : sideToPosition(from.side);
-  const entry = isTap(project, target) ? undefined : sideToPosition(to.side);
-  if (vertices.length) {
-    const points = routeBetween(from, vertices[0], exit);
-    for (const vertex of vertices.slice(1)) {
-      const a = points.at(-1)!;
-      if (nearly(a.x, vertex.x) || nearly(a.y, vertex.y)) points.push(vertex);
-      else points.push({ x: vertex.x, y: a.y }, vertex);
-    }
-    const last = points.at(-1)!;
-    const tailExit = segmentExit(last, to);
-    return simplifyRoute(
-      [...points, ...routeBetween(last, to, tailExit, entry, 0).slice(1)],
-      isTap(project, source) ? undefined : exit,
-      entry,
-    );
-  }
-  return routeBetween(from, to, exit, entry);
 }
 
 export function segmentsOf(pts: Pt[]) {
@@ -220,8 +157,7 @@ export function hitSegment(
   ignoreWireIds: string[] = [],
 ): { wireId: string; point: Pt; dist: number; segment: number } | undefined {
   let best:
-    | { wireId: string; point: Pt; dist: number; segment: number }
-    | undefined;
+    { wireId: string; point: Pt; dist: number; segment: number } | undefined;
   for (const w of project.wires) {
     if (ignoreWireIds.includes(w.id)) continue;
     const pts = polylineOfWire(project, w.id);

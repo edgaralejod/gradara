@@ -4,13 +4,10 @@ import { normalizeBlockNames } from './names';
 import { portOf } from './model';
 import { blockSize, applyLayout, type BlockLayout } from './canvas';
 import { endpointPoint, netComponents } from './net';
-import { polylineOfWire, samePt } from './net-draw';
-import {
-  followJunctionsForLayout,
-  moveJunctions,
-  repairMovedRoutes,
-} from './net-layout';
+import { polylineOfWire, samePt, storedPolyline } from './net-draw';
+import { followJunctionsForLayout, moveJunctions } from './net-layout';
 import { snapMovedBlocks } from './placement';
+import { settleRoutes } from './router';
 import { sideToPosition } from './ports';
 import {
   routeBetween,
@@ -113,7 +110,18 @@ export function translateSelection(
   const resolved = resolveSelection(project, selection);
   const blockIds = new Set(resolved.blockIds);
   const junctionIds = new Set(resolved.junctionIds);
-  const wireIds = new Set(resolved.wireIds);
+  const moving = (id: string) => blockIds.has(id) || junctionIds.has(id);
+  // Moving blocks carries only the wires that run between moving things. A wire that a
+  // region selection merely touched, with an end on a block that stays, stretches
+  // instead of being pushed along. A wire moved on its own (no blocks) moves rigidly.
+  const wireIds = new Set(
+    blockIds.size
+      ? resolved.wireIds.filter((id) => {
+          const w = project.wires.find((x) => x.id === id);
+          return !!w && moving(w.source) && moving(w.target);
+        })
+      : resolved.wireIds,
+  );
   if (!blockIds.size && !junctionIds.size && !wireIds.size) return project;
   const allBlockIds = new Set(project.blocks.map((b) => b.id));
   const moves = (id: string) => blockIds.has(id) || junctionIds.has(id);
@@ -167,7 +175,66 @@ export function translateSelection(
       junctions: w.junctions?.map((p) => offset(p, delta)),
     };
   });
-  return next;
+  if (!blockIds.size) return next;
+  return settleRoutes(carryLeads(project, next, [...blockIds, ...junctionIds]));
+}
+
+/**
+ * A block that moves carries the first run of each pinned wire with it: the bend at the
+ * end of that run shifts with the block across the run, so a vertical lead stays vertical
+ * and a horizontal one horizontal, and the rest of the route is kept. Wires whose both
+ * ends moved are left to the caller.
+ */
+export function carryLeads(
+  before: Project,
+  after: Project,
+  movedIds: readonly string[],
+): Project {
+  const moved = new Set(movedIds);
+  let changed = false;
+  const wires = after.wires.map((w) => {
+    if (!w.waypoints?.length) return w;
+    const sourceMoved = moved.has(w.source),
+      targetMoved = moved.has(w.target);
+    if (sourceMoved === targetMoved) return w;
+    const id = sourceMoved ? w.source : w.target;
+    // A moved junction already carries its runs (moveJunctions).
+    if (!before.blocks.some((b) => b.id === id)) return w;
+    const handle = sourceMoved ? w.sourceHandle : w.targetHandle;
+    const from = endpointPoint(before, id, handle),
+      to = endpointPoint(after, id, handle);
+    if (!from || !to || samePt(from, to)) return w;
+    let points = storedPolyline(before, w.id);
+    if (points.length < 3) return w;
+    if (!sourceMoved) points = [...points].reverse();
+    const [lead, bend] = points;
+    const vertical = Math.abs(lead.x - bend.x) < 0.000001;
+    const shifted = [
+      to,
+      vertical
+        ? { x: bend.x + (to.x - from.x), y: bend.y }
+        : { x: bend.x, y: bend.y + (to.y - from.y) },
+      ...points.slice(2),
+    ];
+    // The next run stays straight: move its far end on the same axis when it is a bend.
+    if (shifted.length > 3) {
+      const next = points[2];
+      const run = vertical
+        ? Math.abs(bend.y - next.y) < 0.000001
+        : Math.abs(bend.x - next.x) < 0.000001;
+      if (!run)
+        shifted[2] = vertical
+          ? { x: shifted[1].x, y: next.y }
+          : { x: next.x, y: shifted[1].y };
+    }
+    const route = simplifyPoints(
+      sourceMoved ? shifted : [...shifted].reverse(),
+    );
+    if (route.length < 3) return w;
+    changed = true;
+    return { ...w, waypoints: route.slice(1, -1) };
+  });
+  return changed ? { ...after, wires } : after;
 }
 
 /** Same operation for live canvas previews and the single saved drag transaction. */
@@ -212,12 +279,16 @@ export function layoutSelection(
     );
   const laidOut = applyLayout(project, updates);
   const ids = updates.map((l) => l.id);
-  return repairMovedRoutes(
-    followJunctionsForLayout(
+  // Pinned wires keep their shape where they can; the sheet router draws the rest.
+  return settleRoutes(
+    carryLeads(
       project,
-      snap ? snapMovedBlocks(laidOut, ids) : laidOut,
+      followJunctionsForLayout(
+        project,
+        snap ? snapMovedBlocks(laidOut, ids) : laidOut,
+      ),
+      ids,
     ),
-    ids,
   );
 }
 

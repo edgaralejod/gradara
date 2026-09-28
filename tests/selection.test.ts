@@ -31,6 +31,7 @@ import {
   type CopyPreview,
 } from '../lib/gradara/copy-drag';
 import { focProject } from '../lib/gradara/foc';
+import { selfIntersects } from '../lib/gradara/routing';
 
 function block(kind: string, id: string, x: number, y: number): Block {
   return {
@@ -631,4 +632,107 @@ void test('repeated fine wire nudges keep fixed ports and do not accumulate retr
       );
     }
   }
+});
+
+void test('dragging a region-selected supply and ground stretches their wires to a fixed block instead of pushing them', () => {
+  const supply = block('dcSource', 'supply', 200, 200);
+  const ground = block('ground', 'ground', 200, 360);
+  const bridge = block('hBridge', 'bridge', 640, 120);
+  const base: Project = {
+    ...initialProject(),
+    blocks: [supply, ground, bridge],
+    junctions: [],
+    wires: [],
+  };
+  const p = endpointPoint(base, 'supply', 'p')!;
+  const n = endpointPoint(base, 'supply', 'n')!;
+  const inP = endpointPoint(base, 'bridge', 'dc_p1')!;
+  const inN = endpointPoint(base, 'bridge', 'dc_n1')!;
+  const dot = { x: n.x, y: n.y + 40 };
+  const project: Project = {
+    ...base,
+    blocks: base.blocks.map((b) =>
+      b.id === 'ground'
+        ? {
+            ...b,
+            position: {
+              x: dot.x - blockSize(b).width / 2,
+              y: dot.y + 40,
+            },
+          }
+        : b,
+    ),
+    junctions: [{ id: 'dot', domain: 'electrical', position: dot }],
+    wires: [
+      {
+        id: 'top',
+        source: 'supply',
+        sourceHandle: 'p',
+        target: 'bridge',
+        targetHandle: 'dc_p1',
+        waypoints: [{ x: p.x, y: inP.y }],
+      },
+      {
+        id: 'lead',
+        source: 'supply',
+        sourceHandle: 'n',
+        target: 'dot',
+        targetHandle: 'node',
+      },
+      {
+        id: 'earth',
+        source: 'dot',
+        sourceHandle: 'node',
+        target: 'ground',
+        targetHandle: 'p',
+      },
+      {
+        id: 'return',
+        source: 'dot',
+        sourceHandle: 'node',
+        target: 'bridge',
+        targetHandle: 'dc_n1',
+        waypoints: [
+          { x: inN.x - 40, y: dot.y },
+          { x: inN.x - 40, y: inN.y },
+        ],
+      },
+    ],
+  };
+  // A region around the supply and the ground also touches both long wires.
+  const region = selectionInRect(project, {
+    x: 180,
+    y: 180,
+    width: 140,
+    height: 320,
+  });
+  assert.ok(
+    region.wireIds.includes('return') && region.wireIds.includes('top'),
+  );
+  const layouts = ['supply', 'ground'].map((id) => {
+    const b = project.blocks.find((x) => x.id === id)!;
+    return {
+      id,
+      position: { x: b.position.x + 200, y: b.position.y },
+      size: blockSize(b),
+    };
+  });
+  const next = normalizeJunctions(
+    layoutSelection(project, layouts, region, false),
+  );
+  for (const id of ['top', 'return']) {
+    const before = polylineOfWire(project, id);
+    const after = polylineOfWire(next, id);
+    // The bridge end keeps its approach: nothing was pushed past the fixed terminal.
+    assert.deepEqual(after.at(-1), before.at(-1), id);
+    assert.equal(after.at(-2)!.y, before.at(-2)!.y, id);
+    assert.ok(
+      after.at(-2)!.x < after.at(-1)!.x,
+      `${id} still enters from the left`,
+    );
+    assert.equal(selfIntersects(after), false, JSON.stringify(after));
+  }
+  const top = polylineOfWire(next, 'top');
+  assert.equal(top[0].x, top[1].x, 'the lead out of + stays vertical');
+  assert.equal(top[1].x, endpointPoint(next, 'supply', 'p')!.x);
 });

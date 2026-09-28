@@ -2,7 +2,6 @@ import type { Project, Wire } from './model';
 import { endpointPoint, isTap } from './net';
 import { nearly, polylineOfWire, samePt } from './net-draw';
 import { sideToPosition } from './ports';
-import { blockSize } from './canvas';
 import { routeBetween, segmentExit, simplifyRoute, type Pt } from './routing';
 
 type Axis = 'x' | 'y';
@@ -231,7 +230,29 @@ export function followJunctionsForLayout(
       if (isTap(before, id)) continue;
       const a = endpointPoint(before, id, handle),
         b = endpointPoint(after, id, handle);
-      if (!a || !b || nearly(a[axis], b[axis])) continue;
+      if (!a || !b) continue;
+      // A block moved along its own lead onto or past the dot: carry the dot out ahead
+      // of the terminal, keeping its spacing, so the lead never folds back into the body.
+      const tapId = id === wire.source ? wire.target : wire.source;
+      const tap = before.junctions.find((j) => j.id === tapId);
+      if (tap) {
+        const along: Axis = axis === 'x' ? 'y' : 'x';
+        const normal = { left: -1, right: 1, top: -1, bottom: 1 }[a.side];
+        const ahead = (tap.position[along] - a[along]) * normal;
+        const aheadAfter = (tap.position[along] - b[along]) * normal;
+        if (ahead > 0 && aheadAfter <= 0) {
+          const proposal = proposals.get(tapId) ?? {};
+          const value = b[along] + normal * ahead;
+          const existing = proposal[along];
+          proposal[along] =
+            existing === undefined ||
+            (existing !== null && nearly(existing, value))
+              ? value
+              : null;
+          proposals.set(tapId, proposal);
+        }
+      }
+      if (nearly(a[axis], b[axis])) continue;
       for (const junctionId of junctionsOnRun(before, wire.id, 0)) {
         const proposal = proposals.get(junctionId) ?? {};
         const value = b[axis];
@@ -259,121 +280,4 @@ export function followJunctionsForLayout(
   // Stretch routes against the blocks' new positions: stretching the old geometry and
   // then moving the block again leaves hairpin bends on the wire that drove the move.
   return moveJunctions(after, positions);
-}
-
-function reverses(points: Pt[]) {
-  for (let i = 2; i < points.length; i++) {
-    const [a, b, c] = [points[i - 2], points[i - 1], points[i]];
-    const straight =
-      (nearly(a.x, b.x) && nearly(b.x, c.x)) ||
-      (nearly(a.y, b.y) && nearly(b.y, c.y));
-    if (straight && (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) < 0)
-      return true;
-  }
-  return false;
-}
-
-function crossesOwnBlock(project: Project, wire: Wire, points: Pt[]) {
-  for (const id of [wire.source, wire.target]) {
-    const block = project.blocks.find((b) => b.id === id);
-    if (!block) continue;
-    const { x, y } = block.position;
-    const { width, height } = blockSize(block);
-    for (let i = 1; i < points.length; i++) {
-      const mx = (points[i - 1].x + points[i].x) / 2,
-        my = (points[i - 1].y + points[i].y) / 2;
-      if (mx > x + 1 && mx < x + width - 1 && my > y + 1 && my < y + height - 1)
-        return true;
-    }
-  }
-  return false;
-}
-
-/**
- * After blocks move on their own, a pinned route can end up doubling back into its
- * terminal or through its own block. Release the bends next to the moved end, one at a
- * time, until the wire reads cleanly again; untouched wires and good routes are kept.
- */
-export function repairMovedRoutes(
-  project: Project,
-  movedIds: readonly string[],
-): Project {
-  const moved = new Set(movedIds);
-  let changed = false;
-  const wires = project.wires.map((wire) => {
-    if (!(moved.has(wire.source) || moved.has(wire.target))) return wire;
-    let current = wire;
-    const bad = (w: Wire) => {
-      const trial = {
-        ...project,
-        wires: project.wires.map((x) => (x.id === w.id ? w : x)),
-      };
-      const points = polylineOfWire(trial, w.id);
-      return reverses(points) || crossesOwnBlock(trial, w, points);
-    };
-    while (current.waypoints?.length && bad(current)) {
-      const points = [...current.waypoints];
-      // Drop the bend nearest a moved end (the source end first when both moved).
-      if (moved.has(current.source)) points.shift();
-      else points.pop();
-      current = { ...current, waypoints: points };
-    }
-    if (!current.waypoints?.length && bad(current)) {
-      const detour = detourToDot(project, current);
-      if (detour && !bad(detour)) current = detour;
-    }
-    if (current !== wire) changed = true;
-    return current;
-  });
-  return changed ? { ...project, wires } : project;
-}
-
-/**
- * A block dragged past its own junction dot: pin a route that leaves the terminal, steps
- * around the body on the dot's side, and comes back, instead of cutting through the block.
- */
-function detourToDot(project: Project, wire: Wire): Wire | undefined {
-  const blockEnd = isTap(project, wire.target)
-    ? 'source'
-    : isTap(project, wire.source)
-      ? 'target'
-      : undefined;
-  if (!blockEnd) return undefined;
-  const id = blockEnd === 'source' ? wire.source : wire.target;
-  const handle = blockEnd === 'source' ? wire.sourceHandle : wire.targetHandle;
-  const block = project.blocks.find((b) => b.id === id);
-  const port = endpointPoint(project, id, handle);
-  const dot = endpointPoint(
-    project,
-    blockEnd === 'source' ? wire.target : wire.source,
-    'node',
-  );
-  if (!block || !port || !dot) return undefined;
-  const size = blockSize(block);
-  const stub = 20;
-  const out = { left: [-1, 0], right: [1, 0], top: [0, -1], bottom: [0, 1] }[
-    port.side
-  ];
-  const lead = { x: port.x + out[0] * stub, y: port.y + out[1] * stub };
-  let bends: Pt[];
-  if (out[0] !== 0) {
-    const above = dot.y < block.position.y + size.height / 2;
-    const y = above
-      ? Math.min(block.position.y - stub, dot.y)
-      : Math.max(block.position.y + size.height + stub, dot.y);
-    bends = [lead, { x: lead.x, y }, { x: dot.x, y }];
-  } else {
-    const leftward = dot.x < block.position.x + size.width / 2;
-    const x = leftward
-      ? Math.min(block.position.x - stub, dot.x)
-      : Math.max(block.position.x + size.width + stub, dot.x);
-    bends = [lead, { x, y: lead.y }, { x, y: dot.y }];
-  }
-  bends = bends.filter(
-    (p, i) => !samePt(p, dot) && (i === 0 || !samePt(p, bends[i - 1])),
-  );
-  return {
-    ...wire,
-    waypoints: blockEnd === 'source' ? bends : bends.reverse(),
-  };
 }

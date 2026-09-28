@@ -229,3 +229,186 @@ export function routeBetween(
   }
   return simplifyPoints([from, a, ...middle, b, to]);
 }
+
+export type Rect = { x: number; y: number; width: number; height: number };
+
+/** Whether an orthogonal segment passes through the inside of `r` (running along an edge does not). */
+export function segmentHitsRect(a: Pt, b: Pt, r: Rect, inset = 1) {
+  const x0 = r.x + inset,
+    x1 = r.x + r.width - inset,
+    y0 = r.y + inset,
+    y1 = r.y + r.height - inset;
+  if (x1 <= x0 || y1 <= y0) return false;
+  if (nearly(a.y, b.y)) {
+    const lo = Math.min(a.x, b.x),
+      hi = Math.max(a.x, b.x);
+    return a.y > y0 && a.y < y1 && hi > x0 && lo < x1;
+  }
+  const lo = Math.min(a.y, b.y),
+    hi = Math.max(a.y, b.y);
+  return a.x > x0 && a.x < x1 && hi > y0 && lo < y1;
+}
+
+function reversesAt(a: Pt, b: Pt, c: Pt) {
+  const straight =
+    (nearly(a.x, b.x) && nearly(b.x, c.x)) ||
+    (nearly(a.y, b.y) && nearly(b.y, c.y));
+  return straight && (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) < 0;
+}
+
+/** The part two orthogonal segments share, as the point nearest `near`, or undefined. */
+function meet(a: Pt, b: Pt, c: Pt, d: Pt, near: Pt): Pt | undefined {
+  const x0 = Math.max(Math.min(a.x, b.x), Math.min(c.x, d.x)),
+    x1 = Math.min(Math.max(a.x, b.x), Math.max(c.x, d.x)),
+    y0 = Math.max(Math.min(a.y, b.y), Math.min(c.y, d.y)),
+    y1 = Math.min(Math.max(a.y, b.y), Math.max(c.y, d.y));
+  if (x0 > x1 + 0.000001 || y0 > y1 + 0.000001) return undefined;
+  return {
+    x: Math.min(Math.max(near.x, x0), x1),
+    y: Math.min(Math.max(near.y, y0), y1),
+  };
+}
+
+/**
+ * A route that crosses or touches itself, or doubles straight back: the loops and hairpins
+ * a wire should never show. Adjacent segments only count when they reverse.
+ */
+export function selfIntersects(points: Pt[]) {
+  const pts = simplifyPoints(points);
+  for (let i = 1; i < pts.length - 1; i++)
+    if (reversesAt(pts[i - 1], pts[i], pts[i + 1])) return true;
+  for (let i = 0; i < pts.length - 1; i++)
+    for (let j = i + 2; j < pts.length - 1; j++)
+      if (meet(pts[i], pts[i + 1], pts[j], pts[j + 1], pts[i])) return true;
+  return false;
+}
+
+/**
+ * Cut every loop out of a route: where it meets itself again, jump straight to the later
+ * segment. The first and last runs keep the port normals, so a loop that is the only way
+ * out of a terminal stays.
+ */
+export function eraseLoops(points: Pt[], exit?: Position, entry?: Position) {
+  let pts = simplifyPoints(points);
+  const keeps = (c: Pt[]) =>
+    c.length >= 2 &&
+    (!exit || segmentExit(c[0], c[1]) === exit) &&
+    (!entry || segmentExit(c.at(-1)!, c.at(-2)!) === entry);
+  for (let pass = 0; pass < 32; pass++) {
+    let cut: Pt[] | undefined;
+    search: for (let i = 0; i < pts.length - 1; i++)
+      for (let j = pts.length - 2; j >= i + 2; j--) {
+        const p = meet(pts[i], pts[i + 1], pts[j], pts[j + 1], pts[i]);
+        if (!p) continue;
+        const candidate = simplifyPoints([
+          ...pts.slice(0, i + 1),
+          p,
+          ...pts.slice(j + 1),
+        ]);
+        if (keeps(candidate) && candidate.length < pts.length + 1) {
+          cut = candidate;
+          break search;
+        }
+      }
+    if (!cut) break;
+    pts = cut;
+  }
+  return simplifyRoute(pts, exit, entry);
+}
+
+function routeHits(points: Pt[], rects: Rect[]) {
+  let hits = 0;
+  for (let i = 1; i < points.length; i++)
+    for (const r of rects)
+      if (segmentHitsRect(points[i - 1], points[i], r)) hits++;
+  return hits;
+}
+
+function routeLength(points: Pt[]) {
+  let length = 0;
+  for (let i = 1; i < points.length; i++)
+    length +=
+      Math.abs(points[i].x - points[i - 1].x) +
+      Math.abs(points[i].y - points[i - 1].y);
+  return length;
+}
+
+/** Clearance a detour keeps from a body; below a block it also clears the instance name. */
+const LANE = EXIT_STUB;
+const NAME_LANE = 44;
+
+/**
+ * The orthogonal route between two terminals that stays out of `rects` when it can: the
+ * ordinary route when that is already clean, otherwise the shortest route with the fewest
+ * bends from a family of detours around the rectangles' edges. Never loops or doubles back.
+ */
+export function routeAround(
+  from: Pt,
+  to: Pt,
+  exit: Position,
+  entry: Position,
+  rects: Rect[],
+  options: { always?: boolean } = {},
+): Pt[] {
+  const base = routeBetween(from, to, exit, entry);
+  if (!options.always && !selfIntersects(base) && routeHits(base, rects) === 0)
+    return base;
+  const a = outward(from, exit),
+    b = outward(to, entry);
+  const xs = new Set([a.x, b.x, (a.x + b.x) / 2]);
+  const ys = new Set([a.y, b.y, (a.y + b.y) / 2]);
+  for (const r of rects) {
+    xs.add(r.x - LANE);
+    xs.add(r.x + r.width + LANE);
+    ys.add(r.y - LANE);
+    ys.add(r.y + r.height + LANE);
+    ys.add(r.y + r.height + NAME_LANE);
+  }
+  const middles: Pt[][] = [[], [{ x: b.x, y: a.y }], [{ x: a.x, y: b.y }]];
+  for (const x of xs)
+    middles.push([
+      { x, y: a.y },
+      { x, y: b.y },
+    ]);
+  for (const y of ys)
+    middles.push([
+      { x: a.x, y },
+      { x: b.x, y },
+    ]);
+  for (const x of xs)
+    for (const y of ys)
+      middles.push(
+        [
+          { x, y: a.y },
+          { x, y },
+          { x: b.x, y },
+        ],
+        [
+          { x: a.x, y },
+          { x, y },
+          { x, y: b.y },
+        ],
+      );
+  let best: { points: Pt[]; cost: number } | undefined;
+  const consider = (raw: Pt[]) => {
+    const points = simplifyPoints(raw);
+    if (points.length < 2) return;
+    for (let i = 1; i < points.length; i++)
+      if (
+        !nearly(points[i].x, points[i - 1].x) &&
+        !nearly(points[i].y, points[i - 1].y)
+      )
+        return;
+    if (segmentExit(points[0], points[1]) !== exit) return;
+    if (segmentExit(points.at(-1)!, points.at(-2)!) !== entry) return;
+    if (selfIntersects(points)) return;
+    const cost =
+      routeHits(points, rects) * 100000 +
+      (points.length - 2) * 30 +
+      routeLength(points);
+    if (!best || cost < best.cost - 0.000001) best = { points, cost };
+  };
+  if (!selfIntersects(base)) consider(base);
+  for (const middle of middles) consider([from, a, ...middle, b, to]);
+  return best?.points ?? eraseLoops(base, exit, entry);
+}

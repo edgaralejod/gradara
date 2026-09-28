@@ -16,7 +16,6 @@ Done: the Apache-2.0 source is public, CI runs on GitHub, installers for Windows
 | Task | Scope | Done when |
 | --- | --- | --- |
 | AI onboarding | Settings → AI already covers provider choice, per-provider model selection, key verification, and Gradara AI sign-in, and the composers point to Settings when setup or sign-in is missing. Remaining: in-context messages for rejected keys, exhausted credits, and vendor outages, and hiding AI controls when AI is off. | A first-time user can distinguish missing setup, sign-in, credit, and vendor failures from the composer itself. Status probes never trigger paid generations. |
-| Preserve route intent through save/load | Python Wire defaults currently erase the distinction between absent and empty waypoints. | A versioned or backward-compatible solution preserves auto versus explicit straight intent through API round trips, without changing saved geometry unexpectedly. |
 | Keyboard and screen-reader access | Focus, discoverable actions, model dialogs, and canvas navigation. | A new user can create/open/run a model using the keyboard; assistive-technology sessions verify accessible names, focus return, and error recovery. |
 | Lint cleanup | Small groups of existing workspace, editor, and UI primitive findings. | The strict lint command passes without blanket rule suppression; interaction regressions are checked. |
 | Simulation settings | Solver/tolerance, output interval, initialization, and parameter sweeps. | Settings have useful defaults, are validated and recorded with each immutable run, and expose failures clearly. |
@@ -37,7 +36,8 @@ These capabilities extend the current drawing engine; keep manual route intent, 
 | Navigation during wiring | Connect to an off-screen target without ending the gesture. Preserve pinned corners through pan/zoom; stop edge-pan on cancellation, release, or focus loss. |
 | Crowded target selection | Preview the exact receiving port/net and provide a way to disambiguate nearby targets. Crossing lines never connect by appearance alone. |
 | Insert or remove in a connection | Insert a compatible signal block into one branch atomically, preserving other sinks and labels. Provide an explicit remove-and-heal action for unambiguous one-input/one-output cases. |
-| Local obstacle routing | Respect block clearance and endpoint normals, retain pinned regions, and avoid unrelated route changes. Cover narrow passages and report an unresolved route without moving other blocks. |
+| Lanes for parallel wires | Automatic routes already go around blocks and avoid other nets' lines where a lane exists. Assign evenly spaced lanes to parallel runs in a shared channel, and report a route that cannot avoid a body instead of drawing through it. |
+| Arrange quality on large circuits | Auto arrange is stable on the examples up to about 40 blocks. On the flyback converter it is not yet idempotent and takes about two seconds; add crossing-minimizing column ordering and power/control section banding, and measure it on 100-block sheets. |
 | Flip | Mirror selected blocks through model operations, updating ports, labels, and incident routes; clockwise 90° rotation is already implemented. |
 
 ## Workbench quality at scale
