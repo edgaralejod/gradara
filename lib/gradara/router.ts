@@ -600,9 +600,7 @@ export function searchRoute(ends: Ends, input: Context): Pt[] {
     );
   // Crossing another net is often unavoidable; anything worse is worth a detour search.
   if (best && penalty(best.points, ctx) < COST.label) return best.points;
-  stats.search++;
   for (const reach of [REACH, 3 * REACH, Infinity]) {
-    if (reach > REACH) stats.deep++;
     local = narrow(reach + 2 * EXIT_STUB);
     if (best) best = { points: best.points, cost: score(best.points, local) };
     const found = gridRoute(ends, local, reach);
@@ -671,7 +669,6 @@ function pinnedValid(points: Pt[], rects: Rect[]) {
  * Routes by their inputs. A wire's route only depends on its ends and on what lies near
  * them, so a sheet where one block moved re-routes only the wires around that block.
  */
-export const stats = { sheets: 0, search: 0, deep: 0, memo: 0 };
 const memo = new Map<string, Pt[]>();
 const MEMO_LIMIT = 20000;
 
@@ -738,10 +735,7 @@ function autoRoute(
   if (!ends) return undefined;
   const key = memoKey(ends, ctx);
   const known = memo.get(key);
-  if (known) {
-    stats.memo++;
-    return known;
-  }
+  if (known) return known;
   const points = searchRoute(
     {
       from: ends.from,
@@ -781,7 +775,6 @@ const cache = new WeakMap<Project, SheetRoutes>();
 export function routeSheet(project: Project): SheetRoutes {
   const cached = cache.get(project);
   if (cached) return cached;
-  stats.sheets++;
   const sheet = sheetOf(project);
   const rects = [...sheet.bodies.values()];
   const labelRects = [...sheet.labels.entries()];

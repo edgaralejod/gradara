@@ -1,6 +1,6 @@
 'use client';
 import { rotateBlocks } from '@/lib/gradara/rotation';
-import { arrangeBlocks } from '@/lib/gradara/arrange';
+import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import { useGeneratedLibrary } from '@/lib/gradara/generated-library';
 import {
   defaultBlockSize,
@@ -1164,12 +1164,24 @@ function Workbench() {
     commit(d.project);
     select(d.selection);
   }, [commit, selectedIds, select]);
-  /** Redraw the selection (two or more blocks) or the whole sheet in house style. */
+  /**
+   * Redraw the selection (two or more blocks) or the whole sheet in house style, but only
+   * when that reads better; otherwise say the drawing is already as clean as it gets.
+   */
   const arrange = useCallback(() => {
     const picked = selectionRef.current.blockIds;
     const ids = picked.length > 1 ? picked : [];
     if (!projectRef.current.blocks.length) return;
-    commit((p) => arrangeBlocks(p, ids));
+    const result = arrangeIfBetter(projectRef.current, ids);
+    if (!result.improved) {
+      notify(
+        ids.length
+          ? 'These blocks are already arranged as cleanly as Arrange can make them.'
+          : 'This layout is already as clean as Arrange can make it.',
+      );
+      return;
+    }
+    commit(result.project);
     notify(
       ids.length
         ? `Arranged ${ids.length} blocks.`

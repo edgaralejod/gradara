@@ -131,3 +131,21 @@ void test('arranging a selection leaves every other block where it was', () => {
   clean(next, 'foc selection');
   assert.equal(semanticSignature(next), semanticSignature(p));
 });
+
+void test('Arrange only rearranges when the drawing reads better, and says so otherwise', async () => {
+  const { arrangeIfBetter, layoutCost } =
+    await import('../lib/gradara/arrange');
+  for (const name of names) {
+    const messy = scrambled(example(name));
+    const first = arrangeIfBetter(messy);
+    assert.equal(first.improved, true, `${name}: a scrambled sheet improves`);
+    assert.ok(layoutCost(first.project) < layoutCost(messy), name);
+    // An arranged sheet cannot be improved further.
+    assert.equal(arrangeIfBetter(first.project).improved, false, name);
+  }
+  // The hand-drawn FOC example is cleaner than what Arrange would make of it.
+  const foc = example('foc');
+  const kept = arrangeIfBetter(foc);
+  assert.equal(kept.improved, false);
+  assert.equal(kept.project, foc);
+});
