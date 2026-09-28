@@ -128,7 +128,7 @@ export default function BlockCatalog() {
                   const size = defaultBlockSize(d);
                   const drawingOnly =
                     !d.generated &&
-                    ['mux', 'demux', 'subsystem'].includes(d.kind);
+                    ['mux', 'demux'].includes(d.kind);
                   return (
                     <article
                       className="catalog-card"

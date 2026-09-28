@@ -61,6 +61,7 @@ export type LibraryCategoryId =
   | 'discrete'
   | 'nonlinear'
   | 'routing'
+  | 'subsystems'
   | 'control'
   | 'sinks'
   | 'electrical'
@@ -207,14 +208,14 @@ export type Project = {
   plots?: { id: string; label: string; series: string[]; labels?: string[] }[];
 };
 export const domainColors: Record<Domain, string> = {
-  signal: '#336184',
-  electrical: '#aa6b20',
-  mechanical: '#298b82',
-  thermal: '#cf6b68',
-  boolean: '#6a5aa6',
-  translational: '#5f7f2a',
-  magnetic: '#a24f86',
-  threePhase: '#b8522b',
+  signal: '#1f5fbf',
+  electrical: '#b86e00',
+  mechanical: '#00897b',
+  thermal: '#d1352b',
+  boolean: '#a064e0',
+  translational: '#5a6b00',
+  magnetic: '#c02a8a',
+  threePhase: '#3f4650',
 };
 const p = (
   id: string,

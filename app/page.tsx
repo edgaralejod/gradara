@@ -4,13 +4,18 @@ import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import CanvasMenu, {
   type CanvasMenuItem,
 } from '@/components/gradara/canvas-menu';
+import SelectionActions from '@/components/gradara/selection-actions';
+import HierarchyBar from '@/components/gradara/hierarchy-bar';
+import {
+  InstancePortsPanel,
+  PortPillPanel,
+} from '@/components/gradara/subsystem-ports-panel';
 import { useGeneratedLibrary } from '@/lib/gradara/generated-library';
 import {
   defaultBlockSize,
   snapBlockPosition,
 } from '@/lib/gradara/block-design';
 import {
-  Fragment,
   useState,
   useMemo,
   useCallback,
@@ -165,10 +170,7 @@ import {
   type Project,
   type Definition,
   type SubsystemDefinition,
-  type Domain,
-  type Port,
   compatible,
-  domainLabels,
   portOf,
 } from '@/lib/gradara/model';
 import { matchingPort } from '@/lib/gradara/catalog';
@@ -199,7 +201,6 @@ import AssistantPanel, {
 } from '@/components/gradara/assistant-panel';
 import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
 import {
-  breadcrumb,
   findSubsystem,
   groupIntoSubsystem,
   isBoundary,
@@ -213,14 +214,11 @@ import {
   validPath,
   withPastedSubsystems,
   writeScope,
-  setBoundaryDomain,
-  setBoundarySide,
   subsystemAt,
   promoteParameter,
   demoteParameter,
   promotedTargets,
 } from '@/lib/gradara/hierarchy';
-import { boundaryDomains, type BoundaryKind } from '@/lib/gradara/port-blocks';
 import { useAiLabel } from '@/lib/gradara/ai';
 import UpdateIndicator from '@/components/gradara/update-indicator';
 import {
@@ -291,6 +289,48 @@ function Workbench() {
       setSelectedJunctions([]);
     }
   }, []);
+  /** Levels visited, for the hierarchy bar's back and forward buttons. */
+  const [nav, setNav] = useState<{ back: string[][]; forward: string[][] }>({
+    back: [],
+    forward: [],
+  });
+  const navRef = useRef(nav);
+  useEffect(() => {
+    navRef.current = nav;
+  }, [nav]);
+  /** Go to another level; going up selects the subsystem you came out of, as in Simulink. */
+  const navigate = useCallback(
+    (path: string[], history: 'record' | 'back' | 'forward' = 'record') => {
+      const current = scopeRef.current;
+      if (
+        path.length === current.length &&
+        path.every((id, i) => id === current[i])
+      )
+        return;
+      const { back, forward } = navRef.current;
+      const next =
+        history === 'back'
+          ? { back: back.slice(0, -1), forward: [current, ...forward] }
+          : history === 'forward'
+            ? { back: [...back, current], forward: forward.slice(1) }
+            : { back: [...back.slice(-49), current], forward: [] };
+      navRef.current = next;
+      setNav(next);
+      enterScope(path);
+      const upward =
+        path.length < current.length && path.every((id, i) => id === current[i]);
+      if (upward) setSelectedIds([current[path.length]]);
+    },
+    [enterScope],
+  );
+  const goBack = useCallback(() => {
+    const target = navRef.current.back.at(-1);
+    if (target) navigate(validPath(docRef.current, target), 'back');
+  }, [navigate]);
+  const goForward = useCallback(() => {
+    const target = navRef.current.forward[0];
+    if (target) navigate(validPath(docRef.current, target), 'forward');
+  }, [navigate]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
   const [selectedJunctions, setSelectedJunctions] = useState<string[]>([]);
@@ -626,7 +666,7 @@ function Workbench() {
       notify('That inside belongs to an inactive variant. Switch to it first.');
       return;
     }
-    enterScope(sheet.path);
+    navigate(sheet.path);
     setWorkspaceMode('diagram');
     setTimeout(() => {
       if (target.blockId) selectBlocks([target.blockId]);
@@ -817,6 +857,7 @@ function Workbench() {
           /* The service still remembers the active document. */
         }
         enterScope([]);
+        setNav({ back: [], forward: [] });
         setProject(next);
         setReady(true);
         const latest = await api<{ result: SimulationResult | null }>(
@@ -941,6 +982,7 @@ function Workbench() {
       /* The service still remembers the active document. */
     }
     enterScope([]);
+    setNav({ back: [], forward: [] });
     setProject(next);
     setHistory([]);
     setFuture([]);
@@ -1452,18 +1494,18 @@ function Workbench() {
       const block = projectRef.current.blocks.find((b) => b.id === id);
       if (!block?.definition.subsystem) return false;
       // The canvas fits each sheet as it opens.
-      enterScope([...scopeRef.current, id]);
+      navigate([...scopeRef.current, id]);
       return true;
     },
-    [enterScope],
+    [navigate],
   );
   const leaveSubsystem = useCallback(() => {
     if (!scopeRef.current.length) return false;
     const from = scopeRef.current[scopeRef.current.length - 1];
-    enterScope(scopeRef.current.slice(0, -1));
+    navigate(scopeRef.current.slice(0, -1));
     select({ ...emptySelection(), blockIds: [from] });
     return true;
-  }, [enterScope, select]);
+  }, [navigate, select]);
   const copySelection = useCallback(
     (cut = false) => {
       const fragment = extractSelection(
@@ -2135,27 +2177,6 @@ function Workbench() {
                 }}
               />
             </div>
-            {scope.length > 0 && (
-              <nav className="sheet-path" aria-label="Subsystem path">
-                {breadcrumb(doc, scope).map((crumb, i, all) => (
-                  <Fragment key={crumb.path.join('/') || 'top'}>
-                    {i > 0 && <ChevronRight size={14} />}
-                    {i === all.length - 1 ? (
-                      <span aria-current="page">
-                        {i === 0 ? 'Top level' : crumb.name}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => enterScope(crumb.path)}
-                      >
-                        {i === 0 ? 'Top level' : crumb.name}
-                      </button>
-                    )}
-                  </Fragment>
-                ))}
-              </nav>
-            )}
           </div>
           <div className="header-right">
             <UpdateIndicator onOpenSettings={() => setSettingsTab('updates')} />
@@ -2675,6 +2696,10 @@ function Workbench() {
                             <LayoutGrid size={12} />
                           </ControlButton>
                         </Controls>
+                        <SelectionActions
+                          onGroup={groupSelected}
+                          onArrange={arrange}
+                        />
                       </ModelCanvas>
                     </VariantSwitchContext.Provider>
                   </SubsystemLookupContext.Provider>
@@ -2687,6 +2712,15 @@ function Workbench() {
                     <span>·</span>/ to search
                   </div>
                 )}
+                <HierarchyBar
+                  doc={doc}
+                  scope={scope}
+                  canBack={nav.back.length > 0}
+                  canForward={nav.forward.length > 0}
+                  onBack={goBack}
+                  onForward={goForward}
+                  onNavigate={(path) => navigate(path)}
+                />
                 <div className="canvas-agent-shortcut">
                   <Button variant="outline" onClick={startComposer}>
                     <Sparkles size={14} />
@@ -3039,6 +3073,11 @@ function Workbench() {
                           </Button>
                         )}
                       </div>
+                      <InstancePortsPanel
+                        view={project}
+                        block={active}
+                        onCommit={(change) => commit(change)}
+                      />
                       <VariantPanel
                         doc={doc}
                         block={active}
@@ -3047,60 +3086,11 @@ function Workbench() {
                     </div>
                   )}
                   {isBoundary(active) && (
-                    <div className="inspector-section subsystem-section">
-                      <div className="section-label">Subsystem port</div>
-                      <label className="field-row">
-                        <span>Domain</span>
-                        <select
-                          value={active.definition.ports[0].domain}
-                          onChange={(e) =>
-                            commit((p) =>
-                              setBoundaryDomain(
-                                p,
-                                active.id,
-                                e.target.value as Domain,
-                              ),
-                            )
-                          }
-                        >
-                          {boundaryDomains(
-                            active.definition.kind as BoundaryKind,
-                          ).map((d) => (
-                            <option key={d} value={d}>
-                              {domainLabels[d]}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      {active.definition.kind === 'connport' && (
-                        <label className="field-row">
-                          <span>Side outside</span>
-                          <select
-                            value={active.definition.boundary?.side ?? 'left'}
-                            onChange={(e) =>
-                              commit((p) =>
-                                setBoundarySide(
-                                  p,
-                                  active.id,
-                                  e.target.value as NonNullable<Port['side']>,
-                                ),
-                              )
-                            }
-                          >
-                            {['left', 'right', 'top', 'bottom'].map((side) => (
-                              <option key={side} value={side}>
-                                {side}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      )}
-                      <p className="size-hint">
-                        The block name is the port name on the subsystem.
-                        Rewiring a port of another domain removes its outside
-                        wires.
-                      </p>
-                    </div>
+                    <PortPillPanel
+                      view={project}
+                      block={active}
+                      onCommit={(change) => commit(change)}
+                    />
                   )}
                   <div className="inspector-section">
                     <div className="section-label">

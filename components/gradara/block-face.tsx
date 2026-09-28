@@ -19,7 +19,7 @@ export function BlockFace({
 }) {
   const shape = blockShape(d);
   const inset = (side: string) =>
-    shape !== 'box'
+    shape !== 'box' && shape !== 'subsystem'
       ? undefined
       : Math.max(
           8,
@@ -53,10 +53,7 @@ export function BlockFace({
         {shape === 'boundary' ? (
           <rect x="1" y="1" width="98" height="98" rx="14" ry="48" />
         ) : shape === 'subsystem' ? (
-          <>
-            <rect className="sheet-behind" x="5" y="1" width="94" height="94" rx="1" />
-            <rect x="1" y="5" width="94" height="94" rx="1" />
-          </>
+          <rect x="1" y="1" width="98" height="98" rx="3" />
         ) : shape === 'sum' ? (
           <ellipse cx="50" cy="50" rx="49" ry="49" />
         ) : shape === 'gain' ? (
@@ -72,7 +69,7 @@ export function BlockFace({
       {shape === 'boundary' ? (
         <span className="boundary-pill">
           <span className="boundary-glyph" data-domain={d.ports[0]?.domain}>
-            {d.kind === 'connport' ? '' : (d.boundary?.order ?? 0) + 1}
+            {d.kind === 'connport' ? '' : d.symbol}
           </span>
           <span className="boundary-name">{d.name}</span>
         </span>

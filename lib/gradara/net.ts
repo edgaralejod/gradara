@@ -1,6 +1,7 @@
 import type { Port, Project, Wire } from './model';
 import { isCausal, portOf } from './model';
 import { portPoint } from './ports';
+import { adoptBoundaryDomain } from './boundary-adopt';
 
 export const TAP_HANDLE = 'node';
 export const TAP_SIZE = 10;
@@ -103,6 +104,8 @@ export function connectionError(
   a: { id: string; handle: string },
   b: { id: string; handle: string },
 ): string | null {
+  // A fresh subsystem port adopts the domain of what it is joined to.
+  project = adoptBoundaryDomain(project, a, b);
   const pa = endpointPort(project, a.id, a.handle, 'source'),
     pb = endpointPort(project, b.id, b.handle, 'target');
   if (!pa || !pb) return 'This port no longer exists.';

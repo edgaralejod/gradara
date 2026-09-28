@@ -57,6 +57,53 @@ export function boundaryBlocks(diagram: { blocks: Block[] }) {
     );
 }
 
+const KIND_ORDER: BoundaryKind[] = ['inport', 'outport', 'connport'];
+
+/**
+ * Canonical port numbers, as in Simulink: inputs, outputs, and terminals are each
+ * numbered from 1 in their current order. `order` becomes inputs first, then
+ * outputs, then terminals; the symbol holds the number (a terminal pill does not show it).
+ */
+export function renumberBoundaries<T extends { blocks: Block[] }>(sheet: T): T {
+  const sorted = boundaryBlocks(sheet);
+  if (!sorted.length) return sheet;
+  const next = new Map<string, { order: number; symbol: string }>();
+  let order = 0;
+  for (const kind of KIND_ORDER)
+    sorted
+      .filter((b) => b.definition.kind === kind)
+      .forEach((b, i) =>
+        next.set(b.id, {
+          order: order++,
+          symbol: String(i + 1),
+        }),
+      );
+  let changed = false;
+  const blocks = sheet.blocks.map((b) => {
+    const n = next.get(b.id);
+    if (
+      !n ||
+      (b.definition.boundary!.order === n.order &&
+        b.definition.symbol === n.symbol)
+    )
+      return b;
+    changed = true;
+    return {
+      ...b,
+      definition: {
+        ...b.definition,
+        symbol: n.symbol,
+        boundary: { ...b.definition.boundary!, order: n.order },
+      },
+    };
+  });
+  return changed ? { ...sheet, blocks } : sheet;
+}
+
+/** A boundary block's number among ports of its kind (1-based). */
+export const boundaryNumber = (block: Block) =>
+  Number(block.definition.symbol) || block.definition.boundary!.order + 1;
+
 /** The ports an instance exposes, in boundary order. */
 export function instancePorts(subsystem: SubsystemDefinition): Port[] {
   return boundaryBlocks(subsystem).map((block) => {
@@ -202,6 +249,47 @@ export function breadcrumb(project: Project, path: string[]) {
   return crumbs;
 }
 
+export type HierarchyNode = {
+  path: string[];
+  name: string;
+  /** The active variant's name, for a subsystem with variants. */
+  variant?: string;
+  children: HierarchyNode[];
+};
+
+/** The model's subsystems as a tree, top level first, as Simulink's Model Browser shows it. */
+export function hierarchyTree(project: Project): HierarchyNode {
+  const walk = (
+    sheet: { blocks: Block[] },
+    path: string[],
+    seen: Set<string>,
+  ) =>
+    sheet.blocks
+      .filter((b) => b.definition.subsystem && !isBoundary(b))
+      .flatMap((block): HierarchyNode[] => {
+        const sr = block.definition.subsystem!;
+        const sub = findSubsystem(project, sr.ref);
+        if (!sub || seen.has(sub.id)) return [];
+        const here = [...path, block.id];
+        return [
+          {
+            path: here,
+            name: block.definition.name,
+            ...(sr.variants
+              ? { variant: sr.variants.find((v) => v.id === sr.active)?.name }
+              : {}),
+            children: walk(sub, here, new Set([...seen, sub.id])),
+          },
+        ];
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  return {
+    path: [],
+    name: project.name,
+    children: walk(project, [], new Set()),
+  };
+}
+
 /** The inside of a subsystem as an ordinary Project; the document itself at the top. */
 export function scopeView(project: Project, path: string[]): Project {
   const ref = path.length ? subsystemAt(project, path) : undefined;
@@ -222,12 +310,20 @@ type Sheet = Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>;
 /** Bring instances in one sheet up to date; drop wires to ports that no longer exist. */
 function syncSheet<T extends Sheet>(project: Project, sheet: T): T {
   let changed = false;
+  // A port that changed direction or domain keeps its ID but not its wires.
+  const retyped = new Map<string, Set<string>>();
   const blocks = sheet.blocks.map((block) => {
     const definition = instanceDefinitionFor(project, block);
     if (!definition) return block;
     if (JSON.stringify(definition) === JSON.stringify(block.definition))
       return block;
     changed = true;
+    const before = new Map(block.definition.ports.map((p) => [p.id, p]));
+    const moved = definition.ports.filter((p) => {
+      const old = before.get(p.id);
+      return old && (old.direction !== p.direction || old.domain !== p.domain);
+    });
+    if (moved.length) retyped.set(block.id, new Set(moved.map((p) => p.id)));
     const size = defaultBlockSize(definition);
     const grow =
       !block.size ||
@@ -240,7 +336,8 @@ function syncSheet<T extends Sheet>(project: Project, sheet: T): T {
     blocks.map((b) => [b.id, new Set(b.definition.ports.map((p) => p.id))]),
   );
   const alive = (id: string, handle: string) =>
-    !ports.has(id) || ports.get(id)!.has(handle);
+    (!ports.has(id) || ports.get(id)!.has(handle)) &&
+    !retyped.get(id)?.has(handle);
   const wires = sheet.wires.filter(
     (w) => alive(w.source, w.sourceHandle) && alive(w.target, w.targetHandle),
   );
@@ -275,6 +372,9 @@ function referenced(project: Project) {
 /** Every instance in the document matches its definition; the format version follows. */
 export function syncInstances(project: Project): Project {
   if (!project.subsystems?.length && project.version === 1) return project;
+  const numbered = subsystemsOf(project).map(renumberBoundaries);
+  if (numbered.some((s, i) => s !== project.subsystems![i]))
+    project = { ...project, subsystems: numbered };
   const top = syncSheet(project, project);
   const withTop = top === project ? project : { ...project, ...top };
   const used = referenced(withTop);
@@ -559,7 +659,9 @@ export function groupIntoSubsystem(
   const subsystem: SubsystemDefinition = {
     id: subsystemId,
     name: name ?? nextSubsystemName(view),
-    blocks: [...innerBlocks, ...[...boundaries.values()].map((b) => b.block)],
+    blocks: renumberBoundaries({
+      blocks: [...innerBlocks, ...[...boundaries.values()].map((b) => b.block)],
+    }).blocks,
     wires: innerWires,
     junctions: (view.junctions ?? []).filter((j) => insideJunctions.has(j.id)),
   };
@@ -808,7 +910,8 @@ export const boundaryColor = (block: Block) =>
 export function realizePlaceholders(project: Project): Project {
   const placeholders = project.blocks.filter(
     (b) =>
-      b.definition.kind === 'subsystem' &&
+      (b.definition.kind === 'subsystem' ||
+        b.definition.kind === 'emptySubsystem') &&
       !b.definition.subsystem &&
       !b.definition.generated,
   );
@@ -849,7 +952,7 @@ export function realizePlaceholders(project: Project): Project {
     const sub: SubsystemDefinition = {
       id: newId('sub_'),
       name: nextSubsystemName({ ...project, subsystems }),
-      blocks: inner,
+      blocks: renumberBoundaries({ blocks: inner }).blocks,
       wires,
       junctions: [],
     };
@@ -857,7 +960,11 @@ export function realizePlaceholders(project: Project): Project {
     subsystems = [...subsystems, sub];
     const definition = instanceDefinition(sub, {
       ...block.definition,
-      name: block.definition.name,
+      // An empty subsystem is named like any other once it is on the sheet.
+      name:
+        block.definition.kind === 'emptySubsystem'
+          ? 'Subsystem'
+          : block.definition.name,
       parameters: [],
     });
     return { ...block, definition };

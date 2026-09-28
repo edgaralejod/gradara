@@ -78,6 +78,26 @@ export function defaultBlockSize(d: Definition) {
   if (shape === 'gain') return { width: 80, height: 64 };
   if (shape === 'mux' || shape === 'demux') return { width: 40, height: 96 };
   if (d.kind === 'secondOrder') return { width: 160, height: 64 };
+  if (shape === 'subsystem') {
+    // Room for the label gutters and a readable window onto the inside.
+    const gutter = (side: string) =>
+      Math.max(
+        10,
+        ...d.ports
+          .filter((p) => sideOf(p) === side)
+          .map((p) => Math.min(42, 12 + p.name.length * 7)),
+      );
+    const rows = Math.max(
+      ...['left', 'right'].map(
+        (side) => d.ports.filter((p) => sideOf(p) === side).length,
+      ),
+      1,
+    );
+    return {
+      width: roundGrid(Math.max(160, gutter('left') + 96 + gutter('right'))),
+      height: roundGrid(Math.max(96, (rows + 1) * 24)),
+    };
+  }
   const labeled = d.ports.some((p) => showPortLabel(d, p));
   if (!labeled)
     return { width: BLOCK_DESIGN.width, height: BLOCK_DESIGN.height };

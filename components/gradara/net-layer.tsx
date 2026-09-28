@@ -101,6 +101,12 @@ function viewOf(session: NetSession, editing = false) {
 }
 
 /** The sole wiring pointer owner. Pointer-rate state stays below the workbench. */
+const newPortLabel = {
+  inport: 'an input',
+  outport: 'an output',
+  connport: 'a terminal',
+} as const;
+
 export default function NetLayer(baseProps: Props) {
   const copyPreview = useContext(SelectionPreviewContext);
   const props = useMemo(
@@ -1073,9 +1079,11 @@ export default function NetLayer(baseProps: Props) {
             (s.wireEdit?.kind === 'redraw'
               ? 'Click to pin bends · Click the highlighted end, or Enter'
               : s.target
-                ? s.target.wireId
-                  ? 'Release / click to join wire'
-                  : 'Release / click to connect'
+                ? s.target.newPort
+                  ? `Release to add ${newPortLabel[s.target.newPort.kind]} to this subsystem`
+                  : s.target.wireId
+                    ? 'Release / click to join wire'
+                    : 'Release / click to connect'
                 : 'Click to pin a bend · Drop on a port or wire')}
           <kbd>⌫</kbd>unpin<kbd>Esc</kbd>cancel
         </output>

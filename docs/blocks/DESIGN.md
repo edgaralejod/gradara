@@ -41,13 +41,13 @@ These are deliberate semantic exceptions, not permission to invent dimensions fo
 
 ## Domains and terminals
 
-Retain the shared `domainColors` in `lib/gradara/model.ts`: signal blue, Boolean violet, electrical ochre, rotational mechanical teal, translational olive, thermal coral, magnetic plum, and 3-phase rust. The body uses its owning domain. **Each terminal uses its own domain**, so an electrical machine can expose mechanical and signal terminals without ambiguity. Physical connection points retain their distinct square/cross affordance; signal terminals keep their existing wiring affordance. Color alone never replaces direction/domain metadata.
+Retain the shared `domainColors` in `lib/gradara/model.ts`: signal blue, Boolean lilac, electrical amber, rotational mechanical teal, translational olive, thermal red, magnetic magenta, and 3-phase graphite. The eight are chosen to stay apart from each other (no two closer than about 23 CAM02-UCS units for normal colour vision); for colour-blind viewers the port shapes and pill glyphs carry the domain too. The body uses its owning domain. **Each terminal uses its own domain**, so an electrical machine can expose mechanical and signal terminals without ambiguity. Physical connection points retain their distinct square/cross affordance; signal terminals keep their existing wiring affordance. Color alone never replaces direction/domain metadata.
 
 Rendering must use `portSide`/`portOffset` geometry also used by `portPoint`. Do not position a visual terminal independently from its hit target or routing endpoint. Keep `data-block-id`, `data-port-id`, accessible names, and native pointer ownership intact.
 
 ## Subsystems and port pills
 
-A subsystem instance draws a box with a second sheet offset behind it and a generic nested-diagram symbol. It shows every port caption, because captions are the names of the port pills inside. Port sides come from the inside: inputs on the left, outputs on the right, and physical terminals on the side their pill chooses.
+A subsystem instance draws a plain box with a window onto its inside: the symbol well is a dotted sheet showing a live, scaled drawing of the blocks, pills, and wires it holds, in their domain colors. An empty subsystem shows a dashed frame with a plus; the library shows a nested-blocks mark. The default body is at least 160 × 96 and grows with its port captions so the window stays readable. It shows every port caption, because captions are the names of the port pills inside. Port sides come from the inside: inputs on the left, outputs on the right, and physical terminals on the side their pill chooses.
 
 Inside a subsystem, **Subsystem input**, **Subsystem output**, and **Subsystem terminal** blocks render as pills instead of boxes. The pill carries the port name inside it, so it has no separate instance label and no terminal captions. A small glyph in the pill shows the position number for inputs and outputs, or a domain mark for terminals, and the pill's tint and glyph use the port's domain color. The name uses the standard 14 px diagram text.
 

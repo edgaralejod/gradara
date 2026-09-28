@@ -117,3 +117,83 @@ export const SubsystemPreview = memo(function SubsystemPreview({
     </div>
   );
 });
+
+/**
+ * The inside of a subsystem drawn small on its own block: a window onto the
+ * diagram it holds. Pills and blocks are outlines in their domain colors; wires are
+ * hairlines. Returns null when there is nothing inside to show (or no lookup, as in
+ * the library), so the caller can draw its own glyph.
+ */
+export const SubsystemThumbnail = memo(function SubsystemThumbnail({
+  subsystemRef,
+}: {
+  subsystemRef: string;
+}) {
+  const lookup = useContext(SubsystemLookupContext);
+  const sub = lookup?.(subsystemRef);
+  const drawing = useMemo(() => {
+    const inner = sub?.blocks.filter((b) => !b.definition.boundary) ?? [];
+    if (!sub || !inner.length) return null;
+    const sheet = {
+      version: 2,
+      name: sub.name,
+      duration: 1,
+      revision: 0,
+      blocks: sub.blocks,
+      wires: sub.wires,
+      junctions: sub.junctions ?? [],
+      nets: sub.nets,
+    } as Project;
+    const boxes = sub.blocks.map((b) => ({ b, size: blockSize(b) }));
+    const lines = [...routedPolylines(sheet).entries()];
+    let x0 = Infinity,
+      y0 = Infinity,
+      x1 = -Infinity,
+      y1 = -Infinity;
+    for (const { b, size } of boxes) {
+      x0 = Math.min(x0, b.position.x);
+      y0 = Math.min(y0, b.position.y);
+      x1 = Math.max(x1, b.position.x + size.width);
+      y1 = Math.max(y1, b.position.y + size.height);
+    }
+    const color = (id: string) => {
+      const w = sub.wires.find((w) => w.id === id);
+      const block = w && sub.blocks.find((b) => b.id === w.source);
+      const port = block?.definition.ports.find((p) => p.id === w!.sourceHandle);
+      return port ? domainColors[port.domain] : '#8b9aa6';
+    };
+    const pad = Math.max(x1 - x0, y1 - y0) * 0.04;
+    return {
+      boxes,
+      lines: lines.map(([id, pts]) => ({
+        id,
+        points: pts.map((p) => `${p.x},${p.y}`).join(' '),
+        color: color(id),
+      })),
+      viewBox: `${x0 - pad} ${y0 - pad} ${x1 - x0 + 2 * pad} ${y1 - y0 + 2 * pad}`,
+    };
+  }, [sub]);
+  if (!drawing) return null;
+  return (
+    <svg
+      className="subsystem-thumb"
+      viewBox={drawing.viewBox}
+      preserveAspectRatio="xMidYMid meet"
+    >
+      {drawing.lines.map((l) => (
+        <polyline key={l.id} points={l.points} stroke={l.color} />
+      ))}
+      {drawing.boxes.map(({ b, size }) => (
+        <rect
+          key={b.id}
+          x={b.position.x}
+          y={b.position.y}
+          width={size.width}
+          height={size.height}
+          rx={b.definition.boundary ? size.height / 2 : 3}
+          stroke={domainColors[b.definition.ports[0]?.domain ?? b.definition.domain]}
+        />
+      ))}
+    </svg>
+  );
+});

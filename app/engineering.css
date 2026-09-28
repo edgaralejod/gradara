@@ -808,7 +808,7 @@
   pointer-events: none;
 }
 .net-live {
-  stroke: #336184;
+  stroke: #1f5fbf;
   stroke-width: 1.5;
   pointer-events: none;
 }
@@ -820,9 +820,9 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--port-color, #336184);
+  background: var(--port-color, #1f5fbf);
   border: 2px solid #fff;
-  box-shadow: 0 0 0 1px var(--port-color, #336184);
+  box-shadow: 0 0 0 1px var(--port-color, #1f5fbf);
 }
 .wire-tap.is-selected {
   box-shadow: 0 0 0 2px #1976b8;
@@ -959,7 +959,7 @@
   border: 1px solid #c8d9e4;
   border-radius: 6px;
   background: #f6fbfe;
-  color: #336184;
+  color: #1f5fbf;
   font-size: var(--text-ui);
   pointer-events: none;
 }
@@ -2402,7 +2402,7 @@
 
 .data-inspector { height:100%; min-height:0; display:flex; flex-direction:column; background:#f6f8fa; color:#273744; font-size:var(--text-ui); }
 .di-heading { min-height:40px; display:flex; gap:14px; align-items:center; padding:8px 14px; border-bottom:1px solid #dce2e8; background:#fff; }
-.di-heading strong { font-size:var(--text-title); }.di-heading span { color:#6c7a86; }.di-heading a { margin-left:auto; color:#336184; }
+.di-heading strong { font-size:var(--text-title); }.di-heading span { color:#6c7a86; }.di-heading a { margin-left:auto; color:#1f5fbf; }
 .di-toolbar { display:flex; flex-wrap:wrap; gap:5px; align-items:center; padding:8px; border-bottom:1px solid #dce2e8; background:#f9fafb; }
 .data-inspector button,.data-inspector select { border:1px solid #d8e0e6; border-radius:4px; background:#fff; padding:4px 7px; font:inherit; color:inherit; cursor:pointer; }
 .data-inspector button:hover { background:#edf4fa; }.data-inspector button[aria-pressed=true] { background:#e0eef9; border-color:#6e9dbf; color:#215c89; }
@@ -2687,36 +2687,6 @@
 .update-indicator.is-ready { border-color: #2f6f9f; background: #2f6f9f; color: #fff; }
 .update-indicator:focus-visible { outline: 2px solid #2f6f9f; outline-offset: 2px; }
 
-/* Subsystem navigation in the header: Top level › Drivetrain › Inverter. */
-.sheet-path {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  color: var(--muted-foreground, #5f6b76);
-  font-size: var(--text-ui);
-}
-.sheet-path button {
-  border: 0;
-  background: none;
-  padding: 2px 4px;
-  border-radius: 3px;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.sheet-path button:hover {
-  background: #eef3f7;
-  color: #1f3a4d;
-}
-.sheet-path [aria-current='page'] {
-  padding: 2px 4px;
-  color: #1f3a4d;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .subsystem-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2740,6 +2710,42 @@
   gap: 8px;
   margin: 6px 0;
 }
+
+/* A subsystem block's ports, edited from outside (inspector). */
+.instance-ports { margin: 10px 0 4px; }
+.instance-ports-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  color: #34495a; font-weight: 600; font-size: var(--text-micro);
+}
+.instance-ports-add { display: flex; gap: 4px; }
+.instance-ports-add button,
+.instance-port-tools button {
+  display: inline-flex; align-items: center; gap: 2px;
+  border: 1px solid #c9d6df; border-radius: 3px; background: #fff;
+  padding: 1px 5px; color: #34495a; font: 500 11px/16px var(--font-ui); cursor: pointer;
+}
+.instance-ports-add button:hover,
+.instance-port-tools button:hover:not(:disabled) { background: #eef3f7; }
+.instance-port-tools button { padding: 1px 3px; border-color: transparent; background: none; }
+.instance-port-tools button:disabled { opacity: .35; cursor: default; }
+.instance-port-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.instance-port-list li {
+  display: grid; grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-areas: 'badge name name tools' '. domain side side';
+  align-items: center; gap: 3px 4px; padding-bottom: 4px; border-bottom: 1px solid #eef2f5;
+}
+.instance-port-list li > .instance-port-badge { grid-area: badge; }
+.instance-port-list li > input { grid-area: name; }
+.instance-port-list li > select:first-of-type { grid-area: domain; }
+.instance-port-list li > select:last-of-type { grid-area: side; }
+.instance-port-list li > .instance-port-tools { grid-area: tools; }
+.instance-port-list input,
+.instance-port-list select { min-width: 0; width: 100%; font-size: 12px; height: 24px; }
+.instance-port-badge {
+  border-left: 3px solid; padding-left: 4px;
+  color: #56697a; font: 600 10px/16px var(--font-ui); white-space: nowrap;
+}
+.instance-port-tools { display: flex; }
 
 /* Variants: the switch on a subsystem block, the inspector list, the configuration menu. */
 .variant-switch {
@@ -2944,3 +2950,67 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .canvas-menu kbd { color: #7d8f9e; font: var(--text-micro) var(--font-ui); }
 .canvas-menu-heading { padding: 6px 8px 2px; color: #7d8f9e; font-size: var(--text-micro); font-weight: 600; }
 .canvas-menu-separator { height: 1px; margin: 4px 2px; border: 0; background: #e3e9ee; }
+
+/* Simulink-style selection ellipsis: "…" at the selection corner, actions on hover. */
+.selection-actions {
+  position: absolute; z-index: 6; display: flex; gap: 2px; padding: 2px;
+  border: 1px solid #b9c7d2; border-radius: 4px; background: #fff;
+  box-shadow: 0 2px 6px #1f3a4d1f;
+}
+.selection-actions button {
+  display: inline-flex; align-items: center; gap: 5px; border: 0; border-radius: 3px;
+  background: none; padding: 2px 6px; color: #2f4b60; font: 500 12px/18px var(--font-ui);
+  white-space: nowrap; cursor: pointer;
+}
+.selection-actions button:hover, .selection-actions button:focus-visible { background: #eef3f7; }
+.selection-actions:not(.is-open) button { padding: 0 3px; color: #2f6f9f; }
+
+/* Explorer bar over the canvas: back, forward, up, the path, and the Model Browser. */
+.hierarchy-bar-wrap {
+  position: absolute; top: 14px; left: 12px; z-index: 5;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: calc(100% - 180px);
+  pointer-events: none;
+}
+.hierarchy-bar {
+  display: flex; align-items: center; gap: 1px; min-width: 0; height: 29px; padding: 0 4px;
+  border: 1px solid #d5dee5; border-radius: 3px; background: #fffffff0;
+  color: #5f6b76; font-size: var(--text-meta); pointer-events: auto;
+}
+.hierarchy-bar > button {
+  display: inline-grid; place-items: center; width: 24px; height: 22px;
+  border: 0; border-radius: 3px; background: none; color: #34495a; cursor: pointer;
+}
+.hierarchy-bar > button:hover:not(:disabled), .hierarchy-bar > button.is-on { background: #eef3f7; }
+.hierarchy-bar > button:disabled { color: #b8c3cc; cursor: default; }
+.hierarchy-path {
+  display: flex; align-items: center; gap: 2px; min-width: 0; margin-left: 4px;
+  padding-left: 6px; border-left: 1px solid #e3e9ee; overflow: hidden;
+}
+.hierarchy-path button, .hierarchy-path [aria-current] {
+  border: 0; background: none; padding: 2px 4px; border-radius: 3px; color: inherit; font: inherit;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+}
+.hierarchy-path button { cursor: pointer; }
+.hierarchy-path button:hover { background: #eef3f7; color: #1f3a4d; }
+.hierarchy-path [aria-current] { color: #1f3a4d; font-weight: 600; }
+.canvas-wrap:has(.net-status) .hierarchy-bar-wrap,
+.canvas-wrap:has(.empty-model) .hierarchy-bar-wrap { visibility: hidden; }
+.hierarchy-tree {
+  width: 260px; max-height: min(420px, 60vh); overflow: auto; padding: 4px 0;
+  border: 1px solid #d5dee5; border-radius: 3px; background: #fff;
+  box-shadow: 0 4px 12px #1f3a4d14; pointer-events: auto;
+}
+.hierarchy-tree ul { list-style: none; margin: 0; padding: 0; }
+.hierarchy-tree button {
+  display: flex; align-items: center; gap: 6px; width: 100%; height: 26px; padding-right: 8px;
+  border: 0; background: none; color: #34495a; font: 500 12px/1 var(--font-ui);
+  text-align: left; cursor: pointer;
+}
+.hierarchy-tree button:hover { background: #f1f5f8; }
+.hierarchy-tree button.is-current { background: #e6eff6; color: #1f3a4d; font-weight: 600; }
+.hierarchy-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hierarchy-variant {
+  margin-left: auto; padding: 0 5px; border: 1px solid #c9d6df; border-radius: 8px;
+  color: #56697a; font-size: 10px; line-height: 14px;
+}
+.hierarchy-tree .size-hint { margin: 6px 10px; }

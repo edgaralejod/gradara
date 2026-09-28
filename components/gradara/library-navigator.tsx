@@ -197,7 +197,7 @@ export default function LibraryNavigator({
               const index = flat.indexOf(hit);
               const drawingOnly =
                 !hit.definition.generated &&
-                ['mux', 'demux', 'subsystem'].includes(hit.definition.kind);
+                ['mux', 'demux'].includes(hit.definition.kind);
               return (
                 <button
                   key={

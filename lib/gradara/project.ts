@@ -4,6 +4,7 @@ import type { Project, Definition, Wire } from './model';
 import { compatible, portOf } from './model';
 import { connectionError, endpointPort, flattenWires, isTap } from './net';
 import { emptySelection, extractSelection, pasteSelection } from './selection';
+import { adoptBoundaryDomain } from './boundary-adopt';
 function sheetSemantics(
   p: Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>,
 ) {
@@ -118,6 +119,7 @@ export function linkEnds(
   b: { id: string; handle: string },
   waypoints?: { x: number; y: number }[],
 ): Project {
+  p = adoptBoundaryDomain(p, a, b);
   const pa = endpointPort(p, a.id, a.handle, 'source');
   const pb = endpointPort(p, b.id, b.handle, 'target');
   const aIsSink = !isTap(p, a.id) && pa?.direction === 'input';

@@ -406,10 +406,31 @@
   }
 }
 
-/* Subsystem instances: a sheet with a second sheet behind it. */
-.block-face.shape-subsystem .block-outline > .sheet-behind {
-  fill: color-mix(in srgb, var(--domain) 5%, white);
+/*
+ * Subsystem instances: a window onto the diagram they hold (a small live drawing
+ * on a dotted sheet), framed a little inside the body so it reads as a view in.
+ */
+.block-face.shape-subsystem .block-symbol {
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--domain) 4%, white);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--domain) 22%, transparent) 0.7px,
+    transparent 0.8px
+  );
+  background-size: 6px 6px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--domain) 14%, transparent);
 }
+.block-face.shape-subsystem .block-symbol > svg.subsystem-thumb {
+  max-width: none;
+  max-height: none;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  fill: white;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.block-face .subsystem-thumb > * { vector-effect: non-scaling-stroke; }
+.block-face .subsystem-thumb > polyline { fill: none; opacity: 0.8; }
 /* Boundary blocks inside a subsystem: a pill with the port number and name. */
 .block-face.shape-boundary .block-outline > * {
   fill: color-mix(in srgb, var(--domain) 8%, white);
@@ -439,8 +460,13 @@
   font-size: 12px;
   line-height: 18px;
 }
-.block-face .boundary-glyph[data-domain='electrical'],
 .block-face .boundary-glyph[data-domain='threePhase'] {
+  min-width: 14px;
+  height: 14px;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  border-radius: 0;
+}
+.block-face .boundary-glyph[data-domain='electrical'] {
   border-radius: 50%;
   background: white;
   box-shadow: inset 0 0 0 2px var(--domain);

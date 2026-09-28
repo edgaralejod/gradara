@@ -50,16 +50,19 @@ export const portBlocks: Definition[] = [
   {
     ...boundaryDefinition('inport', 'in', 'signal', 0),
     name: 'Subsystem input',
+    category: 'subsystems',
     keywords: ['inport', 'port', 'hierarchy'],
   },
   {
     ...boundaryDefinition('outport', 'out', 'signal', 0),
     name: 'Subsystem output',
+    category: 'subsystems',
     keywords: ['outport', 'port', 'hierarchy'],
   },
   {
     ...boundaryDefinition('connport', 'terminal', 'electrical', 0),
     name: 'Subsystem terminal',
+    category: 'subsystems',
     keywords: ['port', 'connection', 'physical', 'hierarchy'],
   },
 ];
