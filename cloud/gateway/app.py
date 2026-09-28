@@ -3,6 +3,7 @@
 
 Privacy contract (see docs/PRIVACY.md):
 * Request bodies are processed in memory and never logged or stored.
+* Client IP addresses are held in memory only, for about a minute, to rate-limit sign-in.
 * Logs contain method, route template, status, latency, and a request id only.
 * Only Gradara task types with a JSON output schema are accepted, so the
   gateway cannot be used as a general-purpose chat proxy.
@@ -13,6 +14,7 @@ import asyncio
 import json
 import os
 import logging
+import math
 import re
 import secrets
 import sys
@@ -46,6 +48,15 @@ MAX_BODY = 1_500_000
 MAX_PROMPT = 400_000
 MAX_SCHEMA = 64_000
 JOB_ID = re.compile(r'^[A-Za-z0-9_.-]{4,80}$')
+HANDLED_EVENTS = {'checkout.session.completed', 'checkout.session.async_payment_succeeded',
+                  'charge.refunded', 'charge.dispute.created'}
+
+
+def _stripe_id(value) -> str | None:
+    """Stripe fields hold either an id or an expanded object."""
+    if isinstance(value, dict):
+        return value.get('id')
+    return getattr(value, 'id', None) if value is not None and not isinstance(value, str) else value
 
 log = logging.getLogger('gradara.gateway')
 
@@ -125,7 +136,7 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
 
     app = FastAPI(title='Gradara AI', lifespan=lifespan, docs_url=None if cfg.production else '/docs',
                   redoc_url=None, openapi_url=None if cfg.production else '/openapi.json')
-    app.state.store, app.state.config = store, cfg
+    app.state.store, app.state.config, app.state.ip_starts = store, cfg, ip_starts
 
     @app.middleware('http')
     async def privacy_log(request: Request, call_next):
@@ -177,8 +188,12 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
 
     @app.post('/v1/device/start')
     async def device_start(body: DeviceStart, request: Request):
-        window = ip_starts[client_ip(request)]
+        # Sign-in starts are limited per IP address. Addresses live only in this
+        # in-memory map and are dropped once their last attempt is a minute old.
         cutoff = time.monotonic() - 60
+        for ip in [ip for ip, starts in ip_starts.items() if not starts or starts[-1] < cutoff]:
+            del ip_starts[ip]
+        window = ip_starts[client_ip(request)]
         while window and window[0] < cutoff:
             window.popleft()
         if len(window) >= 10:
@@ -276,21 +291,33 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
         started = time.monotonic()
         try:
             result = await llm.generate(body.prompt, body.schema_)
-        except ProviderError as exc:
+            await asyncio.to_thread(store.finish_job_call, account, call, True)
+        except BaseException as exc:
+            # No output reached the user, so whatever went wrong (provider error,
+            # disconnect, or a bug here) this call's charge is refunded.
             await asyncio.to_thread(store.finish_job_call, account, call, False)
-            await asyncio.to_thread(store.record_usage, account, body.job.id, body.task, getattr(llm, 'model', ''),
-                                    0, 0, int((time.monotonic() - started) * 1000), False, f'provider_{exc.status}')
-            raise
-        except asyncio.CancelledError:
-            await asyncio.to_thread(store.finish_job_call, account, call, False)
-            raise
+            if isinstance(exc, asyncio.CancelledError) or not isinstance(exc, Exception):
+                raise
+            code = f'provider_{exc.status}' if isinstance(exc, ProviderError) else 'internal'
+            try:
+                await asyncio.to_thread(store.record_usage, account, body.job.id, body.task, getattr(llm, 'model', ''),
+                                        0, 0, int((time.monotonic() - started) * 1000), False, code)
+            except Exception:  # pragma: no cover - usage rows are bookkeeping only
+                pass
+            if isinstance(exc, ProviderError):
+                raise
+            log.info(json.dumps({'event': 'generate_failed', 'error': type(exc).__name__}))
+            raise HTTPException(502, 'The AI request failed. You were not charged; try again.') from None
         finally:
             concurrency[account.id] -= 1
-        await asyncio.to_thread(store.finish_job_call, account, call, True)
-        await asyncio.to_thread(store.record_usage, account, body.job.id, body.task, result.model,
-                                result.usage.input_tokens, result.usage.output_tokens,
-                                int((time.monotonic() - started) * 1000), True)
-        balance = (await asyncio.to_thread(store.account, account.id)).balance
+        try:
+            await asyncio.to_thread(store.record_usage, account, body.job.id, body.task, result.model,
+                                    result.usage.input_tokens, result.usage.output_tokens,
+                                    int((time.monotonic() - started) * 1000), True)
+            balance = (await asyncio.to_thread(store.account, account.id)).balance
+        except Exception as exc:  # the result was paid for; deliver it even if bookkeeping fails
+            log.info(json.dumps({'event': 'usage_record_failed', 'error': type(exc).__name__}))
+            balance = max(0, account.balance - call['charged'])
         return {'data': result.data, 'model': result.model, 'charged': call['charged'], 'jobCharged': call['jobCharged'],
                 'balance': balance,
                 'usage': {'inputTokens': result.usage.input_tokens, 'outputTokens': result.usage.output_tokens}}
@@ -331,20 +358,55 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
             event = stripe_client().construct_event(payload, stripe_signature, cfg.stripe_webhook_secret)
         except Exception:
             raise HTTPException(400, 'Invalid signature.')
-        if event.type not in {'checkout.session.completed', 'checkout.session.async_payment_succeeded'}:
+        if event.type not in HANDLED_EVENTS:
             return {'received': True, 'ignored': True}
-        # Granting is idempotent on the Checkout Session id, so Stripe retries are safe.
+        if await asyncio.to_thread(store.event_known, event.id):
+            return {'received': True, 'duplicate': True}
+        obj = event.data.object
+        obj = obj.to_dict() if hasattr(obj, 'to_dict') else dict(obj)
         if event.type in {'checkout.session.completed', 'checkout.session.async_payment_succeeded'}:
-            session = event.data.object
-            session = session.to_dict() if hasattr(session, 'to_dict') else dict(session)
-            if session.get('payment_status') == 'paid':
-                metadata = session.get('metadata') or {}
+            # Granting is idempotent on the Checkout Session id, so Stripe retries are safe.
+            if obj.get('payment_status') == 'paid':
+                metadata = obj.get('metadata') or {}
                 account = await asyncio.to_thread(store.account_by_public_id, metadata.get('account', ''))
                 pack = cfg.pack(metadata.get('pack', ''))
                 if account and pack:
-                    await asyncio.to_thread(store.grant_purchase, account, int(pack['credits']), f'stripe:{session["id"]}')
+                    await asyncio.to_thread(store.grant_purchase, account, int(pack['credits']), obj['id'],
+                                            _stripe_id(obj.get('payment_intent')))
+        else:
+            await reverse_for_event(event.type, obj)
         await asyncio.to_thread(store.event_seen, event.id)
         return {'received': True}
+
+    async def reverse_for_event(kind: str, obj: dict) -> None:
+        """A refund or dispute removes the purchase's credits (at most the unspent balance)."""
+        payment_intent = _stripe_id(obj.get('payment_intent'))
+        if not payment_intent and obj.get('charge'):
+            charge = await asyncio.to_thread(stripe_client().v1.charges.retrieve, _stripe_id(obj['charge']))
+            payment_intent = _stripe_id(getattr(charge, 'payment_intent', None))
+        if not payment_intent:
+            return
+        purchase = await asyncio.to_thread(store.find_purchase, None, payment_intent)
+        if purchase is None:
+            # Purchases credited before PaymentIntent ids were recorded: ask Stripe for the session.
+            sessions = await asyncio.to_thread(stripe_client().v1.checkout.sessions.list,
+                                               {'payment_intent': payment_intent, 'limit': 1})
+            found = list(getattr(sessions, 'data', None) or [])
+            if not found:
+                return
+            session_id = found[0]['id'] if isinstance(found[0], dict) else found[0].id
+            purchase = await asyncio.to_thread(store.find_purchase, session_id, payment_intent)
+            if purchase is None:
+                return
+            await asyncio.to_thread(store.link_payment_intent, session_id, payment_intent)
+        if kind == 'charge.refunded':
+            amount, refunded = int(obj.get('amount') or 0), int(obj.get('amount_refunded') or 0)
+            covered = purchase['credits'] if obj.get('refunded') or not amount else \
+                math.ceil(purchase['credits'] * refunded / amount)
+        else:  # charge.dispute.created: the payment is in question, so all of its credits are withdrawn
+            covered = purchase['credits']
+        result = await asyncio.to_thread(store.reverse_purchase, purchase['session_id'], covered)
+        log.info(json.dumps({'event': 'purchase_reversed', 'stripe_event': kind, 'removed': result['removed']}))
 
     # -------------------------------------------------------------- admin
 

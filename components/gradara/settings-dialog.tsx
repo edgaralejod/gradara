@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -694,7 +694,13 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
       </div>
       <p className="settings-hint">
         Checkout opens in your browser (Stripe). Your balance updates here when
-        you return.
+        you return. By buying you agree to the{' '}
+        <ExternalTextLink href="https://gradara.app/terms.html">Terms</ExternalTextLink>{' '}
+        and the{' '}
+        <ExternalTextLink href="https://gradara.app/privacy.html">
+          Privacy notice
+        </ExternalTextLink>
+        .
       </p>
       <div className="settings-inline">
         <Button variant="ghost" onClick={() => void load()}>
@@ -714,8 +720,10 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
         <div className="settings-danger" role="alert">
           <p>
             Delete your Gradara AI account? Your email, usage history, and
-            sign-ins are erased, and remaining credits are forfeited. Your
-            models on this computer are not affected.
+            sign-ins are erased, and remaining credits are forfeited. To get
+            unused purchased credits refunded (within 14 days of purchase),
+            contact support first. Your models on this computer are not
+            affected.
           </p>
           <div className="settings-inline">
             <Button
@@ -733,6 +741,26 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
       )}
       <ErrorLine text={error} />
     </div>
+  );
+}
+
+function ExternalTextLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      onClick={(e) => {
+        e.preventDefault();
+        openExternal(href);
+      }}
+    >
+      {children}
+    </a>
   );
 }
 
@@ -817,10 +845,11 @@ function PrivacySettings({ dataDirectory }: { dataDirectory?: string }) {
         <strong>What Gradara AI keeps</strong>
         <p>
           Your email, credit balance and purchases, and per-request counts (task
-          type, model, token counts, time). Gradara AI never stores or logs your
-          prompts, models, equations, or AI responses. Usage records are deleted
-          after about 13 months, and you can delete your account at any time
-          from the AI tab.
+          type, model, token counts, time). The Gradara AI service does not
+          store or log your prompts, models, equations, or AI responses; its AI
+          provider, Anthropic, may keep them briefly for abuse and safety
+          monitoring. Usage records are deleted after about 13 months, and you
+          can delete your account at any time from the AI tab.
         </p>
       </div>
       <div>
@@ -830,7 +859,7 @@ function PrivacySettings({ dataDirectory }: { dataDirectory?: string }) {
       <Button
         variant="outline"
         onClick={() =>
-          openExternal('https://gradara.app/privacy')
+          openExternal('https://gradara.app/privacy.html')
         }
       >
         <ExternalLink />

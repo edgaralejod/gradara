@@ -24,6 +24,14 @@ def _bool(name: str, default: bool = False) -> bool:
 # diagnose plus the edit price.
 DEFAULT_PRICES = {'component': 2, 'model': 20, 'export': 2, 'edit': 4, 'diagnose': 2}
 
+# Version of the Terms and Privacy notice shown on the sign-in page. Signing in
+# records it on the account; change it whenever site/public/terms.html or
+# site/public/privacy.html changes materially.
+TERMS_VERSION = '2026-09-28'
+
+# Stripe webhook event ids are kept this long for de-duplication, then purged.
+STRIPE_EVENT_RETENTION_DAYS = 90
+
 DEFAULT_PACKS = [
     {'id': 'starter', 'credits': 100, 'amount': 1000, 'currency': 'usd', 'label': '100 credits'},
     {'id': 'pro', 'credits': 550, 'amount': 5000, 'currency': 'usd', 'label': '550 credits'},
@@ -56,6 +64,9 @@ class Config:
     max_concurrent: int = 3
     usage_retention_days: int = 400
     admin_token: str = ''
+    # Secret key for the salted hashes of deleted identities (blocks a second
+    # welcome grant). Falls back to admin_token; never change it once set.
+    identity_pepper: str = ''
     support_email: str = 'support@virtu-services.us'
     download_base: str = 'https://github.com/edgaralejod/gradara/releases/latest/download'
     source_url: str = 'https://github.com/edgaralejod/gradara'
@@ -66,6 +77,10 @@ class Config:
 
     def part_price(self, family: str) -> int:
         return self.prices['edit'] if family == 'edit' else self.surcharges['edit'][family]
+
+    @property
+    def pepper(self) -> bytes:
+        return (self.identity_pepper or self.admin_token or 'gradara-development-pepper').encode()
 
     def pack(self, pack_id: str) -> dict | None:
         return next((p for p in self.packs if p['id'] == pack_id), None)
@@ -85,6 +100,8 @@ class Config:
                 problems.append('every credit pack in CREDIT_PACKS needs a Stripe priceId')
             if self.database_url.startswith('sqlite'):
                 problems.append('use a managed database (DATABASE_URL), not SQLite, in production')
+            if not self.identity_pepper and not self.admin_token:
+                problems.append('IDENTITY_PEPPER (or ADMIN_TOKEN) is required')
             if not self.public_url.startswith('https://'):
                 problems.append('PUBLIC_URL must be https')
             if problems:
@@ -118,6 +135,7 @@ def load() -> Config:
         max_concurrent=_int('MAX_CONCURRENT', 3),
         usage_retention_days=_int('USAGE_RETENTION_DAYS', 400),
         admin_token=os.environ.get('ADMIN_TOKEN', ''),
+        identity_pepper=os.environ.get('IDENTITY_PEPPER', ''),
         support_email=os.environ.get('SUPPORT_EMAIL', 'support@virtu-services.us'),
         download_base=os.environ.get('DOWNLOAD_BASE', 'https://github.com/edgaralejod/gradara/releases/latest/download'),
         source_url=os.environ.get('SOURCE_URL', 'https://github.com/edgaralejod/gradara'),

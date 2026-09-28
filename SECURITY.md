@@ -27,11 +27,11 @@ Ordinary local simulation does not call an LLM provider. Engine setup downloads 
 - Controller export sends project name/revision, the selected block's equations, parameters and definition, nearby connection metadata, and target-interface instructions.
 - With the Codex CLI, prompts and responses are also kept locally for diagnostics. Other providers keep no local copy unless `GRADARA_KEEP_AI_TRANSCRIPTS=1` is set.
 
-Do not submit confidential equations or model metadata unless using the configured provider for that content is acceptable to you. With your own key, vendor retention and account terms apply. Gradara AI does not store prompts or responses; see [privacy](docs/PRIVACY.md). Gradara does not need provider credentials for normal editing or simulation. Never commit CLI authentication files, API keys, environment files, or provider logs.
+Do not submit confidential equations or model metadata unless using the configured provider for that content is acceptable to you. With your own key, vendor retention and account terms apply. Gradara AI does not store or log prompts or responses, though its model provider (Anthropic) may keep them briefly for abuse monitoring; see [privacy](docs/PRIVACY.md). Gradara does not need provider credentials for normal editing or simulation. Never commit CLI authentication files, API keys, environment files, or provider logs.
 
 ## Reporting a vulnerability
 
-Contact Edgar Duarte privately at **[contact@virtu-services.us](mailto:contact@virtu-services.us?subject=Gradara%20security%20report)** with the subject **Gradara security report**. This is the public contact address for [Virtu Services](https://virtu-services.us). Do not post exploit details, credentials, or private models in a public issue.
+Contact Edgar Duarte privately at **[support@virtu-services.us](mailto:support@virtu-services.us?subject=Gradara%20security%20report)** with the subject **Gradara security report**. This is the single contact address for Gradara at [Virtu Services](https://virtu-services.us), and it is also published in `site/public/.well-known/security.txt`. Do not post exploit details, credentials, or private models in a public issue.
 
 A useful report identifies the affected revision, trust boundary, impact, and minimal synthetic reproduction. Start with a concise description and arrange transfer of sensitive attachments with the maintainer. No guaranteed response time or supported long-term release series is currently offered.
 

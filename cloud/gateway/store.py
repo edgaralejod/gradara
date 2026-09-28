@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import secrets
 from dataclasses import dataclass
 from datetime import timedelta
@@ -11,8 +12,9 @@ from sqlalchemy import and_, delete, func, insert, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 
-from .config import Config
-from .db import access_tokens, accounts, device_codes, job_parts, jobs, ledger, now, stripe_events, usage
+from .config import STRIPE_EVENT_RETENTION_DAYS, TERMS_VERSION, Config
+from .db import (access_tokens, accounts, deleted_identities, device_codes, job_parts, jobs, ledger, now, purchases,
+                 stripe_events, usage)
 
 USER_ALPHABET = 'BCDFGHJKLMNPQRSTVWXZ'   # no vowels or look-alikes
 DEVICE_TTL = timedelta(minutes=10)
@@ -34,24 +36,41 @@ class InsufficientCredits(Exception):
     pass
 
 
+class _Retry(Exception):
+    pass
+
+
 class Store:
     def __init__(self, engine: Engine, config: Config):
         self.engine, self.config = engine, config
 
     # ------------------------------------------------------------ accounts
 
+    def markers(self, identity: str | None, email: str | None) -> list[str]:
+        """Keyed hashes of a sign-in id and email. Without the pepper they cannot be reversed or matched."""
+        values = [f'identity:{identity}' if identity else None, f'email:{email.strip().lower()}' if email else None]
+        return [hmac.new(self.config.pepper, v.encode(), hashlib.sha256).hexdigest() for v in values if v]
+
     def account_for_identity(self, identity: str, email: str) -> Account:
-        """Find or create the account for a verified identity; new accounts get the welcome grant."""
+        """Find or create the account for a verified identity and record the accepted Terms version.
+
+        New accounts get the welcome grant, unless the same sign-in id or email
+        belonged to an account that was deleted: that person can sign in again
+        but starts with no free credits.
+        """
+        terms = {'terms_version': TERMS_VERSION, 'terms_accepted_at': now()}
         with self.engine.begin() as db:
             row = db.execute(select(accounts).where(accounts.c.identity == identity)).mappings().first()
             if row:
-                if row['email'] != email:
-                    db.execute(update(accounts).where(accounts.c.id == row['id']).values(email=email))
+                db.execute(update(accounts).where(accounts.c.id == row['id']).values(email=email, **terms))
                 return Account(row['id'], row['public_id'], email, row['balance'])
             public_id = 'acct_' + secrets.token_hex(10)
-            grant = self.config.free_credits
+            returning = db.execute(select(func.count()).select_from(deleted_identities).where(
+                deleted_identities.c.marker.in_(self.markers(identity, email)))).scalar_one()
+            grant = 0 if returning else self.config.free_credits
             account_id = db.execute(insert(accounts).values(public_id=public_id, identity=identity, email=email,
-                                                            balance=grant, created_at=now())).inserted_primary_key[0]
+                                                            balance=grant, created_at=now(), **terms)
+                                    ).inserted_primary_key[0]
             if grant:
                 db.execute(insert(ledger).values(account_id=account_id, delta=grant, reason='welcome',
                                                  ref=f'welcome:{public_id}', created_at=now()))
@@ -247,21 +266,97 @@ class Store:
             return db.execute(select(func.count()).select_from(usage).where(
                 usage.c.account_id == account.id, usage.c.created_at >= now() - timedelta(minutes=1))).scalar_one()
 
-    def grant_purchase(self, account: Account, credits: int, ref: str) -> bool:
+    def grant_purchase(self, account: Account, credits: int, session_id: str, payment_intent: str | None = None) -> bool:
         """Credit a paid Checkout Session exactly once (idempotent on the session id)."""
         try:
             with self.engine.begin() as db:
-                db.execute(insert(ledger).values(account_id=account.id, delta=credits, reason='purchase', ref=ref,
-                                                 created_at=now()))
+                db.execute(insert(ledger).values(account_id=account.id, delta=credits, reason='purchase',
+                                                 ref=f'stripe:{session_id}', created_at=now()))
+                db.execute(insert(purchases).values(account_id=account.id, session_id=session_id,
+                                                    payment_intent=payment_intent, credits=credits, reversed=0,
+                                                    created_at=now()))
                 db.execute(update(accounts).where(accounts.c.id == account.id).values(balance=accounts.c.balance + credits))
             return True
         except IntegrityError:
+            if payment_intent:
+                self.link_payment_intent(session_id, payment_intent)
             return False
+
+    def link_payment_intent(self, session_id: str, payment_intent: str) -> None:
+        with self.engine.begin() as db:
+            db.execute(update(purchases).where(purchases.c.session_id == session_id,
+                                               purchases.c.payment_intent.is_(None)).values(payment_intent=payment_intent))
+
+    def find_purchase(self, session_id: str | None = None, payment_intent: str | None = None) -> dict | None:
+        """The purchase for a Checkout Session or PaymentIntent id.
+
+        Purchases credited before the purchases table existed are found through
+        their ledger entry and copied into it on first lookup.
+        """
+        with self.engine.begin() as db:
+            if session_id:
+                row = db.execute(select(purchases).where(purchases.c.session_id == session_id)).mappings().first()
+            elif payment_intent:
+                row = db.execute(select(purchases).where(purchases.c.payment_intent == payment_intent)).mappings().first()
+            else:
+                return None
+            if row or not session_id:
+                return dict(row) if row else None
+            legacy = db.execute(select(ledger).where(ledger.c.ref == f'stripe:{session_id}',
+                                                     ledger.c.reason == 'purchase')).mappings().first()
+            if not legacy:
+                return None
+            db.execute(insert(purchases).values(account_id=legacy['account_id'], session_id=session_id,
+                                                payment_intent=payment_intent, credits=legacy['delta'], reversed=0,
+                                                created_at=legacy['created_at']))
+            return dict(db.execute(select(purchases).where(purchases.c.session_id == session_id)).mappings().first())
+
+    def reverse_purchase(self, session_id: str, covered: int) -> dict:
+        """Remove the credits of a refunded or disputed purchase.
+
+        ``covered`` is how many of the purchase's credits the refunds and
+        disputes so far account for (it only grows), so repeated or overlapping
+        Stripe events never remove credits twice. At most the account's unspent
+        balance is removed; the balance never goes below zero.
+        """
+        for _ in range(5):
+            try:
+                with self.engine.begin() as db:
+                    row = db.execute(select(purchases).where(purchases.c.session_id == session_id)).mappings().first()
+                    if row is None:
+                        return {'found': False, 'removed': 0}
+                    target = max(0, min(covered, row['credits']))
+                    if target <= row['reversed']:
+                        return {'found': True, 'removed': 0, 'reversed': row['reversed'], 'account_id': row['account_id']}
+                    claimed = db.execute(update(purchases).where(purchases.c.id == row['id'],
+                                                                 purchases.c.reversed == row['reversed'])
+                                         .values(reversed=target))
+                    if claimed.rowcount != 1:
+                        continue
+                    wanted = target - row['reversed']
+                    balance = db.execute(select(accounts.c.balance).where(accounts.c.id == row['account_id'])).scalar_one()
+                    removed = max(0, min(wanted, balance))
+                    if removed:
+                        taken = db.execute(update(accounts).where(accounts.c.id == row['account_id'],
+                                                                  accounts.c.balance >= removed)
+                                           .values(balance=accounts.c.balance - removed))
+                        if taken.rowcount != 1:
+                            raise _Retry()
+                        db.execute(insert(ledger).values(account_id=row['account_id'], delta=-removed, reason='reversal',
+                                                         ref=f'reversal:{session_id}:{target}'[:120], created_at=now()))
+                    return {'found': True, 'removed': removed, 'reversed': target, 'account_id': row['account_id']}
+            except _Retry:
+                continue
+        raise RuntimeError('Could not reverse the purchase; try again.')
 
     def adjust(self, account: Account, delta: int, reason: str, ref: str | None = None) -> None:
         with self.engine.begin() as db:
             db.execute(insert(ledger).values(account_id=account.id, delta=delta, reason=reason, ref=ref, created_at=now()))
             db.execute(update(accounts).where(accounts.c.id == account.id).values(balance=accounts.c.balance + delta))
+
+    def event_known(self, event_id: str) -> bool:
+        with self.engine.connect() as db:
+            return db.execute(select(stripe_events.c.id).where(stripe_events.c.id == event_id)).first() is not None
 
     def event_seen(self, event_id: str) -> bool:
         try:
@@ -290,22 +385,37 @@ class Store:
             calls = db.execute(select(usage.c.task, usage.c.model, usage.c.input_tokens, usage.c.output_tokens,
                                       usage.c.ok, usage.c.created_at).where(usage.c.account_id == account.id)
                                .order_by(usage.c.id)).all()
+            terms = db.execute(select(accounts.c.terms_version, accounts.c.terms_accepted_at)
+                               .where(accounts.c.id == account.id)).mappings().first()
             tokens = db.execute(select(access_tokens.c.client, access_tokens.c.created_at, access_tokens.c.last_used_on,
                                        access_tokens.c.revoked_at).where(access_tokens.c.account_id == account.id)).all()
         iso = lambda value: value.isoformat() + 'Z' if value else None
         return {
-            'account': {'id': account.public_id, 'email': account.email, 'balance': account.balance},
+            'account': {'id': account.public_id, 'email': account.email, 'balance': account.balance,
+                        'termsVersion': terms['terms_version'], 'termsAcceptedAt': iso(terms['terms_accepted_at'])},
             'ledger': [{'delta': d, 'reason': r, 'at': iso(t)} for d, r, t in entries],
             'usage': [{'task': t, 'model': m, 'inputTokens': i, 'outputTokens': o, 'ok': ok, 'at': iso(at)}
                       for t, m, i, o, ok, at in calls],
             'devices': [{'client': c, 'signedInAt': iso(a), 'lastUsedOn': iso(u), 'revokedAt': iso(r)} for c, a, u, r in tokens],
-            'notStored': 'Prompts, models, equations, and AI responses are never stored by Gradara AI.',
+            'notStored': ('Prompts, models, equations, and AI responses are not stored or logged by Gradara AI. '
+                          'Its AI provider, Anthropic, may keep them briefly for abuse and safety monitoring.'),
         }
 
     def delete_account(self, account: Account) -> str | None:
-        """Erase personal data. Ledger amounts stay (without identity) for accounting."""
+        """Erase personal data; unspent credits are forfeited.
+
+        What remains is pseudonymous: the ledger and purchases rows (amounts,
+        dates, Stripe ids) stay under the internal account id for accounting,
+        and keyed hashes of the sign-in id and email stay in deleted_identities
+        so signing in again does not grant welcome credits a second time.
+        """
         with self.engine.begin() as db:
-            identity = db.execute(select(accounts.c.identity).where(accounts.c.id == account.id)).scalar_one_or_none()
+            row = db.execute(select(accounts.c.identity, accounts.c.email)
+                             .where(accounts.c.id == account.id)).mappings().first()
+            identity = row['identity'] if row else None
+            for marker in self.markers(identity, row['email'] if row else None):
+                if not db.execute(select(deleted_identities.c.marker).where(deleted_identities.c.marker == marker)).first():
+                    db.execute(insert(deleted_identities).values(marker=marker, created_at=now()))
             db.execute(update(access_tokens).where(access_tokens.c.account_id == account.id, access_tokens.c.revoked_at.is_(None))
                        .values(revoked_at=now()))
             db.execute(delete(usage).where(usage.c.account_id == account.id))
@@ -317,11 +427,11 @@ class Store:
                 db.execute(insert(ledger).values(account_id=account.id, delta=-account.balance, reason='forfeit',
                                                  ref=f'forfeit:{account.public_id}', created_at=now()))
             db.execute(update(accounts).where(accounts.c.id == account.id)
-                       .values(identity=None, email=None, balance=0, deleted_at=now()))
+                       .values(identity=None, email=None, balance=0, deleted_at=now(), terms_accepted_at=None))
         return identity
 
     def purge(self) -> dict:
-        """Retention: usage rows expire; sign-in codes and finished job counters are short-lived."""
+        """Retention: usage rows expire; sign-in codes, finished job counters, and Stripe event ids are short-lived."""
         cutoff = now() - timedelta(days=self.config.usage_retention_days)
         with self.engine.begin() as db:
             old_usage = db.execute(delete(usage).where(usage.c.created_at < cutoff)).rowcount
@@ -331,4 +441,7 @@ class Store:
             old_jobs = db.execute(delete(jobs).where(jobs.c.created_at < now() - timedelta(days=7))).rowcount
             old_tokens = db.execute(delete(access_tokens).where(and_(access_tokens.c.revoked_at.is_not(None),
                                                                      access_tokens.c.revoked_at < now() - timedelta(days=30)))).rowcount
-        return {'usage': old_usage, 'deviceCodes': old_codes, 'jobs': old_jobs, 'revokedTokens': old_tokens}
+            old_events = db.execute(delete(stripe_events).where(
+                stripe_events.c.created_at < now() - timedelta(days=STRIPE_EVENT_RETENTION_DAYS))).rowcount
+        return {'usage': old_usage, 'deviceCodes': old_codes, 'jobs': old_jobs, 'revokedTokens': old_tokens,
+                'stripeEvents': old_events}

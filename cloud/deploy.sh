@@ -182,6 +182,8 @@ cmd_stripe() {
   stripe_api POST webhook_endpoints -d url="$url" \
     -d "enabled_events[]=checkout.session.completed" \
     -d "enabled_events[]=checkout.session.async_payment_succeeded" \
+    -d "enabled_events[]=charge.refunded" \
+    -d "enabled_events[]=charge.dispute.created" \
     -d description="Gradara AI gateway" | json_get "d['secret']" | tr -d '\n' | store_secret stripe-webhook-secret
   echo "  $url"
 }
@@ -252,6 +254,8 @@ cmd_setup() {
   ensure_log_exclusion
 
   secret_exists gateway-admin-token || openssl rand -hex 32 | tr -d '\n' | store_secret gateway-admin-token
+  # Keys the hashes that stop a deleted account's second welcome grant. Never rotate it.
+  secret_exists identity-pepper || openssl rand -hex 32 | tr -d '\n' | store_secret identity-pepper
 
   cmd_secrets
   cmd_stripe
@@ -291,6 +295,8 @@ cmd_deploy() {
   trap 'rm -f "$envs"' RETURN
   env_file "$envs" "$version"
   key_var=$([[ $LLM_PROVIDER == openai ]] && echo OPENAI_API_KEY || echo ANTHROPIC_API_KEY)
+  # Older setups predate this secret; create it once, then never change it.
+  secret_exists identity-pepper || openssl rand -hex 32 | tr -d '\n' | store_secret identity-pepper
 
   say "Building $image"
   "${GC[@]}" builds submit --config cloud/cloudbuild.yaml --ignore-file cloud/.gcloudignore \
@@ -303,7 +309,7 @@ cmd_deploy() {
     --timeout 600 --concurrency 20 --min-instances 0 --max-instances 3 --memory 512Mi --cpu 1 \
     --add-cloudsql-instances "${PROJECT}:${REGION}:${INSTANCE}" \
     --env-vars-file "$envs" \
-    --set-secrets "${key_var}=llm-api-key:latest,STRIPE_SECRET_KEY=stripe-secret-key:latest,STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest,ADMIN_TOKEN=gateway-admin-token:latest,DATABASE_URL=gateway-database-url:latest"
+    --set-secrets "${key_var}=llm-api-key:latest,STRIPE_SECRET_KEY=stripe-secret-key:latest,STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest,ADMIN_TOKEN=gateway-admin-token:latest,IDENTITY_PEPPER=identity-pepper:latest,DATABASE_URL=gateway-database-url:latest"
 
   local url
   url=$("${GC[@]}" run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')

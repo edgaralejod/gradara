@@ -2,9 +2,15 @@
 """Relational storage for accounts, sign-in tokens, and the credit ledger.
 
 What is stored (and nothing else):
-* accounts: an internal id, the identity provider's user id, email, credit balance
+* accounts: an internal id, the identity provider's user id, email, credit
+  balance, and the Terms version accepted at sign-in
 * access_tokens / device_codes: SHA-256 hashes only, never the raw tokens
-* ledger: credit grants, purchases (Stripe session id), and charges
+* ledger: credit grants, purchases (Stripe session id), charges, and reversals
+* purchases: Stripe Checkout Session and PaymentIntent ids, credits bought, and
+  credits reversed after a refund or dispute
+* deleted_identities: keyed hashes of deleted accounts' sign-in ids and emails,
+  so a deleted account cannot collect a second welcome grant
+* stripe_events: processed webhook event ids, purged after 90 days
 * jobs / usage: task name, model, token counts, latency, success flag
 
 Prompts, model files, generated equations, and AI responses are never written.
@@ -15,7 +21,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, MetaData, String, Table,
-                        UniqueConstraint, create_engine, event)
+                        UniqueConstraint, create_engine, event, inspect, text)
 from sqlalchemy.engine import Engine
 
 metadata = MetaData()
@@ -34,6 +40,8 @@ accounts = Table(
     Column('balance', Integer, nullable=False, default=0),
     Column('created_at', DateTime, nullable=False, default=now),
     Column('deleted_at', DateTime, nullable=True),
+    Column('terms_version', String(16), nullable=True),
+    Column('terms_accepted_at', DateTime, nullable=True),
 )
 
 access_tokens = Table(
@@ -64,7 +72,7 @@ ledger = Table(
     Column('id', Integer, primary_key=True),
     Column('account_id', Integer, ForeignKey('accounts.id'), nullable=False, index=True),
     Column('delta', Integer, nullable=False),
-    Column('reason', String(24), nullable=False),     # welcome|purchase|charge|refund|adjust|forfeit
+    Column('reason', String(24), nullable=False),     # welcome|purchase|charge|refund|adjust|forfeit|reversal
     Column('ref', String(120), unique=True, nullable=True),
     Column('created_at', DateTime, nullable=False, default=now),
 )
@@ -109,6 +117,25 @@ usage = Table(
     Column('created_at', DateTime, nullable=False, default=now, index=True),
 )
 
+# One row per paid Checkout Session, so a Stripe refund or dispute (which names
+# the PaymentIntent) can find the credits it bought.
+purchases = Table(
+    'purchases', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('account_id', Integer, ForeignKey('accounts.id'), nullable=False, index=True),
+    Column('session_id', String(120), unique=True, nullable=False),
+    Column('payment_intent', String(120), nullable=True, index=True),
+    Column('credits', Integer, nullable=False),
+    Column('reversed', Integer, nullable=False, default=0),   # credits covered by refunds/disputes so far
+    Column('created_at', DateTime, nullable=False, default=now),
+)
+
+deleted_identities = Table(
+    'deleted_identities', metadata,
+    Column('marker', String(64), primary_key=True),   # HMAC-SHA256(IDENTITY_PEPPER, sign-in id or email)
+    Column('created_at', DateTime, nullable=False, default=now),
+)
+
 stripe_events = Table(
     'stripe_events', metadata,
     Column('id', String(80), primary_key=True),
@@ -129,4 +156,23 @@ def connect(url: str) -> Engine:
     else:
         engine = create_engine(url, pool_pre_ping=True, pool_size=5, max_overflow=5)
     metadata.create_all(engine)
+    migrate(engine)
     return engine
+
+
+# Columns added after a table was first created. ``create_all`` creates missing
+# tables but never alters existing ones, so each addition is applied here once.
+ADDED_COLUMNS = {
+    'accounts': [('terms_version', 'VARCHAR(16)'), ('terms_accepted_at', 'TIMESTAMP')],
+}
+
+
+def migrate(engine: Engine) -> None:
+    inspector = inspect(engine)
+    for table, columns in ADDED_COLUMNS.items():
+        present = {c['name'] for c in inspector.get_columns(table)}
+        missing = [(name, kind) for name, kind in columns if name not in present]
+        if missing:
+            with engine.begin() as db:
+                for name, kind in missing:
+                    db.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {kind}'))

@@ -35,10 +35,15 @@ Point a source checkout or desktop build at it with `GRADARA_GATEWAY_URL=http://
 | `RATE_PER_MINUTE`, `MAX_CONCURRENT` | Per-account limits, defaults 20 and 3 |
 | `USAGE_RETENTION_DAYS` | Default 400 |
 | `ADMIN_TOKEN` | Secret Manager; enables `POST /internal/purge` |
+| `IDENTITY_PEPPER` | Secret Manager; key for the hashes of deleted accounts' sign-in ids and emails that stop a second welcome grant. Falls back to `ADMIN_TOKEN` when unset. Set it once (`openssl rand -hex 32`) and never change it: a new value stops matching earlier deletions |
 | `DOWNLOAD_BASE`, `SOURCE_URL` | Targets for `/download/{platform}` and `/source` redirects |
 | `GATEWAY_REVISION` | Set by `deploy.sh deploy` to the deployed commit; `GET /health` reports it with the accepted task types |
 
-With `GATEWAY_ENV=production` the service refuses to start with development sign-in, SQLite, missing keys, packs without Stripe prices, or a non-HTTPS public URL.
+With `GATEWAY_ENV=production` the service refuses to start with development sign-in, SQLite, missing keys, packs without Stripe prices, no `IDENTITY_PEPPER` or `ADMIN_TOKEN`, or a non-HTTPS public URL.
+
+The Terms version recorded on each account at sign-in is `TERMS_VERSION` in `cloud/gateway/config.py`. Change it together with `site/public/terms.html` and `site/public/privacy.html`.
+
+The schema is created at startup (`metadata.create_all`). Columns added to an existing table are listed in `ADDED_COLUMNS` in `cloud/gateway/db.py` and added once at startup, so deploying a new revision migrates the database.
 
 `CREDIT_PACKS` example:
 
@@ -68,17 +73,22 @@ cloud/deploy.sh status    # service URL, health, pricing, and whether the deploy
 
 Set up by hand, once:
 
-1. **Firebase Authentication.** Google and Email link (passwordless) providers enabled, `api.gradara.app` in authorized domains, and a web app whose config values are in `deploy.env`. Done for `gradara-2e47a`.
-2. **Stripe.** Products and prices are created by `deploy.sh stripe` (lookup keys `gradara_credits_100` and `gradara_credits_550`). Set the support email and statement descriptor in the Stripe dashboard, and enable Stripe Tax when registrations are in place.
-3. **Model vendor.** Use a dedicated API organization or workspace for production. Request zero data retention, set spend limits and alerts, and record the terms in the operations notes.
+1. **Firebase Authentication.** Enable the Google and Email link (passwordless) providers, add `api.gradara.app` to the authorized domains, and create a web app whose config values go in `deploy.env`.
+2. **Stripe.** Products and prices are created by `deploy.sh stripe` (lookup keys `gradara_credits_100` and `gradara_credits_550`). Set the support email and statement descriptor in the Stripe dashboard, and enable Stripe Tax when registrations are in place. The webhook endpoint must send `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`, and `charge.dispute.created`.
+3. **Model vendor.** Use a dedicated API organization or workspace for production and set spend limits and alerts. The privacy notice says the vendor may keep request content briefly for abuse monitoring; if zero data retention is granted, the notice can say so.
 4. **Domain.** Verify `gradara.app` in Search Console (`gcloud domains verify gradara.app`), run `deploy.sh domain`, and add the DNS record it prints.
 
 The 600-second timeout covers long model-build calls. The in-memory per-account concurrency limit is per instance; keep `--max-instances` small until a shared limiter is needed.
 
 Operations:
 
-- **Retention** runs every six hours inside the service. Add a daily Cloud Scheduler call to `POST /internal/purge` with the admin token as a backstop for instances that scale to zero.
-- **Refunds.** Refund in Stripe, then remove the credits: `python -m gateway.admin refund someone@example.com 100 --ref cs_live_…`.
+Admin commands run from `cloud/` with the production `DATABASE_URL` (and `IDENTITY_PEPPER` or `ADMIN_TOKEN`) in the environment: `python -m gateway.admin <command>`.
+
+- **Retention** runs every six hours inside the service, and `deploy.sh deploy` schedules a daily `POST /internal/purge` as a backstop for instances that scale to zero. It deletes usage older than `USAGE_RETENTION_DAYS`, expired sign-in codes, job counters older than 7 days, tokens revoked more than 30 days ago, and Stripe event ids older than 90 days. Run it by hand with `python -m gateway.admin purge`.
+- **Refunds and disputes** made in Stripe are applied by the webhook. `charge.refunded` removes the refunded share of the purchase's credits (rounded up; all of them for a full refund) and `charge.dispute.created` removes all of them. The purchase is found by its PaymentIntent id (recorded when the credits are granted; for older purchases the gateway asks Stripe for the Checkout Session). Removal is capped at the account's unspent balance, never makes it negative, and is recorded per purchase, so repeated events or a later manual refund never remove credits twice. Event ids are de-duplicated in `stripe_events`.
+- **Refund policy.** Unused purchased credits are refunded on request within 14 days of purchase: refund the payment in Stripe (the webhook removes the credits). Failed AI calls are refunded automatically. Deleting an account forfeits its balance, so refund first when a user asks for both.
+- **Manual corrections:** `python -m gateway.admin refund cs_live_…` removes a purchase's credits by Checkout Session id (add a number to remove only that many). It works after the account was deleted and shares the webhook's bookkeeping. `python -m gateway.admin refund someone@example.com 100 --ref re_…` removes credits from an active account by email.
+- **Balance:** `python -m gateway.admin balance someone@example.com`.
 - **Goodwill credits:** `python -m gateway.admin adjust someone@example.com 20 --reason goodwill`.
 - **Monitoring.** Alert on 5xx rate and on vendor spend. Logs contain only route, status, latency, and request ids; do not enable request body logging.
 
@@ -86,4 +96,4 @@ Operations:
 
 Costs scale with tokens. Development runs used about 16k tokens per block and 80k to 130k tokens per model build. At mid-tier model prices (about USD 2 per million input tokens and USD 10 per million output tokens), that is roughly USD 0.05 to 0.15 per block and USD 0.40 to 1.20 per model build, before retries. With 100 credits for USD 10, a block (2 credits) is USD 0.20 and a model (20 credits) is USD 2.00, which covers vendor cost, Stripe fees, and hosting with margin. Review these numbers against real usage records after launch; change `CREDIT_PRICES` rather than code.
 
-A job pays its kind's price once, on its first call, with repairs included. Assistant edits (`edit`) and diagnoses (`diagnose`) can also carry priced parts, labelled on the request as `job.part`. Each new or rewritten block is a `block:<n>` part that pays the block surcharge once; at most three per job. The edit stage of a fix is the `edit` part and pays the edit price once. So a simple edit costs 4, an edit with two new blocks costs 8, explaining costs 2, and a fix that adds one block costs 2 + 4 + 2. A part whose first call fails before output is refunded, as a job is. Parts are recorded in `job_parts` (label and amount only) and expire with their job after 7 days. Responses include `jobCharged`, the job's running total, which the app shows beside the answer.
+A job pays its kind's price once, on its first call, with repairs included. Assistant edits (`edit`) and diagnoses (`diagnose`) can also carry priced parts, labelled on the request as `job.part`. Each new or rewritten block is a `block:<n>` part that pays the block surcharge once; at most three per job. The edit stage of a fix is the `edit` part and pays the edit price once. So a simple edit costs 4, an edit with two new blocks costs 8, explaining costs 2, and a fix that adds one block costs 2 + 4 + 2. A job or part whose first call fails for any reason before output is delivered (provider error, timeout, client disconnect, or a gateway error) is refunded in the same request. Parts are recorded in `job_parts` (label and amount only) and expire with their job after 7 days. Responses include `jobCharged`, the job's running total, which the app shows beside the answer.
