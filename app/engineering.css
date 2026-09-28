@@ -3015,3 +3015,15 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
   color: #56697a; font-size: 10px; line-height: 14px;
 }
 .hierarchy-tree .size-hint { margin: 6px 10px; }
+
+/* Properties dialog of a subsystem port pill. */
+.source-dialog.port-dialog { max-width: 460px !important; }
+.block-dialog-properties.port-dialog-fields { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.port-dialog-fields .field-row {
+  display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 10px;
+}
+.port-dialog-fields select { height: 30px; }
+.port-dialog-swatch {
+  display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%;
+  vertical-align: middle;
+}

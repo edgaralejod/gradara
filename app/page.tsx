@@ -5,7 +5,8 @@ import CanvasMenu, {
   type CanvasMenuItem,
 } from '@/components/gradara/canvas-menu';
 import SelectionActions from '@/components/gradara/selection-actions';
-import { addPort } from '@/lib/gradara/subsystem-ports';
+import { addPort, editPort, kindFor } from '@/lib/gradara/subsystem-ports';
+import PortDialog from '@/components/gradara/port-dialog';
 import { boundaryFor } from '@/lib/gradara/port-blocks';
 import HierarchyBar from '@/components/gradara/hierarchy-bar';
 import {
@@ -392,6 +393,8 @@ function Workbench() {
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
   const [composer, setComposer] = useState<ComposerContext | null>(null);
   const [inserter, setInserter] = useState<InsertContext | null>(null);
+  /** The subsystem port whose properties dialog is open. */
+  const [portDialog, setPortDialog] = useState<string | null>(null);
   const [equationBlock, setEquationBlock] = useState<{
     id: string;
     tab: BlockDialogTab;
@@ -2650,19 +2653,12 @@ function Workbench() {
                           e.stopPropagation();
                           if (n.type === 'tap') return;
                           if (openSubsystem(n.id)) return;
-                          // A port pill has no equations: its properties are the
-                          // port fields in the inspector.
+                          // A port pill's properties are its port, not equations.
                           const block = projectRef.current.blocks.find(
                             (b) => b.id === n.id,
                           );
                           if (block && isBoundary(block)) {
-                            select({ ...emptySelection(), blockIds: [n.id] });
-                            setInspectorOpen(true);
-                            requestAnimationFrame(() =>
-                              document
-                                .getElementById('port-name-field')
-                                ?.focus(),
-                            );
+                            setPortDialog(n.id);
                             return;
                           }
                           setEquationBlock({ id: n.id, tab: 'properties' });
@@ -3507,6 +3503,23 @@ function Workbench() {
             e.target.value = '';
           }}
         />
+        {portDialog && project.blocks.find((b) => b.id === portDialog) && (
+          <PortDialog
+            key={portDialog}
+            block={project.blocks.find((b) => b.id === portDialog)!}
+            count={(role, type) => {
+              const kind = kindFor(role, type).kind;
+              return project.blocks.filter(
+                (b) => isBoundary(b) && b.definition.kind === kind,
+              ).length;
+            }}
+            onClose={() => setPortDialog(null)}
+            onApply={(change) => {
+              commit((p) => editPort(p, portDialog, change));
+              setPortDialog(null);
+            }}
+          />
+        )}
         {equationBlock &&
           project.blocks.find((b) => b.id === equationBlock.id) && (
             <BlockDialog
