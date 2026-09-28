@@ -88,8 +88,15 @@ function relations(project: Project, ids: Set<string>) {
           if (p.block !== q.block)
             list.push({ a: p.block, b: q.block, weight: w });
     };
-    add(x, R, [...U, ...D, ...L], weight);
-    add(x, [...U, ...D], L, weight);
+    if (signal) {
+      // A signal into a top or bottom input is feedback or a measurement: it says
+      // over or under, never before or after, so a loop is never cut through its
+      // forward path.
+      add(x, R, L, weight);
+    } else {
+      add(x, R, [...U, ...D, ...L], weight);
+      add(x, [...U, ...D], L, weight);
+    }
     add(y, D, [...R, ...L, ...U], weight);
     add(y, [...R, ...L], U, weight);
     // Siblings: branches along the rail side by side, fan-out one under another.
@@ -296,11 +303,12 @@ function place(
   const xs = settle('x', cx);
   const x = xs.orders;
   const y = settle('y', cy).orders;
-  const cols = ranks(
+  const byColumn = ranks(
     ids,
     x.map((o) => [o.a, o.b, o.weight]),
     xs.key,
-  ).rank;
+  );
+  const cols = byColumn.rank;
   // Blocks that nothing orders along x take the column of what they hang from.
   const xTied = new Set(x.flatMap((o) => [o.a, o.b]));
   for (const id of ids) {
@@ -317,6 +325,47 @@ function place(
         ),
       );
   }
+  // Longest path puts a block as far left as its orders allow. Within the room its
+  // orders leave, move it to the middle of what it connects to (feedback and
+  // measurement included), so a sensor sits between what it measures and what reads it.
+  const neighbours = new Map(ids.map((id) => [id, [] as string[]]));
+  for (const w of flattenWires(project))
+    if (set.has(w.source) && set.has(w.target) && w.source !== w.target) {
+      neighbours.get(w.source)!.push(w.target);
+      neighbours.get(w.target)!.push(w.source);
+    }
+  const kept = x.filter((_, i) => byColumn.kept.has(i));
+  for (let round = 0; round < 6; round++)
+    for (const id of [...ids].sort(
+      (a, b) => cols.get(a)! - cols.get(b)! || a.localeCompare(b),
+    )) {
+      // Weighted middle of what it connects to; a block it hangs straight under or
+      // over (a vertical connection) counts three times, since they share a column.
+      let total = 0,
+        weight = 0;
+      for (const n of neighbours.get(id)!) {
+        const vertical = pairs.some(
+          (p) =>
+            p.axis === 'x' &&
+            ((p.a === id && p.b === n) || (p.b === id && p.a === n)),
+        );
+        const w = vertical ? 3 : 1;
+        total += cols.get(n)! * w;
+        weight += w;
+      }
+      if (!weight) continue;
+      const lo = Math.max(
+        -Infinity,
+        ...kept.filter((o) => o.b === id).map((o) => cols.get(o.a)! + 1),
+      );
+      const hi = Math.min(
+        Infinity,
+        ...kept.filter((o) => o.a === id).map((o) => cols.get(o.b)! - 1),
+      );
+      const middle = Math.round(total / weight);
+      const next = Math.max(lo === -Infinity ? 0 : lo, Math.min(hi, middle));
+      if (Number.isFinite(next)) cols.set(id, next);
+    }
   // Columns sized to the real blocks and their names.
   const colIds = [...new Set(cols.values())].sort((a, b) => a - b);
   const colX = new Map<number, number>();

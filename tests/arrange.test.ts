@@ -149,3 +149,29 @@ void test('Arrange only rearranges when the drawing reads better, and says so ot
   assert.equal(kept.improved, false);
   assert.equal(kept.project, foc);
 });
+
+void test('a closed loop keeps its forward path left to right and its feedback underneath', async () => {
+  const { closedLoopBuck } = await import('./fixtures/closed-loop-buck');
+  const p = normalizeProject(closedLoopBuck());
+  const next = arranged(p);
+  clean(next, 'closed-loop buck');
+  const at = (id: string) => next.blocks.find((b) => b.id === id)!.position;
+  const path = [
+    'ref',
+    'error',
+    'pi',
+    'hold',
+    'modulator',
+    'highSide',
+    'inductor',
+    'current',
+    'load',
+  ];
+  for (let i = 1; i < path.length; i++)
+    assert.ok(
+      at(path[i - 1]).x < at(path[i]).x,
+      `${path[i - 1]} before ${path[i]}`,
+    );
+  // The output measurement feeds back from the far end, below the forward path.
+  assert.ok(at('voltageProbe').x > at('current').x);
+});
