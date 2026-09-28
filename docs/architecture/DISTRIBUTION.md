@@ -47,17 +47,19 @@ flowchart LR
 ```
 
 - The shell picks a free loopback port, starts the service with `GRADARA_PORT`, `GRADARA_DATA_DIR`, `GRADARA_LOG_DIR`, `GRADARA_STATIC_DIR`, `GRADARA_RESOURCES`, and `GRADARA_VERSION`, waits for it, then loads the workbench. Quitting stops the service and its process tree.
-- The data folder is `<OS app data>/Gradara/data`. Logs are in `<OS app data>/Gradara/logs`. Help menu entries open both.
+- The data folder is `<OS app data>/Gradara/data`. Logs are in `<OS app data>/Gradara/logs`. Help menu entries open both. **Help → Copy Diagnostic Info** copies versions, the engine status, and the end of `service.log`; **Help → Third-Party Licenses** opens `legal/THIRD_PARTY_LICENSES.txt`. The About panel carries the not-for-safety-critical-use note.
 - The workbench is the same React app built without server rendering (`vite.desktop.config.ts`, mode `desktop`).
 - Installers: NSIS on Windows, DMG and ZIP per architecture on macOS, AppImage and deb on Linux. Updates use electron-updater against published GitHub Releases (drafts are never offered). The shell checks 10 seconds after launch and every four hours, downloads in the background, and installs on **Restart to update** or on the next quit. It publishes its state to the workbench through `desktop/preload.cjs`, the only bridge between page and shell (update status, check, install), and accepts those calls only from the local workbench. Windows, macOS (signed builds) and the Linux AppImage update in place; the .deb only reports a new version and links to the download page. `GRADARA_DISABLE_UPDATES=1`, development runs, and self-test runs turn update checks off, and the installer self-test verifies that the bridge reports `disabled`.
 
 ### Simulation engine per platform
 
+For the full list of platforms and their CI coverage, see [supported platforms](../PLATFORMS.md).
+
 | Platform | Default path | First-run setup in the app |
 | --- | --- | --- |
 | Windows | Native OpenModelica (official installer) | Download OpenModelica, then "Set up now" installs MSL 4.1.0 |
 | Linux | Native OpenModelica packages, otherwise Docker | Same, or Docker image download |
-| macOS | Docker-compatible runtime (OrbStack, Docker Desktop, Colima) | Install a runtime, then "Set up now" pulls the engine image |
+| macOS | Docker-compatible runtime (OrbStack, Docker Desktop, Colima) | Install a runtime, then "Set up now" pulls the engine image, or builds it locally when the pull fails |
 
 `auto` prefers a ready native install, then a ready Docker image. Both backends produce the same run folder, CSV, and report, so results and plots do not depend on the backend.
 
@@ -106,7 +108,7 @@ sequenceDiagram
 
 Design decisions:
 
-- **Credits per operation, not tokens.** Engineers reason about "a block" or "a model," and fixed prices insulate users from vendor price changes. Measured usage from development runs: about 16k tokens per block and 80k to 130k tokens per full model build.
+- **Credits per operation, not tokens.** Engineers reason about "a block" or "a model," and fixed prices insulate users from vendor price changes. Typical usage is about 16k tokens per block and 80k to 130k tokens per full model build.
 - **Prepaid packs through Stripe Checkout.** No stored cards, no invoices, no surprise overages. Stripe Tax can be enabled with `STRIPE_AUTOMATIC_TAX`.
 - **Failed first calls are refunded.** If the vendor fails before any output, the operation's charge is returned; a later retry pays again.
 - **Task allowlist.** Only Gradara task types with a JSON object schema are accepted, with size limits, per-account rate and concurrency limits, and a per-operation call cap. The gateway is not a general chat proxy.

@@ -78,13 +78,17 @@ The API exposes jobs rather than blocking the editor. Current concurrency, cance
 
 The component adapter returns structured JSON constrained by the user-selected signal, electrical, rotational or translational mechanical, magnetic, thermal, or multidomain type. The server enforces terminal domains and directions independently of the provider, and refinement preserves the existing wired interface. Pydantic validates the definition, and OpenModelica checks it before insertion. Compiler diagnostics can trigger one repair attempt. The generated response is data, not a project-editing command. The browser applies the accepted component through its normal operations.
 
-C export is deterministic and uses no AI provider: `server/codegen.py` turns one subsystem instance, or a set of signal and Boolean blocks, into C11 `init`/`step` code from per-block templates, and can replay the last run's recorded inputs through the compiled code to compare outputs. Only a custom block without a template goes through the older provider-based path. Compile success and an open-loop replay prove neither closed-loop equivalence nor hardware readiness. See [controller C code](docs/architecture/EXECUTION.md#controller-c-code).
+C export is deterministic and uses no AI provider: `server/codegen.py` turns one subsystem instance, or a set of signal and Boolean blocks, into C11 `init`/`step` code from per-block templates, and can replay the last run's recorded inputs through the compiled code to compare outputs. A custom block needs a C template first; the Export dialog can ask the configured AI provider to write one, which is checked and stored in the block's definition. Compile success and an open-loop replay prove neither closed-loop equivalence nor hardware readiness. See [controller C code](docs/architecture/EXECUTION.md#controller-c-code).
 
 This export is separate from OpenModelica's generated simulation C. It works from the Gradara document, so controller structure and sample timing are preserved before the simulation compiler flattens the plant and controller.
 
 Full-model creation uses `server/model_agent.py` to plan against a catalog snapshot, await checked missing components through the existing creator, assemble catalog references into a validated document, and require a successful trial simulation. The browser previews the result and saves it as a separate model on acceptance. See [execution](docs/architecture/EXECUTION.md#full-model-generation) for limits and ownership.
 
 Editing the open model (`server/model_edit.py`) and diagnosis (`server/diagnose_agent.py`) keep the same boundary: the agent returns bounded operations or an explanation, conventional code applies the operations all-or-nothing and runs the trial simulation, and the browser merges an accepted proposal into the document as one undo step. See [model editing](docs/architecture/EXECUTION.md#model-editing) and [diagnosis](docs/architecture/EXECUTION.md#diagnosis).
+
+### Local generated-block library
+
+`server/component_library.py` stores checked generations as immutable, content-addressed JSON under ignored `projects/components/`; identical definitions deduplicate. Changed definitions produce new entries. The library and block design catalog load this collection through `/api/components/library`, and insertion copies a definition into the ordinary model document. Model execution remains independent of library availability. Existing generated blocks in saved models are imported once with explicit unverified provenance. No private generated definitions are added to the repository or published.
 
 ## Growth decisions
 
@@ -105,7 +109,3 @@ Keep these boundaries modular within the current application. Microservices, an 
 - [Modelica Standard Library 4.1.0](https://github.com/modelica/ModelicaStandardLibrary/releases/tag/v4.1.0) and [Modelica 3.6 specification](https://specification.modelica.org/maint/3.6/MLS.pdf).
 - [React Flow](https://github.com/xyflow/xyflow); Gradara keeps its engineering wire behavior in this repository.
 - [Third-party licensing](THIRD_PARTY_NOTICES.md). Process separation is an engineering choice, not a determination of distribution license obligations.
-
-## Local generated-block library
-
-`server/component_library.py` stores checked generations as immutable, content-addressed JSON under ignored `projects/components/`; identical definitions deduplicate. Changed definitions produce new entries. The library and block design catalog load this collection through `/api/components/library`, and insertion copies a definition into the ordinary model document. Model execution remains independent of library availability. Existing generated blocks in saved models are imported once with explicit unverified provenance. No private generated definitions are added to the repository or published.

@@ -1,53 +1,147 @@
 # Troubleshooting
 
-## Desktop app does not start
+The first part covers the desktop app. The second part is for people running Gradara from a source checkout.
 
-The app shows an error and offers to open its logs folder. Help → Open Logs Folder opens it too: `service.log` there is the local service's log (`Gradara/logs` under the OS application-data folder). If security software quarantined `gradara-backend`, restore it and reinstall. On macOS, unsigned builds must be opened once with right-click → Open.
+## Using the desktop app
 
-## Workbench cannot connect (source checkout)
+### The app does not start
 
-Check [service health](http://127.0.0.1:8765/api/health). If it is unreachable, inspect `.runtime/service.log` and the launcher terminal. Check `.runtime/workbench.log` for frontend startup errors. Avoid starting a second launcher while the first is still running. Ports 4317 and 8765 must be free or occupied by the intended Gradara processes.
+If Gradara cannot start its local service, it shows "Gradara could not start its local service" and offers **Open logs**. The file `service.log` in the logs folder explains what went wrong. **Help → Open Logs Folder** opens the same folder later.
 
-The backend origin allowlist expects localhost/127.0.0.1 at the documented ports. A different hostname or port can return 403. Keep the service bound to loopback; changing CORS is not a substitute for authentication.
+- **Antivirus or security software** may block or quarantine the app's service (`gradara-backend`, or `gradara-backend.exe` on Windows). Restore it or allow it, then reinstall Gradara.
+- **Windows SmartScreen** shows "Windows protected your PC" because the Windows installer is not code-signed yet. Choose **More info → Run anyway**. See [Install Gradara](../INSTALL.md#windows).
+- **Linux AppImage** needs FUSE 2. See [Install Gradara](../INSTALL.md#linux).
+- **macOS** release builds are signed and notarized and open normally. If you build the app yourself without signing, macOS blocks it on first open. On macOS 15 and later, try to open it once, then go to **System Settings → Privacy & Security** and choose **Open Anyway**. On earlier versions, right-click the app and choose **Open**.
 
-## Engine unavailable
+If the service stops while you work, Gradara says "The Gradara service stopped unexpectedly" and offers **Restart**, **Open logs**, or **Quit**. Your saved models are safe. **Help → Restart Local Service** restarts it at any time.
 
-Open **Settings → Engine**: it shows which backend is selected and what is missing, and **Set up now** installs the Modelica Standard Library (native) or prepares the engine image (Docker). `auto` prefers a ready native OpenModelica, then a ready Docker image.
+### The engine is not ready
 
-For native OpenModelica, install version 1.27 from openmodelica.org. If `omc` is not on PATH or in a standard location, set `GRADARA_OMC` to its path. Library installation needs network access once.
+Open **Settings → Engine**. The top line says what is missing, and the steps below it fix it. Choose **Check again** after each step. See [Set up the simulation engine](../INSTALL.md#set-up-the-simulation-engine) for the full walkthrough.
 
-For Docker, check in the context Gradara uses. On macOS that may be `colima-gradara` or `colima-flux`, even when Docker Desktop is your shell's active context. Use `GRADARA_DOCKER_CONTEXT` to select it explicitly, then restart the service so its cached context changes.
+**Windows and Linux**
 
-Run the launcher to build the image if it is missing. A first build needs network access. Ensure the runtime can mount the repository's run directories and has sufficient disk/memory. On Linux the image's `ENGINE_UID` should match the user creating run folders. The [setup guide](SETUP.md) and [manual engine build](TESTING.md) describe both paths.
+- **"OpenModelica is not installed."** Install OpenModelica 1.27 (**Download OpenModelica** opens the right page), then choose **Check again**. Gradara looks for OpenModelica on your `PATH`, in `OPENMODELICAHOME`, and in the standard install folders.
+- **"OpenModelica could not start."** Reinstall OpenModelica with the default options.
+- **"Modelica Standard Library 4.1.0 is missing."** Choose **Set up now**. This needs an internet connection once. If it fails behind a company proxy or firewall, try from another network, or ask IT to allow downloads from OpenModelica's package servers.
+- **A note that Gradara is validated with OpenModelica 1.27.0.** Your OpenModelica is another version. It may work, but install 1.27 for results that match the tested setup.
+- **"No C compiler was found"** (Linux, from **Verify against last run** or a run): install `gcc` with `sudo apt install build-essential`. On Windows, OpenModelica's own compiler is used; reinstall OpenModelica if this appears.
 
-## Model does not simulate
+**macOS**
 
-Read the error detail first. Unconnected scalar inputs should name the block and port. A graph can be saved while incomplete; it is checked again before Run. Mux and demux are drawing-only and do not simulate. Problems inside a subsystem name the block inside it; open the subsystem to see them on its sheet. If a subsystem with variants reports that it has no inside for a port, add that port inside the active variant or mark it **not used here** in the inspector's Variants section.
+- **"Docker is not installed."** Install Colima and the Docker command-line tool: `brew install colima docker`. Then choose **Check again**.
+- **"Docker is not running."** If Colima is installed, the tab shows **Start the container runtime**; choose **Set up now**. This is normal after restarting your Mac. If the tab has no button, Colima was not found: install it as above, or start OrbStack or Docker Desktop and choose **Check again**.
+- **"Colima could not start."** Your Mac needs macOS 13 or newer. Run `colima delete --profile gradara` in Terminal to remove a damaged virtual machine, then choose **Set up now** again. Its engine image downloads again.
+- **"Engine image not prepared"** or **"The engine image could not be downloaded."** Choose **Set up now**. The image is 1 to 2 GB. Check your internet connection and free disk space.
 
-Inspect emitted source and the failing run folder's `diagnostics.json`, which holds the same structured problems the job reported, with the raw solver text in each `detail`. An algebraic-loop failure lists the signal blocks it found on a cycle without state; that list is a best-effort hint, not solver output. Check parameter ranges, equation balance, initial conditions, feedback sign, and physical references. Ideal switch networks can be singular for particular configurations. Do not treat partial CSV output as a successful solution or weaken completion checks to remove the error.
+**Any system, container engine**
 
-## Results are missing after editing or reopening
+- **"Docker is set to Windows containers."** In Docker Desktop, switch to Linux containers, then choose **Check again**.
+- The engine needs free disk space for the image and for each run's files.
 
-Results are reused only for the same model ID and emitted-source hash. Changing parameters, connections, equations, or stop time requires another run. Moving or resizing a block should not. If changing only layout loses results, include that minimal project and gesture in a bug report.
+### A run fails
 
-Jobs are in memory. A backend restart can make a job ID return 404 even though a completed run's files remain on disk. Reopen the model to load a matching completed result. Partial jobs are not resumed automatically.
+1. Open the **Problems** tab (⌘/Ctrl+J). Model checks list problems Gradara found before running, such as an unconnected input. **Last run** lists what the compiler or solver reported, with chips that select the blocks involved. Expand a row for the full message.
+2. Common causes:
+   - An unconnected signal input, or a Mux or Demux block (drawing-only; it cannot run).
+   - A problem inside a subsystem. Open the subsystem to see it on its sheet.
+   - A subsystem variant that lacks one of the block's ports. Add the port inside the active variant, or mark it **not used here** in the inspector's **Variants** section.
+   - An algebraic loop: a feedback path of signal blocks with no state, delay, or integrator. Problems lists the blocks it found on the loop (a best-effort hint).
+   - Parameter values out of range, wrong feedback sign, a floating circuit with no ground, or a switch network that has no valid solution in some state.
+   - A run that takes longer than 120 seconds of real time. Shorten the stop time or simplify the model.
+3. With an AI provider set up, **Explain** or **Fix with AI** in Problems can suggest a cause and a fix.
 
-## Agent unavailable or generation fails
+A failed run never shows partial results as if they were complete.
 
-Check **Settings → AI**. `agentReady` means the selected provider is configured (key saved, signed in, or CLI found), not that it is reachable. Provider errors keep their meaning: a rejected key (401), not enough Gradara AI credits (402), rate limiting (429), or the provider being unavailable (503). The [AI feature setup](../AGENT_SETUP.md) table lists what each provider needs. For the Codex CLI, it must be installed, signed in, and able to reach its provider; set `GRADARA_CODEX_BIN` if executable discovery is wrong. Generation may take tens of seconds and has a timeout.
+### Results disappear after an edit
 
-Review diagnostics in the UI. Codex runs keep their prompts and logs under the data folder's `agent/` directory (`projects/agent/` in a source checkout); other providers keep nothing unless `GRADARA_KEEP_AI_TRANSCRIPTS=1`. These files may contain proprietary model content, so redact before sharing. The generator accepts the selected block type: scalar signal, electrical, rotational or translational mechanical, magnetic, thermal, or multidomain. It does not accept arbitrary Modelica packages, Boolean or three-phase ports, or whole subsystems. Editing and ordinary simulation remain available without an agent.
+Results belong to the model exactly as it ran. Changing parameters, connections, equations, or the stop time needs another run. Moving or resizing blocks does not. If moving a block alone clears your results, please report it with the model.
 
-## Install fails at the React Flow patch
+### AI sign-in and credits
 
-Use `npm ci` with the committed lockfile and the supported Node version. An upstream version or observer implementation mismatch intentionally stops installation. Do not delete the postinstall script, suppress native errors, or patch a global browser API. Follow [patch maintenance](../../patches/README.md) when intentionally upgrading.
+| Message | What to do |
+| --- | --- |
+| "Sign in to Gradara AI" | **Settings → AI → Sign in**. Confirm the code on the page that opens in your browser. If the page does not open, choose **Open sign-in page**. |
+| "Sign-in expired. Start again." | The code was not confirmed in time. Choose **Sign in** again. |
+| "Not enough credits" | Buy credits in **Settings → AI**. Your balance updates when you return from checkout; choose **Refresh** if it does not. |
+| Credits missing after a purchase | Choose **Refresh**. If they still do not appear, email support@virtu-services.us with your account email and the Stripe receipt. |
+| "rejected the API key" | Your OpenAI or Anthropic key is wrong or revoked. Paste a new one in **Settings → AI**. |
+| "does not recognize the model" | Clear the **Model** field to use the default, or enter a model your account can use. |
+| Rate limit, or service temporarily unavailable | Wait a minute and try again. Gradara AI does not charge for requests that fail before producing output. |
+| The service is older than the app | Gradara AI has not caught up with your app version yet. Try again later. |
+| A generated block fails its checks | Check **Settings → Engine**. Gradara tries one automatic repair, then shows the compiler message. |
 
-## Changes are not showing
+AI needs an internet connection. With **Off** selected, AI buttons stay visible and say that AI is off. See [AI features](../AGENT_SETUP.md).
 
-Frontend files use hot reload. A backend launched with `scripts/start.py` does not auto-reload Python changes; restart it, or use the documented separate `uvicorn --reload` command. Refreshing a browser does not restart Python.
+### Updates
 
-Template improvements apply to newly created models. Existing saved documents retain their geometry and definitions. Use **New model** to inspect an updated template; do not delete your saved workspace to make it appear.
+- **Settings → Updates** shows your version and the last check. **Check for updates** checks now.
+- **Linux .deb** does not update itself. Choose **Download from gradara.app** and install the new `.deb`.
+- **The update never finishes downloading.** Check your connection, then quit and reopen Gradara. The update check needs access to `github.com`; some company networks block it. You can always download the latest installer from [gradara.app](https://gradara.app/) and install it over the old version. Your models are kept.
+- An update that is ready installs when you choose **Restart to update**, or the next time you quit.
 
-## Report a useful bug
+### Where the logs are
 
-Include the commit, OS/browser, model origin, exact reproduction steps, expected/actual result, and relevant errors. For wiring, mention zoom, modifier keys, start/end ports, and undo/reload behavior. For simulation, include a small synthetic `.gradara.json`, parameter values, engine version, and diagnostic excerpt. Never attach all of `projects/`, credentials, or private model data. Security reports follow [SECURITY.md](../../SECURITY.md).
+**Help → Open Logs Folder** opens it.
+
+| System | Logs folder |
+| --- | --- |
+| Windows | `%APPDATA%\Gradara\logs` |
+| macOS | `~/Library/Application Support/Gradara/logs` |
+| Linux | `~/.config/Gradara/logs` |
+
+`service.log` is the main log. Older content moves to `service.log.1` when the file grows past 5 MB.
+
+### Report a bug
+
+Choose **Help → Copy Diagnostic Info** first. It puts the app version, your operating system, the engine status, and the last lines of the service log on the clipboard (your home folder is shown as `~`), then offers to open the issue page. Paste it into the report, and add:
+
+- **What you did, what you expected, and what happened.** For wiring problems, mention the zoom level, any keys you held, and which ports you connected.
+- **The whole log**, if asked: `service.log` from **Help → Open Logs Folder**.
+- **The model**: **Export → Gradara project**. A small model that shows the problem is best.
+
+Logs and model files can contain your model's content. Remove anything confidential before you post. Never attach passwords, API keys, or your whole data folder. Report security issues privately as described in [SECURITY.md](../../SECURITY.md).
+
+## Working from source
+
+These notes apply when you run Gradara from a source checkout with `scripts/start.py`. See [setup](SETUP.md) and [testing](TESTING.md).
+
+### The workbench cannot connect
+
+Check [service health](http://127.0.0.1:8765/api/health). If it does not answer, read `.runtime/service.log` and the launcher terminal. Read `.runtime/workbench.log` for frontend startup errors. Do not start a second launcher while the first is running. Ports 4317 and 8765 must be free or used by the intended Gradara processes.
+
+The service only accepts requests from `localhost` or `127.0.0.1` at the documented ports. Another hostname or port gets a 403. Keep the service bound to loopback; changing CORS is not a substitute for authentication.
+
+### Engine setup from source
+
+Settings → Engine works the same as in the desktop app. **Automatic** prefers a ready native OpenModelica, then a ready Docker image.
+
+- If `omc` is not on `PATH` or in a standard location, set `GRADARA_OMC` to its path.
+- On macOS, Gradara uses the `colima-gradara` Docker context when it exists, otherwise the default context when its daemon answers (OrbStack or Docker Desktop), otherwise `colima-gradara`, which it can start. Set `GRADARA_DOCKER_CONTEXT` to force a context.
+- The launcher builds or pulls the image when it is missing. The first build needs network access. The runtime must be able to mount the run folders and have enough disk and memory. On Linux, the image's `ENGINE_UID` should match the user that creates run folders. See [setup](SETUP.md) and the [manual engine build](TESTING.md).
+
+### Run diagnostics on disk
+
+Each run folder under `projects/runs/` has the emitted Modelica source and `diagnostics.json`, which holds the same structured problems the job reported, with the raw solver text in each `detail`. Do not treat partial CSV output as a successful result or weaken completion checks to remove an error.
+
+Jobs are held in memory. After a service restart, an old job ID can return 404 even though the completed run's files are still on disk. Reopen the model to load a matching result. Unfinished jobs are not resumed.
+
+### AI providers from source
+
+`agentReady` in the API means the selected provider is configured (key saved, signed in, or CLI found), not that it is reachable. Provider errors keep their HTTP meaning: 401 (key rejected), 402 (not enough Gradara AI credits), 429 (rate limit), 503 (unavailable), 422 (the Gradara AI service is older than the app).
+
+For the Codex CLI, it must be installed, signed in, and able to reach its provider. Set `GRADARA_CODEX_BIN` if it is not found. Codex runs keep prompts and logs under the data folder's `agent/` directory (`projects/agent/` in a source checkout). Other providers keep nothing unless `GRADARA_KEEP_AI_TRANSCRIPTS=1`. These files can contain proprietary model content; redact them before sharing.
+
+### Install fails at the React Flow patch
+
+Use `npm ci` with the committed lockfile and the supported Node version. A mismatch in the upstream version or observer implementation stops installation on purpose. Do not delete the postinstall script, suppress errors, or patch a global browser API. Follow [patch maintenance](../../patches/README.md) when upgrading on purpose.
+
+### Changes are not showing
+
+Frontend files reload automatically. A service started with `scripts/start.py` does not reload Python changes; restart it, or use the separate `uvicorn --reload` command from [setup](SETUP.md). Refreshing the browser does not restart Python.
+
+Template changes apply to newly created models. Saved models keep their own copy. Use **Examples → Use example** to see an updated template; do not delete your workspace to make it appear.
+
+### Bug reports from source
+
+Also include the commit, your browser, and the engine version. For simulation problems, attach a small synthetic `.gradara.json`. Never attach all of `projects/`, credentials, or private model data.

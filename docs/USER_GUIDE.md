@@ -1,192 +1,334 @@
-# Modeling with Gradara
+# Gradara user guide
+
+This guide covers the desktop app. To install it and set up the simulation engine, see [Install Gradara](INSTALL.md).
+
+## Your first 10 minutes
+
+You need a ready engine: **Settings → Engine** shows a green dot. If it does not, follow [Set up the simulation engine](INSTALL.md#set-up-the-simulation-engine) first.
+
+### Run an example
+
+![The DC motor example: a PI speed loop driving a DC motor and an inertia load](images/workbench-dc.webp)
+
+1. Choose **Examples** in the header. Under **DC motor**, choose **Use example**. Gradara saves your own copy in **My models**. The original example does not change.
+2. Choose **Run** at the top right, or press **⌘/Ctrl+Enter**. The first run takes longer while OpenModelica compiles the model.
+3. When the run finishes, Gradara switches to the **Results** tab. The plot compares the speed request with the measured motor speed.
+4. Go back to the diagram with the **Diagram** tab or **⌘/Ctrl+1**.
+5. Double-click the **Speed reference** block. Change **Target speed** from 100 to 60, then choose **Apply**.
+6. Run again. Results now shows the motor settling at 60 rad/s.
+
+![Results after a run: the speed reference and the measured shaft speed, and the controller output below](images/results-dc.webp)
+
+### Build a model from a blank sheet
+
+1. Choose **New model**. An empty sheet named **Untitled model** opens. Click the name in the header to rename it.
+2. Double-click empty canvas. A block picker opens at the pointer. Type `step` and choose **Step**.
+
+   ![The block picker that opens where you double-click](images/inserter.webp)
+
+3. Double-click to the right of it, type `second` and choose **Second-order**. This is a second-order transfer function, ωn² / (s² + 2ζωn s + ωn²).
+4. Double-click again further right, type `scope` and choose **Scope**.
+5. Drag from the Step's output port (right side) to the Second-order's input port. Then connect the Second-order's output to the Scope.
+6. Set **Stop time** next to **Run** to 2 seconds, then choose **Run**.
+7. In **Results**, check the Second-order output in the signal list. You see a step response that overshoots slightly and settles at 1.
+8. Double-click the Second-order block and lower **Damping ratio** to 0.2. Run again and compare.
+
+You can also use the block library on the left. It opens with a new blank model; the first button in the toolbar (**Show components** / **Hide components**) toggles it. Press **/** to search it, then click or drag a block onto the sheet.
+
+Next, read [Build a diagram](#build-a-diagram) and [Simulate and read results](#simulate-and-read-results), or open other examples from [Built-in examples](#built-in-examples).
+
+## Keyboard shortcuts
+
+Press **?** on the canvas to see this list in the app. On Windows and Linux, use Ctrl where macOS uses ⌘.
+
+| Action | Keys or gesture |
+| --- | --- |
+| Search the library | / |
+| Add a block at the pointer | Double-click empty canvas |
+| Open a block's properties | Double-click the block |
+| Open a subsystem | Double-click it |
+| Ask agent (new block or model) | A |
+| Run simulation | ⌘/Ctrl + Enter |
+| Save now (edits also save automatically) | ⌘/Ctrl + S |
+| Undo / redo | ⌘/Ctrl + Z / ⌘/Ctrl + Shift + Z |
+| Select all blocks and wires | ⌘/Ctrl + A |
+| Copy / cut / paste | ⌘/Ctrl + C / X / V |
+| Duplicate selection | ⌘/Ctrl + D |
+| Drag a copy of a block or selection | Ctrl + drag |
+| Delete selection | Delete / Backspace |
+| Select several items | Shift + click, or drag a box on empty canvas |
+| Nudge selected blocks or wires | Arrow keys (Shift + arrows for 10 units) |
+| Rotate selected blocks clockwise | R |
+| Draw a connection | Drag from port to port, or click two ports |
+| Branch from a wire | Alt + drag |
+| Move a wire segment | Select the wire, then drag |
+| Reconnect a wire | Drag its round end |
+| Redraw a wire | Select it, press D |
+| Finish redrawing | Click the destination, or Enter |
+| Remove the last bend / cancel drawing | Backspace / Escape |
+| Restore automatic routing (wires selected) | R |
+| Name a signal or net | Double-click the wire, or select it and press F2 |
+| Move a signal label | Drag it along its net |
+| Resize a block | Drag a corner or edge |
+| Move a block name / reset its position | Drag the name / double-click it |
+| Select / pan tool | V / H |
+| Pan the canvas | Space + drag, middle or right mouse button, or trackpad |
+| Fit the model to the view | Tap Space, or F |
+| Arrange the sheet (or the selection) | ⌘/Ctrl + Shift + A |
+| Canvas menu | Right-click empty canvas |
+| Make subsystem / ungroup | ⌘/Ctrl + G / ⌘/Ctrl + Shift + G |
+| Leave a subsystem | Escape (nothing selected), or ⌘/Ctrl + ↑ |
+| Diagram / Results / Explorer tab | ⌘/Ctrl + 1 / 2 / 3 |
+| Search the model | ⌘/Ctrl + K |
+| Show or hide the Problems dock | ⌘/Ctrl + J |
+| Show the shortcut list | ? |
+
+Shortcuts do not fire while you type in a text field or an equation editor.
 
 ## Settings
 
-The gear button opens **Settings**:
+The gear button at the top right opens **Settings**. It has four tabs:
 
-- **Engine** shows whether simulation is ready and walks through one-time setup: OpenModelica and its standard library on Windows and Linux, or a container runtime and engine image on macOS. Automatic selection prefers a native install.
-- **AI** chooses the provider for AI features: Gradara AI (sign in, prepaid credits), your own OpenAI or Anthropic API key, the Codex CLI, or Off. Signed-in accounts show the credit balance, prices, and credit packs.
+- **Engine** shows whether simulation is ready and walks you through the one-time setup. See [Install Gradara](INSTALL.md#set-up-the-simulation-engine).
+- **AI** chooses the provider for AI features: Gradara AI (sign in and use prepaid credits), your own OpenAI or Anthropic API key, or **Off**. When you are signed in, it shows your credit balance, prices, and credit packs. See [AI features](AGENT_SETUP.md).
 - **Privacy & data** summarizes what stays on your computer and what AI requests send. See [privacy](PRIVACY.md).
-- **Updates** shows the installed version and lets you check for a new one.
+- **Updates** shows your installed version and has **Check for updates**. See [Updates](INSTALL.md#updates).
 
-### Updates
+## Models, saving, and sharing
 
-The desktop app checks for a new version at launch and every four hours, and downloads it in the background while you work (a progress pill shows in the header). When it is ready, the header shows **Restart to update**: your models are already saved, so restarting installs it. If you don't restart, it installs the next time you quit. **Help → Check for Updates** checks right away. The Linux .deb package can't replace itself without your password, so it shows **Update available** and opens the download page instead. Source checkouts update with `git pull`.
+**New model** opens an empty sheet named **Untitled model** (with a number added when that name is taken). Click the name in the header to rename it. Enter or clicking away keeps the new name. Escape cancels.
 
-## Create, save, and share
+**Models** opens the model browser:
 
-Click **New model** to open a fresh empty canvas immediately. Its initial name is **Untitled model**, with a suffix when needed. Click the title in the header to rename it; Enter or clicking away commits the name, and Escape cancels editing.
+- **My models** lists your saved models, newest first, with a search box. Each row shows the block count and, for copies of examples, which example it came from.
+- **Examples** lists the built-in examples. **Use example** saves a new copy in My models. Changing the copy never changes the example.
+- **Trash** holds models you removed. Use the trash icon on a row to remove a model (open a different model first if it is the one you are editing). Click a model in Trash to restore it. Trash is never emptied automatically.
 
-Open **Models** for the file browser:
+**Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`), Modelica source, or C code. Gradara cannot import Modelica files.
 
-- **My models** contains your saved documents, searchable by name and ordered by last save. Rows show whether a model is empty, its block count, and its example origin when applicable.
-- **Examples** contains built-in starting points. **Use example** creates a new saved copy in My models. Editing or emptying that copy does not change the original example or automatically rename your document.
-- **Trash** holds removed models. Use a row's trash icon to move an inactive model there; open another model before removing the current one. Click a model in Trash to restore it. There is no permanent-delete command.
+### Saving
 
-**Save a copy** creates a separate document with your current edits. **Import file** opens a `.gradara.json` or legacy `.flux.json` as a new document, even if its ID matches a saved model. Repeated imports and copies receive distinct names. **Export** downloads portable JSON or generated Modelica; Modelica import is not implemented.
+Gradara saves your edits automatically after a short pause. Switching models or opening the model browser finishes the save first. **⌘/Ctrl+S** saves right away. The footer shows **Unsaved changes**, **Saving**, **Saved**, or **Not saved**.
 
-Edits autosave locally after a short pause. Switching models or opening the file browser finishes the current save first. The footer distinguishes **Unsaved changes**, **Saving**, **Saved**, and **Not saved**. ⌘/Ctrl+S on the canvas performs an actual save. Keep the local service running.
+If you reload the window (**View → Reload**) before a save finishes, Gradara recovers your unsaved edits and says so. This only works while the app stays open; it is a safety net, not a backup. Undo history is kept per model and clears when you switch models or reload.
 
-Saving a model does not make it the active model in another tab. Each browser tab remembers its own open document for reload. If two tabs edit the same saved version, the second save is rejected instead of overwriting the first. The error banner offers **Retry**, **Save a copy**, and **Reload saved version**. Saving a copy keeps your edits; reloading explicitly replaces them with the disk version. There is no automatic merge or live collaboration.
+If the same model is saved from somewhere else in the meantime (for example a second browser window when running Gradara from source), Gradara refuses to overwrite it. The error banner offers **Retry**, **Save a copy**, and **Reload saved version**. **Save a copy** keeps your edits. **Reload saved version** replaces them with the saved version. Gradara does not merge edits.
 
-Unsaved drafts are retained in the current tab's session storage when browser storage is available, allowing recovery after reload. This is a recovery aid, not an offline workspace or a backup after closing the tab. The browser warns before leaving with unsaved edits. Undo history is per tab and resets on model switching/reload.
+### Where files are stored
 
-Model documents live in `projects/models/`; removed models live in `projects/trash/`. The active-workspace file records which document a new session should reopen. Back up `projects/` for the complete local history, results, and artifacts. Custom nested folders are not implemented yet.
+Models, results, and settings live in your data folder. **Help → Open Data Folder** opens it. Models are in its `models` folder and removed models in `trash`. The [install guide](INSTALL.md#where-your-models-are-stored) lists the location on each system. Back up the whole data folder to keep your models and results. Folders inside My models are not supported yet.
 
 ## Build a diagram
 
-Click a library component to insert it, or invoke the agent from a selected location or dangling connection. Double-click empty canvas to open the add-block picker at the pointer; it stays fully on the sheet if you click near an edge. Select a component to edit its parameters in the inspector. Double-click any block to open its block dialog on **Properties**, where you can rename it and change every parameter (for example a gain's `k` or a resistor's `R`); **Reset** restores a built-in block's library default. Changes are staged until you choose **Apply** or press Enter, and the whole dialog session is one undo step; Cancel or Escape discards them. The **Equations** and **State & declarations** tabs edit signal and AI-generated definitions in Monaco. Built-in physical implementations use canonical Modelica wrappers, so their equations are read-only and explain behavior. The inspector's **Edit…** and **Equations → Open** open the same dialog. Double-clicking a block never opens the add-block picker.
+Add blocks from the library: click a block to place it, or drag it onto the sheet. Double-click empty canvas to open the block picker at the pointer. You can also ask the agent to build something at a selected spot or from an unconnected wire (see [AI features](#ai-features)).
 
-Blocks get readable unique names such as Step, Step1, and Step2. IDs remain stable when names change. Drag a block label separately from the symbol; double-click the label to restore its default location. Press **R** to rotate selected blocks clockwise by 90° about their centers. Ports and connected wires follow, while the instance name stays below the symbol. Rotation supports undo/redo and is saved with the model; with only wires selected, R still restores automatic routing. Resize using selection handles, or choose **Use standard size** in the inspector. The library, canvas, and [block catalog](http://localhost:4317/block-catalog) share the same visual design.
+Select a block to edit its parameters in the inspector on the right. Double-click a block to open its properties dialog. There you can rename it and change every parameter, for example a gain's `k` or a resistor's `R`. **Reset** restores a built-in block's default value. Changes apply when you choose **Apply** or press Enter, as one undo step. **Cancel** or Escape discards them. The dialog only shows sections a block has.
 
-The library has 218 built-in blocks in 19 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Sinks, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. Most physical, logic, and machine blocks are instances of Modelica Standard Library 4.1.0 classes; their parameters map onto the library class, and the block dialog's Equations tab names that class instead of listing equations. **Refine with agent** is offered only for signal blocks defined by equations. The block dialog shows only what a block has: no Parameters section without parameters, no code tabs for a block with no equations to read or edit, and port fields for a subsystem port.
+The **Equations** and **State & declarations** tabs show a block's Modelica equations. You can edit them for signal blocks and AI-generated blocks. Built-in physical blocks use Modelica Standard Library components, so their tab names the library class and is read-only. The inspector's **Edit…** and **Equations → Open** open the same dialog.
 
-Port colors show the connector's domain, which can differ from its block's main domain. The domains are signal (real values), Boolean, electrical, rotational, translational, thermal, magnetic, and 3-phase. Signal and Boolean ports are inputs and outputs; the others are physical terminals. An actuator or sensor can have both a physical connector and a signal port. Signal wires connect an output to inputs; physical wires join compatible physical connectors. Crossing lines alone do not create a connection.
+Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it. Double-click the name to put it back. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block, or choose **Use standard size** in the inspector.
+
+### The library
+
+The library has 218 built-in blocks in 19 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Sinks, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. Most physical, logic, and machine blocks are components of the Modelica Standard Library 4.1.0. Their parameters map directly onto the library component. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
+
+### Ports and connections
+
+Port colors show what a port carries: signal (real numbers), Boolean, electrical, rotational, translational, thermal, magnetic, or 3-phase. A block can have ports of more than one kind. For example, a speed sensor has a rotational terminal and a signal output.
+
+There are two kinds of connection:
+
+- **Signal connections** go from an output to one or more inputs. Values flow one way, like a block diagram.
+- **Physical connections** join physical terminals of the same kind, like wiring a circuit or coupling shafts. They have no direction. The solver works out currents, torques, forces, or heat flows from the laws of physics.
+
+To move between the two, use sensors (physical to signal) and sources or actuators (signal to physical). Wires that only cross do not connect.
 
 ## Wire and arrange
 
-Select blocks, wires, or junctions and use the **arrow keys** to nudge them by one diagram unit, or **Shift + arrow** for ten units. Holding an arrow repeats the movement as one undo action. Connected wires follow moving blocks; unselected block terminals stay fixed when a wire moves. Arrow keys keep their normal behavior in text fields and focused plots.
-
 | Action | Gesture |
 | --- | --- |
-| Connect | Drag port to port, or click the start and destination. |
-| Join an existing net | Finish on wire ink or a junction. |
-| Pin bends while drawing | Release into empty space, then click bend locations. |
-| Reshape | Select a wire and drag a segment, midpoint grip, or corner. |
-| Reconnect | Drag a selected wire's round endpoint to a port or wire. |
-| Redraw | Select a wire and press D; finish at the highlighted destination or Enter. |
+| Connect | Drag from port to port, or click the start and then the destination. |
+| Join an existing net | Finish on a wire or a junction. |
+| Place bends while drawing | Release in empty space, then click where each bend goes. |
+| Reshape | Select a wire and drag a segment, a midpoint grip, or a corner. |
+| Reconnect | Drag a selected wire's round end to another port or wire. |
+| Redraw | Select a wire and press D; finish at the highlighted destination or press Enter. |
 | Restore automatic routing | Select the wire and press R. |
-| Branch | Drag an unselected wire, Alt-drag a wire, or branch from a junction. |
-| Cancel / undo a pinned bend | Escape / Backspace while drawing. |
-| Move a selection | Drag its blocks; internal geometry follows the group. |
-| Duplicate | Ctrl-drag, or select and use ⌘/Ctrl+D. |
+| Branch | Drag an unselected wire, Alt-drag a wire, or drag from a junction. |
+| Cancel / remove the last bend | Escape / Backspace while drawing. |
+| Move a selection | Drag one of its blocks. |
+| Duplicate | Ctrl-drag, or ⌘/Ctrl+D. |
 
-Wires route themselves around blocks and keep off other nets' lines and block names, and they never loop back on themselves. A wire you shaped by hand keeps its shape while it still makes sense; when you move one of its blocks, the run next to that block moves with it, and if the shape would then loop or cross a block the wire goes back to automatic routing. When you move a group selected by dragging a box, wires that only touch the box stretch to the blocks that stay.
+Use the **arrow keys** to nudge selected blocks, wires, or junctions by one grid unit, or **Shift + arrow** for ten. Holding an arrow key moves the selection as one undo step.
 
-**Arrange** (⌘/Ctrl + Shift + A, or the grid button in the canvas controls) redraws the whole sheet, or just the selected blocks when two or more are selected, as one undo step. It reads the model from the terminals: signal flow runs left to right, measurement and feedback paths run underneath, parallel branches of a circuit sit side by side on their rail, grounds sit under their terminal, and a shaft drops straight to its load. Connected terminals are lined up so wires run straight, and every wire is routed afresh. It keeps your rough order where the model does not decide. If the drawing is already as clean as Arrange can make it (including right after arranging), nothing changes and a message says so. Section notes move to a band above the drawing; block names go back under their blocks.
+Wires route around blocks, stay clear of other wires and block names, and never loop back on themselves. A wire you shaped by hand keeps its shape while it still makes sense. When you move a block, the wire section next to it follows. If the shape would then loop or cross a block, the wire goes back to automatic routing. When you move a group selected with a box, wires that only touch the box stretch to the blocks that stay.
 
-Nearby parallel segments snap together and shed redundant bends. Junctions should follow their horizontal run as connected blocks move. One completed gesture should be one undo step. Report a minimal reproduction when a gesture behaves differently; see the [wiring contract](architecture/WIRING.md) for expected behavior and limitations.
+**Arrange** (⌘/Ctrl+Shift+A, or the grid button in the canvas controls) redraws the whole sheet, or only the selected blocks when two or more are selected. It is one undo step. Signals flow left to right. Feedback and measurement paths run underneath. Parallel circuit branches sit side by side. Grounds sit under their terminal. Wires are lined up so they run straight. Arrange keeps your rough order where the model does not decide. If the drawing is already as clean as Arrange can make it, a message says so. Notes move to a band above the drawing.
 
-Tap **Space** or **F**, or use the fit button in the canvas controls, to fit the whole sheet in view. Fit frames everything drawn on the sheet (blocks, their names, wires that loop around the blocks, and section notes) and keeps it clear of the canvas buttons; holding Space and dragging still pans. A fitted view stays fitted when you open or close the library, the inspector, or the Problems dock, or resize the window. After you pan or zoom yourself, those changes keep the same point at the center of the canvas instead.
+**Fit to view**: tap **Space** or **F**, or use the fit button in the canvas controls. Fit shows everything on the sheet and keeps it clear of the canvas buttons. Holding Space and dragging pans instead. A fitted view stays fitted when you open or close panels or resize the window.
 
-Right-click empty canvas space for the canvas menu. With something selected it starts with commands for the selection (cut, copy, duplicate, rotate, make or ungroup a subsystem, arrange the selection, delete). Then come commands for the spot you clicked (add a block there, ask the agent to build there, paste there), for the sheet (select all, arrange, fit to view, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape or a click elsewhere closes it.
+**Canvas menu**: right-click empty canvas. With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
 
-The model inspector exposes blocks and logical nets in a compact tree. The tree and property pane scroll independently. Select the model root, a block, or a net to switch the property pane; component parameters use aligned name/value rows. Expand Description to read model or component notes. Nets receive stable IDs plus automatic names derived from their connection. Give a net a custom name when the engineering meaning is clearer than the default; its label and identity belong to the connected net, not each drawn segment. Net names are hidden on the diagram until you give a net a custom name; turn **Show name on diagram** on or off in a net's properties to change that.
+![The canvas menu on empty space](images/canvas-menu.webp)
+
+**Inspector**: the right-hand panel shows the model as a tree of blocks and nets. Select the model, a block, or a net to see its properties. A net is one electrical node or signal, however many wire pieces draw it. Each net gets an automatic name. Give it your own name when that is clearer. Net names appear on the diagram only once you name them; **Show name on diagram** in the net's properties turns this on or off.
+
+If a wiring gesture behaves unexpectedly, report it with a small example (see [Troubleshooting](development/TROUBLESHOOTING.md#report-a-bug)).
 
 ## Subsystems
 
-A subsystem is a block with its own diagram inside. Documents with subsystems are saved as format version 2; flat documents stay version 1.
+A subsystem is a block with its own diagram inside. Use subsystems to group parts of a large model.
 
-- **Add one.** The **Ports & subsystems** library has **Subsystem** (in1 wired to out1) and **Empty subsystem** (nothing inside, no ports), plus **Subsystem input** and **Subsystem output** for use inside a subsystem. Double-click the canvas and type "subsystem" to drop one where you clicked.
-- **Make one from blocks.** Select blocks and press ⌘/Ctrl+G, choose **Create subsystem** from the **…** that appears at the corner of a selection of two or more blocks, or use **Make subsystem** in the inspector or the canvas menu. The selection is replaced by one subsystem block. Every wire the selection boundary cuts becomes a port: a signal driven inside becomes an output, one driven outside becomes an input, and a physical net becomes a physical terminal of its domain. Connectivity and the outside net names stay as they were.
-- **Open it and move around.** Double-click the block, or choose **Open** in the inspector. The bar at the top left of the canvas has back, forward, and up buttons and the path from **Top level** to the open subsystem; click a level to go there. Its first button shows the model hierarchy: every subsystem as a tree, with the active variant of each; click one to open it. Press Escape with nothing selected, or ⌘/Ctrl+↑, to go up one level; the subsystem you left is selected. Every canvas tool works inside, and each edit is one undo step.
-- **Ports.** Every port is an **input** or an **output**, and its **type** says what it carries: signal, Boolean, or a physical domain (electrical, rotational, translational, thermal, magnetic, 3-phase). A physical port is a terminal; input or output only decides which side it starts on (left or right). Inputs and outputs are each numbered from 1. A new port takes the type of the first thing you wire to it; changing its input/output or type later removes its wires.
-- **Ports from outside.** Drop a wire on the body of a subsystem block to add a port there: a wire from an output makes an input, one from an input makes an output, and one from a physical terminal makes a terminal of that domain on the side you dropped it. Select the block to list its ports in the inspector: rename them, switch input/output and type, move them to another side, renumber them with the arrows, remove them, or add an input or output.
-- **Ports inside.** Inside, ports are pills named after the port and colored by type. Right-click empty space and choose **Add input port here** or **Add output port here**, or drop **Subsystem input** or **Subsystem output** from the library. Double-click a pill to open its properties: input or output, type, name, number, and the side it sits on outside (the inspector shows the same fields when the pill is selected). Every block's properties dialog shows only what that block has. Adding, removing, or renaming a pill updates every instance; wires to a port that no longer exists are removed.
-- **Ungroup.** Press ⌘/Ctrl+Shift+G, or **Ungroup** in the inspector. The inside replaces the block and is wired to what the block was wired to.
-- **Shared definitions.** Copying or duplicating a subsystem block makes another instance of the same inside. The inspector shows **Used N×** when several instances share it; editing the inside changes all of them. **Make unique** gives the selected instance its own copy. Pasting brings the definitions along, and pasting a subsystem inside itself is refused.
-- **Parameters.** Inside a subsystem, the ↑ button beside a parameter promotes it: it becomes a parameter of the subsystem block, and each instance sets its own value. The inner field then shows **set per instance**. The ↓ button stops promoting it, and the inner block keeps its own value.
+![The EV drivetrain example with the model hierarchy open; subsystem blocks show a small drawing of their inside](images/subsystems.webp)
 
-Results inside a subsystem are named by path, such as `Drive › Gain.y`, and select the top-level subsystem block. The Data Inspector's signal list groups them under **Top level** and each subsystem path. You can log nets inside a subsystem; every instance records its own copy.
+- **Add one.** The **Ports & subsystems** library has **Subsystem** (one input wired to one output inside) and **Empty subsystem** (nothing inside, no ports). It also has **Subsystem input** and **Subsystem output** for use inside a subsystem. You can also double-click the canvas and type "subsystem".
+- **Make one from existing blocks.** Select blocks and press ⌘/Ctrl+G. You can also choose **Create subsystem** from the **…** button at the corner of a selection of two or more blocks, or **Make subsystem** in the inspector or the canvas menu. Every wire that crossed the selection edge becomes a port: a signal driven inside becomes an output, one driven outside becomes an input, and a physical connection becomes a physical terminal. Connections and net names outside stay the same.
+- **Open it and move around.** Double-click the block, or choose **Open** in the inspector. The bar at the top left of the canvas has back, forward, and up buttons and the path from **Top level** to where you are. Click a level to go there. Its first button shows every subsystem as a tree, with the active variant of each. Press Escape with nothing selected, or ⌘/Ctrl+↑, to go up one level. Every tool works inside, and each edit is one undo step.
+- **Ports.** Each port is an **input** or an **output**, and its **type** says what it carries: signal, Boolean, or a physical domain. For a physical port, input or output only decides which side of the block it starts on. Inputs and outputs are numbered from 1. A new port takes the type of the first wire you connect to it. Changing a port's direction or type later removes its wires.
+- **Add ports from outside.** Drop a wire on the body of a subsystem block. A wire from an output makes an input, one from an input makes an output, and one from a physical terminal makes a terminal of that kind. Select the block to list its ports in the inspector. There you can rename, retype, move, renumber, remove, or add ports.
+- **Ports inside.** Inside, ports are colored pills named after the port. Right-click empty space and choose **Add input port here** or **Add output port here**, or drop **Subsystem input** or **Subsystem output** from the library. Double-click a pill to edit it. Adding, removing, or renaming a port updates every copy of the subsystem. Wires to a removed port are removed.
+- **Ungroup.** Press ⌘/Ctrl+Shift+G, or choose **Ungroup** in the inspector. The contents replace the block and keep their connections.
+- **Shared contents.** Copying or duplicating a subsystem block makes another instance with the same contents. The inspector shows **Used N×** when several instances share them. Editing the inside changes all of them. **Make unique** gives the selected instance its own copy.
+- **Parameters.** Inside a subsystem, the ↑ button beside a parameter promotes it to the subsystem block, so each instance can set its own value. The inner field then shows **set per instance**. The ↓ button undoes this.
 
-A subsystem block shows a small live drawing of its inside, and hovering over it for a moment shows a larger one, without opening it.
+Results from inside a subsystem are named by path, such as `Drive › Gain.y`. The Results signal list groups them under **Top level** and each subsystem.
+
+A subsystem block shows a small live drawing of its contents. Hover over it for a larger preview.
 
 ### Variants and configurations
 
-A subsystem block can hold several alternative insides behind one set of ports, for example two controller designs.
+A variant is one of several alternative contents for the same subsystem, behind the same ports. For example, two controller designs, or two battery chemistries.
 
-Select the block and use the inspector's **Variants** section. **+ Diagram variant** copies the current inside into a new variant you can edit on its own; it keeps the same ports. **+ Parameter variant** keeps the same inside and remembers its own values of the promoted parameters. New variants are named A, B, C; double-click a name to rename it. A segmented switch above the block shows every variant and switches with one click; the inspector list does the same. Removing variants down to one makes the block an ordinary subsystem again.
+Select the subsystem block and use the inspector's **Variants** section:
 
-Only the active variant is simulated. The block has every port any variant has. If the active variant's inside lacks one of them, the Problems dock reports an error and Run refuses the model, unless you check **not used here** for that port under the variant. An unused port stays idle: an output gives 0 (or false), an input is ignored, and a physical terminal carries no current, torque, force, heat, or flux. Problems in inactive variants (missing ports and errors inside, such as unconnected inputs) appear as warnings, so a broken alternative shows before you switch to it. When the engine is ready, Gradara also compiles each inactive variant with OpenModelica about eight seconds after you stop editing, one at a time and never during a run; a variant that does not compile appears under **Inactive variants** in Problems. Turn this off, or compile now, in the Explorer's **Variants** view, which also lists each result.
+- **+ Diagram variant** copies the current contents into a new variant you can edit on its own.
+- **+ Parameter variant** keeps the same contents with its own values of the promoted parameters.
 
-When a model has variants, a configuration menu appears left of **Run**. It shows the saved configuration that matches the current choices, or **Custom**. **Save current choices…** stores which variant every subsystem uses, including subsystems inside others; choosing a configuration switches all of them in one undo step. **Run all configurations** (two or more saved) runs each one in turn without changing the open model, then opens Results with every signal overlaid and named `[Configuration] signal`. Later runs are resampled onto the first run's time points. The overlay is not saved with the model; run again to see it after reopening.
+New variants are named A, B, C. Double-click a name to rename it. A switch above the block shows every variant and changes the active one with one click. Removing all but one variant makes the block an ordinary subsystem again.
+
+Only the active variant is simulated. The block has every port any variant has. If the active variant lacks one of them, the Problems dock reports an error and **Run** refuses the model, unless you mark that port **not used here** for that variant. An unused port does nothing: an output gives 0 (or false), an input is ignored, and a physical terminal carries no current, torque, force, heat, or flux. Problems in inactive variants appear as warnings. When the engine is ready, Gradara also compiles each inactive variant in the background a few seconds after you stop editing, one at a time and never during a run. A variant that does not compile appears under **Inactive variants** in Problems. You can turn this off, or compile now, in the Explorer's **Variants** view.
+
+A configuration is a saved set of variant choices for the whole model. When a model has variants, a configuration menu appears left of **Run**. It shows the saved configuration that matches the current choices, or **Custom**. **Save current choices…** stores which variant every subsystem uses. Choosing a configuration switches all of them in one undo step. **Run all configurations** (with two or more saved) runs each one without changing the open model, then opens Results with every signal overlaid and named `[Configuration] signal`. The overlay is not saved with the model; run again to see it after reopening.
 
 ## Model Explorer
 
-The **Explorer** tab (⌘/Ctrl+3), beside Diagram and Results, shows the whole model at once. The right-hand inspector stays for quick edits while drawing.
+The **Explorer** tab (⌘/Ctrl+3) shows the whole model at once, next to the Diagram and Results tabs.
 
-Long names never stay cut off. Drag the border of the tree or the details pane to widen it (double-click the border to reset). Drag a column heading's right edge to resize the column, or double-click it to fit the longest entry; the table scrolls sideways when its columns are wider than the panel. Pane and column widths are remembered in this browser, and hovering a cut-off name shows it in full.
+- **Tree.** Lists the blocks of the top level. Subsystems expand to their contents, and subsystems with variants expand to their variants. Badges show the active variant and **Used N×**. A red dot marks a block with problems. Double-click a row to open that place in the Diagram.
+- **Parameters.** Every parameter under the selected tree item (the whole model when the top is selected) in one table: location, block, parameter, value, unit, and range. Edit values in place; each edit is one undo step. **Filter** matches block, parameter, and unit names. **Find value** and **Replace with** change every listed parameter with a given value. ↑ promotes a parameter inside a subsystem.
+- **Variants.** One row per subsystem with variants, one column per configuration. **Current** switches the active variant. Each configuration column sets that configuration's choice, and **Apply** switches the model to it. **Configuration from current choices** adds one. **Run all configurations** runs and overlays them.
+- **Signals.** Every signal net with its location and unit. Check **Log** to record it on the next run. After a run, each logged signal's range is shown. **Open Results** switches to Results.
+- **Search.** ⌘/Ctrl+K opens the Explorer and puts the cursor in search. It finds blocks, ports, parameters, nets, subsystems, and variants anywhere in the model. Enter or a click opens the match in the Diagram.
 
-- **Tree.** The left pane lists the blocks of the top level. A subsystem expands to its inside; a subsystem with variants expands to its variants, and each variant to its inside. Badges show the active variant and **Used N×**; a red dot marks a block with problems. The block selected in the Diagram is underlined. Double-click a row to open that place in the Diagram.
-- **Parameters.** Every parameter under the selected tree node (the whole model when the root is selected) as one sheet: location, block, parameter, value, unit, and range. Edit a value in place; each edit is one undo step. **Filter** matches block, parameter, and unit words. **Find value** and **Replace with** change every listed parameter whose value equals the one you enter. ↑ promotes a parameter inside a subsystem to the subsystem block; a promoted parameter shows its subsystem parameter's name and is set per instance on the block instead.
-- **Variants.** One row per subsystem with variants, one column per configuration. **Current** switches the active variant; each configuration's column sets its choice, and **Apply** switches the model to it. Rename a configuration in its header. **Configuration from current choices** adds one; **Run all configurations** runs and overlays them.
-- **Signals.** Every signal net in the model with its location and unit. Check **Log** to record it on the next run; after a run, the range of each logged signal is shown. **Open Results** switches to the Data Inspector.
-- **Search.** ⌘/Ctrl+K opens the Explorer and focuses search. It finds blocks, ports, parameters, nets, subsystems, and variants anywhere in the hierarchy; Enter or a click opens the first or chosen match in the Diagram and selects it. An inside that belongs only to an inactive variant cannot be opened until you switch to it.
+Drag the borders between panes to widen them, and drag a column heading's edge to resize it (double-click to fit). The tables stay fast even for a thousand blocks.
 
-The tables draw only the rows in view, so a model with a thousand blocks stays responsive.
+## Simulate and read results
 
-## Simulate and inspect
+Set **Stop time** and choose **Run**. The stop time must be more than 0 and at most 86,400 seconds (one day). You can cancel a run from the same button. Gradara checks the model before it simulates. Unconnected signal inputs, drawing-only blocks (Mux and Demux), and missing variant ports are reported as problems. A failed or incomplete simulation never shows as a successful plot.
 
-Set the stop time and press **Run**. Manual models accept stop times greater than 0 and at most 86,400 seconds. Compilation and simulation happen asynchronously. You can cancel from the run controls. Unconnected signal inputs, drawing-only blocks (mux and demux), and subsystem ports the active variant does not provide produce diagnostics; invalid or incomplete simulations do not become successful partial plots. The solver still uses 6,000 output intervals and a 120-second wall-clock timeout; a longer horizon is not a guarantee of adequate event resolution or completion. Full-model agent planning retains a separate 60-second bound.
+Each run saves 6,000 evenly spaced output points plus every event, and stops if it takes longer than 120 seconds of real time. For long simulations with fast events, shorten the stop time to see the details.
+
+After a successful run, Gradara switches to the **Results** tab. The panel inside it is titled **Data Inspector**; this guide calls it Results. Use the **Diagram** and **Results** tabs, or ⌘/Ctrl+1 and ⌘/Ctrl+2, to switch.
+
+### Results
+
+Choose a preset plot or a signal, optionally add a second signal, and choose a time window. **Fit Y** fits the vertical range. **Export CSV** downloads every output row; the on-screen plot is thinned out to stay responsive.
+
+- **Layouts.** One plot, two stacked, two side by side, a 2×2 grid, or a 3×2 grid. Select a plot by its header, then check signals in the left panel, or drag a signal onto any plot. Removing a signal only changes the view.
+- **Navigate.** Use **Pan**, **Box zoom**, or **Cursor**, on **X only**, **Y only**, or **X + Y**. The mouse wheel zooms around the pointer. Link the X axes to keep plots in step. **Fit X**, **Fit Y**, and **Fit both** reset the view; double-click or Home fits both. Arrow keys pan a focused plot. Maximize a plot to see it alone.
+- **Cursor values** show the stored sample at or just before the cursor time, so jumps at events stay sharp.
+- **Units.** Signals with different units on one plot share one axis. Use separate plots when their scales differ.
+
+Plot layouts and axis ranges are remembered on this computer for each model. They are not part of the model file.
+
+### Log a signal
+
+Gradara records every block output. To record a particular wire, select it and choose **Log signal** in the wire toolbar, or check **Log to Data Inspector** in its net properties. A dot beside the net name shows it is logged. Run again to capture it. **Logged nets only** in Results filters the list. Only signal wires can be logged. To see a physical quantity such as a voltage or a speed, add a sensor and log its output.
+
+### When results go stale
+
+Moving blocks or names does not change results. Changing equations, connections, parameters, or the stop time does. Run again after such a change. Results you see always belong to the model as it was when it ran.
 
 ### Problems
 
-The dock under the canvas has a **Problems** tab. Open or collapse it from the status bar summary ("No problems", or a count of errors and warnings), from its header, or with ⌘/Ctrl+J. Drag its top edge (or focus it and use the arrow keys) to resize it; its height and open tab are remembered in this browser. It is hidden in very narrow windows, where the status bar counts remain.
+The **Problems** tab sits in the dock under the canvas. Open or close it from the status bar ("No problems", or a count of errors and warnings), from its header, or with ⌘/Ctrl+J. Drag its top edge to resize it.
 
-- **Model checks** update while you edit: unconnected signal inputs, drawing-only blocks, wires that end on a missing port (errors), and blocks with nothing connected (notes) on the open sheet, plus variant problems anywhere in the model. They mirror what Run rejects before simulating; Run also checks every sheet.
-- **Last run** appears when a run fails. The dock opens automatically and the workspace stays where it is. Each row has a source (Validation, Safety, Compiler, Runtime, Engine) and chips for the blocks or ports it concerns. Click a row or chip to select those blocks and center them on the canvas. Expand a row (▸, or Space on a focused row) for the hint and the full solver text. After you change the model, this section is marked stale and no longer counts toward the totals.
+- **Model checks** update while you edit: unconnected signal inputs, drawing-only blocks, and wires that end on a missing port (errors), and blocks with nothing connected (notes). They also include variant problems anywhere in the model. **Run** refuses the model while errors remain.
+- **Last run** appears when a run fails. The dock opens by itself. Each row names where the problem came from (Validation, Safety, Compiler, Runtime, Engine) and has chips for the blocks it concerns. Click a row or chip to select those blocks and center them. Expand a row (▸) for a hint and the full solver message. After you edit the model, this section is marked out of date.
 - **Run warnings** lists solver warnings from a successful run.
 
-Up/Down moves between rows and Enter selects. **Copy** copies every problem as text. When there are errors or warnings, **Explain** asks the AI provider what is wrong, and **Fix with AI** also asks for a checked fix; the ✦ button on a row asks about that problem only. These are explicit requests: a failed run never calls a provider by itself. Answers appear in the Assistant tab as a diagnosis (likely causes with block chips and steps you can take) and, for a fix, a proposal you review and apply like any other assistant edit. If no safe automatic fix exists, the diagnosis says so. Block mapping for solver messages is best effort; the expandable text is always the complete output. The Results tab still shows the raw failure text.
+**Copy** copies every problem as text. With an AI provider set up, **Explain** asks what is wrong, and **Fix with AI** also proposes a fix. The ✦ button on a row asks about that problem only. A failed run never calls an AI provider on its own. Answers appear in the **Assistant** tab: likely causes with block chips and steps to take, and for a fix, a proposed edit you review and apply. Linking solver messages to blocks is best effort; the expanded text is always the complete message.
 
-After a successful run, the workspace automatically switches to the **Results** tab (also called Data Inspector), which provides a dedicated view for inspecting simulation output. Switch between **Diagram** and **Results** tabs using the workspace tabs in the toolbar, or press ⌘/Ctrl+1 for Diagram and ⌘/Ctrl+2 for Results.
+## Export
 
-In Results view, choose a preset plot or available signal, optionally overlay a second series, and select a time window. **Fit Y** fits the displayed range. The buck template's **Last 1 ms** view reveals switching ripple. Download CSV when you need every output row; the interactive preview is reduced for responsiveness.
+![The Export dialog with C code for the servo example's position controller](images/export.webp)
 
-Moving blocks or labels does not invalidate simulation behavior. Changing equations, connections, parameters, or duration does. Reopened results must match the saved document and emitted source. A stale result is not evidence of the edited model's behavior.
+**Export** in the header offers:
 
-## Ask for a component or export
+- **Modelica source**: the complete model as a `.mo` file, with equations, parameters, and connections. Editing the `.mo` file does not change your diagram.
+- **Gradara project**: a `.gradara.json` file with the diagram, layout, and custom blocks. Import it on another computer with **Models → Import file**.
+- **C code** for a controller.
 
-Choose a provider in **Settings → AI**: sign in to Gradara AI (20 free credits, then prepaid packs), paste your own OpenAI or Anthropic key, use the Codex CLI, or turn AI off. [AI feature setup](AGENT_SETUP.md) explains each option. Simulation never needs an AI provider.
+### C code
 
-Describe the inputs, outputs, state, and timing you want, for example: “A first-order low-pass filter with a 50 ms time constant.” First choose the block type: Signal / control, Electrical, Mechanical · rotational, Mechanical · translational, Magnetic, Thermal, or Multiple physical domains. Generated blocks use real-valued signal ports; they cannot have Boolean or 3-phase ports. For example, choose Electrical and ask for an ideal transformer to get physical winding terminals rather than signal inputs and outputs. The preview identifies each terminal domain. Refining a block preserves its type and existing terminal interface. It validates and compiler-checks a candidate before insertion. Ordinary editing and simulation still work when the agent is unavailable.
+Under **C code**, the **Unit** list offers the selected blocks or selected subsystem, the controller Gradara detected on the open sheet, and each subsystem on the sheet. The detected controller is the group of connected signal blocks between the plant's sensors and actuators, plus constants that only feed it. A group that contains a controller block such as **PI controller** is preferred.
 
-For C code, open **Export**. Under **C code**, the **Unit** list offers the selected blocks (or the selected subsystem), the controller Gradara detected on the open sheet, and each subsystem on it. The detected controller is the group of connected signal blocks between the plant's sensors and actuators, together with constants that only feed it; a group holding a block such as **PI controller** wins. Choose the discretization for continuous blocks (Tustin, backward Euler, or forward Euler), `double` or `float`, the step (empty uses the fastest sample period), and a name for the files. The preview updates as you change them: a header with `In`, `Out`, `Params`, and `State` structs and `init`/`step` functions, the source, and a README. **Show** selects the unit's blocks. **Download .zip** saves the three files.
+Choose how continuous blocks are discretized (Tustin, backward Euler, or forward Euler), `double` or `float`, the time step (empty uses the fastest sample period), and a file name. The preview updates as you change them: a header with `In`, `Out`, `Params`, and `State` structs and `init` and `step` functions, the C source, and a README. **Show** selects the unit's blocks on the canvas. **Download .zip** saves the three files.
 
-If the unit contains a physical block, an algebraic loop, or a block without a C template, the dialog says so and **Show** selects the blocks involved. For a custom AI block, it offers to write a C template for that block with your AI provider. The template is checked, compiled, and saved with the block (every block of that kind on the sheet), so later exports use it without AI; editing the block's equations or ports makes it stale, and the dialog offers a new one.
+The unit must contain only signal blocks. If it contains a physical block, an algebraic loop, or a block without a C template, the dialog says so and **Show** selects the blocks involved. For a custom AI block, it offers to write a C template for that block with your AI provider. The template is checked, compiled, and saved with the block, so later exports need no AI. Editing the block's equations or ports makes the template out of date, and the dialog offers a new one.
 
-**Verify against last run** compiles the code and feeds it the input signals your last run recorded, step by step, then compares its outputs with the simulation. It needs a run of the current model. Sampled controllers match to rounding error; continuous ones differ by their discretization, and a difference beyond 2% of an output's range fails the check. Verification is open-loop and does not replace testing on the target. The [Servo position example](examples/SERVO.md) walks through it. HDL export remains future work.
+**Verify against last run** compiles the code and feeds it the inputs your last run recorded, step by step, then compares its outputs with the simulation. It needs a run of the current model and a C compiler (see [Install Gradara](INSTALL.md#set-up-the-simulation-engine)). Sampled controllers match to rounding error. Continuous controllers differ by their discretization, and a difference beyond 2% of an output's range fails the check. Verification runs the controller on its own, without the plant. It does not replace testing on your hardware. The [servo example](examples/SERVO.md) walks through it.
 
-See [data handling](../SECURITY.md) before sending proprietary equations or model information to an agent provider.
+## AI features
+
+AI is optional. Drawing, simulating, and exporting Modelica or C code for library blocks never need AI or an account. Choose a provider in **Settings → AI**. [AI features](AGENT_SETUP.md) explains the options and credit prices.
+
+Before you send proprietary equations or model details to an AI provider, read [privacy](PRIVACY.md).
+
+### Ask for a new block
+
+Press **A** or choose **Ask agent**, and describe the block: its inputs, outputs, state, and timing. For example: "A first-order low-pass filter with a 50 ms time constant."
+
+First choose the block type: Signal / control, Electrical, Mechanical · rotational, Mechanical · translational, Magnetic, Thermal, or Multiple physical domains. The type decides which terminals the block gets. For example, choose Electrical and ask for an ideal transformer to get real winding terminals instead of signal inputs and outputs. Generated blocks cannot have Boolean or 3-phase ports. The preview shows each terminal. Gradara checks the block with OpenModelica before inserting it, so the engine must be set up. For signal blocks defined by equations, **Refine with agent** in the block's dialog asks for a changed version. Refining keeps the block's type and terminals.
 
 ### Reuse AI blocks
 
-Successfully generated and compiler-checked blocks are automatically saved to **Library → AI blocks**, even before you add them to a diagram. Search, click, or drag them into any model; the dangling-wire picker also offers compatible AI blocks. The block design catalog has the same AI collection. Each insertion is an independent copy. Refinements create new library entries when the definition changes, without updating other models. Identical definitions are deduplicated. Existing generated blocks in saved models are imported once and labeled **From saved model**, rather than claiming a fresh compiler check. This library is local to your workspace, not a public marketplace.
+Every generated block that passes its checks is saved in **Library → AI blocks**, even before you place it. Search, click, or drag it into any model. The picker that opens from an unconnected wire also offers matching AI blocks. Each insertion is an independent copy. A refined block is saved as a new entry and does not change other models. Blocks found in models you already had are added once and labeled **From saved model**. This library is stored on your computer.
 
-### Data Inspector navigation and signal logging
+### Edit the open model with the Assistant
 
-Select a wire and choose **Log signal** in the wire toolbar, or enable **Log to Data Inspector** in its net properties. A dot beside the net name indicates logging. Run again to capture the signal. Only signal/control nets can be logged: use a voltage, current, speed, or other sensor to choose a physical quantity, then log its signal output. A physical connection itself cannot be logged. Existing automatically captured block outputs remain available for compatibility and are distinct from the **Logged nets only** filter.
+Open the **Assistant** tab in the dock and describe a change, for example "Add a scope on the measured angle and connect it" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to point the Assistant at them, or **Whole model**.
 
-In Results, choose one plot, two stacked, two side by side, a 2×2 grid, or a 3×2 grid. Select a plot with its header or canvas, then check signals in the left panel; you can also drag a signal directly onto any plot. The same signal can appear in multiple plots. Removing a signal or clearing a plot changes only the view. Layout changes retain assignments for temporarily hidden plots.
+The Assistant can add library blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, and connect or disconnect ports. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model passed a trial simulation in OpenModelica. If it still fails after one automatic revision, the proposal is marked **Not verified** and shows the messages.
 
-Use **Pan**, **Box zoom**, or **Cursor**, with **X only**, **Y only**, or **X + Y** axes. The mouse wheel zooms around the pointer; plus/minus zoom around the center. Link X axes to keep plots synchronized in time while their Y ranges remain independent. **Fit X**, **Fit Y**, and **Fit both** reset the selected ranges; double-click or Home fits both. Arrow keys pan a focused plot. Maximize a plot to inspect it alone, then restore the layout. Cursor values report saved samples (the last sample at or before the selected time), preserving pre/post-event discontinuities rather than inventing interpolated values.
+Nothing changes until you choose **Apply**. The whole proposal is one undo step, and your wire routes, labels, and net names are kept. New blocks are placed near related blocks; you may want to move them. If you edit the model while a request runs, Apply is disabled and you are asked to try again. **Refine** asks a follow-up. **Discard** dismisses the proposal. The conversation belongs to the open model, clears when you switch models, and is not saved.
 
-The inspector loads full stored CSV samples, retaining repeated event times. If that request fails, it explicitly shows the reduced preview and offers Retry. CSV export retains the complete run. Plot layout, signal assignments, and axis ranges are saved locally in this browser per model; they do not change the simulation or get embedded in exported model documents. Signals unavailable in a later run remain identified rather than being silently replaced. Different units on one plot share a numeric Y axis; use separate plots when their scales differ.
+### Ask for a complete model
 
-## Edit the open model with the assistant
+Choose **Ask agent**, then **Full model / circuit**, and describe the system: inputs, component values, what to measure, and how long to simulate. This creates a new model; it does not change the open one.
 
-Open the **Assistant** tab in the dock and describe a change, for example "Add a scope on the measured angle and connect it" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to tell the assistant which blocks the request concerns, or **Whole model**.
+The agent looks at the built-in library and your AI blocks, reuses what fits, creates missing blocks, and assembles the circuit. The complete draft must finish a simulation before it is offered. Progress shows the current stage. Close the window to cancel. Review the diagram and assumptions, then choose **Open as new model**. Your current model is saved first. Choose **Run** to see results for the new model.
 
-The assistant can add catalog blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, and connect or disconnect ports. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model was checked in OpenModelica; if the check failed after one automatic revision, the proposal is marked **Not verified** and shows the diagnostics.
-
-Nothing changes until you choose **Apply**. The whole proposal is one undo step, and existing routes, labels, and net names are kept. Added blocks are placed next to related blocks; you may want to move them. If you edit the model after asking, Apply is disabled and you are asked to try again. **Refine** starts a follow-up request; **Discard** dismisses the proposal. The thread belongs to the open model, is cleared when you switch models, and is not saved. Cancel stops a request that is still running.
-
-## Ask an agent for a complete model
-
-Open **Ask agent**, choose **Full model / circuit**, and describe the system, inputs, component values, measurements, and simulation duration. This creates a separate model; it does not modify the open diagram.
-
-The builder inspects the built-in catalog and your local AI block library. It reuses suitable components, creates missing components through the typed block creator, waits for their Modelica checks and library saves, then assembles the circuit. The complete draft must finish an OpenModelica simulation before it is offered for opening. Progress reports the current stage. Close the creator to cancel.
-
-Review the diagram, library choices, and assumptions, then choose **Open as new model**. Your current model is saved before switching. The new model uses normal editable blocks and wires. Click **Run** to capture results under the new saved model's identity in Data Inspector. The builder's trial run is a separate validation snapshot.
-
-Currently the builder supports flat models with up to 80 instances and four newly created component types per request. Supported domains match the block creator: scalar signals, electrical, rotational and translational mechanical, magnetic, thermal, and their couplings, plus the built-in library blocks. The builder does not create subsystems. Unsupported domains are reported instead of substituted. A simulation failure gets one assembly repair; unresolved diagnostics remain visible. Missing blocks that completed successfully remain in the AI library even if later assembly fails or is cancelled. Generation is not resumable after closing the creator or restarting the service.
+Limits: flat models (no subsystems) with up to 80 blocks and up to four new block types per request. Supported domains match the block creator. A failed trial simulation gets one automatic repair. New blocks that were created successfully stay in your AI library even if assembly fails. A request cannot be resumed after you close the window or restart the app.
 
 ## Built-in examples
 
-**Examples → EV drivetrain** opens a battery electric vehicle built from nested subsystems: vehicle control and powertrain at the top, battery pack and motor drive inside the powertrain, and a converter inside the motor drive. The battery (LFP or NMC) and the motor (PM DC machine or simple DC motor) are variants, and two configurations switch them together. The [EV example guide](examples/EV.md) describes each level.
+Open any of these from **Examples**. Each guide describes what the model shows, what to look at, and its limits.
 
-**Examples → Servo position** opens a DC motor position loop with a 1 kHz **Discrete PID** and an **Angle sensor**. It is built to export its controller to C. The [servo example guide](examples/SERVO.md) walks through the export and explains how the repository's reference C is checked against the simulation.
+| Example | What it shows |
+| --- | --- |
+| [DC motor](../models/DC.md) | Speed control of a DC motor with a sampled PI controller. |
+| [Servo position](examples/SERVO.md) | A 1 kHz sampled PID position loop, built to export its controller to C. |
+| [AC motor · FOC](../models/FOC.md) | Field-oriented control of a permanent-magnet synchronous motor. |
+| [EV drivetrain](examples/EV.md) | A battery electric vehicle in nested subsystems, with battery and motor variants and two configurations. |
+| [Buck converter](../models/BUCK.md) | A 24 V to 12 V synchronous buck converter with ideal switches. |
+| [480 VAC flyback](examples/FLYBACK.md) | A 480 V AC to 24 V DC switching flyback converter with PI regulation. |
+| [Data center cooling](examples/DATACENTER.md) | A one-hour electrical and thermal control benchmark with load and cooling disturbances. |
 
-**Examples → 480 VAC flyback** opens a hand-authored 480 V RMS single-phase to 24 V / 1 A switching model with bridge rectification, magnetizing energy storage, soft start, and PI regulation. See the [flyback example guide](examples/FLYBACK.md) for assumptions, expected signals, and modeling limits.
+## Limits
 
-**Examples → Data center cooling** opens a one-hour electrical–thermal benchmark with workload and cooling-capacity disturbances. Compare temperatures, electricity, and PI recovery using the [cooling example guide](examples/DATACENTER.md). This is a lumped control model, not a detailed facility model.
+- Gradara is not certified or validated for safety-critical use. Verify results independently before you rely on them for design decisions, and do not use it as the only evidence for safety-related work.
+- Examples use illustrative parameters, not data-sheet values.
+- AI-generated blocks and edits pass compiler checks, but compiling does not make a model physically correct. Review them as you would any model.
+- Mux and Demux are drawing-only and cannot run. Vector and bus signals, Modelica import, FMI, and HDL export are not available.
+- Exported C code is checked against the simulation, not on your target hardware.

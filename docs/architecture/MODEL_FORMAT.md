@@ -1,6 +1,6 @@
 # Document format and identity
 
-The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation lives in [server/models.py](../../server/models.py). Both must evolve together. FastAPI exposes the server schema at `/openapi.json`. Documents use version `1` (flat) or `2` (with subsystems); there is no promise that new schema changes are automatically backward compatible.
+The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation lives in [server/models.py](../../server/models.py). Both must evolve together. FastAPI exposes the server schema at `/api/openapi.json`. Documents use version `1` (flat) or `2` (with subsystems); see [versioning and migration](#versioning-and-migration).
 
 ## Project
 
@@ -34,7 +34,7 @@ An empty document is valid to save, but cannot be simulated:
 }
 ```
 
-Saving assigns a document identity. For realistic fixtures, start with a checked-in template under [models/examples](../../models/examples/) (DC, FOC, buck, [flyback](../../models/examples/flyback.json), or [data center cooling](../../models/examples/datacenter.json)) and create an independent model through the UI or API.
+Saving assigns a document identity. For realistic fixtures, start with a checked-in template under [models/examples](../../models/examples/) (`dc`, `servo`, `foc`, `buck`, `flyback`, `datacenter`, or `ev`; the template IDs `POST /api/models` accepts) and create an independent model through the UI or API.
 
 ## Blocks and definitions
 
@@ -126,6 +126,26 @@ A subsystem is a block whose inside is another diagram of the same document. [hi
 `variants` has 2–12 entries with unique IDs, and `active` must name one whose `ref` equals the instance's `ref`. So the instance's `ref` is always the active variant's inside, and emission, results, and other hierarchy code see an ordinary instance. A diagram variant has its own definition; a parameter variant shares another variant's `ref` and differs only in `values`, the promoted parameter values it restores when chosen. The instance's ports are the union of every variant's ports: the active inside's ports first, then ports only other variants have. `unused` lists ports that variant leaves idle on purpose. A port the active inside lacks and does not list in `unused` fails simulation.
 
 **Configurations.** `Project.configurations` holds up to 30 entries `{id, name, choices}`. `choices` maps `<sheet>/<instance ID>` to a variant ID, where the sheet is a subsystem definition ID, or empty for the top level (`/drive`). Keys for instances that no longer exist are ignored. Configurations do not change emitted source; only the active variants do.
+
+## Versioning and migration
+
+| Version | Content | Opened by |
+| --- | --- | --- |
+| `1` | Flat document: one sheet, no `subsystems`. | Every release. |
+| `2` | Adds `subsystems` and optional `configurations`. | 0.4.0 and later. Releases before 0.4 cannot open it. |
+
+The workbench writes version 1 when a document has no subsystems and version 2 when it has any, so a flat model stays readable by older releases.
+
+Older documents are brought up to date when they are loaded, not by a separate migration step:
+
+- [normalize-project.ts](../../lib/gradara/normalize-project.ts) runs on every load and edit. It assigns a missing `modelId`, normalizes names and junctions, and reconciles nets. Through `realizePlaceholders` (`lib/gradara/hierarchy.ts`) it turns a subsystem placeholder from an older document into a real subsystem.
+- `document()` in [workspace.py](../../server/workspace.py) runs on every server load. It assigns an identity to legacy documents without one, renames the retired `wiring` example, and validates the result against `Project`.
+
+Policy:
+
+- A newer release always opens files saved by an older release.
+- The version number changes only when an older release could misread a file written by a newer one. Additive optional fields that older releases ignore safely do not bump it.
+- Every version bump adds a fixture of the new format under `tests/fixtures/` and a test that loads it. Keep the old-format fixtures too.
 
 ## Normalization and persistence
 
