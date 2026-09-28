@@ -20,7 +20,7 @@ import {
   Crosshair,
 } from 'lucide-react';
 import { api, downloadText, waitForJob, type Job } from '@/lib/gradara/api';
-import { notifyAiChanged, useAiLabel } from '@/lib/gradara/ai';
+import { notifyAiChanged, useAi } from '@/lib/gradara/ai';
 import type { CTemplate, Project } from '@/lib/gradara/model';
 import { isInstance } from '@/lib/gradara/hierarchy';
 import {
@@ -51,6 +51,7 @@ export default function ExportDialog({
   runId,
   onShowBlocks,
   onCommit,
+  onOpenSettings,
   onClose,
 }: {
   /** Apply an edit to the open sheet as one undo step. */
@@ -65,9 +66,11 @@ export default function ExportDialog({
   /** The last run of this model, for the software-in-the-loop check. */
   runId?: string;
   onShowBlocks: (ids: string[]) => void;
+  /** Open Settings → AI, to sign in or set up a provider. */
+  onOpenSettings: () => void;
   onClose: () => void;
 }) {
-  const aiLabel = useAiLabel('export');
+  const ai = useAi('export');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const choices = useMemo(() => {
@@ -390,7 +393,7 @@ export default function ExportDialog({
               blocks, or a subsystem, and open Export again.
             </p>
           )}
-          {failed && (
+          {failed && !customGap && (
             <div className="codegen-problem" role="alert">
               <TriangleAlert size={14} />
               <span>{failed.error}</span>
@@ -403,16 +406,51 @@ export default function ExportDialog({
             </div>
           )}
           {customGap && (
-            <Button
-              variant="outline"
-              onClick={() => void writeTemplate()}
-              disabled={!!busy || !aiLabel}
-            >
-              {busy === 'ai' ? <LoaderCircle className="spin" /> : <Sparkles />}
-              {aiLabel
-                ? `Write a C template for ${customGap.definition.name} with ${aiLabel}`
-                : 'Turn on an AI provider to write a C template for this custom block'}
-            </Button>
+            <div className="codegen-gap" role="alert">
+              <TriangleAlert size={14} />
+              <div>
+                <strong>{customGap.definition.name} has no C code yet.</strong>
+                <p>
+                  It is a custom block, so there is no built-in template.
+                  Gradara can write one with AI; it is checked, saved with the
+                  block, and reused for every export after that. Or select the
+                  other blocks and export them without it.
+                </p>
+                <div className="codegen-gap-actions">
+                  <Button
+                    size="sm"
+                    onClick={() => void writeTemplate()}
+                    disabled={!!busy || !ai.ready}
+                  >
+                    {busy === 'ai' ? (
+                      <LoaderCircle className="spin" />
+                    ) : (
+                      <Sparkles />
+                    )}
+                    Write its C template
+                  </Button>
+                  <button
+                    className="codegen-link"
+                    onClick={() => onShowBlocks([customGap.id])}
+                  >
+                    <Crosshair size={12} />
+                    Show block
+                  </button>
+                </div>
+                <p className="codegen-ai">
+                  {ai.ready ? (
+                    ai.label
+                  ) : (
+                    <>
+                      {ai.label ? 'AI is not set up yet.' : 'AI is turned off.'}{' '}
+                      <button className="codegen-link" onClick={onOpenSettings}>
+                        Open Settings → AI
+                      </button>
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
           )}
           {files.length > 0 && (
             <>

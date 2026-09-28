@@ -3239,6 +3239,10 @@ function Workbench() {
               setExportOpen(false);
               selectBlocks(ids);
             }}
+            onOpenSettings={() => {
+              setExportOpen(false);
+              setSettingsTab('ai');
+            }}
             onClose={() => setExportOpen(false)}
           />
         )}

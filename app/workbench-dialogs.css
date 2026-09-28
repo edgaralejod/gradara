@@ -549,3 +549,33 @@
 .export-dialog .codegen-verify table { width: 100%; margin-top: 4px; border-collapse: collapse; font-size: var(--text-micro); color: #526979; }
 .export-dialog .codegen-verify td { padding: 2px 8px 2px 0; font-variant-numeric: tabular-nums; }
 @media (max-width: 640px) { .export-dialog .codegen-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Export: one neutral workbench style, and nothing wider than the dialog. */
+.export-dialog { max-width: 640px !important; grid-template-columns: minmax(0, 1fr); }
+.export-dialog > *, .export-dialog .controller-export > * { min-width: 0; }
+.export-dialog .export-option strong { color: #27333d; }
+.export-dialog .export-option p { color: #637987; }
+.export-dialog .export-option > svg { color: #637987; }
+.export-dialog .controller-export { display: grid; gap: 8px; }
+.export-dialog .controller-export .component-category { color: #354b5b; font-size: var(--text-ui); font-weight: 600; }
+.export-dialog .controller-export p { margin: 0; }
+.export-dialog .controller-picker { margin: 0; }
+.export-dialog .controller-picker select { width: 100%; min-width: 0; text-overflow: ellipsis; }
+.export-dialog .codegen-options { margin: 0; }
+.export-dialog .codegen-problem { margin: 0; flex-wrap: wrap; }
+.export-dialog .controller-export button[data-slot='button'] { white-space: normal; height: auto; min-height: 28px; text-align: left; }
+.export-dialog .codegen-gap {
+  display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border: 1px solid #e3c9a6;
+  border-radius: 2px; background: #fbf4ea; color: #6b4a1f; font-size: var(--text-ui); line-height: 1.45;
+}
+.export-dialog .codegen-gap > svg { flex: none; margin-top: 2px; }
+.export-dialog .codegen-gap > div { display: grid; gap: 6px; min-width: 0; }
+.export-dialog .codegen-gap strong { font-weight: 600; }
+.export-dialog .codegen-gap p { margin: 0; color: #6b4a1f; }
+.export-dialog .codegen-gap-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.export-dialog .codegen-gap .codegen-ai { color: #7a6445; font-size: var(--text-micro); }
+.export-dialog .codegen-link {
+  display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 0; color: var(--primary);
+  font: 500 var(--text-ui) var(--font-ui); cursor: pointer;
+}
+.export-dialog .codegen-ai .codegen-link { font-size: var(--text-micro); }

@@ -1,4 +1,5 @@
 'use client';
+import { ColumnHead, PaneResizer, useColumns } from './resizable-columns';
 import {
   useDeferredValue,
   useEffect,
@@ -104,6 +105,9 @@ export default function ModelExplorer({
     if (searchSignal) searchRef.current?.focus();
   }, [searchSignal]);
   const hits = useMemo(() => searchModel(index, query, 30), [index, query]);
+  // The tree and details panes can be widened to read long names; widths are remembered.
+  const panes = useColumns('explorer-panes', [240, 260], 160);
+  const paneStart = useRef([240, 260]);
   const reveal = (hit: SearchHit) => {
     setQuery('');
     onReveal({ sheetId: hit.sheetId, blockId: hit.blockId, netId: hit.netId });
@@ -165,7 +169,34 @@ export default function ModelExplorer({
           ))}
         </div>
       </div>
-      <div className="explorer-body">
+      <div
+        className="explorer-body"
+        style={
+          {
+            '--tree-width': `${panes.widths[0]}px`,
+            '--details-width': `${panes.widths[1]}px`,
+          } as React.CSSProperties
+        }
+      >
+        <PaneResizer
+          style={{ left: panes.widths[0] - 3 }}
+          label="Resize the model tree"
+          onReset={panes.reset}
+          onResize={(delta, start) => {
+            if (start) paneStart.current = [...panes.current.current];
+            panes.resize(0, Math.min(640, paneStart.current[0] + delta));
+          }}
+        />
+        <PaneResizer
+          className="is-details"
+          style={{ right: panes.widths[1] - 3 }}
+          label="Resize the details pane"
+          onReset={panes.reset}
+          onResize={(delta, start) => {
+            if (start) paneStart.current = [...panes.current.current];
+            panes.resize(1, Math.min(640, paneStart.current[1] - delta));
+          }}
+        />
         <ModelTree
           doc={doc}
           index={index}
@@ -430,6 +461,7 @@ function ParametersView({
   onCommit: (change: (doc: Project) => Project) => void;
   onReveal: (target: ExplorerTarget) => void;
 }) {
+  const columns = useColumns('parameters', [160, 170, 170, 110, 56, 110, 52]);
   const [filter, setFilter] = useState('');
   const deferred = useDeferredValue(filter);
   const [find, setFind] = useState('');
@@ -503,85 +535,113 @@ function ParametersView({
         </form>
         {note && <span className="table-note">{note}</span>}
       </div>
-      <div className="table-head param-grid">
-        <span>Location</span>
-        <span>Block</span>
-        <span>Parameter</span>
-        <span>Value</span>
-        <span>Unit</span>
-        <span>Range</span>
-        <span />
-      </div>
-      <VirtualRows
-        count={rows.length}
-        render={(i) => {
-          const r = rows[i];
-          const p = r.parameter;
-          return (
-            <div
-              key={r.key}
-              className="table-row param-grid"
-
-              onDoubleClick={() =>
-                onReveal({ sheetId: r.sheetId, blockId: r.blockId })
-              }
-            >
-              <span title={r.sheet}>{r.sheet}</span>
-              <span title={r.blockName}>{r.blockName}</span>
-              <span title={p.id}>
-                {p.name}
-                {r.promotedAs && (
-                  <em className="promoted-tag">↑ {r.promotedAs}</em>
-                )}
-              </span>
-              <NumberField
-                value={p.value}
-                min={p.min}
-                max={p.max}
-                ariaLabel={`${r.blockName} ${p.name}`}
-                disabled={!!r.promotedAs}
-                onChange={(value) =>
-                  onCommit((d) =>
-                    setParameterAt(d, r.sheetId, r.blockId, p.id, value),
-                  )
-                }
+      <div className="table-scroll">
+        <div className="table-inner" style={{ minWidth: columns.total }}>
+          <div
+            className="table-head"
+            style={{ gridTemplateColumns: columns.template }}
+          >
+            {(
+              [
+                ['Location', () => rows.map((r) => r.sheet)],
+                ['Block', () => rows.map((r) => r.blockName)],
+                [
+                  'Parameter',
+                  () =>
+                    rows.map(
+                      (r) =>
+                        r.parameter.name +
+                        (r.promotedAs ? `  ↑ ${r.promotedAs}` : ''),
+                    ),
+                ],
+                ['Value', () => rows.map((r) => String(r.parameter.value))],
+                ['Unit', () => rows.map((r) => r.parameter.unit ?? '')],
+                ['Range', undefined],
+                ['', undefined],
+              ] as [string, (() => string[]) | undefined][]
+            ).map(([label, fit], i) => (
+              <ColumnHead
+                key={i}
+                label={label}
+                index={i}
+                columns={columns}
+                fit={fit}
               />
-              <span>{p.unit}</span>
-              <span className="table-muted">
-                {p.min !== undefined || p.max !== undefined
-                  ? `${p.min ?? '−∞'} … ${p.max ?? '∞'}`
-                  : ''}
-              </span>
-              <span className="row-actions">
-                {r.sheetId && !r.promotedAs && (
-                  <button
-                    title="Promote to a parameter of the subsystem block"
-                    aria-label={`Promote ${r.blockName} ${p.name}`}
-                    onClick={() =>
-                      onCommit((d) =>
-                        syncInstances(
-                          promoteParameter(d, r.sheetId, r.blockId, p.id),
-                        ),
-                      )
-                    }
-                  >
-                    <ArrowUpToLine size={12} />
-                  </button>
-                )}
-                <button
-                  title="Show on the canvas"
-                  aria-label={`Show ${r.blockName}`}
-                  onClick={() =>
+            ))}
+          </div>
+          <VirtualRows
+            count={rows.length}
+            render={(i) => {
+              const r = rows[i];
+              const p = r.parameter;
+              return (
+                <div
+                  key={r.key}
+                  className="table-row"
+                  style={{ gridTemplateColumns: columns.template }}
+
+                  onDoubleClick={() =>
                     onReveal({ sheetId: r.sheetId, blockId: r.blockId })
                   }
                 >
-                  <Crosshair size={12} />
-                </button>
-              </span>
-            </div>
-          );
-        }}
-      />
+                  <span title={r.sheet}>{r.sheet}</span>
+                  <span title={r.blockName}>{r.blockName}</span>
+                  <span title={p.id}>
+                    {p.name}
+                    {r.promotedAs && (
+                      <em className="promoted-tag">↑ {r.promotedAs}</em>
+                    )}
+                  </span>
+                  <NumberField
+                    value={p.value}
+                    min={p.min}
+                    max={p.max}
+                    ariaLabel={`${r.blockName} ${p.name}`}
+                    disabled={!!r.promotedAs}
+                    onChange={(value) =>
+                      onCommit((d) =>
+                        setParameterAt(d, r.sheetId, r.blockId, p.id, value),
+                      )
+                    }
+                  />
+                  <span>{p.unit}</span>
+                  <span className="table-muted">
+                    {p.min !== undefined || p.max !== undefined
+                      ? `${p.min ?? '−∞'} … ${p.max ?? '∞'}`
+                      : ''}
+                  </span>
+                  <span className="row-actions">
+                    {r.sheetId && !r.promotedAs && (
+                      <button
+                        title="Promote to a parameter of the subsystem block"
+                        aria-label={`Promote ${r.blockName} ${p.name}`}
+                        onClick={() =>
+                          onCommit((d) =>
+                            syncInstances(
+                              promoteParameter(d, r.sheetId, r.blockId, p.id),
+                            ),
+                          )
+                        }
+                      >
+                        <ArrowUpToLine size={12} />
+                      </button>
+                    )}
+                    <button
+                      title="Show on the canvas"
+                      aria-label={`Show ${r.blockName}`}
+                      onClick={() =>
+                        onReveal({ sheetId: r.sheetId, blockId: r.blockId })
+                      }
+                    >
+                      <Crosshair size={12} />
+                    </button>
+                  </span>
+                </div>
+              );
+            }}
+          />
+        </div>
+      </div>
     </>
   );
 }
@@ -819,6 +879,7 @@ function SignalsView({
   onReveal: (target: ExplorerTarget) => void;
   onOpenResults: () => void;
 }) {
+  const columns = useColumns('signals', [40, 220, 170, 56, 170, 34]);
   const [filter, setFilter] = useState('');
   const ranges = useMemo(() => {
     const out = new Map<string, [number, number]>();
@@ -869,54 +930,79 @@ function SignalsView({
           <LineChart size={12} /> Open Results
         </button>
       </div>
-      <div className="table-head signal-grid">
-        <span>Log</span>
-        <span>Signal</span>
-        <span>Location</span>
-        <span>Unit</span>
-        <span>Last run range</span>
-        <span />
-      </div>
-      <div className="table-rows">
-        {rows.map((n) => {
-          const range = ranges.get(n.net.id);
-          return (
-            <div key={n.key} className="table-row signal-grid">
-              <input
-                type="checkbox"
-                checked={!!n.net.logged}
-                aria-label={`Log ${n.name}`}
-                onChange={(e) =>
-                  onCommit((d) =>
-                    setNetLogged(d, n.sheetId, n.net.id, e.target.checked),
-                  )
-                }
+      <div className="table-scroll">
+        <div className="table-inner" style={{ minWidth: columns.total }}>
+          <div
+            className="table-head"
+            style={{ gridTemplateColumns: columns.template }}
+          >
+            {(
+              [
+                ['Log', undefined],
+                ['Signal', () => rows.map((n) => n.name)],
+                ['Location', () => rows.map((n) => n.sheet)],
+                ['Unit', () => rows.map((n) => n.unit ?? '')],
+                ['Last run range', undefined],
+                ['', undefined],
+              ] as [string, (() => string[]) | undefined][]
+            ).map(([label, fit], i) => (
+              <ColumnHead
+                key={i}
+                label={label}
+                index={i}
+                columns={columns}
+                fit={fit}
               />
-              <span>{n.name}</span>
-              <span className="table-muted">{n.sheet}</span>
-              <span>{n.unit}</span>
-              <span className="table-muted">
-                {range
-                  ? `${fmt(range[0])} … ${fmt(range[1])}`
-                  : n.net.logged
-                    ? 'run to record'
-                    : ''}
-              </span>
-              <span className="row-actions">
-                <button
-                  title="Show on the canvas"
-                  aria-label={`Show ${n.name}`}
-                  onClick={() =>
-                    onReveal({ sheetId: n.sheetId, netId: n.net.id })
-                  }
+            ))}
+          </div>
+          <div className="table-rows">
+            {rows.map((n) => {
+              const range = ranges.get(n.net.id);
+              return (
+                <div
+                  key={n.key}
+                  className="table-row"
+                  style={{ gridTemplateColumns: columns.template }}
                 >
-                  <Crosshair size={12} />
-                </button>
-              </span>
-            </div>
-          );
-        })}
-        {!rows.length && <p className="explorer-empty">No signal nets.</p>}
+                  <input
+                    type="checkbox"
+                    checked={!!n.net.logged}
+                    aria-label={`Log ${n.name}`}
+                    onChange={(e) =>
+                      onCommit((d) =>
+                        setNetLogged(d, n.sheetId, n.net.id, e.target.checked),
+                      )
+                    }
+                  />
+                  <span title={n.name}>{n.name}</span>
+                  <span className="table-muted" title={n.sheet}>
+                    {n.sheet}
+                  </span>
+                  <span>{n.unit}</span>
+                  <span className="table-muted">
+                    {range
+                      ? `${fmt(range[0])} … ${fmt(range[1])}`
+                      : n.net.logged
+                        ? 'run to record'
+                        : ''}
+                  </span>
+                  <span className="row-actions">
+                    <button
+                      title="Show on the canvas"
+                      aria-label={`Show ${n.name}`}
+                      onClick={() =>
+                        onReveal({ sheetId: n.sheetId, netId: n.net.id })
+                      }
+                    >
+                      <Crosshair size={12} />
+                    </button>
+                  </span>
+                </div>
+              );
+            })}
+            {!rows.length && <p className="explorer-empty">No signal nets.</p>}
+          </div>
+        </div>
       </div>
     </>
   );
