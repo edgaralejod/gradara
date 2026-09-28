@@ -23,19 +23,19 @@ def document(data: dict, legacy_id: str | None = None) -> Project:
 def load_current(directory: Path):
     path = directory/'workspace.json'
     if not path.exists(): return None
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding='utf-8'))
     current = document(data, data.get('exampleId') or 'workspace')
     canonical = directory/'models'/f'{current.modelId}.json'
-    return document(json.loads(canonical.read_text())) if canonical.exists() else current
+    return document(json.loads(canonical.read_text(encoding='utf-8'))) if canonical.exists() else current
 
 
 def saved_models(directory: Path):
     models = {}
     for path in sorted((directory/'examples').glob('*.json')):
-        project = document(json.loads(path.read_text()), path.stem)
+        project = document(json.loads(path.read_text(encoding='utf-8')), path.stem)
         models[project.modelId] = project
     for path in sorted((directory/'models').glob('*.json')):
-        project = document(json.loads(path.read_text()))
+        project = document(json.loads(path.read_text(encoding='utf-8')))
         models[project.modelId] = project
     current = load_current(directory)
     if current: models.setdefault(current.modelId, current)
@@ -56,7 +56,7 @@ def atomic_write(path: Path, content: str):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f'.{path.name}.{uuid.uuid4().hex}.tmp')
     try:
-        temporary.write_text(content)
+        temporary.write_text(content, encoding='utf-8')
         temporary.replace(path)
     finally:
         temporary.unlink(missing_ok=True)
@@ -67,7 +67,7 @@ def write_document(directory: Path, project: Project):
     source = emit_project(project)
     path = directory/'models'/f'{project.modelId}.json'
     content = project.model_dump_json(indent=2, exclude_none=True)
-    if not path.exists() or path.read_text() != content:
+    if not path.exists() or path.read_text(encoding='utf-8') != content:
         atomic_write(path, content)
     current = load_current(directory)
     if current and current.modelId == project.modelId:
@@ -131,7 +131,7 @@ def copy_model(directory: Path, project: Project, name: str):
 
 def model_summaries(directory: Path, trashed: bool = False):
     summaries = []
-    projects = [document(json.loads(path.read_text())) for path in (directory/'trash').glob('*.json')] if trashed else saved_models(directory).values()
+    projects = [document(json.loads(path.read_text(encoding='utf-8'))) for path in (directory/'trash').glob('*.json')] if trashed else saved_models(directory).values()
     for project in projects:
         path = directory/('trash' if trashed else 'models')/f'{project.modelId}.json'
         if not path.exists():
@@ -151,7 +151,7 @@ def new_model(directory: Path, templates: Path, name: str, template: str = 'blan
     if template == 'blank':
         data = {'version':1,'name':name,'duration':1,'revision':0,'blocks':[],'wires':[],'junctions':[],'nets':[]}
     else:
-        data = json.loads((templates/f'{template}.json').read_text())
+        data = json.loads((templates/f'{template}.json').read_text(encoding='utf-8'))
     data.update(name=unique_name(directory, name),modelId=uuid.uuid4().hex,revision=0)
     return save(directory, document(data))
 
@@ -170,7 +170,7 @@ def trash_model(directory: Path, model_id: str):
 def restore_model(directory: Path, model_id: str):
     # Resolve through validated documents instead of interpreting a requested ID as a path.
     for path in (directory/'trash').glob('*.json'):
-        project = document(json.loads(path.read_text()))
+        project = document(json.loads(path.read_text(encoding='utf-8')))
         if project.modelId == model_id:
             write_document(directory, project)
             path.unlink()

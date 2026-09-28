@@ -15,13 +15,13 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def library() -> list[dict]:
-    src = (ROOT/'lib'/'gradara'/'msl-blocks.ts').read_text()
+    src = (ROOT/'lib'/'gradara'/'msl-blocks.ts').read_text(encoding='utf-8')
     return json.loads(src[src.index('= [') + 2:src.rindex(';')])
 
 
 def test_generated_library_is_up_to_date():
-    out = subprocess.run([sys.executable, 'scripts/msl-blocks.py'], cwd=ROOT, capture_output=True, text=True, check=True)
-    assert out.stdout == (ROOT/'lib'/'gradara'/'msl-blocks.ts').read_text(), 'run: python3 scripts/msl-blocks.py > lib/gradara/msl-blocks.ts'
+    out = subprocess.run([sys.executable, 'scripts/msl-blocks.py'], cwd=ROOT, capture_output=True, text=True, check=True, encoding='utf-8', errors='replace')
+    assert out.stdout == (ROOT/'lib'/'gradara'/'msl-blocks.ts').read_text(encoding='utf-8'), 'run: python3 scripts/msl-blocks.py > lib/gradara/msl-blocks.ts'
 
 
 @pytest.mark.parametrize('data', library(), ids=lambda d: d['kind'])

@@ -23,7 +23,7 @@ FUNCTIONS = {'sqrt', 'sin', 'cos', 'tan', 'exp', 'log', 'abs', 'min', 'max', 'fi
 
 @lru_cache(maxsize=1)
 def index() -> dict:
-    return json.loads(INDEX_PATH.read_text())['classes']
+    return json.loads(INDEX_PATH.read_text(encoding='utf-8'))['classes']
 
 
 def connector(definition: Definition, port_id: str) -> str:

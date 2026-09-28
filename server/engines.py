@@ -186,7 +186,7 @@ class DockerBackend:
             raise EngineError('The engine image could not be built: ' + output[-2000:])
 
     async def execute(self, folder: Path, config: dict, name: str) -> dict:
-        (folder/'request.json').write_text(json.dumps(config))
+        (folder/'request.json').write_text(json.dumps(config), encoding='utf-8')
         shutil.copyfile(RESOURCES/'server'/'engine_runner.py', folder/'runner.py')
         command = [*docker_argv(), 'run', '--rm', '--name', name, '--network=none', '--cap-drop=ALL',
                    '--security-opt=no-new-privileges', '--pids-limit=256', '--memory=2g', '--cpus=2',
@@ -210,7 +210,7 @@ class DockerBackend:
         report = folder/'engine.json'
         if not report.exists():
             raise EngineError(output.decode(errors='replace')[-5000:] or 'The numerical engine could not start.')
-        data = json.loads(report.read_text())
+        data = json.loads(report.read_text(encoding='utf-8'))
         data.setdefault('engine', f'OpenModelica {OM_VERSION}')
         return data
 
@@ -314,7 +314,7 @@ class NativeBackend:
 
     async def script(self, omc: Path, folder: Path, body: str, timeout: float) -> tuple[int, str]:
         script = folder/'gradara.mos'
-        script.write_text(body)
+        script.write_text(body, encoding='utf-8')
         return await _run([str(omc), script.name], timeout, cwd=folder, env=self.environment(omc))
 
     async def library_ready(self, omc: Path) -> bool:
@@ -400,15 +400,15 @@ class NativeBackend:
         omc = self.omc()
         if omc is None:
             raise EngineError('OpenModelica is not installed. ' + install_hint())
-        (folder/'request.json').write_text(json.dumps(config))
+        (folder/'request.json').write_text(json.dumps(config), encoding='utf-8')
         try:
             code, output = await self.script(omc, folder, self._script_for(folder, config), TIMEOUT)
         except asyncio.TimeoutError as exc:
             raise EngineError(timeout_message()) from exc
-        (folder/'engine.log').write_text(output)
+        (folder/'engine.log').write_text(output, encoding='utf-8')
         report = parse_native(folder, config, output)
         report['engine'] = f'OpenModelica {await self.version(omc) or "(native)"}'
-        (folder/'engine.json').write_text(json.dumps(report))
+        (folder/'engine.json').write_text(json.dumps(report), encoding='utf-8')
         # A library that will not load is an engine problem; anything later is the model's own
         # failure, reported like the Docker backend's so diagnostics can explain it.
         if report.get('error') and _read(folder, 'om_load.txt') != 'true':
@@ -444,7 +444,7 @@ class NativeBackend:
 
 def _read(folder: Path, name: str) -> str:
     try:
-        return (folder/name).read_text(errors='replace').strip()
+        return (folder/name).read_text(errors='replace', encoding='utf-8').strip()
     except OSError:
         return ''
 

@@ -14,7 +14,7 @@ def save_component(directory: Path, definition: Definition, checked: bool = True
     key = 'ai_' + hashlib.sha256(json.dumps(content, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     path = directory/'components'/f'{key}.json'
     if path.exists():
-        entry = json.loads(path.read_text())
+        entry = json.loads(path.read_text(encoding='utf-8'))
         if checked and not entry['checked']:
             entry['checked'] = True
             atomic_write(path, json.dumps(entry, indent=2))
@@ -33,5 +33,5 @@ def list_components(directory: Path):
                 if block.definition.generated:
                     save_component(directory, block.definition, checked=False)
         atomic_write(marker, '1')
-    entries = [json.loads(p.read_text()) for p in (directory/'components').glob('ai_*.json')]
+    entries = [json.loads(p.read_text(encoding='utf-8')) for p in (directory/'components').glob('ai_*.json')]
     return sorted(entries, key=lambda entry: entry['createdAt'], reverse=True)

@@ -125,7 +125,7 @@ def test_ev_drivetrain_reaches_cruise_speed_in_each_configuration(source):
     from pathlib import Path
 
     from server.engine import simulate
-    project = Project.model_validate_json((Path(__file__).parent.parent/source).read_text())
+    project = Project.model_validate_json((Path(__file__).parent.parent/source).read_text(encoding='utf-8'))
     result = asyncio.run(simulate(project, 'ev' + uuid.uuid4().hex[:10]))
     speed = next(o for o in result['series'] if o['key'] == 'speed.v')['values']
     assert speed[-1] == pytest.approx(5, rel=0.05)

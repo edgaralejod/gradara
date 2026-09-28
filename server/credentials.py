@@ -35,7 +35,7 @@ def _keyring():
 
 def _read_file() -> dict:
     try:
-        return json.loads(FALLBACK.read_text())
+        return json.loads(FALLBACK.read_text(encoding='utf-8'))
     except (OSError, ValueError):
         return {}
 
@@ -44,7 +44,7 @@ def _write_file(data: dict) -> None:
     FALLBACK.parent.mkdir(parents=True, exist_ok=True)
     temporary = FALLBACK.with_suffix('.tmp')
     fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, 'w') as stream:
+    with os.fdopen(fd, 'w', encoding='utf-8') as stream:
         json.dump(data, stream)
     os.replace(temporary, FALLBACK)
     try:

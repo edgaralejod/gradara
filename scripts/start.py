@@ -81,11 +81,11 @@ def main():
     signal.signal(signal.SIGINT,lambda *args:sys.exit(0))
     try:
         for name,command in commands:
-            log=(RUNTIME/f'{name}.log').open('a')
+            log=(RUNTIME/f'{name}.log').open('a', encoding='utf-8')
             logs.append(log)
             child=subprocess.Popen(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
             children.append(child)
-        (RUNTIME/'launcher.pid').write_text(str(os.getpid()))
+        (RUNTIME/'launcher.pid').write_text(str(os.getpid()), encoding='utf-8')
         deadline=time.monotonic()+75
         while time.monotonic()<deadline:
             if any(child.poll() is not None for child in children):

@@ -25,7 +25,7 @@ def test_deduplicates_and_keeps_changed_versions(tmp_path):
 
 
 def test_imports_existing_generated_blocks_once_without_changing_models(tmp_path):
-    model = json.loads((Path(__file__).with_name('motor-project.json')).read_text())
+    model = json.loads((Path(__file__).with_name('motor-project.json')).read_text(encoding='utf-8'))
     model['modelId'] = 'test-model'
     model['blocks'][0]['definition'] = definition().model_dump()
     # This test needs a valid self-contained saved document, not motor wiring.
@@ -34,7 +34,7 @@ def test_imports_existing_generated_blocks_once_without_changing_models(tmp_path
     model.pop('nets', None)
     path = tmp_path/'models'/'test-model.json'
     path.parent.mkdir()
-    path.write_text(json.dumps(model))
+    path.write_text(json.dumps(model), encoding='utf-8')
     before = path.read_bytes()
     entries = list_components(tmp_path)
     assert len(entries) == 1

@@ -167,7 +167,7 @@ async def load_example(example_id: str):
     if example_id not in {'dc','foc','buck','flyback','datacenter','servo','ev'}: raise HTTPException(404,'Example not found.')
     path = EXAMPLES/f'{example_id}.json'
     if not path.exists(): raise HTTPException(404,'Example is unavailable.')
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding='utf-8'))
     data['modelId'] = uuid.uuid4().hex
     names = {p.name for p in workspace.saved_models(PROJECT_DIR).values()}
     base = data['name']
@@ -236,7 +236,7 @@ async def latest(model: str | None = None):
     files = sorted(RUNS.glob('*/result.json'),key=lambda p:p.stat().st_mtime,reverse=True)
     for path in files:
         try:
-            result = json.loads(path.read_text())
+            result = json.loads(path.read_text(encoding='utf-8'))
         except (OSError, ValueError):
             continue
         snapshot = result.get('snapshot', {})
@@ -250,7 +250,7 @@ async def run_diagnostics(run_id: str):
     if not run_id.isalnum(): raise HTTPException(400, 'Invalid run ID.')
     path = RUNS/run_id/'diagnostics.json'
     if not path.exists(): raise HTTPException(404, 'No diagnostics were recorded for this run.')
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding='utf-8'))
 
 @app.get('/api/results/{run_id}/data')
 async def full_result_data(run_id: str):
@@ -260,8 +260,8 @@ async def full_result_data(run_id: str):
         raise HTTPException(404, 'Results are unavailable.')
     def read():
         import csv, math
-        result = json.loads((folder/'result.json').read_text())
-        with (folder/'simulation_res.csv').open() as stream:
+        result = json.loads((folder/'result.json').read_text(encoding='utf-8'))
+        with (folder/'simulation_res.csv').open(encoding='utf-8') as stream:
             rows = [row for row in csv.DictReader(stream) if float(row['time']) <= result['duration'] + max(1e-12, result['duration']*1e-12)]
         result['time'] = [float(row['time']) for row in rows]
         for series in result['series']:

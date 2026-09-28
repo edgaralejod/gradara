@@ -158,13 +158,13 @@ def test_gateway_accepts_every_task_and_job_kind_the_app_sends():
     import re
     from pathlib import Path
     root = Path(__file__).resolve().parent.parent
-    gateway = (root/'cloud'/'gateway'/'app.py').read_text()
+    gateway = (root/'cloud'/'gateway'/'app.py').read_text(encoding='utf-8')
     task_pattern = re.search(r"task: str = Field\(pattern='([^']+)'", gateway).group(1)
     kind_pattern = re.search(r"kind: str = Field\(pattern='([^']+)'", gateway).group(1)
-    source = '\n'.join(p.read_text() for p in (root/'server').rglob('*.py'))
+    source = '\n'.join(p.read_text(encoding='utf-8') for p in (root/'server').rglob('*.py'))
     tasks = set(re.findall(r"task='([a-z-]+)'", source)) | {'component'}
     # Jobs started through the local job runner (engine-only jobs never reach the gateway), plus the task-name fallback.
-    kinds = {k for k in re.findall(r"start_job\('([a-z]+)'", (root/'server'/'app.py').read_text()) if k not in ('engine', 'simulation', 'variants')}
+    kinds = {k for k in re.findall(r"start_job\('([a-z]+)'", (root/'server'/'app.py').read_text(encoding='utf-8')) if k not in ('engine', 'simulation', 'variants')}
     kinds |= {task.split('-')[0] for task in tasks}
     task_kinds = eval(re.search(r'TASK_KINDS = (\{.*?\}\})', gateway, re.S).group(1))  # literal dict
     assert tasks, 'no Gradara AI tasks found in server/'

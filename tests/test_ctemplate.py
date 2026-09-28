@@ -64,7 +64,7 @@ def test_code_generation_uses_a_matching_template(tmp_path):
     g = generate(project(LAG.model_copy(update={'ctemplate': template()})), [], None, ['block'], CodegenOptions(step=0.01))
     assert 'Forward Euler' in ' '.join(g.notes)
     for name, text in g.files.items():
-        (tmp_path/name).write_text(text)
+        (tmp_path/name).write_text(text, encoding='utf-8')
     subprocess.run(['gcc', '-std=c11', '-Wall', '-Wextra', '-Werror', '-c', 'controller.c'], cwd=tmp_path, check=True)
 
 
@@ -86,7 +86,7 @@ def test_the_ai_job_retries_once_with_the_reason(monkeypatch, tmp_path):
 
     async def compile_c(folder, source):
         run = subprocess.run(['gcc', '-std=c11', '-Wall', '-Wextra', '-Werror', '-c', source], cwd=folder,
-                             capture_output=True, text=True)
+                             capture_output=True, text=True, encoding='utf-8', errors='replace')
         return run.returncode, run.stdout + run.stderr
     monkeypatch.setattr(agent, 'structured_generation', provider)
     monkeypatch.setattr(engines, 'compile_c', compile_c)

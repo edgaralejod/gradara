@@ -20,12 +20,12 @@ FLAGS = ['-std=c11', '-Wall', '-Wextra', '-Werror']
 
 
 def servo() -> Project:
-    return Project.model_validate(json.loads((ROOT/'models/examples/servo.json').read_text()))
+    return Project.model_validate(json.loads((ROOT/'models/examples/servo.json').read_text(encoding='utf-8')))
 
 
 def reference_export():
-    return {'header': (REFERENCE/'gradara_controller.h').read_text(),
-            'source': (REFERENCE/'gradara_controller.c').read_text(),
+    return {'header': (REFERENCE/'gradara_controller.h').read_text(encoding='utf-8'),
+            'source': (REFERENCE/'gradara_controller.c').read_text(encoding='utf-8'),
             'notes': 'Call gradara_controller_step every 1 ms.'}
 
 
@@ -61,13 +61,13 @@ def test_packages_a_compiled_export(monkeypatch, tmp_path):
     with zipfile.ZipFile(folder/'gradara-controller.zip') as archive:
         assert sorted(archive.namelist()) == ['README.md', 'controller-package.json',
                                               'gradara_controller.c', 'gradara_controller.h']
-    assert 'Call gradara_controller_step every 1 ms.' in (folder/'README.md').read_text()
+    assert 'Call gradara_controller_step every 1 ms.' in (folder/'README.md').read_text(encoding='utf-8')
 
 
 def test_boundary_states_the_sampling_contract(monkeypatch, tmp_path):
     provider, _ = setup(monkeypatch, tmp_path, [reference_export()], [(0, '')])
     asyncio.run(exporter.export_controller(servo(), 'controller', 'job3'))
-    package = json.loads((tmp_path/'job3'/'controller-package.json').read_text())
+    package = json.loads((tmp_path/'job3'/'controller-package.json').read_text(encoding='utf-8'))
     target = package['target']
     assert target['samplePeriod'] == {'parameter': 'samplePeriod', 'value': 0.001, 'unit': 's'}
     assert target['discreteStates'] == ['e', 'integral', 'derivative', 'errorPrev']
@@ -125,7 +125,7 @@ def test_reference_c_reproduces_the_simulated_controller(tmp_path):
     result = asyncio.run(simulate(project, 'servoreplay'+uuid.uuid4().hex[:10]))
     period = next(p.value for b in project.blocks if b.id == 'controller' for p in b.definition.parameters
                   if p.id == 'samplePeriod')
-    with (RUNS/result['id']/'simulation_res.csv').open() as stream:
+    with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:
         rows = list(csv.DictReader(stream))
     # Each sample instant is logged as a pre-event and a post-event row; the
     # post-event row holds the inputs the when-clause read and its new output.
@@ -143,7 +143,7 @@ def test_reference_c_reproduces_the_simulated_controller(tmp_path):
     subprocess.run([compiler(), *FLAGS, str(REFERENCE/'gradara_controller.c'), str(REFERENCE/'harness.c'),
                     '-o', str(harness)], check=True, capture_output=True)
     stdin = ''.join(f"{r['controller.reference']} {r['controller.measured']}\n" for r in samples)
-    output = subprocess.run([str(harness)], input=stdin, capture_output=True, text=True, check=True).stdout.split()
+    output = subprocess.run([str(harness)], input=stdin, capture_output=True, text=True, check=True, encoding='utf-8', errors='replace').stdout.split()
     assert len(output) == len(samples)
     worst = max(abs(float(y) - float(r['controller.y'])) for y, r in zip(output, samples))
     assert worst < 1e-6

@@ -21,7 +21,7 @@ gcc = pytest.mark.skipif(shutil.which('gcc') is None, reason='needs a C compiler
 
 
 def example(name):
-    return Project.model_validate(json.loads((ROOT/'models/examples'/f'{name}.json').read_text()))
+    return Project.model_validate(json.loads((ROOT/'models/examples'/f'{name}.json').read_text(encoding='utf-8')))
 
 
 def block(ident, kind, ports, params=(), **extra):
@@ -44,13 +44,13 @@ def chain(*blocks_and_wires):
 def run_c(tmp_path, generated, rows, prefix='controller'):
     """Compile the generated unit with a host program and run it over `rows` of inputs."""
     for name, text in generated.files.items():
-        (tmp_path/name).write_text(text)
-    (tmp_path/'main.c').write_text(sil_main(prefix, generated.inputs, generated.outputs, len(rows)))
-    (tmp_path/'inputs.csv').write_text(''.join(','.join(repr(float(v)) for v in r) + '\n' for r in rows))
+        (tmp_path/name).write_text(text, encoding='utf-8')
+    (tmp_path/'main.c').write_text(sil_main(prefix, generated.inputs, generated.outputs, len(rows)), encoding='utf-8')
+    (tmp_path/'inputs.csv').write_text(''.join(','.join(repr(float(v)) for v in r) + '\n' for r in rows), encoding='utf-8')
     subprocess.run(['gcc', '-std=c11', '-Wall', '-Wextra', '-Werror', '-o', 'sil', f'{prefix}.c', 'main.c', '-lm'],
-                   cwd=tmp_path, check=True, capture_output=True, text=True)
+                   cwd=tmp_path, check=True, capture_output=True, text=True, encoding='utf-8', errors='replace')
     subprocess.run(['./sil'], cwd=tmp_path, check=True)
-    return parse_outputs((tmp_path/'outputs.csv').read_text(), len(generated.outputs))
+    return parse_outputs((tmp_path/'outputs.csv').read_text(encoding='utf-8'), len(generated.outputs))
 
 
 FOC = ['units', 'speedError', 'speedKp', 'speedKi', 'speedIntegral', 'speedSum', 'iqReference', 'qError', 'qPI',
@@ -152,7 +152,7 @@ def test_sample_period_must_fit_the_step():
 
 
 def test_selection_inside_a_subsystem_uses_nested_result_names():
-    project = Project.model_validate(json.loads((ROOT/'tests/fixtures/grouped-dc.json').read_text()))
+    project = Project.model_validate(json.loads((ROOT/'tests/fixtures/grouped-dc.json').read_text(encoding='utf-8')))
     g = generate(project, ['b_2f80d45f5e'], None, ['controller'], CodegenOptions())
     assert all(i['column'].startswith('b_2f80d45f5e.p_') for i in g.inputs)
     assert [o['column'] for o in g.outputs] == ['b_2f80d45f5e.controller.y']
@@ -197,8 +197,8 @@ def test_subsystem_instance_is_a_unit(tmp_path):
 def fake_run(tmp_path, project, rows, header):
     folder = tmp_path/'runs'/'run1'
     folder.mkdir(parents=True)
-    (folder/'result.json').write_text(json.dumps({'modelHash': semantic_hash(project), 'duration': project.duration}))
-    (folder/'simulation_res.csv').write_text(','.join(header) + '\n' + ''.join(','.join(map(repr, r)) + '\n' for r in rows))
+    (folder/'result.json').write_text(json.dumps({'modelHash': semantic_hash(project), 'duration': project.duration}), encoding='utf-8')
+    (folder/'simulation_res.csv').write_text(','.join(header) + '\n' + ''.join(','.join(map(repr, r)) + '\n' for r in rows), encoding='utf-8')
     return tmp_path/'runs'
 
 
@@ -214,7 +214,7 @@ def test_verification_replays_the_last_run(tmp_path):
     assert report['outputs'][0]['maxError'] < 1e-9
     # A wrong recording fails the check instead of passing silently.
     csv_file = runs/'run1'/'simulation_res.csv'
-    csv_file.write_text(csv_file.read_text().replace(',2.25\n', ',5.0\n'))
+    csv_file.write_text(csv_file.read_text(encoding='utf-8').replace(',2.25\n', ',5.0\n'), encoding='utf-8')
     assert not asyncio.run(verify(request, runs, engines.NATIVE.run_c))['ok']
 
 
@@ -253,7 +253,7 @@ def test_generated_code_reproduces_the_simulation(name, ids, step, path):
 
     from server.engine import RUNS, simulate
     source = ROOT/'tests/fixtures/grouped-dc.json' if name == 'grouped-dc' else ROOT/'models/examples'/f'{name}.json'
-    project = Project.model_validate_json(source.read_text())
+    project = Project.model_validate_json(source.read_text(encoding='utf-8'))
     run_id = 'sil' + uuid.uuid4().hex[:10]
     asyncio.run(simulate(project, run_id))
     request = CodegenRequest(project=project, path=path, blockIds=ids, runId=run_id, options=CodegenOptions(step=step))

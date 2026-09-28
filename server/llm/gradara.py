@@ -22,7 +22,7 @@ def _version() -> str:
     try:  # source checkout: the repository's package.json
         import json
         from pathlib import Path
-        return json.loads((Path(__file__).resolve().parents[2]/'package.json').read_text())['version']
+        return json.loads((Path(__file__).resolve().parents[2]/'package.json').read_text(encoding='utf-8'))['version']
     except (OSError, ValueError, KeyError):
         return 'dev'
 

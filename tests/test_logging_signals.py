@@ -10,7 +10,7 @@ from server.engine import simulate
 
 
 def circuit():
-    raw=json.loads((Path(__file__).parents[1]/'models/examples/buck.json').read_text())
+    raw=json.loads((Path(__file__).parents[1]/'models/examples/buck.json').read_text(encoding='utf-8'))
     p=Project.model_validate(raw)
     blocks={b.id:b for b in p.blocks}
     selected=next(n for n in p.nets if any(w.id in n.wireIds and any(port.id==w.sourceHandle and port.direction=='output' for port in blocks[w.source].definition.ports) for w in p.wires if w.source in blocks))
@@ -52,8 +52,8 @@ def test_full_resolution_endpoint_preserves_event_pairs(tmp_path, monkeypatch):
     from server import app as module
     from fastapi.testclient import TestClient
     folder=tmp_path/'run1';folder.mkdir()
-    (folder/'result.json').write_text(json.dumps(dict(id='run1',duration=1,time=[0,1],series=[dict(key='signal',values=[0,2])],samples=4)))
-    (folder/'simulation_res.csv').write_text('time,signal\n0,0\n0.5,0\n0.5,2\n1,2\n1.1,2\n')
+    (folder/'result.json').write_text(json.dumps(dict(id='run1',duration=1,time=[0,1],series=[dict(key='signal',values=[0,2])],samples=4)), encoding='utf-8')
+    (folder/'simulation_res.csv').write_text('time,signal\n0,0\n0.5,0\n0.5,2\n1,2\n1.1,2\n', encoding='utf-8')
     monkeypatch.setattr(module,'RUNS',tmp_path)
     with TestClient(module.app) as client:
         response=client.get('/api/results/run1/data')

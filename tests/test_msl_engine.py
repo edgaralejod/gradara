@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def library() -> list[dict]:
-    src = (ROOT/'lib'/'gradara'/'msl-blocks.ts').read_text()
+    src = (ROOT/'lib'/'gradara'/'msl-blocks.ts').read_text(encoding='utf-8')
     return json.loads(src[src.index('= [') + 2:src.rindex(';')])
 
 

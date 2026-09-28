@@ -29,7 +29,7 @@ SERVICE = 'gradara-backend.exe' if WINDOWS else 'gradara-backend'
 
 def pid_alive(pid: int) -> bool:
     if WINDOWS:
-        out = subprocess.run(['tasklist', '/FI', f'PID eq {pid}', '/NH'], capture_output=True, text=True).stdout
+        out = subprocess.run(['tasklist', '/FI', f'PID eq {pid}', '/NH'], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
         return str(pid) in out
     try:
         os.kill(pid, 0)
@@ -39,7 +39,7 @@ def pid_alive(pid: int) -> bool:
         return True
     # A zombie still answers kill(0); treat it as gone.
     try:
-        state = Path(f'/proc/{pid}/stat').read_text().split(')')[-1].split()[0]
+        state = Path(f'/proc/{pid}/stat').read_text(encoding='utf-8').split(')')[-1].split()[0]
         return state != 'Z'
     except OSError:
         return True
@@ -47,9 +47,9 @@ def pid_alive(pid: int) -> bool:
 
 def running_services() -> list[str]:
     if WINDOWS:
-        out = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq {SERVICE}', '/NH'], capture_output=True, text=True).stdout
+        out = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq {SERVICE}', '/NH'], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
         return [line for line in out.splitlines() if SERVICE.lower() in line.lower()]
-    out = subprocess.run(['ps', '-axo', 'pid=,stat=,comm='], capture_output=True, text=True).stdout
+    out = subprocess.run(['ps', '-axo', 'pid=,stat=,comm='], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
     found = []
     for line in out.splitlines():
         parts = line.split(None, 2)
@@ -80,7 +80,7 @@ def show_service_log(report: dict) -> None:
     log = Path(user_data)/'logs'/'service.log'
     if log.exists():
         print(f'--- last lines of {log} ---')
-        print('\n'.join(log.read_text(errors='replace').splitlines()[-60:]))
+        print('\n'.join(log.read_text(errors='replace', encoding='utf-8').splitlines()[-60:]))
 
 
 def main() -> int:
@@ -114,7 +114,7 @@ def main() -> int:
     if not report_path.exists():
         print('FAIL: the app exited without writing a self-test report.')
         return 1
-    report = json.loads(report_path.read_text())
+    report = json.loads(report_path.read_text(encoding='utf-8'))
     print(json.dumps(report, indent=2))
     if not report.get('ok'):
         show_service_log(report)

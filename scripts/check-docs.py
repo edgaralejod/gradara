@@ -92,9 +92,9 @@ def check_commands(name: str, text: str, scripts: set[str], deploy_commands: set
 def main() -> int:
     files = tracked()
     docs = [name for name in files if name.endswith('.md')]
-    scripts = set(json.loads((ROOT/'package.json').read_text())['scripts'])
-    scripts |= set(json.loads((ROOT/'desktop'/'package.json').read_text())['scripts'])
-    deploy = (ROOT/'cloud'/'deploy.sh').read_text()
+    scripts = set(json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['scripts'])
+    scripts |= set(json.loads((ROOT/'desktop'/'package.json').read_text(encoding='utf-8'))['scripts'])
+    deploy = (ROOT/'cloud'/'deploy.sh').read_text(encoding='utf-8')
     deploy_commands = set(re.findall(r'^\s{2}([a-z]+)\)', deploy, re.MULTILINE))
 
     file_set = set(files)
@@ -107,7 +107,7 @@ def main() -> int:
         failures += check_paths(name, text, file_set, folders)
         failures += check_commands(name, text, scripts, deploy_commands)
         documented |= set(ENV_VAR.findall(text))
-    documented |= set(ENV_VAR.findall((ROOT/'.env.example').read_text()))
+    documented |= set(ENV_VAR.findall((ROOT/'.env.example').read_text(encoding='utf-8')))
 
     used: set[str] = set()
     for name in files:

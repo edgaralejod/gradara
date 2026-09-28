@@ -76,7 +76,7 @@ def test_generated_transformer_runs_in_real_circuit():
     async def run():
         d = transformer()
         await check_component(d, 'transformercheck'+uuid.uuid4().hex[:10])
-        raw = json.loads((Path(__file__).parents[1]/'models/examples/buck.json').read_text())
+        raw = json.loads((Path(__file__).parents[1]/'models/examples/buck.json').read_text(encoding='utf-8'))
         defs = {b['definition']['kind']:b['definition'] for b in raw['blocks']}
         blocks = []
         for ident, definition in [('source', defs['dcSource']), ('transformer', d.model_dump()), ('load', defs['resistor']), ('primaryGround', defs['ground']), ('secondaryGround', defs['ground'])]:
@@ -85,7 +85,7 @@ def test_generated_transformer_runs_in_real_circuit():
         project = Project(name='Generated transformer test', duration=.02, revision=0, blocks=blocks,
             wires=[dict(id=f'w{i}',source=a,sourceHandle=b,target=c,targetHandle=e) for i,(a,b,c,e) in enumerate(pairs)])
         result = await simulate(project, 'transformer'+uuid.uuid4().hex[:10])
-        with (RUNS/result['id']/'simulation_res.csv').open() as stream:
+        with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:
             row = list(csv.DictReader(stream))[-1]
         # OpenModelica folds the ideal source voltage into a parameter.
         v1 = next(p.value for p in project.blocks[0].definition.parameters if p.id == 'V')

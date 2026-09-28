@@ -38,7 +38,7 @@ def _merge(base: dict, update: dict) -> dict:
 
 def load() -> dict:
     try:
-        stored = json.loads(SETTINGS_FILE.read_text())
+        stored = json.loads(SETTINGS_FILE.read_text(encoding='utf-8'))
     except (OSError, ValueError):
         stored = {}
     return _merge(DEFAULTS, stored if isinstance(stored, dict) else {})

@@ -10,16 +10,16 @@ from server.diagnostics import validate_simulation
 from server.engine import simulate
 
 FIXTURE = Path(__file__).parent/'fixtures/feedback-project.json'
-def feedback(): return Project.model_validate_json(FIXTURE.read_text())
+def feedback(): return Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
 
 def test_saved_models_survive_switching_and_legacy_migration(tmp_path):
-    original = json.loads(FIXTURE.read_text())
+    original = json.loads(FIXTURE.read_text(encoding='utf-8'))
     original.update(exampleId='wiring', name='Wiring playground')
     (tmp_path/'examples').mkdir()
     legacy = tmp_path/'examples/wiring.json'
-    legacy.write_text(json.dumps(original))
-    (tmp_path/'workspace.json').write_text(legacy.read_text())
-    before = legacy.read_text()
+    legacy.write_text(json.dumps(original), encoding='utf-8')
+    (tmp_path/'workspace.json').write_text(legacy.read_text(encoding='utf-8'), encoding='utf-8')
+    before = legacy.read_text(encoding='utf-8')
     model = workspace.load_current(tmp_path)
     assert model.name == 'Feedback control'
     assert model.modelId == 'legacy-wiring'
@@ -32,7 +32,7 @@ def test_saved_models_survive_switching_and_legacy_migration(tmp_path):
     assert other.modelId != model.modelId
     assert workspace.load_current(tmp_path).modelId == other.modelId
     assert set(workspace.saved_models(tmp_path)) == {model.modelId, other.modelId}
-    assert legacy.read_text() == before
+    assert legacy.read_text(encoding='utf-8') == before
 
 def test_document_identity_is_not_solver_identity():
     model = feedback()
@@ -72,7 +72,7 @@ def test_latest_results_require_same_document_and_exact_equations(tmp_path, monk
     def record(run_id, snapshot, model_hash):
         folder = runs/run_id
         folder.mkdir(parents=True)
-        (folder/'result.json').write_text(json.dumps({'id':run_id,'modelHash':model_hash,'snapshot':snapshot.model_dump(exclude_none=True)}))
+        (folder/'result.json').write_text(json.dumps({'id':run_id,'modelHash':model_hash,'snapshot':snapshot.model_dump(exclude_none=True)}), encoding='utf-8')
     other = model.model_copy(deep=True)
     other.modelId = 'unrelated'
     record('unrelated', other, semantic_hash(model))
@@ -106,14 +106,14 @@ def test_api_documents_omit_unset_optional_values(tmp_path, monkeypatch):
 def test_new_blank_model_preserves_current_document_and_uses_independent_identity(tmp_path):
     templates = Path(__file__).parents[1]/'models/examples'
     existing = workspace.save(tmp_path, feedback())
-    before = (tmp_path/'models'/f'{existing.modelId}.json').read_text()
+    before = (tmp_path/'models'/f'{existing.modelId}.json').read_text(encoding='utf-8')
     blank = workspace.new_model(tmp_path, templates, '  My circuit  ')
     assert blank.name == 'My circuit'
     assert blank.modelId != existing.modelId
     assert blank.blocks == blank.wires == blank.junctions == blank.nets == blank.plots == []
     assert blank.exampleId is None
     assert workspace.load_current(tmp_path).modelId == blank.modelId
-    assert (tmp_path/'models'/f'{existing.modelId}.json').read_text() == before
+    assert (tmp_path/'models'/f'{existing.modelId}.json').read_text(encoding='utf-8') == before
     second = workspace.new_model(tmp_path, templates, 'My circuit')
     assert second.name == 'My circuit (2)'
     assert second.modelId != blank.modelId
@@ -121,13 +121,13 @@ def test_new_blank_model_preserves_current_document_and_uses_independent_identit
 @pytest.mark.parametrize('template', ['dc', 'foc', 'buck', 'flyback', 'datacenter', 'servo'])
 def test_new_model_templates_are_saved_independent_documents(tmp_path, template):
     templates = Path(__file__).parents[1]/'models/examples'
-    before = (templates/f'{template}.json').read_text()
+    before = (templates/f'{template}.json').read_text(encoding='utf-8')
     created = workspace.new_model(tmp_path, templates, 'My example', template)
     validate_simulation(created)
     assert created.blocks and created.wires
     assert created.modelId
     assert len(workspace.saved_models(tmp_path)) == 1
-    assert (templates/f'{template}.json').read_text() == before
+    assert (templates/f'{template}.json').read_text(encoding='utf-8') == before
 
 @pytest.mark.parametrize('name,template', [(' ', 'blank'), ('Circuit', '../workspace')])
 def test_new_model_rejects_invalid_requests_without_touching_workspace(tmp_path, name, template):
@@ -193,10 +193,10 @@ def test_current_snapshot_cannot_override_newer_canonical_document(tmp_path):
 
 
 def test_creating_model_preserves_a_workspace_only_legacy_document(tmp_path):
-    original = json.loads(FIXTURE.read_text())
+    original = json.loads(FIXTURE.read_text(encoding='utf-8'))
     original.pop('modelId', None)
     original.pop('exampleId', None)
-    (tmp_path/'workspace.json').write_text(json.dumps(original))
+    (tmp_path/'workspace.json').write_text(json.dumps(original), encoding='utf-8')
     old = workspace.load_current(tmp_path)
     workspace.new_model(tmp_path, Path('models/examples'), 'Untitled model')
     assert workspace.saved_models(tmp_path)[old.modelId].blocks == old.blocks
@@ -245,7 +245,7 @@ def test_trash_is_recoverable_and_legacy_files_do_not_resurrect_it(tmp_path, mon
     monkeypatch.setattr(service, 'PROJECT_DIR', tmp_path)
     legacy = tmp_path/'examples/dc.json'
     legacy.parent.mkdir()
-    legacy.write_text(FIXTURE.read_text())
+    legacy.write_text(FIXTURE.read_text(encoding='utf-8'), encoding='utf-8')
     model = next(iter(workspace.saved_models(tmp_path).values()))
     active = workspace.new_model(tmp_path, Path('models/examples'), 'Current model')
     workspace.trash_model(tmp_path, model.modelId)

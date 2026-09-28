@@ -36,14 +36,14 @@ async def export_controller(project:Project,block_id:str,job_id:str):
     for attempt in range(2):
         data = await agent.structured_generation(prompt,EXPORT_SCHEMA,f'export-{job_id}-{attempt}',task='export')
         if len(data['source'])>64000 or len(data['header'])>24000: raise ValueError('The generated controller is too large for this demo.')
-        (folder/'gradara_controller.c').write_text(data['source'])
-        (folder/'gradara_controller.h').write_text(data['header'])
+        (folder/'gradara_controller.c').write_text(data['source'], encoding='utf-8')
+        (folder/'gradara_controller.h').write_text(data['header'], encoding='utf-8')
         returncode,output = await engines.compile_c(folder,'gradara_controller.c')
         if returncode==0: break
         if attempt: raise ValueError('The generated C needs a revision: '+output[-3000:])
         prompt+='\nPrevious candidate:\n'+json.dumps(data)+'\nRepair this compiler output:\n'+output[-4000:]
-    (folder/'controller-package.json').write_text(json.dumps(boundary,indent=2))
-    (folder/'README.md').write_text('# Gradara controller export\n\n'+data['notes']+'\n\nGenerated from project revision '+str(project.revision)+'. Compiled as C11. Behavioral equivalence and target hardware execution have not been tested.\n')
+    (folder/'controller-package.json').write_text(json.dumps(boundary,indent=2), encoding='utf-8')
+    (folder/'README.md').write_text('# Gradara controller export\n\n'+data['notes']+'\n\nGenerated from project revision '+str(project.revision)+'. Compiled as C11. Behavioral equivalence and target hardware execution have not been tested.\n', encoding='utf-8')
     archive=folder/'gradara-controller.zip'
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED) as z:
         for filename in ['gradara_controller.c','gradara_controller.h','controller-package.json','README.md']:

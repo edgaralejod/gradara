@@ -34,8 +34,8 @@ async def generate(prompt: str, schema: dict, job_id: str) -> Generation:
     folder.mkdir(parents=True, exist_ok=True)
     schema_path = folder/'schema.json'
     result_path = folder/'response.json'
-    schema_path.write_text(json.dumps(schema))
-    (folder/'prompt.txt').write_text(prompt)
+    schema_path.write_text(json.dumps(schema), encoding='utf-8')
+    (folder/'prompt.txt').write_text(prompt, encoding='utf-8')
     command = [codex_path(), 'exec', '--ephemeral', '--ignore-user-config', '--skip-git-repo-check', '--sandbox',
                'read-only', '-c', 'features.shell_tool=false', '--output-schema', str(schema_path),
                '--output-last-message', str(result_path), '--color', 'never', '-']
@@ -51,4 +51,4 @@ async def generate(prompt: str, schema: dict, job_id: str) -> Generation:
     (folder/'agent.log').write_bytes(stderr)
     if process.returncode != 0 or not result_path.exists():
         raise ProviderError('Component generation did not finish. ' + stderr.decode(errors='replace')[-1200:], 502)
-    return Generation(json.loads(result_path.read_text()), 'codex', 'codex', Usage())
+    return Generation(json.loads(result_path.read_text(encoding='utf-8')), 'codex', 'codex', Usage())

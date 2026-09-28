@@ -11,7 +11,7 @@ from server.engine import RUNS, simulate
 FIXTURE = Path(__file__).parents[1]/'models/examples/buck.json'
 
 def buck():
-    return Project.model_validate_json(FIXTURE.read_text())
+    return Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
 
 def test_buck_uses_actual_zero_loss_switches_and_complementary_gate_events():
     source = emit_project(buck())
@@ -28,7 +28,7 @@ def test_buck_settles_to_duty_times_input_with_real_switching_ripple():
         next(p for b in lower.blocks if b.id == 'pwm' for p in b.definition.parameters if p.id == 'duty').value = .25
         results = await asyncio.gather(*[simulate(model,'buck'+uuid.uuid4().hex[:12]) for model in [base, lower]])
         for result, duty in zip(results, [.5, .25]):
-            with (RUNS/result['id']/'simulation_res.csv').open() as stream:
+            with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:
                 rows = list(csv.DictReader(stream))
             tail = [row for row in rows if .019 - 1e-12 <= float(row['time']) <= .02 + 1e-12]
             times = [float(row['time']) for row in tail]

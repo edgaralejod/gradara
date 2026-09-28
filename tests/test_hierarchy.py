@@ -107,7 +107,7 @@ FIXTURE = __import__('pathlib').Path(__file__).with_name('fixtures')/'grouped-dc
 
 
 def test_document_grouped_by_the_workbench_is_accepted_and_nests():
-    project = Project.model_validate_json(FIXTURE.read_text())
+    project = Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
     source = emit_project(project)
     assert source.count('\nmodel Sub_') == 2
     top = [b for b in project.blocks if b.definition.subsystem]
@@ -120,8 +120,8 @@ def test_grouped_model_simulates_like_the_flat_one():
     import uuid
     from pathlib import Path
     from server.engine import simulate
-    flat = Project.model_validate_json((Path(__file__).parent.parent/'models'/'examples'/'dc.json').read_text())
-    nested = Project.model_validate_json(FIXTURE.read_text())
+    flat = Project.model_validate_json((Path(__file__).parent.parent/'models'/'examples'/'dc.json').read_text(encoding='utf-8'))
+    nested = Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
 
     async def both():
         return await asyncio.gather(simulate(flat, 'flat' + uuid.uuid4().hex[:10]),
