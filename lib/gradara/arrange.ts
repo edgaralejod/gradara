@@ -132,6 +132,19 @@ function relations(project: Project, ids: Set<string>) {
             axis: 'x',
             weight,
           });
+    // Branches hanging from one rail (all facing up, or all facing down) line up on it.
+    if (!signal)
+      for (const group of [U, D])
+        for (let i = 1; i < group.length; i++)
+          if (group[i - 1].block !== group[i].block)
+            pairs.push({
+              a: group[i - 1].block,
+              portA: group[i - 1].port,
+              b: group[i].block,
+              portB: group[i].port,
+              axis: 'y',
+              weight: 1,
+            });
   }
   return { x, y, pairs, siblings };
 }
@@ -328,12 +341,24 @@ function place(
   // Longest path puts a block as far left as its orders allow. Within the room its
   // orders leave, move it to the middle of what it connects to (feedback and
   // measurement included), so a sensor sits between what it measures and what reads it.
-  const neighbours = new Map(ids.map((id) => [id, [] as string[]]));
-  for (const w of flattenWires(project))
-    if (set.has(w.source) && set.has(w.target) && w.source !== w.target) {
-      neighbours.get(w.source)!.push(w.target);
-      neighbours.get(w.target)!.push(w.source);
-    }
+  // Everything on a shared net counts as connected, split evenly across the net.
+  const neighbours = new Map(
+    ids.map((id) => [id, [] as { id: string; weight: number }[]]),
+  );
+  for (const keys of netComponents(project)) {
+    const members = [
+      ...new Set(
+        keys
+          .filter((k) => !k.startsWith('j:'))
+          .map((k) => k.slice(0, k.lastIndexOf('.')))
+          .filter((id) => set.has(id)),
+      ),
+    ];
+    for (const a of members)
+      for (const b of members)
+        if (a !== b)
+          neighbours.get(a)!.push({ id: b, weight: 1 / (members.length - 1) });
+  }
   const kept = x.filter((_, i) => byColumn.kept.has(i));
   for (let round = 0; round < 6; round++)
     for (const id of [...ids].sort(
@@ -347,10 +372,10 @@ function place(
         const vertical = pairs.some(
           (p) =>
             p.axis === 'x' &&
-            ((p.a === id && p.b === n) || (p.b === id && p.a === n)),
+            ((p.a === id && p.b === n.id) || (p.b === id && p.a === n.id)),
         );
-        const w = vertical ? 3 : 1;
-        total += cols.get(n)! * w;
+        const w = n.weight * (vertical ? 3 : 1);
+        total += cols.get(n.id)! * w;
         weight += w;
       }
       if (!weight) continue;
@@ -623,9 +648,12 @@ function place(
   const apart = (p: Pair) =>
     Math.abs(cols.get(p.a)! - cols.get(p.b)!) * 1000 +
     Math.abs(position.get(p.a)!.y - position.get(p.b)!.y);
+  // In flow order, so a chain straightens from its source downstream.
   const straight = [...pairs].sort(
     (p, q) =>
       q.weight - p.weight ||
+      Math.min(cols.get(p.a)!, cols.get(p.b)!) -
+        Math.min(cols.get(q.a)!, cols.get(q.b)!) ||
       apart(p) - apart(q) ||
       p.a.localeCompare(q.a) ||
       p.b.localeCompare(q.b) ||
