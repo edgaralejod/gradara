@@ -5,6 +5,8 @@ import CanvasMenu, {
   type CanvasMenuItem,
 } from '@/components/gradara/canvas-menu';
 import SelectionActions from '@/components/gradara/selection-actions';
+import { addPort } from '@/lib/gradara/subsystem-ports';
+import { boundaryFor } from '@/lib/gradara/port-blocks';
 import HierarchyBar from '@/components/gradara/hierarchy-bar';
 import {
   InstancePortsPanel,
@@ -69,6 +71,8 @@ import {
   CopyPlus,
   CornerLeftUp,
   SquareDashedMousePointer,
+  LogIn,
+  LogOut,
   Keyboard,
   Check,
   LoaderCircle,
@@ -318,7 +322,8 @@ function Workbench() {
       setNav(next);
       enterScope(path);
       const upward =
-        path.length < current.length && path.every((id, i) => id === current[i]);
+        path.length < current.length &&
+        path.every((id, i) => id === current[i]);
       if (upward) setSelectedIds([current[path.length]]);
     },
     [enterScope],
@@ -1135,11 +1140,29 @@ function Workbench() {
         return;
       }
       if (definition.boundary) {
-        // A new port goes after the existing ones.
-        const order = projectRef.current.blocks.filter(isBoundary).length;
+        // Dropped from a wire, the port becomes the type that wire needs.
+        if (connection)
+          definition = boundaryFor(
+            portOf(projectRef.current, connection.blockId, connection.portId),
+            definition,
+          );
+        // A new port goes after the existing ones, named in1, out2, terminal1, …
+        const pills = projectRef.current.blocks.filter(isBoundary);
+        const names = new Set(pills.map((b) => b.definition.name));
+        const base =
+          definition.kind === 'inport'
+            ? 'in'
+            : definition.kind === 'outport'
+              ? 'out'
+              : 'terminal';
+        let n =
+          pills.filter((b) => b.definition.kind === definition.kind).length + 1;
+        while (names.has(`${base}${n}`)) n++;
         definition = {
           ...definition,
-          boundary: { ...definition.boundary, order },
+          name: `${base}${n}`,
+          ports: definition.ports.map((p) => ({ ...p, name: `${base}${n}` })),
+          boundary: { ...definition.boundary, order: Number.MAX_SAFE_INTEGER },
         };
       }
       const id = `b_${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`;
@@ -1382,6 +1405,24 @@ function Workbench() {
         hint: 'Copy or cut blocks first',
         run: () => pasteAt(menu.point),
       },
+      // Inside a subsystem, an input or output pill can go where you clicked; its
+      // Type in the inspector sets what it carries.
+      ...(scopeRef.current.length
+        ? (['inport', 'outport'] as const).map((kind): CanvasMenuItem => ({
+            id: `port-${kind}`,
+            label:
+              kind === 'inport'
+                ? 'Add input port here'
+                : 'Add output port here',
+            icon:
+              kind === 'inport' ? <LogIn size={13} /> : <LogOut size={13} />,
+            run: () => {
+              const id = `p_${crypto.randomUUID().replaceAll('-', '').slice(0, 10)}`;
+              commit((p) => addPort(p, { kind, position: menu.point }, id));
+              select({ ...emptySelection(), blockIds: [id] });
+            },
+          }))
+        : []),
       { id: 'sep-here', separator: true },
       { id: 'sheet', heading: 'Sheet' },
       {
@@ -2609,6 +2650,21 @@ function Workbench() {
                           e.stopPropagation();
                           if (n.type === 'tap') return;
                           if (openSubsystem(n.id)) return;
+                          // A port pill has no equations: its properties are the
+                          // port fields in the inspector.
+                          const block = projectRef.current.blocks.find(
+                            (b) => b.id === n.id,
+                          );
+                          if (block && isBoundary(block)) {
+                            select({ ...emptySelection(), blockIds: [n.id] });
+                            setInspectorOpen(true);
+                            requestAnimationFrame(() =>
+                              document
+                                .getElementById('port-name-field')
+                                ?.focus(),
+                            );
+                            return;
+                          }
                           setEquationBlock({ id: n.id, tab: 'properties' });
                         }}
                         onPaneClick={() => {
@@ -3004,26 +3060,28 @@ function Workbench() {
                       <summary>Description</summary>
                       <p>{active.definition.description}</p>
                     </details>
-                    <Button
-                      className="refine-button"
-                      variant="outline"
-                      disabled={
-                        active.definition.domain !== 'signal' ||
-                        !!active.definition.modelica
-                      }
-                      onClick={() =>
-                        setComposer({
-                          position: active.position,
-                          existing: {
-                            id: active.id,
-                            definition: active.definition,
-                          },
-                        })
-                      }
-                    >
-                      <Sparkles size={13} />
-                      Refine with agent
-                    </Button>
+                    {/* Only a signal block defined by equations can be refined. */}
+                    {active.definition.domain === 'signal' &&
+                      !active.definition.modelica &&
+                      !active.definition.subsystem &&
+                      !isBoundary(active) && (
+                        <Button
+                          className="refine-button"
+                          variant="outline"
+                          onClick={() =>
+                            setComposer({
+                              position: active.position,
+                              existing: {
+                                id: active.id,
+                                definition: active.definition,
+                              },
+                            })
+                          }
+                        >
+                          <Sparkles size={13} />
+                          Refine with agent
+                        </Button>
+                      )}
                   </div>
                   {active.definition.subsystem && (
                     <div className="inspector-section subsystem-section">
@@ -3092,51 +3150,60 @@ function Workbench() {
                       onCommit={(change) => commit(change)}
                     />
                   )}
-                  <div className="inspector-section">
-                    <div className="section-label">
-                      Parameters
-                      <span>{active.definition.parameters.length}</span>
-                      <button
-                        onClick={() =>
-                          setEquationBlock({ id: active.id, tab: 'properties' })
-                        }
-                      >
-                        Edit…
-                      </button>
-                    </div>
-                    <ParameterList
-                      blockId={active.id}
-                      parameters={active.definition.parameters}
-                      {...(currentSubsystem && !isBoundary(active)
-                        ? {
-                            promoted: promotedTargets(
-                              doc,
-                              currentSubsystem,
-                            ).get(active.id),
-                            onPromote: (id: string) =>
-                              commit((p) =>
-                                promoteParameter(
-                                  p,
+                  {/* A port pill has no parameters or equations; a block with neither skips the section. */}
+                  {!isBoundary(active) &&
+                    (active.definition.parameters.length > 0 ||
+                      !!active.definition.equations?.trim() ||
+                      !!active.definition.declarations?.trim()) && (
+                      <div className="inspector-section">
+                        <div className="section-label">
+                          Parameters
+                          <span>{active.definition.parameters.length}</span>
+                          <button
+                            onClick={() =>
+                              setEquationBlock({
+                                id: active.id,
+                                tab: 'properties',
+                              })
+                            }
+                          >
+                            Edit…
+                          </button>
+                        </div>
+                        <ParameterList
+                          blockId={active.id}
+                          parameters={active.definition.parameters}
+                          {...(currentSubsystem && !isBoundary(active)
+                            ? {
+                                promoted: promotedTargets(
+                                  doc,
                                   currentSubsystem,
-                                  active.id,
-                                  id,
-                                ),
-                              ),
-                            onDemote: (id: string) =>
-                              commit((p) =>
-                                demoteParameter(p, currentSubsystem, id),
-                              ),
+                                ).get(active.id),
+                                onPromote: (id: string) =>
+                                  commit((p) =>
+                                    promoteParameter(
+                                      p,
+                                      currentSubsystem,
+                                      active.id,
+                                      id,
+                                    ),
+                                  ),
+                                onDemote: (id: string) =>
+                                  commit((p) =>
+                                    demoteParameter(p, currentSubsystem, id),
+                                  ),
+                              }
+                            : {})}
+                          onChange={(id, value) =>
+                            commit((p) =>
+                              applyBlockEdits(p, active.id, {
+                                parameters: { [id]: value },
+                              }),
+                            )
                           }
-                        : {})}
-                      onChange={(id, value) =>
-                        commit((p) =>
-                          applyBlockEdits(p, active.id, {
-                            parameters: { [id]: value },
-                          }),
-                        )
-                      }
-                    />
-                  </div>
+                        />
+                      </div>
+                    )}
                   <div className="inspector-section block-layout-section">
                     <div className="section-label">
                       Block size <span className="subtle">px</span>

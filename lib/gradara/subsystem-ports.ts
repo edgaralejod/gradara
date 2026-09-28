@@ -39,7 +39,43 @@ export const portKindLabels: Record<BoundaryKind, string> = {
 };
 
 export type Side = NonNullable<Port['side']>;
+
+/**
+ * How ports are presented: every port is an input or an output of the subsystem,
+ * and its type is what it carries. A physical type makes it a terminal, which is
+ * an input or output only in where it sits (left or right) on the block.
+ */
+export type PortRole = 'input' | 'output';
+export const portTypes: Domain[] = [
+  'signal',
+  'boolean',
+  'electrical',
+  'mechanical',
+  'translational',
+  'thermal',
+  'magnetic',
+  'threePhase',
+];
+const causal = (d: Domain) => d === 'signal' || d === 'boolean';
+export const roleOf = (kind: BoundaryKind, side?: Side): PortRole =>
+  kind === 'outport' || (kind === 'connport' && side === 'right')
+    ? 'output'
+    : 'input';
+/** The boundary block behind a role and type. */
+export function kindFor(role: PortRole, type: Domain) {
+  return causal(type)
+    ? { kind: (role === 'input' ? 'inport' : 'outport') as BoundaryKind }
+    : {
+        kind: 'connport' as BoundaryKind,
+        side: (role === 'input' ? 'left' : 'right') as Side,
+      };
+}
+
 export type PortChange = {
+  /** Input or output, keeping the type where it can. */
+  role?: PortRole;
+  /** What the port carries; a physical type makes it a terminal. */
+  type?: Domain;
   name?: string;
   kind?: BoundaryKind;
   domain?: Domain;
@@ -255,6 +291,19 @@ export function editPort<T extends Sheet>(
   change: PortChange,
 ): T {
   let next = sheet;
+  if (change.role || change.type) {
+    const block = sheet.blocks.find((b) => b.id === id);
+    if (block && isBoundary(block)) {
+      const now = portSummary(block);
+      const role = change.role ?? now.role;
+      const type = change.type ?? now.domain;
+      const target = kindFor(role, type);
+      if (target.kind !== now.kind) next = setPortKind(next, id, target.kind);
+      next = setPortDomain(next, id, type);
+      if (target.side && (target.kind !== now.kind || role !== now.role))
+        next = setPortSide(next, id, target.side);
+    }
+  }
   if (change.kind) next = setPortKind(next, id, change.kind);
   if (change.domain) next = setPortDomain(next, id, change.domain);
   if (change.side) next = setPortSide(next, id, change.side);
@@ -300,7 +349,14 @@ function placeFor(
 /** Add a port to a sheet: a new pill named in1, out1, terminal1, … by default. */
 export function addPort<T extends Sheet>(
   sheet: T,
-  spec: { kind: BoundaryKind; domain?: Domain; name?: string; side?: Side },
+  spec: {
+    kind: BoundaryKind;
+    domain?: Domain;
+    name?: string;
+    side?: Side;
+    /** Where to put the pill; by default, below the others of its column. */
+    position?: { x: number; y: number };
+  },
   id = newId('p_'),
 ): T {
   const kind = spec.kind;
@@ -334,7 +390,15 @@ export function addPort<T extends Sheet>(
   const block: Block = {
     id,
     definition,
-    position: placeFor(sheet, kind, side ?? defaultSide(kind), size),
+    position: spec.position
+      ? snapBlockPosition(
+          {
+            x: spec.position.x - size.width / 2,
+            y: spec.position.y - size.height / 2,
+          },
+          size,
+        )
+      : placeFor(sheet, kind, side ?? defaultSide(kind), size),
     size,
   };
   return renumberBoundaries({ ...sheet, blocks: [...sheet.blocks, block] });
@@ -463,5 +527,6 @@ export function portSummary(block: Block) {
     domain: block.definition.ports[0].domain,
     number: Number(block.definition.symbol) || undefined,
     side: block.definition.boundary?.side ?? defaultSide(kind),
+    role: roleOf(kind, block.definition.boundary?.side),
   };
 }

@@ -81,6 +81,15 @@ export default function BlockDialog({
     !definition.generated &&
     (definition.domain !== 'signal' || !!definition.modelica);
   const defaults = libraryDefaults(definition);
+  // Show only what this block has: code tabs for blocks defined by equations you
+  // can read or edit, and a Parameters section only when there are parameters.
+  const showEquations = !readonly || !!definition.equations?.trim();
+  const showDeclarations = !readonly || !!definition.declarations?.trim();
+  const activeTab: BlockDialogTab =
+    (tab === 'equations' && !showEquations) ||
+    (tab === 'declarations' && !showDeclarations)
+      ? 'properties'
+      : tab;
   const dirty = isDirty(definition, draft);
 
   const apply = () => {
@@ -129,9 +138,9 @@ export default function BlockDialog({
     };
   }, []);
 
-  const code = tab === 'equations' ? draft.equations : draft.declarations;
+  const code = activeTab === 'equations' ? draft.equations : draft.declarations;
   const setCode = (value: string) =>
-    setDraft(tab === 'equations' ? { equations: value } : { declarations: value });
+    setDraft(activeTab === 'equations' ? { equations: value } : { declarations: value });
 
   return (
     <Dialog
@@ -150,20 +159,28 @@ export default function BlockDialog({
       >
         <DialogTitle>{definition.name}</DialogTitle>
         <DialogDescription>
-          {tab === 'properties'
+          {activeTab === 'properties'
             ? 'Edit the name and parameters of this block. Apply saves all changes as one undo step.'
             : readonly
               ? 'Built-in physical equations are shown for inspection. Parameters stay editable on the Properties tab.'
               : 'Edit the component definition. Changes become part of your saved model.'}
         </DialogDescription>
-        <Tabs value={tab} onValueChange={(v) => setTab(v as BlockDialogTab)}>
-          <TabsList variant="line">
-            <TabsTrigger value="properties">Properties</TabsTrigger>
-            <TabsTrigger value="equations">Equations</TabsTrigger>
-            <TabsTrigger value="declarations">State & declarations</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        {tab === 'properties' ? (
+        {(showEquations || showDeclarations) && (
+          <Tabs value={activeTab} onValueChange={(v) => setTab(v as BlockDialogTab)}>
+            <TabsList variant="line">
+              <TabsTrigger value="properties">Properties</TabsTrigger>
+              {showEquations && (
+                <TabsTrigger value="equations">Equations</TabsTrigger>
+              )}
+              {showDeclarations && (
+                <TabsTrigger value="declarations">
+                  State & declarations
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </Tabs>
+        )}
+        {activeTab === 'properties' ? (
           <div className="block-dialog-properties">
             <section>
               <div className="section-label">Name</div>
@@ -188,6 +205,7 @@ export default function BlockDialog({
                 <code>{block.id}</code>
               </p>
             </section>
+            {definition.parameters.length > 0 && (
             <section>
               <div className="section-label">
                 Parameters<span>{definition.parameters.length}</span>
@@ -207,6 +225,7 @@ export default function BlockDialog({
                 }
               />
             </section>
+            )}
             <section>
               <div className="section-label">Interface</div>
               {definition.ports.map((p) => (
@@ -246,7 +265,7 @@ export default function BlockDialog({
             ) : (
               <textarea
                 aria-label={
-                  tab === 'equations'
+                  activeTab === 'equations'
                     ? 'Component equations'
                     : 'Component declarations'
                 }

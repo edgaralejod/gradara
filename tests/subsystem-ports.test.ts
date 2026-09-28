@@ -11,6 +11,7 @@ import {
 } from '../lib/gradara/hierarchy';
 import {
   addInstancePort,
+  addPort,
   editInstancePort,
   editPort,
   instancePortBlocks,
@@ -214,5 +215,59 @@ void test('the hierarchy tree lists nested subsystems under the top level', () =
   assert.deepEqual(
     tree.children.map((c) => [c.path, c.name]),
     [[['sub'], 'Subsystem']],
+  );
+});
+
+void test('a port added at a point sits there, centered and on the grid', () => {
+  const doc = withSubsystem('emptySubsystem');
+  const view = scopeView(doc, ['sub']);
+  const next = addPort(
+    view,
+    { kind: 'outport', position: { x: 400, y: 200 } },
+    'p_here',
+  );
+  const pill = next.blocks.find((b) => b.id === 'p_here')!;
+  assert.equal(pill.definition.kind, 'outport');
+  assert.equal(pill.position.x % 20, 0);
+  assert.ok(Math.abs(pill.position.x + pill.size!.width / 2 - 400) <= 20);
+  assert.ok(Math.abs(pill.position.y + pill.size!.height / 2 - 200) <= 20);
+});
+
+void test('ports are inputs or outputs; a physical type makes a terminal on that side', () => {
+  let p = withSubsystem();
+  const [input, output] = summaries(p);
+  p = editInstancePort(p, 'sub', input.id, { type: 'electrical' });
+  p = editInstancePort(p, 'sub', output.id, { type: 'mechanical' });
+  let [a, b] = [input.id, output.id].map((id) =>
+    summaries(p).find((s) => s.id === id)!,
+  );
+  assert.deepEqual(
+    [a.kind, a.role, a.side, a.domain],
+    ['connport', 'input', 'left', 'electrical'],
+  );
+  assert.deepEqual(
+    [b.kind, b.role, b.side, b.domain],
+    ['connport', 'output', 'right', 'mechanical'],
+  );
+  p = editInstancePort(p, 'sub', output.id, { type: 'boolean' });
+  p = editInstancePort(p, 'sub', input.id, { role: 'output' });
+  [a, b] = [input.id, output.id].map((id) =>
+    summaries(p).find((s) => s.id === id)!,
+  );
+  assert.deepEqual([a.kind, a.role, a.side], ['connport', 'output', 'right']);
+  assert.deepEqual(
+    [b.kind, b.role, b.domain],
+    ['outport', 'output', 'boolean'],
+  );
+});
+
+void test('the library has one subsystem input and one subsystem output', () => {
+  const ports = library.filter((d) => d.boundary);
+  assert.deepEqual(
+    ports.map((d) => [d.kind, d.name]),
+    [
+      ['inport', 'Subsystem input'],
+      ['outport', 'Subsystem output'],
+    ],
   );
 });

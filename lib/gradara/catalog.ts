@@ -151,6 +151,8 @@ export function searchLibrary(
     if (category !== 'all' && categoryOf(definition) !== category) return false;
     if (
       compatibleWith &&
+      // A subsystem port becomes whatever the wire needs.
+      !definition.boundary &&
       !definition.ports.some((port) => compatible(compatibleWith, port))
     )
       return false;

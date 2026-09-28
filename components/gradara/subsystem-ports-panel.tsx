@@ -3,20 +3,19 @@ import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react';
 import { domainColors, domainLabels } from '@/lib/gradara/model';
 import type { Block, Domain, Project } from '@/lib/gradara/model';
 import { boundaryBlocks, type BoundaryKind } from '@/lib/gradara/hierarchy';
-import { boundaryDomains } from '@/lib/gradara/port-blocks';
 import {
   addInstancePort,
   editInstancePort,
   editPort,
   instancePortBlocks,
-  portKindLabels,
   portSummary,
+  portTypes,
+  type PortRole,
   removeInstancePort,
   type PortChange,
   type Side,
 } from '@/lib/gradara/subsystem-ports';
 
-const kinds: BoundaryKind[] = ['inport', 'outport', 'connport'];
 const sides: Side[] = ['left', 'right', 'top', 'bottom'];
 const sideLabels: Record<Side, string> = {
   left: 'Left',
@@ -24,18 +23,44 @@ const sideLabels: Record<Side, string> = {
   top: 'Top',
   bottom: 'Bottom',
 };
+const roleLabels: Record<PortRole, string> = {
+  input: 'Input',
+  output: 'Output',
+};
 
-/** Signal and Boolean for inputs and outputs; the physical domains for terminals. */
-function DomainSelect({
-  kind,
+function RoleSelect({
   value,
   onChange,
   label,
 }: {
-  kind: BoundaryKind;
+  value: PortRole;
+  onChange: (r: PortRole) => void;
+  label?: string;
+}) {
+  return (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value as PortRole)}
+    >
+      {(['input', 'output'] as const).map((r) => (
+        <option key={r} value={r}>
+          {roleLabels[r]}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/** What a port carries: signal, Boolean, or a physical domain (which makes it a terminal). */
+function TypeSelect({
+  value,
+  onChange,
+  label,
+}: {
   value: Domain;
   onChange: (d: Domain) => void;
-  label: string;
+  label?: string;
 }) {
   return (
     <select
@@ -43,7 +68,7 @@ function DomainSelect({
       value={value}
       onChange={(e) => onChange(e.target.value as Domain)}
     >
-      {boundaryDomains(kind).map((d) => (
+      {portTypes.map((d) => (
         <option key={d} value={d}>
           {domainLabels[d]}
         </option>
@@ -74,22 +99,26 @@ export function PortPillPanel({
   return (
     <div className="inspector-section subsystem-section">
       <div className="section-label">Subsystem port</div>
-      <label className="field-row">
+      <div className="field-row">
+        <span>Port</span>
+        <RoleSelect
+          label="Port"
+          value={port.role}
+          onChange={(role) => change({ role })}
+        />
+      </div>
+      <div className="field-row">
         <span>Type</span>
-        <select
-          value={port.kind}
-          onChange={(e) => change({ kind: e.target.value as BoundaryKind })}
-        >
-          {kinds.map((k) => (
-            <option key={k} value={k}>
-              {portKindLabels[k]}
-            </option>
-          ))}
-        </select>
-      </label>
+        <TypeSelect
+          label="Type"
+          value={port.domain}
+          onChange={(type) => change({ type })}
+        />
+      </div>
       <label className="field-row">
         <span>Name</span>
         <input
+          id="port-name-field"
           key={port.name}
           defaultValue={port.name}
           onBlur={(e) => change({ name: e.target.value })}
@@ -99,7 +128,7 @@ export function PortPillPanel({
         />
       </label>
       <label className="field-row">
-        <span>Port number</span>
+        <span>Number</span>
         <select
           value={port.number ?? 1}
           onChange={(e) => change({ number: Number(e.target.value) })}
@@ -110,15 +139,6 @@ export function PortPillPanel({
             </option>
           ))}
         </select>
-      </label>
-      <label className="field-row">
-        <span>{port.kind === 'connport' ? 'Domain' : 'Carries'}</span>
-        <DomainSelect
-          kind={port.kind}
-          value={port.domain}
-          label="Domain"
-          onChange={(domain) => change({ domain })}
-        />
       </label>
       <label className="field-row">
         <span>Side outside</span>
@@ -134,9 +154,9 @@ export function PortPillPanel({
         </select>
       </label>
       <p className="size-hint">
-        The name and number show on the subsystem block. A port takes the domain
-        of the first thing you wire to it; changing its type or domain later
-        removes its wires.
+        The name shows on the subsystem block. A physical type makes the port a
+        terminal. A new port takes the type of the first thing you wire to it;
+        changing its port or type later removes its wires.
       </p>
     </div>
   );
@@ -167,19 +187,29 @@ export function InstancePortsPanel({
       <div className="instance-ports-head">
         <span>Ports</span>
         <span className="instance-ports-add">
-          {kinds.map((kind) => (
-            <button
-              key={kind}
-              type="button"
-              title={`Add ${portKindLabels[kind].toLowerCase()} port`}
-              onClick={() =>
-                onCommit((p) => addInstancePort(p, block.id, { kind }).project)
-              }
-            >
-              <Plus size={11} />
-              {portKindLabels[kind]}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() =>
+              onCommit(
+                (p) => addInstancePort(p, block.id, { kind: 'inport' }).project,
+              )
+            }
+          >
+            <Plus size={11} />
+            Input
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              onCommit(
+                (p) =>
+                  addInstancePort(p, block.id, { kind: 'outport' }).project,
+              )
+            }
+          >
+            <Plus size={11} />
+            Output
+          </button>
         </span>
       </div>
       {!ports.length && (
@@ -193,18 +223,14 @@ export function InstancePortsPanel({
             <span
               className="instance-port-badge"
               style={{ borderColor: domainColors[port.domain] }}
-              title={`${portKindLabels[port.kind]} ${port.number ?? ''}`}
+              title={`${roleLabels[port.role]} · ${domainLabels[port.domain]}`}
             >
-              {port.kind === 'inport'
-                ? 'In'
-                : port.kind === 'outport'
-                  ? 'Out'
-                  : 'T'}
-              {port.number}
+              {port.role === 'input' ? 'In' : 'Out'}
+              {port.kind === 'connport' ? '' : port.number}
             </span>
             <input
               key={port.name}
-              aria-label={`Name of ${portKindLabels[port.kind].toLowerCase()} ${port.number}`}
+              aria-label={`Name of ${port.role} ${port.number ?? ''}`}
               defaultValue={port.name}
               onFocus={() => onSelectPort?.(port.id)}
               onBlur={(e) => {
@@ -215,11 +241,15 @@ export function InstancePortsPanel({
                 if (e.key === 'Enter') e.currentTarget.blur();
               }}
             />
-            <DomainSelect
-              kind={port.kind}
+            <RoleSelect
+              label={`Is ${port.name} an input or an output`}
+              value={port.role}
+              onChange={(role) => edit(port.id, { role })}
+            />
+            <TypeSelect
+              label={`Type of ${port.name}`}
               value={port.domain}
-              label={`What ${port.name} carries`}
-              onChange={(domain) => edit(port.id, { domain })}
+              onChange={(type) => edit(port.id, { type })}
             />
             <select
               aria-label={`Side of ${port.name}`}
