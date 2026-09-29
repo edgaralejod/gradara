@@ -2677,6 +2677,18 @@ function Workbench() {
               >
                 {ready &&
                   project.blocks.length === 0 &&
+                  scope.length > 0 &&
+                  !composer &&
+                  !inserter && (
+                    <div className="empty-subsystem" role="note">
+                      This subsystem is empty. Add blocks from the library, or
+                      right-click to add input and output ports. Esc or ⌘↑
+                      goes back up.
+                    </div>
+                  )}
+                {ready &&
+                  project.blocks.length === 0 &&
+                  scope.length === 0 &&
                   !composer &&
                   !inserter && (
                     <div

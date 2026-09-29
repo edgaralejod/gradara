@@ -588,3 +588,117 @@ void test('net labels are off by default and follow names and the show toggle', 
   assert.equal(netLabelShown({ ...net(p), hidden: false }), false);
   assert.equal(semanticSignature(shown), semanticSignature(p));
 });
+
+void test('two wires leaving a dot along one run branch where they part, like wires leaving a port', () => {
+  // Four electrical terminals on one node J. Dragging the lower wire onto the upper
+  // one's row makes them share J → (480, 32) → (336, 32); A turns up at x = 336.
+  const terminal = (
+    id: string,
+    x: number,
+    y: number,
+    side: 'top' | 'bottom',
+  ) => ({
+    id,
+    position: { x, y },
+    size: { width: 32, height: 32 },
+    definition: {
+      kind: 'test',
+      name: id,
+      domain: 'electrical' as const,
+      symbol: 'T',
+      description: '',
+      parameters: [],
+      equations: '',
+      ports: [
+        {
+          id: 'p',
+          name: 'p',
+          domain: 'electrical' as const,
+          direction: 'physical' as const,
+          side,
+        },
+      ],
+    },
+  });
+  const project: Project = {
+    ...initialProject(),
+    blocks: [
+      terminal('lower', 32, -64, 'bottom'),
+      terminal('a', 320, -64, 'bottom'),
+      terminal('b', 464, -64, 'bottom'),
+      terminal('gnd', 464, 128, 'top'),
+    ],
+    junctions: [{ id: 'J', domain: 'electrical', position: { x: 480, y: 64 } }],
+    wires: [
+      {
+        id: 'wl',
+        source: 'lower',
+        sourceHandle: 'p',
+        target: 'J',
+        targetHandle: 'node',
+        waypoints: [
+          { x: 48, y: 32 },
+          { x: 480, y: 32 },
+        ],
+      },
+      {
+        id: 'wa',
+        source: 'a',
+        sourceHandle: 'p',
+        target: 'J',
+        targetHandle: 'node',
+        waypoints: [
+          { x: 336, y: 32 },
+          { x: 480, y: 32 },
+        ],
+      },
+      {
+        id: 'wb',
+        source: 'b',
+        sourceHandle: 'p',
+        target: 'J',
+        targetHandle: 'node',
+      },
+      {
+        id: 'wg',
+        source: 'J',
+        sourceHandle: 'node',
+        target: 'gnd',
+        targetHandle: 'p',
+      },
+    ],
+    nets: [],
+  };
+  const before = reconcileNets(project);
+  const after = normalizeProject(before);
+  const dots = (after.junctions ?? []).map(
+    (j) => `${j.position.x},${j.position.y}`,
+  );
+  assert.ok(
+    dots.includes('336,32'),
+    `a dot where A leaves the shared run: ${dots}`,
+  );
+  assert.equal(semanticSignature(after), semanticSignature(before));
+  const terminals = (p: Project) =>
+    netTopology(p).map((n) =>
+      [...n.keys].filter((e) => !e.startsWith('j:')).sort(),
+    );
+  assert.deepEqual(terminals(after), terminals(before));
+  // No two wires still overlap along a run.
+  const runs = new Map<string, number>();
+  for (const wire of after.wires) {
+    const pts = polylineOfWire(after, wire.id);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [a, b] = [pts[i], pts[i + 1]].sort(
+        (u, v) => u.x - v.x || u.y - v.y,
+      );
+      const key = `${a.x},${a.y}-${b.x},${b.y}`;
+      runs.set(key, (runs.get(key) ?? 0) + 1);
+    }
+  }
+  assert.ok(
+    [...runs.values()].every((n) => n === 1),
+    JSON.stringify([...runs]),
+  );
+  assert.equal(normalizeProject(after), after);
+});

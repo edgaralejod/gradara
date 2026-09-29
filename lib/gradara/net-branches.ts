@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { Project, Wire } from './model';
 import { endpointPoint, endpointPort, TAP_HANDLE } from './net';
+import { isCausal, type Project, type Wire } from './model';
 import { polylineOfWire, samePt } from './net-draw';
 import { simplifyPoints, type Pt } from './routing';
 
@@ -38,7 +38,13 @@ export function materializeBranches(project: Project): Project {
     for (const wire of next.wires) {
       for (const reversed of [false, true]) {
         const id = reversed ? wire.target : wire.source;
-        if (!next.blocks.some((b) => b.id === id)) continue;
+        // Block terminals, and junctions: two wires leaving one dot along the same
+        // run branch where they part, like two wires leaving one port.
+        if (
+          !next.blocks.some((b) => b.id === id) &&
+          !next.junctions?.some((j) => j.id === id)
+        )
+          continue;
         const key = `${id}.${reversed ? wire.targetHandle : wire.sourceHandle}`;
         const list = groups.get(key) ?? [];
         list.push({ wire, reversed });
@@ -58,6 +64,22 @@ export function materializeBranches(project: Project): Project {
           };
           const branch = prefix(path(first), path(second));
           if (!branch) continue;
+          const dot = next.junctions?.find(
+            (j) =>
+              j.id === (first.reversed ? first.wire.target : first.wire.source),
+          );
+          if (dot) {
+            // A signal dot has one incoming driver; only outgoing wires share a run.
+            if (isCausal(dot.domain) && (first.reversed || second.reversed))
+              continue;
+            // When every wire at the dot leaves along this run, the dot itself belongs
+            // at the divergence: normalizeJunctions moves it instead.
+            const heading = (p: Pt[]) =>
+              `${Math.sign(p[1].x - p[0].x)},${Math.sign(p[1].y - p[0].y)}`;
+            const shared = heading(branch.common);
+            if (group.every((entry) => heading(path(entry)) === shared))
+              continue;
+          }
           // A later fan-out can share a trunk we just materialized. Attach
           // it to that existing node instead of retaining an overlapping wire.
           if (branch.a.length === 1 || branch.b.length === 1) {
