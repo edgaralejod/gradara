@@ -14,7 +14,9 @@ Selection:
   found by reading PE import tables.
 - `tools/msys`: the MSYS2 packages (from its pacman database) that provide the
   C toolchain and those DLLs, with their dependency closure, plus a minimal
-  MSYS base (sh, coreutils) for the makefiles.
+  MSYS base (sh, coreutils) for the makefiles. Static archives are dropped
+  where an import library exists, except those the simulation makefile links
+  statically (HDF5, zlib, szip, libstdc++).
 - `include/omc`, `lib/omc`, `share/omc` in full, less the C++ and FMI-export
   runtimes Gradara does not use.
 """
@@ -30,7 +32,11 @@ from pathlib import Path
 
 # MSYS2 packages the C toolchain needs (dependencies are added from the database).
 TOOLCHAIN = ['mingw-w64-ucrt-x86_64-gcc', 'mingw-w64-ucrt-x86_64-make', 'mingw-w64-ucrt-x86_64-openblas',
-             'mingw-w64-ucrt-x86_64-gcc-libgfortran', 'mingw-w64-ucrt-x86_64-expat']
+             'mingw-w64-ucrt-x86_64-gcc-libgfortran', 'mingw-w64-ucrt-x86_64-expat', 'mingw-w64-ucrt-x86_64-hdf5',
+             'mingw-w64-ucrt-x86_64-zlib', 'mingw-w64-ucrt-x86_64-libaec']
+# Libraries OpenModelica's simulation makefile links statically (-Wl,-Bstatic), so
+# their .a archives stay even where an import library exists.
+STATIC_LINKED = {'libhdf5.a', 'libz.a', 'libsz.a', 'libstdc++.a'}
 MSYS_BASE = ['bash', 'coreutils', 'msys2-runtime', 'sed', 'grep']
 # Parts of OpenModelica Gradara never uses: the C++/OMSI targets, the GUI tools'
 # static libraries (OMEdit, OMPlot/Qwt, OMOptim, OMSimulator), dynamic
@@ -177,7 +183,8 @@ def main() -> None:
             if not src.is_file() or SKIP_MSYS.search(f):
                 continue
             # Static archives beside an import library: simulations link dynamically.
-            if f.endswith('.a') and not f.endswith('.dll.a') and f[:-2].lower() + '.dll.a' in all_files:
+            if (f.endswith('.a') and not f.endswith('.dll.a') and f[:-2].lower() + '.dll.a' in all_files
+                    and Path(f).name.lower() not in STATIC_LINKED):
                 continue
             # OpenBLAS is loaded only by simulations, which find OpenModelica's copy in bin/.
             if f.lower() == 'ucrt64/bin/libopenblas.dll' and 'libopenblas.dll' in om_dlls:
@@ -189,6 +196,11 @@ def main() -> None:
     for extra in ('OSMC-License.txt', 'COPYING'):
         if (om/extra).exists():
             copy(om/extra, extra)
+
+    have = {p.name.lower() for p in (out/'tools'/'msys').rglob('*.a')}
+    lacking = sorted(STATIC_LINKED - have)
+    if lacking:
+        raise SystemExit(f'Static libraries simulations link are missing from the trimmed toolchain: {", ".join(lacking)}')
 
     inventory = [{'name': n, 'version': packages[n]['version'], 'license': ' '.join(packages[n]['license']),
                   'url': packages[n]['url']} for n in sorted(keep_packages)]

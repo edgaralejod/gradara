@@ -61,7 +61,7 @@ Every installer carries OpenModelica 1.27.1 and the Modelica Standard Library 4.
 
 | Platform | Built-in engine | How it runs | Size (compressed) |
 | --- | --- | --- | --- |
-| Windows | OpenModelica tree trimmed from the official installer: `omc` and its DLLs, the C runtime and headers, and the MSYS2 ucrt64 toolchain packages its `Compile.bat` needs, chosen from the MSYS2 package database and PE imports (`packaging/engine/trim_windows.py`) | As a native install with `OPENMODELICAHOME` and `OPENMODELICALIBRARY` set to the bundle | About 115 MB |
+| Windows | OpenModelica tree trimmed from the official installer: `omc` and its DLLs, the C runtime and headers, and the MSYS2 ucrt64 toolchain packages its `Compile.bat` needs (with the static HDF5, zlib, szip, and libstdc++ archives its makefile links), chosen from the MSYS2 package database and PE imports (`packaging/engine/trim_windows.py`) | As a native install with `OPENMODELICAHOME` and `OPENMODELICALIBRARY` set to the bundle | About 115 MB |
 | Linux | OpenModelica from its Ubuntu 22.04 packages, relocated, with the shared libraries it needs beyond glibc, the gcc runtime, zlib and OpenSSL, plus GNU make (`packaging/engine/build-linux.sh`) | As a native install, adding the bundle's libraries to `LD_LIBRARY_PATH`; compiles with the system `gcc`, which the `.deb` depends on | About 45 MB |
 | macOS | A Linux VM: squashfs root (Ubuntu 24.04, OpenModelica, gcc, make, Python, MSL), the Ubuntu kernel, the command agent, and vfkit (`packaging/engine/build-macos-guest.sh`), one per architecture | vfkit boots it with Apple's Virtualization framework on first use; the data folder is shared over virtio-fs; commands go over vsock. No network device. Needs macOS 13 | About 150 MB |
 
