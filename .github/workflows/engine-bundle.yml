@@ -207,7 +207,7 @@ jobs:
           if not status['ready']:
               raise SystemExit('The engine VM is not ready.')
           EOF
-          python -m pytest -q -m integration tests/test_validation.py tests/test_codegen.py tests/test_buck.py
+          python -m pytest -v -m integration --durations=10 tests/test_validation.py tests/test_codegen.py tests/test_buck.py
       - name: VM logs
         if: always()
         run: |
