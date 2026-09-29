@@ -24,7 +24,19 @@ from .paths import DATA, EXAMPLES, STATIC
 from .llm import dispatch, gradara as gradara_ai
 from .llm.providers import ProviderError, verify_key
 
-VERSION = os.environ.get('GRADARA_VERSION', '0.2.0')
+def app_version() -> str:
+    """Installed apps set GRADARA_VERSION. A source checkout reads package.json."""
+    override = os.environ.get('GRADARA_VERSION')
+    if override:
+        return override
+    package = os.path.join(os.path.dirname(__file__), '..', 'package.json')
+    try:
+        with open(package, encoding='utf-8') as handle:
+            return json.load(handle)['version']
+    except (OSError, ValueError, KeyError):
+        return 'dev'
+
+VERSION = app_version()
 PROJECT_DIR = DATA
 PROJECT_FILE = PROJECT_DIR/'workspace.json'
 JOBS: dict[str,dict] = {}

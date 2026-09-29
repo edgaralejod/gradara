@@ -22,7 +22,7 @@ The desktop app picks a free loopback port at each start and serves both the wor
 
 | Method and path | Input | Response / effect |
 | --- | --- | --- |
-| `GET /health` | None | `{engine, engineReady, agentReady, provider, aiProvider, version, projectDirectory}`. `provider` is the AI provider's display label and `aiProvider` its ID (`gradara`, `openai`, `anthropic`, `codex`, or `off`); `version` is the Gradara version. |
+| `GET /health` | None | `{engine, engineReady, agentReady, provider, aiProvider, version, projectDirectory}`. `provider` is the AI provider's display label and `aiProvider` its ID (`gradara`, `openai`, `anthropic`, `codex`, or `off`); `version` is the Gradara version (`GRADARA_VERSION` in the desktop app, otherwise the version in `package.json`). |
 | `GET /project` | None | `{project: Project \| null, saveVersion: string \| null}` for the last activated document, resolved from its canonical saved file. |
 | `PUT /project` | Project | Legacy creation/idempotent retry only. Changing an existing document returns 409 with a reload instruction; use versioned model saves. |
 | `GET /models` | Optional `?trashed=true` | `{models: [{id, name, blocks, exampleId, updatedAt}]}`, newest saved first. Trash is separate from My models. |
