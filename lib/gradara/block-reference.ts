@@ -4,7 +4,7 @@
  *
  * Structural facts come from the definition (so they are always what the block does);
  * the prose comes from lib/gradara/block-docs. The workbench's Help dialog and the
- * gradara.app block pages (scripts/build-block-docs.ts) both render this one shape.
+ * gradara.app block pages (scripts/build-block-docs.tsx) both render this one shape.
  */
 import type { BlockDoc } from './block-docs/types';
 import { categoryLabel, categoryOf } from './catalog';
