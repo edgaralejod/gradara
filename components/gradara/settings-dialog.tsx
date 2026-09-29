@@ -40,6 +40,13 @@ const OM_DOWNLOAD: Record<string, string> = {
   linux: 'https://openmodelica.org/download/download-linux/',
 };
 const DOCKER_HELP = 'https://docs.docker.com/get-started/get-docker/';
+const GCC_HELP = 'https://gradara.app/docs/install#linux';
+
+const ENGINE_NAMES: Record<EngineStatus['backend'], string> = {
+  bundled: 'simulation engine built into Gradara',
+  native: 'OpenModelica installation',
+  docker: 'Gradara container engine',
+};
 
 export default function SettingsDialog({
   initialTab = 'engine',
@@ -171,10 +178,7 @@ function EngineSettings({ onChange }: { onChange?: () => void }) {
           {status?.ready && (
             <p>
               Simulations run on this computer using the{' '}
-              {status.backend === 'native'
-                ? 'OpenModelica installation'
-                : 'Gradara container engine'}
-              .
+              {ENGINE_NAMES[status.backend] ?? 'selected engine'}.
             </p>
           )}
         </div>
@@ -191,6 +195,20 @@ function EngineSettings({ onChange }: { onChange?: () => void }) {
       </div>
       {!status?.ready && status && (
         <div className="settings-steps">
+          {actions.includes('install-gcc') && (
+            <div className="settings-step">
+              <strong>Install a C compiler</strong>
+              <p>
+                OpenModelica turns each model into a small program with gcc. On
+                Debian or Ubuntu run <code>sudo apt install gcc</code>, then
+                choose Check again. (The .deb package installs it for you.)
+              </p>
+              <Button onClick={() => openExternal(GCC_HELP)}>
+                <ExternalLink />
+                Installation help
+              </Button>
+            </div>
+          )}
           {actions.includes('install-openmodelica') && (
             <div className="settings-step">
               <strong>1. Install OpenModelica</strong>
@@ -235,16 +253,20 @@ function EngineSettings({ onChange }: { onChange?: () => void }) {
             actions.includes('start-runtime')) && (
             <div className="settings-step">
               <strong>
-                {status.backend === 'native'
-                  ? 'Install the Modelica Standard Library'
-                  : actions.includes('start-runtime')
-                    ? 'Start the container runtime'
-                    : 'Download the simulation engine'}
+                {status.backend === 'bundled'
+                  ? 'Restart the built-in engine'
+                  : status.backend === 'native'
+                    ? 'Install the Modelica Standard Library'
+                    : actions.includes('start-runtime')
+                      ? 'Start the container runtime'
+                      : 'Download the simulation engine'}
               </strong>
               <p>
-                {status.backend === 'native'
-                  ? 'A one-time download of the component library Gradara models use (a few minutes).'
-                  : 'A one-time download of the OpenModelica engine image (1 to 2 GB).'}
+                {status.backend === 'bundled'
+                  ? 'Starts the engine again. Nothing is downloaded.'
+                  : status.backend === 'native'
+                    ? 'A one-time download of the component library Gradara models use (a few minutes).'
+                    : 'A one-time download of the OpenModelica engine image (1 to 2 GB).'}
               </p>
               <Button disabled={!!busy} onClick={() => void prepare()}>
                 {busy === 'prepare' ? (
@@ -252,7 +274,11 @@ function EngineSettings({ onChange }: { onChange?: () => void }) {
                 ) : (
                   <Cpu />
                 )}
-                {busy === 'prepare' ? progress || 'Working…' : 'Set up now'}
+                {busy === 'prepare'
+                  ? progress || 'Working…'
+                  : status.backend === 'bundled'
+                    ? 'Restart engine'
+                    : 'Set up now'}
               </Button>
             </div>
           )}
@@ -265,7 +291,11 @@ function EngineSettings({ onChange }: { onChange?: () => void }) {
           disabled={!!busy}
           onChange={(e) => void choose(e.target.value)}
         >
-          <option value="auto">Automatic (recommended)</option>
+          <option value="auto">
+            {status?.bundled
+              ? 'Built-in engine (recommended)'
+              : 'Automatic (recommended)'}
+          </option>
           <option value="native">
             OpenModelica installed on this computer
           </option>
