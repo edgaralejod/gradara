@@ -183,6 +183,9 @@ def main() -> None:
             if f.lower() == 'ucrt64/bin/libopenblas.dll' and 'libopenblas.dll' in om_dlls:
                 continue
             copy(src, f'tools/msys/{f}')
+    # The MSYS shell the makefiles run under warns without a /tmp.
+    (out/'tools'/'msys'/'tmp').mkdir(parents=True, exist_ok=True)
+    (out/'tools'/'msys'/'tmp'/'.keep').write_text('', encoding='utf-8')
     for extra in ('OSMC-License.txt', 'COPYING'):
         if (om/extra).exists():
             copy(om/extra, extra)

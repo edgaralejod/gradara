@@ -79,7 +79,7 @@ def test_bundled_backend_uses_only_its_own_library_and_gcc(tmp_path, monkeypatch
     folder.mkdir()
     asyncio.run(backend.script(omc, folder, backend._script_for(folder, {'duration': 1.0}), 10))
     script = (folder/'seen-script.mos').read_text(encoding='utf-8')
-    assert script.startswith('setCompiler("gcc")'), 'Linux bundles compile with gcc, not clang'
+    assert script.startswith('setCompiler("gcc")'), 'bundles compile with gcc, not clang'
     assert (folder/'seen-env.txt').read_text(encoding='utf-8').splitlines()[0] == str(root/'lib'/'omlibrary')
 
 

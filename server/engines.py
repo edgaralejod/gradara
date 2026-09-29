@@ -565,7 +565,9 @@ class BundledBackend(NativeBackend):
         super().__init__()
         self.root = root
         self.manifest = bundle_manifest(root)
-        self.COMPILER_SETUP = '' if os.name == 'nt' else 'setCompiler("gcc"); setCXXCompiler("g++");'
+        # OpenModelica defaults to clang (Windows: MSYS2's, Linux: the system's); the
+        # bundle carries gcc on Windows, and the .deb depends on gcc on Linux.
+        self.COMPILER_SETUP = 'setCompiler("gcc");' if os.name == 'nt' else 'setCompiler("gcc"); setCXXCompiler("g++");'
 
     def omc(self) -> Path | None:
         path = self.root/'bin'/('omc.exe' if os.name == 'nt' else 'omc')
