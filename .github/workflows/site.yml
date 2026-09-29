@@ -6,9 +6,9 @@ name: Website
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/site.yml']
+    paths: ['site/**', 'scripts/check-site-links.py', '.github/workflows/site.yml']
   pull_request:
-    paths: ['site/**', '.github/workflows/site.yml']
+    paths: ['site/**', 'scripts/check-site-links.py', '.github/workflows/site.yml']
   workflow_dispatch:
 
 permissions:
@@ -20,7 +20,10 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      # The Firebase action comments the preview link on the pull request and
+      # records the deploy as a check run.
       pull-requests: write
+      checks: write
     env:
       HAS_DEPLOY_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GRADARA != '' }}
     steps:
@@ -32,6 +35,7 @@ jobs:
           for f in index.html privacy.html terms.html 404.html assets/site.css assets/site.js docs/blocks/index.html; do
             test -s "site/public/$f" || { echo "missing site/public/$f"; exit 1; }
           done
+          python3 scripts/check-site-links.py
       - name: Deploy key not configured
         if: env.HAS_DEPLOY_KEY != 'true'
         run: echo "::notice::FIREBASE_SERVICE_ACCOUNT_GRADARA is not set; skipping the Firebase deploy. Run 'firebase init hosting:github' in site/ to enable it."

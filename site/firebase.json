@@ -4,6 +4,11 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "ignore": ["firebase.json", "**/.DS_Store", "**/.git*"],
+    "redirects": [
+      {"regex": "^/docs/?$", "destination": "/docs/blocks", "type": 301},
+      {"source": "/docs/blocks.html", "destination": "/docs/blocks", "type": 301},
+      {"regex": "^/docs/(?P<kind>[A-Za-z0-9]+)\\.html$", "destination": "/docs/blocks/:kind", "type": 301}
+    ],
     "headers": [
       {
         "source": "**",
