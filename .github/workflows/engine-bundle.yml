@@ -1,0 +1,243 @@
+name: Engine bundles
+
+# Builds the simulation engine each desktop installer ships, and proves each one
+# on its own before an installer uses it:
+# - Linux: OpenModelica relocated from the Ubuntu 22.04 packages; simulates in
+#   clean containers that have only gcc, then runs the full engine test suite.
+# - Windows: the official installer, trimmed; the full install is moved away
+#   before the full engine test suite runs against the trimmed copy.
+# - macOS: the Linux VM image (arm64 and x64), whose contents run the full suite
+#   under Docker on a Linux runner of the same architecture; then the VM itself
+#   boots with vfkit on macOS runners and simulates.
+# Manual runs with "publish" put the archives on the engine-<version> prerelease
+# (never marked latest); packaging/engine/bundles.json pins them for release.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the bundles to the engine prerelease
+        type: boolean
+        default: false
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packaging/engine/**'
+      - 'server/engines.py'
+      - '.github/workflows/engine-bundle.yml'
+
+concurrency:
+  group: engine-bundles-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  OM_VERSION: '1.27.1'
+  MSL_VERSION: '4.1.0'
+
+jobs:
+  linux:
+    name: Linux x64 engine
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - name: Build the bundle
+        run: sudo -E bash packaging/engine/build-linux.sh "$PWD/build/engine" && sudo chown -R "$USER" build
+      - name: Simulate on clean systems with only gcc
+        run: packaging/engine/test_clean_linux.sh build/engine ubuntu:22.04 ubuntu:24.04 debian:12
+      - run: python -m pip install -r server/requirements-dev.txt
+      - name: Engine test suite on the bundle
+        env:
+          GRADARA_ENGINE: bundled
+          GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
+        run: |
+          python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
+          python -m pytest -q -m integration
+      - name: Pack
+        run: python packaging/engine/pack_bundle.py --dir build/engine --name linux-x64 --out dist-engine
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-linux-x64
+          path: dist-engine/*
+          if-no-files-found: error
+
+  windows:
+    name: Windows x64 engine
+    runs-on: windows-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - name: Build the bundle
+        run: python packaging/engine/build_windows.py --out build\engine --install C:\OpenModelicaFull
+      - name: Move the full installation away
+        # The tests must pass on the trimmed copy alone.
+        shell: pwsh
+        run: |
+          Rename-Item C:\OpenModelicaFull C:\OpenModelicaFull-hidden
+          [Environment]::SetEnvironmentVariable('OPENMODELICAHOME', $null, 'Machine')
+          Get-ChildItem build\engine | Format-Table Name, Length
+      - run: python -m pip install -r server/requirements-dev.txt
+      - name: Engine test suite on the bundle
+        env:
+          GRADARA_ENGINE: bundled
+          GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}\build\engine
+          OPENMODELICAHOME: ''
+        run: |
+          python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
+          python -m pytest -q -m integration
+      - name: Pack
+        run: python packaging/engine/pack_bundle.py --dir build/engine --name windows-x64 --out dist-engine
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-windows-x64
+          path: dist-engine/*
+          if-no-files-found: error
+
+  macos-image:
+    name: macOS ${{ matrix.arch }} engine image
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+          - arch: x64
+            docker: amd64
+            runner: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get install -y -qq squashfs-tools
+      - name: Build the VM image
+        run: sudo -E bash packaging/engine/build-macos-guest.sh ${{ matrix.docker || matrix.arch }} "$PWD/build/engine" && sudo chown -R "$USER" build
+      - run: python -m pip install -r server/requirements-dev.txt
+      - name: Engine test suite through the VM backend (image under Docker)
+        # Same image, same agent, same /data layout as the VM; only vsock is replaced by TCP.
+        env:
+          GRADARA_ENGINE: bundled
+          GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
+          GRADARA_ENGINE_VM_TCP: 127.0.0.1:18024
+        run: |
+          mkdir -p projects
+          docker run -d --name agent --user "$(id -u):$(id -g)" -p 127.0.0.1:18024:18024 -e GRADARA_AGENT_TCP=18024 \
+            -v "$PWD/projects:/data" gradara-guest:${{ matrix.docker || matrix.arch }} python3 -u /opt/gradara/agent.py
+          sleep 2
+          python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
+          python -m pytest -q -m integration
+      - name: Pack
+        run: python packaging/engine/pack_bundle.py --dir build/engine --name macos-${{ matrix.arch }} --out dist-engine
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-macos-${{ matrix.arch }}
+          path: dist-engine/*
+          if-no-files-found: error
+
+  macos-boot:
+    name: macOS VM boots / ${{ matrix.name }}
+    needs: macos-image
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    # GitHub's Apple silicon runners are themselves VMs without nested
+    # virtualization, so the arm64 image cannot boot there; it is checked on a
+    # real Mac before each release (docs/RELEASING.md). Intel runners can.
+    continue-on-error: ${{ matrix.arch == 'arm64' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Intel
+            arch: x64
+            runner: macos-15-intel
+          - name: Apple silicon
+            arch: arm64
+            runner: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: engine-macos-${{ matrix.arch }}
+          path: dist-engine
+      - run: python packaging/engine/fetch_bundle.py --name macos-${{ matrix.arch }} --from dist-engine
+      - name: vfkit and its entitlements
+        run: |
+          file build/engine/vfkit
+          codesign -d --entitlements - build/engine/vfkit 2>&1 || true
+          sysctl -n machdep.cpu.brand_string kern.hv_support || true
+      - run: python -m pip install -r server/requirements-dev.txt
+      - name: Boot the VM and run engine tests
+        env:
+          GRADARA_ENGINE: bundled
+          GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
+        run: |
+          python - <<'EOF'
+          import asyncio, json, time
+          from server import engines
+          started = time.monotonic()
+          status = asyncio.run(engines.status())
+          print(json.dumps(status, indent=2))
+          print(f'first status (boots the VM): {time.monotonic() - started:.1f}s')
+          if not status['ready']:
+              raise SystemExit('The engine VM is not ready.')
+          EOF
+          python -m pytest -q -m integration tests/test_validation.py tests/test_codegen.py tests/test_buck.py
+      - name: VM logs
+        if: always()
+        run: |
+          for f in projects/logs/engine-vm*.log; do echo "--- $f"; tail -60 "$f"; done
+          pgrep -l vfkit && echo 'vfkit still running' || true
+
+  publish:
+    name: Publish to the engine prerelease
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    needs: [linux, windows, macos-image, macos-boot]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: engine-*
+          path: dist-engine
+          merge-multiple: true
+      - name: Create or update the prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="engine-$OM_VERSION"
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title "Simulation engine: OpenModelica $OM_VERSION" \
+              --notes "Engine bundles for the Gradara desktop installers (OpenModelica $OM_VERSION, Modelica Standard Library $MSL_VERSION). Not an app release. Built by the Engine bundles workflow from packaging/engine; license texts and the OpenModelica usage mode are inside each archive."
+          fi
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber dist-engine/*.tar.*
+          python3 - <<'EOF'
+          import glob, json
+          assets = {}
+          for path in sorted(glob.glob('dist-engine/*.json')):
+              name = path.split('/')[-1][:-5]
+              assets[name] = json.load(open(path))
+          print(json.dumps({'assets': assets}, indent=2))
+          EOF

@@ -1,0 +1,12 @@
+OpenModelica usage mode
+
+Gradara's installers include OpenModelica, unmodified, as the built-in
+simulation engine. Virtu Services LLC, the publisher of Gradara, uses and
+redistributes OpenModelica under the GNU AGPL version 3 mode of the OSMC Public
+License (OSMC-PL) version 1.8.
+
+The full OSMC-PL, including the AGPL version 3 text, is in OSMC-License.txt next
+to this file. OpenModelica's source code is available from
+https://github.com/OpenModelica/OpenModelica (tag v<version> for the version
+this engine reports), and on request from support@virtu-services.us for three
+years after Gradara last distributes that version.
