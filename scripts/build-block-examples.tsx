@@ -22,6 +22,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { defaultBlockSize } from '../lib/gradara/block-design';
 import { library, type Block, type Project } from '../lib/gradara/model';
 import { normalizeProject } from '../lib/gradara/normalize-project';
+import {
+  BUS_KINDS,
+  busPortsWithCount,
+  renamedBusInput,
+  selectorPorts,
+} from '../lib/gradara/buses';
+import { syncInstances } from '../lib/gradara/hierarchy';
 import { linkEnds } from '../lib/gradara/project';
 import { examples, type ExampleSpec } from './block-examples';
 import { ExampleDiagram } from './example-diagram';
@@ -81,10 +88,32 @@ function instance(
       throw new Error(`${spec.id}: ${kind} has no parameter ${key}`);
     parameter.value = value;
   }
-  const { rotation, label, ports } =
+  const { rotation, label, ports, signals } =
     typeof options === 'number'
-      ? { rotation: options, label: undefined, ports: undefined }
+      ? {
+          rotation: options,
+          label: undefined,
+          ports: undefined,
+          signals: undefined,
+        }
       : (options ?? {});
+  if (signals !== undefined) {
+    if (!BUS_KINDS.has(kind))
+      throw new Error(`${spec.id}: ${kind} is not a bus block`);
+    if (typeof signals === 'number')
+      definition.ports = busPortsWithCount(definition, signals);
+    else if (kind === 'busSelector')
+      definition.ports = selectorPorts(
+        { ...definition, ports: [definition.ports[0]] },
+        signals,
+      );
+    else {
+      definition.ports = busPortsWithCount(definition, signals.length);
+      signals.forEach((name, i) => {
+        definition.ports = renamedBusInput(definition, `u${i + 1}`, name);
+      });
+    }
+  }
   for (const [portId, place] of Object.entries(ports ?? {})) {
     const port = definition.ports.find((p) => p.id === portId);
     if (!port) throw new Error(`${spec.id}: ${kind} has no port ${portId}`);
@@ -143,7 +172,8 @@ function build(spec: ExampleSpec): Project {
       throw new Error(`${spec.id}: ${from} → ${to}: ${(e as Error).message}`);
     }
   }
-  doc = normalizeProject(normalizeProject(doc));
+  // Twice: junction dots settle on the second pass. Then bus widths follow the wiring.
+  doc = syncInstances(normalizeProject(normalizeProject(doc)));
   if (spec.finish) doc = spec.finish(doc);
   delete doc.modelId;
   doc.plots = spec.plots.map((plot, i) => ({
@@ -237,7 +267,7 @@ if (reviewDir) {
     `body{font:14px system-ui;margin:24px;background:#eef0f4}
 section{background:#f8f9fc;margin:0 0 24px;padding:16px;border:1px solid #ccd}
 .diagram{position:relative;display:block}.diagram-wires{position:absolute;left:0;top:0}
-.diagram-wires polyline{fill:none;stroke-width:1.5}
+.diagram-wires polyline{fill:none;stroke-width:1.5}.diagram-wires polyline.is-bus{stroke-width:3.4}
 .diagram-block{position:absolute}.diagram-turn{position:absolute;left:50%;top:50%}.diagram-name{position:absolute;transform:translateX(-50%);font-size:12px;color:#273f50;white-space:nowrap}`;
   const body = manifest
     .map(

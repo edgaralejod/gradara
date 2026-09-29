@@ -6,7 +6,7 @@ Every library block has a small runnable model that shows it at work. A block's 
 
 | What | Where |
 | --- | --- |
-| Specs, by area | `scripts/block-examples/` (`signals.ts`, `logic.ts`, `control.ts`, `electrical.ts`, `circuits.ts`, `power.ts`, `converters.ts`, `physical.ts`) |
+| Specs, by area | `scripts/block-examples/` (`signals.ts`, `buses.ts`, `logic.ts`, `control.ts`, `electrical.ts`, `circuits.ts`, `power.ts`, `converters.ts`, `physical.ts`) |
 | Builder | `scripts/build-block-examples.tsx` (`npm run examples:blocks`) |
 | Built models and manifest | `models/examples/blocks/<id>.json`, `models/examples/blocks/index.json` |
 | Lookup for the workbench | `lib/gradara/block-examples.ts` (`exampleForKind`) |
@@ -18,8 +18,8 @@ Every library block has a small runnable model that shows it at work. A block's 
 
 Each example is an `ExampleSpec` (`scripts/block-examples/types.ts`):
 
-- **Blocks** with their centers on the sheet. Centers on multiples of 8 keep blocks on the grid, and two-terminal parts on one row get straight wires. Options rotate a block, move its name beside or above it, or move a port to another side.
-- **Links** as `block.port` pairs. The builder connects them with the workbench's own rules and saves the document through `normalizeProject`, so the router draws the wires and junctions exactly as the canvas would.
+- **Blocks** with their centers on the sheet. Centers on multiples of 8 keep blocks on the grid, and two-terminal parts on one row get straight wires. Options rotate a block, move its name beside or above it, move a port to another side, or set a bus block's signals (`signals`: a Mux or Demux count, Bus Creator names, or the names a Bus Selector picks).
+- **Links** as `block.port` pairs. The builder connects them with the workbench's own rules and saves the document through `normalizeProject` and `syncInstances` (which derives bus widths), so the router draws the wires and junctions exactly as the canvas would.
 - **Plots** that open with the model, **about** (the blocks this example teaches; a block's Help opens the example about it), and a description that says what to look for in Results.
 - **Checks**: results the simulation must produce, each with the reason (`why`). A check reads a block output (`block.port`) or a raw Modelica variable (`=c1.v`) at a time, as a time average over an interval (`mean`), or within bounds over the run (`min`, `max`). Derive every expected value from the physics, not from a previous run, and give tolerances that a correct model meets with room to spare.
 

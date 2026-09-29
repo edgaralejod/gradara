@@ -50,8 +50,13 @@ export function showPortLabel(d: Definition, p: Port) {
   if (shape === 'boundary') return false;
   if (shape === 'subsystem') return true;
   if (shape === 'sum') return p.direction === 'input';
-  if (shape !== 'box' && shape !== 'mux' && shape !== 'demux') return false;
+  // A Mux numbers its inputs and a Demux its outputs; the single side needs no name.
+  if (shape === 'mux') return p.direction === 'input';
+  if (shape === 'demux') return p.direction === 'output';
+  if (shape !== 'box') return false;
   if (commutative.has(d.kind)) return false;
+  // A bus's signal names are the point of these blocks.
+  if (d.kind === 'busCreator' || d.kind === 'busSelector') return true;
   if (
     d.domain === 'signal' &&
     d.ports.length <= 2 &&
@@ -83,7 +88,16 @@ export function defaultBlockSize(d: Definition) {
       ? { width: 48, height: 80 }
       : { width: 80, height: 48 };
   if (shape === 'gain') return { width: 80, height: 64 };
-  if (shape === 'mux' || shape === 'demux') return { width: 48, height: 96 };
+  if (shape === 'mux' || shape === 'demux') {
+    // One bar pitch per signal, so a wider Mux grows instead of crowding its wires.
+    const n = d.ports.filter((p) =>
+      shape === 'mux' ? p.direction === 'input' : p.direction === 'output',
+    ).length;
+    return {
+      width: 48,
+      height: roundGrid(Math.max(96, (n + 1) * BLOCK_DESIGN.pitch)),
+    };
+  }
   if (d.kind === 'secondOrder') return { width: 160, height: 64 };
   if (shape === 'subsystem') {
     // Room for the label gutters and a readable window onto the inside.

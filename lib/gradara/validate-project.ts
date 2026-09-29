@@ -1,8 +1,9 @@
 import type { Diagnostic } from './api';
 import type { Project } from './model';
 import { flattenWires, isTap } from './net';
+import { busProblems } from './buses';
 
-const DRAWING_ONLY = new Set(['mux', 'demux', 'subsystem']);
+const DRAWING_ONLY = new Set(['subsystem']);
 
 function problem(
   id: string,
@@ -91,6 +92,8 @@ export function validateProject(project: Project): Diagnostic[] {
         }),
       );
   }
+  for (const { id, ...fields } of busProblems(project))
+    out.push(problem(`v-${id}`, fields));
   return out;
 }
 

@@ -984,6 +984,13 @@
 .net-wire.is-selected .net-wire-ink {
   stroke-width: 2;
 }
+/* A bus or vector wire is drawn heavy, as in Simulink. */
+.net-wire.is-bus .net-wire-ink {
+  stroke-width: 3.4;
+}
+.net-wire.is-bus.is-selected .net-wire-ink {
+  stroke-width: 4;
+}
 .net-vertex {
   fill: white;
   stroke: #3283b7;
@@ -1284,6 +1291,19 @@
   cursor: grabbing;
   outline: 1px dashed #3283b7;
   outline-offset: 3px;
+}
+.engineering-label .block-name-editor {
+  cursor: text;
+  user-select: text;
+  border: 1px solid #3283b7;
+  background: #fff;
+  padding: 0 4px;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 1px 4px rgb(20 50 80 / 0.15);
+}
+.engineering-label .block-name-editor:focus-visible {
+  outline: none;
 }
 .react-flow[data-wiring='connecting'] .block-name,
 .react-flow[data-wiring='drawing'] .block-name {
@@ -2810,6 +2830,38 @@
   color: #56697a; font: 600 10px/16px var(--font-ui); white-space: nowrap;
 }
 .instance-port-tools { display: flex; }
+
+/* Bus blocks: the Signals section (Mux and Demux counts, Bus Creator names, Bus Selector picks). */
+.bus-section .field-row {
+  display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 8px; margin: 6px 0;
+}
+.bus-stepper { display: inline-flex; align-items: center; gap: 3px; }
+.bus-stepper input { width: 44px; height: 24px; text-align: center; font-size: 12px; }
+.bus-stepper button,
+.bus-match {
+  display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+  min-width: 24px; height: 24px; border: 1px solid #c9d6df; border-radius: 3px; background: #fff;
+  color: #34495a; font: 500 11px/16px var(--font-ui); cursor: pointer;
+}
+.bus-match { padding: 0 8px; margin: 2px 0 4px; }
+.bus-stepper button:hover:not(:disabled),
+.bus-match:hover { background: #eef3f7; }
+.bus-stepper button:disabled { opacity: .35; cursor: default; }
+.bus-section .instance-ports-head { margin-top: 8px; }
+.bus-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; }
+.bus-list li {
+  display: grid; grid-template-columns: 18px minmax(0, 1fr) auto auto; align-items: center; gap: 4px;
+}
+.bus-list input { min-width: 0; width: 100%; height: 24px; font-size: 12px; }
+.bus-list input[aria-invalid] { border-color: #c2412d; outline-color: #c2412d; }
+.bus-index { color: #7a8894; font: 600 10px/16px var(--font-ui); text-align: right; }
+.bus-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #1f3444; }
+.bus-width { color: #7a8894; font-size: 11px; white-space: nowrap; }
+.bus-list li.is-missing .bus-name { color: #c2412d; text-decoration: line-through; }
+.bus-list li.is-missing .bus-width { color: #c2412d; }
+.bus-choices { list-style: none; margin: 4px 0 0; padding: 0; max-height: 220px; overflow: auto; }
+.bus-choices label { display: flex; align-items: center; gap: 6px; padding: 2px 0; font-size: 12px; color: #1f3444; cursor: pointer; }
+.bus-choices .bus-width { margin-left: auto; }
 
 /* Variants: the switch on a subsystem block, the inspector list, the configuration menu. */
 .variant-switch {

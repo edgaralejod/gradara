@@ -21,10 +21,7 @@ export type BlockExample = {
 export const blockExamples: BlockExample[] = manifest.examples;
 
 /** Library blocks with no example, and why. */
-export const UNEXAMPLED: Record<string, string> = {
-  mux: 'Mux is drawing-only: a model that contains it cannot run yet.',
-  demux: 'Demux is drawing-only: a model that contains it cannot run yet.',
-};
+export const UNEXAMPLED: Record<string, string> = {};
 
 /** Palette entries that become another kind when placed. */
 const PLACED_AS: Record<string, string> = { emptySubsystem: 'subsystem' };

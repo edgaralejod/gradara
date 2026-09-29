@@ -17,7 +17,8 @@ Enlarging a block changes the space around its symbol, not its text size. Zoom s
 | Dense terminal arrays | Computed in 16-unit steps | At least 24 units of vertical pitch; nominal 32-unit horizontal pitch |
 | PMSM | 160 × 96 | Four bottom terminals plus top measurements and mixed-domain side terminals |
 | Wide notation | 160 × 64 | Complete second-order transfer function at the normal font size |
-| Mux / demux | 48 × 96 | Narrow tapered body; indexed terminals replace redundant internal text |
+| Mux / demux | 48 × 96, one 24-unit pitch taller per signal past three | Narrow tapered body; numbered terminals on the many-signal side, none on the bus side |
+| Bus Creator / Bus Selector | Labeled box, as wide as the signal names | Signal names are the port labels and are never cut short; bus glyph in the middle |
 | Electrical primitive | 80 × 48 horizontal; 48 × 80 vertical | Unboxed circuit symbol; leads reach the exact terminal coordinates |
 | Ground | 48 × 48 | Unboxed reference glyph with its lead at the top terminal |
 | Pictorial schematic symbols | 80 × 48 two-terminal; 48 × 80 vertical sources; 64 × 80 transistors; 64 × 48 op-amps and changeover; 64 × 64 transformers; 48 × 48 fixed points | Unboxed standard symbol (`lib/gradara/circuit-symbols.ts`) at its design size, with leads to the grid ports |

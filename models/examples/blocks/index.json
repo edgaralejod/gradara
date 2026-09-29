@@ -511,6 +511,91 @@
       ]
     },
     {
+      "id": "mux-demux",
+      "title": "Mux and Demux",
+      "area": "Signals",
+      "summary": "Three signals carried across the sheet on one vector wire, then split apart again.",
+      "about": [
+        "mux",
+        "demux"
+      ],
+      "kinds": [
+        "constant",
+        "demux",
+        "mux",
+        "ramp",
+        "sine",
+        "sum"
+      ],
+      "checks": [
+        {
+          "signal": "demux.y1",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "first signal: the ramp, 1 × 2 s"
+        },
+        {
+          "signal": "demux.y2",
+          "at": 0.25,
+          "value": 1,
+          "tol": 0.001,
+          "why": "second signal: sin(2π · 0.25) = 1"
+        },
+        {
+          "signal": "demux.y3",
+          "value": 2,
+          "tol": 1e-9,
+          "why": "third signal: the constant 2"
+        },
+        {
+          "signal": "add.y",
+          "at": 1,
+          "value": 1,
+          "tol": 0.001,
+          "why": "ramp 1 + sin(2π) = 1"
+        }
+      ]
+    },
+    {
+      "id": "buses",
+      "title": "Signal buses",
+      "area": "Signals",
+      "summary": "Named signals bundled into a bus with a Bus Creator, and picked out by name with a Bus Selector.",
+      "about": [
+        "busCreator",
+        "busSelector"
+      ],
+      "kinds": [
+        "busCreator",
+        "busSelector",
+        "constant",
+        "gain",
+        "ramp",
+        "sine"
+      ],
+      "checks": [
+        {
+          "signal": "pick.y1",
+          "value": 4,
+          "tol": 0.000001,
+          "why": "speed: the ramp, 2 × 2 s"
+        },
+        {
+          "signal": "pick.y2",
+          "at": 0.25,
+          "value": 1,
+          "tol": 0.001,
+          "why": "current: sin(2π · 0.25) = 1"
+        },
+        {
+          "signal": "scale.y",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "0.5 × speed 4"
+        }
+      ]
+    },
+    {
       "id": "logic-gates",
       "title": "Logic gates",
       "area": "Logic",

@@ -13,7 +13,7 @@ export const libraryCategories: {
   { id: 'continuous', label: 'Continuous', hint: 's-domain dynamics' },
   { id: 'discrete', label: 'Discrete', hint: 'Sampled operators' },
   { id: 'nonlinear', label: 'Nonlinear', hint: 'Limits and relays' },
-  { id: 'routing', label: 'Routing', hint: 'Mux, switch' },
+  { id: 'routing', label: 'Routing', hint: 'Mux, bus, switch' },
   {
     id: 'subsystems',
     label: 'Ports & subsystems',
@@ -23,13 +23,33 @@ export const libraryCategories: {
   { id: 'sinks', label: 'Sinks', hint: 'Scopes and displays' },
   { id: 'logic', label: 'Logic', hint: 'Boolean gates, comparators, triggers' },
   { id: 'electrical', label: 'Electrical', hint: 'Passives, sources, sensors' },
-  { id: 'semiconductors', label: 'Semiconductors', hint: 'Diodes, transistors, switches' },
-  { id: 'converters', label: 'Converters', hint: 'Choppers, rectifiers, inverters, PWM' },
+  {
+    id: 'semiconductors',
+    label: 'Semiconductors',
+    hint: 'Diodes, transistors, switches',
+  },
+  {
+    id: 'converters',
+    label: 'Converters',
+    hint: 'Choppers, rectifiers, inverters, PWM',
+  },
   { id: 'machines', label: 'Machines', hint: 'DC, induction, synchronous' },
   { id: 'threePhase', label: '3-phase', hint: 'Sources, loads, transformers' },
-  { id: 'mechanical', label: 'Rotational', hint: 'Inertia, springs, gears, sources' },
-  { id: 'translational', label: 'Translational', hint: 'Mass, spring, damper, force' },
-  { id: 'thermal', label: 'Thermal', hint: 'Heat capacity, conduction, sources' },
+  {
+    id: 'mechanical',
+    label: 'Rotational',
+    hint: 'Inertia, springs, gears, sources',
+  },
+  {
+    id: 'translational',
+    label: 'Translational',
+    hint: 'Mass, spring, damper, force',
+  },
+  {
+    id: 'thermal',
+    label: 'Thermal',
+    hint: 'Heat capacity, conduction, sources',
+  },
   { id: 'magnetic', label: 'Magnetic', hint: 'Reluctance, windings, MMF' },
 ];
 
@@ -75,6 +95,8 @@ const kindCategory: Record<string, LibraryCategoryId> = {
   rateLimiter: 'nonlinear',
   mux: 'routing',
   demux: 'routing',
+  busCreator: 'routing',
+  busSelector: 'routing',
   switch2: 'routing',
   manualSwitch: 'routing',
   terminator: 'sinks',

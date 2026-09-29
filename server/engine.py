@@ -84,6 +84,16 @@ def result_columns(folder: Path, rows: list[dict]):
     return column
 
 
+def elements_of(port, name: str, joiner: str):
+    """(variable suffix, readable name) per signal: one for a plain port, one per element of a bus."""
+    width = (port.get('width') if isinstance(port, dict) else getattr(port, 'width', None)) or 1
+    if width == 1:
+        return [('', name)]
+    elements = (port.get('elements') if isinstance(port, dict) else port.elements) or []
+    return [(f'[{i + 1}]', f'{name}{joiner}{elements[i]}' if len(elements) == width else f'{name}[{i + 1}]')
+            for i in range(width)]
+
+
 async def run(project: Project, job_id: str, folder: Path):
     started = time.monotonic()
     (folder/'model.mo').write_text(emit_project(project), encoding='utf-8')
@@ -114,22 +124,27 @@ async def run(project: Project, job_id: str, folder: Path):
         candidates = [(p.id, p.name, p.unit) for p in definition.ports if p.direction == 'output' or (definition.kind in {'scope', 'display'} and p.direction == 'input')]
         if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
         if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
+        widths = {p.id: p for p in definition.ports}
         for variable,label_,unit in candidates:
             key = f'{prefix}{block.id}.{msl.connector(definition, variable)}'
-            values = column(key)
-            if values is not None:
-                if not all(math.isfinite(value) for value in values):
-                    raise run_failure(f'{label}{definition.name}.{label_} contains non-finite results.', owner)
-                outputs.append({'key':key,'name':f'{label}{definition.name}.{label_}', 'unit':unit,'blockId':owner,'values':values})
+            # A bus output is an array: one series per signal, named by its element.
+            for suffix, name in elements_of(widths.get(variable), f'{label}{definition.name}.{label_}', '.'):
+                values = column(key + suffix)
+                if values is not None:
+                    if not all(math.isfinite(value) for value in values):
+                        raise run_failure(f'{name} contains non-finite results.', owner)
+                    outputs.append({'key':key + suffix,'name':name, 'unit':unit,'blockId':owner,'values':values})
     from .logging_signals import logged_signals
     for log in logged_signals(project):
-        key = log['key']
-        values = column(key)
-        if values is None:
-            raise run_failure(f"Logged net {log['name']} is missing from the solver output.", log.get('blockId'))
-        if not all(math.isfinite(v) for v in values):
-            raise run_failure(f"Logged net {log['name']} contains non-finite values.", log.get('blockId'))
-        outputs.append({k:v for k,v in log.items() if k != 'expression'} | {'values':values})
+        for suffix, name in elements_of(log, log['name'], ' · '):
+            key = log['key'] + suffix
+            values = column(key)
+            if values is None:
+                raise run_failure(f"Logged net {name} is missing from the solver output.", log.get('blockId'))
+            if not all(math.isfinite(v) for v in values):
+                raise run_failure(f"Logged net {name} contains non-finite values.", log.get('blockId'))
+            outputs.append({k:v for k,v in log.items() if k not in ('expression', 'width', 'elements')}
+                           | {'key': key, 'name': name, 'values': values})
     sample_indices = list(range(0,len(rows),max(1,len(rows)//1800)))
     sample_indices += [len(rows)-1]
     # Preserve switching event pairs and a dense tail for short-time ripple views.

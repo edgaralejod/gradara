@@ -132,11 +132,11 @@ The **Equations** and **State & declarations** tabs show a block's Modelica equa
 
 **Notes.** Label parts of a diagram with notes: a heading and an optional detail line. Right-click empty canvas and choose **Add note here**, type the heading, press Tab for the detail, and press Enter. Drag a note to move it; it lands on the sheet grid. Double-click a note to edit it, or select it and press Delete to remove it. Every change can be undone. Notes belong to the top-level sheet; the notes in the built-in examples work the same way.
 
-**Block examples.** Every library block has a small runnable example that shows it at work, such as an RC circuit for the capacitor or a clutch that locks for the clutch. In a block's Help, choose **Open example**: the example opens as a new model in **My models**, with that block selected, ready to run. Each example's description says what to look for in Results. **Examples** lists them all under **Block examples**, grouped by area, and each block's page on gradara.app shows its example's diagram. The only blocks without one are Mux and Demux, which are drawing-only and cannot run yet.
+**Block examples.** Every library block has a small runnable example that shows it at work, such as an RC circuit for the capacitor or a clutch that locks for the clutch. In a block's Help, choose **Open example**: the example opens as a new model in **My models**, with that block selected, ready to run. Each example's description says what to look for in Results. **Examples** lists them all under **Block examples**, grouped by area, and each block's page on gradara.app shows its example's diagram.
 
 **Scope, Display, and Terminator** are no longer in the library: Results already lists every block output, and an unconnected output is allowed. Models that contain them still open and run unchanged.
 
-Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it. Double-click the name to put it back. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
+Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it; select it and press Home to put it back. Double-click a block's name (or select it and press Enter) to rename the block in place, subsystems included: Enter or clicking away saves, Escape cancels. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
 
 ### The library
 
@@ -152,6 +152,16 @@ There are two kinds of connection:
 - **Physical connections** join physical terminals of the same kind, like wiring a circuit or coupling shafts. They have no direction. The solver works out currents, torques, forces, or heat flows from the laws of physics.
 
 To move between the two, use sensors (physical to signal) and sources or actuators (signal to physical). Wires that only cross do not connect.
+
+### Signal buses
+
+A bus carries several signals on one wire, drawn heavy so it stands out. Four blocks in **Routing** make and take them apart, as in Simulink:
+
+- **Mux** joins its inputs into one vector, in order. **Demux** splits a vector back into equal parts. Set how many inputs or outputs under **Signals** in the block's properties; the bar grows to fit, and **Match incoming** gives a Demux one output per signal.
+- **Bus Creator** bundles signals under names: each input label is the signal's name, edited under **Signals**. A bus plugged into a Bus Creator keeps its signals under that input's name, such as `motor.speed`.
+- **Bus Selector** picks signals out of a bus by name, wherever they are in it. Tick them under **Signals**; each becomes an output labeled with its name. Ticking a bus inside the bus (`motor`) gives all its signals as one vector.
+
+Buses pass through subsystem ports unchanged, so one wire can carry a group of signals into and out of a subsystem. Widths follow the wiring automatically. Other blocks take one signal: a bus wired into a Gain or Sum is reported as a problem that says to split it first. Results show one trace per signal of a bus, named after its element (for example `Sensors.bus.speed`), and logging a bus wire logs every signal on it. The **Mux and Demux** and **Signal buses** examples show both kinds.
 
 ## Wire and arrange
 
@@ -238,7 +248,7 @@ Drag the borders between panes to widen them, and drag a column heading's edge t
 
 ## Simulate and read results
 
-Set **Stop time** and choose **Run**. The stop time must be more than 0 and at most 86,400 seconds (one day). You can cancel a run from the same button. Gradara checks the model before it simulates. Unconnected signal inputs, drawing-only blocks (Mux and Demux), and missing variant ports are reported as problems. A failed or incomplete simulation never shows as a successful plot.
+Set **Stop time** and choose **Run**. The stop time must be more than 0 and at most 86,400 seconds (one day). You can cancel a run from the same button. Gradara checks the model before it simulates. Unconnected signal inputs, bus mistakes, the empty subsystem placeholder, and missing variant ports are reported as problems. A failed or incomplete simulation never shows as a successful plot.
 
 Each run saves 6,000 evenly spaced output points plus every event, and stops if it takes longer than 120 seconds of real time. For long simulations with fast events, shorten the stop time to see the details.
 
@@ -267,7 +277,7 @@ Moving blocks or names does not change results. Changing equations, connections,
 
 The **Problems** tab sits in the dock under the canvas. Open or close it from the status bar ("No problems", or a count of errors and warnings), from its header, or with ⌘/Ctrl+J. Drag its top edge to resize it.
 
-- **Model checks** update while you edit: unconnected signal inputs, drawing-only blocks, and wires that end on a missing port (errors), and blocks with nothing connected (notes). They also include variant problems anywhere in the model. **Run** refuses the model while errors remain.
+- **Model checks** update while you edit: unconnected signal inputs, bus mistakes (a bus into a block that takes one signal, a Demux that cannot split its input evenly, a Bus Selector naming a signal the bus lacks), drawing-only blocks, and wires that end on a missing port (errors), and blocks with nothing connected (notes). They also include variant problems anywhere in the model. **Run** refuses the model while errors remain.
 - **Last run** appears when a run fails. The dock opens by itself. Each row names where the problem came from (Validation, Safety, Compiler, Runtime, Engine) and has chips for the blocks it concerns. Click a row or chip to select those blocks and center them. Expand a row (▸) for a hint and the full solver message. After you edit the model, this section is marked out of date.
 - **Run warnings** lists solver warnings from a successful run.
 
@@ -344,5 +354,5 @@ Open any of these from **Examples**. Each guide describes what the model shows, 
 - Gradara is not certified or validated for safety-critical use. Verify results independently before you rely on them for design decisions, and do not use it as the only evidence for safety-related work.
 - Examples use illustrative parameters, not data-sheet values.
 - AI-generated blocks and edits pass compiler checks, but compiling does not make a model physically correct. Review them as you would any model.
-- Mux and Demux are drawing-only and cannot run. Vector and bus signals, Modelica import, FMI, and HDL export are not available.
+- Buses route signals but do not do math: a Gain, Sum, or other block takes one signal, so split a bus with a Demux or Bus Selector first. Buses are signal-only (not Boolean or physical), and C export does not accept them. Modelica import, FMI, and HDL export are not available.
 - Exported C code is checked against the simulation, not on your target hardware.

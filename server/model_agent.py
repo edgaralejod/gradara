@@ -67,7 +67,8 @@ def catalog_snapshot(request, directory):
         key = 'builtin:' + definition.kind
         if definition.generated or key in catalog:
             raise ValueError('Built-in catalog must have unique non-generated kinds.')
-        if definition.kind not in {'mux', 'demux', 'subsystem'}:
+        # Buses need widths the editor derives, and subsystems a definition: the agent wires plain signals.
+        if definition.kind not in {'mux', 'demux', 'busCreator', 'busSelector', 'subsystem'}:
             catalog[key] = definition.model_copy(deep=True)
     for entry in list_components(directory):
         catalog[entry['id']] = Definition.model_validate(entry['definition'])

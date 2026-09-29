@@ -66,7 +66,7 @@ Subsystems, shared definitions, promoted parameters, variants, and configuration
 
 ## Expand modeling and export
 
-1. Define scalar/vector/bus and sample-clock semantics, including buses across subsystem ports, before enabling mux/demux as executable blocks.
+1. Buses: signal buses route and select signals today. Next: element-wise math on vectors (a Gain or Sum applied to a whole bus), Boolean buses, buses in C export, and sample-clock semantics.
 2. Close the loop in C verification: run the generated controller against the simulated plant (co-simulation) instead of replaying recorded plant signals. Add fixed-point formats and multi-rate task scheduling.
 3. Extend physical domains through tested Modelica components and examples. Translational, magnetic, thermal, and three-phase blocks now wrap MSL 4.1.0 classes; hydraulics/fluid support is not implemented.
 4. Add HDL only with explicit clock/reset, numeric, and latency contracts and toolchain validation.

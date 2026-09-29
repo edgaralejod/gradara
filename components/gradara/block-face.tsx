@@ -23,6 +23,8 @@ export function BlockFace({
   size?: { width: number; height: number };
 }) {
   const shape = blockShape(d);
+  // Bus signal names are the content of these blocks: never cut them short.
+  const named = d.kind === 'busCreator' || d.kind === 'busSelector';
   const inset = (side: string) =>
     shape !== 'box' && shape !== 'subsystem'
       ? undefined
@@ -32,13 +34,13 @@ export function BlockFace({
             .filter((p) => sideOf(p) === side && showPortLabel(d, p))
             .map((p) =>
               side === 'left' || side === 'right'
-                ? Math.min(42, 12 + p.name.length * 7)
+                ? Math.min(named ? 320 : 42, 12 + p.name.length * 7)
                 : 24,
             ),
         );
   return (
     <span
-      className={`block-face shape-${shape}`}
+      className={`block-face shape-${shape}${named ? ' has-signal-names' : ''}`}
       style={
         {
           '--domain': domainColors[d.domain],

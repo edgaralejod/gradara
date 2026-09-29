@@ -38,6 +38,11 @@ export type BlockOptions = {
   label?: 'left' | 'right' | 'above' | [number, number];
   /** Move ports to another side, optionally at an offset (percent along it). */
   ports?: Record<string, Side | [Side, number]>;
+  /**
+   * Bus blocks: a number of signal ports (Mux inputs, Demux outputs), Bus Creator
+   * input names, or the names a Bus Selector picks.
+   */
+  signals?: number | string[];
 };
 export type Side = 'left' | 'right' | 'top' | 'bottom';
 

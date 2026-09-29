@@ -20,11 +20,12 @@ const notes: Record<string, string> = {
   subtract: 'Minus sign identifies the subtracting input.',
   gain: 'Triangle, bounded gain value.',
   secondOrder: 'Complete denominator: s² + 2ζωₙs + ωₙ².',
-  discreteIntegrator:
-    'Ts·z / (z−1) represents current-sample accumulation.',
+  discreteIntegrator: 'Ts·z / (z−1) represents current-sample accumulation.',
   pmsm: 'Expanded width for four bottom signal terminals; mixed-domain colors.',
-  mux: 'Caption-only tapered body; drawing-only vector-bus placeholder.',
-  demux: 'Caption-only tapered body; drawing-only vector-bus placeholder.',
+  mux: 'Tapered bar that grows one pitch per input; numbered inputs.',
+  demux: 'Tapered bar that grows one pitch per output; numbered outputs.',
+  busCreator: 'Signal names are the input labels and are never cut short.',
+  busSelector: 'Selected signal names are the output labels.',
   subsystem:
     'Nested-block glyph; drawing-only placeholder without hierarchical execution.',
   display: '123 is a notation glyph, not a live numerical readout.',
@@ -72,7 +73,7 @@ ${rows}
 
 ## Remaining boundaries
 
-- Mux, Demux, and Subsystem are drawing-only placeholders. Display and Scope traces appear in the results panel, not as live values inside their symbols.
+- The empty Subsystem placeholder is drawing-only until it has an inside. Display and Scope traces appear in the results panel, not as live values inside their symbols.
 - No built-in thermal block currently exists; thermal coloring is supported by the shared domain system.
 - Historical custom sizes may still be too small for complete notation. Resizing them to the standard is deliberate and undoable, not an automatic migration.
 - Very long port captions ellipsize and retain their full tooltip/inspector value. Custom tightly clustered offsets need manual review.

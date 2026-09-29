@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="preload" as="image" href="/assets/icon.svg"/>
 <title>Demux · Gradara</title>
-<meta name="description" content="Split a drawing path into three. Same stand-in as Mux until buses exist."/>
+<meta name="description" content="Splits a vector wire into its signals, in order. Set the number of outputs in its properties."/>
 <meta name="theme-color" content="#0a0e13"/>
 <link rel="canonical" href="https://gradara.app/docs/blocks/demux"/>
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-mux-demux.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -24,18 +25,25 @@
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/docs/blocks">Block reference</a><span aria-hidden="true">/</span><a href="/docs/blocks#routing">Routing</a></nav>
 <header class="block-head">
 <h1>Demux</h1>
-<p class="lede">Split a drawing path into three. Same stand-in as Mux until buses exist.</p>
+<p class="lede">Splits a vector wire into its signals, in order. Set the number of outputs in its properties.</p>
 <ul class="chips" aria-label="At a glance">
 <li class="chip"><span class="port signal" aria-hidden="true"></span>signal</li>
 <li class="chip">Gradara equations</li>
 <li class="chip quiet">4 ports</li></ul></header>
 <figure class="sheet">
-<div class="sheet-canvas"><span class="sheet-stage f-81a18b9c"><span class="block-preview f-a444446c" aria-hidden="true"><span class="block-preview-body f-aa5eda78"><span class="block-face shape-demux f-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="1,25 99,1 99,99 1,75"></polygon></svg><span class="block-symbol"></span><span class="port-label port-left f-525979f6">u</span><span class="port-label port-right f-308fe664">1</span><span class="port-label port-right f-525979f6">2</span><span class="port-label port-right f-b5f05b4c">3</span></span><span class="preview-terminal terminal-left  f-0e89e25e"></span><span class="preview-terminal terminal-right  f-c9ed9434"></span><span class="preview-terminal terminal-right  f-0e89e25e"></span><span class="preview-terminal terminal-right  f-06ed13ba"></span></span></span></span></div>
+<div class="sheet-canvas"><span class="sheet-stage f-81a18b9c"><span class="block-preview f-a444446c" aria-hidden="true"><span class="block-preview-body f-aa5eda78"><span class="block-face shape-demux f-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="1,25 99,1 99,99 1,75"></polygon></svg><span class="block-symbol"></span><span class="port-label port-right f-308fe664">1</span><span class="port-label port-right f-525979f6">2</span><span class="port-label port-right f-b5f05b4c">3</span></span><span class="preview-terminal terminal-left  f-0e89e25e"></span><span class="preview-terminal terminal-right  f-c9ed9434"></span><span class="preview-terminal terminal-right  f-0e89e25e"></span><span class="preview-terminal terminal-right  f-06ed13ba"></span></span></span></span></div>
 <figcaption class="title-block"><span><small>Block</small>Demux</span><span><small>Kind</small><code>demux</code></span><span><small>Library</small>Routing</span></figcaption></figure>
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
-<p>A drawing stand-in for splitting a bundled line into three signals, the counterpart of Mux.</p>
-<p>Models containing Demux cannot run: model checks report it as a drawing-only block, and Run refuses the model until it is replaced by direct connections.</p></section>
+<p>Splits a vector into its signals, in order: the counterpart of Mux.</p>
+<p>Set the number of outputs (2 to 32) under Signals in the block’s properties. The input is cut into that many equal parts, so with 6 signals and 2 outputs each output is itself a vector of 3. Match incoming sets the outputs to one per signal.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Mux and Demux</strong> Three signals carried across the sheet on one vector wire, then split apart again.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-12583cde"><span class="diagram x-0f49101c"><svg class="diagram-wires" viewBox="16 40 816 360" width="816" height="360" aria-hidden="true"><polyline points="120,96 192,96 192,184 264,184" stroke="#1f5fbf"></polyline><polyline points="120,208 264,208" stroke="#1f5fbf"></polyline><polyline points="120,320 192,320 192,232 264,232" stroke="#1f5fbf"></polyline><polyline class="is-bus" points="312,208 584,208" stroke="#1f5fbf"></polyline><polyline points="632,184 696,184 696,136 760,136" stroke="#1f5fbf"></polyline><polyline points="632,208 784,208 784,160" stroke="#1f5fbf"></polyline></svg><span><span class="diagram-block x-71876818"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M6 36H20L54 8"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-07b871ee">Ramp</span></span><span><span class="diagram-block x-f43afe06"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M4 22C10 22 12 8 18 8S26 36 32 36 38 8 44 8 50 22 56 22"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-d190a744">Sine</span></span><span><span class="diagram-block x-df08f978"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="value-symbol">2</span></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-cb2b330a">Level</span></span><span><span class="diagram-block x-f45ad156"><span class="diagram-turn x-770c1a1d"><span class="block-preview x-a444446c" aria-hidden="true"><span class="block-preview-body x-aa5eda78"><span class="block-face shape-mux x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="1,1 99,25 99,75 1,99"></polygon></svg><span class="block-symbol"></span><span class="port-label port-left x-308fe664">1</span><span class="port-label port-left x-525979f6">2</span><span class="port-label port-left x-b5f05b4c">3</span></span><span class="preview-terminal terminal-left  x-c9ed9434"></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-left  x-06ed13ba"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-f28bd7fb">Mux</span></span><span><span class="diagram-block x-e2584a70"><span class="diagram-turn x-770c1a1d"><span class="block-preview x-a444446c" aria-hidden="true"><span class="block-preview-body x-aa5eda78"><span class="block-face shape-demux x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="1,25 99,1 99,99 1,75"></polygon></svg><span class="block-symbol"></span><span class="port-label port-right x-308fe664">1</span><span class="port-label port-right x-525979f6">2</span><span class="port-label port-right x-b5f05b4c">3</span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-c9ed9434"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-06ed13ba"></span></span></span></span></span><span class="diagram-name x-15dd5366">Demux</span></span><span><span class="diagram-block x-6045d724"><span class="diagram-turn x-3574e156"><span class="block-preview x-6374f7a4" aria-hidden="true"><span class="block-preview-body x-dd344d53"><span class="block-face shape-sum x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><ellipse cx="50" cy="50" rx="49" ry="49"></ellipse></svg><span class="block-symbol"></span><span class="port-label port-left sum-sign x-525979f6">+</span><span class="port-label port-bottom sum-sign x-4414ad8e">+</span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-bottom  x-df849ba5"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-ead3de4c">Sum</span></span></span></span></div>
+<figcaption>In Gradara, select a Demux block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/sum">Sum</a><a href="/docs/blocks/constant">Constant</a><a href="/docs/blocks/ramp">Ramp</a><a href="/docs/blocks/sine">Sine wave</a><a href="/docs/blocks/mux">Mux</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -43,45 +51,44 @@
 <ul class="entries">
 <li class="entry">
 <div class="entry-head"><span class="port signal" aria-hidden="true"></span><strong>u</strong><span class="entry-meta">signal</span></div>
-<p>Bundled line, usually from a Mux.</p></li></ul></div>
+<p>A vector, usually from a Mux.</p></li></ul></div>
 <div class="port-group">
 <h3>Outputs <span class="count">3</span></h3>
 <ul class="entries">
 <li class="entry">
 <div class="entry-head"><span class="port signal" aria-hidden="true"></span><strong>1</strong><code class="id">y1</code><span class="entry-meta">signal</span></div>
-<p>First output, a copy of u.</p></li>
+<p>The first part of u.</p></li>
 <li class="entry">
 <div class="entry-head"><span class="port signal" aria-hidden="true"></span><strong>2</strong><code class="id">y2</code><span class="entry-meta">signal</span></div>
-<p>Second output, a copy of u.</p></li>
+<p>The second part of u.</p></li>
 <li class="entry">
 <div class="entry-head"><span class="port signal" aria-hidden="true"></span><strong>3</strong><code class="id">y3</code><span class="entry-meta">signal</span></div>
-<p>Third output, a copy of u.</p></li></ul></div></section>
+<p>The third part of u.</p></li></ul></div></section>
 <section class="doc-section">
 <h2 id="equations"><a class="anchor" href="#equations">Equations</a></h2>
 <div class="code-card">
-<div class="code-label">Modelica</div><pre>y1 = u
-y2 = u
-y3 = u</pre></div></section>
+<div class="code-label">Modelica</div><pre>y1 = u[1], y2 = u[2], y3 = u[3]  (with one signal per output)</pre></div></section>
 <section class="doc-section">
 <h2 id="implementation"><a class="anchor" href="#implementation">Implementation</a></h2>
 <div class="code-card">
-<div class="code-label">The block’s Modelica model</div><pre class="source">y1 = u;
-y2 = u;
-y3 = u;</pre></div></section>
+<div class="code-label">The block’s Modelica model</div><pre class="source">y1 = u[1];
+y2 = u[2];
+y3 = u[3];</pre></div></section>
 <section class="doc-section">
 <h2 id="limitations"><a class="anchor" href="#limitations">Assumptions and limitations</a></h2>
 <div class="callout-box warn">
 <ul>
-<li>No vector or bus signals: every output repeats the one input signal.</li>
-<li>Always three outputs.</li></ul></div></section>
+<li>The number of outputs must divide the width of the input; otherwise model checks report it.</li>
+<li>The parts are equal in size; to take signals by name, bundle them with a Bus Creator and use a Bus Selector.</li></ul></div></section>
 <section class="doc-section">
 <h2 id="see-also"><a class="anchor" href="#see-also">See also</a></h2>
 <ul class="cards related">
-<li><a class="card" href="/docs/blocks/mux"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-60218c0c" aria-hidden="true"><span class="block-preview-body f-eef66b4c"><span class="block-face shape-mux f-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="1,1 99,25 99,75 1,99"></polygon></svg><span class="block-symbol"></span><span class="port-label port-left f-308fe664">1</span><span class="port-label port-left f-525979f6">2</span><span class="port-label port-left f-b5f05b4c">3</span><span class="port-label port-right f-525979f6">y</span></span><span class="preview-terminal terminal-left  f-c9ed9434"></span><span class="preview-terminal terminal-left  f-0e89e25e"></span><span class="preview-terminal terminal-left  f-06ed13ba"></span><span class="preview-terminal terminal-right  f-0e89e25e"></span></span></span></span><span class="card-text"><strong>Mux</strong><span>Three signals into one drawing path. Vector buses come later; this keeps the sheet readable.</span></span></a></li></ul></section>
+<li><a class="card" href="/docs/blocks/mux"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-60218c0c" aria-hidden="true"><span class="block-preview-body f-eef66b4c"><span class="block-face shape-mux f-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="1,1 99,25 99,75 1,99"></polygon></svg><span class="block-symbol"></span><span class="port-label port-left f-308fe664">1</span><span class="port-label port-left f-525979f6">2</span><span class="port-label port-left f-b5f05b4c">3</span></span><span class="preview-terminal terminal-left  f-c9ed9434"></span><span class="preview-terminal terminal-left  f-0e89e25e"></span><span class="preview-terminal terminal-left  f-06ed13ba"></span><span class="preview-terminal terminal-right  f-0e89e25e"></span></span></span></span><span class="card-text"><strong>Mux</strong><span>Joins signals into one vector wire, in order. Set the number of inputs in its properties; an input may itself be a vector.</span></span></a></li>
+<li><a class="card" href="/docs/blocks/busSelector"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-2f08dfe1" aria-hidden="true"><span class="block-preview-body f-2cedbc89"><span class="block-face shape-box has-signal-names f-3803d8c2" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path class="symbol-bus" d="M6 22H32"></path><path d="M32 22L54 8M32 22L54 36"></path></g></svg></span><span class="port-label port-left f-525979f6">bus</span><span class="port-label port-right f-525979f6">signal1</span></span><span class="preview-terminal terminal-left  f-0e89e25e"></span><span class="preview-terminal terminal-right  f-0e89e25e"></span></span></span></span><span class="card-text"><strong>Bus Selector</strong><span>Picks signals out of a bus by name. Choose the signals in its properties; each becomes an output.</span></span></a></li></ul></section>
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
-<nav class="pager" aria-label="More in Routing"><a class="prev" href="/docs/blocks/mux"><small>Previous</small>Mux</a><a class="next" href="/docs/blocks/switch2"><small>Next</small>Switch</a></nav></article></main>
+<nav class="pager" aria-label="More in Routing"><a class="prev" href="/docs/blocks/mux"><small>Previous</small>Mux</a><a class="next" href="/docs/blocks/busCreator"><small>Next</small>Bus Creator</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>215</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>217</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -124,10 +131,12 @@ y3 = u;</pre></div></section>
 <li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
 <li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
 <li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
-<details open="" data-group=""><summary>Routing <span>4</span></summary>
+<details open="" data-group=""><summary>Routing <span>6</span></summary>
 <ul>
 <li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
 <li data-name="demux demux"><a href="/docs/blocks/demux" aria-current="page">Demux</a></li>
+<li data-name="bus creator buscreator"><a href="/docs/blocks/busCreator">Bus Creator</a></li>
+<li data-name="bus selector busselector"><a href="/docs/blocks/busSelector">Bus Selector</a></li>
 <li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
 <li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
 <details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
@@ -338,6 +347,7 @@ y3 = u;</pre></div></section>
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#equations">Equations</a></li>
 <li><a href="#implementation">Implementation</a></li>

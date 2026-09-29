@@ -45,6 +45,14 @@ export type Port = {
   side?: 'left' | 'right' | 'bottom' | 'top';
   unit?: string;
   offset?: number;
+  /**
+   * Signals carried by a bus port (two or more). Absent means one signal. Only bus
+   * blocks, subsystem ports, and boundary blocks take a width; `propagateBuses`
+   * (buses.ts) derives it from what is connected.
+   */
+  width?: number;
+  /** Element names of a named bus (from a Bus Creator), one per signal. */
+  elements?: string[];
 };
 export type Parameter = {
   id: string;

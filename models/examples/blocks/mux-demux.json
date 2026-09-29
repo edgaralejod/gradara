@@ -1,0 +1,433 @@
+{
+  "version": 1,
+  "name": "Example: Mux and Demux",
+  "exampleId": "block-mux-demux",
+  "description": "The Mux joins the ramp, the sine, and the constant into one vector, drawn as a heavy line: one wire where there would be three. The Demux splits it back in the same order, so its outputs are the three sources again. The Sum adds the first two. Set the number of inputs or outputs in each block’s properties; a Demux splits its input into equal parts, so its output count must divide the vector’s width.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "ramp",
+      "definition": {
+        "kind": "ramp",
+        "name": "Ramp",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 1,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "sine",
+      "definition": {
+        "kind": "sine",
+        "name": "Sine",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 1,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "level",
+      "definition": {
+        "kind": "constant",
+        "name": "Level",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 2,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 40,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "mux",
+      "definition": {
+        "kind": "mux",
+        "name": "Mux",
+        "symbol": "mux",
+        "domain": "signal",
+        "description": "Joins signals into one vector wire, in order. Set the number of inputs in its properties; an input may itself be a vector.",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "1",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "u2",
+            "name": "2",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "u3",
+            "name": "3",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "width": 3
+          }
+        ],
+        "equations": "y = {u1, u2, u3};",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "routing",
+          "bus",
+          "bundle",
+          "vector",
+          "concatenate"
+        ]
+      },
+      "position": {
+        "x": 264,
+        "y": 160
+      },
+      "size": {
+        "width": 48,
+        "height": 96
+      }
+    },
+    {
+      "id": "demux",
+      "definition": {
+        "kind": "demux",
+        "name": "Demux",
+        "symbol": "demux",
+        "domain": "signal",
+        "description": "Splits a vector wire into its signals, in order. Set the number of outputs in its properties.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "width": 3
+          },
+          {
+            "id": "y1",
+            "name": "1",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "y2",
+            "name": "2",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "y3",
+            "name": "3",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "equations": "y1 = u[1];\ny2 = u[2];\ny3 = u[3];",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "routing",
+          "bus",
+          "vector",
+          "split"
+        ]
+      },
+      "position": {
+        "x": 584,
+        "y": 160
+      },
+      "size": {
+        "width": 48,
+        "height": 96
+      }
+    },
+    {
+      "id": "add",
+      "definition": {
+        "kind": "sum",
+        "name": "Sum",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Sum",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a + b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 760,
+        "y": 112
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "ramp",
+      "sourceHandle": "y",
+      "target": "mux",
+      "targetHandle": "u1"
+    },
+    {
+      "id": "id0002",
+      "source": "sine",
+      "sourceHandle": "y",
+      "target": "mux",
+      "targetHandle": "u2"
+    },
+    {
+      "id": "id0003",
+      "source": "level",
+      "sourceHandle": "y",
+      "target": "mux",
+      "targetHandle": "u3"
+    },
+    {
+      "id": "id0004",
+      "source": "mux",
+      "sourceHandle": "y",
+      "target": "demux",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0005",
+      "source": "demux",
+      "sourceHandle": "y1",
+      "target": "add",
+      "targetHandle": "a"
+    },
+    {
+      "id": "id0006",
+      "source": "demux",
+      "sourceHandle": "y2",
+      "target": "add",
+      "targetHandle": "b"
+    }
+  ],
+  "junctions": [],
+  "nets": [
+    {
+      "id": "net_id0008",
+      "anchor": "ramp.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id0009",
+      "anchor": "sine.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000a",
+      "anchor": "level.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000b",
+      "anchor": "mux.y",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000c",
+      "anchor": "demux.y1",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000d",
+      "anchor": "demux.y2",
+      "wireIds": [
+        "id0006"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Split signals",
+      "series": [
+        "demux.y1",
+        "demux.y2",
+        "demux.y3",
+        "add.y"
+      ],
+      "labels": [
+        "Ramp",
+        "Sine",
+        "Level",
+        "Ramp + sine"
+      ]
+    }
+  ]
+}

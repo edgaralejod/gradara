@@ -85,7 +85,7 @@ Drag empty canvas to select. Pan with the middle or right mouse button or Space.
 
 This is a trusted, single-user local application. **Do not expose the local service to a public network.** It accepts only loopback requests from its own workbench and has no multi-user authorization. Models and runs live in your data folder (`projects/` in a source checkout). See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
-Vector and bus signals, Modelica import, FMI, remote simulation, and HDL generation are not available. Mux and Demux blocks are drawing-only and report that when you run. Checking C code against a simulation does not prove it behaves correctly on your target hardware. Gradara is not certified for safety-critical use; verify results independently. The [roadmap](ROADMAP.md) lists planned work.
+Signal buses (Mux, Demux, Bus Creator, Bus Selector) carry and route several signals on one wire, but element-wise math on a bus is not available yet. Modelica import, FMI, remote simulation, and HDL generation are not available. Checking C code against a simulation does not prove it behaves correctly on your target hardware. Gradara is not certified for safety-critical use; verify results independently. The [roadmap](ROADMAP.md) lists planned work.
 
 ## Develop and contribute
 

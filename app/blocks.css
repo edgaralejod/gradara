@@ -67,6 +67,9 @@
   opacity: 0.3;
   stroke-width: 1;
 }
+.block-face .symbol-bus {
+  stroke-width: 4;
+}
 .block-face .math-op,
 .block-face .pid-symbol,
 .block-face .display-glyph,
@@ -145,6 +148,9 @@
 .block-face .port-bottom {
   bottom: 4px;
   transform: translateX(-50%);
+}
+.block-face.has-signal-names .port-label {
+  max-width: none;
 }
 .block-face .port-label.sum-sign {
   color: var(--block-ink);
@@ -390,7 +396,6 @@
 }
 .library-part-detail strong { font-weight: 600; }
 .library-part-detail p { color: #637987; margin: 3px 0 0; }
-.legend-availability { font-size: var(--text-ui); color: #8a653b; }
 .legend-copy > small { font-size: var(--text-ui); color: #637987; }
 
 /* Unboxed circuit symbols get lighter relief; labels and connection targets stay flat. */

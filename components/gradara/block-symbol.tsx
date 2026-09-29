@@ -133,8 +133,7 @@ export function BlockSymbol({
     );
   if (kind === 'pid' || kind === 'pi' || kind === 'currentPI')
     return <span className="pid-symbol">{kind === 'pid' ? 'PID' : 'PI'}</span>;
-  if (kind === 'discretePID')
-    return <span className="pid-symbol">PID(z)</span>;
+  if (kind === 'discretePID') return <span className="pid-symbol">PID(z)</span>;
   if (kind === 'step') return <Icon path="M5 35H26V9H55" />;
   if (kind === 'ramp') return <Icon path="M6 36H20L54 8" />;
   if (kind === 'sine')
@@ -186,6 +185,20 @@ export function BlockSymbol({
   if (kind === 'power') return <span className="math-op">uⁿ</span>;
   if (kind === 'zoh') return <span className="math-op">ZOH</span>;
   if (kind === 'mux' || kind === 'demux') return null;
+  if (kind === 'busCreator')
+    return (
+      <Icon>
+        <path d="M6 8L28 22M6 22H28M6 36L28 22" />
+        <path className="symbol-bus" d="M28 22H54" />
+      </Icon>
+    );
+  if (kind === 'busSelector')
+    return (
+      <Icon>
+        <path className="symbol-bus" d="M6 22H32" />
+        <path d="M32 22L54 8M32 22L54 36" />
+      </Icon>
+    );
   if (kind === 'switch2' || kind === 'manualSwitch')
     return <Icon path="M4 10H18M4 34H18M56 22H42L20 11" />;
   if (kind === 'subsystem')
@@ -200,7 +213,14 @@ export function BlockSymbol({
   if (kind === 'emptySubsystem')
     return (
       <Icon>
-        <rect x="10" y="7" width="40" height="30" rx="4" strokeDasharray="3 3" />
+        <rect
+          x="10"
+          y="7"
+          width="40"
+          height="30"
+          rx="4"
+          strokeDasharray="3 3"
+        />
         <path d="M30 16V28M24 22H36" />
       </Icon>
     );

@@ -9,6 +9,7 @@ import { BlockPreview } from '../components/gradara/block-face';
 import { domainColors, type Domain, type Project } from '../lib/gradara/model';
 import { polylineOfWire } from '../lib/gradara/net-draw';
 import { bodyOf, labelOf } from '../lib/gradara/router';
+import { busWireIds } from '../lib/gradara/buses';
 
 const PAD = 24;
 
@@ -56,6 +57,7 @@ export function sheetBounds(project: Project) {
 
 export function ExampleDiagram({ project }: { project: Project }) {
   const box = sheetBounds(project);
+  const buses = busWireIds(project);
   return (
     <span
       className="diagram"
@@ -73,6 +75,7 @@ export function ExampleDiagram({ project }: { project: Project }) {
           return (
             <polyline
               key={w.id}
+              className={buses.has(w.id) ? 'is-bus' : undefined}
               points={points.map((p) => `${p.x},${p.y}`).join(' ')}
               stroke={domainColors[wireDomain(project, w.id)]}
             />

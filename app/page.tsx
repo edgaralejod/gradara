@@ -168,6 +168,8 @@ import BlockDialog, {
 import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import VariantPanel from '@/components/gradara/variant-panel';
+import { BusSignalsPanel } from '@/components/gradara/bus-signals-panel';
+import { isBusBlock, propagateBuses } from '@/lib/gradara/buses';
 import { useVariantChecks } from '@/components/gradara/use-variant-checks';
 import { SubsystemLookupContext } from '@/components/gradara/subsystem-preview';
 import ExplorerWorkspace, {
@@ -895,7 +897,8 @@ function Workbench() {
         /* Ignore an unreadable browser draft; the disk document remains authoritative. */
       }
     }
-    return normalizeProject(next);
+    // Bus widths are derived: bring them up to date with the wiring on load.
+    return propagateBuses(normalizeProject(next));
   };
   useEffect(() => {
     let disposed = false;
@@ -2816,6 +2819,19 @@ function Workbench() {
                         onLabelSelect={(id) => {
                           select({ ...emptySelection(), blockIds: [id] });
                         }}
+                        onLabelRename={(id, name) =>
+                          commit((p) => ({
+                            ...p,
+                            blocks: p.blocks.map((b) =>
+                              b.id === id
+                                ? {
+                                    ...b,
+                                    definition: { ...b.definition, name },
+                                  }
+                                : b,
+                            ),
+                          }))
+                        }
                         edges={[]}
                         nodesConnectable={false}
                         onNodeClick={(event, node) => {
@@ -3263,6 +3279,7 @@ function Workbench() {
                     {active.definition.domain === 'signal' &&
                       !active.definition.modelica &&
                       !active.definition.subsystem &&
+                      !isBusBlock(active.definition) &&
                       !isBoundary(active) && (
                         <Button
                           className="refine-button"
@@ -3342,6 +3359,12 @@ function Workbench() {
                       />
                     </div>
                   )}
+                  {isBusBlock(active.definition) && (
+                    <BusSignalsPanel
+                      block={active}
+                      onCommit={(change) => commit(change)}
+                    />
+                  )}
                   {isBoundary(active) && (
                     <PortPillPanel
                       view={project}
@@ -3350,7 +3373,9 @@ function Workbench() {
                     />
                   )}
                   {/* A port pill has no parameters or equations; a block with neither skips the section. */}
+                  {/* A bus block's equations follow its Signals; there is nothing else to edit. */}
                   {!isBoundary(active) &&
+                    !isBusBlock(active.definition) &&
                     (active.definition.parameters.length > 0 ||
                       !!active.definition.equations?.trim() ||
                       !!active.definition.declarations?.trim()) && (
@@ -3881,7 +3906,8 @@ function Workbench() {
                 ['Pan canvas', 'Space + drag / Trackpad'],
                 ['Resize a block', 'Drag a corner or edge'],
                 ['Move a block name', 'Drag the label'],
-                ['Reset label position', 'Double-click its label'],
+                ['Rename a block', 'Double-click its name'],
+                ['Reset name position', 'Select the name, then Home'],
                 ['Nudge selection one grid step', 'Arrow keys'],
                 ['Nudge five grid steps', 'Shift + arrows'],
                 ['Add a block at the pointer', 'Double-click empty canvas'],

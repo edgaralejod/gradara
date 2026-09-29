@@ -51,10 +51,15 @@ void test('a wire to a missing port is an error and an isolated block is info', 
 
 void test('drawing-only blocks are reported', () => {
   const p = initialProject();
-  const mux = structuredClone(library.find((d) => d.kind === 'mux')!);
+  const placeholder = structuredClone(
+    library.find((d) => d.kind === 'subsystem')!,
+  );
   const problems = validateProject({
     ...p,
-    blocks: [...p.blocks, { id: 'm', definition: mux, position: { x: 0, y: 0 } }],
+    blocks: [
+      ...p.blocks,
+      { id: 'm', definition: placeholder, position: { x: 0, y: 0 } },
+    ],
   });
   assert.ok(problems.some((d) => d.id === 'v-drawing-m'));
 });
