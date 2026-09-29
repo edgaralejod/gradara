@@ -52,6 +52,26 @@ class EngineError(RuntimeError):
     pass
 
 
+def _no_error_dialogs() -> None:
+    """On Windows, make a missing DLL or a crash end the process with an error code.
+
+    By default Windows shows a dialog and waits for someone to close it, which
+    would leave a simulation hanging until its timeout. Child processes (omc,
+    make, gcc, the compiled model) inherit this error mode.
+    """
+    if os.name != 'nt':
+        return
+    try:
+        import ctypes
+        SEM_FAILCRITICALERRORS, SEM_NOGPFAULTERRORBOX, SEM_NOOPENFILEERRORBOX = 0x0001, 0x0002, 0x8000
+        ctypes.windll.kernel32.SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX)  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
+
+_no_error_dialogs()
+
+
 @dataclass
 class EngineStatus:
     backend: str
