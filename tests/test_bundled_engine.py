@@ -124,6 +124,35 @@ def test_vm_paths_map_the_data_folder(tmp_path, monkeypatch):
     assert any(a.startswith('virtio-vsock,port=1024,') and a.endswith(',connect') for a in argv)
 
 
+def test_vm_reruns_a_command_after_a_compiler_crash(tmp_path):
+    backend = engines.VmBackend(make_bundle(tmp_path/'engine', {'platform': 'macos'}))
+    replies = [(0, 'gcc: internal compiler error: Segmentation fault signal terminated program cc1'),
+               (0, 'record SimulationResult ... end SimulationResult;')]
+    calls = []
+
+    async def run(argv, cwd, timeout):
+        calls.append(argv)
+        return replies.pop(0)
+    backend.vm.run = run
+    assert asyncio.run(backend.command(['omc', 'run.mos'], 10)) == (0, 'record SimulationResult ... end SimulationResult;')
+    assert len(calls) == 2
+
+    backend.vm.run = lambda argv, cwd, timeout: _reply(calls, 1, 'gcc: internal compiler error: Segmentation fault')
+    calls.clear()
+    code, _ = asyncio.run(backend.command(['omc', 'run.mos'], 10))
+    assert code == 1 and len(calls) == 1 + backend.COMPILER_RETRIES, 'a crash that keeps happening is reported'
+
+    backend.vm.run = lambda argv, cwd, timeout: _reply(calls, 1, 'Error: Variable x not found')
+    calls.clear()
+    asyncio.run(backend.command(['omc', 'run.mos'], 10))
+    assert len(calls) == 1, 'model errors are not retried'
+
+
+async def _reply(calls, code, output):
+    calls.append(1)
+    return code, output
+
+
 # ------------------------------------------------------------------ agent
 
 def free_port() -> int:

@@ -852,8 +852,22 @@ class VmBackend(NativeBackend):
             raise EngineError(f'{path} is outside the data folder the engine VM can see.') from exc
         return '/data/' + relative.as_posix() if relative.parts else '/data'
 
+    # gcc inside the VM occasionally dies with a segfault that does not repeat (seen
+    # under nested virtualization on CI Macs). A crashed compiler is not a model error,
+    # so the same command runs again; make rebuilds only what did not finish.
+    COMPILER_CRASH = 'internal compiler error'
+    COMPILER_RETRIES = 2
+
     async def command(self, argv: list[str], timeout: float, cwd: Path | None = None) -> tuple[int, str]:
-        return await self.vm.run([str(a) for a in argv], self.engine_path(cwd) if cwd else '/tmp', timeout)
+        argv = [str(a) for a in argv]
+        where = self.engine_path(cwd) if cwd else '/tmp'
+        for attempt in range(self.COMPILER_RETRIES + 1):
+            code, output = await self.vm.run(argv, where, timeout)
+            if self.COMPILER_CRASH not in output or attempt == self.COMPILER_RETRIES:
+                return code, output
+            print(f'gradara: the compiler crashed in the engine VM; running {Path(argv[0]).name} again',
+                  file=sys.stderr, flush=True)
+        return code, output
 
     async def status(self) -> EngineStatus:
         omc = self.omc()
