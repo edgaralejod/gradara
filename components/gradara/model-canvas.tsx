@@ -9,6 +9,7 @@ import {
 } from 'react';
 import {
   ReactFlow,
+  ViewportPortal,
   useNodesInitialized,
   useReactFlow,
   useStore,
@@ -17,9 +18,17 @@ import {
   type NodeChange,
 } from '@xyflow/react';
 import BlockNode from './block-node';
-import { snapDraggedBlockPosition } from '@/lib/gradara/placement';
+import { dragSnap } from '@/lib/gradara/placement';
+import {
+  ALIGN_GUIDE_PX,
+  alignToNeighbors,
+  boundsOf,
+  type AlignGuide,
+} from '@/lib/gradara/align-guides';
+import { snapBlockPosition } from '@/lib/gradara/block-design';
 import { LabelEditingContext } from './label-editing-context';
 import {
+  blockSize,
   CanvasGestures,
   reconcileNodes,
   type BlockLayout,
@@ -188,7 +197,8 @@ type Props = Omit<
   onCopyDrop: (preview: SelectionPreview) => void;
   selectedIds: string[];
   onSelectedIdsChange: (ids: string[]) => void;
-  onLayout: (layouts: BlockLayout[]) => void;
+  /** `free`: the drag had Alt held, so nothing but the grid moved the blocks. */
+  onLayout: (layouts: BlockLayout[], options?: { free?: boolean }) => void;
   onLabelOffset: (id: string, offset: Block['labelOffset']) => void;
   onLabelSelect: (id: string) => void;
   /** The open sheet (subsystem path); the view refits when it changes. */
@@ -262,21 +272,91 @@ export default function ModelCanvas({
     setNodes(next);
   }, [blocks, selectedIds]);
 
+  // Alt turns off every pull but the grid while dragging, as in Visio and Simulink.
+  const altHeld = useRef(false);
+  useEffect(() => {
+    const track = (e: KeyboardEvent | PointerEvent) => {
+      altHeld.current = e.altKey;
+    };
+    const release = () => {
+      altHeld.current = false;
+    };
+    window.addEventListener('keydown', track, true);
+    window.addEventListener('keyup', track, true);
+    window.addEventListener('pointermove', track, true);
+    window.addEventListener('blur', release);
+    return () => {
+      window.removeEventListener('keydown', track, true);
+      window.removeEventListener('keyup', track, true);
+      window.removeEventListener('pointermove', track, true);
+      window.removeEventListener('blur', release);
+    };
+  }, []);
+  const store = useStoreApi();
+  const [guides, setGuides] = useState<AlignGuide[]>([]);
+  const guidesRef = useRef<AlignGuide[]>([]);
+
   const onNodesChange = useCallback(
     (changes: NodeChange<CanvasNode>[]) => {
+      let nextGuides: AlignGuide[] = [];
       const { nodes: next, layouts } = gestures.current.apply(
         changes,
         nodesRef.current,
         (node, position) => {
-          const snapped = snapDraggedBlockPosition(
-            project,
-            node.id,
-            position,
-            documentSelectedIds,
+          const block = project.blocks.find((b) => b.id === node.id);
+          if (!block || altHeld.current)
+            return snapBlockPosition(position, {
+              width: node.width ?? 80,
+              height: node.height ?? 64,
+            });
+          const moving = new Set([node.id, ...documentSelectedIds]);
+          const snap = dragSnap(project, node.id, position, [...moving]);
+          // Line edges and centers up with the blocks that stay, on the axes no
+          // connected wire decided; the whole moving group counts as one box.
+          const shift = {
+            x: position.x - block.position.x,
+            y: position.y - block.position.y,
+          };
+          const group = boundsOf(
+            project.blocks
+              .filter((b) => moving.has(b.id))
+              .map((b) => ({
+                ...blockSize(b),
+                x: b.position.x + shift.x,
+                y: b.position.y + shift.y,
+              })),
           );
-          return snapped;
+          if (!group) return snap.position;
+          const zoom = store.getState().transform[2] || 1;
+          const align = alignToNeighbors(
+            group,
+            project.blocks
+              .filter((b) => !moving.has(b.id) && !b.definition.boundary)
+              .map((b) => ({ ...b.position, ...blockSize(b) })),
+            ALIGN_GUIDE_PX / zoom,
+            snap.wire,
+          );
+          nextGuides = align.guides;
+          return {
+            x: align.dx !== undefined ? position.x + align.dx : snap.position.x,
+            y: align.dy !== undefined ? position.y + align.dy : snap.position.y,
+          };
         },
       );
+      const dragging = changes.some((c) => c.type === 'position' && c.dragging);
+      const shown = dragging ? nextGuides : [];
+      if (
+        shown.length !== guidesRef.current.length ||
+        shown.some(
+          (g, i) =>
+            g.value !== guidesRef.current[i].value ||
+            g.from !== guidesRef.current[i].from ||
+            g.to !== guidesRef.current[i].to,
+        )
+      ) {
+        guidesRef.current = shown;
+        setGuides(shown);
+      }
       nodesRef.current = next;
       // Measurement callbacks run inside ResizeObserver delivery. Paint on the
       // next frame, never trigger another layout while that delivery is active.
@@ -290,9 +370,9 @@ export default function ModelCanvas({
         const ids = next.filter((n) => n.selected).map((n) => n.id);
         onSelectedIdsChange(ids);
       }
-      if (layouts.length) onLayout(layouts);
+      if (layouts.length) onLayout(layouts, { free: altHeld.current });
     },
-    [onSelectedIdsChange, onLayout, project, documentSelectedIds],
+    [onSelectedIdsChange, onLayout, project, documentSelectedIds, store],
   );
 
   return (
@@ -320,6 +400,31 @@ export default function ModelCanvas({
             onPreview={setPreview}
             onCommit={onCopyDrop}
           />
+          {guides.length > 0 && (
+            <ViewportPortal>
+              <svg className="align-guides" aria-hidden="true">
+                {guides.map((g) =>
+                  g.axis === 'x' ? (
+                    <line
+                      key={`x${g.value}`}
+                      x1={g.value}
+                      x2={g.value}
+                      y1={g.from - 16}
+                      y2={g.to + 16}
+                    />
+                  ) : (
+                    <line
+                      key={`y${g.value}`}
+                      y1={g.value}
+                      y2={g.value}
+                      x1={g.from - 16}
+                      x2={g.to + 16}
+                    />
+                  ),
+                )}
+              </svg>
+            </ViewportPortal>
+          )}
           {props.children}
           {preview && (
             <div className="copy-drag-hint">

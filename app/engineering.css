@@ -3063,3 +3063,7 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .library-help:hover { text-decoration: underline; }
 .properties-heading { display: flex; align-items: center; min-height: 34px; }
 .block-help-dialog [data-slot='dialog-title'] { font-size: 19px; }
+
+/* Smart alignment guides while dragging (align-guides.ts). */
+.align-guides { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; z-index: 5; }
+.align-guides line { stroke: #d6336c; stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }

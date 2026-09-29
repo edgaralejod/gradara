@@ -1187,8 +1187,11 @@ function Workbench() {
     }
   };
   const updateLayout = useCallback(
-    (layouts: BlockLayout[]) => {
-      commit((p) => layoutSelection(p, layouts, selectionRef.current));
+    (layouts: BlockLayout[], options?: { free?: boolean }) => {
+      // A drag with Alt held places blocks exactly where they were dropped (on the grid).
+      commit((p) =>
+        layoutSelection(p, layouts, selectionRef.current, !options?.free),
+      );
     },
     [commit],
   );
