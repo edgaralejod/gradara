@@ -59,7 +59,16 @@ jobs:
           GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
         run: |
           python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
-          python -m pytest -v -m integration --durations=15
+          # One simulation first with its full output, so a broken engine shows why at once.
+          python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
+          python -m pytest -v -m integration --durations=15 --maxfail=10
+      - name: Keep the run folders of a failed engine test
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-test-runs-linux
+          path: projects/runs
+          if-no-files-found: ignore
       - name: Pack
         run: python packaging/engine/pack_bundle.py --dir build/engine --name linux-x64 --out dist-engine
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -101,7 +110,16 @@ jobs:
           OPENMODELICAHOME: ''
         run: |
           python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
-          python -m pytest -v -m integration --durations=15
+          # One simulation first with its full output, so a broken engine shows why at once.
+          python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
+          python -m pytest -v -m integration --durations=15 --maxfail=10
+      - name: Keep the run folders of a failed engine test
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-test-runs-windows
+          path: projects/runs
+          if-no-files-found: ignore
       - name: Pack
         run: python packaging/engine/pack_bundle.py --dir build/engine --name windows-x64 --out dist-engine
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -148,7 +166,16 @@ jobs:
             -v "$PWD/projects:/data" gradara-guest:${{ matrix.docker || matrix.arch }} python3 -u /opt/gradara/agent.py
           sleep 2
           python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
-          python -m pytest -v -m integration --durations=15
+          # One simulation first with its full output, so a broken engine shows why at once.
+          python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
+          python -m pytest -v -m integration --durations=15 --maxfail=10
+      - name: Keep the run folders of a failed engine test
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-test-runs-macos-${{ matrix.arch }}
+          path: projects/runs
+          if-no-files-found: ignore
       - name: Pack
         run: python packaging/engine/pack_bundle.py --dir build/engine --name macos-${{ matrix.arch }} --out dist-engine
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
