@@ -1,7 +1,9 @@
 name: Desktop installers
 
-# Builds Windows, macOS, and Linux installers, then installs each one on a clean
-# runner, launches it in self-test mode, and uninstalls it. Tag pushes (v*)
+# Builds Windows, macOS, and Linux installers, each with its platform's built-in
+# simulation engine (packaging/engine/bundles.json), then installs each one on a
+# clean runner, launches it in self-test mode, runs a simulation and verifies
+# generated C with the built-in engine, and uninstalls it. Tag pushes (v*)
 # attach the installers to a draft GitHub Release only when every install test
 # passes. Pull requests and manual runs build and test without releasing.
 #
@@ -20,6 +22,7 @@ on:
       - '!desktop/package-lock.json'
       - 'packaging/**'
       - 'server/requirements.txt'
+      - 'server/engines.py'
       - 'vite.desktop.config.ts'
       - '.github/workflows/release.yml'
   workflow_dispatch:
@@ -43,16 +46,20 @@ jobs:
           - name: Windows x64
             os: windows-latest
             builder: --win nsis --x64
+            engine: windows-x64
           - name: macOS Apple silicon
             os: macos-15
             builder: --mac dmg zip --arm64
+            engine: macos-arm64
           - name: macOS Intel
             os: macos-15-intel
             builder: --mac dmg zip --x64
+            engine: macos-x64
           # 22.04 keeps the bundled service compatible with older Linux glibc versions.
           - name: Linux x64
             os: ubuntu-22.04
             builder: --linux AppImage deb --x64
+            engine: linux-x64
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -85,6 +92,9 @@ jobs:
           npm ci
           python -m pip install -r server/requirements.txt pyinstaller==6.22.3
           cd desktop && npm ci
+      - name: Fetch the built-in engine
+        shell: bash
+        run: python packaging/engine/fetch_bundle.py --name ${{ matrix.engine }}
       - name: Build workbench and local service
         shell: bash
         run: |
@@ -92,6 +102,7 @@ jobs:
           python packaging/build_backend.py
           python packaging/third_party_licenses.py
       - name: Smoke-test the bundled service
+        # On Windows and Linux this also simulates with the built-in engine.
         shell: bash
         run: python packaging/smoke_backend.py
       - name: Build installer
@@ -153,26 +164,35 @@ jobs:
     # Test whatever built, even if another platform's build failed.
     if: ${{ !cancelled() }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
+        # simulate: run the DC motor on the built-in engine and verify its generated C.
+        # GitHub's Apple silicon runners cannot start virtual machines (no nested
+        # virtualization), so that installer's simulation is checked on a Mac before
+        # publishing (docs/RELEASING.md); the Intel runner boots the same VM design.
         include:
           - name: Windows x64
             os: windows-latest
             artifact: gradara-windows-latest
+            simulate: '--simulate'
           - name: macOS Apple silicon
             os: macos-15
             artifact: gradara-macos-15
+            simulate: ''
           - name: macOS Intel
             os: macos-15-intel
             artifact: gradara-macos-15-intel
+            simulate: '--simulate'
           - name: Ubuntu 22.04
             os: ubuntu-22.04
             artifact: gradara-ubuntu-22.04
+            simulate: '--simulate'
           - name: Ubuntu 24.04
             os: ubuntu-24.04
             artifact: gradara-ubuntu-22.04
+            simulate: '--simulate'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -200,6 +220,7 @@ jobs:
           $dir = Join-Path $env:LOCALAPPDATA 'Programs\Gradara'
           if (-not (Test-Path "$dir\Gradara.exe")) { throw "Gradara.exe not found in $dir" }
           if (-not (Test-Path "$dir\resources\backend\gradara-backend.exe")) { throw 'Bundled service missing' }
+          if (-not (Test-Path "$dir\resources\engine\bin\omc.exe")) { throw 'Built-in engine missing' }
           $key = Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall' |
             Where-Object { (Get-ItemProperty $_.PSPath).DisplayName -like 'Gradara*' }
           if (-not $key) { throw 'No Add/Remove Programs entry' }
@@ -225,6 +246,9 @@ jobs:
           exe=/Applications/Gradara.app/Contents/MacOS/Gradara
           file "$exe"
           file /Applications/Gradara.app/Contents/Resources/backend/gradara-backend
+          file /Applications/Gradara.app/Contents/Resources/engine/vfkit
+          codesign -d --entitlements - /Applications/Gradara.app/Contents/Resources/engine/vfkit 2>&1 | grep -q com.apple.security.virtualization \
+            || { echo 'vfkit lacks the virtualization entitlement'; exit 1; }
           # Authority lines (the signing certificate chain) are only printed at -vv or higher.
           signature=$(codesign -dvv /Applications/Gradara.app 2>&1 || true)
           echo "$signature"
@@ -249,18 +273,23 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq xvfb ./installers/Gradara-linux-amd64.deb
           test -x /opt/Gradara/gradara
           test -x /opt/Gradara/resources/backend/gradara-backend
+          test -x /opt/Gradara/resources/engine/bin/omc
+          dpkg-query -W -f='${Depends}\n' gradara | grep -q gcc
           test -f /usr/share/applications/gradara.desktop
           command -v gradara
           echo "GRADARA_EXE=/opt/Gradara/gradara" >> "$GITHUB_ENV"
 
-      - name: First launch
+      - name: First launch (simulates on the built-in engine)
         shell: bash
         run: |
           mkdir -p reports
+          if [ -z "${{ matrix.simulate }}" ]; then
+            echo "::notice::This runner cannot start the engine VM; the Apple silicon simulation is checked on a Mac before release."
+          fi
           if [ "$RUNNER_OS" = Linux ]; then
-            xvfb-run -a python packaging/installer_selftest.py --exe "$GRADARA_EXE" --report reports/first-launch.json
+            xvfb-run -a python packaging/installer_selftest.py --exe "$GRADARA_EXE" --report reports/first-launch.json ${{ matrix.simulate }}
           else
-            python packaging/installer_selftest.py --exe "$GRADARA_EXE" --report reports/first-launch.json
+            python packaging/installer_selftest.py --exe "$GRADARA_EXE" --report reports/first-launch.json ${{ matrix.simulate }}
           fi
       - name: Second launch (existing data folder)
         shell: bash
