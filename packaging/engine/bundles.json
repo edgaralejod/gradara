@@ -1,6 +1,0 @@
-{
-  "comment": "The engine each installer ships. Produced by the Engine bundles workflow and published as a prerelease that is never marked latest. Update the checksums together with the release.",
-  "repository": "edgaralejod/gradara",
-  "release": "engine-1.27.1",
-  "assets": {}
-}

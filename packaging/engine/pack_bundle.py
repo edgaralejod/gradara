@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Archive an engine bundle for the engine release and print its checksum.
+"""Archive an engine bundle as a workflow artifact and record its checksum.
 
     python packaging/engine/pack_bundle.py --dir build/engine --name linux-x64 --out dist-engine
 
