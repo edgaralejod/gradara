@@ -2838,7 +2838,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "idealTransformer",
     "name": "Ideal transformer",
-    "description": "Ideal transformer with turns ratio n (optionally with magnetizing inductance).",
+    "description": "Ideal transformer with turns ratio n: v1 = n·v2 and i2 = −n·i1, with no magnetizing inductance.",
     "domain": "electrical",
     "category": "electrical",
     "symbol": "n:1",
@@ -4687,7 +4687,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "Vmax",
-        "name": "Quench voltage",
+        "name": "Maximum arc voltage",
         "value": 60,
         "unit": "V",
         "min": 0
@@ -4862,49 +4862,49 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "buckBoostConverter",
     "name": "Buck-boost converter",
-    "description": "Non-inverting buck-boost chopper: fire_p drives the input (buck) switch, fire_n the output (boost) switch.",
+    "description": "Bidirectional half-bridge: port 1 is the switch node (add a series inductor); fire_p drives the low-side switch, stepping up from port 1 to port 2, and fire_n the high-side switch, stepping down from port 2 to port 1.",
     "domain": "electrical",
     "category": "converters",
     "symbol": "b-b",
     "ports": [
       {
         "id": "dc_p1",
-        "name": "in+",
+        "name": "1+",
         "direction": "physical",
         "domain": "electrical",
         "side": "left"
       },
       {
         "id": "dc_n1",
-        "name": "in−",
+        "name": "1−",
         "direction": "physical",
         "domain": "electrical",
         "side": "left"
       },
       {
         "id": "dc_p2",
-        "name": "out+",
+        "name": "2+",
         "direction": "physical",
         "domain": "electrical",
         "side": "right"
       },
       {
         "id": "dc_n2",
-        "name": "out−",
+        "name": "2−",
         "direction": "physical",
         "domain": "electrical",
         "side": "right"
       },
       {
         "id": "fire_p",
-        "name": "buck",
+        "name": "lo",
         "direction": "input",
         "domain": "boolean",
         "side": "bottom"
       },
       {
         "id": "fire_n",
-        "name": "boost",
+        "name": "hi",
         "direction": "input",
         "domain": "boolean",
         "side": "bottom"
@@ -4942,7 +4942,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "hBridge",
     "name": "H-bridge",
-    "description": "Four-quadrant DC chopper; fire_p and fire_n drive the two diagonals.",
+    "description": "Four-quadrant DC chopper: fire_p switches out+ and fire_n switches out− between the input rails; drive fire_n with the complement of fire_p for bipolar switching.",
     "domain": "electrical",
     "category": "converters",
     "symbol": "H",
@@ -6022,7 +6022,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "resolver",
     "name": "Resolver",
-    "description": "Sine–cosine resolver: outputs the sine and cosine of the electrical angle.",
+    "description": "Sine–cosine resolver: the sine and cosine of the electrical angle p·φ, and their negatives.",
     "domain": "mechanical",
     "category": "machines",
     "symbol": "R",
@@ -6080,20 +6080,22 @@ export const mslBlocks: Definition[] = [
     "modelica": {
       "class": "Modelica.Electrical.Machines.Sensors.SinCosResolver",
       "modifiers": {
+        "offset": "0",
+        "phi0": "0",
         "p": "p"
       },
       "ports": {
-        "sin": "y[1]",
-        "cos": "y[2]",
-        "nsin": "y[3]",
-        "ncos": "y[4]"
+        "sin": "y[3]",
+        "cos": "y[1]",
+        "nsin": "y[4]",
+        "ncos": "y[2]"
       }
     }
   },
   {
     "kind": "threePhaseSource",
     "name": "3-phase AC source",
-    "description": "Balanced three-phase sinusoidal voltages (star, neutral at plug −).",
+    "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
     "domain": "threePhase",
     "category": "threePhase",
     "symbol": "3~ AC",
@@ -6107,7 +6109,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "plug_n",
-        "name": "N",
+        "name": "abc−",
         "direction": "physical",
         "domain": "threePhase",
         "side": "bottom"

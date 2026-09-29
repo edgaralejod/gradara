@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discrete integrator · Gradara</title>
+<meta name="description" content="Sampled integrator accumulating the current input at each sample.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/discreteIntegrator">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Discrete</p>
+<h1>Discrete integrator</h1>
+<p class="lede">Sampled integrator accumulating the current input at each sample.</p>
+<h2>Description</h2>
+<p>A sampled integrator. At each sample instant it adds Ts times the current input to its state, a backward-Euler sum.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>u</strong></td><td><span class="port-domain domain-signal">signal</span></td><td>Input signal, read at each sample instant.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>y</strong></td><td><span class="port-domain domain-signal">signal</span></td><td>Output signal, the accumulated sum, held between samples.</td></tr>
+</tbody></table>
+
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Sample period</strong> <code>Ts</code></td><td class="nowrap">0.001 s<br><span class="range">≥ 0.0001</span></td><td>Sample period, in seconds. At least 0.0001 s (default 1 ms).</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">At t = k · Ts, k = 0, 1, 2, …:
+x[k] = x[k − 1] + Ts · u[k], with x = 0 before the first sample
+y = x</pre>
+<h2>Implementation</h2>
+<p>The block’s Modelica equations:</p>
+<pre class="block-source">discrete Real x(start=0, fixed=true);
+when sample(0, Ts) then
+  x = pre(x) + Ts*u;
+end when;
+y = x;</pre>
+<h2>Assumptions and limitations</h2>
+<ul><li>No output limits, reset, or initial-value setting. The state starts at 0.</li><li>Samples are taken at fixed multiples of Ts from time 0.</li></ul>
+
+
+<h2>See also</h2>
+<p class="see-also"><a href="integrator.html">Limited integrator</a> <a href="unitDelay.html">Unit delay</a> <a href="discretePID.html">Discrete PID</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

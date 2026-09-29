@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thermal resistor · Gradara</title>
+<meta name="description" content="Linear thermal resistance: ΔT = R·Q.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/thermalResistor">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Thermal</p>
+<h1>Thermal resistor</h1>
+<p class="lede">Linear thermal resistance: ΔT = R·Q.</p>
+<h2>Description</h2>
+<p>Linear thermal resistance between two ports with no heat storage: the temperature difference is proportional to the heat flow. Equivalent to Thermal conductor with G = 1 / R.</p>
+<h2>Ports</h2>
+
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>a</strong> <code>port_a</code></td><td><span class="port-domain domain-thermal">thermal</span></td><td>Heat port a. Heat flow Q from a to b enters here.</td></tr>
+<tr><td><strong>b</strong> <code>port_b</code></td><td><span class="port-domain domain-thermal">thermal</span></td><td>Heat port b. Q leaves here.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Resistance</strong> <code>R</code></td><td class="nowrap">1 K/W<br><span class="range">≥ 0</span></td><td>Thermal resistance, in K/W. Use a positive value.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">ΔT = port_a.T − port_b.T
+ΔT = R · Q
+port_a.Q_flow = Q, port_b.Q_flow = −Q</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Thermal.HeatTransfer.Components.ThermalResistor</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Thermal_HeatTransfer_Components.html#Modelica.Thermal.HeatTransfer.Components.ThermalResistor" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>Constant resistance, independent of temperature. No heat storage.</li></ul>
+<h2>Tips</h2>
+<ul><li>Datasheet junction-to-case and case-to-ambient values in K/W can be entered directly and chained in series.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="thermalConductor.html">Thermal conductor</a> <a href="heatCapacitor.html">Heat capacitor</a> <a href="fixedTemperature.html">Fixed temperature</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

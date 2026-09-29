@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PMSM · Gradara</title>
+<meta name="description" content="Three-phase permanent-magnet synchronous motor. Sinusoidal flux, fixed d/q inductances, ideal rotor-angle and current measurements.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/pmsm">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Electrical</p>
+<h1>PMSM</h1>
+<p class="lede">Three-phase permanent-magnet synchronous motor. Sinusoidal flux, fixed d/q inductances, ideal rotor-angle and current measurements.</p>
+<h2>Description</h2>
+<p>A three-phase permanent-magnet synchronous motor modeled in the rotor d/q frame. Phase voltages come in as signals, are transformed to d/q using the rotor’s electrical angle, and drive the d/q current equations. Torque acts on the mechanical shaft.</p>
+<p>It also outputs the phase currents, electrical angle, speed, and torque as ideal measurements, ready for field-oriented control.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>a</strong> <code>va</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Phase a voltage, in volts.</td></tr>
+<tr><td><strong>b</strong> <code>vb</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Phase b voltage, in volts.</td></tr>
+<tr><td><strong>c</strong> <code>vc</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Phase c voltage, in volts.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>ia</strong></td><td><span class="port-domain domain-signal">signal</span> · A</td><td>Phase a current, in amperes.</td></tr>
+<tr><td><strong>ib</strong></td><td><span class="port-domain domain-signal">signal</span> · A</td><td>Phase b current, in amperes.</td></tr>
+<tr><td><strong>ic</strong></td><td><span class="port-domain domain-signal">signal</span> · A</td><td>Phase c current, in amperes.</td></tr>
+<tr><td><strong>θe</strong> <code>theta</code></td><td><span class="port-domain domain-signal">signal</span> · rad</td><td>Electrical rotor angle, in radians: polePairs times the shaft angle. It is not wrapped to one turn.</td></tr>
+<tr><td><strong>ω</strong> <code>wm</code></td><td><span class="port-domain domain-signal">signal</span> · rad/s</td><td>Mechanical shaft speed, in rad/s.</td></tr>
+<tr><td><strong>rpm</strong></td><td><span class="port-domain domain-signal">signal</span> · rpm</td><td>Mechanical shaft speed, in revolutions per minute.</td></tr>
+<tr><td><strong>Te</strong> <code>torque</code></td><td><span class="port-domain domain-signal">signal</span> · N·m</td><td>Electromagnetic torque Te, in N·m.</td></tr>
+</tbody></table>
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>shaft</strong> <code>flange</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Rotor shaft. The motor applies torque Te to what is connected.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Stator resistance</strong> <code>R</code></td><td class="nowrap">0.35 Ω<br><span class="range">≥ 0.001</span></td><td>Stator phase resistance, in ohms.</td></tr>
+<tr><td><strong>d-axis inductance</strong> <code>Ld</code></td><td class="nowrap">0.001 H<br><span class="range">≥ 0.000001</span></td><td>d-axis inductance, in henries.</td></tr>
+<tr><td><strong>q-axis inductance</strong> <code>Lq</code></td><td class="nowrap">0.001 H<br><span class="range">≥ 0.000001</span></td><td>q-axis inductance, in henries. Ld = Lq gives a surface-mount machine with no reluctance torque.</td></tr>
+<tr><td><strong>PM flux linkage</strong> <code>psi</code></td><td class="nowrap">0.035 Wb<br><span class="range">≥ 0.0001</span></td><td>Permanent-magnet flux linkage, in webers.</td></tr>
+<tr><td><strong>Pole pairs</strong> <code>polePairs</code></td><td class="nowrap">4<br><span class="range">≥ 1</span></td><td>Number of pole pairs.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">theta = polePairs · flange.phi, wm = d(flange.phi)/dt, we = polePairs · wm
+vd = (2/3) · Σ vk · cos(theta − θk), vq = −(2/3) · Σ vk · sin(theta − θk), θk = 0, 2π/3, −2π/3 for a, b, c
+Ld · did/dt = vd − R · id + we · Lq · iq
+Lq · diq/dt = vq − R · iq − we · (Ld · id + psi)
+torque = 1.5 · polePairs · (psi · iq + (Ld − Lq) · id · iq), flange.tau = −torque
+ia = id · cos(theta) − iq · sin(theta), and likewise for b and c
+rpm = wm · 60 / (2π)</pre>
+
+<h2>Assumptions and limitations</h2>
+<ul><li>The phase voltages are signals, not pins: the motor draws no power from an electrical circuit. Drive it from Three-phase inverter or voltage commands.</li><li>Sinusoidal back-EMF, constant inductances; no saturation, iron losses, cogging, or zero-sequence current.</li><li>No rotor inertia or friction; connect an inertia to the shaft. The d/q currents start at 0.</li></ul>
+
+<h2>Examples</h2>
+<p>Used in the shipped examples <strong>PMSM · Field-oriented control</strong>. Open them from <strong>Examples</strong> in the app.</p>
+<h2>See also</h2>
+<p class="see-also"><a href="inverter.html">Three-phase inverter</a> <a href="park.html">Park transform</a> <a href="clarke.html">Clarke transform</a> <a href="inversePark.html">Inverse transforms</a> <a href="currentPI.html">Current PI</a> <a href="pmSyncMachine.html">PMSM (MSL)</a> <a href="inertia.html">Inertia &amp; load</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

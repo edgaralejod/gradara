@@ -45,6 +45,8 @@ Keep visible terminal names to roughly 1–5 characters. Use meaningful names fo
 
    See [controller C code](../architecture/EXECUTION.md#controller-c-code).
 
+9. Write its reference page: an entry in the matching file under `lib/gradara/block-docs/` (see `types.ts`) with a description, every port, every parameter, the equations as implemented, and its assumptions and limitations. Derive it from the code or the MSL class, not from the one-line description. `tests/block-docs.test.ts` fails when a block, port, or parameter has no entry. Then run `npm run docs:blocks` to regenerate the gradara.app pages in `site/public/docs/blocks/`; CI fails when they are stale.
+
 A block is ready when it is recognizable at normal zoom, contributes to a quiet diagram, has no overlapping notation or captions, and behaves through the same selection, wiring, resizing, naming, and history mechanisms as every other block. Record a remaining limitation explicitly instead of implying an icon makes a placeholder simulation feature complete.
 
 ### Wrap a Modelica Standard Library class
@@ -56,6 +58,7 @@ Wrapper blocks live in `lib/gradara/msl-blocks.ts`, which is generated. Do not e
 3. Run `python3 scripts/msl-blocks.py > lib/gradara/msl-blocks.ts`. The script refuses a class, parameter, or connector that is not in the index. `tests/test_msl.py` fails when the generated file is stale and checks every wrapper with `server/msl.py`.
 4. Run the block through the engine: `.venv/bin/python -m pytest -q -m integration tests/test_msl_engine.py -k <kind>`. `tests/test_msl_engine.py` places every wrapper block in a harness (constant inputs, each physical terminal tied to its domain's reference through a lossy element) and requires a completed run. A block that needs a working circuit to be well posed gets its own entry in `CIRCUITS`. For new physics, add a check with engineering meaning, like the spring-mass, heat capacitor, and inverting amplifier tests there.
 5. Review the drawing in `/block-catalog` as in step 6 above. Most wrapper blocks use the generic body and captions; add a `BlockSymbol` only when a familiar symbol exists.
+6. Write its reference page as in step 9 above.
 
 ## Subsystems are not blocks to author
 

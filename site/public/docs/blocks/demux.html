@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demux · Gradara</title>
+<meta name="description" content="Split a drawing path into three. Same stand-in as Mux until buses exist.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/demux">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Routing</p>
+<h1>Demux</h1>
+<p class="lede">Split a drawing path into three. Same stand-in as Mux until buses exist.</p>
+<h2>Description</h2>
+<p>A drawing stand-in for splitting a bundled line into three signals, the counterpart of Mux.</p>
+<p>Models containing Demux cannot run: model checks report it as a drawing-only block, and Run refuses the model until it is replaced by direct connections.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>u</strong></td><td><span class="port-domain domain-signal">signal</span></td><td>Bundled line, usually from a Mux.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>1</strong> <code>y1</code></td><td><span class="port-domain domain-signal">signal</span></td><td>First output, a copy of u.</td></tr>
+<tr><td><strong>2</strong> <code>y2</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Second output, a copy of u.</td></tr>
+<tr><td><strong>3</strong> <code>y3</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Third output, a copy of u.</td></tr>
+</tbody></table>
+
+
+<h2>Equations</h2>
+<pre class="equations">y1 = u
+y2 = u
+y3 = u</pre>
+<h2>Implementation</h2>
+<p>The block’s Modelica equations:</p>
+<pre class="block-source">y1 = u;
+y2 = u;
+y3 = u;</pre>
+<h2>Assumptions and limitations</h2>
+<ul><li>No vector or bus signals: every output repeats the one input signal.</li><li>Always three outputs.</li></ul>
+
+
+<h2>See also</h2>
+<p class="see-also"><a href="mux.html">Mux</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

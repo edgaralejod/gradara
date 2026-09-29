@@ -263,7 +263,7 @@ export const library: Definition[] = [
     kind: 'pi',
     name: 'PI controller',
     description:
-      'Sampled speed control with output saturation and a bounded integral state.',
+      'Sampled PI control with output saturation and a bounded integral state.',
     domain: 'signal',
     symbol: 'PI',
     controller: true,

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Current PI · Gradara</title>
+<meta name="description" content="Continuous PI current regulator with back-calculation anti-windup.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/currentPI">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Control</p>
+<h1>Current PI</h1>
+<p class="lede">Continuous PI current regulator with back-calculation anti-windup.</p>
+<h2>Description</h2>
+<p>A continuous PI controller with a symmetric output limit and back-calculation anti-windup. The input is the current error; the output is a voltage command.</p>
+<p>In the field-oriented control example, one instance regulates the d-axis current and another the q-axis current.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>e</strong> <code>u</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Control error, typically current reference minus measured current, in amperes.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>v</strong> <code>y</code></td><td><span class="port-domain domain-signal">signal</span> · V</td><td>Voltage command, in volts, limited to ±limit.</td></tr>
+</tbody></table>
+
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Proportional gain</strong> <code>kp</code></td><td class="nowrap">2</td><td>Proportional gain, in volts per unit of error.</td></tr>
+<tr><td><strong>Integral gain</strong> <code>ki</code></td><td class="nowrap">700</td><td>Integral gain: the integral state rises at ki · u per second.</td></tr>
+<tr><td><strong>Anti-windup gain</strong> <code>kaw</code></td><td class="nowrap">350 1/s<br><span class="range">≥ 0</span></td><td>Anti-windup gain, in 1/s, 0 or more. How fast the integral state is pulled back while the output is limited. 0 disables anti-windup.</td></tr>
+<tr><td><strong>Voltage limit</strong> <code>limit</code></td><td class="nowrap">27 V<br><span class="range">≥ 0.1</span></td><td>Output limit, in volts, at least 0.1. The output is clamped to ±limit.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">raw = kp · u + x
+y = max(−limit, min(limit, raw))
+dx/dt = ki · u + kaw · (y − raw),  x(0) = 0</pre>
+<h2>Implementation</h2>
+<p>The block’s Modelica equations:</p>
+<pre class="block-source">Real x(start=0, fixed=true);
+Real raw;
+raw = kp*u + x;
+y = max(-limit, min(limit, raw));
+der(x) = ki*u + kaw*(y-raw);</pre>
+<h2>Assumptions and limitations</h2>
+<ul><li>Continuous time: no sampling, computation delay, or quantization.</li><li>The limit is symmetric and fixed. It does not track the available DC-bus voltage.</li><li>The integral state is not clamped directly; it is held back only through the kaw term.</li></ul>
+<h2>Tips</h2>
+<ul><li>While y is within ±limit, y − raw = 0 and the block is a plain PI. Once the output limits, the kaw term drives x toward the value that just brings raw back to the limit.</li><li>A starting point for kaw is ki/kp, which is the default ratio (700/2 = 350).</li></ul>
+<h2>Examples</h2>
+<p>Used in the shipped examples <strong>PMSM · Field-oriented control</strong>. Open them from <strong>Examples</strong> in the app.</p>
+<h2>See also</h2>
+<p class="see-also"><a href="park.html">Park transform</a> <a href="inversePark.html">Inverse transforms</a> <a href="pi.html">PI controller</a> <a href="pid.html">PID</a> <a href="discretePID.html">Discrete PID</a> <a href="pmsm.html">PMSM</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

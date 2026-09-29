@@ -2,6 +2,7 @@
 import { rotateBlocks } from '@/lib/gradara/rotation';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
+import BlockHelpDialog from '@/components/gradara/block-help-dialog';
 import { useStored } from '@/components/gradara/use-stored';
 import {
   PaneResizer,
@@ -74,6 +75,7 @@ import {
   Maximize,
   LayoutGrid,
   Grid3x3,
+  CircleHelp,
   PanelsTopLeft,
   Group,
   Ungroup,
@@ -468,6 +470,16 @@ function Workbench() {
     return () => window.removeEventListener(RESET_LAYOUT_EVENT, reset);
   }, []);
   const [helpOpen, setHelpOpen] = useState(false);
+  // The block reference page (Help), for a library entry or a placed block.
+  const [helpDefinition, setHelpDefinition] = useState<Definition | null>(null);
+  const openBlockHelp = useCallback(() => {
+    const ids = selectionRef.current.blockIds;
+    const block =
+      ids.length === 1
+        ? projectRef.current.blocks.find((b) => b.id === ids[0])
+        : undefined;
+    if (block) setHelpDefinition(block.definition);
+  }, []);
   /** The canvas right-click menu: where it opened, on screen and on the sheet. */
   // The visible sheet grid is a personal view preference, kept per browser.
   const [gridSetting, writeGridSetting] = useStored(GRID_VISIBLE_KEY);
@@ -1396,6 +1408,14 @@ function Workbench() {
             commit((p) => rotateBlocks(p, selectionRef.current.blockIds)),
         },
         {
+          id: 'help',
+          label: 'Help',
+          icon: <CircleHelp size={13} />,
+          shortcut: 'F1',
+          disabled: blocks.length !== 1,
+          run: openBlockHelp,
+        },
+        {
           id: 'group',
           label: 'Make subsystem',
           icon: <Group size={13} />,
@@ -2042,6 +2062,9 @@ function Workbench() {
       } else if (e.key.toLowerCase() === 'f' && !command) {
         e.preventDefault();
         window.dispatchEvent(new Event(FIT_VIEW_EVENT));
+      } else if (e.key === 'F1') {
+        e.preventDefault();
+        openBlockHelp();
       } else if (e.key === "'" && command) {
         e.preventDefault();
         toggleGrid();
@@ -2110,6 +2133,7 @@ function Workbench() {
     inserter,
     workspaceMode,
     toggleGrid,
+    openBlockHelp,
   ]);
   const insertGenerated = (definition: Definition) => {
     if (!composer) return;
@@ -2578,6 +2602,7 @@ function Workbench() {
             <LibraryNavigator
               onAdd={(definition) => addComponent(definition)}
               onAskAgent={startComposer}
+              onHelp={setHelpDefinition}
             />
           </aside>
           <section className="center-panel">
@@ -3076,6 +3101,17 @@ function Workbench() {
                 : activeNet
                   ? 'Net properties'
                   : 'Model properties'}
+              {active && (
+                <button
+                  type="button"
+                  className="properties-help"
+                  title="Block reference · F1"
+                  aria-label={`Help for ${active.definition.name}`}
+                  onClick={() => setHelpDefinition(active.definition)}
+                >
+                  <CircleHelp size={14} />
+                </button>
+              )}
             </div>
             <div className="inspector-properties">
               {selectedIds.length > 1 && (
@@ -3715,6 +3751,12 @@ function Workbench() {
             onEngineChange={refreshHealth}
           />
         )}
+        {helpDefinition && (
+          <BlockHelpDialog
+            definition={helpDefinition}
+            onClose={() => setHelpDefinition(null)}
+          />
+        )}
         <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
           <DialogContent className="shortcuts-dialog">
             <DialogTitle>Make yourself at home</DialogTitle>
@@ -3776,6 +3818,7 @@ function Workbench() {
                 ['Add a block at the pointer', 'Double-click empty canvas'],
                 ["Open a block's properties", 'Double-click the block'],
                 ['Open a subsystem', 'Double-click it'],
+                ["Open a block's reference page", 'F1'],
                 ['Show this list', '?'],
               ].map(([label, key]) => (
                 <div key={label}>

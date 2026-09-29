@@ -37,11 +37,14 @@ export default function LibraryNavigator({
   compatibleWith,
   onAdd,
   onAskAgent,
+  onHelp,
 }: {
   variant?: 'panel' | 'popover';
   compatibleWith?: Port;
   onAdd: (definition: Definition) => void;
   onAskAgent?: () => void;
+  /** Open the block's reference page. */
+  onHelp?: (definition: Definition) => void;
 }) {
   const { entries, error, retry } = useGeneratedLibrary();
   const [source, setSource] = useState<'built-in' | 'ai'>('built-in');
@@ -267,6 +270,15 @@ export default function LibraryNavigator({
               ? categoryLabel(categoryOf(flat[highlight].definition))
               : flat[highlight].definition.description}
           </p>
+          {onHelp && (
+            <button
+              type="button"
+              className="library-help"
+              onClick={() => onHelp(flat[highlight].definition)}
+            >
+              Block reference
+            </button>
+          )}
         </div>
       )}
       {variant === 'panel' && import.meta.env.MODE !== 'desktop' && (

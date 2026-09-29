@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diode bridge · Gradara</title>
+<meta name="description" content="Single-phase full-wave diode rectifier.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/diodeBridge">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Converters</p>
+<h1>Diode bridge</h1>
+<p class="lede">Single-phase full-wave diode rectifier.</p>
+<h2>Description</h2>
+<p>A single-phase full-wave (two-pulse) rectifier of four ideal diodes. dc_p is fed from ac_p and ac_n through two diodes; dc_n returns through the other two.</p>
+<p>There is no smoothing capacitor; add one across dc_p and dc_n if needed.</p>
+<h2>Ports</h2>
+
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>ac+</strong> <code>ac_p</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>AC terminal 1.</td></tr>
+<tr><td><strong>ac−</strong> <code>ac_n</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>AC terminal 2.</td></tr>
+<tr><td><strong>dc+</strong> <code>dc_p</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>DC positive terminal (common cathode of the upper diodes).</td></tr>
+<tr><td><strong>dc−</strong> <code>dc_n</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>DC negative terminal (common anode of the lower diodes).</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Diode on resistance</strong> <code>RonDiode</code></td><td class="nowrap">0.00001 Ω<br><span class="range">≥ 0</span></td><td>On resistance of each diode, in ohms. 0 or more.</td></tr>
+<tr><td><strong>Diode off conductance</strong> <code>GoffDiode</code></td><td class="nowrap">0.00001 S<br><span class="range">≥ 0</span></td><td>Off conductance of each diode, in siemens. 0 or more.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">With a resistive load and no capacitor: dc_p.v − dc_n.v ≈ |ac_p.v − ac_n.v|</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Electrical.PowerConverters.ACDC.DiodeBridge2Pulse</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_PowerConverters_ACDC.html#Modelica.Electrical.PowerConverters.ACDC.DiodeBridge2Pulse" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>Ideal diodes with the knee voltage fixed at 0 V: no forward drop, reverse recovery, or junction capacitance.</li></ul>
+
+
+<h2>See also</h2>
+<p class="see-also"><a href="thyristorBridge.html">Thyristor bridge</a> <a href="idealDiode.html">Ideal diode</a> <a href="capacitor.html">Capacitor</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
