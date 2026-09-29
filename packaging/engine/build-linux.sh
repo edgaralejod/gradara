@@ -91,6 +91,8 @@ printf 'installPackage(Modelica, "%s", exactMatch=true);\ngetErrorString();\n' "
 mkdir -p "$OUT/lib/omlibrary"
 cp -a "$HOME/.openmodelica/libraries/." "$OUT/lib/omlibrary/"
 rm -f "$OUT/lib/omlibrary/index.json" "$OUT/lib/omlibrary/index.mos"
+# omc unpacks packages owner-only; the installed app is owned by root and run by users.
+chmod -R a+rX "$OUT"
 ls "$OUT/lib/omlibrary"
 
 # OSMC-PL: the full license and the chosen usage mode travel with the engine.

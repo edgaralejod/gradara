@@ -47,6 +47,8 @@ RUN set -eux; \
     HOME=/tmp/msl omc install.mos; \
     mkdir -p /opt/modelica; cp -a /tmp/msl/.openmodelica/libraries/. /opt/modelica/; \
     rm -f /opt/modelica/index.json /opt/modelica/index.mos; ls /opt/modelica; \
+    # omc unpacks packages owner-only; every user in the VM must be able to read them.
+    chmod -R a+rX /opt/modelica; \
     # Package inventory for the license notices.
     dpkg-query -W -f '${Package} ${Version} ${source:Package}\n' > /usr/share/doc/gradara-engine-packages.txt; \
     echo "omc $OM_VERSION-1 openmodelica" >> /usr/share/doc/gradara-engine-packages.txt; \

@@ -65,14 +65,15 @@ def main() -> None:
     out = args.out.resolve()
     subprocess.run([sys.executable, str(HERE/'trim_windows.py'), '--om', str(args.install), '--out', str(out)], check=True)
 
-    # MSL, installed by the trimmed omc into a private home, then moved into the bundle.
+    # MSL, installed by the full installation's omc (its downloader needs the CA
+    # certificates the trimmed copy leaves out) into a private home, then copied
+    # into the bundle. The engine tests later load it with the trimmed omc.
     home = Path(tempfile.mkdtemp(prefix='gradara-msl-'))
-    env = dict(os.environ, OPENMODELICAHOME=str(out), HOME=str(home), APPDATA=str(home), USERPROFILE=str(home))
+    env = dict(os.environ, OPENMODELICAHOME=str(args.install), HOME=str(home), APPDATA=str(home), USERPROFILE=str(home))
     env.pop('OPENMODELICALIBRARY', None)
-    env['PATH'] = os.pathsep.join([str(out/'bin'), str(out/'tools'/'msys'/'ucrt64'/'bin'), env.get('PATH', '')])
     script = home/'install.mos'
     script.write_text(f'installPackage(Modelica, "{MSL_VERSION}", exactMatch=true);\ngetErrorString();\n', encoding='utf-8')
-    result = subprocess.run([str(out/'bin'/'omc.exe'), str(script)], cwd=home, env=env, capture_output=True, text=True,
+    result = subprocess.run([str(omc_full), str(script)], cwd=home, env=env, capture_output=True, text=True,
                             encoding='utf-8', errors='replace')
     print(result.stdout, result.stderr, flush=True)
     installed = [p for p in home.rglob('Modelica ' + MSL_VERSION + '*') if p.is_dir() and (p/'package.mo').exists()]
