@@ -5,7 +5,7 @@ One repository produces four things: the developer checkout, installable desktop
 | Product | Who uses it | How it runs | AI default |
 | --- | --- | --- | --- |
 | Source checkout | Contributors, tinkerers, forks | `scripts/start.py`: Vite dev server plus the local service | Codex CLI if installed, otherwise Gradara AI |
-| Desktop app | Engineers who want to install and go | Electron shell plus a frozen local service and static workbench | Gradara AI (prepaid credits) |
+| Desktop app | Engineers who want to install and go | Electron shell plus a frozen local service, a static workbench, and a built-in OpenModelica engine | Gradara AI (prepaid credits) |
 | Gradara AI service (`cloud/`) | Desktop and source users who choose it | Container on Cloud Run with PostgreSQL | Not applicable |
 | Website (`site/`) | Visitors choosing and downloading Gradara | Static files on Firebase Hosting, [gradara.app](https://gradara.app/) | Not applicable |
 
@@ -16,7 +16,7 @@ Everything is Apache-2.0. The paid product is the hosted service and the conveni
 ```
 app/, components/, lib/      Workbench UI (shared by dev server and desktop build)
 server/                      Local service (FastAPI)
-  engines.py                 OpenModelica backends: native install or Docker image
+  engines.py                 OpenModelica backends: built-in (bundled), native install, or Docker image
   llm/                       AI providers: gradara (hosted), openai, anthropic, codex
     providers.py, schema.py  Dependency-light; also used by cloud/
   paths.py, settings.py,     Data folder, preferences, keychain secrets
@@ -25,9 +25,10 @@ server/                      Local service (FastAPI)
 desktop/                     Electron shell and electron-builder config
   web/                       Static entry for the desktop workbench build
 packaging/                   PyInstaller entry, build, and smoke test for the service
+  engine/                    Built-in engine builds (Windows, Linux, macOS VM image and agent)
 cloud/                       Gradara AI gateway, sign-in pages, Dockerfile, deploy.sh, tests
 site/                        gradara.app (static files for Firebase Hosting)
-.github/workflows/           ci, engine, native-engine, cloud, release, site
+.github/workflows/           ci, engine, native-engine, engine-bundle, cloud, release, site
 ```
 
 ## Desktop app
@@ -40,8 +41,9 @@ flowchart LR
   end
   S --> D[(Data folder<br>models, runs, library)]
   S --> K[(OS keychain<br>keys, token)]
-  S -->|native| OM[OpenModelica<br>host install]
-  S -->|docker| C[gradara-engine<br>container]
+  S -->|bundled: Windows, Linux| OM[OpenModelica<br>resources/engine]
+  S -->|bundled: macOS, vsock| VM[Engine VM<br>vfkit + Linux + OpenModelica]
+  VM -.->|virtio-fs| D
   S -->|AI, on request| G[Gradara AI]
   S -->|AI, own key| P[OpenAI / Anthropic]
 ```
@@ -55,17 +57,21 @@ flowchart LR
 
 For the full list of platforms and their CI coverage, see [supported platforms](../PLATFORMS.md).
 
-| Platform | Default path | First-run setup in the app |
-| --- | --- | --- |
-| Windows | Native OpenModelica (official installer) | Download OpenModelica, then "Set up now" installs MSL 4.1.0 |
-| Linux | Native OpenModelica packages, otherwise Docker | Same, or Docker image download |
-| macOS | Docker-compatible runtime (OrbStack, Docker Desktop, Colima) | Install a runtime, then "Set up now" pulls the engine image, or builds it locally when the pull fails |
+Every installer carries OpenModelica 1.27.1 and the Modelica Standard Library 4.1.0 in `resources/engine` (with a `manifest.json`), and the **bundled** backend uses it by default. Nothing is downloaded on first run.
 
-`auto` prefers a ready native install, then a ready Docker image. Both backends produce the same run folder, CSV, and report, so results and plots do not depend on the backend.
+| Platform | Built-in engine | How it runs | Size (compressed) |
+| --- | --- | --- | --- |
+| Windows | OpenModelica tree trimmed from the official installer: `omc` and its DLLs, the C runtime and headers, and the MSYS2 ucrt64 toolchain packages its `Compile.bat` needs, chosen from the MSYS2 package database and PE imports (`packaging/engine/trim_windows.py`) | As a native install with `OPENMODELICAHOME` and `OPENMODELICALIBRARY` set to the bundle | About 115 MB |
+| Linux | OpenModelica from its Ubuntu 22.04 packages, relocated, with the shared libraries it needs beyond glibc, the gcc runtime, zlib and OpenSSL, plus GNU make (`packaging/engine/build-linux.sh`) | As a native install, adding the bundle's libraries to `LD_LIBRARY_PATH`; compiles with the system `gcc`, which the `.deb` depends on | About 45 MB |
+| macOS | A Linux VM: squashfs root (Ubuntu 24.04, OpenModelica, gcc, make, Python, MSL), the Ubuntu kernel, the command agent, and vfkit (`packaging/engine/build-macos-guest.sh`), one per architecture | vfkit boots it with Apple's Virtualization framework on first use; the data folder is shared over virtio-fs; commands go over vsock. No network device. Needs macOS 13 | About 150 MB |
 
-The native backend drives `omc` with a generated `.mos` script, and writes each result field to a small file so parsing does not depend on omc's printed record format. It runs as the user, without the container's isolation, so `safety.py` rejects `external`, `Modelica.Utilities`, annotations, imports, class definitions, and string literals in editable definition text before either backend compiles it. The document schema already rejects most of these; the screen is defense in depth.
+OpenModelica does not publish macOS builds (discontinued after 1.16), which is why macOS uses a VM. The VM runs OpenModelica's own Linux packages, the same version as the other platforms, and needs no Docker or other software on the Mac.
 
-OpenModelica does not publish macOS builds (discontinued after 1.16), which is why macOS uses the container. See the roadmap for the embedded-VM and bundled-engine follow-ups.
+**Settings → Engine** can still switch to a native OpenModelica or the Docker image. In source checkouts, `auto` prefers a ready native install, then a ready Docker image, unless `GRADARA_ENGINE_BUNDLE` points at a built bundle. Every backend produces the same run folder, CSV, and report, so results and plots do not depend on the backend.
+
+The native and bundled backends drive `omc` with a generated `.mos` script, and write each result field to a small file so parsing does not depend on omc's printed record format. On Windows and Linux they run as the user, without the container's isolation, so `safety.py` rejects `external`, `Modelica.Utilities`, annotations, imports, class definitions, and string literals in editable definition text before any backend compiles it. The document schema already rejects most of these; the screen is defense in depth.
+
+**Builds and CI.** The Engine bundles workflow (`.github/workflows/engine-bundle.yml`) builds and tests the four engines; the Desktop installers workflow calls it in the same run, unpacks each platform's artifact into `build/engine` (`packaging/engine/fetch_bundle.py`), and `desktop/electron-builder.yml` copies it into the installer. The macOS app signs vfkit with the `com.apple.security.virtualization` entitlement. `packaging/third_party_licenses.py` adds the engine's package inventory and license texts to `THIRD_PARTY_LICENSES.txt`.
 
 ## AI providers
 

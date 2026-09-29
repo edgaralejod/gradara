@@ -10,7 +10,7 @@ Run commands from the repository root. This guide is for working on Gradara from
 | --- | --- |
 | Node.js / npm | Node 22.13 or newer. CI uses the Node 22 line. Use the committed npm lockfile. |
 | Python | Python 3.12 is the development and CI baseline. Use a repository-local virtual environment. |
-| Simulation engine | Either native OpenModelica 1.27 with the Modelica Standard Library 4.1.0 (Windows, Linux), or a running Docker-compatible engine for the `gradara-engine` image (macOS default, optional elsewhere). Settings → Engine in the app sets up either one. |
+| Simulation engine | For a source checkout: either native OpenModelica 1.27 with the Modelica Standard Library 4.1.0 (Windows, Linux), or a running Docker-compatible engine for the `gradara-engine` image (macOS default, optional elsewhere). Settings → Engine in the app sets up either one. Installed desktop apps carry their own engine instead ([built-in engine bundles](#built-in-engine-bundles)). |
 | AI provider | Optional, for block generation, model building, and C export: Gradara AI (sign in), your own OpenAI or Anthropic key, or the Codex CLI. See [agent setup](../AGENT_SETUP.md). |
 
 Supported operating systems, default engines, and CI coverage are listed in [supported platforms](../PLATFORMS.md).
@@ -96,7 +96,7 @@ Frontend-only work requires just `npm ci` and `npm run dev`. The block catalog a
 
 ## Choose the simulation engine
 
-`GRADARA_ENGINE=auto` (default) prefers a ready native OpenModelica install, then the Docker image. Force one with `GRADARA_ENGINE=native` or `docker`, or choose it in Settings → Engine. For native use, install OpenModelica 1.27 (official Windows installer or Linux packages) and let Settings → Engine install MSL 4.1.0, or run `omc` with `installPackage(Modelica, "4.1.0", exactMatch=true);`. `GRADARA_OMC` points at a specific `omc` executable.
+`GRADARA_ENGINE=auto` (default) uses the built-in engine when there is one (installed apps, or `GRADARA_ENGINE_BUNDLE`), and otherwise prefers a ready native OpenModelica install, then the Docker image. Force one with `GRADARA_ENGINE=bundled`, `native`, or `docker`, or choose it in Settings → Engine. For native use, install OpenModelica 1.27 (official Windows installer or Linux packages) and let Settings → Engine install MSL 4.1.0, or run `omc` with `installPackage(Modelica, "4.1.0", exactMatch=true);`. `GRADARA_OMC` points at a specific `omc` executable.
 
 ## Windows (PowerShell) from source
 
@@ -178,6 +178,20 @@ python3 -m pip install -r server/requirements.txt pyinstaller==6.22.3   # in .ve
 npm run desktop:dist                # workbench + PyInstaller service + installers for this OS
 ```
 
-Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service, and `python packaging/installer_selftest.py --exe <path to the built app>` checks a built or installed app end to end. The **Desktop installers** workflow builds and install-tests every platform in [supported platforms](../PLATFORMS.md) on pull requests that change packaging, and drafts a release on `v*` tags. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
+Every installer includes a simulation engine: put this platform's engine in `build/engine` first (see below), or the installer has none. Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service (and, with a Windows or Linux engine in `build/engine`, runs a simulation on it), and `python packaging/installer_selftest.py --exe <path to the built app> --simulate` checks a built or installed app end to end, including a simulation and a generated-C verification on its built-in engine. The **Desktop installers** workflow builds and install-tests every platform in [supported platforms](../PLATFORMS.md) on pull requests that change packaging, and drafts a release on `v*` tags. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
 
 The repository retains optional Sites/Cloudflare build scaffolding with no database or bucket bindings. You do not need to register or publish a site to run Gradara locally. `npm run build` verifies the web bundle; it does not package the Python service or engine.
+
+### Built-in engine bundles
+
+Each installer ships OpenModelica 1.27.1 with the Modelica Standard Library 4.1.0 in `resources/engine`. The scripts in `packaging/engine/` build one engine per platform; the **Engine bundles** workflow runs them, tests each engine, and hands them to the installer jobs in the same run. To build one locally:
+
+| Engine | Build on | Command |
+| --- | --- | --- |
+| Linux x64 | Ubuntu 22.04 (a machine or an `ubuntu:22.04` container), as root or with sudo | `bash packaging/engine/build-linux.sh build/engine` |
+| Windows x64 | Windows, with Python 3.12 | `python packaging/engine/build_windows.py --out build\engine` (downloads and silently installs the official OpenModelica installer, then copies what Gradara needs with `packaging/engine/trim_windows.py`) |
+| macOS VM image | Linux with Docker and `squashfs-tools` (arm64 image: an arm64 machine, or binfmt/QEMU) | `bash packaging/engine/build-macos-guest.sh arm64 build/engine` (or `amd64`) |
+
+`packaging/engine/pack_bundle.py` archives a bundle with its checksum and `packaging/engine/fetch_bundle.py` unpacks one into `build/engine` (on macOS it also thins vfkit to the target architecture). `packaging/engine/test_clean_linux.sh build/engine` simulates a Linux bundle in clean containers that have only `gcc`.
+
+To run the service from source against a bundle, set `GRADARA_ENGINE_BUNDLE` to its folder (a Windows or Linux bundle; a macOS bundle needs a Mac). `GRADARA_ENGINE_VM_MEMORY` sets the macOS engine VM's memory in MiB (default 2048). `GRADARA_ENGINE_VM_TCP` is for tests only: it points the VM backend at a guest agent reached over TCP (the image run under Docker with `GRADARA_AGENT_TCP`) instead of booting a VM; see [testing](TESTING.md#built-in-engine).

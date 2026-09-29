@@ -17,27 +17,28 @@ If the service stops while you work, Gradara says "The Gradara service stopped u
 
 ### The engine is not ready
 
-Open **Settings → Engine**. The top line says what is missing, and the steps below it fix it. Choose **Check again** after each step. See [Set up the simulation engine](../INSTALL.md#set-up-the-simulation-engine) for the full walkthrough.
+Open **Settings → Engine**. The top line says what is wrong; choose **Check again** after each step. **Help → Copy Diagnostic Info** copies the engine status and the end of the service log for a bug report.
 
-**Windows and Linux**
+**Built-in engine (the default)**
+
+- **"The built-in engine is incomplete"** or **"could not load its library."** Part of the app's `engine` folder is missing, often removed by antivirus software. Reinstall Gradara; your models are kept.
+- **"A C compiler is needed"** (Linux AppImage). OpenModelica builds each model with `gcc`. Install it (`sudo apt install gcc` on Debian or Ubuntu), then choose **Check again**. The `.deb` installs it automatically.
+- **"The built-in engine could not start"** (macOS). Choose **Restart engine**. The message includes the end of the engine's logs; the full logs are `engine-vm.log` and `engine-vm-console.log` in the logs folder (**Help → Open Logs Folder**). The engine needs macOS 13 or newer and about 2 GB of free memory. If another virtualization tool is using most of your memory, quit it and restart the engine.
+- **"macOS 13 or newer is required."** Update macOS. On older versions, choose **OpenModelica installed on this computer** or **Container engine (Docker)** in the **Engine** menu if you maintain one of those yourself.
+
+**Your own OpenModelica** (Engine menu: **OpenModelica installed on this computer**)
 
 - **"OpenModelica is not installed."** Install OpenModelica 1.27 (**Download OpenModelica** opens the right page), then choose **Check again**. Gradara looks for OpenModelica on your `PATH`, in `OPENMODELICAHOME`, and in the standard install folders.
 - **"OpenModelica could not start."** Reinstall OpenModelica with the default options.
-- **"Modelica Standard Library 4.1.0 is missing."** Choose **Set up now**. This needs an internet connection once. If it fails behind a company proxy or firewall, try from another network, or ask IT to allow downloads from OpenModelica's package servers.
-- **A note that Gradara is validated with OpenModelica 1.27.0.** Your OpenModelica is another version. It may work, but install 1.27 for results that match the tested setup.
-- **"No C compiler was found"** (Linux, from **Verify against last run** or a run): install `gcc` with `sudo apt install build-essential`. On Windows, OpenModelica's own compiler is used; reinstall OpenModelica if this appears.
+- **"Modelica Standard Library 4.1.0 is missing."** Choose **Set up now**. This needs an internet connection once.
+- **A note that Gradara is validated with OpenModelica 1.27.1.** Your OpenModelica is another version. It may work, but results can differ from the tested setup.
+- **"No C compiler was found"** (Linux): install `gcc` with `sudo apt install build-essential`.
 
-**macOS**
+**Container engine** (Engine menu: **Container engine (Docker)**)
 
-- **"Docker is not installed."** Install Colima and the Docker command-line tool: `brew install colima docker`. Then choose **Check again**.
-- **"Docker is not running."** If Colima is installed, the tab shows **Start the container runtime**; choose **Set up now**. This is normal after restarting your Mac. If the tab has no button, Colima was not found: install it as above, or start OrbStack or Docker Desktop and choose **Check again**.
-- **"Colima could not start."** Your Mac needs macOS 13 or newer. Run `colima delete --profile gradara` in Terminal to remove a damaged virtual machine, then choose **Set up now** again. Its engine image downloads again.
-- **"Engine image not prepared"** or **"The engine image could not be downloaded."** Choose **Set up now**. The image is 1 to 2 GB. Check your internet connection and free disk space.
-
-**Any system, container engine**
-
+- **"Docker is not installed"** or **"Docker is not running."** Install or start your container runtime (Docker Engine, Docker Desktop, OrbStack, or Colima), then choose **Check again**. With Colima installed on macOS, **Set up now** starts it.
+- **"Engine image not prepared."** Choose **Set up now**. The image is 1 to 2 GB.
 - **"Docker is set to Windows containers."** In Docker Desktop, switch to Linux containers, then choose **Check again**.
-- The engine needs free disk space for the image and for each run's files.
 
 ### A run fails
 
@@ -114,7 +115,7 @@ The service only accepts requests from `localhost` or `127.0.0.1` at the documen
 
 ### Engine setup from source
 
-Settings → Engine works the same as in the desktop app. **Automatic** prefers a ready native OpenModelica, then a ready Docker image.
+A source checkout has no built-in engine, so **Automatic** prefers a ready native OpenModelica, then a ready Docker image. To use a built engine bundle instead (for example `build/engine` from `packaging/engine/`), set `GRADARA_ENGINE_BUNDLE` to its folder; see [setup](SETUP.md#built-in-engine-bundles).
 
 - If `omc` is not on `PATH` or in a standard location, set `GRADARA_OMC` to its path.
 - On macOS, Gradara uses the `colima-gradara` Docker context when it exists, otherwise the default context when its daemon answers (OrbStack or Docker Desktop), otherwise `colima-gradara`, which it can start. Set `GRADARA_DOCKER_CONTEXT` to force a context.

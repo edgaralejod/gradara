@@ -99,7 +99,7 @@
       <article class="feature">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5m0 14h16"/><path d="m7 15 4-5 3 3 5-7"/></svg></div>
         <h3>OpenModelica inside</h3>
-        <p>Models compile to Modelica and run with OpenModelica 1.27 and the Modelica Standard Library 4.1.0, including events and stiff systems.</p>
+        <p>Models compile to Modelica and run with the built-in OpenModelica 1.27 and the Modelica Standard Library 4.1.0, including events and stiff systems.</p>
       </article>
       <article class="feature">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-4 3 2 4-5"/></svg></div>
@@ -196,36 +196,36 @@
   <section class="section wrap" id="download" aria-labelledby="download-title">
     <div class="section-head">
       <div><div class="kicker">Download</div><h2 id="download-title">Install in minutes.</h2></div>
-      <p>On first launch, Gradara walks you through a one-time simulation engine setup for your platform.</p>
+      <p>One download. The simulation engine, OpenModelica with the Modelica Standard Library, is included: nothing else to install.</p>
     </div>
     <div class="downloads">
       <article class="platform" data-platform="windows">
         <h3>Windows</h3>
-        <p>Windows 10 or 11, 64-bit. Gradara guides you to install OpenModelica, then adds its component library.</p>
+        <p>Windows 10 or 11, 64-bit. Install and run your first model; the engine is built in.</p>
         <div class="actions"><a class="button primary" href="https://github.com/edgaralejod/gradara/releases/latest/download/Gradara-win-x64.exe">Download .exe</a></div>
         <small>Installer · x64</small>
       </article>
       <article class="platform" data-platform="mac">
         <h3>macOS</h3>
-        <p>Apple silicon or Intel. Simulations run in a lightweight container with OrbStack, Docker Desktop, or Colima.</p>
+        <p>Apple silicon or Intel, macOS 13 or newer. The engine runs in a small virtual machine built into the app. No Docker needed.</p>
         <div class="actions"><a class="button primary" href="https://github.com/edgaralejod/gradara/releases/latest/download/Gradara-mac-arm64.dmg">Apple silicon</a><a class="button" href="https://github.com/edgaralejod/gradara/releases/latest/download/Gradara-mac-x64.dmg">Intel</a></div>
         <small>Disk image · .dmg</small>
       </article>
       <article class="platform" data-platform="linux">
         <h3>Linux</h3>
-        <p>64-bit Linux. Uses OpenModelica's packages, or Docker if you prefer containers.</p>
+        <p>64-bit Linux, .deb or AppImage. The engine is built in and compiles with your system's gcc.</p>
         <div class="actions"><a class="button primary" href="https://github.com/edgaralejod/gradara/releases/latest/download/Gradara-linux-x86_64.AppImage">AppImage</a><a class="button" href="https://github.com/edgaralejod/gradara/releases/latest/download/Gradara-linux-amd64.deb">.deb</a></div>
         <small>AppImage · Debian and Ubuntu</small>
       </article>
     </div>
-    <p class="note">Step-by-step instructions for each system, including the engine setup, are in the <a href="https://github.com/edgaralejod/gradara/blob/main/docs/INSTALL.md">install guide</a>. Prefer to build it yourself? Clone the <a href="https://github.com/edgaralejod/gradara">repository</a> and follow the setup guide. Release notes are on <a href="https://github.com/edgaralejod/gradara/releases">GitHub Releases</a>.</p>
+    <p class="note">Step-by-step instructions for each system are in the <a href="https://github.com/edgaralejod/gradara/blob/main/docs/INSTALL.md">install guide</a>. Prefer to build it yourself? Clone the <a href="https://github.com/edgaralejod/gradara">repository</a> and follow the setup guide. Release notes are on <a href="https://github.com/edgaralejod/gradara/releases">GitHub Releases</a>.</p>
   </section>
 
   <section class="section wrap" aria-labelledby="faq-title">
     <div class="section-head"><div><div class="kicker">FAQ</div><h2 id="faq-title">Questions.</h2></div></div>
     <div class="faq">
       <details><summary>Is Gradara really free?</summary><p>Yes. The app is open source under Apache-2.0 and every modeling and simulation feature is free. Only the optional hosted AI uses paid credits, and you can use your own AI account instead.</p></details>
-      <details><summary>Do I need Docker?</summary><p>Not on Windows or Linux, where Gradara uses an installed OpenModelica. On macOS, OpenModelica does not publish native builds, so Gradara runs it in a lightweight container through OrbStack, Docker Desktop, or Colima.</p></details>
+      <details><summary>Do I need Docker or OpenModelica?</summary><p>No. Every installer includes the simulation engine. On macOS, where OpenModelica publishes no native builds, Gradara runs it in a small virtual machine that ships inside the app and uses Apple's built-in Virtualization framework. The virtual machine has no network access and only sees Gradara's data folder.</p></details>
       <details><summary>How do I know the results are right?</summary><p>The physics comes from OpenModelica and the Modelica Standard Library. Automated tests compare Gradara's results with closed-form answers, from an RC circuit's time constant to a buck converter's ripple; the <a href="https://github.com/edgaralejod/gradara/blob/main/docs/VALIDATION.md">validation page</a> lists them with measured values. Gradara is not certified for safety-critical use.</p></details>
       <details><summary>Can it open Simulink models?</summary><p>No. Gradara is an independent tool with its own model format and exports standard Modelica source. MATLAB and Simulink files are not supported.</p></details>
       <details><summary>Does my model leave my computer?</summary><p>Only when you use an AI feature, and only the context that request needs. Gradara AI does not store it; Anthropic, which runs the model, may keep it briefly for abuse monitoring. Simulation always runs locally.</p></details>

@@ -139,7 +139,7 @@ def main() -> int:
         return 1
     report = json.loads(report_path.read_text(encoding='utf-8'))
     print(json.dumps(report, indent=2))
-    if args.simulate and not report.get('ok') or os.environ.get('GRADARA_SHOW_LOGS'):
+    if args.simulate and not report.get('ok'):
         show_engine_logs(report)
     if not report.get('ok'):
         show_service_log(report)
