@@ -15,7 +15,7 @@ After that, see [Your first 10 minutes](USER_GUIDE.md#your-first-10-minutes).
 
 [Supported platforms](PLATFORMS.md) lists what is tested on each system.
 
-Rough guidance: 8 GB of RAM or more. On macOS the engine's virtual machine uses up to 2 GB while it runs. Large models and long simulations need more space for results.
+Rough guidance: 8 GB of RAM or more. On macOS the engine's virtual machine uses up to 3 GB while it runs. Large models and long simulations need more space for results.
 
 You need a network connection only to download the app. Drawing and simulating work offline. AI features and update checks need a connection.
 

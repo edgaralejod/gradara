@@ -23,7 +23,7 @@ Open **Settings → Engine**. The top line says what is wrong; choose **Check ag
 
 - **"The built-in engine is incomplete"** or **"could not load its library."** Part of the app's `engine` folder is missing, often removed by antivirus software. Reinstall Gradara; your models are kept.
 - **"A C compiler is needed"** (Linux AppImage). OpenModelica builds each model with `gcc`. Install it (`sudo apt install gcc` on Debian or Ubuntu), then choose **Check again**. The `.deb` installs it automatically.
-- **"The built-in engine could not start"** (macOS). Choose **Restart engine**. The message includes the end of the engine's logs; the full logs are `engine-vm.log` and `engine-vm-console.log` in the logs folder (**Help → Open Logs Folder**). The engine needs macOS 13 or newer and about 2 GB of free memory. If another virtualization tool is using most of your memory, quit it and restart the engine.
+- **"The built-in engine could not start"** (macOS). Choose **Restart engine**. The message includes the end of the engine's logs; the full logs are `engine-vm.log` and `engine-vm-console.log` in the logs folder (**Help → Open Logs Folder**). The engine needs macOS 13 or newer and about 3 GB of free memory. If another virtualization tool is using most of your memory, quit it and restart the engine.
 - **"macOS 13 or newer is required."** Update macOS. On older versions, choose **OpenModelica installed on this computer** or **Container engine (Docker)** in the **Engine** menu if you maintain one of those yourself.
 
 **Your own OpenModelica** (Engine menu: **OpenModelica installed on this computer**)

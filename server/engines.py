@@ -613,7 +613,8 @@ class EngineVM:
     filesystem, shares the data folder over virtio-fs, and exposes the guest's
     command agent (vsock) as a Unix socket."""
 
-    BOOT_TIMEOUT = 90
+    # Seconds; a Mac boots it in a few, nested-virtualization CI runners take far longer.
+    BOOT_TIMEOUT = 240
 
     def __init__(self, root: Path, manifest: dict):
         self.root = root
@@ -637,7 +638,7 @@ class EngineVM:
         return self.runtime_dir()/'agent.sock'
 
     def argv(self) -> list[str]:
-        memory = int(os.environ.get('GRADARA_ENGINE_VM_MEMORY', '2048'))
+        memory = int(os.environ.get('GRADARA_ENGINE_VM_MEMORY', '3072'))
         cpus = max(1, min(4, os.cpu_count() or 2))
         cmdline = 'console=hvc0 root=/dev/vda rootfstype=squashfs ro init=/sbin/gradara-init quiet'
         kernel = self.root/self.manifest.get('kernel', 'kernel')
@@ -695,7 +696,7 @@ class EngineVM:
         try:
             command = subprocess.run(['ps', '-p', str(pid), '-o', 'comm='], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
             if 'vfkit' in command:
-                os.kill(pid, 15)
+                os.kill(pid, 9)
         except OSError:
             pass
         pidfile.unlink(missing_ok=True)
@@ -723,14 +724,19 @@ class EngineVM:
         raise EngineError(f'The engine VM did not start within {self.BOOT_TIMEOUT} seconds. ' + self._log_tail())
 
     def _log_tail(self) -> str:
+        """The informative end of the VM logs (vfkit prints its whole usage text on errors)."""
+        usage = re.compile(r'^(Usage:|Flags:|\s+-\w?,? ?--|\s+--|\s*vfkit \[flags\])')
         parts = []
         for name in ('engine-vm.log', 'engine-vm-console.log'):
             try:
-                text = (LOGS/name).read_text(encoding='utf-8', errors='replace').strip()
+                text = (LOGS/name).read_text(encoding='utf-8', errors='replace')
             except OSError:
                 continue
-            if text:
-                parts.append(f'{name}: ' + text[-1200:])
+            lines = [line for line in text.splitlines() if line.strip() and not usage.match(line)]
+            errors = [line for line in lines if 'error' in line.lower()]
+            tail = '\n'.join(dict.fromkeys((errors or lines)[-6:]))
+            if tail:
+                parts.append(f'{name}: {tail[-1200:]}')
         return '\n'.join(parts)
 
     def lock(self) -> asyncio.Lock:
@@ -771,15 +777,14 @@ class EngineVM:
         return int(reply.get('code', 1)), str(reply.get('output', ''))
 
     async def stop(self) -> None:
+        # Killed outright: the guest has no ACPI power handling, so vfkit's polite stop
+        # only waits out a timeout. Nothing is lost: the root filesystem is read-only
+        # and every write to the data folder already went to the Mac's disk.
         process, self.process = self.process, None
         if process is None or process.returncode is not None:
             return
-        process.terminate()
-        try:
-            await asyncio.wait_for(process.wait(), 10)
-        except asyncio.TimeoutError:
-            process.kill()
-            await process.wait()
+        process.kill()
+        await process.wait()
         (self.runtime_dir()/'vfkit.pid').unlink(missing_ok=True)
 
 
@@ -790,7 +795,7 @@ def _stop_at_exit(pid: int) -> None:
 
     def stop():
         try:
-            os.kill(pid, signal.SIGTERM)
+            os.kill(pid, signal.SIGKILL)
         except OSError:
             pass
     atexit.register(stop)

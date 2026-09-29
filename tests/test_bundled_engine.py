@@ -189,3 +189,15 @@ def test_cancelling_a_run_stops_the_command(agent, monkeypatch, tmp_path):
     asyncio.run(cancel_soon())
     time.sleep(4)
     assert not (tmp_path/'late').exists(), 'closing the connection kills the command'
+
+
+def test_vm_errors_leave_out_vfkit_usage(tmp_path, monkeypatch):
+    monkeypatch.setattr(engines, 'LOGS', tmp_path)
+    (tmp_path/'engine-vm.log').write_text(
+        'time="x" level=info msg="Adding virtio-rng device"\n'
+        'Error: Error Domain=VZErrorDomain Code=2 Description="Virtualization is not available on this hardware."\n'
+        'Usage:\n  vfkit [flags]\nFlags:\n  -c, --cpus uint               number of virtual CPUs (default 1)\n'
+        '      --gui                     display the contents\n', encoding='utf-8')
+    tail = engines.EngineVM(tmp_path, {})._log_tail()
+    assert 'Virtualization is not available on this hardware' in tail
+    assert '--cpus' not in tail and 'Usage' not in tail
