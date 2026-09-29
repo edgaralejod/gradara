@@ -701,6 +701,7 @@ class EngineVM:
     async def _start(self) -> None:
         self._stop_stale()
         self.socket_path.unlink(missing_ok=True)
+        LOGS.mkdir(parents=True, exist_ok=True)
         log = open(LOGS/'engine-vm.log', 'ab')
         started = time.monotonic()
         # Same process group as the service: quitting the app stops the VM too.

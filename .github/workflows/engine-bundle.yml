@@ -211,5 +211,5 @@ jobs:
       - name: VM logs
         if: always()
         run: |
-          for f in projects/logs/engine-vm*.log; do echo "--- $f"; tail -60 "$f"; done
+          for f in projects/logs/engine-vm*.log; do [ -f "$f" ] && { echo "--- $f"; tail -60 "$f"; }; done
           pgrep -l vfkit && echo 'vfkit still running' || true
