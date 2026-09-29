@@ -59,7 +59,7 @@ jobs:
           GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
         run: |
           python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
-          python -m pytest -q -m integration
+          python -m pytest -v -m integration --durations=15
       - name: Pack
         run: python packaging/engine/pack_bundle.py --dir build/engine --name linux-x64 --out dist-engine
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -98,7 +98,7 @@ jobs:
           OPENMODELICAHOME: ''
         run: |
           python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
-          python -m pytest -q -m integration
+          python -m pytest -v -m integration --durations=15
       - name: Pack
         run: python packaging/engine/pack_bundle.py --dir build/engine --name windows-x64 --out dist-engine
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -145,7 +145,7 @@ jobs:
             -v "$PWD/projects:/data" gradara-guest:${{ matrix.docker || matrix.arch }} python3 -u /opt/gradara/agent.py
           sleep 2
           python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
-          python -m pytest -q -m integration
+          python -m pytest -v -m integration --durations=15
       - name: Pack
         run: python packaging/engine/pack_bundle.py --dir build/engine --name macos-${{ matrix.arch }} --out dist-engine
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
