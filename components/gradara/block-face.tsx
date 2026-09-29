@@ -8,6 +8,8 @@ import {
 } from '@/lib/gradara/block-design';
 import { portOffset, sideLength } from '@/lib/gradara/ports';
 import { BlockSymbol } from './block-symbol';
+import { CircuitSymbol } from './circuit-symbol';
+import { isPictorial } from '@/lib/gradara/pictorial';
 
 /** The sole visual renderer. Port interaction and labels outside the body belong to the canvas. */
 export function BlockFace({
@@ -78,7 +80,11 @@ export function BlockFace({
         </span>
       ) : (
         <span className="block-symbol">
-          <BlockSymbol definition={d} thumbnail={thumbnail} />
+          {isPictorial(d.kind) ? (
+            <CircuitSymbol definition={d} size={size} />
+          ) : (
+            <BlockSymbol definition={d} thumbnail={thumbnail} />
+          )}
         </span>
       )}
       {d.ports

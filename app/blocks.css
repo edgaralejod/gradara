@@ -493,3 +493,8 @@
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
   border-radius: 0;
 }
+
+/* Pictorial schematic symbols (circuit-symbol.tsx): drawn at design size, never stretched. */
+.block-face .circuit-symbol { overflow: visible; }
+.block-face .circuit-symbol path { fill: none; stroke: var(--domain); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.block-face .circuit-symbol path.glyph-fill { fill: var(--domain); stroke: none; }
