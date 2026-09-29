@@ -425,7 +425,7 @@ for (const domain of [
     const blocks = [0, 1, 2].map((i) => ({
       id: `b${i}`,
       position: { x: i ? 300 : 0, y: i === 2 ? 160 : 0 },
-      size: { width: 80, height: 40 },
+      size: { width: 80, height: 48 },
       definition: {
         kind: 'test',
         name: `Block${i}`,
@@ -472,8 +472,8 @@ for (const domain of [
           target: 'b0',
           targetHandle: 'p',
           waypoints: [
-            { x: 180, y: 180 },
-            { x: 180, y: 20 },
+            { x: 184, y: 184 },
+            { x: 184, y: 24 },
           ],
         },
       ],
@@ -482,7 +482,7 @@ for (const domain of [
     const after = normalizeProject(before);
     assert.equal(after.junctions?.length, 1);
     assert.equal(after.junctions![0].domain, domain);
-    assert.deepEqual(after.junctions![0].position, { x: 180, y: 20 });
+    assert.deepEqual(after.junctions![0].position, { x: 184, y: 24 });
     assert.equal(after.wires.length, 3);
     assert.equal(after.nets![0].id, before.nets![0].id);
     assert.equal(after.nets![0].name, 'Preserved');
@@ -517,8 +517,8 @@ for (const domain of [
           target: 'b0',
           targetHandle: 'p',
           waypoints: [
-            { x: 180, y: -140 },
-            { x: 180, y: 20 },
+            { x: 184, y: -136 },
+            { x: 184, y: 24 },
           ],
         },
       ],

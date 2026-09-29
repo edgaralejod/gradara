@@ -38,7 +38,7 @@ Saving assigns a document identity. For realistic fixtures, start with a checked
 
 ## Blocks and definitions
 
-A block has an `id`, embedded `definition`, `position`, optional `size`, and optional `labelOffset`. Instances carry their own parameter values and definitions; changing the library does not silently rewrite saved instances. `definition.name` currently doubles as the human instance name. `definition.kind` chooses behavior/symbol conventions and must not change just to rename a block.
+A block has an `id`, embedded `definition`, `position`, optional `size`, and optional `labelOffset`. `position` is the top-left corner of the body and `size` its displayed width and height, in diagram units; the workbench keeps positions, pinned bends, and junctions on the 8-unit sheet grid and sizes in 16-unit steps (see the [block design contract](../blocks/DESIGN.md#the-sheet-grid)). A port's optional `offset` is a percent along its side, placed at the nearest grid step. Instances carry their own parameter values and definitions; changing the library does not silently rewrite saved instances. `definition.name` currently doubles as the human instance name. `definition.kind` chooses behavior/symbol conventions and must not change just to rename a block.
 
 Definitions contain `kind`, name/description, primary domain, symbol, ports, parameters, declarations, equations, and optional generated/controller/category/keywords metadata. Scalar signal definitions are wrapped as Modelica components. Canonical physical kinds select backend wrappers, which are authoritative for their implementation.
 
@@ -149,7 +149,7 @@ Policy:
 
 ## Normalization and persistence
 
-[normalize-project.ts](../../lib/gradara/normalize-project.ts) assigns missing document identity, normalizes block names and junctions, and reconciles nets. It also turns a library **Subsystem** block, or a subsystem placeholder in an older document, into a real subsystem whose inside passes each input to the output in the same position, so its ports and wires stay. It is used around document loading and editing. Backend [workspace.py](../../server/workspace.py) handles document creation, save/load, and legacy files.
+[normalize-project.ts](../../lib/gradara/normalize-project.ts) assigns missing document identity, puts every sheet on the sheet grid (an older document's blocks move by at most a few units, and wires that move leaves one step out of line are straightened by moving a block that holds no other straight wire), normalizes block names and junctions, and reconciles nets. It also turns a library **Subsystem** block, or a subsystem placeholder in an older document, into a real subsystem whose inside passes each input to the output in the same position, so its ports and wires stay. It is used around document loading and editing. Backend [workspace.py](../../server/workspace.py) handles document creation, save/load, and legacy files.
 
 | Path under `projects/` | Ownership |
 | --- | --- |

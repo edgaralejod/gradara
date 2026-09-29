@@ -9,6 +9,7 @@ import {
 import { sideToPosition } from './ports';
 import { outward, simplifyPoints, simplifyRoute, type Pt } from './routing';
 import { setWireWaypoints } from './wires';
+import { snap as snapGrid } from './grid';
 import {
   junctionsOnRun,
   moveJunctions,
@@ -243,13 +244,15 @@ export function snappedSegment(
     anchors.filter((g) => g.axis === axis),
     tolerance,
   );
+  // Unguided runs land on the sheet grid, as the saved document will.
+  const target = snap.guides.length ? snap.point[axis] : snapGrid(at[axis]);
   return {
-    project: slideSegment(project, wireId, index, snap.point[axis] - a[axis]),
+    project: slideSegment(project, wireId, index, target - a[axis]),
     guides: snap.guides,
   };
 }
 
-/** Corner editing shares the segment straightening policy, rather than a separate grid. */
+/** Corner editing shares the segment straightening policy; unguided corners land on the sheet grid. */
 export function snappedVertex(
   project: Project,
   wireId: string,
@@ -283,7 +286,9 @@ export function snappedVertex(
       close.length ? close : anchors.filter((g) => g.axis === axis),
       tolerance,
     );
-    point[axis] = snap.point[axis];
+    point[axis] = snap.guides.some((g) => g.axis === axis)
+      ? snap.point[axis]
+      : snapGrid(at[axis]);
     guides.push(...snap.guides.filter((g) => g.axis === axis));
   }
   let next = moveVertex(project, wireId, index, point);

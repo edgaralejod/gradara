@@ -1,3 +1,4 @@
+import { GRID, SIZE_STEP, snapPoint } from './grid';
 import type { Definition, Port } from './model';
 
 /** Diagram units at 100% zoom. Keep the matching typography tokens in blocks.css. */
@@ -6,7 +7,7 @@ export const BLOCK_DESIGN = {
   height: 64,
   text: 14,
   pitch: 24,
-  grid: 8,
+  grid: GRID,
 } as const;
 export type BlockShape =
   | 'box'
@@ -59,16 +60,20 @@ export function showPortLabel(d: Definition, p: Port) {
   return true;
 }
 
+/** Sizes step in two sheet-grid units, so centers and ports stay on the grid. */
 function roundGrid(n: number) {
-  return Math.ceil(n / BLOCK_DESIGN.grid) * BLOCK_DESIGN.grid;
+  return Math.ceil(n / SIZE_STEP) * SIZE_STEP;
 }
 
 export function defaultBlockSize(d: Definition) {
   const shape = blockShape(d);
   if (shape === 'boundary')
     // Side padding, the domain glyph, and about 8 units per character.
-    return { width: roundGrid(Math.min(176, 56 + d.name.length * 8)), height: 32 };
-  if (shape === 'sum' || shape === 'ground') return { width: 40, height: 40 };
+    return {
+      width: roundGrid(Math.min(176, 56 + d.name.length * 8)),
+      height: 32,
+    };
+  if (shape === 'sum' || shape === 'ground') return { width: 48, height: 48 };
   if (shape === 'physical')
     return ['top', 'bottom'].includes(
       d.ports.find((p) => p.direction === 'physical')?.side ?? '',
@@ -76,7 +81,7 @@ export function defaultBlockSize(d: Definition) {
       ? { width: 48, height: 80 }
       : { width: 80, height: 48 };
   if (shape === 'gain') return { width: 80, height: 64 };
-  if (shape === 'mux' || shape === 'demux') return { width: 40, height: 96 };
+  if (shape === 'mux' || shape === 'demux') return { width: 48, height: 96 };
   if (d.kind === 'secondOrder') return { width: 160, height: 64 };
   if (shape === 'subsystem') {
     // Room for the label gutters and a readable window onto the inside.
@@ -138,7 +143,7 @@ export function minimumDesignedSize(d: Definition) {
   const size = defaultBlockSize(d);
   if (['sum', 'ground', 'boundary'].includes(blockShape(d))) return size;
   if (blockShape(d) === 'box' && size.width === 80)
-    return { width: 64, height: 56 };
+    return { width: 64, height: 48 };
   return size;
 }
 
@@ -155,16 +160,13 @@ export function formatBlockValue(value: number) {
     : String(Number(value.toPrecision(4)));
 }
 
-/** Keep horizontal signal centerlines on a common grid regardless of block height. */
+/**
+ * A block's corner on the sheet grid. With sizes in whole size steps, that puts its
+ * center and every port on the grid too (see grid.ts).
+ */
 export function snapBlockPosition(
   position: { x: number; y: number },
-  size: { width: number; height: number },
-  grid = 20,
+  _size?: { width: number; height: number },
 ) {
-  return {
-    x: Math.round(position.x / grid) * grid,
-    y:
-      Math.round((position.y + size.height / 2) / grid) * grid -
-      size.height / 2,
-  };
+  return snapPoint(position);
 }

@@ -40,15 +40,15 @@ function place(
   return { id, definition: structuredClone(def(kind)), position: { x, y } };
 }
 
-/** Step (0,40), Sum (180,50), Gain (300,36) — output/input row at y = 68. */
+/** Step (0,40), Sum (184,48), Gain (304,40): every block on the sheet grid, output/input row at y = 72. */
 function sheet(): Project {
   return {
     ...initialProject(),
     name: 'Wiring spec',
     blocks: [
       place('step', 'step', 0, 40),
-      place('sum', 'sum', 180, 50),
-      place('gain', 'gain', 300, 36),
+      place('sum', 'sum', 184, 48),
+      place('gain', 'gain', 304, 40),
     ],
     wires: [],
     junctions: [],
@@ -66,10 +66,10 @@ void test('fixture ports sit on a shared row so geometry is exact', () => {
   const p = sheet();
   assert.equal(blockSize(p.blocks[0]).width, 64);
   assert.equal(port(p, 'step', 'y').x, 64);
-  assert.equal(port(p, 'step', 'y').y, 68);
-  assert.equal(port(p, 'sum', 'a').x, 180);
-  assert.equal(port(p, 'sum', 'a').y, 68);
-  assert.equal(port(p, 'gain', 'u').y, 68);
+  assert.equal(port(p, 'step', 'y').y, 72);
+  assert.equal(port(p, 'sum', 'a').x, 184);
+  assert.equal(port(p, 'sum', 'a').y, 72);
+  assert.equal(port(p, 'gain', 'u').y, 72);
 });
 
 void test('1 pin exit: first segment leaves a right port horizontally', () => {
@@ -79,8 +79,8 @@ void test('1 pin exit: first segment leaves a right port horizontally', () => {
   const pts = s.preview();
   assert.ok(pts.length >= 2);
   assert.ok(firstSegmentHorizontal(pts));
-  assert.ok(nearly(pts[0].y, 68));
-  assert.ok(nearly(pts[1].y, 68));
+  assert.ok(nearly(pts[0].y, 72));
+  assert.ok(nearly(pts[1].y, 72));
   assert.ok(pts[1].x > pts[0].x);
 });
 
@@ -93,7 +93,7 @@ void test('2 click pins a vertex and does not create a junction graphic', () => 
   assert.equal(s.mode, 'drawing');
   assert.ok(s.corners.length >= 1);
   assert.equal(s.junctionCount(), 0);
-  s.click({ x: 180, y: 68 });
+  s.click({ x: 184, y: 72 });
   assert.equal(s.mode, 'idle');
   assert.equal(s.junctionCount(), 0);
   assert.equal(s.project.wires.length, 1);
@@ -103,27 +103,27 @@ void test('2 click pins a vertex and does not create a junction graphic', () => 
 void test('3 anchors magnetize a second wire to an existing run Y without joining', () => {
   const s = new NetSession(sheet());
   s.pressPort('step', 'y');
-  s.move(180, 68);
-  s.release({ x: 180, y: 68 });
+  s.move(184, 72);
+  s.release({ x: 184, y: 72 });
   assert.equal(s.project.wires.length, 1);
   const sat = place('saturation', 'sat', 300, 160);
   s.project = { ...s.project, blocks: [...s.project.blocks, sat] };
   s.pressPort('sat', 'u');
   s.move(245, 70);
-  assert.ok(s.guides.some((g) => g.axis === 'y' && nearly(g.value, 68)));
+  assert.ok(s.guides.some((g) => g.axis === 'y' && nearly(g.value, 72)));
   assert.equal(s.project.wires.length, 1);
 });
 
 void test('4 drop on ink creates a junction; dragging it moves the T', () => {
   const s = new NetSession(sheet());
   s.pressPort('step', 'y');
-  s.move(180, 68);
-  s.release({ x: 180, y: 68 });
+  s.move(184, 72);
+  s.release({ x: 184, y: 72 });
   const sat = place('saturation', 'sat', 140, 160);
   s.project = { ...s.project, blocks: [...s.project.blocks, sat] };
   s.pressPort('sat', 'u');
-  s.move(120, 68);
-  s.release({ x: 122, y: 68 });
+  s.move(120, 72);
+  s.release({ x: 122, y: 72 });
   assert.ok(s.junctionCount() >= 1, 'splice must create a node graphic');
   const j = s.project.junctions![0];
   const before = { ...j.position };
@@ -138,11 +138,11 @@ void test('4 drop on ink creates a junction; dragging it moves the T', () => {
 void test('5 unpinned feedback uses ordinary orthogonal routing, not a return rail', () => {
   const s = new NetSession(sheet());
   s.pressPort('step', 'y');
-  s.move(180, 68);
-  s.release({ x: 180, y: 68 });
+  s.move(184, 72);
+  s.release({ x: 184, y: 72 });
   s.pressPort('sum', 'y');
-  s.move(300, 68);
-  s.release({ x: 300, y: 68 });
+  s.move(304, 72);
+  s.release({ x: 304, y: 72 });
   s.pressPort('gain', 'y');
   const minus = port(s.project, 'sum', 'b');
   s.move(minus.x, minus.y);
@@ -174,11 +174,11 @@ void test('5 unpinned feedback uses ordinary orthogonal routing, not a return ra
 void test('6 drawn feedback keeps vertices and adds no junction', () => {
   const s = new NetSession(sheet());
   s.pressPort('step', 'y');
-  s.release({ x: 180, y: 68 });
+  s.release({ x: 184, y: 72 });
   s.pressPort('sum', 'y');
-  s.release({ x: 300, y: 68 });
+  s.release({ x: 304, y: 72 });
   s.pressPort('gain', 'y');
-  s.move(400, 68);
+  s.move(400, 72);
   s.release({ x: 400, y: 160 });
   s.click({ x: 400, y: 160 });
   s.click({ x: 198, y: 160 });
@@ -193,11 +193,11 @@ void test('6 drawn feedback keeps vertices and adds no junction', () => {
 void test('7 branch from a junction does not collapse onto its own net', () => {
   const s = new NetSession(sheet());
   s.pressPort('step', 'y');
-  s.release({ x: 180, y: 68 });
+  s.release({ x: 184, y: 72 });
   const sat = place('saturation', 'sat', 140, 180);
   s.project = { ...s.project, blocks: [...s.project.blocks, sat] };
   s.pressPort('sat', 'u');
-  s.release({ x: 122, y: 68 });
+  s.release({ x: 122, y: 72 });
   assert.ok(s.junctionCount() >= 1);
   const j = s.project.junctions![0];
   s.pressJunction(j.id, { x: j.position.x, y: j.position.y - 40 });
@@ -225,7 +225,7 @@ void test('8 Esc / cancel while drawing leaves the sheet unchanged', () => {
 void test('9 two distinct nets do not occupy the same pixels unless snapped as a suggestion', () => {
   const s = new NetSession(sheet());
   s.pressPort('step', 'y');
-  s.release({ x: 180, y: 68 });
+  s.release({ x: 184, y: 72 });
   const sat = place('saturation', 'sat', 0, 200);
   const gain2 = place('gain', 'g2', 200, 200);
   s.project = {
@@ -251,7 +251,7 @@ void test('9 two distinct nets do not occupy the same pixels unless snapped as a
   );
   const shared = [...ay].filter((y) => by.has(y));
   assert.ok(
-    shared.every((y) => y !== 68 || gy.y === 68),
+    shared.every((y) => y !== 72 || gy.y === 72),
     'a second net must not sit on the first trunk',
   );
   void u;
@@ -262,7 +262,7 @@ void test('10 flatten ignores vertices; occupancy stays one driver per input', (
   s.pressPort('step', 'y');
   s.release({ x: 140, y: 20 });
   s.click({ x: 140, y: 20 });
-  s.click({ x: 180, y: 68 });
+  s.click({ x: 184, y: 72 });
   const pairs = flattenWires(s.project);
   assert.deepEqual(
     pairs.map((w) => [w.source, w.sourceHandle, w.target, w.targetHandle]),
@@ -270,7 +270,7 @@ void test('10 flatten ignores vertices; occupancy stays one driver per input', (
   );
   assert.throws(() => {
     s.pressPort('gain', 'y');
-    s.release({ x: 180, y: 68 });
+    s.release({ x: 184, y: 72 });
   });
 });
 
@@ -364,7 +364,7 @@ void test('an invalid drop onto a driven net never changes another free input or
   const s = connectedSheet();
   const before = s.project;
   s.pressPort('gain', 'y');
-  assert.throws(() => s.release({ x: 120, y: 68 }), /already has a source/);
+  assert.throws(() => s.release({ x: 120, y: 72 }), /already has a source/);
   assert.equal(s.project, before);
   assert.equal(s.junctionCount(), 0);
   assert.ok(
@@ -382,10 +382,10 @@ void test('the entire source net is excluded when branching from a junction', ()
     blocks: [...s.project.blocks, place('scope', 'scope', 200, 200)],
   };
   s.pressPort('scope', 'u');
-  s.release({ x: 120, y: 68 });
+  s.release({ x: 120, y: 72 });
   const j = s.project.junctions![0];
   s.pressJunction(j.id);
-  s.move(90, 68);
+  s.move(90, 72);
   assert.equal(s.target, null);
   assert.equal(s.ignoreWireIds.length, 3);
 });
@@ -400,7 +400,7 @@ void test('alignment outside segment extents does not join the net', () => {
   assert.equal(s.mode, 'drawing');
   assert.equal(s.junctionCount(), 0);
   assert.equal(s.project.wires.length, 2);
-  assert.equal(s.cursor.y, 68);
+  assert.equal(s.cursor.y, 72);
 });
 void test('hit tolerance scales with zoom and is independent of the twenty-unit block grid', () => {
   for (const zoom of [0.5, 1, 2]) {
@@ -411,7 +411,7 @@ void test('hit tolerance scales with zoom and is independent of the twenty-unit 
       blocks: [...s.project.blocks, place('scope', 'scope', 220, 200)],
     };
     s.pressPort('scope', 'u');
-    s.release({ x: 121.3, y: 68 + 5 / zoom });
+    s.release({ x: 121.3, y: 72 + 5 / zoom });
     assert.equal(s.mode, 'idle');
     assert.equal(s.junctionCount(), 1);
     assert.equal(s.project.junctions![0].position.x, 121.3);
@@ -428,7 +428,7 @@ void test('subpixel offsets never become diagonal segments', () => {
 void test('cancel after grabbing an existing wire restores the original document identity', () => {
   const s = connectedSheet();
   const before = s.project;
-  assert.ok(s.pressSegment({ x: 120, y: 68 }));
+  assert.ok(s.pressSegment({ x: 120, y: 72 }));
   s.move(120, 180);
   s.release({ x: 120, y: 180 });
   s.click({ x: 120, y: 180 });
@@ -442,7 +442,7 @@ void test('moving a real junction keeps all incident paths orthogonal and simula
     blocks: [...s.project.blocks, place('scope', 'scope', 220, 200)],
   };
   s.pressPort('scope', 'u');
-  s.release({ x: 120, y: 68 });
+  s.release({ x: 120, y: 72 });
   const before = flattenWires(s.project);
   const j = s.project.junctions![0];
   s.moveJunction(j.id, 140, 120);
@@ -601,7 +601,7 @@ void test('deleting the last branch removes its junction and preserves the origi
   };
   const baseline = s.project;
   s.pressPort('scope', 'u');
-  s.release({ x: 120, y: 68 });
+  s.release({ x: 120, y: 72 });
   const branch = s.project.wires.find((w) => w.target === 'scope')!;
   const pruned = removeSelection(s.project, [], [branch.id]);
   assert.equal(pruned.junctions?.length, 0);
@@ -736,13 +736,13 @@ void test('redraw pins a new route while preserving endpoints, identity and simu
     id = original.wires[0].id;
   const signature = semanticSignature(original);
   s.redraw(id);
-  s.click({ x: 110, y: 180 });
-  s.click({ x: 250, y: 180 });
+  s.click({ x: 112, y: 176 });
+  s.click({ x: 248, y: 176 });
   s.finishRedraw();
   assert.equal(s.mode, 'idle');
   assert.equal(s.project.wires[0].id, id);
   assert.equal(semanticSignature(s.project), signature);
-  assert.ok(s.project.wires[0].waypoints?.some((p) => p.y === 180));
+  assert.ok(s.project.wires[0].waypoints?.some((p) => p.y === 176));
   orthogonal(s.pathPoints(id));
   assert.equal(original.wires[0].waypoints, undefined);
 });
@@ -784,7 +784,7 @@ void test('sliding a straight connection creates a dogleg and retains both port 
   orthogonal(points);
   assert.deepEqual(points[0], cached[0]);
   assert.deepEqual(points.at(-1), cached.at(-1));
-  assert.ok(points.some((p) => p.y === 138));
+  assert.ok(points.some((p) => p.y === 142));
   assert.equal(points[1].y, points[0].y);
   assert.ok(points[1].x > points[0].x);
   assert.equal(points.at(-2)!.y, points.at(-1)!.y);
@@ -796,8 +796,8 @@ void test('every run of a hand-routed wire slides orthogonally without changing 
   const s = editableSheet(),
     id = s.project.wires[0].id;
   s.redraw(id);
-  s.click({ x: 110, y: 180 });
-  s.click({ x: 250, y: 180 });
+  s.click({ x: 112, y: 176 });
+  s.click({ x: 248, y: 176 });
   s.finishRedraw();
   const original = s.project,
     before = structuredClone(s.pathPoints(id));
@@ -948,7 +948,7 @@ void test('a dogleg snaps to its own endpoint row and becomes one straight run a
         bent,
         id,
         2,
-        { x: 150, y: 68 + offset / zoom },
+        { x: 150, y: 72 + offset / zoom },
         zoom,
         [],
       );
@@ -960,7 +960,7 @@ void test('a dogleg snaps to its own endpoint row and becomes one straight run a
         semanticSignature(result.project),
         semanticSignature(original),
       );
-      assert.deepEqual(result.guides, [{ axis: 'y', value: 68 }]);
+      assert.deepEqual(result.guides, [{ axis: 'y', value: 72 }]);
       assert.equal(result.project.wires[0].waypoints?.length, 0);
     }
 });
@@ -968,7 +968,7 @@ void test('a deliberate offset outside the capture radius retains its bends', ()
   const s = editableSheet(),
     id = s.project.wires[0].id;
   const bent = slideSegment(s.project, id, 0, 90);
-  const result = snappedSegment(bent, id, 2, { x: 150, y: 78 }, 1, []);
+  const result = snappedSegment(bent, id, 2, { x: 150, y: 82 }, 1, []);
   assert.equal(new NetSession(result.project).pathPoints(id).length, 6);
   assert.equal(result.guides.length, 0);
 });
@@ -983,7 +983,7 @@ void test('straightening wins over a closer alignment guide on another net', () 
     new NetSession(result.project).pathPoints(id),
     s.pathPoints(id),
   );
-  assert.deepEqual(result.guides, [{ axis: 'y', value: 68 }]);
+  assert.deepEqual(result.guides, [{ axis: 'y', value: 72 }]);
 });
 void test('several almost-aligned sections coalesce into a single row', () => {
   const s = editableSheet(),
@@ -993,12 +993,12 @@ void test('several almost-aligned sections coalesce into a single row', () => {
     wires: s.project.wires.map((w) => ({
       ...w,
       waypoints: [
-        { x: 84, y: 68 },
+        { x: 84, y: 72 },
         { x: 84, y: 120 },
         { x: 140, y: 120 },
         { x: 140, y: 72 },
         { x: 220, y: 72 },
-        { x: 220, y: 68 },
+        { x: 220, y: 72 },
       ],
     })),
   };
@@ -1016,12 +1016,12 @@ void test('aligning a retraced hairpin removes backtracking instead of preservin
     wires: s.project.wires.map((w) => ({
       ...w,
       waypoints: [
-        { x: 100, y: 68 },
+        { x: 100, y: 72 },
         { x: 100, y: 160 },
         { x: 240, y: 160 },
         { x: 240, y: 72 },
         { x: 80, y: 72 },
-        { x: 80, y: 68 },
+        { x: 80, y: 72 },
       ],
     })),
   };
@@ -1059,7 +1059,7 @@ void test('a corner can straighten its adjacent runs with the same screen-space 
     new NetSession(result.project).pathPoints(id),
     s.pathPoints(id),
   );
-  assert.ok(result.guides.some((g) => g.axis === 'y' && g.value === 68));
+  assert.ok(result.guides.some((g) => g.axis === 'y' && g.value === 72));
 });
 void test('straightening does not move ports whose rows are slightly different', () => {
   const s = editableSheet(),
@@ -1088,13 +1088,13 @@ void test('straightening a moved run returns its junction and incident paths to 
     blocks: [...s.project.blocks, place('scope', 'scope', 300, 200)],
   };
   s.pressPort('scope', 'u');
-  s.release({ x: 140, y: 68 });
+  s.release({ x: 140, y: 72 });
   const wire = s.project.wires.find((w) => w.source === 'step')!,
     original = s.project;
   const bent = slideSegment(original, wire.id, 0, 80);
-  assert.equal(bent.junctions![0].position.y, 148);
+  assert.equal(bent.junctions![0].position.y, 152);
   const pts = new NetSession(bent).pathPoints(wire.id);
-  const i = pts.findIndex((p, i) => p.y === 148 && pts[i + 1]?.y === 148);
+  const i = pts.findIndex((p, i) => p.y === 152 && pts[i + 1]?.y === 152);
   assert.ok(i >= 0);
   const result = snappedSegment(
     bent,
@@ -1174,12 +1174,12 @@ void test('a tiny jog from a saved user diagram collapses when its run is nudged
     wires: s.project.wires.map((w) => ({
       ...w,
       waypoints: [
-        { x: 84, y: 68 },
+        { x: 84, y: 72 },
         { x: 84, y: 158.86819988748294 },
         { x: 149.48929761803663, y: 158.86819988748294 },
         { x: 149.48929761803663, y: 159.18256411345106 },
         { x: 240, y: 159.18256411345106 },
-        { x: 240, y: 68 },
+        { x: 240, y: 72 },
       ],
     })),
   };
@@ -1203,8 +1203,8 @@ function pinnedDogleg(): Project {
       target: 'gain',
       targetHandle: 'u',
       waypoints: [
-        { x: 140, y: 68 },
-        { x: 140, y: 168 },
+        { x: 136, y: 72 },
+        { x: 136, y: 168 },
       ],
     },
   ];
@@ -1229,13 +1229,13 @@ function moveBlock(
 void test('moving a block onto its source row removes the retraced vertical spur from ink and hit testing', () => {
   const before = pinnedDogleg();
   const original = new NetSession(before).pathPoints('bent');
-  const moved = moveBlock(before, 'gain', 300, 36);
+  const moved = moveBlock(before, 'gain', 304, 40);
   const expected = [
-    { x: 64, y: 68 },
-    { x: 300, y: 68 },
+    { x: 64, y: 72 },
+    { x: 304, y: 72 },
   ];
   assert.deepEqual(new NetSession(moved).pathPoints('bent'), expected);
-  assert.equal(hitSegment(moved, { x: 140, y: 140 }, 10), undefined);
+  assert.equal(hitSegment(moved, { x: 136, y: 140 }, 10), undefined);
   assert.deepEqual(
     new NetSession(structuredClone(moved)).pathPoints('bent'),
     expected,
@@ -1251,29 +1251,29 @@ void test('moving a block onto its source row removes the retraced vertical spur
 
 void test('moving either endpoint shortens a pinned leg instead of leaving a doubled-back tail', () => {
   const before = pinnedDogleg();
-  const targetMoved = moveBlock(before, 'gain', 300, 76);
+  const targetMoved = moveBlock(before, 'gain', 304, 80);
   assert.deepEqual(new NetSession(targetMoved).pathPoints('bent'), [
-    { x: 64, y: 68 },
-    { x: 140, y: 68 },
-    { x: 140, y: 108 },
-    { x: 300, y: 108 },
+    { x: 64, y: 72 },
+    { x: 136, y: 72 },
+    { x: 136, y: 112 },
+    { x: 304, y: 112 },
   ]);
-  const sourceMoved = moveBlock(before, 'step', 0, 140);
+  const sourceMoved = moveBlock(before, 'step', 0, 136);
   assert.deepEqual(new NetSession(sourceMoved).pathPoints('bent'), [
     { x: 64, y: 168 },
-    { x: 300, y: 168 },
+    { x: 304, y: 168 },
   ]);
 });
 
 void test('repeated block movement and resize do not accumulate phantom sections', () => {
   let project = pinnedDogleg();
   for (let repeat = 0; repeat < 20; repeat++) {
-    for (const y of [176, 116, 76, 36, -4, 36]) {
-      project = moveBlock(project, 'gain', 300, y);
+    for (const y of [176, 112, 80, 40, 0, 40]) {
+      project = moveBlock(project, 'gain', 304, y);
       const points = new NetSession(project).pathPoints('bent');
       orthogonal(points);
-      assert.equal(points.length, y === 36 ? 2 : 4);
-      const rows = [68, y + 32];
+      assert.equal(points.length, y === 40 ? 2 : 4);
+      const rows = [72, y + 32];
       assert.ok(
         points.every((p) => rows.includes(p.y)),
         'no leg extends back to the old port row',
@@ -1289,7 +1289,7 @@ void test('repeated block movement and resize do not accumulate phantom sections
   ]);
   assert.deepEqual(new NetSession(resized).pathPoints('bent'), [
     { x: 64, y: 168 },
-    { x: 300, y: 168 },
+    { x: 304, y: 168 },
   ]);
 });
 
@@ -1311,15 +1311,15 @@ void test('physical top and bottom ports also shed retraced horizontal spurs whe
         target: 'b',
         targetHandle: b.definition.ports[0].id,
         waypoints: [
-          { x: 40, y: 140 },
-          { x: 240, y: 140 },
+          { x: 40, y: 136 },
+          { x: 240, y: 136 },
         ],
       },
     ],
   };
   const moved = moveBlock(before, 'b', 0, 220);
   assert.deepEqual(new NetSession(moved).pathPoints('physical'), [
-    { x: 40, y: 44 },
+    { x: 40, y: 48 },
     { x: 40, y: 220 },
   ]);
   assert.equal(semanticSignature(moved), semanticSignature(before));
@@ -1332,10 +1332,10 @@ void test('a real branch on the vertical leg stays connected when its sink moves
     blocks: [...s.project.blocks, place('scope', 'scope', 400, 260)],
   };
   s.pressPort('scope', 'u');
-  s.release({ x: 140, y: 120 });
+  s.release({ x: 136, y: 120 });
   const before = s.project;
   assert.equal(before.junctions!.length, 1);
-  const moved = moveBlock(before, 'gain', 300, 36);
+  const moved = moveBlock(before, 'gain', 304, 40);
   assert.equal(moved.junctions, before.junctions);
   assert.equal(moved.wires, before.wires);
   assert.equal(semanticSignature(moved), semanticSignature(before));
@@ -1343,7 +1343,7 @@ void test('a real branch on the vertical leg stays connected when its sink moves
     const points = new NetSession(moved).pathPoints(wire.id);
     orthogonal(points);
     assert.ok(
-      points.some((p) => p.x === 140 && p.y === 120),
+      points.some((p) => p.x === 136 && p.y === 120),
       'each branch still reaches the real junction',
     );
   }

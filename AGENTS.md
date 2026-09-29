@@ -14,7 +14,7 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | --- | --- | --- |
 | Workspace and panels | `app/page.tsx`, `app/engineering.css`, `components/gradara/` | User guide, browser acceptance checks, component agent guidance. |
 | Block visuals / library | `block-face.tsx`, `block-symbol.tsx`, `lib/gradara/block-design.ts` | `docs/blocks/DESIGN.md`, `docs/blocks/AGENT_BLOCK_GUIDE.md`. |
-| Wiring / selection / routing | `lib/gradara/net-*.ts`, `routing.ts`, `selection.ts`, canvas/net components | `docs/architecture/WIRING.md`, model format, browser acceptance checks. |
+| Wiring / selection / routing | `lib/gradara/net-*.ts`, `routing.ts`, `selection.ts`, `grid.ts`, canvas/net components | `docs/architecture/WIRING.md`, model format, browser acceptance checks. |
 | Definitions and physical blocks | `lib/gradara/*blocks.ts`, `model.ts`, `server/modelica.py` | Block guide and simulation execution guide. |
 | Save/load and API | `server/workspace.py`, `server/app.py`, `lib/gradara/api.ts` | Model format and API guide. |
 | Simulation engines | `server/engine.py`, `server/engines.py` (native and Docker backends), `safety.py`, `processes.py` | `server/AGENTS.md`, execution guide, `SECURITY.md`. |
@@ -22,7 +22,7 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | Desktop app and installers | `desktop/`, `packaging/`, `vite.desktop.config.ts`, `.github/workflows/release.yml` | Distribution guide, release checklist. |
 | Gradara AI service | `cloud/` (gateway, sign-in pages, `deploy.sh`) | `cloud/README.md`, `docs/PRIVACY.md`. Privacy rules are enforced by its tests. |
 | Website | `site/` | `site/README.md`. Keep claims in step with `docs/PRIVACY.md` and the code. |
-| Templates | `models/examples/`, `scripts/style-examples.ts`, buck/flyback/datacenter builders | Example notes, block design, template tests. |
+| Templates | `models/examples/`, `scripts/style-examples.ts`, `scripts/grid-examples.ts`, buck/flyback/datacenter builders | Example notes, block design, template tests. |
 
 ## Invariants
 

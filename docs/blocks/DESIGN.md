@@ -12,15 +12,15 @@ Enlarging a block changes the space around its symbol, not its text size. Zoom s
 | --- | --- | --- |
 | Standard | 80 × 64 | Sources, unary math, most dynamics, limits, sinks, controllers with one input |
 | Gain | 80 × 64 | Same envelope, familiar triangle |
-| Sum / subtract | 40 × 40 | Compact circular junction; input signs belong at their terminals |
+| Sum / subtract | 48 × 48 | Compact circular junction; input signs belong at their terminals |
 | Multi-terminal | 128 × 96 or larger | A central symbol well plus independent terminal-caption gutters |
-| Dense terminal arrays | Computed on an 8-unit grid | At least 24 units of vertical pitch; nominal 32-unit horizontal pitch |
+| Dense terminal arrays | Computed in 16-unit steps | At least 24 units of vertical pitch; nominal 32-unit horizontal pitch |
 | PMSM | 160 × 96 | Four bottom terminals plus top measurements and mixed-domain side terminals |
 | Wide notation | 160 × 64 | Complete second-order transfer function at the normal font size |
-| Mux / demux | 40 × 96 | Narrow tapered body; indexed terminals replace redundant internal text |
+| Mux / demux | 48 × 96 | Narrow tapered body; indexed terminals replace redundant internal text |
 | Electrical primitive | 80 × 48 horizontal; 48 × 80 vertical | Unboxed circuit symbol; leads reach the exact terminal coordinates |
-| Ground | 40 × 40 | Unboxed reference glyph with its lead at the top terminal |
-| Subsystem port pill | 32 high; width 56 + 8 per name character, on the 8-unit grid, at most 176 | A rounded pill inside a subsystem; its default size is also its minimum |
+| Ground | 48 × 48 | Unboxed reference glyph with its lead at the top terminal |
+| Subsystem port pill | 32 high; width 56 + 8 per name character, rounded up to a 16-unit step, at most 176 | A rounded pill inside a subsystem; its default size is also its minimum |
 | Subsystem | Labeled-terminal family (80 × 64 up, 128 × 96 or larger with several ports) | Always shows port captions, since they are the inside's port names |
 
 These are deliberate semantic exceptions, not permission to invent dimensions for every new kind. `defaultBlockSize()` computes defaults and `minimumDesignedSize()` sets resizing limits. New registered or agent-created blocks inherit this system automatically. Generic signal blocks with one input and one output use the standard body; multiple or mixed-domain terminals reserve more room. Explicit unusual terminal offsets still need visual review for spacing.
@@ -61,15 +61,29 @@ The compact library uses the same face, uniformly scaled to fit a 36 × 28 thumb
 
 `/block-catalog` renders every definition at its actual standard dimensions, grouped by category, with optional compact library specimens. It supports source/category/search filters and 100%, 150%, and 200% zoom. The toolbar stays in place while the reference sheet scrolls; descriptions and domain markers remain visible. This is a visual review surface and never loads or changes a saved project. Do not judge a new block solely by its thumbnail.
 
+## The sheet grid
+
+Every block sits on one grid (`lib/gradara/grid.ts`), so wires between ports run exactly straight:
+
+1. Block corners are multiples of **8 units** (`GRID`).
+2. Block widths and heights are multiples of **16 units** (`SIZE_STEP`), so a block's center and the middle of each side are on the grid too, and a quarter turn about the center keeps the block on the grid.
+3. Ports on a side are spread at whole grid steps about its middle (`gridPortOffsets`): one port sits at the middle; several are evenly spaced as close as possible to the classic (i + 1) / (n + 1) spread. An even number of ports is exactly centered when its spacing is an even number of steps; when an odd number fits much better, the group sits half a step toward the side's start. An explicit `offset` is moved to the nearest grid step.
+
+Together these put every port on a grid point at every size and rotation, so two ports can always be lined up by moving a block whole steps. Every default size above is a size step. Resizing moves in size steps and keeps the edge you are not dragging where it was; the inspector's width and height fields round to size steps the same way.
+
+Never place ports at fractions of a side or give a block an off-grid size to line up a wire: move the block instead.
+
 ## Placement alignment
 
-New blocks and dragged blocks snap their horizontal centerline to the 20-unit placement grid, rather than snapping their top-left corner. This lets the standard 80 × 64 body, 40 × 40 Sum, and custom heights share a straight signal line. Connected-port alignment takes precedence on release; grouped blocks retain their relative spacing. Never change port geometry to compensate for placement. Blocks that an agent adds are placed by `lib/gradara/auto-layout.ts` under the same rules (see the [execution guide](../architecture/EXECUTION.md)); agents never choose coordinates. **Arrange** (`lib/gradara/arrange.ts`, see the [wiring contract](../architecture/WIRING.md#auto-arrange)) redraws a sheet by the same conventions: flow left to right, feedback underneath, grounds under their terminals, names under their blocks.
+New blocks and dragged blocks land on the grid. Because sizes are whole size steps, snapping the corner also puts the centerline on the grid, so the standard 80 × 64 body, the 48 × 48 Sum, and custom heights share a straight signal line. On release, a connected terminal within 16 units of its wire's line pulls the block onto that line; grouped blocks keep their relative spacing. A resized block is not pulled: it stays where the pointer left it. Blocks that an agent adds are placed by `lib/gradara/auto-layout.ts` under the same rules (see the [execution guide](../architecture/EXECUTION.md)); agents never choose coordinates. **Arrange** (`lib/gradara/arrange.ts`, see the [wiring contract](../architecture/WIRING.md#auto-arrange)) redraws a sheet by the same conventions: flow left to right, feedback underneath, grounds under their terminals, names under their blocks.
 
 ## Saved layout compatibility
 
-Old v1 blocks without an explicit `size` retain their legacy dimensions through `blockSize()`. Newly inserted blocks persist `defaultBlockSize(definition)`; pasted blocks keep the source size. This prevents a visual refresh from silently moving connection anchors in an existing model.
+Old v1 blocks without an explicit `size` keep their legacy proportions through `blockSize()`, in whole size steps. Newly inserted blocks persist `defaultBlockSize(definition)`; pasted blocks keep the source size.
 
-The inspector's **Use standard size** command deliberately applies the new dimensions using the ordinary, undoable layout transaction and connected-port snapping. Resizing and visual metadata do not affect numerical identity. Updating a default must never silently rewrite old models or reroute their saved wires.
+Documents saved before the sheet grid are put on it when they open (`normalizeProject`): each size is rounded to a size step about the block's center, then each corner, pinned bend, and junction moves to the nearest grid point. A block moves by at most a few units. Two ports that were in line can end up one grid step apart; `straightenNearRuns` (`lib/gradara/grid-migrate.ts`) then moves one block of such a wire by that step, never a block that already holds a straight wire, and moves a pinned wire's end run onto its port's line. None of this changes connectivity, parameters, or results.
+
+The inspector's **Use standard size** command applies the current default dimensions through the ordinary, undoable layout transaction. Resizing and visual metadata do not affect numerical identity. Changing a default size never rewrites the size saved with an existing block.
 
 ## Where changes belong
 

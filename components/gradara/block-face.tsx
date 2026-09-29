@@ -6,16 +6,19 @@ import {
   showPortLabel,
   sideOf,
 } from '@/lib/gradara/block-design';
-import { portOffset } from '@/lib/gradara/ports';
+import { portOffset, sideLength } from '@/lib/gradara/ports';
 import { BlockSymbol } from './block-symbol';
 
 /** The sole visual renderer. Port interaction and labels outside the body belong to the canvas. */
 export function BlockFace({
   definition: d,
   thumbnail = false,
+  size = defaultBlockSize(d),
 }: {
   definition: Definition;
   thumbnail?: boolean;
+  /** The face before rotation; port captions follow the block's grid ports. */
+  size?: { width: number; height: number };
 }) {
   const shape = blockShape(d);
   const inset = (side: string) =>
@@ -82,7 +85,7 @@ export function BlockFace({
         .filter((p) => showPortLabel(d, p))
         .map((p) => {
           const side = sideOf(p),
-            offset = portOffset(d, p);
+            offset = portOffset(d, p, sideLength(p, size));
           return (
             <span
               key={p.id}
@@ -139,7 +142,7 @@ export function BlockPreview({
         <BlockFace definition={definition} thumbnail={miniature} />
         {definition.ports.map((p) => {
           const side = sideOf(p),
-            offset = portOffset(definition, p);
+            offset = portOffset(definition, p, sideLength(p, size));
           return (
             <span
               key={p.id}

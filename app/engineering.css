@@ -3027,3 +3027,9 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
   display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%;
   vertical-align: middle;
 }
+
+/* Resizable workbench panes (see resizable-columns.tsx). */
+.di-workspace { position: relative; }
+.di-signals { min-width: 0; }
+.workbench-resizer { top: 44px; }
+@media (max-width: 1100px) { .workbench-resizer { display: none; } }

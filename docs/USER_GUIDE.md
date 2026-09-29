@@ -57,7 +57,8 @@ Press **?** on the canvas to see this list in the app. On Windows and Linux, use
 | Drag a copy of a block or selection | Ctrl + drag |
 | Delete selection | Delete / Backspace |
 | Select several items | Shift + click, or drag a box on empty canvas |
-| Nudge selected blocks or wires | Arrow keys (Shift + arrows for 10 units) |
+| Nudge selected blocks or wires | Arrow keys, one grid step (Shift + arrows for five) |
+| Show or hide the grid | ⌘/Ctrl + ' |
 | Rotate selected blocks clockwise | R |
 | Draw a connection | Drag from port to port, or click two ports |
 | Branch from a wire | Alt + drag |
@@ -126,7 +127,7 @@ Select a block to edit its parameters in the inspector on the right. Double-clic
 
 The **Equations** and **State & declarations** tabs show a block's Modelica equations. You can edit them for signal blocks and AI-generated blocks. Built-in physical blocks use Modelica Standard Library components, so their tab names the library class and is read-only. The inspector's **Edit…** and **Equations → Open** open the same dialog.
 
-Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it. Double-click the name to put it back. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block, or choose **Use standard size** in the inspector.
+Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it. Double-click the name to put it back. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
 
 ### The library
 
@@ -159,7 +160,9 @@ To move between the two, use sensors (physical to signal) and sources or actuato
 | Move a selection | Drag one of its blocks. |
 | Duplicate | Ctrl-drag, or ⌘/Ctrl+D. |
 
-Use the **arrow keys** to nudge selected blocks, wires, or junctions by one grid unit, or **Shift + arrow** for ten. Holding an arrow key moves the selection as one undo step.
+Use the **arrow keys** to nudge selected blocks, wires, or junctions by one grid step, or **Shift + arrow** for five. Holding an arrow key moves the selection as one undo step.
+
+**The grid.** Blocks, ports, and bends sit on an 8-unit grid, and block sizes change in 16-unit steps, so any two ports can be lined up exactly and a straight wire between them is truly straight, whatever you resized or rotated. Dragging a block snaps it to the grid, and to the line of a wire it connects to when a port comes within a couple of steps of it. Resizing keeps the edge you are not dragging in place. To see the grid, press ⌘/Ctrl + ' or choose **Show grid** from the canvas menu; it is a view setting and stays on in this browser until you turn it off. Models saved by an earlier version are moved onto the grid when they open: a block moves by at most a few units, and a wire that ends up a step out of line is straightened.
 
 Wires route around blocks, stay clear of other wires and block names, and never loop back on themselves. A wire you shaped by hand keeps its shape while it still makes sense. When you move a block, the wire section next to it follows. If the shape would then loop or cross a block, the wire goes back to automatic routing. When you move a group selected with a box, wires that only touch the box stretch to the blocks that stay.
 
@@ -167,7 +170,9 @@ Wires route around blocks, stay clear of other wires and block names, and never 
 
 **Fit to view**: tap **Space** or **F**, or use the fit button in the canvas controls. Fit shows everything on the sheet and keeps it clear of the canvas buttons. Holding Space and dragging pans instead. A fitted view stays fitted when you open or close panels or resize the window.
 
-**Canvas menu**: right-click empty canvas. With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
+**Canvas menu**: right-click empty canvas. With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
+
+**Panels.** Drag the inner edge of the component library or the inspector to resize it, and the top edge of the Problems dock to change its height; in Results, drag the edge of the signal list. Sizes are remembered in this browser. Double-click an edge to restore that panel, or choose **Reset layout** from the canvas menu (or **View → Reset Layout** in the desktop app) to restore every panel, column width, and the dock at once.
 
 ![The canvas menu on empty space](images/canvas-menu.webp)
 

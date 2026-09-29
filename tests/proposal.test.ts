@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { GRID } from '../lib/gradara/grid';
 import { initialProject, library } from '../lib/gradara/model';
 import { mergeProposal } from '../lib/gradara/proposal';
 
@@ -39,7 +40,7 @@ void test('a new block is snapped with a standard size and a new wire has no rou
   assert.deepEqual(added, ['b_scope']);
   const block = project.blocks.find((b) => b.id === 'b_scope')!;
   assert.ok(block.size);
-  assert.equal(block.position.x % 20, 0);
+  assert.equal(block.position.x % GRID, 0);
   const wire = project.wires.find((w) => w.id === 'w_ai_1')!;
   assert.equal('waypoints' in wire, false);
 });

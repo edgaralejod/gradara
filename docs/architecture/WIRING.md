@@ -27,7 +27,7 @@ The [model format](MODEL_FORMAT.md) defines the serialized fields. Rendered poly
 | Complete a connection | Finish on a compatible port, junction, or wire segment. Connected ports take precedence over overlapping wire hit areas. |
 | Branch | Drag unselected wire ink, Alt-drag a selected wire, or click/Alt-drag a junction. Splicing and the new branch commit together. |
 | Unpin or cancel | Backspace removes the last pinned run and restores its exit direction. Escape cancels the entire provisional edit, including splices. |
-| Nudge selection | Arrow keys translate selected blocks, wires, and junctions by one diagram unit; Shift uses ten. Key repeats form one undo transaction. Fixed boundary ports retain their positions and normals. |
+| Nudge selection | Arrow keys translate selected blocks, wires, and junctions by one grid step (8 units); Shift uses five steps. Key repeats form one undo transaction. Fixed boundary ports retain their positions and normals. |
 | Move a junction | A normal junction drag moves its incident runs. |
 | Reshape | Select a wire and drag a segment, midpoint grip, or bend handle. A segment moves perpendicular to itself; fixed block ports grow connecting elbows. |
 | Reconnect | Drag a selected wire's round endpoint. Preserve the wire ID and the fixed part of its manual route where possible; prune obsolete junctions after commit. |
@@ -40,6 +40,8 @@ Target rings indicate an attachment; alignment guides only indicate coordinates.
 Pointer previews are derived from the gesture's original snapshot and painted locally once per animation frame. Do not put autosave, provider calls, source emission, or history updates in the pointer-move loop. Live drawing uses its free-tail geometry rather than repeatedly invoking the finished-path router.
 
 ## Routing and alignment
+
+Wiring geometry lives on the sheet grid ([block design contract](../blocks/DESIGN.md#the-sheet-grid)): every block corner and port is on an 8-unit grid point, so two ports can always be lined up exactly. Exit stubs and detour clearance are two grid steps, the lane past a block's name is five, midlines between lanes are rounded to the grid, and a bend placed by clicking, a dragged run, or a dragged corner that no alignment guide holds lands on the grid.
 
 One sheet router (`lib/gradara/router.ts`) owns every drawn route. `routeSheet(project)` is a pure, cached function of the sheet: block bodies and names, terminals, connections, and pinned bends. Preview, commit, hit testing, and reload therefore always agree; nothing else computes or repairs geometry.
 
@@ -56,7 +58,7 @@ Coalesce nearby parallel runs and remove redundant collinear vertices or retrace
 
 ## Moving blocks
 
-A dragged block snaps each axis on its own: a connected terminal within 16 units of a horizontal line snaps vertically onto it, and one near a vertical line snaps horizontally, so one drag can straighten a signal wire and a shaft together. The line is the adjacent saved bend when the wire has pinned corners, otherwise the far terminal or junction dot; a far block terminal must face along the same axis. Otherwise the block's centerline snaps to the 20-unit grid. The drag preview and the saved move use the same rule, so a block lands where the preview showed it (`lib/gradara/placement.ts`).
+A dragged block snaps each axis on its own: a connected terminal within 16 units of a horizontal line snaps vertically onto it, and one near a vertical line snaps horizontally, so one drag can straighten a signal wire and a shaft together. The line is the adjacent saved bend when the wire has pinned corners, otherwise the far terminal or junction dot; a far block terminal must face along the same axis. Otherwise the block's corner snaps to the 8-unit grid, which puts its ports on the grid too. A resized block is not pulled onto nearby lines; it keeps the edge you did not drag, and its size changes in 16-unit steps. The drag preview and the saved move use the same rule, so a block lands where the preview showed it (`lib/gradara/placement.ts`).
 
 A moved block carries the first run of each pinned wire (`carryLeads`, `lib/gradara/selection.ts`): the bend at the end of that run shifts with the block across the run, so a vertical lead stays vertical, and the rest of the drawing is kept. If the pinned route still reads badly, the router's rule above applies and the wire becomes automatic. A block moved along its own lead onto or past a junction dot carries the dot ahead of the terminal. Moving blocks with a region selection carries only wires whose both ends move; a wire the region merely touched, with an end on a block that stays, stretches instead of being pushed along. Undo restores the previous geometry.
 

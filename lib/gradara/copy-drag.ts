@@ -1,3 +1,4 @@
+import { snap } from './grid';
 import {
   emptySelection,
   extractSelection,
@@ -134,8 +135,8 @@ export function installCopyDrag(
     if (!g.moved) return;
     const at = position(e);
     const delta = {
-      x: Math.round((at.x - g.from.x) / 20) * 20,
-      y: Math.round((at.y - g.from.y) / 20) * 20,
+      x: snap(at.x - g.from.x),
+      y: snap(at.y - g.from.y),
     };
     g.current = {
       ...g.initial,

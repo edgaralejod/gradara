@@ -409,6 +409,14 @@ function buildMenu() {
         { role: 'zoomIn' },
         { role: 'zoomOut' },
         { type: 'separator' },
+        // Panel widths and the dock live in the workbench; it listens for this event.
+        {
+          label: 'Reset Layout',
+          click: () =>
+            void mainWindow?.webContents.executeJavaScript(
+              "window.dispatchEvent(new Event('gradara:reset-layout'))",
+            ),
+        },
         { role: 'togglefullscreen' },
         ...(DEV ? [{ role: 'toggleDevTools' }] : []),
       ],

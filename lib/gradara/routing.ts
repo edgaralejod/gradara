@@ -1,6 +1,8 @@
+import { GRID, snap } from './grid';
 import { Position } from '@xyflow/react';
 
-export const EXIT_STUB = 20;
+/** Two sheet grid steps, so stubs and detour lanes stay on the grid (see grid.ts). */
+export const EXIT_STUB = 2 * GRID;
 
 export type Pt = { x: number; y: number };
 
@@ -183,13 +185,13 @@ export function routeBetween(
     // Opposite ports that point away from each other (the target is behind the source)
     // need an S: two legs across, so neither stub doubles back on itself.
     if (!facing && exit !== entry) {
-      const y = nearly(a.y, b.y) ? a.y + EXIT_STUB : (a.y + b.y) / 2;
+      const y = nearly(a.y, b.y) ? a.y + EXIT_STUB : snap((a.y + b.y) / 2);
       return simplifyPoints([from, a, { x: a.x, y }, { x: b.x, y }, b, to]);
     }
     const x = facing
       ? sourceStub === 0
         ? a.x
-        : (a.x + b.x) / 2
+        : snap((a.x + b.x) / 2)
       : exit === Position.Right
         ? Math.max(a.x, b.x)
         : Math.min(a.x, b.x);
@@ -202,13 +204,13 @@ export function routeBetween(
       (exit === Position.Bottom && entry === Position.Top && a.y <= b.y) ||
       (exit === Position.Top && entry === Position.Bottom && a.y >= b.y);
     if (!facing && exit !== entry) {
-      const x = nearly(a.x, b.x) ? a.x + EXIT_STUB : (a.x + b.x) / 2;
+      const x = nearly(a.x, b.x) ? a.x + EXIT_STUB : snap((a.x + b.x) / 2);
       return simplifyPoints([from, a, { x, y: a.y }, { x, y: b.y }, b, to]);
     }
     const y = facing
       ? sourceStub === 0
         ? a.y
-        : (a.y + b.y) / 2
+        : snap((a.y + b.y) / 2)
       : exit === Position.Bottom
         ? Math.max(a.y, b.y)
         : Math.min(a.y, b.y);
@@ -335,7 +337,7 @@ function routeLength(points: Pt[]) {
 
 /** Clearance a detour keeps from a body; below a block it also clears the instance name. */
 const LANE = EXIT_STUB;
-const NAME_LANE = 44;
+const NAME_LANE = 5 * GRID;
 
 /**
  * The orthogonal route between two terminals that stays out of `rects` when it can: the
@@ -355,8 +357,8 @@ export function routeAround(
     return base;
   const a = outward(from, exit),
     b = outward(to, entry);
-  const xs = new Set([a.x, b.x, (a.x + b.x) / 2]);
-  const ys = new Set([a.y, b.y, (a.y + b.y) / 2]);
+  const xs = new Set([a.x, b.x, snap((a.x + b.x) / 2)]);
+  const ys = new Set([a.y, b.y, snap((a.y + b.y) / 2)]);
   for (const r of rects) {
     xs.add(r.x - LANE);
     xs.add(r.x + r.width + LANE);

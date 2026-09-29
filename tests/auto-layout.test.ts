@@ -13,6 +13,7 @@ import {
   layoutProject,
 } from '../lib/gradara/auto-layout';
 import { portPoint } from '../lib/gradara/ports';
+import { GRID } from '../lib/gradara/grid';
 
 const definition = (kind: string) =>
   structuredClone(library.find((d) => d.kind === kind)!);
@@ -61,7 +62,7 @@ void test('a block fed by an output sits on that output line, to its right', () 
   )!;
   assert.ok(to.x > from.x, 'signal flows left to right');
   assert.equal(to.y, from.y, 'a straight wire');
-  assert.equal(block.position.x % 20, 0, 'on the placement grid');
+  assert.equal(block.position.x % GRID, 0, 'on the sheet grid');
   assert.deepEqual(
     layoutFindings(laid).filter(
       (f) => f.ids.includes('b_gain') || f.ids.includes('w_ai_1'),

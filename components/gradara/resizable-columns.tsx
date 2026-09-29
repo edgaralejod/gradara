@@ -2,15 +2,17 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
 } from 'react';
+import { useStored } from './use-stored';
 
-/** Remembered widths, per table, in this browser. Best effort: storage can be off. */
-function load(key: string, defaults: number[]) {
+/** Remembered widths, per table, in this browser; anything malformed means the defaults. */
+function parse(raw: string | null, defaults: number[]) {
   try {
-    const saved = JSON.parse(localStorage.getItem(key) ?? 'null');
+    const saved: unknown = JSON.parse(raw ?? 'null');
     if (
       Array.isArray(saved) &&
       saved.length === defaults.length &&
@@ -18,17 +20,15 @@ function load(key: string, defaults: number[]) {
     )
       return saved as number[];
   } catch {
-    /* A blocked or corrupt store falls back to the defaults. */
+    /* A corrupt entry falls back to the defaults. */
   }
   return defaults;
 }
 
-function save(key: string, widths: number[]) {
-  try {
-    localStorage.setItem(key, JSON.stringify(widths));
-  } catch {
-    /* Widths are a convenience; never fail an edit over them. */
-  }
+/** Every remembered pane size and column width returns to its default. */
+export const RESET_LAYOUT_EVENT = 'gradara:reset-layout';
+export function resetLayout() {
+  window.dispatchEvent(new Event(RESET_LAYOUT_EVENT));
 }
 
 let canvas: HTMLCanvasElement | undefined;
@@ -50,28 +50,28 @@ export function textWidth(text: string, sample: Element | null) {
  * any text can be brought fully into view.
  */
 export function useColumns(key: string, defaults: number[], min = 40) {
-  const storage = `gradara:columns:${key}`;
-  const [widths, setWidths] = useState(() => load(storage, defaults));
+  const [raw, write] = useStored(`gradara:columns:${key}`);
+  const [initial] = useState(defaults);
+  const widths = useMemo(() => parse(raw, initial), [raw, initial]);
   const latest = useRef(widths);
   useEffect(() => {
     latest.current = widths;
   }, [widths]);
   const resize = useCallback(
-    (index: number, width: number) =>
-      setWidths((w) => {
-        const next = w.map((v, i) =>
-          i === index ? Math.max(min, Math.round(width)) : v,
-        );
-        save(storage, next);
-        return next;
-      }),
-    [storage, min],
+    (index: number, width: number) => {
+      const next = latest.current.map((v, i) =>
+        i === index ? Math.max(min, Math.round(width)) : v,
+      );
+      latest.current = next;
+      write(JSON.stringify(next));
+    },
+    [write, min],
   );
-  const initial = useRef(defaults);
-  const reset = useCallback(() => {
-    setWidths(initial.current);
-    save(storage, initial.current);
-  }, [storage]);
+  const reset = useCallback(() => write(null), [write]);
+  useEffect(() => {
+    window.addEventListener(RESET_LAYOUT_EVENT, reset);
+    return () => window.removeEventListener(RESET_LAYOUT_EVENT, reset);
+  }, [reset]);
   return {
     widths,
     template: widths.map((w) => `${w}px`).join(' '),

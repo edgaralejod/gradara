@@ -12,6 +12,7 @@ import { linkEnds, pruneJunctions } from './project';
 import { moveJunctions, normalizeJunctions } from './net-layout';
 import { isInstance, type BoundaryKind } from './hierarchy';
 import { bodyOf } from './router';
+import { snap } from './grid';
 import { addInstancePort, defaultSide, type Side } from './subsystem-ports';
 import { sideToPosition } from './ports';
 import {
@@ -275,7 +276,13 @@ export class NetSession {
       ],
       ANCHOR_PX / this.zoom,
     );
-    this.cursor = this.target?.point ?? snapped.point;
+    // Free bends sit on the sheet grid, like ports, unless a guide holds that axis.
+    const guided = new Set(snapped.guides.map((g) => g.axis));
+    const free = {
+      x: guided.has('x') ? snapped.point.x : snap(snapped.point.x),
+      y: guided.has('y') ? snapped.point.y : snap(snapped.point.y),
+    };
+    this.cursor = this.target?.point ?? free;
     this.guides = this.target ? [] : snapped.guides;
     if (!this.corners.length && isTap(this.project, this.from.id))
       this.exit = segmentExit(this.origin, this.cursor);

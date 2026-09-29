@@ -1,11 +1,20 @@
 'use client';
 import { rotateBlocks } from '@/lib/gradara/rotation';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
+import GridBackground from '@/components/gradara/grid-background';
+import { useStored } from '@/components/gradara/use-stored';
+import {
+  PaneResizer,
+  RESET_LAYOUT_EVENT,
+  resetLayout,
+  useColumns,
+} from '@/components/gradara/resizable-columns';
 import CanvasMenu, {
   type CanvasMenuItem,
 } from '@/components/gradara/canvas-menu';
 import SelectionActions from '@/components/gradara/selection-actions';
 import { addPort, editPort, kindFor } from '@/lib/gradara/subsystem-ports';
+import { GRID, snap as snapGrid, snapLength } from '@/lib/gradara/grid';
 import PortDialog from '@/components/gradara/port-dialog';
 import { boundaryFor } from '@/lib/gradara/port-blocks';
 import HierarchyBar from '@/components/gradara/hierarchy-bar';
@@ -28,7 +37,6 @@ import {
 } from 'react';
 import {
   ReactFlowProvider,
-  Background,
   ViewportPortal,
   Controls,
   ControlButton,
@@ -65,6 +73,8 @@ import {
   Trash2,
   Maximize,
   LayoutGrid,
+  Grid3x3,
+  PanelsTopLeft,
   Group,
   Ungroup,
   Scissors,
@@ -95,6 +105,8 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import ModelCanvas, { FIT_VIEW_EVENT } from '@/components/gradara/model-canvas';
+
+const GRID_VISIBLE_KEY = 'gradara:grid-visible';
 import { normalizeProject } from '@/lib/gradara/normalize-project';
 import { describeNets, renameNet } from '@/lib/gradara/net-registry';
 import { setNetLabel, setNetLabelShown } from '@/lib/gradara/net-label';
@@ -421,8 +433,53 @@ function Workbench() {
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, [libraryOpen, inspectorOpen]);
+  // Side panel widths, remembered per browser; the canvas takes the rest.
+  const sidePanes = useColumns('workbench', [272, 270], 180);
+  const sideStart = useRef<number[]>([]);
+  const [widePanes, setWidePanes] = useState(true);
+  useEffect(() => {
+    // Below 1100 px the panels take turns, and their widths come from the stylesheet.
+    const query = window.matchMedia('(min-width: 1101px)');
+    const sync = () => setWidePanes(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  const resizeSide = (index: 0 | 1, delta: number, start: boolean) => {
+    if (start) sideStart.current = [...sidePanes.current.current];
+    const other = sideStart.current[1 - index];
+    const widest = Math.max(180, window.innerWidth - other - 360);
+    const [low, high] = index ? [220, 560] : [180, 520];
+    sidePanes.resize(
+      index,
+      Math.min(
+        high,
+        widest,
+        Math.max(low, sideStart.current[index] + (index ? -delta : delta)),
+      ),
+    );
+  };
+  useEffect(() => {
+    const reset = () => {
+      updateLibraryOpen(true);
+      updateInspectorOpen(window.innerWidth >= 1100);
+    };
+    window.addEventListener(RESET_LAYOUT_EVENT, reset);
+    return () => window.removeEventListener(RESET_LAYOUT_EVENT, reset);
+  }, []);
   const [helpOpen, setHelpOpen] = useState(false);
   /** The canvas right-click menu: where it opened, on screen and on the sheet. */
+  // The visible sheet grid is a personal view preference, kept per browser.
+  const [gridSetting, writeGridSetting] = useStored(GRID_VISIBLE_KEY);
+  const showGrid = gridSetting === '1';
+  const showGridRef = useRef(showGrid);
+  useEffect(() => {
+    showGridRef.current = showGrid;
+  }, [showGrid]);
+  const toggleGrid = useCallback(
+    () => writeGridSetting(showGridRef.current ? '0' : '1'),
+    [writeGridSetting],
+  );
   const [canvasMenu, setCanvasMenu] = useState<{
     at: { x: number; y: number };
     point: { x: number; y: number };
@@ -1460,6 +1517,19 @@ function Workbench() {
         shortcut: 'Space',
         run: () => window.dispatchEvent(new Event(FIT_VIEW_EVENT)),
       },
+      {
+        id: 'grid',
+        label: showGridRef.current ? 'Hide grid' : 'Show grid',
+        icon: <Grid3x3 size={13} />,
+        shortcut: "⌘'",
+        run: toggleGrid,
+      },
+      {
+        id: 'reset-layout',
+        label: 'Reset layout',
+        icon: <PanelsTopLeft size={13} />,
+        run: resetLayout,
+      },
       ...(scopeRef.current.length
         ? [
             {
@@ -1612,8 +1682,8 @@ function Workbench() {
         return;
       }
       const result = pasteSelection(target, fragment, {
-        x: Math.round((point.x - left) / 20) * 20,
-        y: Math.round((point.y - top) / 20) * 20,
+        x: snapGrid(point.x - left),
+        y: snapGrid(point.y - top),
       });
       commit(result.project);
       select(result.selection);
@@ -1832,7 +1902,8 @@ function Workbench() {
       ]);
       const mergeHistory = event.repeat && held === signature;
       held = signature;
-      const step = event.shiftKey ? 10 : 1;
+      // One grid step, or five with Shift: a nudge keeps the selection on the grid.
+      const step = event.shiftKey ? 5 * GRID : GRID;
       commit(
         (project) =>
           translateSelection(project, selection, {
@@ -1971,6 +2042,9 @@ function Workbench() {
       } else if (e.key.toLowerCase() === 'f' && !command) {
         e.preventDefault();
         window.dispatchEvent(new Event(FIT_VIEW_EVENT));
+      } else if (e.key === "'" && command) {
+        e.preventDefault();
+        toggleGrid();
       } else if (e.key === '/' && !command) {
         e.preventDefault();
         setLibraryOpen(true);
@@ -2035,6 +2109,7 @@ function Workbench() {
     leaveSubsystem,
     inserter,
     workspaceMode,
+    toggleGrid,
   ]);
   const insertGenerated = (definition: Definition) => {
     if (!composer) return;
@@ -2302,7 +2377,32 @@ function Workbench() {
         )}
         <div
           className={`main-layout ${!libraryOpen ? 'library-hidden' : ''} ${!inspectorOpen ? 'inspector-hidden' : ''}`}
+          style={
+            widePanes
+              ? {
+                  gridTemplateColumns: `${libraryOpen ? sidePanes.widths[0] : 0}px minmax(350px, 1fr) ${inspectorOpen ? sidePanes.widths[1] : 0}px`,
+                }
+              : undefined
+          }
         >
+          {widePanes && libraryOpen && (
+            <PaneResizer
+              className="workbench-resizer"
+              style={{ left: sidePanes.widths[0] - 3 }}
+              label="Resize the component library"
+              onReset={sidePanes.reset}
+              onResize={(delta, start) => resizeSide(0, delta, start)}
+            />
+          )}
+          {widePanes && inspectorOpen && (
+            <PaneResizer
+              className="workbench-resizer"
+              style={{ right: sidePanes.widths[1] - 3 }}
+              label="Resize the inspector"
+              onReset={sidePanes.reset}
+              onResize={(delta, start) => resizeSide(1, delta, start)}
+            />
+          )}
           <div className="model-toolbar">
             <div className="toolbar-left">
               <IconButton
@@ -2693,7 +2793,7 @@ function Workbench() {
                         panActivationKeyCode="Space"
                         multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
                       >
-                        <Background gap={20} size={0.7} color="#dde3e8" />
+                        <GridBackground visible={showGrid} />
                         <ViewportPortal>
                           {project.annotations?.map((a, i) => (
                             <div
@@ -3202,7 +3302,8 @@ function Workbench() {
                     )}
                   <div className="inspector-section block-layout-section">
                     <div className="section-label">
-                      Block size <span className="subtle">px</span>
+                      Block size{' '}
+                      <span className="subtle">px, steps of {2 * GRID}</span>
                     </div>
                     <div className="block-size-fields">
                       <label>
@@ -3221,7 +3322,17 @@ function Workbench() {
                               {
                                 id: active.id,
                                 position: active.position,
-                                size: { ...blockSize(active), width },
+                                // Whole size steps, so the ports stay on the grid.
+                                size: {
+                                  ...blockSize(active),
+                                  width: snapLength(
+                                    width,
+                                    minimumBlockSize(
+                                      active.definition,
+                                      active.rotation,
+                                    ).width,
+                                  ),
+                                },
                               },
                             ])
                           }
@@ -3243,7 +3354,16 @@ function Workbench() {
                               {
                                 id: active.id,
                                 position: active.position,
-                                size: { ...blockSize(active), height },
+                                size: {
+                                  ...blockSize(active),
+                                  height: snapLength(
+                                    height,
+                                    minimumBlockSize(
+                                      active.definition,
+                                      active.rotation,
+                                    ).height,
+                                  ),
+                                },
                               },
                             ])
                           }
@@ -3639,6 +3759,9 @@ function Workbench() {
                 ['Select several components', 'Shift + click / Drag'],
                 ['Select / pan tools', 'V / H'],
                 ['Fit the model to the view', 'Space (tap) / F'],
+                ['Show or hide the grid', "⌘ / Ctrl + '"],
+                ['Resize a side panel', 'Drag its inner edge'],
+                ['Restore default panel sizes', 'Canvas menu → Reset layout'],
                 ['Canvas menu', 'Right-click empty space'],
                 [
                   'Arrange the sheet (or the selection)',
@@ -3648,8 +3771,8 @@ function Workbench() {
                 ['Resize a block', 'Drag a corner or edge'],
                 ['Move a block name', 'Drag the label'],
                 ['Reset label position', 'Double-click its label'],
-                ['Nudge selected blocks / wires', 'Arrow keys'],
-                ['Nudge by 10 diagram units', 'Shift + arrows'],
+                ['Nudge selection one grid step', 'Arrow keys'],
+                ['Nudge five grid steps', 'Shift + arrows'],
                 ['Add a block at the pointer', 'Double-click empty canvas'],
                 ["Open a block's properties", 'Double-click the block'],
                 ['Open a subsystem', 'Double-click it'],

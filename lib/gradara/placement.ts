@@ -4,7 +4,8 @@ import type { Block, Definition, Port, Project } from './model';
 import { endpointPoint, isTap } from './net';
 import { portPoint, portSide, positionForPortAt } from './ports';
 
-export const GRID = 20;
+import { GRID } from './grid';
+export { GRID };
 export const STAGE_GAP = 56;
 export const ALIGN_SNAP = 16;
 

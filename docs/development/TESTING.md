@@ -85,11 +85,12 @@ npx tsx scripts/build-buck-example.ts
 npx tsx scripts/build-flyback-example.ts
 npx tsx scripts/build-datacenter-example.ts
 npx tsx scripts/style-examples.ts
+npx tsx scripts/grid-examples.ts
 ```
 
 Run only the relevant generator. `report:blocks` writes `reports/block-catalog.md`, which is ignored by Git and can be regenerated at any time. Review block visuals in the live `/block-catalog` page; structural inventory alone cannot verify appearance or physics.
 
-The example builders rewrite checked-in template files, not user documents. Review their diffs, run template tests, and inspect the resulting examples. A deliberate example change should not be mixed into unrelated work.
+The example builders rewrite checked-in template files, not user documents. Run `scripts/grid-examples.ts` after any builder: it puts the templates and test fixtures on the sheet grid, as the workbench does when a document opens, so the checked-in files are what the workbench shows. Review their diffs, run template tests, and inspect the resulting examples. A deliberate example change should not be mixed into unrelated work.
 
 ## CI
 

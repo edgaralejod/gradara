@@ -31,7 +31,7 @@ void test('every catalog insertion aligns its actual port with the requested wir
 void test('new standards preserve legacy wiring geometry and never change numerical identity', () => {
   const project = initialProject();
   const legacy = project.blocks.find((b) => b.definition.kind === 'step')!;
-  assert.deepEqual(blockSize(legacy), { width: 64, height: 56 });
+  assert.deepEqual(blockSize(legacy), { width: 64, height: 64 });
   assert.deepEqual(blockSize({ ...legacy, size: { width: 101, height: 73 } }), {
     width: 101,
     height: 73,
@@ -76,12 +76,13 @@ void test('notation bounds extreme values without replacing parameter precision'
 
 void test('standard, sum, and custom-height blocks snap to the same signal centerline', async () => {
   const { snapBlockPosition } = await import('../lib/gradara/block-design');
-  for (const height of [40, 64, 73, 96, 170]) {
+  // Sizes are whole size steps, so a block's center is on the grid when its corner is.
+  for (const height of [48, 64, 80, 96, 176]) {
     const snapped = snapBlockPosition(
       { x: 133, y: 203 - height / 2 },
       { width: 80, height },
     );
-    assert.equal(snapped.x, 140);
+    assert.equal(snapped.x, 136);
     assert.equal(snapped.y + height / 2, 200);
   }
 });
@@ -124,8 +125,8 @@ void test('nearby off-grid ports take priority over rounding and group members d
       {
         id: 'sum',
         definition: sum,
-        position: { x: 180, y: 83 },
-        size: { width: 40, height: 40 },
+        position: { x: 184, y: 80 },
+        size: { width: 48, height: 48 },
       },
     ],
     wires: [
@@ -138,17 +139,18 @@ void test('nearby off-grid ports take priority over rounding and group members d
       },
     ],
   };
-  // Raw port is 11 units away; rounding first would push it to 17 and miss the magnet.
-  const snapped = snapDraggedBlockPosition(project, 'sum', { x: 202, y: 94 });
+  // The step is where an older document left it, off the grid. The raw port is 14
+  // units from its row; rounding first would push it to 17 and miss the magnet.
+  const snapped = snapDraggedBlockPosition(project, 'sum', { x: 202, y: 93 });
   assert.equal(
     portPoint({ ...project.blocks[1], position: snapped }, 'a')!.y,
     103,
   );
-  const grouped = snapDraggedBlockPosition(project, 'sum', { x: 202, y: 94 }, [
+  const grouped = snapDraggedBlockPosition(project, 'sum', { x: 202, y: 93 }, [
     'step',
     'sum',
   ]);
-  assert.equal(grouped.y + 20, 120);
+  assert.deepEqual(grouped, { x: 200, y: 96 });
 });
 
 void test('null offsets from older API payloads use the same default port center as omitted offsets', () => {

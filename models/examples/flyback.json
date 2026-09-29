@@ -649,7 +649,7 @@
         ]
       },
       "position": {
-        "x": 1180,
+        "x": 1184,
         "y": 304
       },
       "size": {
@@ -748,7 +748,7 @@
       },
       "position": {
         "x": 1400,
-        "y": 472
+        "y": 464
       },
       "size": {
         "width": 80,
@@ -813,7 +813,7 @@
         "generated": true
       },
       "position": {
-        "x": 1580,
+        "x": 1584,
         "y": 464
       },
       "size": {
@@ -874,7 +874,7 @@
         "declarations": "Real v;"
       },
       "position": {
-        "x": 1660,
+        "x": 1664,
         "y": 248
       },
       "size": {
@@ -969,7 +969,7 @@
         ]
       },
       "position": {
-        "x": 2020,
+        "x": 2024,
         "y": 304
       },
       "size": {
@@ -1047,11 +1047,11 @@
       },
       "position": {
         "x": 1080,
-        "y": 644
+        "y": 640
       },
       "size": {
-        "width": 40,
-        "height": 40
+        "width": 48,
+        "height": 48
       }
     },
     {
@@ -1079,8 +1079,8 @@
         "y": 544
       },
       "size": {
-        "width": 40,
-        "height": 40
+        "width": 48,
+        "height": 48
       }
     },
     {
@@ -1126,7 +1126,7 @@
       },
       "position": {
         "x": 840,
-        "y": 484
+        "y": 488
       },
       "size": {
         "width": 48,
@@ -1225,7 +1225,7 @@
         ]
       },
       "position": {
-        "x": 2380,
+        "x": 2384,
         "y": 304
       },
       "size": {
@@ -1474,7 +1474,7 @@
         "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
       },
       "position": {
-        "x": 1060,
+        "x": 1064,
         "y": 808
       },
       "size": {
@@ -1521,7 +1521,7 @@
         "equations": "y = max(lower, min(upper, u));"
       },
       "position": {
-        "x": 1300,
+        "x": 1304,
         "y": 824
       },
       "size": {
@@ -1572,7 +1572,7 @@
         "equations": "when {initial(), sample(0, 1/frequency)} then sampledDuty=min(1,max(0,duty)); cycleStart=time; end when; gate=if time < enableTime then 0 else if sampledDuty <= 0 then 0 else if sampledDuty >= 1 then 1 else if time < cycleStart+sampledDuty/frequency then 1 else 0;"
       },
       "position": {
-        "x": 1500,
+        "x": 1504,
         "y": 824
       },
       "size": {
@@ -1645,7 +1645,7 @@
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 452,
+          "x": 456,
           "y": 288
         },
         {
@@ -1704,11 +1704,11 @@
       "targetHandle": "node",
       "waypoints": [
         {
-          "x": 812,
+          "x": 816,
           "y": 528
         },
         {
-          "x": 812,
+          "x": 816,
           "y": 408
         }
       ]
@@ -1721,7 +1721,7 @@
       "targetHandle": "node",
       "waypoints": [
         {
-          "x": 1100,
+          "x": 1104,
           "y": 408
         }
       ]
@@ -1772,12 +1772,12 @@
           "y": 648
         },
         {
-          "x": 1076,
+          "x": 1080,
           "y": 648
         },
         {
-          "x": 1076,
-          "y": 620
+          "x": 1080,
+          "y": 624
         }
       ]
     },
@@ -1802,7 +1802,7 @@
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 1204,
+          "x": 1208,
           "y": 264
         }
       ]
@@ -1815,7 +1815,7 @@
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 1204,
+          "x": 1208,
           "y": 408
         }
       ]
@@ -1854,7 +1854,7 @@
         },
         {
           "x": 1376,
-          "y": 496
+          "y": 488
         }
       ]
     },
@@ -1867,7 +1867,7 @@
       "waypoints": [
         {
           "x": 1504,
-          "y": 496
+          "y": 488
         },
         {
           "x": 1504,
@@ -1883,7 +1883,7 @@
       "targetHandle": "node",
       "waypoints": [
         {
-          "x": 1100,
+          "x": 1104,
           "y": 552
         }
       ]
@@ -1896,11 +1896,11 @@
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 1636,
+          "x": 1640,
           "y": 264
         },
         {
-          "x": 1636,
+          "x": 1640,
           "y": 272
         }
       ]
@@ -1921,7 +1921,7 @@
       "targetHandle": "node",
       "waypoints": [
         {
-          "x": 2044,
+          "x": 2048,
           "y": 272
         }
       ]
@@ -1985,12 +1985,12 @@
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 916,
-          "y": 460
+          "x": 920,
+          "y": 464
         },
         {
           "x": 864,
-          "y": 460
+          "y": 464
         }
       ]
     },
@@ -2002,12 +2002,12 @@
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 916,
-          "y": 588
+          "x": 920,
+          "y": 592
         },
         {
           "x": 864,
-          "y": 588
+          "y": 592
         }
       ]
     },
@@ -2045,7 +2045,7 @@
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 2404,
+          "x": 2408,
           "y": 280
         }
       ]
@@ -2058,7 +2058,7 @@
       "targetHandle": "n",
       "waypoints": [
         {
-          "x": 2404,
+          "x": 2408,
           "y": 408
         }
       ]
@@ -2071,16 +2071,16 @@
       "targetHandle": "u",
       "waypoints": [
         {
-          "x": 2452,
+          "x": 2456,
           "y": 344
         },
         {
-          "x": 2452,
-          "y": 956
+          "x": 2456,
+          "y": 960
         },
         {
           "x": 616,
-          "y": 956
+          "y": 960
         },
         {
           "x": 616,
@@ -2104,11 +2104,11 @@
       "targetHandle": "measured",
       "waypoints": [
         {
-          "x": 1036,
+          "x": 1040,
           "y": 1016
         },
         {
-          "x": 1036,
+          "x": 1040,
           "y": 872
         }
       ]
@@ -2129,11 +2129,11 @@
       "targetHandle": "reference",
       "waypoints": [
         {
-          "x": 1036,
+          "x": 1040,
           "y": 856
         },
         {
-          "x": 1036,
+          "x": 1040,
           "y": 840
         }
       ]
@@ -2162,19 +2162,19 @@
       "targetHandle": "gate",
       "waypoints": [
         {
-          "x": 1604,
+          "x": 1608,
           "y": 856
         },
         {
-          "x": 1604,
-          "y": 532
+          "x": 1608,
+          "y": 536
         },
         {
-          "x": 1556,
-          "y": 532
+          "x": 1560,
+          "y": 536
         },
         {
-          "x": 1556,
+          "x": 1560,
           "y": 496
         }
       ]
@@ -2195,7 +2195,7 @@
       "targetHandle": "node",
       "waypoints": [
         {
-          "x": 452,
+          "x": 456,
           "y": 440
         }
       ]
@@ -2354,7 +2354,7 @@
       "id": "flyback_j1",
       "domain": "electrical",
       "position": {
-        "x": 452,
+        "x": 456,
         "y": 400
       }
     },
@@ -2394,15 +2394,15 @@
       "id": "flyback_j6",
       "domain": "electrical",
       "position": {
-        "x": 1100,
-        "y": 620
+        "x": 1104,
+        "y": 624
       }
     },
     {
       "id": "flyback_j7",
       "domain": "electrical",
       "position": {
-        "x": 916,
+        "x": 920,
         "y": 408
       }
     },
@@ -2418,7 +2418,7 @@
       "id": "flyback_j9",
       "domain": "electrical",
       "position": {
-        "x": 916,
+        "x": 920,
         "y": 280
       }
     },
@@ -2442,7 +2442,7 @@
       "id": "flyback_j12",
       "domain": "electrical",
       "position": {
-        "x": 1620,
+        "x": 1624,
         "y": 440
       }
     },
@@ -2450,7 +2450,7 @@
       "id": "flyback_j13",
       "domain": "electrical",
       "position": {
-        "x": 1620,
+        "x": 1624,
         "y": 552
       }
     },
@@ -2458,7 +2458,7 @@
       "id": "flyback_j14",
       "domain": "electrical",
       "position": {
-        "x": 2044,
+        "x": 2048,
         "y": 280
       }
     },
@@ -2466,7 +2466,7 @@
       "id": "flyback_j15",
       "domain": "electrical",
       "position": {
-        "x": 2044,
+        "x": 2048,
         "y": 408
       }
     },
@@ -2474,7 +2474,7 @@
       "id": "flyback_j16",
       "domain": "electrical",
       "position": {
-        "x": 2220,
+        "x": 2224,
         "y": 408
       }
     }

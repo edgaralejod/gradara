@@ -392,13 +392,16 @@ const block = (kind: string, id: string, x: number, y: number): Block => ({
 });
 export function initialProject(): Project {
   const blocks = [
-    block('step', 'reference', 0, 85),
-    block('pi', 'controller', 225, 65),
-    block('voltage', 'drive', 470, 85),
-    block('motor', 'motor', 705, 85),
-    block('inertia', 'load', 705, 335),
-    block('sensor', 'sensor', 225, 335),
-    block('ground', 'ground', 495, 345),
+    // On the sheet grid, with each connection a straight run where one is possible.
+    // The controller is unsized, so it opens at its 128 × 96 minimum, grown about
+    // its center to (224, 48).
+    block('step', 'reference', 0, 48),
+    block('pi', 'controller', 240, 64),
+    block('voltage', 'drive', 472, 48),
+    block('motor', 'motor', 704, 48),
+    block('inertia', 'load', 728, 336),
+    block('sensor', 'sensor', 224, 336),
+    block('ground', 'ground', 512, 280),
   ];
   const pairs = [
     ['reference', 'y', 'controller', 'reference'],

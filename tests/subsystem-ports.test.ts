@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { GRID } from '../lib/gradara/grid';
 import { initialProject, library, type Project } from '../lib/gradara/model';
 import { normalizeProject } from '../lib/gradara/normalize-project';
 import {
@@ -228,7 +229,7 @@ void test('a port added at a point sits there, centered and on the grid', () => 
   );
   const pill = next.blocks.find((b) => b.id === 'p_here')!;
   assert.equal(pill.definition.kind, 'outport');
-  assert.equal(pill.position.x % 20, 0);
+  assert.equal(pill.position.x % GRID, 0);
   assert.ok(Math.abs(pill.position.x + pill.size!.width / 2 - 400) <= 20);
   assert.ok(Math.abs(pill.position.y + pill.size!.height / 2 - 200) <= 20);
 });

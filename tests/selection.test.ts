@@ -45,10 +45,10 @@ function branched(): Project {
     ...initialProject(),
     blocks: [
       block('step', 'source', 0, 0),
-      block('gain', 'gain', 300, -4),
-      block('scope', 'sink', 300, 172),
+      block('gain', 'gain', 304, 0),
+      block('scope', 'sink', 304, 176),
     ],
-    junctions: [{ id: 'j1', domain: 'signal', position: { x: 140, y: 28 } }],
+    junctions: [{ id: 'j1', domain: 'signal', position: { x: 136, y: 32 } }],
     wires: [
       {
         id: 'trunk',
@@ -70,7 +70,7 @@ function branched(): Project {
         sourceHandle: 'node',
         target: 'sink',
         targetHandle: 'u',
-        waypoints: [{ x: 140, y: 204 }],
+        waypoints: [{ x: 136, y: 208 }],
       },
     ],
   };
@@ -79,7 +79,7 @@ const all = (p: Project) => ({
   ...emptySelection(),
   blockIds: p.blocks.map((b) => b.id),
 });
-const delta = { x: 40, y: 60 };
+const delta = { x: 40, y: 64 };
 const shift = (p: { x: number; y: number }) => ({
   x: p.x + delta.x,
   y: p.y + delta.y,
@@ -151,10 +151,10 @@ void test('partial duplication retains the selected source and sink path, with t
     [['source', 'sink']],
   );
   assert.deepEqual(polylineOfWire(next, f.wires[0].id), [
-    { x: 64, y: 28 },
-    { x: 140, y: 28 },
-    { x: 140, y: 204 },
-    { x: 300, y: 204 },
+    { x: 64, y: 32 },
+    { x: 136, y: 32 },
+    { x: 136, y: 208 },
+    { x: 304, y: 208 },
   ]);
   geometry(next);
 });
@@ -205,7 +205,7 @@ void test('whole-selection movement preserves every internal bend and dot in pre
   }));
   for (const snap of [false, true]) {
     const next = normalizeJunctions(layoutSelection(p, layouts, all(p), snap));
-    assert.deepEqual(next.junctions![0].position, { x: 180, y: 88 });
+    assert.deepEqual(next.junctions![0].position, { x: 176, y: 96 });
     for (const w of p.wires)
       assert.deepEqual(
         polylineOfWire(next, w.id),
@@ -237,11 +237,11 @@ void test('group movement stretches the external boundary without moving the ext
 
 void test('multiple junctions and feedback translate as a unit without accumulating bends', () => {
   const p = branched();
-  p.blocks.push(block('scope', 'extra', 500, 300));
+  p.blocks.push(block('scope', 'extra', 504, 304));
   p.junctions!.push({
     id: 'j2',
     domain: 'signal',
-    position: { x: 220, y: 28 },
+    position: { x: 216, y: 32 },
   });
   p.wires[1] = { ...p.wires[1], source: 'j2' };
   p.wires.push(
@@ -258,7 +258,7 @@ void test('multiple junctions and feedback translate as a unit without accumulat
       sourceHandle: 'node',
       target: 'extra',
       targetHandle: 'u',
-      waypoints: [{ x: 220, y: 332 }],
+      waypoints: [{ x: 216, y: 336 }],
     },
   );
   p.wires.push({
@@ -268,10 +268,10 @@ void test('multiple junctions and feedback translate as a unit without accumulat
     target: 'source',
     targetHandle: 'feedback',
     waypoints: [
-      { x: 400, y: 28 },
-      { x: 400, y: -100 },
-      { x: 90, y: -100 },
-      { x: 90, y: 28 },
+      { x: 400, y: 32 },
+      { x: 400, y: -104 },
+      { x: 88, y: -104 },
+      { x: 88, y: 32 },
     ],
   });
   p.blocks[0].definition.ports.push({
@@ -293,7 +293,7 @@ void test('multiple junctions and feedback translate as a unit without accumulat
   geometry(next);
 });
 
-void test('group grid snapping uses one delta and preserves off-grid spacing through release', () => {
+void test('group grid snapping uses one delta and preserves spacing through release', () => {
   const p = branched();
   const g = new CanvasGestures();
   const nodes = reconcileNodes([], [], p.blocks, all(p).blockIds);
@@ -302,7 +302,7 @@ void test('group grid snapping uses one delta and preserves off-grid spacing thr
     type: 'position' as const,
     position: {
       x: b.position.x + 40,
-      y: Math.round((b.position.y + 60) / 20) * 20,
+      y: Math.round((b.position.y + 64) / 8) * 8,
     },
     dragging: true,
   }));
@@ -487,7 +487,7 @@ void test('Ctrl-drag preserves originals, previews stable copy IDs at zoom, and 
     before = structuredClone(p),
     h = copyDragHarness(p);
   assert.ok(h.send('pointerdown', { ctrlKey: true }).defaultPrevented);
-  h.send('pointermove', { clientX: 180, clientY: 220 });
+  h.send('pointermove', { clientX: 180, clientY: 228 });
   h.paint();
   const preview = h.previews.at(-1)!;
   assert.equal(preview.project.blocks.length, 6);
@@ -503,15 +503,15 @@ void test('Ctrl-drag preserves originals, previews stable copy IDs at zoom, and 
       polylineOfWire(preview.project, preview.selection.wireIds[i]),
       polylineOfWire(p, p.wires[i].id).map(shift),
     );
-  h.send('pointermove', { clientX: 260, clientY: 220 });
-  h.send('pointerup', { clientX: 260, clientY: 220 });
+  h.send('pointermove', { clientX: 260, clientY: 228 });
+  h.send('pointerup', { clientX: 260, clientY: 228 });
   assert.equal(h.commits.length, 1);
   assert.deepEqual(
     h.commits[0].selection,
     preview.selection,
     'IDs do not change during movement',
   );
-  assert.deepEqual(h.commits[0].project.blocks[3].position, { x: 80, y: 60 });
+  assert.deepEqual(h.commits[0].project.blocks[3].position, { x: 80, y: 64 });
   assert.equal(h.previews.at(-1), null);
   assert.equal(h.frames.size, 0);
   assert.equal(h.captured.size, 0);
@@ -523,7 +523,7 @@ void test('Ctrl-drag cancellation, focus loss, and a changed document never comm
   for (const action of ['escape', 'blur', 'pointercancel', 'changed']) {
     const h = copyDragHarness(branched());
     h.send('pointerdown', { ctrlKey: true });
-    h.send('pointermove', { clientX: 180, clientY: 220 });
+    h.send('pointermove', { clientX: 180, clientY: 228 });
     h.paint();
     if (action === 'escape') h.send('keydown', { key: 'Escape' });
     else if (action === 'changed') h.replaceProject();
@@ -573,15 +573,16 @@ void test('the full FOC example preserves signal and physical connectivity throu
 void test('fine and coarse nudges preserve branched geometry and numerical identity', () => {
   const p = branched();
   let next = p;
-  for (const step of [1, 1, 1, 10])
+  // Arrow keys move one grid step, Shift + arrows five.
+  for (const step of [8, 8, 8, 40])
     next = normalizeJunctions(
       translateSelection(next, all(next), { x: step, y: -step }),
     );
   for (const b of p.blocks) {
     const moved = next.blocks.find((n) => n.id === b.id)!;
     assert.deepEqual(moved.position, {
-      x: b.position.x + 13,
-      y: b.position.y - 13,
+      x: b.position.x + 64,
+      y: b.position.y - 64,
     });
   }
   assert.equal(semanticSignature(next), semanticSignature(p));
@@ -589,8 +590,8 @@ void test('fine and coarse nudges preserve branched geometry and numerical ident
     assert.deepEqual(
       polylineOfWire(next, w.id),
       polylineOfWire(p, w.id).map((point) => ({
-        x: point.x + 13,
-        y: point.y - 13,
+        x: point.x + 64,
+        y: point.y - 64,
       })),
     );
   geometry(next);
