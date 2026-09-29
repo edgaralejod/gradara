@@ -1,3 +1,4 @@
+import { settleTerminators } from './terminators';
 import type { Project } from './model';
 import { normalizeBlockNames } from './names';
 import { materializeBranches } from './net-branches';
@@ -41,12 +42,14 @@ export function normalizeProject(
 ) {
   if (!project.modelId) project = { ...project, modelId: crypto.randomUUID() };
   project = onGrid(realizePlaceholders(project));
-  return reconcileNets(
-    settleRoutes(
-      normalizeJunctions(
-        materializeBranches(normalizeBlockNames(project, previous)),
+  return settleTerminators(
+    reconcileNets(
+      settleRoutes(
+        normalizeJunctions(
+          materializeBranches(normalizeBlockNames(project, previous)),
+        ),
       ),
+      previous,
     ),
-    previous,
   );
 }

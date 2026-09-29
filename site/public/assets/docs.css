@@ -199,6 +199,7 @@
 .diagram-wires { position: absolute; left: 0; top: 0; overflow: visible; }
 .diagram-wires polyline { fill: none; stroke-width: 1.5; stroke-linejoin: round; }
 .diagram-wires polyline.is-bus { stroke-width: 3.4; }
+.diagram-wires .diagram-terminator { fill: none; stroke: #4b6273; stroke-width: 1.5; stroke-linecap: round; }
 .diagram-block { position: absolute; }
 .diagram-turn { position: absolute; left: 50%; top: 50%; }
 .diagram-name { position: absolute; transform: translateX(-50%); font: 12px/20px var(--font-ui); color: #273f50; white-space: nowrap; }

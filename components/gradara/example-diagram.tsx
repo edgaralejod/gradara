@@ -2,14 +2,16 @@
  * A static drawing of a model's top sheet: block faces from the workbench's own
  * renderer, wires along the routes the canvas draws, junction dots, and instance
  * names. Used for the example pictures on gradara.app (scripts/build-block-docs.tsx)
- * and to review generated examples (scripts/build-block-examples.ts --review).
+ * to review generated examples (scripts/build-block-examples.ts --review), and for
+ * the previews in the workbench's example browser (example-gallery.tsx).
  */
 import type { CSSProperties } from 'react';
-import { BlockPreview } from '../components/gradara/block-face';
-import { domainColors, type Domain, type Project } from '../lib/gradara/model';
-import { polylineOfWire } from '../lib/gradara/net-draw';
-import { bodyOf, labelOf } from '../lib/gradara/router';
-import { busWireIds } from '../lib/gradara/buses';
+import { BlockPreview } from './block-face';
+import { domainColors, type Domain, type Project } from '@/lib/gradara/model';
+import { polylineOfWire } from '@/lib/gradara/net-draw';
+import { bodyOf, labelOf } from '@/lib/gradara/router';
+import { busWireIds } from '@/lib/gradara/buses';
+import { portPoint } from '@/lib/gradara/ports';
 
 const PAD = 24;
 
@@ -81,6 +83,21 @@ export function ExampleDiagram({ project }: { project: Project }) {
             />
           );
         })}
+        {project.blocks.flatMap((b) =>
+          (b.terminated ?? []).map((portId) => {
+            const at = portPoint(b, portId);
+            if (!at) return null;
+            const turn = { right: 0, bottom: 90, left: 180, top: 270 }[at.side];
+            return (
+              <path
+                key={`${b.id}.${portId}`}
+                className="diagram-terminator"
+                transform={`translate(${at.x} ${at.y}) rotate(${turn})`}
+                d="M0 0H11M11 -6.5V6.5M15 -3.5V3.5"
+              />
+            );
+          }),
+        )}
         {(project.junctions ?? []).map((j) => (
           <circle
             key={j.id}

@@ -77,7 +77,7 @@ Press **?** on the canvas to see this list in the app. On Windows and Linux, use
 | Pan the canvas | Space + drag, middle or right mouse button, or trackpad |
 | Fit the model to the view | Tap Space, or F |
 | Arrange the sheet (or the selection) | ⌘/Ctrl + Shift + A |
-| Canvas menu | Right-click empty canvas |
+| Canvas menu | Right-click empty canvas or a block |
 | Make subsystem / ungroup | ⌘/Ctrl + G / ⌘/Ctrl + Shift + G |
 | Leave a subsystem | Escape (nothing selected), or ⌘/Ctrl + ↑ |
 | Diagram / Results / Explorer tab | ⌘/Ctrl + 1 / 2 / 3 |
@@ -103,7 +103,7 @@ The gear button at the top right opens **Settings**. It has four tabs:
 **Models** opens the model browser:
 
 - **My models** lists your saved models, newest first, with a search box. Each row shows the block count and, for copies of examples, which example it came from.
-- **Examples** lists the built-in examples. **Use example** saves a new copy in My models. Changing the copy never changes the example.
+- **Examples** lists the complete example systems (motor drives, converters, the EV, data-center cooling), and **Block examples** the small model for each library block, grouped by area. Select one to preview its diagram and description; search block examples by any block they use. **Use example** (or double-click, or Enter) saves a new copy in My models. Changing the copy never changes the example.
 - **Trash** holds models you removed. Use the trash icon on a row to remove a model (open a different model first if it is the one you are editing). Click a model in Trash to restore it. Trash is never emptied automatically.
 
 **Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`), Modelica source, or C code. Gradara cannot import Modelica files.
@@ -132,15 +132,15 @@ The **Equations** and **State & declarations** tabs show a block's Modelica equa
 
 **Notes.** Label parts of a diagram with notes: a heading and an optional detail line. Right-click empty canvas and choose **Add note here**, type the heading, press Tab for the detail, and press Enter. Drag a note to move it; it lands on the sheet grid. Double-click a note to edit it, or select it and press Delete to remove it. Every change can be undone. Notes belong to the top-level sheet; the notes in the built-in examples work the same way.
 
-**Block examples.** Every library block has a small runnable example that shows it at work, such as an RC circuit for the capacitor or a clutch that locks for the clutch. In a block's Help, choose **Open example**: the example opens as a new model in **My models**, with that block selected, ready to run. Each example's description says what to look for in Results. **Examples** lists them all under **Block examples**, grouped by area, and each block's page on gradara.app shows its example's diagram.
+**Block examples.** Every library block has a small runnable example that shows it at work, such as an RC circuit for the capacitor or a clutch that locks for the clutch. In a block's Help, choose **Open example**: the example opens as a new model in **My models**, with that block selected, ready to run. Each example's description says what to look for in Results. The model browser lists them all under **Block examples**, grouped by area and searchable by block name, and each block's page on gradara.app shows its example's diagram.
 
-**Scope, Display, and Terminator** are no longer in the library: Results already lists every block output, and an unconnected output is allowed. Models that contain them still open and run unchanged.
+**Scope, Display, and Terminator** are no longer in the library: Results already lists every block output, and an unconnected output is allowed. Models that contain them still open and run unchanged. To show that an output is unused on purpose, right-click its block and choose **Terminate unused outputs**: each open output gets a terminator mark, as in Simulink, with no block and no effect on the simulation. Wiring the output removes its mark; **Remove terminators** removes them all.
 
 Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it; select it and press Home to put it back. Double-click a block's name (or select it and press Enter) to rename the block in place, subsystems included: Enter or clicking away saves, Escape cancels. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
 
 ### The library
 
-The library has 218 built-in blocks in 19 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Sinks, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. Most physical, logic, and machine blocks are components of the Modelica Standard Library 4.1.0. Their parameters map directly onto the library component. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
+The library has 217 built-in blocks in 18 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. Most physical, logic, and machine blocks are components of the Modelica Standard Library 4.1.0. Their parameters map directly onto the library component. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
 
 ### Ports and connections
 
@@ -189,7 +189,7 @@ Wires route around blocks, stay clear of other wires and block names, and never 
 
 **Fit to view**: tap **Space** or **F**, or use the fit button in the canvas controls. Fit shows everything on the sheet and keeps it clear of the canvas buttons. Holding Space and dragging pans instead. A fitted view stays fitted when you open or close panels or resize the window.
 
-**Canvas menu**: right-click empty canvas. With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, help, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
+**Canvas menu**: right-click empty canvas, or a block (which selects it unless it is already part of the selection). With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, terminate unused outputs, help, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
 
 **Panels.** Drag the inner edge of the component library or the inspector to resize it, and the top edge of the Problems dock to change its height; in Results, drag the edge of the signal list. Sizes are remembered in this browser. Double-click an edge to restore that panel, or choose **Reset layout** from the canvas menu (or **View → Reset Layout** in the desktop app) to restore every panel, column width, and the dock at once.
 
@@ -337,7 +337,7 @@ Limits: flat models (no subsystems) with up to 80 blocks and up to four new bloc
 
 ## Built-in examples
 
-Open any of these from **Examples**. Each guide describes what the model shows, what to look at, and its limits. Below them, **Block examples** has a small model for every library block (see **Block examples** in [Build a diagram](#build-a-diagram)).
+Open any of these from **Examples**. Each guide describes what the model shows, what to look at, and its limits. **Block examples**, next to it in the model browser, has a small model for every library block (see **Block examples** in [Build a diagram](#build-a-diagram)).
 
 | Example | What it shows |
 | --- | --- |

@@ -1292,6 +1292,17 @@
   outline: 1px dashed #3283b7;
   outline-offset: 3px;
 }
+.port-terminator {
+  position: absolute;
+  z-index: 3;
+  overflow: visible;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  fill: none;
+  stroke: #4b6273;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
 .engineering-label .block-name-editor {
   cursor: text;
   user-select: text;
@@ -2029,9 +2040,9 @@
   color: #4b6474;
 }
 .model-browser {
-  width: min(900px, calc(100vw - 32px));
-  max-width: 900px;
-  height: min(610px, calc(100dvh - 48px));
+  width: min(1080px, calc(100vw - 32px));
+  max-width: 1080px;
+  height: min(680px, calc(100dvh - 48px));
   padding: 0;
   gap: 0;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -2054,7 +2065,7 @@
 }
 .model-browser-layout {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
+  grid-template-columns: 196px minmax(0, 1fr);
   min-height: 0;
 }
 .model-browser-nav {
@@ -2131,9 +2142,13 @@
   background: #fafcfd;
 }
 .model-browser-content {
+  flex: 1;
   overflow: auto;
   min-height: 0;
   padding: 0 20px 20px;
+}
+.model-browser-content:has(> .example-gallery) {
+  overflow: hidden;
 }
 .model-list-heading {
   display: flex;
@@ -2229,54 +2244,6 @@
 .model-browser-footer button {
   height: 29px;
   font-size: var(--text-ui);
-}
-.examples-explanation {
-  font-size: var(--text-ui);
-  line-height: 1.6;
-  color: #7a8c98;
-  margin: 3px 0 17px;
-}
-.example-file-list {
-  display: grid;
-  gap: 12px;
-}
-.example-file {
-  display: flex;
-  gap: 16px;
-  border: 1px solid #e2e9ee;
-  border-radius: 7px;
-  padding: 18px;
-  background: linear-gradient(130deg, #fff, #f9fbfc);
-}
-.example-file > .template-icon {
-  flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-}
-.example-file > div > small {
-  display: block;
-  font-size: 9px;
-  letter-spacing: 0.5px;
-  color: #899aa5;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-.example-file h3 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: #304b5e;
-}
-.example-file p {
-  font-size: var(--text-ui);
-  line-height: 1.6;
-  color: #738591;
-  margin: 7px 0 12px;
-}
-.example-file button {
-  font-size: var(--text-meta);
-  height: 29px;
-  gap: 6px;
 }
 .model-browser-error {
   margin: 0 20px 10px;

@@ -201,6 +201,8 @@ class Block(BaseModel):
     size: Size | None = None
     labelOffset: Position | None = None
     rotation: Literal[0, 90, 180, 270] | None = None
+    # Outputs left open on purpose, drawn with a terminator mark; presentation only.
+    terminated: list[str] | None = Field(default=None, max_length=100)
 
 class Wire(BaseModel):
     id: str = Field(max_length=100)

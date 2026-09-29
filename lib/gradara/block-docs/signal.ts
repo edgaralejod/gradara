@@ -702,7 +702,7 @@ export const docs: Record<string, BlockDoc> = {
 
   terminator: {
     description: [
-      'No longer in the block library. Models that already contain it still open and run. Results lists every block output, so no block is needed to see a signal; to record a particular wire, select it and choose Log signal.',
+      'No longer in the block library. Models that already contain it still open and run. To show that an output is unused on purpose, right-click its block and choose Terminate unused outputs: a terminator mark caps each open output, with no block.',
       'Caps an output you do not use, so the sheet shows it is left open on purpose. It has no effect on the simulation.',
     ],
     ports: { u: 'Signal to discard.' },

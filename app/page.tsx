@@ -83,6 +83,7 @@ import {
   PanelsTopLeft,
   Group,
   Ungroup,
+  Unplug,
   Scissors,
   Plus,
   CopyPlus,
@@ -138,6 +139,11 @@ import {
 import NumberField from '@/components/gradara/number-field';
 import NameField from '@/components/gradara/name-field';
 import Results from '@/components/gradara/results';
+import {
+  openOutputs,
+  removeTerminators,
+  terminateOpenOutputs,
+} from '@/lib/gradara/terminators';
 import ModelBrowser, {
   type BrowserSection,
 } from '@/components/gradara/model-browser';
@@ -1397,6 +1403,16 @@ function Workbench() {
       ),
     );
     const items: CanvasMenuItem[] = [];
+    const picked = projectRef.current.blocks.filter((b) =>
+      blocks.includes(b.id),
+    );
+    const canTerminate = picked.some(
+      (b) =>
+        openOutputs(projectRef.current, b).filter(
+          (id) => !b.terminated?.includes(id),
+        ).length > 0,
+    );
+    const terminated = picked.some((b) => b.terminated?.length);
     if (anything) {
       items.push(
         {
@@ -1438,6 +1454,30 @@ function Workbench() {
           run: () =>
             commit((p) => rotateBlocks(p, selectionRef.current.blockIds)),
         },
+        {
+          id: 'terminate',
+          label: 'Terminate unused outputs',
+          icon: <Unplug size={13} />,
+          disabled: !canTerminate,
+          hint: 'No unconnected outputs in the selection',
+          run: () =>
+            commit((p) =>
+              terminateOpenOutputs(p, selectionRef.current.blockIds),
+            ),
+        },
+        ...(terminated
+          ? [
+              {
+                id: 'unterminate',
+                label: 'Remove terminators',
+                icon: <Unplug size={13} />,
+                run: () =>
+                  commit((p) =>
+                    removeTerminators(p, selectionRef.current.blockIds),
+                  ),
+              },
+            ]
+          : []),
         {
           id: 'help',
           label: 'Help',
@@ -2668,8 +2708,24 @@ function Workbench() {
                 ref={canvasRef}
                 className={`canvas-wrap tool-${canvasTool}`}
                 onContextMenu={(e) => {
-                  if (!isCanvasInsertDoubleClick(e.target)) return;
+                  // Right-clicking a block acts on it: it becomes the selection unless it is already in it.
+                  const node =
+                    e.target instanceof Element
+                      ? e.target.closest<HTMLElement>(
+                          '.react-flow__node-block[data-id]',
+                        )
+                      : null;
+                  const blockId = node?.dataset.id;
+                  if (!blockId && !isCanvasInsertDoubleClick(e.target)) return;
                   e.preventDefault();
+                  if (
+                    blockId &&
+                    !selectionRef.current.blockIds.includes(blockId)
+                  ) {
+                    const only = { ...emptySelection(), blockIds: [blockId] };
+                    selectionRef.current = only;
+                    select(only);
+                  }
                   const bounds = canvasRef.current?.getBoundingClientRect();
                   setInserter(null);
                   const menu = {
@@ -3898,7 +3954,7 @@ function Workbench() {
                 ['Restore default panel sizes', 'Canvas menu → Reset layout'],
                 ['Add a note', 'Canvas menu → Add note here'],
                 ['Edit or delete a note', 'Double-click it · Delete'],
-                ['Canvas menu', 'Right-click empty space'],
+                ['Canvas menu', 'Right-click empty space or a block'],
                 [
                   'Arrange the sheet (or the selection)',
                   '⌘ / Ctrl + Shift + A',

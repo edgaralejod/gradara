@@ -44,7 +44,7 @@ import {
   type BlockExample,
 } from '../lib/gradara/block-examples';
 import type { Project } from '../lib/gradara/model';
-import { ExampleDiagram, sheetBounds } from './example-diagram';
+import { ExampleDiagram, sheetBounds } from '../components/gradara/example-diagram';
 
 const OUT = 'site/public/docs/blocks';
 const FACES_CSS = 'site/public/assets/block-faces.css';

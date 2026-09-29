@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import {
+  Blocks,
   BookOpen,
   Check,
   ChevronRight,
@@ -31,9 +32,11 @@ import { Input } from '@/components/ui/input';
 import { api } from '@/lib/gradara/api';
 import { modelTemplates, type TemplateId } from '@/lib/gradara/workspace';
 import { blockExamples } from '@/lib/gradara/block-examples';
+import { definitionFor } from '@/lib/gradara/model';
+import { ExampleGallery, type GalleryEntry } from './example-gallery';
 import type { ModelSummary } from '@/lib/gradara/document-store';
 
-export type BrowserSection = 'models' | 'examples' | 'trash';
+export type BrowserSection = 'models' | 'examples' | 'blocks' | 'trash';
 const icons = {
   blank: FilePlus2,
   dc: Gauge,
@@ -44,6 +47,46 @@ const icons = {
   servo: Crosshair,
   ev: CarFront,
 };
+/** The complete systems: the curated templates other than the blank model. */
+const showcase: GalleryEntry[] = modelTemplates
+  .filter((t) => t.id !== 'blank')
+  .map((t) => {
+    const Icon = icons[t.id];
+    return {
+      id: t.id,
+      title: t.title,
+      name: t.name,
+      summary: t.description,
+      detail: t.detail,
+      icon: (
+        <span className={`template-icon template-${t.id}`}>
+          <Icon size={16} />
+        </span>
+      ),
+    };
+  });
+
+const blockName = (kind: string) => definitionFor(kind)?.name ?? kind;
+/** One small model per block, grouped by area; the blocks it is about come first. */
+const blockGallery: GalleryEntry[] = blockExamples.map((e) => ({
+  id: `block-${e.id}` as TemplateId,
+  title: e.title,
+  name: `Example: ${e.title}`,
+  summary: e.summary,
+  group: e.area,
+  detail: e.about.map(blockName).join(' · '),
+  blocks: {
+    about: e.about.map(blockName),
+    also: e.kinds
+      .filter(
+        (k) =>
+          !e.about.includes(k) &&
+          !(k === 'subsystem' && e.about.includes('emptySubsystem')),
+      )
+      .map(blockName),
+  },
+}));
+
 const dateLabel = (date: string) => {
   const value = new Date(date);
   return value.getTime() > 0
@@ -133,19 +176,16 @@ export default function ModelBrowser({
   const filtered = (section === 'trash' ? trash : models).filter((model) =>
     model.name.toLowerCase().includes(query.toLowerCase()),
   );
-  const examples = modelTemplates.filter(
-    (item) =>
-      item.id !== 'blank' &&
-      `${item.title} ${item.description}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
+  const q = query.trim().toLowerCase();
+  const examples: GalleryEntry[] = showcase.filter((e) =>
+    `${e.title} ${e.summary} ${e.detail}`.toLowerCase().includes(q),
   );
-  const blockMatches = blockExamples.filter((item) =>
-    `${item.title} ${item.summary} ${item.area}`
+  // A block example is found by the blocks in it too: "zener" finds the clamp.
+  const blockEntries: GalleryEntry[] = blockGallery.filter((e) =>
+    `${e.title} ${e.summary} ${e.group} ${[...e.blocks!.about, ...e.blocks!.also].join(' ')}`
       .toLowerCase()
-      .includes(query.toLowerCase()),
+      .includes(q),
   );
-  const blockAreas = [...new Set(blockMatches.map((e) => e.area))];
   return (
     <Dialog
       open
@@ -187,12 +227,19 @@ export default function ModelBrowser({
             >
               <BookOpen size={17} />
               Examples
-              <span>
-                {
-                  modelTemplates.filter((template) => template.id !== 'blank')
-                    .length
-                }
-              </span>
+              <span>{showcase.length}</span>
+            </button>
+            <button
+              disabled={!!busy}
+              aria-current={section === 'blocks' ? 'page' : undefined}
+              onClick={() => {
+                setSection('blocks');
+                setQuery('');
+              }}
+            >
+              <Blocks size={17} />
+              Block examples
+              <span>{blockGallery.length}</span>
             </button>
             <button
               disabled={!!busy}
@@ -222,7 +269,9 @@ export default function ModelBrowser({
                 ? 'My models'
                 : section === 'trash'
                   ? 'Trash'
-                  : 'Examples'
+                  : section === 'blocks'
+                    ? 'Block examples'
+                    : 'Examples'
             }
           >
             <div className="model-browser-tools">
@@ -237,7 +286,9 @@ export default function ModelBrowser({
                       ? 'Search your models…'
                       : section === 'trash'
                         ? 'Search trash…'
-                        : 'Search examples…'
+                        : section === 'blocks'
+                          ? 'Search by example or block name…'
+                          : 'Search examples…'
                   }
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -270,7 +321,7 @@ export default function ModelBrowser({
               </div>
             )}
             <div className="model-browser-content">
-              {section !== 'examples' ? (
+              {section !== 'examples' && section !== 'blocks' ? (
                 <>
                   <div className="model-list-heading">
                     <span>Name</span>
@@ -368,99 +419,15 @@ export default function ModelBrowser({
                   )}
                 </>
               ) : (
-                <>
-                  <p className="examples-explanation">
-                    Examples are starting points. Using one creates a separate
-                    model in <strong>My models</strong>.
-                  </p>
-                  <div className="example-file-list">
-                    {examples.map((item) => {
-                      const Icon = icons[item.id];
-                      return (
-                        <article key={item.id} className="example-file">
-                          <span className={`template-icon template-${item.id}`}>
-                            <Icon size={24} />
-                          </span>
-                          <div>
-                            <small>{item.detail}</small>
-                            <h3>{item.title}</h3>
-                            <p>{item.description}</p>
-                            <Button
-                              variant="outline"
-                              disabled={!!busy}
-                              onClick={() =>
-                                void perform(item.id, () =>
-                                  onCreate(item.name, item.id),
-                                )
-                              }
-                            >
-                              {busy === item.id ? (
-                                <LoaderCircle className="spin" size={14} />
-                              ) : (
-                                <Copy size={14} />
-                              )}
-                              Use example
-                            </Button>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                  {blockMatches.length > 0 && (
-                    <div className="block-example-index">
-                      <h3>Block examples</h3>
-                      <p className="examples-explanation">
-                        Small models that show each library block at work. A
-                        block's Help opens the one about it.
-                      </p>
-                      {blockAreas.map((area) => (
-                        <section key={area}>
-                          <h4>{area}</h4>
-                          <ul>
-                            {blockMatches
-                              .filter((e) => e.area === area)
-                              .map((item) => {
-                                const id = `block-${item.id}` as TemplateId;
-                                return (
-                                  <li key={item.id}>
-                                    <div>
-                                      <strong>{item.title}</strong>
-                                      <span>{item.summary}</span>
-                                    </div>
-                                    <Button
-                                      variant="outline"
-                                      disabled={!!busy}
-                                      onClick={() =>
-                                        void perform(id, () =>
-                                          onCreate(
-                                            `Example: ${item.title}`,
-                                            id,
-                                          ),
-                                        )
-                                      }
-                                    >
-                                      {busy === id ? (
-                                        <LoaderCircle
-                                          className="spin"
-                                          size={14}
-                                        />
-                                      ) : (
-                                        <Copy size={14} />
-                                      )}
-                                      Use
-                                    </Button>
-                                  </li>
-                                );
-                              })}
-                          </ul>
-                        </section>
-                      ))}
-                    </div>
-                  )}
-                  {!examples.length && !blockMatches.length && (
-                    <p className="model-list-empty">No matching examples.</p>
-                  )}
-                </>
+                <ExampleGallery
+                  key={section}
+                  entries={section === 'blocks' ? blockEntries : examples}
+                  busy={busy}
+                  empty="No matching examples."
+                  onUse={(entry) =>
+                    void perform(entry.id, () => onCreate(entry.name, entry.id))
+                  }
+                />
               )}
             </div>
           </section>
@@ -471,7 +438,9 @@ export default function ModelBrowser({
               ? 'Autosaved locally · Click the model title to rename'
               : section === 'trash'
                 ? 'Click a model to restore it · Nothing here is permanently deleted'
-                : 'Built-in examples · Original files stay unchanged'}
+                : section === 'blocks'
+                  ? 'One small runnable model per block · A block’s Help opens its example'
+                  : 'Complete systems to start from · Original files stay unchanged'}
           </span>
           <Button variant="outline" disabled={!!busy} onClick={onClose}>
             Close

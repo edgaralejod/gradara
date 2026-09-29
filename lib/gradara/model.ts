@@ -71,7 +71,6 @@ export type LibraryCategoryId =
   | 'routing'
   | 'subsystems'
   | 'control'
-  | 'sinks'
   | 'electrical'
   | 'semiconductors'
   | 'converters'
@@ -160,6 +159,11 @@ export type Block = {
   rotation?: 0 | 90 | 180 | 270;
   /** Canvas offset from the centered label below the block; never part of simulation. */
   labelOffset?: { x: number; y: number };
+  /**
+   * Output ports left unconnected on purpose, drawn with a terminator mark as in
+   * Simulink. Presentation only; a wire to the port removes the mark (terminators.ts).
+   */
+  terminated?: string[];
 };
 export type Wire = {
   id: string;

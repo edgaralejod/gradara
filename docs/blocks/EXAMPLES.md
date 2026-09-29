@@ -1,6 +1,6 @@
 # Block examples
 
-Every library block has a small runnable model that shows it at work. A block's Help opens it (**Open example**), **Examples** lists them under **Block examples**, and each block's page on gradara.app shows its diagram. They double as tests: each one is simulated in CI and must produce the results its spec states, and each one must be drawn in house style.
+Every library block has a small runnable model that shows it at work. A block's Help opens it (**Open example**), the model browser lists them under **Block examples** with a preview of each, and each block's page on gradara.app shows its diagram. They double as tests: each one is simulated in CI and must produce the results its spec states, and each one must be drawn in house style.
 
 ## Where they live
 
@@ -10,7 +10,7 @@ Every library block has a small runnable model that shows it at work. A block's 
 | Builder | `scripts/build-block-examples.tsx` (`npm run examples:blocks`) |
 | Built models and manifest | `models/examples/blocks/<id>.json`, `models/examples/blocks/index.json` |
 | Lookup for the workbench | `lib/gradara/block-examples.ts` (`exampleForKind`) |
-| Diagram drawing (site pages and review) | `scripts/example-diagram.tsx` |
+| Diagram drawing (example browser, site pages, review) | `components/gradara/example-diagram.tsx` |
 | House-style test | `tests/block-examples.test.ts` |
 | Simulation test | `tests/test_block_examples.py` (integration) |
 

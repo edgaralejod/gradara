@@ -31,7 +31,7 @@ import {
 import { syncInstances } from '../lib/gradara/hierarchy';
 import { linkEnds } from '../lib/gradara/project';
 import { examples, type ExampleSpec } from './block-examples';
-import { ExampleDiagram } from './example-diagram';
+import { ExampleDiagram } from '../components/gradara/example-diagram';
 
 const OUT = 'models/examples/blocks';
 const check = process.argv.includes('--check');

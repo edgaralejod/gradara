@@ -132,3 +132,15 @@ def test_bus_results_through_a_subsystem():
     assert series['sensors.y[3]']['name'] == 'Sensors.bus.current'
     assert abs(series['scale.y']['values'][-1] - 2) < 1e-6  # 0.5 × speed 4
     assert abs(series['unpack.speed_out']['values'][-1] - 4) < 1e-6
+
+
+def test_terminator_marks_are_kept_and_do_not_change_the_model():
+    doc = example('mux-demux')
+    before = Project.model_validate(doc)
+    demux = next(b for b in doc['blocks'] if b['id'] == 'demux')
+    demux['terminated'] = ['y3']
+    after = Project.model_validate(doc)
+    assert next(b for b in after.blocks if b.id == 'demux').terminated == ['y3']
+    from server.modelica import project_key, semantic_hash
+    assert project_key(after) == project_key(before)
+    assert semantic_hash(after) == semantic_hash(before)
