@@ -29,7 +29,7 @@ jobs:
           persist-credentials: false
       - name: Check the site files
         run: |
-          for f in index.html privacy.html terms.html 404.html assets/site.css assets/site.js; do
+          for f in index.html privacy.html terms.html 404.html assets/site.css assets/site.js docs/blocks/index.html; do
             test -s "site/public/$f" || { echo "missing site/public/$f"; exit 1; }
           done
       - name: Deploy key not configured

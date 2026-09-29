@@ -3,7 +3,7 @@
     "public": "public",
     "cleanUrls": true,
     "trailingSlash": false,
-    "ignore": ["firebase.json", "**/.*"],
+    "ignore": ["firebase.json", "**/.DS_Store", "**/.git*"],
     "headers": [
       {
         "source": "**",

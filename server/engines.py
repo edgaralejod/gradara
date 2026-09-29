@@ -84,6 +84,8 @@ class DockerBackend:
 
     def forget(self) -> None:
         self._probe = None
+        # The runtime may have changed (OrbStack started, Colima profile created).
+        docker_context.cache_clear()
 
     async def _image_present(self, tag: str) -> bool:
         try:

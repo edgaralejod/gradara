@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PMSM (MSL) · Gradara</title>
+<meta name="description" content="Three-phase permanent-magnet synchronous machine with damper cage.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/pmSyncMachine">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Machines</p>
+<h1>PMSM (MSL)</h1>
+<p class="lede">Three-phase permanent-magnet synchronous machine with damper cage.</p>
+<h2>Description</h2>
+<p>A three-phase permanent-magnet synchronous machine with a damper cage on the rotor, from the Modelica library. The magnets give a fixed rotor flux; torque comes from the stator current in quadrature with it.</p>
+<p>The back EMF is fixed at 112.3 V RMS per phase at fsNominal. Inductances are fixed as reactances at fsNominal, so changing fsNominal rescales them and the magnet flux.</p>
+<h2>Ports</h2>
+
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>abc</strong> <code>plug_sp</code></td><td><span class="port-domain domain--phase">3-phase</span></td><td>Stator phase terminals a, b, c. Current into plug_sp is counted as positive.</td></tr>
+<tr><td><strong>n</strong> <code>plug_sn</code></td><td><span class="port-domain domain--phase">3-phase</span></td><td>Stator winding ends. Connect them to a Star point for a star connection.</td></tr>
+<tr><td><strong>shaft</strong> <code>flange</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Shaft, rotational, carrying the rotor inertia Jr. The stator is fixed to ground internally.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Pole pairs</strong> <code>p</code></td><td class="nowrap">2<br><span class="range">≥ 1</span></td><td>Number of pole pairs, an integer ≥ 1. Synchronous speed is 2π · f / p.</td></tr>
+<tr><td><strong>Nominal frequency</strong> <code>fsNominal</code></td><td class="nowrap">50 Hz<br><span class="range">≥ 0</span></td><td>Nominal frequency, in hertz. The open-circuit voltage 112.3 V RMS is reached at this frequency.</td></tr>
+<tr><td><strong>Stator resistance</strong> <code>Rs</code></td><td class="nowrap">0.03 Ω<br><span class="range">≥ 0</span></td><td>Stator resistance per phase, in ohms.</td></tr>
+<tr><td><strong>Rotor inertia</strong> <code>Jr</code></td><td class="nowrap">0.29 kg·m²<br><span class="range">≥ 0</span></td><td>Rotor moment of inertia, in kg·m².</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">ψPM = √2 · 112.3 V / (2π · fsNominal) (peak, rotor d axis)
+vs = Rs · is + Lsσ · dis/dt + dψm/dt (stator space phasors)
+ψm,d = Lmd · (is,d + ir,d) + ψPM, ψm,q = Lmq · (is,q + ir,q)
+τe = (3/2) · p · (ψm,α · is,β − ψm,β · is,α) = (3/2) · p · ψPM · is,q in steady state
+Lmd = Lmq = 0.3 Ω / (2π · fsNominal), Lsσ = 0.1 Ω / (2π · fsNominal)</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Electrical.Machines.BasicMachines.SynchronousMachines.SM_PermanentMagnet</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_Machines_BasicMachines_SynchronousMachines.html#Modelica.Electrical.Machines.BasicMachines.SynchronousMachines.SM_PermanentMagnet" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>Surface-magnet rotor (Lmd = Lmq), so there is no reluctance torque.</li><li>Linear magnetics: no saturation, no demagnetization, no cogging.</li><li>No iron, magnet, friction, or stray-load losses. Temperatures are fixed at 20 °C.</li><li>The damper cage (0.04 Ω per axis) is always present. It damps transients but is not found in most inverter-fed PM machines.</li></ul>
+<h2>Tips</h2>
+<ul><li>Drive it from an inverter with field-oriented control, taking the rotor angle from Electrical angle sensor or Resolver.</li><li>For a simpler PMSM with directly entered dq parameters, see PMSM.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="pmsm.html">PMSM</a> <a href="threePhaseInverter.html">Inverter (3-phase)</a> <a href="hallSensor.html">Electrical angle sensor</a> <a href="resolver.html">Resolver</a> <a href="park.html">Park transform</a> <a href="inductionMachine.html">Induction machine</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

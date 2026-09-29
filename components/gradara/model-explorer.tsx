@@ -520,8 +520,8 @@ function ParametersView({
           />
           <input
             value={replace}
-            placeholder="Replace with"
-            aria-label="Replace with"
+            placeholder="Replace"
+            aria-label="Replace"
             inputMode="decimal"
             onChange={(e) => setReplace(e.target.value)}
             onKeyDown={(e) => e.stopPropagation()}

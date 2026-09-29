@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backlash · Gradara</title>
+<meta name="description" content="Spring and damper in series with a free play of b.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/rotBacklash">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Rotational</p>
+<h1>Backlash</h1>
+<p class="lede">Spring and damper in series with a free play of b.</p>
+<h2>Description</h2>
+<p>A free play of b in series with a parallel spring and damper. Within the play no torque is transmitted; outside it the flanges are in contact through the spring and damper. Combine it with Ideal gear to model a gearbox with backlash.</p>
+<p>The contact torque only pushes: it is set to zero when the damper would pull the flanges together, and the damping torque is limited to the spring torque, so the torque is continuous at the start of contact.</p>
+<h2>Ports</h2>
+
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>a</strong> <code>flange_a</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Flange a. Receives −τ.</td></tr>
+<tr><td><strong>b</strong> <code>flange_b</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Flange b. Receives τ, the contact torque.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Total backlash</strong> <code>b</code></td><td class="nowrap">0.01 rad<br><span class="range">≥ 0</span></td><td>Total backlash (full width of the free play), in radians. The play spans ±b/2 around zero relative angle.</td></tr>
+<tr><td><strong>Stiffness</strong> <code>c</code></td><td class="nowrap">100000 N·m/rad<br><span class="range">≥ 0</span></td><td>Contact stiffness, in N·m/rad. Must be greater than zero.</td></tr>
+<tr><td><strong>Damping</strong> <code>d</code></td><td class="nowrap">10 N·m·s/rad<br><span class="range">≥ 0</span></td><td>Contact damping, in N·m·s/rad. Zero or positive.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">φ_rel = flange_b.phi − flange_a.phi, ω_rel = dφ_rel/dt
+|φ_rel| ≤ b/2: τ = 0
+φ_rel &gt; b/2: τ_c = c · (φ_rel − b/2), τ = τ_c + min(τ_c, d · ω_rel), or 0 if τ_c + d · ω_rel ≤ 0
+φ_rel &lt; −b/2: τ_c = c · (φ_rel + b/2), τ = τ_c + max(τ_c, d · ω_rel), or 0 if τ_c + d · ω_rel ≥ 0
+flange_b.tau = τ, flange_a.tau = −τ</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Mechanics.Rotational.Components.ElastoBacklash</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Mechanics_Rotational_Components.html#Modelica.Mechanics.Rotational.Components.ElastoBacklash" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>If b is below 1e-10 rad the play is ignored and the block is a plain spring and damper.</li><li>During initialization the play is replaced by a linear characteristic of slope c/3 for |φ_rel| &lt; 1.5 · b/2, so the initial state may differ slightly from the true contact state.</li><li>Each contact change is a solver event; very small b with oscillating loads makes the run slow.</li></ul>
+
+
+<h2>See also</h2>
+<p class="see-also"><a href="idealGear.html">Ideal gear</a> <a href="rotSpring.html">Torsion spring</a> <a href="springDamper.html">Spring-damper</a> <a href="hardStop.html">Hard stop</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

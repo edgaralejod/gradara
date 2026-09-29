@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On-off controller · Gradara</title>
+<meta name="description" content="True while the measurement is below the reference minus half the bandwidth; false above plus half.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/onOffController">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Logic</p>
+<h1>On-off controller</h1>
+<p class="lede">True while the measurement is below the reference minus half the bandwidth; false above plus half.</p>
+<h2>Description</h2>
+<p>A bang-bang controller with a band around a reference. The output turns true when the measurement falls below reference − bandwidth/2 and turns false when it reaches reference + bandwidth/2. Inside the band it keeps its previous value.</p>
+<p>The output starts false. Use it for heaters, pumps, and other on/off actuators.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>ref</strong> <code>reference</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Setpoint.</td></tr>
+<tr><td><strong>meas</strong> <code>u</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Measured value, in the same units as the reference.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>y</strong></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Actuator command: true means on.</td></tr>
+</tbody></table>
+
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Bandwidth</strong> <code>bandwidth</code></td><td class="nowrap">0.1<br><span class="range">≥ 0</span></td><td>Total width of the band around the reference, 0 or more. 0 gives a plain comparison, u &lt; reference.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">y = (y⁻ ∧ u &lt; reference + bandwidth/2) ∨ (u &lt; reference − bandwidth/2)
+y⁻ is the value just before the current event; y⁻ = false at t = 0.</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Blocks.Logical.OnOffController</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Blocks_Logical.html#Modelica.Blocks.Logical.OnOffController" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>The output is true when the measurement is low, so it suits heating-type actuators. For cooling, invert it with NOT.</li></ul>
+<h2>Tips</h2>
+<ul><li>Convert the output with Boolean to real to drive a Real-valued actuator.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="boolHysteresis.html">Hysteresis</a> <a href="relay.html">Relay</a> <a href="logicNot.html">NOT</a> <a href="booleanToReal.html">Boolean to real</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

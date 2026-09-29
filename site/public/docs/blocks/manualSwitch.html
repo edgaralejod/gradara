@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual switch · Gradara</title>
+<meta name="description" content="Pick an input with a parameter. 1 uses the top input.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/manualSwitch">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Routing</p>
+<h1>Manual switch</h1>
+<p class="lede">Pick an input with a parameter. 1 uses the top input.</p>
+<h2>Description</h2>
+<p>Passes one of two inputs chosen by a parameter. Use it to try alternatives between runs without rewiring.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>1</strong> <code>u1</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Input 1, passed when Select is 1.</td></tr>
+<tr><td><strong>2</strong> <code>u2</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Input 2, passed when Select is 2.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>y</strong></td><td><span class="port-domain domain-signal">signal</span></td><td>Output signal.</td></tr>
+</tbody></table>
+
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Select 1 or 2</strong> <code>sel</code></td><td class="nowrap">1<br><span class="range">≥ 1</span></td><td>Which input to pass: 1 or 2. Values below 1.5 select input 1; 1.5 and above select input 2.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">y = u2 if sel ≥ 1.5
+y = u1 otherwise</pre>
+<h2>Implementation</h2>
+<p>The block’s Modelica equations:</p>
+<pre class="block-source">y = if sel &gt;= 1.5 then u2 else u1;</pre>
+<h2>Assumptions and limitations</h2>
+<ul><li>The choice is fixed during a run. To switch during a run, use Switch.</li></ul>
+<h2>Tips</h2>
+<ul><li>Both inputs must still be connected: an unconnected input is an error even when it is not selected.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="switch2.html">Switch</a> <a href="logicSwitch.html">Switch (logic)</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

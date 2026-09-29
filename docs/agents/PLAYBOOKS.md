@@ -14,6 +14,7 @@ Handoff: changed behavior, evidence, limitations, and follow-up work.
 ```
 
 Do not include credentials or an entire personal workspace. Inspect the current code and its tests before deciding which contract needs to change.
+
 ## Wiring or selection fix
 
 Read the [wiring contract](../architecture/WIRING.md), [browser acceptance checks](../development/TESTING.md), and [model format](../architecture/MODEL_FORMAT.md). Trace pointer ownership from canvas/net components into `net-session.ts`, `net-draw.ts`, or `net-edit.ts`, then the immutable project operation and normalization. Keep route geometry distinct from logical net identity.
@@ -54,4 +55,4 @@ For documentation, link to existing source contracts and remove stale claims ins
 
 Report the resulting behavior, changed contracts, checks actually run, and known limitations. Include browser evidence for interaction changes and numerical evidence for physics changes. Leave a narrow follow-up task when work exceeds the agreed scope. Do not claim a clean build, tested platform, or solved physics unless you have that evidence.
 
-Put that handoff in the GitHub PR or the session reply. Git commit and merge messages stay short: a subject and a few sentences, with no PR template, HTML, checklists, or agent UI. See [AGENTS.md](../../AGENTS.md) for the pull-request rule.
+Put that handoff in the GitHub PR description. Git commit and merge messages stay short: a subject and a few sentences, with no PR template, HTML, checklists, or agent UI. See [AGENTS.md](../../AGENTS.md) for the pull-request rule.

@@ -3,6 +3,22 @@ import { bodyOf, labelOf, routeSheet } from './router';
 
 export type Bounds = { x: number; y: number; width: number; height: number };
 
+/** A note's footprint: a heading, then one line per detail line, in the diagram type sizes. */
+export function noteRect(a: {
+  x: number;
+  y: number;
+  text: string;
+  detail?: string;
+}): Bounds {
+  const lines = a.detail ? a.detail.split('\n') : [];
+  return {
+    x: a.x,
+    y: a.y,
+    width: Math.max(a.text.length * 10, ...lines.map((l) => l.length * 8)),
+    height: 24 + lines.length * 18,
+  };
+}
+
 /**
  * Everything drawn on a sheet: block bodies and names, every wire as routed (a feedback
  * loop can run well outside the blocks), junction dots, and section notes. Fit to view
@@ -29,14 +45,10 @@ export function sheetBounds(project: Project): Bounds | undefined {
     for (const p of points) add(p.x, p.y);
   for (const j of project.junctions ?? [])
     add(j.position.x - 5, j.position.y - 5, 10, 10);
-  // A note is a heading and a detail line in the diagram type sizes.
-  for (const a of project.annotations ?? [])
-    add(
-      a.x,
-      a.y,
-      Math.max(a.text.length * 10, (a.detail?.length ?? 0) * 8),
-      a.detail ? 48 : 24,
-    );
+  for (const a of project.annotations ?? []) {
+    const r = noteRect(a);
+    add(r.x, r.y, r.width, r.height);
+  }
   if (!Number.isFinite(x0)) return undefined;
   return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
 }

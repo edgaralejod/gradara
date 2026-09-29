@@ -90,6 +90,7 @@ jobs:
         run: |
           npm run desktop:web
           python packaging/build_backend.py
+          python packaging/third_party_licenses.py
       - name: Smoke-test the bundled service
         shell: bash
         run: python packaging/smoke_backend.py

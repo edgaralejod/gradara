@@ -347,8 +347,8 @@
         "y": 336
       },
       "size": {
-        "width": 40,
-        "height": 40
+        "width": 48,
+        "height": 48
       }
     }
   ],
@@ -457,7 +457,7 @@
       "id": "dc_return",
       "domain": "electrical",
       "position": {
-        "x": 604,
+        "x": 608,
         "y": 320
       }
     }

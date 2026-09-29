@@ -4,7 +4,8 @@ import type { Block, Definition, Port, Project } from './model';
 import { endpointPoint, isTap } from './net';
 import { portPoint, portSide, positionForPortAt } from './ports';
 
-export const GRID = 20;
+import { GRID } from './grid';
+export { GRID };
 export const STAGE_GAP = 56;
 export const ALIGN_SNAP = 16;
 
@@ -188,8 +189,18 @@ export function snapDraggedBlockPosition(
   position: Block['position'],
   movingIds: string[] = [],
 ) {
+  return dragSnap(project, id, position, movingIds).position;
+}
+
+/** The dragged position, and which axes a connected wire's line decided. */
+export function dragSnap(
+  project: Project,
+  id: string,
+  position: Block['position'],
+  movingIds: string[] = [],
+) {
   const original = project.blocks.find((b) => b.id === id);
-  if (!original) return position;
+  if (!original) return { position, wire: {} };
   const block = { ...original, position };
   const snapped = snapBlockPosition(position, blockSize(block));
   const moving = new Set(movingIds);
@@ -202,5 +213,8 @@ export function snapDraggedBlockPosition(
   const shift = alignmentShift(external, block);
   if (shift.y !== undefined) snapped.y = position.y + shift.y;
   if (shift.x !== undefined) snapped.x = position.x + shift.x;
-  return snapped;
+  return {
+    position: snapped,
+    wire: { x: shift.x !== undefined, y: shift.y !== undefined },
+  };
 }

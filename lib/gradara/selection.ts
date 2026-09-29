@@ -279,13 +279,24 @@ export function layoutSelection(
     );
   const laidOut = applyLayout(project, updates);
   const ids = updates.map((l) => l.id);
+  // A moved block is pulled onto nearby wire rows; a resized one stays where the
+  // pointer left it, since its edges are what the user placed.
+  const moved = updates
+    .filter((l) => {
+      const b = project.blocks.find((b) => b.id === l.id)!;
+      return (
+        blockSize(b).width === l.size.width &&
+        blockSize(b).height === l.size.height
+      );
+    })
+    .map((l) => l.id);
   // Pinned wires keep their shape where they can; the sheet router draws the rest.
   return settleRoutes(
     carryLeads(
       project,
       followJunctionsForLayout(
         project,
-        snap ? snapMovedBlocks(laidOut, ids) : laidOut,
+        snap ? snapMovedBlocks(laidOut, moved) : laidOut,
       ),
       ids,
     ),

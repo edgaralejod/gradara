@@ -94,7 +94,7 @@
         "equations": "y = max(lower, min(upper, u));"
       },
       "position": {
-        "x": 220,
+        "x": 224,
         "y": 120
       },
       "size": {
@@ -206,7 +206,7 @@
         }
       },
       "position": {
-        "x": 1100,
+        "x": 1104,
         "y": 120
       },
       "size": {
@@ -261,7 +261,7 @@
         }
       },
       "position": {
-        "x": 1300,
+        "x": 1304,
         "y": 120
       },
       "size": {
@@ -309,8 +309,8 @@
         }
       },
       "position": {
-        "x": 1316,
-        "y": 300
+        "x": 1320,
+        "y": 304
       },
       "size": {
         "width": 80,
@@ -352,8 +352,8 @@
         }
       },
       "position": {
-        "x": 1100,
-        "y": 300
+        "x": 1104,
+        "y": 304
       },
       "size": {
         "width": 128,
@@ -361,7 +361,7 @@
       }
     },
     {
-      "id": "b_6094638ba0",
+      "id": "b_3990ab050c",
       "definition": {
         "kind": "subsystem",
         "name": "Powertrain",
@@ -370,14 +370,14 @@
         "symbol": "Powertrain",
         "ports": [
           {
-            "id": "p_a6d3307198",
+            "id": "p_37fcd38f45",
             "name": "duty",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "p_f3c715c228",
+            "id": "p_3541d1800e",
             "name": "shaft",
             "direction": "physical",
             "domain": "mechanical",
@@ -388,20 +388,20 @@
         "equations": "",
         "category": "routing",
         "subsystem": {
-          "ref": "sub_43fbabf6ac"
+          "ref": "sub_a09e2dc61b"
         }
       },
       "size": {
-        "width": 128,
+        "width": 192,
         "height": 96
       },
       "position": {
-        "x": 660,
+        "x": 656,
         "y": 104
       }
     },
     {
-      "id": "b_e8a4cd96a8",
+      "id": "b_ecb7fd7e3c",
       "definition": {
         "kind": "subsystem",
         "name": "Vehicle control",
@@ -410,21 +410,21 @@
         "symbol": "Vehicle control",
         "ports": [
           {
-            "id": "p_89eced1c23",
+            "id": "p_2ebb40e09c",
             "name": "v ref",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "p_9b88ade7a7",
+            "id": "p_577fec0a7f",
             "name": "v",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "p_9b3406cb9d",
+            "id": "p_9220e535ac",
             "name": "duty",
             "direction": "output",
             "domain": "signal",
@@ -435,102 +435,102 @@
         "equations": "",
         "category": "routing",
         "subsystem": {
-          "ref": "sub_be502a6306"
+          "ref": "sub_e39f8d82da"
         }
       },
       "size": {
-        "width": 128,
+        "width": 192,
         "height": 96
       },
       "position": {
-        "x": 420,
+        "x": 416,
         "y": 104
       }
     }
   ],
   "wires": [
     {
-      "id": "8d963eb1-75c6-4add-9432-982d571be87e",
+      "id": "b342e76a-96e4-4936-b065-f605d36f463d",
       "source": "request",
       "sourceHandle": "y",
       "target": "cruise",
       "targetHandle": "u"
     },
     {
-      "id": "94be8356-217e-4ce4-9f72-1969ae34700f",
+      "id": "a778c5cb-c660-4031-bb67-2c67a0674a46",
       "source": "cruise",
       "sourceHandle": "y",
-      "target": "b_e8a4cd96a8",
-      "targetHandle": "p_89eced1c23"
+      "target": "b_ecb7fd7e3c",
+      "targetHandle": "p_2ebb40e09c"
     },
     {
-      "id": "cc98029f-70a5-478f-8191-a1dfb89b53c2",
+      "id": "aea2cfd2-ec72-4c4e-a27e-83842d5e71b8",
       "source": "speed",
       "sourceHandle": "v",
-      "target": "b_e8a4cd96a8",
-      "targetHandle": "p_9b88ade7a7"
+      "target": "b_ecb7fd7e3c",
+      "targetHandle": "p_577fec0a7f"
     },
     {
-      "id": "dab21800-b1aa-4bef-9431-2986c791a027",
-      "source": "b_e8a4cd96a8",
-      "sourceHandle": "p_9b3406cb9d",
-      "target": "b_6094638ba0",
-      "targetHandle": "p_a6d3307198"
+      "id": "328b1434-0e96-465d-8d71-4e25f51beccf",
+      "source": "b_ecb7fd7e3c",
+      "sourceHandle": "p_9220e535ac",
+      "target": "b_3990ab050c",
+      "targetHandle": "p_37fcd38f45"
     },
     {
-      "id": "4db9f68a-8809-413d-a9e1-4d5739334467",
-      "source": "b_6094638ba0",
-      "sourceHandle": "p_f3c715c228",
+      "id": "b9169f83-adf1-4403-b23a-88bc0e93ba03",
+      "source": "b_3990ab050c",
+      "sourceHandle": "p_3541d1800e",
       "target": "wheel",
       "targetHandle": "flangeR"
     },
     {
-      "id": "c9e4afc3-4caa-4e29-b7df-2c8621626c58",
+      "id": "7baba4ec-7d55-4c53-9e9d-8041ff244f2d",
       "source": "wheel",
       "sourceHandle": "flangeT",
-      "target": "j_23142b0711484d3fb400eec05c3ca1ca",
+      "target": "j_178cf17feda44a24b589327fec489425",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "0162cb66-1a25-4607-b96f-616323fece48",
-      "source": "j_23142b0711484d3fb400eec05c3ca1ca",
+      "id": "232fead9-720c-45f3-91d3-0182321a3604",
+      "source": "j_178cf17feda44a24b589327fec489425",
       "sourceHandle": "node",
       "target": "speed",
       "targetHandle": "flange",
       "waypoints": [
         {
           "x": 1080,
-          "y": 348
+          "y": 352
         }
       ]
     },
     {
-      "id": "70555035-e1be-4806-9f22-24910fa3602b",
+      "id": "bf3239c2-b6f9-48ca-a867-ecf9f5d49ba7",
       "source": "car",
       "sourceHandle": "flange_b",
       "target": "drag",
       "targetHandle": "flange_a"
     },
     {
-      "id": "227a27cd-fcb3-4b91-822c-1d3ef92a5ccc",
+      "id": "827e1000-8e7b-4fcd-b9c3-3e7996b5e2f7",
       "source": "drag",
       "sourceHandle": "flange_b",
       "target": "road",
       "targetHandle": "flange"
     },
     {
-      "id": "w_ccd1197d424349beb09d941935e78476",
+      "id": "w_595ed0c743ad489ea747f147c2a509ab",
       "source": "car",
       "sourceHandle": "flange_a",
-      "target": "j_23142b0711484d3fb400eec05c3ca1ca",
+      "target": "j_178cf17feda44a24b589327fec489425",
       "targetHandle": "node",
       "waypoints": []
     }
   ],
   "junctions": [
     {
-      "id": "j_23142b0711484d3fb400eec05c3ca1ca",
+      "id": "j_178cf17feda44a24b589327fec489425",
       "domain": "translational",
       "position": {
         "x": 1080,
@@ -540,69 +540,69 @@
   ],
   "nets": [
     {
-      "id": "net_9f7be9f33f954b8e849b25d57d728d36",
+      "id": "net_011754aaa13846e48e21967243b1156f",
       "anchor": "request.y",
       "wireIds": [
-        "8d963eb1-75c6-4add-9432-982d571be87e"
+        "b342e76a-96e4-4936-b065-f605d36f463d"
       ],
       "hidden": true
     },
     {
-      "id": "net_3726f15dce1244318897ddf3729a8b8a",
+      "id": "net_67b38446dae743898763c33082d7063f",
       "anchor": "cruise.y",
       "wireIds": [
-        "94be8356-217e-4ce4-9f72-1969ae34700f"
+        "a778c5cb-c660-4031-bb67-2c67a0674a46"
       ],
       "hidden": true
     },
     {
-      "id": "net_1ee534eb3489445f83eb512371bc6a11",
+      "id": "net_ef52acb4d8354e8ab8e8700dbd99c69b",
       "anchor": "speed.v",
       "wireIds": [
-        "cc98029f-70a5-478f-8191-a1dfb89b53c2"
+        "aea2cfd2-ec72-4c4e-a27e-83842d5e71b8"
       ],
       "name": "v vehicle",
       "logged": true
     },
     {
-      "id": "net_40fb2d23eef04cc985357911fc96383b",
-      "anchor": "b_e8a4cd96a8.p_9b3406cb9d",
+      "id": "net_fb56dc0a09a54cf382dba3fe9754cfd1",
+      "anchor": "b_ecb7fd7e3c.p_9220e535ac",
       "wireIds": [
-        "dab21800-b1aa-4bef-9431-2986c791a027"
+        "328b1434-0e96-465d-8d71-4e25f51beccf"
       ],
       "hidden": true
     },
     {
-      "id": "net_3e6f93e4fdfe4426b57a68a344756cf1",
-      "anchor": "b_6094638ba0.p_f3c715c228",
+      "id": "net_99b9fae3be354f56a44c945ab4d6c1af",
+      "anchor": "b_3990ab050c.p_3541d1800e",
       "wireIds": [
-        "4db9f68a-8809-413d-a9e1-4d5739334467"
+        "b9169f83-adf1-4403-b23a-88bc0e93ba03"
       ],
       "hidden": true
     },
     {
-      "id": "net_f95f2f74ee6e418b9b2e016a29e4fdbb",
+      "id": "net_ae7483f1a439490880df8a0e9fe20c1a",
       "anchor": "car.flange_a",
       "wireIds": [
-        "0162cb66-1a25-4607-b96f-616323fece48",
-        "c9e4afc3-4caa-4e29-b7df-2c8621626c58",
-        "w_ccd1197d424349beb09d941935e78476"
+        "232fead9-720c-45f3-91d3-0182321a3604",
+        "7baba4ec-7d55-4c53-9e9d-8041ff244f2d",
+        "w_595ed0c743ad489ea747f147c2a509ab"
       ],
       "hidden": true
     },
     {
-      "id": "net_1b6a5116c1074424b7a597072fb5955f",
+      "id": "net_708424aa1c1d4708ab0babeafc05b65d",
       "anchor": "car.flange_b",
       "wireIds": [
-        "70555035-e1be-4806-9f22-24910fa3602b"
+        "bf3239c2-b6f9-48ca-a867-ecf9f5d49ba7"
       ],
       "hidden": true
     },
     {
-      "id": "net_367166d8c6bf4ed69ff8e98e2068fcdd",
+      "id": "net_5c4c99df65344f288da07b85e62b16bf",
       "anchor": "drag.flange_b",
       "wireIds": [
-        "227a27cd-fcb3-4b91-822c-1d3ef92a5ccc"
+        "827e1000-8e7b-4fcd-b9c3-3e7996b5e2f7"
       ],
       "hidden": true
     }
@@ -622,10 +622,10 @@
       ]
     }
   ],
-  "modelId": "510e6664-0194-4b01-89ec-9a8e5b28081f",
+  "modelId": "6b10691f-0674-4ef1-9164-7e3c47835e97",
   "subsystems": [
     {
-      "id": "sub_19524c9994",
+      "id": "sub_b003e17140",
       "name": "Converter",
       "blocks": [
         {
@@ -771,11 +771,11 @@
           },
           "position": {
             "x": 760,
-            "y": 168
+            "y": 160
           },
           "size": {
             "width": 80,
-            "height": 64
+            "height": 80
           }
         },
         {
@@ -921,11 +921,11 @@
           },
           "position": {
             "x": 392,
-            "y": 168
+            "y": 160
           },
           "size": {
             "width": 80,
-            "height": 64
+            "height": 80
           }
         },
         {
@@ -953,55 +953,22 @@
             "y": 408
           },
           "size": {
-            "width": 40,
-            "height": 40
+            "width": 48,
+            "height": 48
           }
         },
         {
-          "id": "p_5bc8194567",
+          "id": "p_5d5a2fc2d2",
           "definition": {
             "kind": "connport",
             "name": "dc+",
             "description": "Physical electrical terminal of the subsystem.",
             "domain": "electrical",
-            "symbol": "⊙",
+            "symbol": "1",
             "ports": [
               {
                 "id": "p",
                 "name": "dc+",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "right"
-              }
-            ],
-            "parameters": [],
-            "equations": "",
-            "category": "routing",
-            "boundary": {
-              "order": 0
-            }
-          },
-          "position": {
-            "x": 40,
-            "y": 48
-          },
-          "size": {
-            "width": 80,
-            "height": 32
-          }
-        },
-        {
-          "id": "p_99330b60ca",
-          "definition": {
-            "kind": "connport",
-            "name": "dc−",
-            "description": "Physical electrical terminal of the subsystem.",
-            "domain": "electrical",
-            "symbol": "⊙",
-            "ports": [
-              {
-                "id": "p",
-                "name": "dc−",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
@@ -1016,6 +983,39 @@
           },
           "position": {
             "x": 40,
+            "y": 48
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_3a9ead5b2a",
+          "definition": {
+            "kind": "connport",
+            "name": "dc−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "2",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 40,
             "y": 328
           },
           "size": {
@@ -1024,13 +1024,13 @@
           }
         },
         {
-          "id": "p_f23b6cde46",
+          "id": "p_d00e9deda0",
           "definition": {
             "kind": "inport",
             "name": "duty",
             "description": "Subsystem input.",
             "domain": "signal",
-            "symbol": "3",
+            "symbol": "1",
             "ports": [
               {
                 "id": "y",
@@ -1044,7 +1044,7 @@
             "equations": "",
             "category": "routing",
             "boundary": {
-              "order": 2
+              "order": 0
             }
           },
           "position": {
@@ -1052,18 +1052,18 @@
             "y": 456
           },
           "size": {
-            "width": 88,
+            "width": 96,
             "height": 32
           }
         },
         {
-          "id": "p_1a1fce0995",
+          "id": "p_ef2787e930",
           "definition": {
             "kind": "connport",
             "name": "out+",
             "description": "Physical electrical terminal of the subsystem.",
             "domain": "electrical",
-            "symbol": "⊙",
+            "symbol": "3",
             "ports": [
               {
                 "id": "p",
@@ -1083,21 +1083,21 @@
           },
           "position": {
             "x": 1080,
-            "y": 48
+            "y": 40
           },
           "size": {
-            "width": 88,
+            "width": 96,
             "height": 32
           }
         },
         {
-          "id": "p_27f08547f0",
+          "id": "p_3bed75762f",
           "definition": {
             "kind": "connport",
             "name": "out−",
             "description": "Physical electrical terminal of the subsystem.",
             "domain": "electrical",
-            "symbol": "⊙",
+            "symbol": "4",
             "ports": [
               {
                 "id": "p",
@@ -1119,17 +1119,17 @@
             "y": 328
           },
           "size": {
-            "width": 88,
+            "width": 96,
             "height": 32
           }
         }
       ],
       "wires": [
         {
-          "id": "21254b70-9d50-4749-b84d-8f7cdc98eade",
-          "source": "p_5bc8194567",
+          "id": "81f8965f-20bc-4310-b1e5-9d5a38598a27",
+          "source": "p_5d5a2fc2d2",
           "sourceHandle": "p",
-          "target": "j_76717e7e03e34d628d2d9c645b7a7aa5",
+          "target": "j_c27ffe8af3594bd1be32b6acb482ecad",
           "targetHandle": "node",
           "waypoints": [
             {
@@ -1139,23 +1139,23 @@
           ]
         },
         {
-          "id": "ca561550-b7b5-4f2e-8ad7-7313cc665b7d",
-          "source": "j_76717e7e03e34d628d2d9c645b7a7aa5",
+          "id": "a47d5ce3-92a1-4838-922d-4b4a6f78033c",
+          "source": "j_c27ffe8af3594bd1be32b6acb482ecad",
           "sourceHandle": "node",
           "target": "sink",
           "targetHandle": "p",
           "waypoints": [
             {
               "x": 432,
-              "y": 148
+              "y": 152
             }
           ]
         },
         {
-          "id": "7776389b-0edb-40da-947a-6b96ff8a8d91",
-          "source": "p_99330b60ca",
+          "id": "2dc1a4ea-6f1f-4acb-af0e-0ecdf9c18862",
+          "source": "p_3a9ead5b2a",
           "sourceHandle": "p",
-          "target": "j_eaa677f65e7a47539a6527045fe77970",
+          "target": "j_656e2cce5baf4bc9ba09a86d1b720e93",
           "targetHandle": "node",
           "waypoints": [
             {
@@ -1165,34 +1165,34 @@
           ]
         },
         {
-          "id": "5419c4a9-50d5-4009-9cc1-847df9faa61f",
-          "source": "j_eaa677f65e7a47539a6527045fe77970",
+          "id": "d02e0a58-2ff7-4901-965a-df6e88ab0dbe",
+          "source": "j_656e2cce5baf4bc9ba09a86d1b720e93",
           "sourceHandle": "node",
           "target": "sink",
           "targetHandle": "n",
           "waypoints": [
             {
               "x": 432,
-              "y": 268
+              "y": 280
             }
           ]
         },
         {
-          "id": "baa758c4-d88e-4a45-9352-b7c2024a64e5",
-          "source": "j_c890e93e45f34b5880e00fa7075f3d62",
+          "id": "e88027d7-dcac-47ab-a736-0189181d23a6",
+          "source": "j_0280c0c816a04bc3a1466aad69e6070b",
           "sourceHandle": "node",
           "target": "draw",
           "targetHandle": "a",
           "waypoints": [
             {
-              "x": 172,
+              "x": 176,
               "y": 552
             }
           ]
         },
         {
-          "id": "b96fc4c1-67a9-4d6b-aefd-4383f3b9b109",
-          "source": "j_c890e93e45f34b5880e00fa7075f3d62",
+          "id": "3640eee2-7c70-41ff-b4f2-89b0d33bb73d",
+          "source": "j_0280c0c816a04bc3a1466aad69e6070b",
           "sourceHandle": "node",
           "target": "scale",
           "targetHandle": "a",
@@ -1208,52 +1208,52 @@
           ]
         },
         {
-          "id": "821c35ee-2366-4e4a-875a-8f81a5ba227a",
+          "id": "fad74640-2af5-45d5-bf2c-cb240c068fed",
           "source": "vdc",
           "sourceHandle": "y",
           "target": "scale",
           "targetHandle": "b"
         },
         {
-          "id": "f85c1b02-4f2d-421b-aa57-a56c22eea995",
+          "id": "8b29e478-8233-4176-83f2-7eeed937e12e",
           "source": "scale",
           "sourceHandle": "y",
           "target": "source",
           "targetHandle": "v"
         },
         {
-          "id": "5c5fb118-a18a-459b-b75c-a3c5b816e49b",
+          "id": "85b76eb9-5a98-4d43-990b-ae404d5cdfac",
           "source": "iout",
           "sourceHandle": "y",
           "target": "draw",
           "targetHandle": "b"
         },
         {
-          "id": "3df734ff-a0a3-4a5f-9936-584a47db1ee5",
+          "id": "7dbe8b8c-1dfc-442e-b97b-a2d002d52560",
           "source": "draw",
           "sourceHandle": "y",
           "target": "sink",
           "targetHandle": "i"
         },
         {
-          "id": "91f292f6-4df5-4d19-9e09-c112ddcee026",
+          "id": "14df44f7-314b-4753-adca-24c3a09450b3",
           "source": "source",
           "sourceHandle": "p",
           "target": "iout",
           "targetHandle": "p"
         },
         {
-          "id": "4cc79812-a791-4aa9-8d52-7f38ff10345d",
+          "id": "e01a0dc3-b160-4a57-9a59-7ea512d1d1b0",
           "source": "iout",
           "sourceHandle": "n",
-          "target": "p_1a1fce0995",
+          "target": "p_ef2787e930",
           "targetHandle": "p"
         },
         {
-          "id": "565643df-bc5d-4ffe-b1d2-2c4dca23512e",
+          "id": "916ee0b9-47fd-404e-b8d8-1974cd44ed24",
           "source": "source",
           "sourceHandle": "n",
-          "target": "j_ddb146599e414a908ae37818d5b05845",
+          "target": "j_7fa248e7ae75454383314216a8bd009a",
           "targetHandle": "node",
           "waypoints": [
             {
@@ -1261,188 +1261,188 @@
               "y": 320
             },
             {
-              "x": 796,
+              "x": 800,
               "y": 320
             }
           ]
         },
         {
-          "id": "398535bb-c616-4190-b499-271d142a474a",
-          "source": "j_ddb146599e414a908ae37818d5b05845",
+          "id": "ba190790-37ce-49ad-ade8-bd5d1faf1d82",
+          "source": "j_7fa248e7ae75454383314216a8bd009a",
           "sourceHandle": "node",
-          "target": "p_27f08547f0",
+          "target": "p_3bed75762f",
           "targetHandle": "p",
           "waypoints": [
             {
-              "x": 1188,
-              "y": 388
+              "x": 1192,
+              "y": 392
             },
             {
-              "x": 1188,
+              "x": 1192,
               "y": 344
             }
           ]
         },
         {
-          "id": "w_941f88716d9147b386776ce8dd8963ce",
+          "id": "w_4a064c5a4d1d4df5842b55a283af1f64",
           "source": "vdc",
           "sourceHandle": "p",
-          "target": "j_76717e7e03e34d628d2d9c645b7a7aa5",
+          "target": "j_c27ffe8af3594bd1be32b6acb482ecad",
           "targetHandle": "node",
           "waypoints": []
         },
         {
-          "id": "w_c8eb8297756a43ba886e017c6926e805",
+          "id": "w_f970105c35254c929a184e0cd248a25d",
           "source": "vdc",
           "sourceHandle": "n",
-          "target": "j_eaa677f65e7a47539a6527045fe77970",
+          "target": "j_656e2cce5baf4bc9ba09a86d1b720e93",
           "targetHandle": "node",
           "waypoints": []
         },
         {
-          "id": "w_f7a1a3491ca44a868d3897f041483b70",
-          "source": "p_f23b6cde46",
+          "id": "w_13608f28598b4c95b1d7de79799b7853",
+          "source": "p_d00e9deda0",
           "sourceHandle": "y",
-          "target": "j_c890e93e45f34b5880e00fa7075f3d62",
+          "target": "j_0280c0c816a04bc3a1466aad69e6070b",
           "targetHandle": "node",
           "waypoints": []
         },
         {
-          "id": "w_426da9f016374b50b653b36efe828112",
+          "id": "w_bef05a5ec7414b85b9a1aa3f76dc2b17",
           "source": "outGround",
           "sourceHandle": "p",
-          "target": "j_ddb146599e414a908ae37818d5b05845",
+          "target": "j_7fa248e7ae75454383314216a8bd009a",
           "targetHandle": "node",
           "waypoints": []
         }
       ],
       "junctions": [
         {
-          "id": "j_76717e7e03e34d628d2d9c645b7a7aa5",
+          "id": "j_c27ffe8af3594bd1be32b6acb482ecad",
           "domain": "electrical",
           "position": {
             "x": 240,
-            "y": 148
+            "y": 152
           }
         },
         {
-          "id": "j_eaa677f65e7a47539a6527045fe77970",
+          "id": "j_656e2cce5baf4bc9ba09a86d1b720e93",
           "domain": "electrical",
           "position": {
             "x": 240,
-            "y": 268
+            "y": 280
           }
         },
         {
-          "id": "j_c890e93e45f34b5880e00fa7075f3d62",
+          "id": "j_0280c0c816a04bc3a1466aad69e6070b",
           "domain": "signal",
           "position": {
-            "x": 172,
+            "x": 176,
             "y": 472
           }
         },
         {
-          "id": "j_ddb146599e414a908ae37818d5b05845",
+          "id": "j_7fa248e7ae75454383314216a8bd009a",
           "domain": "electrical",
           "position": {
-            "x": 796,
-            "y": 388
+            "x": 800,
+            "y": 392
           }
         }
       ],
       "nets": [
         {
-          "id": "net_77088edc67bc49efafde5ec1a439e8d5",
-          "anchor": "p_5bc8194567.p",
+          "id": "net_97d9dd8ba3d84d34908ce2f42826106a",
+          "anchor": "p_5d5a2fc2d2.p",
           "wireIds": [
-            "21254b70-9d50-4749-b84d-8f7cdc98eade",
-            "ca561550-b7b5-4f2e-8ad7-7313cc665b7d",
-            "w_941f88716d9147b386776ce8dd8963ce"
+            "81f8965f-20bc-4310-b1e5-9d5a38598a27",
+            "a47d5ce3-92a1-4838-922d-4b4a6f78033c",
+            "w_4a064c5a4d1d4df5842b55a283af1f64"
           ],
           "hidden": true
         },
         {
-          "id": "net_9340b49ca5fa4cae884e04cfcbfc997b",
-          "anchor": "p_99330b60ca.p",
+          "id": "net_684938d49e9f46429200c4f751ef31a7",
+          "anchor": "p_3a9ead5b2a.p",
           "wireIds": [
-            "5419c4a9-50d5-4009-9cc1-847df9faa61f",
-            "7776389b-0edb-40da-947a-6b96ff8a8d91",
-            "w_c8eb8297756a43ba886e017c6926e805"
+            "2dc1a4ea-6f1f-4acb-af0e-0ecdf9c18862",
+            "d02e0a58-2ff7-4901-965a-df6e88ab0dbe",
+            "w_f970105c35254c929a184e0cd248a25d"
           ],
           "hidden": true
         },
         {
-          "id": "net_cbfa0c238a714d4d990185c8137e16c4",
-          "anchor": "p_f23b6cde46.y",
+          "id": "net_c81b581be939439b88fd1a5a3ee504c9",
+          "anchor": "p_d00e9deda0.y",
           "wireIds": [
-            "b96fc4c1-67a9-4d6b-aefd-4383f3b9b109",
-            "baa758c4-d88e-4a45-9352-b7c2024a64e5",
-            "w_f7a1a3491ca44a868d3897f041483b70"
+            "3640eee2-7c70-41ff-b4f2-89b0d33bb73d",
+            "e88027d7-dcac-47ab-a736-0189181d23a6",
+            "w_13608f28598b4c95b1d7de79799b7853"
           ],
           "hidden": true
         },
         {
-          "id": "net_3c202e1f6a31493b890c37981aaa416b",
+          "id": "net_9c958de8d05d4871952962034fb383c6",
           "anchor": "vdc.y",
           "wireIds": [
-            "821c35ee-2366-4e4a-875a-8f81a5ba227a"
+            "fad74640-2af5-45d5-bf2c-cb240c068fed"
           ],
           "hidden": true
         },
         {
-          "id": "net_d91c16b3d44a4fdca914ea282b73ec3b",
+          "id": "net_ce9fc32cf3b343078c98840ed35ebbd9",
           "anchor": "scale.y",
           "wireIds": [
-            "f85c1b02-4f2d-421b-aa57-a56c22eea995"
+            "8b29e478-8233-4176-83f2-7eeed937e12e"
           ],
           "hidden": true
         },
         {
-          "id": "net_e043c406ec304bc1ad34c286ad0e1de3",
+          "id": "net_42f82788d900442499173d19da0a5758",
           "anchor": "iout.y",
           "wireIds": [
-            "5c5fb118-a18a-459b-b75c-a3c5b816e49b"
+            "85b76eb9-5a98-4d43-990b-ae404d5cdfac"
           ],
           "hidden": true
         },
         {
-          "id": "net_26e71f569f964f37ab8da7e6a402dc54",
+          "id": "net_5dbf21b5b1304603b8ccb9fbf7c16296",
           "anchor": "draw.y",
           "wireIds": [
-            "3df734ff-a0a3-4a5f-9936-584a47db1ee5"
+            "7dbe8b8c-1dfc-442e-b97b-a2d002d52560"
           ],
           "hidden": true
         },
         {
-          "id": "net_6d4a11de52794f01a57e619777158781",
+          "id": "net_8aa772544eec49c3a1e15d5a40cada62",
           "anchor": "iout.p",
           "wireIds": [
-            "91f292f6-4df5-4d19-9e09-c112ddcee026"
+            "14df44f7-314b-4753-adca-24c3a09450b3"
           ],
           "hidden": true
         },
         {
-          "id": "net_73b95bf38dd04212a8fb03aee4891367",
+          "id": "net_43be722a796943058c0506fb4a2bb567",
           "anchor": "iout.n",
           "wireIds": [
-            "4cc79812-a791-4aa9-8d52-7f38ff10345d"
+            "e01a0dc3-b160-4a57-9a59-7ea512d1d1b0"
           ],
           "hidden": true
         },
         {
-          "id": "net_4df94716f8ff4df6b929c66b9d7744fa",
+          "id": "net_e1f5d252a23a4854b45c6303ddf1d037",
           "anchor": "outGround.p",
           "wireIds": [
-            "398535bb-c616-4190-b499-271d142a474a",
-            "565643df-bc5d-4ffe-b1d2-2c4dca23512e",
-            "w_426da9f016374b50b653b36efe828112"
+            "916ee0b9-47fd-404e-b8d8-1974cd44ed24",
+            "ba190790-37ce-49ad-ade8-bd5d1faf1d82",
+            "w_bef05a5ec7414b85b9a1aa3f76dc2b17"
           ],
           "hidden": true
         }
       ]
     },
     {
-      "id": "sub_e4cb9dd538",
+      "id": "sub_784cfe6937",
       "name": "Motor drive",
       "blocks": [
         {
@@ -1552,7 +1552,7 @@
           }
         },
         {
-          "id": "b_7138b154bc",
+          "id": "b_357e3911cb",
           "definition": {
             "kind": "subsystem",
             "name": "Converter",
@@ -1561,35 +1561,35 @@
             "symbol": "Converter",
             "ports": [
               {
-                "id": "p_5bc8194567",
-                "name": "dc+",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "left"
-              },
-              {
-                "id": "p_99330b60ca",
-                "name": "dc−",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "left"
-              },
-              {
-                "id": "p_f23b6cde46",
+                "id": "p_d00e9deda0",
                 "name": "duty",
                 "direction": "input",
                 "domain": "signal",
                 "side": "left"
               },
               {
-                "id": "p_1a1fce0995",
+                "id": "p_5d5a2fc2d2",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_3a9ead5b2a",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_ef2787e930",
                 "name": "out+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
               },
               {
-                "id": "p_27f08547f0",
+                "id": "p_3bed75762f",
                 "name": "out−",
                 "direction": "physical",
                 "domain": "electrical",
@@ -1600,12 +1600,12 @@
             "equations": "",
             "category": "routing",
             "subsystem": {
-              "ref": "sub_19524c9994"
+              "ref": "sub_b003e17140"
             }
           },
           "size": {
-            "width": 128,
-            "height": 120
+            "width": 176,
+            "height": 128
           },
           "position": {
             "x": 240,
@@ -1613,50 +1613,17 @@
           }
         },
         {
-          "id": "p_ca38b366fe",
+          "id": "p_7be922340d",
           "definition": {
             "kind": "connport",
             "name": "dc+",
             "description": "Physical electrical terminal of the subsystem.",
             "domain": "electrical",
-            "symbol": "⊙",
+            "symbol": "1",
             "ports": [
               {
                 "id": "p",
                 "name": "dc+",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "right"
-              }
-            ],
-            "parameters": [],
-            "equations": "",
-            "category": "routing",
-            "boundary": {
-              "order": 0
-            }
-          },
-          "position": {
-            "x": 40,
-            "y": 96
-          },
-          "size": {
-            "width": 80,
-            "height": 32
-          }
-        },
-        {
-          "id": "p_57241ddf31",
-          "definition": {
-            "kind": "connport",
-            "name": "dc−",
-            "description": "Physical electrical terminal of the subsystem.",
-            "domain": "electrical",
-            "symbol": "⊙",
-            "ports": [
-              {
-                "id": "p",
-                "name": "dc−",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
@@ -1671,7 +1638,7 @@
           },
           "position": {
             "x": 40,
-            "y": 168
+            "y": 96
           },
           "size": {
             "width": 80,
@@ -1679,13 +1646,13 @@
           }
         },
         {
-          "id": "p_8cf7b35ef6",
+          "id": "p_088830a758",
           "definition": {
             "kind": "inport",
             "name": "duty",
             "description": "Subsystem input.",
             "domain": "signal",
-            "symbol": "3",
+            "symbol": "1",
             "ports": [
               {
                 "id": "y",
@@ -1699,7 +1666,7 @@
             "equations": "",
             "category": "routing",
             "boundary": {
-              "order": 2
+              "order": 0
             }
           },
           "position": {
@@ -1707,18 +1674,18 @@
             "y": 240
           },
           "size": {
-            "width": 88,
+            "width": 96,
             "height": 32
           }
         },
         {
-          "id": "p_2e7bef55d4",
+          "id": "p_e25ca9158d",
           "definition": {
             "kind": "connport",
             "name": "shaft",
             "description": "Physical mechanical terminal of the subsystem.",
             "domain": "mechanical",
-            "symbol": "⊙",
+            "symbol": "2",
             "ports": [
               {
                 "id": "p",
@@ -1732,7 +1699,7 @@
             "equations": "",
             "category": "routing",
             "boundary": {
-              "order": 3,
+              "order": 2,
               "side": "right"
             }
           },
@@ -1744,106 +1711,139 @@
             "width": 96,
             "height": 32
           }
+        },
+        {
+          "id": "p_07595188e7",
+          "definition": {
+            "kind": "connport",
+            "name": "dc−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "3",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 3
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
         }
       ],
       "wires": [
         {
-          "id": "bc8c2949-4a4e-4273-be93-7a77774ca3cc",
-          "source": "p_ca38b366fe",
+          "id": "b00a9437-1459-4261-8e08-38c0c63c31c2",
+          "source": "p_7be922340d",
           "sourceHandle": "p",
-          "target": "b_7138b154bc",
-          "targetHandle": "p_5bc8194567"
+          "target": "b_357e3911cb",
+          "targetHandle": "p_5d5a2fc2d2"
         },
         {
-          "id": "de3c9a99-8968-403a-8e67-31f84204a657",
-          "source": "p_57241ddf31",
-          "sourceHandle": "p",
-          "target": "b_7138b154bc",
-          "targetHandle": "p_99330b60ca"
-        },
-        {
-          "id": "ae21924f-4add-4d15-9645-a395f298e9f8",
-          "source": "p_8cf7b35ef6",
+          "id": "e3e82b64-1b14-4adb-9c85-268c0b6aa6f8",
+          "source": "p_088830a758",
           "sourceHandle": "y",
-          "target": "b_7138b154bc",
-          "targetHandle": "p_f23b6cde46"
+          "target": "b_357e3911cb",
+          "targetHandle": "p_d00e9deda0"
         },
         {
-          "id": "976557b5-55ae-4984-91f9-e701f1d349da",
-          "source": "b_7138b154bc",
-          "sourceHandle": "p_1a1fce0995",
+          "id": "4ee59417-3bf5-4419-90ce-f7cc3e7fafbb",
+          "source": "b_357e3911cb",
+          "sourceHandle": "p_ef2787e930",
           "target": "machine",
           "targetHandle": "pin_ap"
         },
         {
-          "id": "fc02690b-6db5-499a-a59c-35d0272e4bd4",
-          "source": "b_7138b154bc",
-          "sourceHandle": "p_27f08547f0",
+          "id": "e6881d86-342e-46c5-8ccb-01bdf1f3d83e",
+          "source": "b_357e3911cb",
+          "sourceHandle": "p_3bed75762f",
           "target": "machine",
           "targetHandle": "pin_an"
         },
         {
-          "id": "04978d57-24cf-4e99-8305-b2b777d0487f",
+          "id": "150e9172-f674-46bc-862f-2a42ccf4d634",
           "source": "machine",
           "sourceHandle": "flange",
-          "target": "p_2e7bef55d4",
+          "target": "p_e25ca9158d",
           "targetHandle": "p"
+        },
+        {
+          "id": "d35cb9f5-9a65-4fae-bc55-92cbf33cde4f",
+          "source": "p_07595188e7",
+          "sourceHandle": "p",
+          "target": "b_357e3911cb",
+          "targetHandle": "p_3a9ead5b2a"
         }
       ],
       "junctions": [],
       "nets": [
         {
-          "id": "net_5097e924439c4301b0b0cd701e4ae07c",
-          "anchor": "b_7138b154bc.p_5bc8194567",
+          "id": "net_a7d5b253e20e4c9b947e79a9c0eea7b4",
+          "anchor": "b_357e3911cb.p_5d5a2fc2d2",
           "wireIds": [
-            "bc8c2949-4a4e-4273-be93-7a77774ca3cc"
+            "b00a9437-1459-4261-8e08-38c0c63c31c2"
           ],
           "hidden": true
         },
         {
-          "id": "net_3a4d1d7ae6324157a7b5e529cf6ccb98",
-          "anchor": "b_7138b154bc.p_99330b60ca",
+          "id": "net_942aa7ea55274ce3860cebb1d859ac90",
+          "anchor": "p_088830a758.y",
           "wireIds": [
-            "de3c9a99-8968-403a-8e67-31f84204a657"
+            "e3e82b64-1b14-4adb-9c85-268c0b6aa6f8"
           ],
           "hidden": true
         },
         {
-          "id": "net_175ef44a685e488086e78fab88936dbe",
-          "anchor": "p_8cf7b35ef6.y",
+          "id": "net_caeb648b08914003b12e8b62814b9be5",
+          "anchor": "b_357e3911cb.p_ef2787e930",
           "wireIds": [
-            "ae21924f-4add-4d15-9645-a395f298e9f8"
+            "4ee59417-3bf5-4419-90ce-f7cc3e7fafbb"
           ],
           "hidden": true
         },
         {
-          "id": "net_11368b81158d4734acd0192a561cd751",
-          "anchor": "b_7138b154bc.p_1a1fce0995",
+          "id": "net_7c578a828ae1404ca778d45a48a98cdb",
+          "anchor": "b_357e3911cb.p_3bed75762f",
           "wireIds": [
-            "976557b5-55ae-4984-91f9-e701f1d349da"
+            "e6881d86-342e-46c5-8ccb-01bdf1f3d83e"
           ],
           "hidden": true
         },
         {
-          "id": "net_f52675d3c22f4ef5a459ce29e1c191c6",
-          "anchor": "b_7138b154bc.p_27f08547f0",
-          "wireIds": [
-            "fc02690b-6db5-499a-a59c-35d0272e4bd4"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_7469cfa9a54f45b59bebba4e4d38dd6a",
+          "id": "net_57fdaa39a4d644bd853f5337c215d840",
           "anchor": "machine.flange",
           "wireIds": [
-            "04978d57-24cf-4e99-8305-b2b777d0487f"
+            "150e9172-f674-46bc-862f-2a42ccf4d634"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_faa1b83f4c454b1399448b0e3a03ef4f",
+          "anchor": "b_357e3911cb.p_3a9ead5b2a",
+          "wireIds": [
+            "d35cb9f5-9a65-4fae-bc55-92cbf33cde4f"
           ],
           "hidden": true
         }
       ]
     },
     {
-      "id": "sub_cc9f1056f8",
+      "id": "sub_3d6d7bb65b",
       "name": "Battery pack",
       "blocks": [
         {
@@ -1937,11 +1937,11 @@
           },
           "position": {
             "x": 120,
-            "y": 96
+            "y": 88
           },
           "size": {
             "width": 80,
-            "height": 64
+            "height": 80
           }
         },
         {
@@ -1969,18 +1969,18 @@
             "y": 280
           },
           "size": {
-            "width": 40,
-            "height": 40
+            "width": 48,
+            "height": 48
           }
         },
         {
-          "id": "p_ed30cc26fb",
+          "id": "p_e9444ef8ed",
           "definition": {
             "kind": "connport",
             "name": "−",
             "description": "Physical electrical terminal of the subsystem.",
             "domain": "electrical",
-            "symbol": "⊙",
+            "symbol": "2",
             "ports": [
               {
                 "id": "p",
@@ -2008,13 +2008,13 @@
           }
         },
         {
-          "id": "p_d315ecef9b",
+          "id": "p_5113f3af0c",
           "definition": {
             "kind": "connport",
             "name": "+",
             "description": "Physical electrical terminal of the subsystem.",
             "domain": "electrical",
-            "symbol": "⊙",
+            "symbol": "1",
             "ports": [
               {
                 "id": "p",
@@ -2044,72 +2044,72 @@
       ],
       "wires": [
         {
-          "id": "911b3f70-6c90-4e01-833b-301f9da110cd",
+          "id": "5d7f3e30-84ab-4cf9-9460-3df22df9c055",
           "source": "cells",
           "sourceHandle": "n",
-          "target": "j_bb572a05b0a34a97a2bbf260a034956f",
+          "target": "j_a7af3dbd3099421c9f0338b3f4956d46",
           "targetHandle": "node",
           "waypoints": [
             {
               "x": 160,
-              "y": 220
+              "y": 224
             },
             {
-              "x": 156,
-              "y": 220
+              "x": 160,
+              "y": 224
             }
           ]
         },
         {
-          "id": "a23bea5c-c646-4372-9903-c786aeb2c50e",
-          "source": "j_bb572a05b0a34a97a2bbf260a034956f",
+          "id": "9fa3968b-32ea-4ad3-82c5-6336b150c760",
+          "source": "j_a7af3dbd3099421c9f0338b3f4956d46",
           "sourceHandle": "node",
-          "target": "p_ed30cc26fb",
+          "target": "p_e9444ef8ed",
           "targetHandle": "p",
           "waypoints": []
         },
         {
-          "id": "47bdeaa6-1346-4eba-9064-16e6e3f7f379",
+          "id": "d62aa148-8f42-46ee-ab02-a5600db76288",
           "source": "cells",
           "sourceHandle": "p",
-          "target": "p_d315ecef9b",
+          "target": "p_5113f3af0c",
           "targetHandle": "p"
         },
         {
-          "id": "w_f5b2a16fdc034efcab0fac87e5d47b76",
+          "id": "w_739df9e8388440f8996fdbd9f2bc9f34",
           "source": "packGround",
           "sourceHandle": "p",
-          "target": "j_bb572a05b0a34a97a2bbf260a034956f",
+          "target": "j_a7af3dbd3099421c9f0338b3f4956d46",
           "targetHandle": "node",
           "waypoints": []
         }
       ],
       "junctions": [
         {
-          "id": "j_bb572a05b0a34a97a2bbf260a034956f",
+          "id": "j_a7af3dbd3099421c9f0338b3f4956d46",
           "domain": "electrical",
           "position": {
-            "x": 156,
+            "x": 160,
             "y": 224
           }
         }
       ],
       "nets": [
         {
-          "id": "net_c7895b7c3ce14f8da94cf6850932875b",
+          "id": "net_f6c218974684488ea1ee01ab359b2064",
           "anchor": "cells.n",
           "wireIds": [
-            "911b3f70-6c90-4e01-833b-301f9da110cd",
-            "a23bea5c-c646-4372-9903-c786aeb2c50e",
-            "w_f5b2a16fdc034efcab0fac87e5d47b76"
+            "5d7f3e30-84ab-4cf9-9460-3df22df9c055",
+            "9fa3968b-32ea-4ad3-82c5-6336b150c760",
+            "w_739df9e8388440f8996fdbd9f2bc9f34"
           ],
           "hidden": true
         },
         {
-          "id": "net_84ac552b2c1944eeabf0d33d6890337d",
+          "id": "net_d5a9623ea1b9476c9bcc10298f0cdc43",
           "anchor": "cells.p",
           "wireIds": [
-            "47bdeaa6-1346-4eba-9064-16e6e3f7f379"
+            "d62aa148-8f42-46ee-ab02-a5600db76288"
           ],
           "hidden": true
         }
@@ -2183,7 +2183,7 @@
       ]
     },
     {
-      "id": "sub_43fbabf6ac",
+      "id": "sub_a09e2dc61b",
       "name": "Powertrain",
       "blocks": [
         {
@@ -2242,7 +2242,7 @@
           }
         },
         {
-          "id": "b_73fc5c6aa8",
+          "id": "b_9be0fe2d2b",
           "definition": {
             "kind": "subsystem",
             "name": "Motor drive",
@@ -2251,58 +2251,58 @@
             "symbol": "Motor drive Simple DC mo",
             "ports": [
               {
-                "id": "p_ca38b366fe",
-                "name": "dc+",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "left"
-              },
-              {
-                "id": "p_57241ddf31",
-                "name": "dc−",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "left"
-              },
-              {
-                "id": "p_8cf7b35ef6",
+                "id": "p_088830a758",
                 "name": "duty",
                 "direction": "input",
                 "domain": "signal",
                 "side": "left"
               },
               {
-                "id": "p_2e7bef55d4",
+                "id": "p_7be922340d",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_e25ca9158d",
                 "name": "shaft",
                 "direction": "physical",
                 "domain": "mechanical",
                 "side": "right"
+              },
+              {
+                "id": "p_07595188e7",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
               }
             ],
             "parameters": [],
             "equations": "",
             "category": "routing",
             "subsystem": {
-              "ref": "sub_2dfa56e429",
+              "ref": "sub_f38bfbe14f",
               "variants": [
                 {
-                  "id": "v_5b0621f417",
+                  "id": "v_4f99798303",
                   "name": "PM DC machine",
-                  "ref": "sub_e4cb9dd538",
+                  "ref": "sub_784cfe6937",
                   "values": {}
                 },
                 {
-                  "id": "v_b213cb1ddd",
+                  "id": "v_9a78f247e9",
                   "name": "Simple DC motor",
-                  "ref": "sub_2dfa56e429",
+                  "ref": "sub_f38bfbe14f",
                   "values": {}
                 }
               ],
-              "active": "v_b213cb1ddd"
+              "active": "v_9a78f247e9"
             }
           },
           "size": {
-            "width": 128,
+            "width": 192,
             "height": 96
           },
           "position": {
@@ -2311,7 +2311,7 @@
           }
         },
         {
-          "id": "b_29f6421f31",
+          "id": "b_51a387930e",
           "definition": {
             "kind": "subsystem",
             "name": "Battery pack",
@@ -2320,14 +2320,14 @@
             "symbol": "Battery pack",
             "ports": [
               {
-                "id": "p_d315ecef9b",
+                "id": "p_5113f3af0c",
                 "name": "+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
               },
               {
-                "id": "p_ed30cc26fb",
+                "id": "p_e9444ef8ed",
                 "name": "−",
                 "direction": "physical",
                 "domain": "electrical",
@@ -2374,12 +2374,12 @@
             "equations": "",
             "category": "routing",
             "subsystem": {
-              "ref": "sub_cc9f1056f8",
+              "ref": "sub_3d6d7bb65b",
               "variants": [
                 {
-                  "id": "v_512b8dfb37",
+                  "id": "v_9fe4780976",
                   "name": "LFP",
-                  "ref": "sub_cc9f1056f8",
+                  "ref": "sub_3d6d7bb65b",
                   "values": {
                     "Cells_Ns": 34,
                     "Cells_Q": 40,
@@ -2389,9 +2389,9 @@
                   }
                 },
                 {
-                  "id": "v_c0c75f5316",
+                  "id": "v_6c778fcce1",
                   "name": "NMC",
-                  "ref": "sub_cc9f1056f8",
+                  "ref": "sub_3d6d7bb65b",
                   "values": {
                     "Cells_Ns": 28,
                     "Cells_Q": 40,
@@ -2401,20 +2401,20 @@
                   }
                 }
               ],
-              "active": "v_c0c75f5316"
+              "active": "v_6c778fcce1"
             }
           },
           "size": {
-            "width": 128,
+            "width": 160,
             "height": 96
           },
           "position": {
             "x": 40,
-            "y": 104
+            "y": 112
           }
         },
         {
-          "id": "p_a6d3307198",
+          "id": "p_37fcd38f45",
           "definition": {
             "kind": "inport",
             "name": "duty",
@@ -2442,18 +2442,18 @@
             "y": 288
           },
           "size": {
-            "width": 88,
+            "width": 96,
             "height": 32
           }
         },
         {
-          "id": "p_f3c715c228",
+          "id": "p_3541d1800e",
           "definition": {
             "kind": "connport",
             "name": "shaft",
             "description": "Physical mechanical terminal of the subsystem.",
             "domain": "mechanical",
-            "symbol": "⊙",
+            "symbol": "1",
             "ports": [
               {
                 "id": "p",
@@ -2483,87 +2483,87 @@
       ],
       "wires": [
         {
-          "id": "8f87664a-0862-4a0f-a65e-50c78c6fdd55",
-          "source": "b_29f6421f31",
-          "sourceHandle": "p_ed30cc26fb",
-          "target": "b_73fc5c6aa8",
-          "targetHandle": "p_57241ddf31"
+          "id": "b34004f4-9c6b-4a6e-ab8d-cd99d34e6299",
+          "source": "b_51a387930e",
+          "sourceHandle": "p_e9444ef8ed",
+          "target": "b_9be0fe2d2b",
+          "targetHandle": "p_07595188e7"
         },
         {
-          "id": "03ce66a5-bde3-4fa5-be2c-c9925c02753d",
-          "source": "b_29f6421f31",
-          "sourceHandle": "p_d315ecef9b",
-          "target": "b_73fc5c6aa8",
-          "targetHandle": "p_ca38b366fe"
+          "id": "235f01c7-c26e-4a55-9a3a-d23d388fb85f",
+          "source": "b_51a387930e",
+          "sourceHandle": "p_5113f3af0c",
+          "target": "b_9be0fe2d2b",
+          "targetHandle": "p_7be922340d"
         },
         {
-          "id": "b24cbd9e-7f07-486b-b1eb-33be0bdb3d84",
-          "source": "p_a6d3307198",
+          "id": "a7e9e2e7-dc15-46e3-be0d-4e1cdcd5dd4a",
+          "source": "p_37fcd38f45",
           "sourceHandle": "y",
-          "target": "b_73fc5c6aa8",
-          "targetHandle": "p_8cf7b35ef6"
+          "target": "b_9be0fe2d2b",
+          "targetHandle": "p_088830a758"
         },
         {
-          "id": "2a4c4677-64eb-464b-8042-60744b0cc9bb",
-          "source": "b_73fc5c6aa8",
-          "sourceHandle": "p_2e7bef55d4",
+          "id": "1852849a-5bf2-4447-a121-e36c6b5e407b",
+          "source": "b_9be0fe2d2b",
+          "sourceHandle": "p_e25ca9158d",
           "target": "gear",
           "targetHandle": "flange_a"
         },
         {
-          "id": "232aef4e-d387-418d-a0a2-7247a6b904af",
+          "id": "a333ee1a-6a51-4842-9c35-517c3ef0f371",
           "source": "gear",
           "sourceHandle": "flange_b",
-          "target": "p_f3c715c228",
+          "target": "p_3541d1800e",
           "targetHandle": "p"
         }
       ],
       "junctions": [],
       "nets": [
         {
-          "id": "net_5760dc1db9c345a1ae805870d8d55778",
-          "anchor": "b_29f6421f31.p_ed30cc26fb",
+          "id": "net_edd0c1bf94ca40cda4755fb74ff74ac1",
+          "anchor": "b_51a387930e.p_e9444ef8ed",
           "wireIds": [
-            "8f87664a-0862-4a0f-a65e-50c78c6fdd55"
+            "b34004f4-9c6b-4a6e-ab8d-cd99d34e6299"
           ],
           "hidden": true
         },
         {
-          "id": "net_18ef9b66e99b475a9150e2a15b755f90",
-          "anchor": "b_29f6421f31.p_d315ecef9b",
+          "id": "net_d2ee24166720445e8f4ff78c85bc282b",
+          "anchor": "b_51a387930e.p_5113f3af0c",
           "wireIds": [
-            "03ce66a5-bde3-4fa5-be2c-c9925c02753d"
+            "235f01c7-c26e-4a55-9a3a-d23d388fb85f"
           ],
           "hidden": true
         },
         {
-          "id": "net_10968c41cdf542589920f5be957a3126",
-          "anchor": "p_a6d3307198.y",
+          "id": "net_cc5c59569433481db4de571686ba26e2",
+          "anchor": "p_37fcd38f45.y",
           "wireIds": [
-            "b24cbd9e-7f07-486b-b1eb-33be0bdb3d84"
+            "a7e9e2e7-dc15-46e3-be0d-4e1cdcd5dd4a"
           ],
           "hidden": true
         },
         {
-          "id": "net_fd9ef93e06a74065a83fa4b34191ccf6",
-          "anchor": "b_73fc5c6aa8.p_2e7bef55d4",
+          "id": "net_c2845bc86f89476d82d2098d0edef583",
+          "anchor": "b_9be0fe2d2b.p_e25ca9158d",
           "wireIds": [
-            "2a4c4677-64eb-464b-8042-60744b0cc9bb"
+            "1852849a-5bf2-4447-a121-e36c6b5e407b"
           ],
           "hidden": true
         },
         {
-          "id": "net_7d86c27707a5477ca8c7b8d0d0f98a94",
+          "id": "net_fd51ad953fb0448382ce06d18eac01dc",
           "anchor": "gear.flange_b",
           "wireIds": [
-            "232aef4e-d387-418d-a0a2-7247a6b904af"
+            "a333ee1a-6a51-4842-9c35-517c3ef0f371"
           ],
           "hidden": true
         }
       ]
     },
     {
-      "id": "sub_be502a6306",
+      "id": "sub_e39f8d82da",
       "name": "Vehicle control",
       "blocks": [
         {
@@ -2604,11 +2604,11 @@
           },
           "position": {
             "x": 240,
-            "y": 100
+            "y": 96
           },
           "size": {
-            "width": 40,
-            "height": 40
+            "width": 48,
+            "height": 48
           }
         },
         {
@@ -2672,7 +2672,7 @@
             "controller": true
           },
           "position": {
-            "x": 380,
+            "x": 384,
             "y": 88
           },
           "size": {
@@ -2728,7 +2728,7 @@
           }
         },
         {
-          "id": "p_89eced1c23",
+          "id": "p_2ebb40e09c",
           "definition": {
             "kind": "inport",
             "name": "v ref",
@@ -2761,7 +2761,7 @@
           }
         },
         {
-          "id": "p_9b88ade7a7",
+          "id": "p_577fec0a7f",
           "definition": {
             "kind": "inport",
             "name": "v",
@@ -2785,8 +2785,8 @@
             }
           },
           "position": {
-            "x": 100,
-            "y": 220
+            "x": 104,
+            "y": 224
           },
           "size": {
             "width": 64,
@@ -2794,13 +2794,13 @@
           }
         },
         {
-          "id": "p_9b3406cb9d",
+          "id": "p_9220e535ac",
           "definition": {
             "kind": "outport",
             "name": "duty",
             "description": "Subsystem output.",
             "domain": "signal",
-            "symbol": "3",
+            "symbol": "1",
             "ports": [
               {
                 "id": "u",
@@ -2818,102 +2818,102 @@
             }
           },
           "position": {
-            "x": 740,
+            "x": 736,
             "y": 104
           },
           "size": {
-            "width": 88,
+            "width": 96,
             "height": 32
           }
         }
       ],
       "wires": [
         {
-          "id": "w_6669dae441",
-          "source": "p_89eced1c23",
+          "id": "w_1fd5a5295f",
+          "source": "p_2ebb40e09c",
           "sourceHandle": "y",
           "target": "error",
           "targetHandle": "a"
         },
         {
-          "id": "w_b3be834fee",
-          "source": "p_9b88ade7a7",
+          "id": "w_386a128a0b",
+          "source": "p_577fec0a7f",
           "sourceHandle": "y",
           "target": "error",
           "targetHandle": "b"
         },
         {
-          "id": "2aa3130e-44a0-4511-be12-55500f1971d2",
+          "id": "9d77d223-fe4d-4b7b-848b-6ce3bbc49ef9",
           "source": "error",
           "sourceHandle": "y",
           "target": "pi",
           "targetHandle": "u"
         },
         {
-          "id": "1cb4b414-56c5-4474-839c-4fa966134675",
+          "id": "f29e2732-4275-4bef-8c58-46f7138ad78f",
           "source": "pi",
           "sourceHandle": "y",
           "target": "duty",
           "targetHandle": "u"
         },
         {
-          "id": "w_46ef9c2878",
+          "id": "w_52ad80d530",
           "source": "duty",
           "sourceHandle": "y",
-          "target": "p_9b3406cb9d",
+          "target": "p_9220e535ac",
           "targetHandle": "u"
         }
       ],
       "junctions": [],
       "nets": [
         {
-          "id": "net_69bc60003a2f4afaa21c455356a69c0e",
-          "anchor": "p_89eced1c23.y",
+          "id": "net_f1a49e1e9df64ecda77045706744ae63",
+          "anchor": "p_2ebb40e09c.y",
           "wireIds": [
-            "w_6669dae441"
+            "w_1fd5a5295f"
           ],
           "hidden": true
         },
         {
-          "id": "net_a3e1f8163b9540339046576ad57b0359",
-          "anchor": "p_9b88ade7a7.y",
+          "id": "net_9115268c045646e08369440f94d7f6e5",
+          "anchor": "p_577fec0a7f.y",
           "wireIds": [
-            "w_b3be834fee"
+            "w_386a128a0b"
           ],
           "hidden": true
         },
         {
-          "id": "net_fe83ecc6d04e44eaa43f108252559089",
+          "id": "net_4d102e2a9bb34bbcaaf9a9bc634647b3",
           "anchor": "error.y",
           "wireIds": [
-            "2aa3130e-44a0-4511-be12-55500f1971d2"
+            "9d77d223-fe4d-4b7b-848b-6ce3bbc49ef9"
           ],
           "hidden": true
         },
         {
-          "id": "net_b08e1bde498741178941e6048555b2f6",
+          "id": "net_a13544daa25f4ca1b087bd1c174835b8",
           "anchor": "pi.y",
           "wireIds": [
-            "1cb4b414-56c5-4474-839c-4fa966134675"
+            "f29e2732-4275-4bef-8c58-46f7138ad78f"
           ],
           "hidden": true
         },
         {
-          "id": "net_23a03b12764f483a9b54962c815feac0",
+          "id": "net_2c1ae440d40d4db2ac3efd1218bf29e6",
           "anchor": "duty.y",
           "wireIds": [
-            "w_46ef9c2878"
+            "w_52ad80d530"
           ],
           "hidden": true
         }
       ]
     },
     {
-      "id": "sub_2dfa56e429",
+      "id": "sub_f38bfbe14f",
       "name": "Motor drive Simple DC motor",
       "blocks": [
         {
-          "id": "b_7138b154bc",
+          "id": "b_357e3911cb",
           "definition": {
             "kind": "subsystem",
             "name": "Converter",
@@ -2922,35 +2922,35 @@
             "symbol": "Converter",
             "ports": [
               {
-                "id": "p_5bc8194567",
-                "name": "dc+",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "left"
-              },
-              {
-                "id": "p_99330b60ca",
-                "name": "dc−",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "left"
-              },
-              {
-                "id": "p_f23b6cde46",
+                "id": "p_d00e9deda0",
                 "name": "duty",
                 "direction": "input",
                 "domain": "signal",
                 "side": "left"
               },
               {
-                "id": "p_1a1fce0995",
+                "id": "p_5d5a2fc2d2",
+                "name": "dc+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_3a9ead5b2a",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "p_ef2787e930",
                 "name": "out+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
               },
               {
-                "id": "p_27f08547f0",
+                "id": "p_3bed75762f",
                 "name": "out−",
                 "direction": "physical",
                 "domain": "electrical",
@@ -2961,12 +2961,12 @@
             "equations": "",
             "category": "routing",
             "subsystem": {
-              "ref": "sub_19524c9994"
+              "ref": "sub_b003e17140"
             }
           },
           "size": {
-            "width": 128,
-            "height": 120
+            "width": 176,
+            "height": 128
           },
           "position": {
             "x": 240,
@@ -2974,50 +2974,17 @@
           }
         },
         {
-          "id": "p_ca38b366fe",
+          "id": "p_7be922340d",
           "definition": {
             "kind": "connport",
             "name": "dc+",
             "description": "Physical electrical terminal of the subsystem.",
             "domain": "electrical",
-            "symbol": "⊙",
+            "symbol": "1",
             "ports": [
               {
                 "id": "p",
                 "name": "dc+",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "right"
-              }
-            ],
-            "parameters": [],
-            "equations": "",
-            "category": "routing",
-            "boundary": {
-              "order": 0
-            }
-          },
-          "position": {
-            "x": 40,
-            "y": 96
-          },
-          "size": {
-            "width": 80,
-            "height": 32
-          }
-        },
-        {
-          "id": "p_57241ddf31",
-          "definition": {
-            "kind": "connport",
-            "name": "dc−",
-            "description": "Physical electrical terminal of the subsystem.",
-            "domain": "electrical",
-            "symbol": "⊙",
-            "ports": [
-              {
-                "id": "p",
-                "name": "dc−",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
@@ -3032,7 +2999,7 @@
           },
           "position": {
             "x": 40,
-            "y": 168
+            "y": 96
           },
           "size": {
             "width": 80,
@@ -3040,13 +3007,13 @@
           }
         },
         {
-          "id": "p_8cf7b35ef6",
+          "id": "p_088830a758",
           "definition": {
             "kind": "inport",
             "name": "duty",
             "description": "Subsystem input.",
             "domain": "signal",
-            "symbol": "3",
+            "symbol": "1",
             "ports": [
               {
                 "id": "y",
@@ -3060,7 +3027,7 @@
             "equations": "",
             "category": "routing",
             "boundary": {
-              "order": 2
+              "order": 0
             }
           },
           "position": {
@@ -3068,18 +3035,18 @@
             "y": 240
           },
           "size": {
-            "width": 88,
+            "width": 96,
             "height": 32
           }
         },
         {
-          "id": "p_2e7bef55d4",
+          "id": "p_e25ca9158d",
           "definition": {
             "kind": "connport",
             "name": "shaft",
             "description": "Physical mechanical terminal of the subsystem.",
             "domain": "mechanical",
-            "symbol": "⊙",
+            "symbol": "2",
             "ports": [
               {
                 "id": "p",
@@ -3093,7 +3060,7 @@
             "equations": "",
             "category": "routing",
             "boundary": {
-              "order": 3,
+              "order": 2,
               "side": "right"
             }
           },
@@ -3103,6 +3070,39 @@
           },
           "size": {
             "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_07595188e7",
+          "definition": {
+            "kind": "connport",
+            "name": "dc−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "3",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 3
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
             "height": 32
           }
         },
@@ -3164,7 +3164,7 @@
           },
           "position": {
             "x": 480,
-            "y": 104
+            "y": 112
           },
           "size": {
             "width": 128,
@@ -3230,49 +3230,49 @@
       ],
       "wires": [
         {
-          "id": "6d1b07c0-6621-4e9c-8e70-1cabede5dbdb",
-          "source": "p_ca38b366fe",
+          "id": "9f4c8aa9-8a69-4027-80cb-d861fdb1614f",
+          "source": "p_7be922340d",
           "sourceHandle": "p",
-          "target": "b_7138b154bc",
-          "targetHandle": "p_5bc8194567"
+          "target": "b_357e3911cb",
+          "targetHandle": "p_5d5a2fc2d2"
         },
         {
-          "id": "d7734b8a-8c8f-4600-af15-01127f987137",
-          "source": "p_57241ddf31",
-          "sourceHandle": "p",
-          "target": "b_7138b154bc",
-          "targetHandle": "p_99330b60ca"
-        },
-        {
-          "id": "4aaa56da-7e20-4b53-b0ff-8dd2632dd018",
-          "source": "p_8cf7b35ef6",
+          "id": "9199f260-ceb0-4257-911b-615dd51401b8",
+          "source": "p_088830a758",
           "sourceHandle": "y",
-          "target": "b_7138b154bc",
-          "targetHandle": "p_f23b6cde46"
+          "target": "b_357e3911cb",
+          "targetHandle": "p_d00e9deda0"
         },
         {
-          "id": "e2d9229c-0dd9-417f-be3c-b2ad7b30c747",
-          "source": "b_7138b154bc",
-          "sourceHandle": "p_1a1fce0995",
+          "id": "33251efe-ff93-4b80-9a2b-cdafe071adf3",
+          "source": "b_357e3911cb",
+          "sourceHandle": "p_ef2787e930",
           "target": "motor",
           "targetHandle": "p"
         },
         {
-          "id": "11301ec3-dfd5-44b9-932d-a38f65bf0f9a",
-          "source": "b_7138b154bc",
-          "sourceHandle": "p_27f08547f0",
+          "id": "0e9981db-1453-4097-937b-a900a1678a24",
+          "source": "b_357e3911cb",
+          "sourceHandle": "p_3bed75762f",
           "target": "motor",
           "targetHandle": "n"
         },
         {
-          "id": "602e22ec-4105-46a2-9f5f-d40088ad1335",
+          "id": "a1003e2f-63fb-49ed-9b76-f1f8cc10c597",
           "source": "rotor",
           "sourceHandle": "flange_b",
-          "target": "p_2e7bef55d4",
+          "target": "p_e25ca9158d",
           "targetHandle": "p"
         },
         {
-          "id": "d9d2ce39-b85d-4006-be29-8a76ca23f7b7",
+          "id": "4f4011c8-56ec-46d5-8224-e5f028c76f5a",
+          "source": "p_07595188e7",
+          "sourceHandle": "p",
+          "target": "b_357e3911cb",
+          "targetHandle": "p_3a9ead5b2a"
+        },
+        {
+          "id": "6ca7fd6e-345b-4ebb-835d-bd5af29b42eb",
           "source": "motor",
           "sourceHandle": "flange",
           "target": "rotor",
@@ -3282,58 +3282,58 @@
       "junctions": [],
       "nets": [
         {
-          "id": "net_c9e13aa6932a447485c0bdf177ba5165",
-          "anchor": "b_7138b154bc.p_5bc8194567",
+          "id": "net_880ef360151d45dfa157bd53048c9b71",
+          "anchor": "b_357e3911cb.p_5d5a2fc2d2",
           "wireIds": [
-            "6d1b07c0-6621-4e9c-8e70-1cabede5dbdb"
+            "9f4c8aa9-8a69-4027-80cb-d861fdb1614f"
           ],
           "hidden": true
         },
         {
-          "id": "net_c6bb811711e24334a72d28b08c1becba",
-          "anchor": "b_7138b154bc.p_99330b60ca",
+          "id": "net_02ab1a93fc914eedb5b4a4c1bef05588",
+          "anchor": "p_088830a758.y",
           "wireIds": [
-            "d7734b8a-8c8f-4600-af15-01127f987137"
+            "9199f260-ceb0-4257-911b-615dd51401b8"
           ],
           "hidden": true
         },
         {
-          "id": "net_2d37dea79e7d4962b6c76c9acfd82762",
-          "anchor": "p_8cf7b35ef6.y",
+          "id": "net_94e55778b6f84cc1be7ced24d88decbf",
+          "anchor": "b_357e3911cb.p_ef2787e930",
           "wireIds": [
-            "4aaa56da-7e20-4b53-b0ff-8dd2632dd018"
+            "33251efe-ff93-4b80-9a2b-cdafe071adf3"
           ],
           "hidden": true
         },
         {
-          "id": "net_ceff40e620664daca2f1c70794b1b078",
-          "anchor": "b_7138b154bc.p_1a1fce0995",
+          "id": "net_680fe5aede0d434f8e7d4a69460c2ce1",
+          "anchor": "b_357e3911cb.p_3bed75762f",
           "wireIds": [
-            "e2d9229c-0dd9-417f-be3c-b2ad7b30c747"
+            "0e9981db-1453-4097-937b-a900a1678a24"
           ],
           "hidden": true
         },
         {
-          "id": "net_425e1dce076a48c4ace94c271accfb46",
-          "anchor": "b_7138b154bc.p_27f08547f0",
+          "id": "net_69099e4c2fdb4c1f85f014c7db6d3fc9",
+          "anchor": "p_e25ca9158d.p",
           "wireIds": [
-            "11301ec3-dfd5-44b9-932d-a38f65bf0f9a"
+            "a1003e2f-63fb-49ed-9b76-f1f8cc10c597"
           ],
           "hidden": true
         },
         {
-          "id": "net_3f9e1f3f0dac4472ab041559cab4fcb9",
-          "anchor": "p_2e7bef55d4.p",
+          "id": "net_d9ae78c8bd6449e6a110c98afe82d208",
+          "anchor": "b_357e3911cb.p_3a9ead5b2a",
           "wireIds": [
-            "602e22ec-4105-46a2-9f5f-d40088ad1335"
+            "4f4011c8-56ec-46d5-8224-e5f028c76f5a"
           ],
           "hidden": true
         },
         {
-          "id": "net_f13d3d74547948ae965f9af9af4a6f91",
+          "id": "net_52f05fe39bbd4d17be4cea035a9d99a7",
           "anchor": "motor.flange",
           "wireIds": [
-            "d9d2ce39-b85d-4006-be29-8a76ca23f7b7"
+            "6ca7fd6e-345b-4ebb-835d-bd5af29b42eb"
           ],
           "hidden": true
         }
@@ -3342,19 +3342,19 @@
   ],
   "configurations": [
     {
-      "id": "cfg_31c472a79e",
+      "id": "cfg_dd7a1da4c7",
       "name": "City · LFP",
       "choices": {
-        "sub_43fbabf6ac/b_73fc5c6aa8": "v_5b0621f417",
-        "sub_43fbabf6ac/b_29f6421f31": "v_512b8dfb37"
+        "sub_a09e2dc61b/b_9be0fe2d2b": "v_4f99798303",
+        "sub_a09e2dc61b/b_51a387930e": "v_9fe4780976"
       }
     },
     {
-      "id": "cfg_f68abd58d2",
+      "id": "cfg_2acf75c2bd",
       "name": "Performance · NMC",
       "choices": {
-        "sub_43fbabf6ac/b_73fc5c6aa8": "v_b213cb1ddd",
-        "sub_43fbabf6ac/b_29f6421f31": "v_c0c75f5316"
+        "sub_a09e2dc61b/b_9be0fe2d2b": "v_9a78f247e9",
+        "sub_a09e2dc61b/b_51a387930e": "v_6c778fcce1"
       }
     }
   ]

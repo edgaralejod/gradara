@@ -45,24 +45,60 @@ export function boundaryDefinition(
   };
 }
 
-/** Library entries for adding ports inside a subsystem; the inspector sets their domain. */
+/**
+ * The library's subsystem ports: an input and an output. Each starts as a signal;
+ * its Type in the inspector makes it Boolean or a physical terminal, and dropped
+ * from a wire it becomes what that wire needs (`boundaryFor`).
+ */
+const portKeywords = [
+  'port',
+  'hierarchy',
+  'terminal',
+  'connection',
+  'physical',
+];
 export const portBlocks: Definition[] = [
   {
     ...boundaryDefinition('inport', 'in', 'signal', 0),
     name: 'Subsystem input',
-    keywords: ['inport', 'port', 'hierarchy'],
+    description:
+      'An input of the subsystem you are in. Set its type (signal, Boolean, or a physical domain) in its properties.',
+    category: 'subsystems',
+    keywords: ['inport', 'input', ...portKeywords],
   },
   {
     ...boundaryDefinition('outport', 'out', 'signal', 0),
     name: 'Subsystem output',
-    keywords: ['outport', 'port', 'hierarchy'],
-  },
-  {
-    ...boundaryDefinition('connport', 'terminal', 'electrical', 0),
-    name: 'Subsystem terminal',
-    keywords: ['port', 'connection', 'physical', 'hierarchy'],
+    description:
+      'An output of the subsystem you are in. Set its type (signal, Boolean, or a physical domain) in its properties.',
+    category: 'subsystems',
+    keywords: ['outport', 'output', ...portKeywords],
   },
 ];
+
+/** The subsystem port a wire from `from` needs: it drives an input, is driven by an output, or joins a physical net. */
+export function boundaryFor(
+  from: Port | undefined,
+  base: Definition,
+): Definition {
+  if (!from) return base;
+  const kind: BoundaryKind =
+    from.direction === 'physical'
+      ? 'connport'
+      : from.direction === 'output'
+        ? 'outport'
+        : 'inport';
+  if (!boundaryDomains(kind).includes(from.domain)) return base;
+  const name =
+    kind === 'inport' ? 'in' : kind === 'outport' ? 'out' : 'terminal';
+  return {
+    ...base,
+    ...boundaryDefinition(kind, name, from.domain, base.boundary?.order ?? 0),
+    name,
+    category: base.category,
+    keywords: base.keywords,
+  };
+}
 
 /** Domains a boundary block can take: causal ones for inputs and outputs, physical ones for terminals. */
 export const boundaryDomains = (kind: BoundaryKind): Domain[] =>

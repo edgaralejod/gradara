@@ -61,6 +61,7 @@ export type LibraryCategoryId =
   | 'discrete'
   | 'nonlinear'
   | 'routing'
+  | 'subsystems'
   | 'control'
   | 'sinks'
   | 'electrical'
@@ -158,7 +159,7 @@ export type Wire = {
   sourceHandle: string;
   target: string;
   targetHandle: string;
-  /** Undefined permits automatic orthogonal routing; [] explicitly preserves a straight route. */
+  /** Bends the user pinned. Absent or [] means an automatic route from the sheet router. */
   waypoints?: { x: number; y: number }[];
   junctions?: { x: number; y: number }[];
 };
@@ -207,14 +208,14 @@ export type Project = {
   plots?: { id: string; label: string; series: string[]; labels?: string[] }[];
 };
 export const domainColors: Record<Domain, string> = {
-  signal: '#336184',
-  electrical: '#aa6b20',
-  mechanical: '#298b82',
-  thermal: '#cf6b68',
-  boolean: '#6a5aa6',
-  translational: '#5f7f2a',
-  magnetic: '#a24f86',
-  threePhase: '#b8522b',
+  signal: '#1f5fbf',
+  electrical: '#b86e00',
+  mechanical: '#00897b',
+  thermal: '#d1352b',
+  boolean: '#a064e0',
+  translational: '#5a6b00',
+  magnetic: '#c02a8a',
+  threePhase: '#3f4650',
 };
 const p = (
   id: string,
@@ -262,7 +263,7 @@ export const library: Definition[] = [
     kind: 'pi',
     name: 'PI controller',
     description:
-      'Sampled speed control with output saturation and a bounded integral state.',
+      'Sampled PI control with output saturation and a bounded integral state.',
     domain: 'signal',
     symbol: 'PI',
     controller: true,
@@ -391,13 +392,16 @@ const block = (kind: string, id: string, x: number, y: number): Block => ({
 });
 export function initialProject(): Project {
   const blocks = [
-    block('step', 'reference', 0, 85),
-    block('pi', 'controller', 225, 65),
-    block('voltage', 'drive', 470, 85),
-    block('motor', 'motor', 705, 85),
-    block('inertia', 'load', 705, 335),
-    block('sensor', 'sensor', 225, 335),
-    block('ground', 'ground', 495, 345),
+    // On the sheet grid, with each connection a straight run where one is possible.
+    // The controller is unsized, so it opens at its 128 × 96 minimum, grown about
+    // its center to (224, 48).
+    block('step', 'reference', 0, 48),
+    block('pi', 'controller', 240, 64),
+    block('voltage', 'drive', 472, 48),
+    block('motor', 'motor', 704, 48),
+    block('inertia', 'load', 728, 336),
+    block('sensor', 'sensor', 224, 336),
+    block('ground', 'ground', 512, 280),
   ];
   const pairs = [
     ['reference', 'y', 'controller', 'reference'],

@@ -425,7 +425,7 @@ for (const domain of [
     const blocks = [0, 1, 2].map((i) => ({
       id: `b${i}`,
       position: { x: i ? 300 : 0, y: i === 2 ? 160 : 0 },
-      size: { width: 80, height: 40 },
+      size: { width: 80, height: 48 },
       definition: {
         kind: 'test',
         name: `Block${i}`,
@@ -472,8 +472,8 @@ for (const domain of [
           target: 'b0',
           targetHandle: 'p',
           waypoints: [
-            { x: 180, y: 180 },
-            { x: 180, y: 20 },
+            { x: 184, y: 184 },
+            { x: 184, y: 24 },
           ],
         },
       ],
@@ -482,7 +482,7 @@ for (const domain of [
     const after = normalizeProject(before);
     assert.equal(after.junctions?.length, 1);
     assert.equal(after.junctions![0].domain, domain);
-    assert.deepEqual(after.junctions![0].position, { x: 180, y: 20 });
+    assert.deepEqual(after.junctions![0].position, { x: 184, y: 24 });
     assert.equal(after.wires.length, 3);
     assert.equal(after.nets![0].id, before.nets![0].id);
     assert.equal(after.nets![0].name, 'Preserved');
@@ -517,8 +517,8 @@ for (const domain of [
           target: 'b0',
           targetHandle: 'p',
           waypoints: [
-            { x: 180, y: -140 },
-            { x: 180, y: 20 },
+            { x: 184, y: -136 },
+            { x: 184, y: 24 },
           ],
         },
       ],
@@ -587,4 +587,236 @@ void test('net labels are off by default and follow names and the show toggle', 
   // Saved documents carry hidden: false for every net; that alone does not show a label.
   assert.equal(netLabelShown({ ...net(p), hidden: false }), false);
   assert.equal(semanticSignature(shown), semanticSignature(p));
+});
+
+void test('two wires leaving a dot along one run branch where they part, like wires leaving a port', () => {
+  // Four electrical terminals on one node J. Dragging the lower wire onto the upper
+  // one's row makes them share J → (480, 32) → (336, 32); A turns up at x = 336.
+  const terminal = (
+    id: string,
+    x: number,
+    y: number,
+    side: 'top' | 'bottom',
+  ) => ({
+    id,
+    position: { x, y },
+    size: { width: 32, height: 32 },
+    definition: {
+      kind: 'test',
+      name: id,
+      domain: 'electrical' as const,
+      symbol: 'T',
+      description: '',
+      parameters: [],
+      equations: '',
+      ports: [
+        {
+          id: 'p',
+          name: 'p',
+          domain: 'electrical' as const,
+          direction: 'physical' as const,
+          side,
+        },
+      ],
+    },
+  });
+  const project: Project = {
+    ...initialProject(),
+    blocks: [
+      terminal('lower', 32, -64, 'bottom'),
+      terminal('a', 320, -64, 'bottom'),
+      terminal('b', 464, -64, 'bottom'),
+      terminal('gnd', 464, 128, 'top'),
+    ],
+    junctions: [{ id: 'J', domain: 'electrical', position: { x: 480, y: 64 } }],
+    wires: [
+      {
+        id: 'wl',
+        source: 'lower',
+        sourceHandle: 'p',
+        target: 'J',
+        targetHandle: 'node',
+        waypoints: [
+          { x: 48, y: 32 },
+          { x: 480, y: 32 },
+        ],
+      },
+      {
+        id: 'wa',
+        source: 'a',
+        sourceHandle: 'p',
+        target: 'J',
+        targetHandle: 'node',
+        waypoints: [
+          { x: 336, y: 32 },
+          { x: 480, y: 32 },
+        ],
+      },
+      {
+        id: 'wb',
+        source: 'b',
+        sourceHandle: 'p',
+        target: 'J',
+        targetHandle: 'node',
+      },
+      {
+        id: 'wg',
+        source: 'J',
+        sourceHandle: 'node',
+        target: 'gnd',
+        targetHandle: 'p',
+      },
+    ],
+    nets: [],
+  };
+  const before = reconcileNets(project);
+  const after = normalizeProject(before);
+  const dots = (after.junctions ?? []).map(
+    (j) => `${j.position.x},${j.position.y}`,
+  );
+  assert.ok(
+    dots.includes('336,32'),
+    `a dot where A leaves the shared run: ${dots}`,
+  );
+  assert.equal(semanticSignature(after), semanticSignature(before));
+  const terminals = (p: Project) =>
+    netTopology(p).map((n) =>
+      [...n.keys].filter((e) => !e.startsWith('j:')).sort(),
+    );
+  assert.deepEqual(terminals(after), terminals(before));
+  // No two wires still overlap along a run.
+  const runs = new Map<string, number>();
+  for (const wire of after.wires) {
+    const pts = polylineOfWire(after, wire.id);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [a, b] = [pts[i], pts[i + 1]].sort(
+        (u, v) => u.x - v.x || u.y - v.y,
+      );
+      const key = `${a.x},${a.y}-${b.x},${b.y}`;
+      runs.set(key, (runs.get(key) ?? 0) + 1);
+    }
+  }
+  assert.ok(
+    [...runs.values()].every((n) => n === 1),
+    JSON.stringify([...runs]),
+  );
+  assert.equal(normalizeProject(after), after);
+});
+
+void test('dragging a run onto another run of its net merges the carried dot and branches where they part', async () => {
+  const { snappedSegment } = await import('../lib/gradara/net-edit');
+  const terminal = (
+    id: string,
+    x: number,
+    y: number,
+    side: 'top' | 'bottom' | 'left',
+  ) => ({
+    id,
+    position: { x, y },
+    size: { width: 32, height: 32 },
+    definition: {
+      kind: 'test',
+      name: id,
+      domain: 'electrical' as const,
+      symbol: 'T',
+      description: '',
+      parameters: [],
+      equations: '',
+      ports: [
+        {
+          id: 'p',
+          name: 'p',
+          domain: 'electrical' as const,
+          direction: 'physical' as const,
+          side,
+        },
+      ],
+    },
+  });
+  // The reported sheet: a source and a voltmeter return to two stacked dots on one net.
+  const sheet = (): Project => ({
+    ...initialProject(),
+    blocks: [
+      terminal('src', -16, -32, 'bottom'),
+      terminal('volt', 184, -48, 'bottom'),
+      terminal('gnd', 304, 96, 'top'),
+      terminal('xf', 400, -216, 'left'),
+    ],
+    junctions: [
+      { id: 'J1', domain: 'electrical', position: { x: 320, y: 32 } },
+      { id: 'J2', domain: 'electrical', position: { x: 320, y: 48 } },
+    ],
+    wires: [
+      {
+        id: 'wsrc',
+        source: 'src',
+        sourceHandle: 'p',
+        target: 'J1',
+        targetHandle: 'node',
+        waypoints: [{ x: 0, y: 32 }],
+      },
+      {
+        id: 'wx',
+        source: 'xf',
+        sourceHandle: 'p',
+        target: 'J1',
+        targetHandle: 'node',
+        waypoints: [{ x: 320, y: -200 }],
+      },
+      {
+        id: 'wj',
+        source: 'J1',
+        sourceHandle: 'node',
+        target: 'J2',
+        targetHandle: 'node',
+      },
+      {
+        id: 'wvolt',
+        source: 'volt',
+        sourceHandle: 'p',
+        target: 'J2',
+        targetHandle: 'node',
+        waypoints: [{ x: 200, y: 48 }],
+      },
+      {
+        id: 'wg',
+        source: 'J2',
+        sourceHandle: 'node',
+        target: 'gnd',
+        targetHandle: 'p',
+      },
+    ],
+    nets: [],
+  });
+  const before = normalizeProject(sheet());
+  const dragged = snappedSegment(
+    before,
+    'wsrc',
+    1,
+    { x: 150, y: 47 },
+    1,
+  ).project;
+  const after = normalizeProject(dragged, before);
+  assert.deepEqual(
+    after.junctions!.map((j) => `${j.position.x},${j.position.y}`).sort(),
+    ['200,48', '320,48'],
+  );
+  assert.ok(after.wires.every((w) => polylineOfWire(after, w.id).length >= 2));
+  const terminals = (p: Project) =>
+    netTopology(p).map((n) =>
+      [...n.keys].filter((e) => !e.startsWith('j:')).sort(),
+    );
+  assert.deepEqual(terminals(after), terminals(before));
+  assert.equal(semanticSignature(after), semanticSignature(before));
+
+  // Two dots of different nets on one point stay apart: only connectivity merges.
+  const apart = sheet();
+  apart.wires = apart.wires.filter((w) => w.id !== 'wj');
+  apart.junctions![1].position = { x: 320, y: 32 };
+  const kept = normalizeProject(apart);
+  assert.equal(netTopology(kept).length, 2);
+  assert.equal(
+    kept.junctions!.filter((j) => j.position.x === 320).length >= 2,
+    true,
+  );
 });

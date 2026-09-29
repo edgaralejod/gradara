@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RS flip-flop · Gradara</title>
+<meta name="description" content="Set/reset latch.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/rsFlipFlop">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Logic</p>
+<h1>RS flip-flop</h1>
+<p class="lede">Set/reset latch.</p>
+<h2>Description</h2>
+<p>A set/reset latch built from two cross-coupled NOR gates. S sets Q true, R resets it, and with both false Q keeps its value.</p>
+<p>Q starts false and Q̄ starts true.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>S</strong></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Set input.</td></tr>
+<tr><td><strong>R</strong></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Reset input.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Q</strong></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Latched output.</td></tr>
+<tr><td><strong>Q̄</strong> <code>QI</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Q̄, normally the complement of Q.</td></tr>
+</tbody></table>
+
+
+<h2>Equations</h2>
+<pre class="equations">Q = ¬(R ∨ QI)
+QI = pre(¬(S ∨ Q)), with pre(…) = true at t = 0
+pre(…) breaks the algebraic loop; the latch settles within the event iteration at the same instant.</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Blocks.Logical.RSFlipFlop</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Blocks_Logical.html#Modelica.Blocks.Logical.RSFlipFlop" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>With S and R both true, Q and QI are both false, so QI is not the complement of Q in that state.</li><li>No propagation delay, setup, or hold times.</li></ul>
+
+
+<h2>See also</h2>
+<p class="see-also"><a href="logicNor.html">NOR</a> <a href="edge.html">Rising edge</a> <a href="triggeredSampler.html">Triggered sampler</a> <a href="timer.html">Timer</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

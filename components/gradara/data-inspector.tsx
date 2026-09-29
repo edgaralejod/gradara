@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   Download,
@@ -23,6 +23,7 @@ import {
   type PlotView,
 } from '@/lib/gradara/plot-navigation';
 import PlotViewport from './plot-viewport';
+import { PaneResizer, useColumns } from './resizable-columns';
 import InspectorPlot, { traceColors } from './inspector-plot';
 
 type Plot = { signals: string[]; view?: PlotView };
@@ -128,6 +129,8 @@ function InspectorSession({
   const [axes, setAxes] = useState<Axes>('x'),
     [mode, setMode] = useState<'pan' | 'zoom' | 'cursor'>('pan');
   const [maximized, setMaximized] = useState<number | null>(null);
+  const signalPane = useColumns('signals', [244], 150);
+  const signalStart = useRef(0);
   const [storageError, setStorageError] = useState('');
   const resultId = result.id;
   useEffect(() => {
@@ -415,7 +418,26 @@ function InspectorSession({
             </label>
           </div>
           <div className="di-workspace">
-            <aside className="di-signals" aria-label="Signal selection">
+            <PaneResizer
+              className="signals-resizer"
+              style={{
+                left: `calc(min(${signalPane.widths[0]}px, 45%) - 3px)`,
+              }}
+              label="Resize the signal list"
+              onReset={signalPane.reset}
+              onResize={(delta, start) => {
+                if (start) signalStart.current = signalPane.current.current[0];
+                signalPane.resize(
+                  0,
+                  Math.min(480, signalStart.current + delta),
+                );
+              }}
+            />
+            <aside
+              className="di-signals"
+              aria-label="Signal selection"
+              style={{ width: `min(${signalPane.widths[0]}px, 45%)` }}
+            >
               <div className="di-pane-title">
                 <strong>Signals</strong>
                 <span>{traces.length}</span>

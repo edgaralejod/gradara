@@ -25,7 +25,8 @@ import { normalizeProject } from './normalize-project';
 const GAP = 96;
 /** Space between rows, beyond the block and its name. */
 const ROW_GAP = 72;
-const GRID = 20;
+/** Layout step: three sheet-grid units, so arranged blocks stay on the grid. */
+const GRID = 24;
 const ORIGIN = { x: 40, y: 80 };
 
 /** "a comes before b" on one axis, with how much the model cares. */

@@ -10,6 +10,7 @@
  */
 import { Position } from '@xyflow/react';
 import { blockSize } from './canvas';
+import { GRID, snap } from './grid';
 import type { Block, Project, Wire } from './model';
 import { endpointPoint, isTap, netComponents } from './net';
 import { sideToPosition } from './ports';
@@ -30,7 +31,7 @@ import {
 const SIDES = [Position.Right, Position.Bottom, Position.Left, Position.Top];
 /** Clearance a detour keeps from a body; below a block it also clears the instance name. */
 const LANE = EXIT_STUB;
-const NAME_LANE = 44;
+const NAME_LANE = 5 * GRID;
 /** How far around a connection the router looks for detour lanes before widening. */
 const REACH = 240;
 
@@ -309,7 +310,7 @@ function gridRoute(
     const mids: number[] = [];
     for (let i = 1; i < list.length; i++)
       if (list[i] - list[i - 1] > 2 * LANE)
-        mids.push(Math.round((list[i] + list[i - 1]) / 2));
+        mids.push(snap((list[i] + list[i - 1]) / 2));
     list.push(...mids);
     list.sort((a, b) => a - b);
   }

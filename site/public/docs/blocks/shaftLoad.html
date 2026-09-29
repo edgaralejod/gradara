@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mechanical load · Gradara</title>
+<meta name="description" content="Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/shaftLoad">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Rotational</p>
+<h1>Mechanical load</h1>
+<p class="lede">Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.</p>
+<h2>Description</h2>
+<p>A complete test load for a motor shaft: an inertia with viscous friction to the housing and a load torque that steps up at a set time. Use it to check how a speed or current controller rejects a load disturbance.</p>
+<p>The load torque is also sent to the TL output, so you can plot it next to the motor torque.</p>
+<h2>Ports</h2>
+
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>TL</strong> <code>loadTorque</code></td><td><span class="port-domain domain-signal">signal</span> · N·m</td><td>The load torque currently applied, in N·m (signal output).</td></tr>
+</tbody></table>
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>shaft</strong> <code>flange</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Shaft flange. Torque into the flange drives the load in the positive direction.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Inertia</strong> <code>J</code></td><td class="nowrap">0.002 kg·m²<br><span class="range">≥ 0.00001</span></td><td>Moment of inertia of the load, in kg·m². Must be positive.</td></tr>
+<tr><td><strong>Viscous friction</strong> <code>damping</code></td><td class="nowrap">0.001 N·m·s<br><span class="range">≥ 0</span></td><td>Viscous friction coefficient to the housing, in N·m·s. Zero or positive.</td></tr>
+<tr><td><strong>Initial load torque</strong> <code>initialLoad</code></td><td class="nowrap">0.05 N·m</td><td>Load torque before the step, in N·m.</td></tr>
+<tr><td><strong>Added load torque</strong> <code>stepLoad</code></td><td class="nowrap">0.35 N·m</td><td>Torque added to the load at loadTime, in N·m.</td></tr>
+<tr><td><strong>Load step time</strong> <code>loadTime</code></td><td class="nowrap">0.45 s<br><span class="range">≥ 0</span></td><td>Time of the load step, in seconds.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">loadTorque = initialLoad for time &lt; loadTime, initialLoad + stepLoad afterward
+J · dω/dt = flange.tau − damping · ω − loadTorque
+ω = dφ/dt, with φ(0) = 0 and ω(0) = 0</pre>
+
+<h2>Assumptions and limitations</h2>
+<ul><li>The load torque does not depend on speed or direction: it always acts in the negative direction. If the drive torque is smaller than the load, the shaft turns backward rather than stalling.</li><li>The initial angle and speed are fixed at zero. Driving the flange from a speed source, or rigidly joining another block that also fixes its initial speed, over-determines the initial conditions.</li></ul>
+<h2>Tips</h2>
+<ul><li>For a load with a different profile, combine Inertia (ideal) with Torque source or Torque step.</li></ul>
+<h2>Examples</h2>
+<p>Used in the shipped examples <strong>PMSM · Field-oriented control</strong>. Open them from <strong>Examples</strong> in the app.</p>
+<h2>See also</h2>
+<p class="see-also"><a href="inertia.html">Inertia &amp; load</a> <a href="rotInertia.html">Inertia (ideal)</a> <a href="torqueStep.html">Torque step</a> <a href="pmsm.html">PMSM</a> <a href="motor.html">DC motor</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

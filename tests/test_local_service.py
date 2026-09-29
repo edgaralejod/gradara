@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Local API boundary, settings, credentials, and safety screening."""
+import json
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -16,6 +19,15 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv('GRADARA_CREDENTIAL_STORE', 'file')
     monkeypatch.delenv('GRADARA_AI_PROVIDER', raising=False)
     return tmp_path
+
+
+def test_source_checkout_reports_the_package_version(monkeypatch):
+    monkeypatch.delenv('GRADARA_VERSION', raising=False)
+    root = Path(__file__).resolve().parents[1]
+    package = json.loads((root / 'package.json').read_text(encoding='utf-8'))['version']
+    assert service.app_version() == package
+    monkeypatch.setenv('GRADARA_VERSION', '9.9.9')
+    assert service.app_version() == '9.9.9'
 
 
 def test_foreign_host_and_origin_are_refused(isolated):

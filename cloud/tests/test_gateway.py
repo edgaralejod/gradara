@@ -245,9 +245,9 @@ def test_export_and_delete_account(tmp_path):
     database = (tmp_path/'gw.db').read_bytes() + b''.join(p.read_bytes() for p in tmp_path.glob('gw.db-*'))
     with app.state.store.engine.connect() as db:
         assert not db.execute(usage.select()).all()
-    # A new sign-in with the same email is a fresh account (identity was erased).
+    # Signing in again works and is a fresh account, but without a second welcome grant.
     fresh = sign_in(client)
-    assert client.get('/v1/account', headers=auth(fresh)).json()['balance'] == 10
+    assert client.get('/v1/account', headers=auth(fresh)).json()['balance'] == 0
     del database
 
 

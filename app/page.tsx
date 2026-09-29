@@ -1,16 +1,34 @@
 'use client';
 import { rotateBlocks } from '@/lib/gradara/rotation';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
+import GridBackground from '@/components/gradara/grid-background';
+import BlockHelpDialog from '@/components/gradara/block-help-dialog';
+import { useStored } from '@/components/gradara/use-stored';
+import {
+  PaneResizer,
+  RESET_LAYOUT_EVENT,
+  resetLayout,
+  useColumns,
+} from '@/components/gradara/resizable-columns';
 import CanvasMenu, {
   type CanvasMenuItem,
 } from '@/components/gradara/canvas-menu';
+import SelectionActions from '@/components/gradara/selection-actions';
+import { addPort, editPort, kindFor } from '@/lib/gradara/subsystem-ports';
+import { GRID, snap as snapGrid, snapLength } from '@/lib/gradara/grid';
+import PortDialog from '@/components/gradara/port-dialog';
+import { boundaryFor } from '@/lib/gradara/port-blocks';
+import HierarchyBar from '@/components/gradara/hierarchy-bar';
+import {
+  InstancePortsPanel,
+  PortPillPanel,
+} from '@/components/gradara/subsystem-ports-panel';
 import { useGeneratedLibrary } from '@/lib/gradara/generated-library';
 import {
   defaultBlockSize,
   snapBlockPosition,
 } from '@/lib/gradara/block-design';
 import {
-  Fragment,
   useState,
   useMemo,
   useCallback,
@@ -20,7 +38,6 @@ import {
 } from 'react';
 import {
   ReactFlowProvider,
-  Background,
   ViewportPortal,
   Controls,
   ControlButton,
@@ -57,6 +74,9 @@ import {
   Trash2,
   Maximize,
   LayoutGrid,
+  Grid3x3,
+  CircleHelp,
+  PanelsTopLeft,
   Group,
   Ungroup,
   Scissors,
@@ -64,6 +84,8 @@ import {
   CopyPlus,
   CornerLeftUp,
   SquareDashedMousePointer,
+  LogIn,
+  LogOut,
   Keyboard,
   Check,
   LoaderCircle,
@@ -85,6 +107,8 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import ModelCanvas, { FIT_VIEW_EVENT } from '@/components/gradara/model-canvas';
+
+const GRID_VISIBLE_KEY = 'gradara:grid-visible';
 import { normalizeProject } from '@/lib/gradara/normalize-project';
 import { describeNets, renameNet } from '@/lib/gradara/net-registry';
 import { setNetLabel, setNetLabelShown } from '@/lib/gradara/net-label';
@@ -165,10 +189,7 @@ import {
   type Project,
   type Definition,
   type SubsystemDefinition,
-  type Domain,
-  type Port,
   compatible,
-  domainLabels,
   portOf,
 } from '@/lib/gradara/model';
 import { matchingPort } from '@/lib/gradara/catalog';
@@ -199,7 +220,6 @@ import AssistantPanel, {
 } from '@/components/gradara/assistant-panel';
 import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
 import {
-  breadcrumb,
   findSubsystem,
   groupIntoSubsystem,
   isBoundary,
@@ -213,14 +233,11 @@ import {
   validPath,
   withPastedSubsystems,
   writeScope,
-  setBoundaryDomain,
-  setBoundarySide,
   subsystemAt,
   promoteParameter,
   demoteParameter,
   promotedTargets,
 } from '@/lib/gradara/hierarchy';
-import { boundaryDomains, type BoundaryKind } from '@/lib/gradara/port-blocks';
 import { useAiLabel } from '@/lib/gradara/ai';
 import UpdateIndicator from '@/components/gradara/update-indicator';
 import {
@@ -291,6 +308,49 @@ function Workbench() {
       setSelectedJunctions([]);
     }
   }, []);
+  /** Levels visited, for the hierarchy bar's back and forward buttons. */
+  const [nav, setNav] = useState<{ back: string[][]; forward: string[][] }>({
+    back: [],
+    forward: [],
+  });
+  const navRef = useRef(nav);
+  useEffect(() => {
+    navRef.current = nav;
+  }, [nav]);
+  /** Go to another level; going up selects the subsystem you came out of, as in Simulink. */
+  const navigate = useCallback(
+    (path: string[], history: 'record' | 'back' | 'forward' = 'record') => {
+      const current = scopeRef.current;
+      if (
+        path.length === current.length &&
+        path.every((id, i) => id === current[i])
+      )
+        return;
+      const { back, forward } = navRef.current;
+      const next =
+        history === 'back'
+          ? { back: back.slice(0, -1), forward: [current, ...forward] }
+          : history === 'forward'
+            ? { back: [...back, current], forward: forward.slice(1) }
+            : { back: [...back.slice(-49), current], forward: [] };
+      navRef.current = next;
+      setNav(next);
+      enterScope(path);
+      const upward =
+        path.length < current.length &&
+        path.every((id, i) => id === current[i]);
+      if (upward) setSelectedIds([current[path.length]]);
+    },
+    [enterScope],
+  );
+  const goBack = useCallback(() => {
+    const target = navRef.current.back.at(-1);
+    if (target) navigate(validPath(docRef.current, target), 'back');
+  }, [navigate]);
+  const goForward = useCallback(() => {
+    const target = navRef.current.forward[0];
+    if (target) navigate(validPath(docRef.current, target), 'forward');
+  }, [navigate]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
   const [selectedJunctions, setSelectedJunctions] = useState<string[]>([]);
@@ -347,6 +407,8 @@ function Workbench() {
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
   const [composer, setComposer] = useState<ComposerContext | null>(null);
   const [inserter, setInserter] = useState<InsertContext | null>(null);
+  /** The subsystem port whose properties dialog is open. */
+  const [portDialog, setPortDialog] = useState<string | null>(null);
   const [equationBlock, setEquationBlock] = useState<{
     id: string;
     tab: BlockDialogTab;
@@ -373,8 +435,63 @@ function Workbench() {
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, [libraryOpen, inspectorOpen]);
+  // Side panel widths, remembered per browser; the canvas takes the rest.
+  const sidePanes = useColumns('workbench', [272, 270], 180);
+  const sideStart = useRef<number[]>([]);
+  const [widePanes, setWidePanes] = useState(true);
+  useEffect(() => {
+    // Below 1100 px the panels take turns, and their widths come from the stylesheet.
+    const query = window.matchMedia('(min-width: 1101px)');
+    const sync = () => setWidePanes(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  const resizeSide = (index: 0 | 1, delta: number, start: boolean) => {
+    if (start) sideStart.current = [...sidePanes.current.current];
+    const other = sideStart.current[1 - index];
+    const widest = Math.max(180, window.innerWidth - other - 360);
+    const [low, high] = index ? [220, 560] : [180, 520];
+    sidePanes.resize(
+      index,
+      Math.min(
+        high,
+        widest,
+        Math.max(low, sideStart.current[index] + (index ? -delta : delta)),
+      ),
+    );
+  };
+  useEffect(() => {
+    const reset = () => {
+      updateLibraryOpen(true);
+      updateInspectorOpen(window.innerWidth >= 1100);
+    };
+    window.addEventListener(RESET_LAYOUT_EVENT, reset);
+    return () => window.removeEventListener(RESET_LAYOUT_EVENT, reset);
+  }, []);
   const [helpOpen, setHelpOpen] = useState(false);
+  // The block reference page (Help), for a library entry or a placed block.
+  const [helpDefinition, setHelpDefinition] = useState<Definition | null>(null);
+  const openBlockHelp = useCallback(() => {
+    const ids = selectionRef.current.blockIds;
+    const block =
+      ids.length === 1
+        ? projectRef.current.blocks.find((b) => b.id === ids[0])
+        : undefined;
+    if (block) setHelpDefinition(block.definition);
+  }, []);
   /** The canvas right-click menu: where it opened, on screen and on the sheet. */
+  // The visible sheet grid is a personal view preference, kept per browser.
+  const [gridSetting, writeGridSetting] = useStored(GRID_VISIBLE_KEY);
+  const showGrid = gridSetting === '1';
+  const showGridRef = useRef(showGrid);
+  useEffect(() => {
+    showGridRef.current = showGrid;
+  }, [showGrid]);
+  const toggleGrid = useCallback(
+    () => writeGridSetting(showGridRef.current ? '0' : '1'),
+    [writeGridSetting],
+  );
   const [canvasMenu, setCanvasMenu] = useState<{
     at: { x: number; y: number };
     point: { x: number; y: number };
@@ -626,7 +743,7 @@ function Workbench() {
       notify('That inside belongs to an inactive variant. Switch to it first.');
       return;
     }
-    enterScope(sheet.path);
+    navigate(sheet.path);
     setWorkspaceMode('diagram');
     setTimeout(() => {
       if (target.blockId) selectBlocks([target.blockId]);
@@ -817,6 +934,7 @@ function Workbench() {
           /* The service still remembers the active document. */
         }
         enterScope([]);
+        setNav({ back: [], forward: [] });
         setProject(next);
         setReady(true);
         const latest = await api<{ result: SimulationResult | null }>(
@@ -941,6 +1059,7 @@ function Workbench() {
       /* The service still remembers the active document. */
     }
     enterScope([]);
+    setNav({ back: [], forward: [] });
     setProject(next);
     setHistory([]);
     setFuture([]);
@@ -1068,8 +1187,11 @@ function Workbench() {
     }
   };
   const updateLayout = useCallback(
-    (layouts: BlockLayout[]) => {
-      commit((p) => layoutSelection(p, layouts, selectionRef.current));
+    (layouts: BlockLayout[], options?: { free?: boolean }) => {
+      // A drag with Alt held places blocks exactly where they were dropped (on the grid).
+      commit((p) =>
+        layoutSelection(p, layouts, selectionRef.current, !options?.free),
+      );
     },
     [commit],
   );
@@ -1093,11 +1215,29 @@ function Workbench() {
         return;
       }
       if (definition.boundary) {
-        // A new port goes after the existing ones.
-        const order = projectRef.current.blocks.filter(isBoundary).length;
+        // Dropped from a wire, the port becomes the type that wire needs.
+        if (connection)
+          definition = boundaryFor(
+            portOf(projectRef.current, connection.blockId, connection.portId),
+            definition,
+          );
+        // A new port goes after the existing ones, named in1, out2, terminal1, …
+        const pills = projectRef.current.blocks.filter(isBoundary);
+        const names = new Set(pills.map((b) => b.definition.name));
+        const base =
+          definition.kind === 'inport'
+            ? 'in'
+            : definition.kind === 'outport'
+              ? 'out'
+              : 'terminal';
+        let n =
+          pills.filter((b) => b.definition.kind === definition.kind).length + 1;
+        while (names.has(`${base}${n}`)) n++;
         definition = {
           ...definition,
-          boundary: { ...definition.boundary, order },
+          name: `${base}${n}`,
+          ports: definition.ports.map((p) => ({ ...p, name: `${base}${n}` })),
+          boundary: { ...definition.boundary, order: Number.MAX_SAFE_INTEGER },
         };
       }
       const id = `b_${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`;
@@ -1271,6 +1411,14 @@ function Workbench() {
             commit((p) => rotateBlocks(p, selectionRef.current.blockIds)),
         },
         {
+          id: 'help',
+          label: 'Help',
+          icon: <CircleHelp size={13} />,
+          shortcut: 'F1',
+          disabled: blocks.length !== 1,
+          run: openBlockHelp,
+        },
+        {
           id: 'group',
           label: 'Make subsystem',
           icon: <Group size={13} />,
@@ -1340,6 +1488,24 @@ function Workbench() {
         hint: 'Copy or cut blocks first',
         run: () => pasteAt(menu.point),
       },
+      // Inside a subsystem, an input or output pill can go where you clicked; its
+      // Type in the inspector sets what it carries.
+      ...(scopeRef.current.length
+        ? (['inport', 'outport'] as const).map((kind): CanvasMenuItem => ({
+            id: `port-${kind}`,
+            label:
+              kind === 'inport'
+                ? 'Add input port here'
+                : 'Add output port here',
+            icon:
+              kind === 'inport' ? <LogIn size={13} /> : <LogOut size={13} />,
+            run: () => {
+              const id = `p_${crypto.randomUUID().replaceAll('-', '').slice(0, 10)}`;
+              commit((p) => addPort(p, { kind, position: menu.point }, id));
+              select({ ...emptySelection(), blockIds: [id] });
+            },
+          }))
+        : []),
       { id: 'sep-here', separator: true },
       { id: 'sheet', heading: 'Sheet' },
       {
@@ -1373,6 +1539,19 @@ function Workbench() {
         icon: <Maximize size={13} />,
         shortcut: 'Space',
         run: () => window.dispatchEvent(new Event(FIT_VIEW_EVENT)),
+      },
+      {
+        id: 'grid',
+        label: showGridRef.current ? 'Hide grid' : 'Show grid',
+        icon: <Grid3x3 size={13} />,
+        shortcut: "⌘'",
+        run: toggleGrid,
+      },
+      {
+        id: 'reset-layout',
+        label: 'Reset layout',
+        icon: <PanelsTopLeft size={13} />,
+        run: resetLayout,
       },
       ...(scopeRef.current.length
         ? [
@@ -1452,18 +1631,18 @@ function Workbench() {
       const block = projectRef.current.blocks.find((b) => b.id === id);
       if (!block?.definition.subsystem) return false;
       // The canvas fits each sheet as it opens.
-      enterScope([...scopeRef.current, id]);
+      navigate([...scopeRef.current, id]);
       return true;
     },
-    [enterScope],
+    [navigate],
   );
   const leaveSubsystem = useCallback(() => {
     if (!scopeRef.current.length) return false;
     const from = scopeRef.current[scopeRef.current.length - 1];
-    enterScope(scopeRef.current.slice(0, -1));
+    navigate(scopeRef.current.slice(0, -1));
     select({ ...emptySelection(), blockIds: [from] });
     return true;
-  }, [enterScope, select]);
+  }, [navigate, select]);
   const copySelection = useCallback(
     (cut = false) => {
       const fragment = extractSelection(
@@ -1526,8 +1705,8 @@ function Workbench() {
         return;
       }
       const result = pasteSelection(target, fragment, {
-        x: Math.round((point.x - left) / 20) * 20,
-        y: Math.round((point.y - top) / 20) * 20,
+        x: snapGrid(point.x - left),
+        y: snapGrid(point.y - top),
       });
       commit(result.project);
       select(result.selection);
@@ -1746,7 +1925,8 @@ function Workbench() {
       ]);
       const mergeHistory = event.repeat && held === signature;
       held = signature;
-      const step = event.shiftKey ? 10 : 1;
+      // One grid step, or five with Shift: a nudge keeps the selection on the grid.
+      const step = event.shiftKey ? 5 * GRID : GRID;
       commit(
         (project) =>
           translateSelection(project, selection, {
@@ -1885,6 +2065,12 @@ function Workbench() {
       } else if (e.key.toLowerCase() === 'f' && !command) {
         e.preventDefault();
         window.dispatchEvent(new Event(FIT_VIEW_EVENT));
+      } else if (e.key === 'F1') {
+        e.preventDefault();
+        openBlockHelp();
+      } else if (e.key === "'" && command) {
+        e.preventDefault();
+        toggleGrid();
       } else if (e.key === '/' && !command) {
         e.preventDefault();
         setLibraryOpen(true);
@@ -1949,6 +2135,8 @@ function Workbench() {
     leaveSubsystem,
     inserter,
     workspaceMode,
+    toggleGrid,
+    openBlockHelp,
   ]);
   const insertGenerated = (definition: Definition) => {
     if (!composer) return;
@@ -2135,27 +2323,6 @@ function Workbench() {
                 }}
               />
             </div>
-            {scope.length > 0 && (
-              <nav className="sheet-path" aria-label="Subsystem path">
-                {breadcrumb(doc, scope).map((crumb, i, all) => (
-                  <Fragment key={crumb.path.join('/') || 'top'}>
-                    {i > 0 && <ChevronRight size={14} />}
-                    {i === all.length - 1 ? (
-                      <span aria-current="page">
-                        {i === 0 ? 'Top level' : crumb.name}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => enterScope(crumb.path)}
-                      >
-                        {i === 0 ? 'Top level' : crumb.name}
-                      </button>
-                    )}
-                  </Fragment>
-                ))}
-              </nav>
-            )}
           </div>
           <div className="header-right">
             <UpdateIndicator onOpenSettings={() => setSettingsTab('updates')} />
@@ -2237,7 +2404,32 @@ function Workbench() {
         )}
         <div
           className={`main-layout ${!libraryOpen ? 'library-hidden' : ''} ${!inspectorOpen ? 'inspector-hidden' : ''}`}
+          style={
+            widePanes
+              ? {
+                  gridTemplateColumns: `${libraryOpen ? sidePanes.widths[0] : 0}px minmax(350px, 1fr) ${inspectorOpen ? sidePanes.widths[1] : 0}px`,
+                }
+              : undefined
+          }
         >
+          {widePanes && libraryOpen && (
+            <PaneResizer
+              className="workbench-resizer"
+              style={{ left: sidePanes.widths[0] - 3 }}
+              label="Resize the component library"
+              onReset={sidePanes.reset}
+              onResize={(delta, start) => resizeSide(0, delta, start)}
+            />
+          )}
+          {widePanes && inspectorOpen && (
+            <PaneResizer
+              className="workbench-resizer"
+              style={{ right: sidePanes.widths[1] - 3 }}
+              label="Resize the inspector"
+              onReset={sidePanes.reset}
+              onResize={(delta, start) => resizeSide(1, delta, start)}
+            />
+          )}
           <div className="model-toolbar">
             <div className="toolbar-left">
               <IconButton
@@ -2413,6 +2605,7 @@ function Workbench() {
             <LibraryNavigator
               onAdd={(definition) => addComponent(definition)}
               onAskAgent={startComposer}
+              onHelp={setHelpDefinition}
             />
           </aside>
           <section className="center-panel">
@@ -2484,6 +2677,18 @@ function Workbench() {
               >
                 {ready &&
                   project.blocks.length === 0 &&
+                  scope.length > 0 &&
+                  !composer &&
+                  !inserter && (
+                    <div className="empty-subsystem" role="note">
+                      This subsystem is empty. Add blocks from the library, or
+                      right-click to add input and output ports. Esc or ⌘↑
+                      goes back up.
+                    </div>
+                  )}
+                {ready &&
+                  project.blocks.length === 0 &&
+                  scope.length === 0 &&
                   !composer &&
                   !inserter && (
                     <div
@@ -2588,6 +2793,14 @@ function Workbench() {
                           e.stopPropagation();
                           if (n.type === 'tap') return;
                           if (openSubsystem(n.id)) return;
+                          // A port pill's properties are its port, not equations.
+                          const block = projectRef.current.blocks.find(
+                            (b) => b.id === n.id,
+                          );
+                          if (block && isBoundary(block)) {
+                            setPortDialog(n.id);
+                            return;
+                          }
                           setEquationBlock({ id: n.id, tab: 'properties' });
                         }}
                         onPaneClick={() => {
@@ -2620,7 +2833,7 @@ function Workbench() {
                         panActivationKeyCode="Space"
                         multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
                       >
-                        <Background gap={20} size={0.7} color="#dde3e8" />
+                        <GridBackground visible={showGrid} />
                         <ViewportPortal>
                           {project.annotations?.map((a, i) => (
                             <div
@@ -2675,6 +2888,10 @@ function Workbench() {
                             <LayoutGrid size={12} />
                           </ControlButton>
                         </Controls>
+                        <SelectionActions
+                          onGroup={groupSelected}
+                          onArrange={arrange}
+                        />
                       </ModelCanvas>
                     </VariantSwitchContext.Provider>
                   </SubsystemLookupContext.Provider>
@@ -2687,6 +2904,15 @@ function Workbench() {
                     <span>·</span>/ to search
                   </div>
                 )}
+                <HierarchyBar
+                  doc={doc}
+                  scope={scope}
+                  canBack={nav.back.length > 0}
+                  canForward={nav.forward.length > 0}
+                  onBack={goBack}
+                  onForward={goForward}
+                  onNavigate={(path) => navigate(path)}
+                />
                 <div className="canvas-agent-shortcut">
                   <Button variant="outline" onClick={startComposer}>
                     <Sparkles size={14} />
@@ -2890,6 +3116,17 @@ function Workbench() {
                 : activeNet
                   ? 'Net properties'
                   : 'Model properties'}
+              {active && (
+                <button
+                  type="button"
+                  className="properties-help"
+                  title="Block reference · F1"
+                  aria-label={`Help for ${active.definition.name}`}
+                  onClick={() => setHelpDefinition(active.definition)}
+                >
+                  <CircleHelp size={14} />
+                </button>
+              )}
             </div>
             <div className="inspector-properties">
               {selectedIds.length > 1 && (
@@ -2970,26 +3207,28 @@ function Workbench() {
                       <summary>Description</summary>
                       <p>{active.definition.description}</p>
                     </details>
-                    <Button
-                      className="refine-button"
-                      variant="outline"
-                      disabled={
-                        active.definition.domain !== 'signal' ||
-                        !!active.definition.modelica
-                      }
-                      onClick={() =>
-                        setComposer({
-                          position: active.position,
-                          existing: {
-                            id: active.id,
-                            definition: active.definition,
-                          },
-                        })
-                      }
-                    >
-                      <Sparkles size={13} />
-                      Refine with agent
-                    </Button>
+                    {/* Only a signal block defined by equations can be refined. */}
+                    {active.definition.domain === 'signal' &&
+                      !active.definition.modelica &&
+                      !active.definition.subsystem &&
+                      !isBoundary(active) && (
+                        <Button
+                          className="refine-button"
+                          variant="outline"
+                          onClick={() =>
+                            setComposer({
+                              position: active.position,
+                              existing: {
+                                id: active.id,
+                                definition: active.definition,
+                              },
+                            })
+                          }
+                        >
+                          <Sparkles size={13} />
+                          Refine with agent
+                        </Button>
+                      )}
                   </div>
                   {active.definition.subsystem && (
                     <div className="inspector-section subsystem-section">
@@ -3039,6 +3278,11 @@ function Workbench() {
                           </Button>
                         )}
                       </div>
+                      <InstancePortsPanel
+                        view={project}
+                        block={active}
+                        onCommit={(change) => commit(change)}
+                      />
                       <VariantPanel
                         doc={doc}
                         block={active}
@@ -3047,109 +3291,70 @@ function Workbench() {
                     </div>
                   )}
                   {isBoundary(active) && (
-                    <div className="inspector-section subsystem-section">
-                      <div className="section-label">Subsystem port</div>
-                      <label className="field-row">
-                        <span>Domain</span>
-                        <select
-                          value={active.definition.ports[0].domain}
-                          onChange={(e) =>
-                            commit((p) =>
-                              setBoundaryDomain(
-                                p,
-                                active.id,
-                                e.target.value as Domain,
-                              ),
-                            )
-                          }
-                        >
-                          {boundaryDomains(
-                            active.definition.kind as BoundaryKind,
-                          ).map((d) => (
-                            <option key={d} value={d}>
-                              {domainLabels[d]}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      {active.definition.kind === 'connport' && (
-                        <label className="field-row">
-                          <span>Side outside</span>
-                          <select
-                            value={active.definition.boundary?.side ?? 'left'}
-                            onChange={(e) =>
-                              commit((p) =>
-                                setBoundarySide(
-                                  p,
-                                  active.id,
-                                  e.target.value as NonNullable<Port['side']>,
-                                ),
-                              )
+                    <PortPillPanel
+                      view={project}
+                      block={active}
+                      onCommit={(change) => commit(change)}
+                    />
+                  )}
+                  {/* A port pill has no parameters or equations; a block with neither skips the section. */}
+                  {!isBoundary(active) &&
+                    (active.definition.parameters.length > 0 ||
+                      !!active.definition.equations?.trim() ||
+                      !!active.definition.declarations?.trim()) && (
+                      <div className="inspector-section">
+                        <div className="section-label">
+                          Parameters
+                          <span>{active.definition.parameters.length}</span>
+                          <button
+                            onClick={() =>
+                              setEquationBlock({
+                                id: active.id,
+                                tab: 'properties',
+                              })
                             }
                           >
-                            {['left', 'right', 'top', 'bottom'].map((side) => (
-                              <option key={side} value={side}>
-                                {side}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      )}
-                      <p className="size-hint">
-                        The block name is the port name on the subsystem.
-                        Rewiring a port of another domain removes its outside
-                        wires.
-                      </p>
-                    </div>
-                  )}
-                  <div className="inspector-section">
-                    <div className="section-label">
-                      Parameters
-                      <span>{active.definition.parameters.length}</span>
-                      <button
-                        onClick={() =>
-                          setEquationBlock({ id: active.id, tab: 'properties' })
-                        }
-                      >
-                        Edit…
-                      </button>
-                    </div>
-                    <ParameterList
-                      blockId={active.id}
-                      parameters={active.definition.parameters}
-                      {...(currentSubsystem && !isBoundary(active)
-                        ? {
-                            promoted: promotedTargets(
-                              doc,
-                              currentSubsystem,
-                            ).get(active.id),
-                            onPromote: (id: string) =>
-                              commit((p) =>
-                                promoteParameter(
-                                  p,
+                            Edit…
+                          </button>
+                        </div>
+                        <ParameterList
+                          blockId={active.id}
+                          parameters={active.definition.parameters}
+                          {...(currentSubsystem && !isBoundary(active)
+                            ? {
+                                promoted: promotedTargets(
+                                  doc,
                                   currentSubsystem,
-                                  active.id,
-                                  id,
-                                ),
-                              ),
-                            onDemote: (id: string) =>
-                              commit((p) =>
-                                demoteParameter(p, currentSubsystem, id),
-                              ),
+                                ).get(active.id),
+                                onPromote: (id: string) =>
+                                  commit((p) =>
+                                    promoteParameter(
+                                      p,
+                                      currentSubsystem,
+                                      active.id,
+                                      id,
+                                    ),
+                                  ),
+                                onDemote: (id: string) =>
+                                  commit((p) =>
+                                    demoteParameter(p, currentSubsystem, id),
+                                  ),
+                              }
+                            : {})}
+                          onChange={(id, value) =>
+                            commit((p) =>
+                              applyBlockEdits(p, active.id, {
+                                parameters: { [id]: value },
+                              }),
+                            )
                           }
-                        : {})}
-                      onChange={(id, value) =>
-                        commit((p) =>
-                          applyBlockEdits(p, active.id, {
-                            parameters: { [id]: value },
-                          }),
-                        )
-                      }
-                    />
-                  </div>
+                        />
+                      </div>
+                    )}
                   <div className="inspector-section block-layout-section">
                     <div className="section-label">
-                      Block size <span className="subtle">px</span>
+                      Block size{' '}
+                      <span className="subtle">px, steps of {2 * GRID}</span>
                     </div>
                     <div className="block-size-fields">
                       <label>
@@ -3168,7 +3373,17 @@ function Workbench() {
                               {
                                 id: active.id,
                                 position: active.position,
-                                size: { ...blockSize(active), width },
+                                // Whole size steps, so the ports stay on the grid.
+                                size: {
+                                  ...blockSize(active),
+                                  width: snapLength(
+                                    width,
+                                    minimumBlockSize(
+                                      active.definition,
+                                      active.rotation,
+                                    ).width,
+                                  ),
+                                },
                               },
                             ])
                           }
@@ -3190,7 +3405,16 @@ function Workbench() {
                               {
                                 id: active.id,
                                 position: active.position,
-                                size: { ...blockSize(active), height },
+                                size: {
+                                  ...blockSize(active),
+                                  height: snapLength(
+                                    height,
+                                    minimumBlockSize(
+                                      active.definition,
+                                      active.rotation,
+                                    ).height,
+                                  ),
+                                },
                               },
                             ])
                           }
@@ -3450,6 +3674,23 @@ function Workbench() {
             e.target.value = '';
           }}
         />
+        {portDialog && project.blocks.find((b) => b.id === portDialog) && (
+          <PortDialog
+            key={portDialog}
+            block={project.blocks.find((b) => b.id === portDialog)!}
+            count={(role, type) => {
+              const kind = kindFor(role, type).kind;
+              return project.blocks.filter(
+                (b) => isBoundary(b) && b.definition.kind === kind,
+              ).length;
+            }}
+            onClose={() => setPortDialog(null)}
+            onApply={(change) => {
+              commit((p) => editPort(p, portDialog, change));
+              setPortDialog(null);
+            }}
+          />
+        )}
         {equationBlock &&
           project.blocks.find((b) => b.id === equationBlock.id) && (
             <BlockDialog
@@ -3525,6 +3766,12 @@ function Workbench() {
             onEngineChange={refreshHealth}
           />
         )}
+        {helpDefinition && (
+          <BlockHelpDialog
+            definition={helpDefinition}
+            onClose={() => setHelpDefinition(null)}
+          />
+        )}
         <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
           <DialogContent className="shortcuts-dialog">
             <DialogTitle>Make yourself at home</DialogTitle>
@@ -3545,8 +3792,9 @@ function Workbench() {
                 ['Restore auto route (wires only)', 'R'],
                 ['Name a signal / net', 'Double-click wire / F2'],
                 ['Move a signal label', 'Drag along its net'],
-                ['Create a component', 'A'],
+                ['Ask agent (new block or model)', 'A'],
                 ['Run simulation', '⌘ / Ctrl + Enter'],
+                ['Save now (edits also save automatically)', '⌘ / Ctrl + S'],
                 ['Undo', '⌘ / Ctrl + Z'],
                 ['Redo', '⌘ / Ctrl + Shift + Z'],
                 ['Duplicate selection', '⌘ / Ctrl + D'],
@@ -3562,11 +3810,15 @@ function Workbench() {
                 ['Switch to Results view', '⌘ / Ctrl + 2'],
                 ['Switch to Model Explorer', '⌘ / Ctrl + 3'],
                 ['Search the model', '⌘ / Ctrl + K'],
+                ['Show or hide the Problems dock', '⌘ / Ctrl + J'],
                 ['Make subsystem · ungroup', '⌘ / Ctrl + G · ⇧G'],
                 ['Leave a subsystem', 'Esc · ⌘ / Ctrl + ↑'],
                 ['Select several components', 'Shift + click / Drag'],
                 ['Select / pan tools', 'V / H'],
                 ['Fit the model to the view', 'Space (tap) / F'],
+                ['Show or hide the grid', "⌘ / Ctrl + '"],
+                ['Resize a side panel', 'Drag its inner edge'],
+                ['Restore default panel sizes', 'Canvas menu → Reset layout'],
                 ['Canvas menu', 'Right-click empty space'],
                 [
                   'Arrange the sheet (or the selection)',
@@ -3576,11 +3828,13 @@ function Workbench() {
                 ['Resize a block', 'Drag a corner or edge'],
                 ['Move a block name', 'Drag the label'],
                 ['Reset label position', 'Double-click its label'],
-                ['Nudge selected blocks / wires', 'Arrow keys'],
-                ['Nudge by 10 diagram units', 'Shift + arrows'],
+                ['Nudge selection one grid step', 'Arrow keys'],
+                ['Nudge five grid steps', 'Shift + arrows'],
                 ['Add a block at the pointer', 'Double-click empty canvas'],
-                ['Inspect equations', 'Double-click a block'],
-                ['Save', 'Automatic'],
+                ["Open a block's properties", 'Double-click the block'],
+                ['Open a subsystem', 'Double-click it'],
+                ["Open a block's reference page", 'F1'],
+                ['Show this list', '?'],
               ].map(([label, key]) => (
                 <div key={label}>
                   <span>{label}</span>

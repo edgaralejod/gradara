@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inverter (3-phase) · Gradara</title>
+<meta name="description" content="Three-phase two-level inverter with a fire input per switch.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/threePhaseInverter">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Converters</p>
+<h1>Inverter (3-phase)</h1>
+<p class="lede">Three-phase two-level inverter with a fire input per switch.</p>
+<h2>Description</h2>
+<p>A three-phase two-level voltage-source inverter: three half-bridge legs across the DC bus, each with an upper and lower transistor and antiparallel diodes. Each switch has its own fire input.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>a+</strong> <code>fa_p</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Phase a upper transistor gate: true connects a to dc_p.</td></tr>
+<tr><td><strong>b+</strong> <code>fb_p</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Phase b upper transistor gate: true connects b to dc_p.</td></tr>
+<tr><td><strong>c+</strong> <code>fc_p</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Phase c upper transistor gate: true connects c to dc_p.</td></tr>
+<tr><td><strong>a−</strong> <code>fa_n</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Phase a lower transistor gate: true connects a to dc_n.</td></tr>
+<tr><td><strong>b−</strong> <code>fb_n</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Phase b lower transistor gate: true connects b to dc_n.</td></tr>
+<tr><td><strong>c−</strong> <code>fc_n</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Phase c lower transistor gate: true connects c to dc_n.</td></tr>
+</tbody></table>
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>dc+</strong> <code>dc_p</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>DC bus positive terminal.</td></tr>
+<tr><td><strong>dc−</strong> <code>dc_n</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>DC bus negative terminal.</td></tr>
+<tr><td><strong>abc</strong> <code>ac</code></td><td><span class="port-domain domain--phase">3-phase</span></td><td>Three-phase output plug carrying phases a, b, and c (the three leg midpoints).</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Transistor on resistance</strong> <code>RonTransistor</code></td><td class="nowrap">0.00001 Ω<br><span class="range">≥ 0</span></td><td>On resistance of each transistor, in ohms. 0 or more.</td></tr>
+<tr><td><strong>Diode on resistance</strong> <code>RonDiode</code></td><td class="nowrap">0.00001 Ω<br><span class="range">≥ 0</span></td><td>On resistance of each freewheeling diode, in ohms. 0 or more.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">For phase k: upper on → vk ≈ dc_p.v; lower on → vk ≈ dc_n.v; both off → set by the diodes and the phase current</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Electrical.PowerConverters.DCAC.Polyphase2Level</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_PowerConverters_DCAC.html#Modelica.Electrical.PowerConverters.DCAC.Polyphase2Level" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>Ideal switches: transistors are GTO-type switches that conduct only forward, and diodes switch at 0 V. Off conductance is fixed at 10 µS and knee voltages at 0 V. No switching times, reverse recovery, or conduction voltage drop beyond the on resistance.</li><li>The upper and lower gates of a phase both true short the DC bus. No dead time is inserted.</li></ul>
+<h2>Tips</h2>
+<ul><li>Drive each phase pair from one PWM generator (fire to the upper gate, notFire to the lower gate).</li><li>For a model without switching ripple, use the averaged Inverter.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="singlePhaseInverter.html">Inverter (1-phase)</a> <a href="inverter.html">Three-phase inverter</a> <a href="pwmSignal.html">PWM generator</a> <a href="inductionMachine.html">Induction machine</a> <a href="pmSyncMachine.html">PMSM (MSL)</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

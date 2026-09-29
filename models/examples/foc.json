@@ -127,11 +127,11 @@
       },
       "position": {
         "x": 256,
-        "y": 140
+        "y": 136
       },
       "size": {
-        "width": 40,
-        "height": 40
+        "width": 48,
+        "height": 48
       },
       "labelOffset": {
         "x": 0,
@@ -304,11 +304,11 @@
       },
       "position": {
         "x": 512,
-        "y": 140
+        "y": 136
       },
       "size": {
-        "width": 40,
-        "height": 40
+        "width": 48,
+        "height": 48
       },
       "labelOffset": {
         "x": 0,
@@ -401,11 +401,11 @@
       },
       "position": {
         "x": 800,
-        "y": 140
+        "y": 136
       },
       "size": {
-        "width": 40,
-        "height": 40
+        "width": 48,
+        "height": 48
       },
       "labelOffset": {
         "x": 0,
@@ -554,11 +554,11 @@
       },
       "position": {
         "x": 800,
-        "y": 284
+        "y": 280
       },
       "size": {
-        "width": 40,
-        "height": 40
+        "width": 48,
+        "height": 48
       },
       "labelOffset": {
         "x": 0,
@@ -1193,7 +1193,7 @@
           "y": 224
         },
         {
-          "x": 532,
+          "x": 536,
           "y": 224
         }
       ]
@@ -1382,7 +1382,7 @@
       "targetHandle": "b",
       "waypoints": [
         {
-          "x": 820,
+          "x": 824,
           "y": 464
         }
       ]
@@ -1403,7 +1403,7 @@
           "y": 224
         },
         {
-          "x": 820,
+          "x": 824,
           "y": 224
         }
       ]
@@ -1454,7 +1454,7 @@
           "y": 640
         },
         {
-          "x": 276,
+          "x": 280,
           "y": 640
         }
       ]
@@ -1507,7 +1507,7 @@
     },
     {
       "x": 1104,
-      "y": 368,
+      "y": 336,
       "text": "CURRENT FEEDBACK",
       "detail": "abc → αβ → dq"
     }

@@ -137,7 +137,14 @@ function BlockNode({
           transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
         }}
       >
-        <BlockFace definition={d} />
+        <BlockFace
+          definition={d}
+          size={
+            rotation % 180
+              ? { width: bounds.height, height: bounds.width }
+              : bounds
+          }
+        />
       </div>
       {d.subsystem?.variants && (
         <VariantSwitch
@@ -170,7 +177,7 @@ function BlockNode({
         </ViewportPortal>
       )}
       {d.ports.map((port) => {
-        const { side, offset } = portPlacement(d, port, rotation);
+        const { side, offset } = portPlacement(d, port, rotation, bounds);
         const location =
           side === 'left' || side === 'right'
             ? { top: `${offset}%` }

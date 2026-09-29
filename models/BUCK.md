@@ -1,45 +1,56 @@
 # Synchronous buck converter with ideal switches
 
-Open **Examples**, choose **Use example** under **Buck converter**, then press **Run**. This creates an independent saved document. Select **Output voltage**, **Inductor current**, or **Switch gates** in the results panel. **Last 1 ms** automatically fits the vertical axis to reveal ripple; **Full run** shows startup.
+An open-loop 24 V to 12 V synchronous buck converter. Real switching events are simulated, so you can see the output ripple and the inductor current rise and fall each cycle.
+
+## Try it
+
+Open **Examples**, choose **Use example** under **Buck converter**, then choose **Run**. This saves your own copy. The example itself does not change.
 
 ## Circuit
 
-A 24 V DC source feeds complementary high-side and low-side ideal switches. Their midpoint drives a 1 mH inductor and an ideal current sensor. A 100 µF capacitor and a 10 Ω resistor connect the output to ground. An ideal voltage sensor measures output voltage without loading the circuit. Named nets identify Vin, SW, Vout, and GND.
+A 24 V DC source feeds a high-side and a low-side ideal switch that open and close in turn. Their midpoint drives a 1 mH inductor and a current sensor. A 100 µF capacitor and a 10 Ω resistor connect the output to ground. A voltage sensor measures the output without loading it. Named nets mark Vin, SW, Vout, and GND.
 
 | Parameter | Default |
 | --- | --- |
 | Input voltage | 24 V |
 | Switching frequency | 10 kHz |
-| High-side duty | 0.5 |
+| High-side duty cycle | 0.5 |
 | Inductance | 1 mH |
 | Capacitance | 100 µF |
 | Load resistance | 10 Ω |
-| Simulation stop time | 20 ms |
+| Stop time | 20 ms |
 | Initial inductor current / capacitor voltage | 0 A / 0 V |
 
-Both power switches use `Modelica.Electrical.Analog.Ideal.IdealClosingSwitch` with **Ron = 0 and Goff = 0**. A Modelica BooleanPulse generates events; the high-side gate is 0 or 1 and the low-side gate is its complement. OpenModelica resolves the changing physical connection equations and continuous states. This is a switched circuit, not an averaged duty-to-voltage block. See the [Modelica Standard Library ideal-switch documentation](https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_Analog_Ideal.html).
+Both switches are the Modelica Standard Library's ideal closing switch with zero on-resistance and zero off-conductance. A pulse generator drives the high-side gate between 0 and 1; the low-side gate is its complement. This is a switched circuit, not an averaged duty-to-voltage model. See the [Modelica Standard Library ideal-switch documentation](https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_Analog_Ideal.html).
 
-## Behavior and limits
+## What to look at
 
-This is an open-loop **synchronous** buck: there is no diode, dead time, semiconductor loss, capacitor ESR, inductor resistance, or parasitic element. The closed switches conduct in either direction. Reverse inductor current during the initial transient is therefore possible.
+- In Results, select **Output voltage**, **Inductor current**, or **Switch gates**.
+- **Last 1 ms** fits the vertical axis to show the switching ripple. **Full run** shows startup.
+- Startup overshoots to about **19.3 V** before settling near 12 V. This is expected: the circuit starts with no stored energy, has no soft start, and runs at a fixed duty cycle. It is not a regulated supply.
+- Double-click **Gate drive**, change **Duty cycle** to 0.25, and run again. The output settles near 6 V.
 
-Starting from zero stored energy produces an underdamped startup that peaks around **19.32 V** before settling near 12 V. That overshoot is expected for this initially unenergized ideal LC circuit with a resistive load and immediate fixed duty; it is not a regulated 12 V supply. A soft start and voltage/current control loops are a useful next example extension.
-
-The steady-state relations are approximately `Vout = duty × Vin`, `Iout = Vout/R`, and `ΔIL = Vin × (1-duty) × duty / (L × frequency)`. Time-weighted integration over the final ten switching cycles of the real CSV produced:
+In steady state, approximately: `Vout = duty × Vin`, `Iout = Vout / R`, and inductor ripple `ΔIL = Vin × (1 − duty) × duty / (L × frequency)`. Measured over the last ten switching cycles of a full-resolution run:
 
 | Duty | Mean output | Mean inductor current | Voltage ripple p-p | Current ripple p-p |
 | --- | --- | --- | --- | --- |
-| 0.50 | 12.000296 V | 1.199899 A | 0.076250 V | 0.601574 A |
-| 0.25 | 6.000171 V | 0.599951 A | 0.056891 V | 0.450871 A |
+| 0.50 | 12.000 V | 1.200 A | 0.076 V | 0.602 A |
+| 0.25 | 6.000 V | 0.600 A | 0.057 V | 0.451 A |
 
-These are validation results, not fixed numbers rendered by the UI. Changing circuit parameters and running again produces a new immutable OpenModelica job. The default solver remains DASSL with tolerance 1e-6 and 6,000 output intervals. The UI preserves event pairs and a dense final window; the CSV retains all output rows. DASSL can emit an extra output-grid row beyond stop time; plot previews exclude it.
+These are reference values from testing. The app computes new results each time you run.
 
-## Files and verification
+## Limits
 
-- `models/examples/buck.json`: executable template and curated layout.
-- `scripts/build-buck-example.ts`: template builder; run `npx tsx scripts/build-buck-example.ts` when editing the example.
-- `lib/gradara/power-blocks.ts`: five reusable library definitions.
-- `server/modelica.py`: canonical physical component wrappers.
-- `tests/test_buck.py`: real-engine checks for two duty cycles, complementary gates, startup conditions, steady-state voltage/current, and switching ripple.
+This is an ideal **synchronous** buck: no diode, no dead time, no switching or conduction losses, no capacitor ESR, no inductor resistance, and no parasitics. Closed switches conduct in both directions, so the inductor current can go negative during the startup transient. There is no voltage or current control loop.
 
-The sensors and source are also reusable in models created from an empty canvas. A custom control block can replace the gate generator later while retaining the physical circuit.
+**Export CSV** in Results downloads every output point. The on-screen plot is thinned out but keeps the points around each switching event.
+
+## For contributors
+
+- `models/examples/buck.json`: the template and its layout.
+- `scripts/build-buck-example.ts`: the template builder. Run `npx tsx scripts/build-buck-example.ts` after editing the example.
+- `lib/gradara/power-blocks.ts`: the five reusable library definitions used here.
+- `server/modelica.py`: the physical component wrappers.
+- `tests/test_buck.py`: real-engine checks for two duty cycles, complementary gates, startup conditions, steady-state voltage and current, and switching ripple.
+
+The reference values above come from time-weighted integration over the final ten switching cycles of the full CSV output.

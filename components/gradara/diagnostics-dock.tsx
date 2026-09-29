@@ -1,12 +1,14 @@
 'use client';
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { RESET_LAYOUT_EVENT } from './resizable-columns';
 import {
   ChevronDown,
   ChevronUp,
@@ -71,6 +73,12 @@ export function useDockState() {
     }
     for (const listener of listeners) listener();
   }, []);
+  // Reset layout closes the dock and restores its height; the chosen tab stays.
+  useEffect(() => {
+    const reset = () => update({ open: DEFAULT.open, height: DEFAULT.height });
+    window.addEventListener(RESET_LAYOUT_EVENT, reset);
+    return () => window.removeEventListener(RESET_LAYOUT_EVENT, reset);
+  }, [update]);
   return [state, update] as const;
 }
 

@@ -1,6 +1,6 @@
 # Document format and identity
 
-The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation lives in [server/models.py](../../server/models.py). Both must evolve together. FastAPI exposes the server schema at `/openapi.json`. Documents use version `1` (flat) or `2` (with subsystems); there is no promise that new schema changes are automatically backward compatible.
+The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation lives in [server/models.py](../../server/models.py). Both must evolve together. FastAPI exposes the server schema at `/api/openapi.json`. Documents use version `1` (flat) or `2` (with subsystems); see [versioning and migration](#versioning-and-migration).
 
 ## Project
 
@@ -34,11 +34,11 @@ An empty document is valid to save, but cannot be simulated:
 }
 ```
 
-Saving assigns a document identity. For realistic fixtures, start with a checked-in template under [models/examples](../../models/examples/) (DC, FOC, buck, [flyback](../../models/examples/flyback.json), or [data center cooling](../../models/examples/datacenter.json)) and create an independent model through the UI or API.
+Saving assigns a document identity. For realistic fixtures, start with a checked-in template under [models/examples](../../models/examples/) (`dc`, `servo`, `foc`, `buck`, `flyback`, `datacenter`, or `ev`; the template IDs `POST /api/models` accepts) and create an independent model through the UI or API.
 
 ## Blocks and definitions
 
-A block has an `id`, embedded `definition`, `position`, optional `size`, and optional `labelOffset`. Instances carry their own parameter values and definitions; changing the library does not silently rewrite saved instances. `definition.name` currently doubles as the human instance name. `definition.kind` chooses behavior/symbol conventions and must not change just to rename a block.
+A block has an `id`, embedded `definition`, `position`, optional `size`, and optional `labelOffset`. `position` is the top-left corner of the body and `size` its displayed width and height, in diagram units; the workbench keeps positions, pinned bends, and junctions on the 8-unit sheet grid and sizes in 16-unit steps (see the [block design contract](../blocks/DESIGN.md#the-sheet-grid)). A port's optional `offset` is a percent along its side, placed at the nearest grid step. Instances carry their own parameter values and definitions; changing the library does not silently rewrite saved instances. `definition.name` currently doubles as the human instance name. `definition.kind` chooses behavior/symbol conventions and must not change just to rename a block.
 
 Definitions contain `kind`, name/description, primary domain, symbol, ports, parameters, declarations, equations, and optional generated/controller/category/keywords metadata. Scalar signal definitions are wrapped as Modelica components. Canonical physical kinds select backend wrappers, which are authoritative for their implementation.
 
@@ -104,9 +104,9 @@ A subsystem is a block whose inside is another diagram of the same document. [hi
 
 **Definitions.** Each entry in `Project.subsystems` has an `id`, a `name`, its own `blocks`, `wires`, `junctions`, and `nets`, and optional promoted `parameters`. A definition is stored once however many instances use it. Definitions that no instance reaches from the top level are dropped when the document is edited; a document without subsystems returns to version 1.
 
-**Boundary blocks.** Inside a definition, blocks of kind `inport`, `outport`, and `connport` (library names **Subsystem input**, **Subsystem output**, and **Subsystem terminal**) carry `definition.boundary = {order, side?}`. Each has one port: an inport has an output `y` that drives the inside, an outport an input `u` that the inside drives, and a connport a physical `p`. Inports and outports take `signal` or `boolean`; connports take a physical domain. Boundary blocks are refused on the top level.
+**Boundary blocks.** Inside a definition, blocks of kind `inport`, `outport`, and `connport` (library names **Subsystem input**, **Subsystem output**, and **Subsystem terminal**) carry `definition.boundary = {order, side?}`. `order` is canonical: inputs first, then outputs, then terminals, each group in its port-number order, and `definition.symbol` holds the 1-based number within its group (Simulink-style: In 1, In 2, Out 1, …). The workbench renumbers whenever ports are added, removed, retyped, or reordered. Each has one port: an inport has an output `y` that drives the inside, an outport an input `u` that the inside drives, and a connport a physical `p`. Inports and outports take `signal` or `boolean`; connports take a physical domain. Boundary blocks are refused on the top level.
 
-**Instances.** An instance block has `definition.kind = "subsystem"` and `definition.subsystem.ref` set to a definition ID. Its ports are derived from the boundary blocks in `order`: the port ID is the boundary block's ID, the name is the boundary block's name, the direction is `input`, `output`, or `physical`, and the domain is the inner port's domain. `boundary.side` places a physical port on the outside. The server rejects an instance whose ports or parameter IDs do not match its definition, a reference to a missing definition, and any definition that contains itself directly or through others.
+**Instances.** An instance block has `definition.kind = "subsystem"` and `definition.subsystem.ref` set to a definition ID. Its ports are derived from the boundary blocks in `order`: the port ID is the boundary block's ID, the name is the boundary block's name, the direction is `input`, `output`, or `physical`, and the domain is the inner port's domain. `boundary.side` places the port on a side of the outside block (left, right, top, or bottom; inputs default left, outputs right, terminals left). The server rejects an instance whose ports or parameter IDs do not match its definition, a reference to a missing definition, and any definition that contains itself directly or through others.
 
 **Promoted parameters.** A definition's `parameters` are ordinary parameters plus `targets: [{blockId, parameterId}]`, the inner block parameters they set. Instances list the same parameter IDs and hold their own values. The inner block keeps a value of its own, which is used when the parameter is demoted.
 
@@ -127,9 +127,29 @@ A subsystem is a block whose inside is another diagram of the same document. [hi
 
 **Configurations.** `Project.configurations` holds up to 30 entries `{id, name, choices}`. `choices` maps `<sheet>/<instance ID>` to a variant ID, where the sheet is a subsystem definition ID, or empty for the top level (`/drive`). Keys for instances that no longer exist are ignored. Configurations do not change emitted source; only the active variants do.
 
+## Versioning and migration
+
+| Version | Content | Opened by |
+| --- | --- | --- |
+| `1` | Flat document: one sheet, no `subsystems`. | Every release. |
+| `2` | Adds `subsystems` and optional `configurations`. | 0.4.0 and later. Releases before 0.4 cannot open it. |
+
+The workbench writes version 1 when a document has no subsystems and version 2 when it has any, so a flat model stays readable by older releases.
+
+Older documents are brought up to date when they are loaded, not by a separate migration step:
+
+- [normalize-project.ts](../../lib/gradara/normalize-project.ts) runs on every load and edit. It assigns a missing `modelId`, normalizes names and junctions, and reconciles nets. Through `realizePlaceholders` (`lib/gradara/hierarchy.ts`) it turns a subsystem placeholder from an older document into a real subsystem.
+- `document()` in [workspace.py](../../server/workspace.py) runs on every server load. It assigns an identity to legacy documents without one, renames the retired `wiring` example, and validates the result against `Project`.
+
+Policy:
+
+- A newer release always opens files saved by an older release.
+- The version number changes only when an older release could misread a file written by a newer one. Additive optional fields that older releases ignore safely do not bump it.
+- Every version bump adds a fixture of the new format under `tests/fixtures/` and a test that loads it. Keep the old-format fixtures too.
+
 ## Normalization and persistence
 
-[normalize-project.ts](../../lib/gradara/normalize-project.ts) assigns missing document identity, normalizes block names and junctions, and reconciles nets. It also turns a library **Subsystem** block, or a subsystem placeholder in an older document, into a real subsystem whose inside passes each input to the output in the same position, so its ports and wires stay. It is used around document loading and editing. Backend [workspace.py](../../server/workspace.py) handles document creation, save/load, and legacy files.
+[normalize-project.ts](../../lib/gradara/normalize-project.ts) assigns missing document identity, puts every sheet on the sheet grid (an older document's blocks move by at most a few units, and wires that move leaves one step out of line are straightened by moving a block that holds no other straight wire), normalizes block names and junctions, and reconciles nets. It also turns a library **Subsystem** block, or a subsystem placeholder in an older document, into a real subsystem whose inside passes each input to the output in the same position, so its ports and wires stay. It is used around document loading and editing. Backend [workspace.py](../../server/workspace.py) handles document creation, save/load, and legacy files.
 
 | Path under `projects/` | Ownership |
 | --- | --- |

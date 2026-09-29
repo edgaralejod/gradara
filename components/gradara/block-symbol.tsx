@@ -1,6 +1,39 @@
 import type { ReactNode } from 'react';
 import type { Definition } from '@/lib/gradara/model';
+import { useContext } from 'react';
 import { formatBlockValue } from '@/lib/gradara/block-design';
+import {
+  SubsystemLookupContext,
+  SubsystemThumbnail,
+} from './subsystem-preview';
+
+/**
+ * A subsystem shows what it holds: a small drawing of its inside. An empty one
+ * shows an open frame; the library, which has no inside to show, a nested-sheet mark.
+ */
+function SubsystemFace({ subsystemRef }: { subsystemRef: string }) {
+  const lookup = useContext(SubsystemLookupContext);
+  const sub = lookup?.(subsystemRef);
+  if (sub?.blocks.some((b) => !b.definition.boundary))
+    return <SubsystemThumbnail subsystemRef={subsystemRef} />;
+  return (
+    <svg viewBox="0 0 60 44" className="subsystem-symbol">
+      <rect
+        x="12"
+        y="8"
+        width="36"
+        height="28"
+        rx="4"
+        strokeDasharray={sub ? '3 3' : undefined}
+      />
+      {sub ? (
+        <path d="M30 16V28M24 22H36" />
+      ) : (
+        <rect x="20" y="15" width="20" height="14" rx="2" />
+      )}
+    </svg>
+  );
+}
 
 function Icon({
   children,
@@ -38,14 +71,7 @@ export function BlockSymbol({
   const vertical =
     d.ports.find((p) => p.direction === 'physical')?.side === 'top';
   if (kind === 'sum' || kind === 'subtract') return null;
-  if (d.subsystem)
-    return (
-      <svg viewBox="0 0 60 44" className="subsystem-symbol">
-        <rect x="14" y="8" width="32" height="24" rx="1" />
-        <path d="M20 16H28M20 22H36M32 16H40" />
-        <path d="M8 20H14M46 20H52" />
-      </svg>
-    );
+  if (d.subsystem) return <SubsystemFace subsystemRef={d.subsystem.ref} />;
   if (kind === 'gain') {
     const k = d.parameters.find((p) => p.id === 'k')?.value ?? 1;
     return (
@@ -165,9 +191,17 @@ export function BlockSymbol({
   if (kind === 'subsystem')
     return (
       <Icon>
-        <rect x="9" y="9" width="16" height="26" />
-        <rect x="39" y="15" width="12" height="14" />
-        <path d="M0 22H9M25 22H39M51 22H60" />
+        <rect x="10" y="7" width="40" height="30" rx="4" />
+        <rect x="17" y="17" width="10" height="10" rx="1.5" />
+        <rect x="34" y="17" width="10" height="10" rx="1.5" />
+        <path d="M0 22H17M27 22H34M44 22H60" />
+      </Icon>
+    );
+  if (kind === 'emptySubsystem')
+    return (
+      <Icon>
+        <rect x="10" y="7" width="40" height="30" rx="4" strokeDasharray="3 3" />
+        <path d="M30 16V28M24 22H36" />
       </Icon>
     );
   if (kind === 'terminator') return <Icon path="M8 22H36M36 10V34L52 22Z" />;
@@ -185,7 +219,7 @@ export function BlockSymbol({
         <path d="M24 0V25M24 55V80M24 55L38 28" />
         <circle cx="24" cy="25" r="2" />
         <circle cx="24" cy="55" r="2" />
-        <path d="M0 40H13" stroke="#336184" strokeDasharray="3 3" />
+        <path d="M0 40H13" stroke="#1f5fbf" strokeDasharray="3 3" />
       </svg>
     );
   if (kind === 'dcSource' || kind === 'voltageSensor')
@@ -198,7 +232,7 @@ export function BlockSymbol({
         ) : (
           <>
             <path d="M18 34L24 46L30 34" />
-            <path d="M41 40H48" stroke="#336184" />
+            <path d="M41 40H48" stroke="#1f5fbf" />
           </>
         )}
       </svg>
@@ -209,7 +243,7 @@ export function BlockSymbol({
         <path d="M0 24H22M58 24H80" />
         <circle cx="40" cy="24" r="18" />
         <path d="M33 32L40 16L47 32M36 26H44" />
-        <path d="M40 42V48" stroke="#336184" />
+        <path d="M40 42V48" stroke="#1f5fbf" />
       </svg>
     );
   if (kind === 'resistor')

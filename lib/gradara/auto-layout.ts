@@ -25,7 +25,8 @@ export const LAYOUT_GAP = 96;
 /** Clearance kept around every block; the bottom also holds the instance name. */
 const MARGIN = 20;
 const NAME_SPACE = 32;
-const GRID = 20;
+/** Layout step: three sheet-grid units, so laid-out blocks stay on the grid. */
+const GRID = 24;
 
 type Rect = { x: number; y: number; width: number; height: number };
 

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Breaker (with arc) · Gradara</title>
+<meta name="description" content="Opens while control is true; an arc sustains current until it quenches.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/breaker">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Semiconductors</p>
+<h1>Breaker (with arc)</h1>
+<p class="lede">Opens while control is true; an arc sustains current until it quenches.</p>
+<h2>Description</h2>
+<p>An opening switch with a simple arc model. While control is false it is closed. When control turns true, an arc keeps current flowing with a voltage that starts at V0 and rises at dVdt up to Vmax.</p>
+<p>The arc quenches once the current has fallen to the leakage level, and the switch then blocks with conductance Goff until it closes again.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>trip</strong> <code>control</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Boolean trip command: true opens the contacts.</td></tr>
+</tbody></table>
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>+</strong> <code>p</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>Terminal 1. Current into p is counted as positive.</td></tr>
+<tr><td><strong>−</strong> <code>n</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>Terminal 2.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>On resistance</strong> <code>Ron</code></td><td class="nowrap">0.00001 Ω<br><span class="range">≥ 0</span></td><td>Closed-contact resistance, in ohms. 0 or more.</td></tr>
+<tr><td><strong>Off conductance</strong> <code>Goff</code></td><td class="nowrap">0.00001 S<br><span class="range">≥ 0</span></td><td>Conductance after the arc quenches, in siemens. 0 or more.</td></tr>
+<tr><td><strong>Arc voltage</strong> <code>V0</code></td><td class="nowrap">30 V<br><span class="range">≥ 0</span></td><td>Arc voltage at the instant of opening, in volts. 0 or more.</td></tr>
+<tr><td><strong>Arc voltage slope</strong> <code>dVdt</code></td><td class="nowrap">10000 V/s<br><span class="range">≥ 0</span></td><td>Rate at which the arc voltage rises, in V/s. 0 or more.</td></tr>
+<tr><td><strong>Maximum arc voltage</strong> <code>Vmax</code></td><td class="nowrap">60 V<br><span class="range">≥ 0</span></td><td>Maximum arc voltage, in volts. The arc voltage stops rising here; reaching it does not by itself quench the arc.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">v = p.v − n.v, i = p.i
+Closed: v = Ron · i
+Arcing: v = min(Vmax, V0 + dVdt · (time − tOpen)) · sign(i)
+Quenched once |i| ≤ Goff · |v|; then i = Goff · v</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Electrical.Analog.Ideal.OpenerWithArc</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_Analog_Ideal.html#Modelica.Electrical.Analog.Ideal.OpenerWithArc" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>The arc voltage depends only on time since opening, not on current, cooling, or contact gap. There is no re-strike after quenching.</li><li>In an AC circuit the arc quenches at the next current zero. In a DC circuit it quenches only if the arc voltage can drive the current to zero, typically when Vmax exceeds the source voltage.</li></ul>
+
+
+<h2>See also</h2>
+<p class="see-also"><a href="openingSwitch.html">Opening switch</a> <a href="closingSwitch.html">Switch (Boolean)</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

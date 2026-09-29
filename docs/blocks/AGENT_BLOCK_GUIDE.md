@@ -39,6 +39,13 @@ Keep visible terminal names to roughly 1–5 characters. Use meaningful names fo
 5. Use the existing port geometry helpers and domain colors. Verify each visible terminal and its wiring hit target agree, especially top/bottom and mixed-domain ports. Preserve full accessible labels and pointer ownership.
 6. Open `/block-catalog`, filter to the new block, and review its full-size drawing and library thumbnail. Check 100% and 200% zoom, minimum/default/enlarged sizes in the actual canvas, plus a neighboring source–operator–sink chain. Verify captions, fractions, signs, and lead continuity. Check narrow library widths and long names/large parameter values.
 7. Run `npm run report:blocks` to inspect the ignored local inventory. Run `npm run typecheck` and the existing frontend tests for any geometry/insertion changes. Use focused numerical validation if behavior changes; a visual-only edit should not require a new solver.
+8. For a signal block that should appear in generated controller C code, add its template to `t_signal` in `server/codegen.py`: output statements, state with initial values, update statements, and whether the output reads the input in the same step (feedthrough). Continuous states use the shared discretization helpers; sampled blocks run on a period parameter. A block without a template is refused by name when code is generated. Add tests:
+   - `tests/test_codegen.py`: the generated code compiles and matches the block's equations on a short input (see the integrator and unit-delay tests). If the block is used in an example controller, extend the replay test that compares the C output with a simulation.
+   - `tests/codegen.test.ts`: when the block's library category or ports change whether `isControlBlock` (`lib/gradara/codegen.ts`) counts it as controller code.
+
+   See [controller C code](../architecture/EXECUTION.md#controller-c-code).
+
+9. Write its reference page: an entry in the matching file under `lib/gradara/block-docs/` (see `types.ts`) with a description, every port, every parameter, the equations as implemented, and its assumptions and limitations. Derive it from the code or the MSL class, not from the one-line description. `tests/block-docs.test.ts` fails when a block, port, or parameter has no entry. Then run `npm run docs:blocks` to regenerate the gradara.app pages in `site/public/docs/blocks/`; CI fails when they are stale.
 
 A block is ready when it is recognizable at normal zoom, contributes to a quiet diagram, has no overlapping notation or captions, and behaves through the same selection, wiring, resizing, naming, and history mechanisms as every other block. Record a remaining limitation explicitly instead of implying an icon makes a placeholder simulation feature complete.
 
@@ -51,6 +58,7 @@ Wrapper blocks live in `lib/gradara/msl-blocks.ts`, which is generated. Do not e
 3. Run `python3 scripts/msl-blocks.py > lib/gradara/msl-blocks.ts`. The script refuses a class, parameter, or connector that is not in the index. `tests/test_msl.py` fails when the generated file is stale and checks every wrapper with `server/msl.py`.
 4. Run the block through the engine: `.venv/bin/python -m pytest -q -m integration tests/test_msl_engine.py -k <kind>`. `tests/test_msl_engine.py` places every wrapper block in a harness (constant inputs, each physical terminal tied to its domain's reference through a lossy element) and requires a completed run. A block that needs a working circuit to be well posed gets its own entry in `CIRCUITS`. For new physics, add a check with engineering meaning, like the spring-mass, heat capacitor, and inverting amplifier tests there.
 5. Review the drawing in `/block-catalog` as in step 6 above. Most wrapper blocks use the generic body and captions; add a `BlockSymbol` only when a familiar symbol exists.
+6. Write its reference page as in step 9 above.
 
 ## Subsystems are not blocks to author
 

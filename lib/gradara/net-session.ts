@@ -3,12 +3,17 @@ import type { Domain, Junction, Project, Wire } from './model';
 import {
   connectionError,
   endpointPoint,
+  endpointPort,
   isTap,
   netKeys,
   TAP_HANDLE,
 } from './net';
 import { linkEnds, pruneJunctions } from './project';
 import { moveJunctions, normalizeJunctions } from './net-layout';
+import { isInstance, type BoundaryKind } from './hierarchy';
+import { bodyOf } from './router';
+import { snap } from './grid';
+import { addInstancePort, defaultSide, type Side } from './subsystem-ports';
 import { sideToPosition } from './ports';
 import {
   EXIT_STUB,
@@ -46,6 +51,8 @@ export type SnapTarget = {
   point: Pt;
   end: End;
   wireId?: string;
+  /** Released on a subsystem block's body: a new port is made there, as in Simulink. */
+  newPort?: { instanceId: string; kind: BoundaryKind; side: Side };
   error: string | null;
 };
 const newId = (prefix: string) =>
@@ -89,11 +96,14 @@ export class NetSession {
   preview(): Pt[] {
     if (this.mode === 'idle' || !this.start) return [];
     if (this.target && !this.target.error) {
-      const to = endpointPoint(
-        this.project,
-        this.target.end.id,
-        this.target.end.handle,
-      )!;
+      const made = this.target.newPort;
+      const to = made
+        ? { ...this.target.point, side: made.side }
+        : endpointPoint(
+            this.project,
+            this.target.end.id,
+            this.target.end.handle,
+          )!;
       const entry =
         this.target.wireId || isTap(this.project, this.target.end.id)
           ? undefined
@@ -254,6 +264,8 @@ export class NetSession {
         wireId: wire.id,
         error: this.targetError(end),
       };
+    } else if (!this.editing) {
+      this.target = this.newPortAt(this.raw);
     }
     const snapped = snapToAnchors(
       this.raw,
@@ -264,10 +276,59 @@ export class NetSession {
       ],
       ANCHOR_PX / this.zoom,
     );
-    this.cursor = this.target?.point ?? snapped.point;
+    // Free bends sit on the sheet grid, like ports, unless a guide holds that axis.
+    const guided = new Set(snapped.guides.map((g) => g.axis));
+    const free = {
+      x: guided.has('x') ? snapped.point.x : snap(snapped.point.x),
+      y: guided.has('y') ? snapped.point.y : snap(snapped.point.y),
+    };
+    this.cursor = this.target?.point ?? free;
     this.guides = this.target ? [] : snapped.guides;
     if (!this.corners.length && isTap(this.project, this.from.id))
       this.exit = segmentExit(this.origin, this.cursor);
+  }
+  /** A new port on the subsystem block under the pointer, typed by where the wire comes from. */
+  private newPortAt(at: Pt): SnapTarget | null {
+    if (!this.from) return null;
+    const block = this.project.blocks.find((b) => {
+      if (!isInstance(b) || b.id === this.from!.id) return false;
+      const r = bodyOf(b);
+      return (
+        at.x >= r.x &&
+        at.x <= r.x + r.width &&
+        at.y >= r.y &&
+        at.y <= r.y + r.height
+      );
+    });
+    const from = endpointPort(
+      this.project,
+      this.from.id,
+      this.from.handle,
+      'source',
+    );
+    if (!block || !from) return null;
+    const kind: BoundaryKind =
+      from.direction === 'physical'
+        ? 'connport'
+        : from.direction === 'output'
+          ? 'inport'
+          : 'outport';
+    const r = bodyOf(block);
+    const side: Side =
+      kind === 'connport'
+        ? at.x < r.x + r.width / 2
+          ? 'left'
+          : 'right'
+        : defaultSide(kind);
+    return {
+      end: { id: block.id, handle: '' },
+      point: {
+        x: side === 'left' ? r.x : r.x + r.width,
+        y: Math.min(r.y + r.height - 10, Math.max(r.y + 10, at.y)),
+      },
+      newPort: { instanceId: block.id, kind, side },
+      error: null,
+    };
   }
   release(at?: Pt) {
     if (this.mode !== 'connecting' || !this.start) return;
@@ -334,9 +395,21 @@ export class NetSession {
     if (this.target.error) throw new Error(this.target.error);
     const before = this.project;
     try {
-      const to = this.target.wireId
-        ? this.spliceAt(this.target.wireId, this.target.point)
-        : this.target.end;
+      const made = this.target.newPort;
+      let to: End | null;
+      if (made) {
+        const domain = domainOf(this.project, this.from);
+        const result = addInstancePort(this.project, made.instanceId, {
+          kind: made.kind,
+          domain,
+          side: made.side,
+        });
+        this.project = result.project;
+        to = { id: made.instanceId, handle: result.portId };
+      } else
+        to = this.target.wireId
+          ? this.spliceAt(this.target.wireId, this.target.point)
+          : this.target.end;
       if (!to) return false;
       this.commitTo(to);
       return true;

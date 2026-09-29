@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { GRID } from '../lib/gradara/grid';
 import { initialProject, library } from '../lib/gradara/model';
 import { fuzzyScore } from '../lib/gradara/fuzzy';
 import { searchLibrary } from '../lib/gradara/catalog';
@@ -68,7 +69,10 @@ void test('block dialog edits change only the named block values and keep wiring
     next.blocks.filter((b) => b.id !== 'controller'),
     p.blocks.filter((b) => b.id !== 'controller'),
   );
-  assert.equal(p.blocks.find((b) => b.id === 'controller')!.definition.name, controller.definition.name);
+  assert.equal(
+    p.blocks.find((b) => b.id === 'controller')!.definition.name,
+    controller.definition.name,
+  );
 });
 void test('block dialog edits without changes return the same project', () => {
   const p = initialProject();
@@ -76,7 +80,9 @@ void test('block dialog edits without changes return the same project', () => {
   assert.equal(
     applyBlockEdits(p, 'controller', {
       name: controller.name,
-      parameters: Object.fromEntries(controller.parameters.map((x) => [x.id, x.value])),
+      parameters: Object.fromEntries(
+        controller.parameters.map((x) => [x.id, x.value]),
+      ),
       equations: controller.equations,
       declarations: controller.declarations ?? '',
     }),
@@ -88,7 +94,9 @@ void test('block dialog edits without changes return the same project', () => {
 void test('block dialog equation edits follow replaceDefinition', () => {
   const p = initialProject();
   const d = p.blocks.find((b) => b.id === 'controller')!.definition;
-  const next = applyBlockEdits(p, 'controller', { equations: d.equations + '\n' });
+  const next = applyBlockEdits(p, 'controller', {
+    equations: d.equations + '\n',
+  });
   assert.deepEqual(
     next,
     replaceDefinition(p, 'controller', { ...d, equations: d.equations + '\n' }),
@@ -206,11 +214,13 @@ void test('dragging preserves transient geometry and produces only one saved tra
 });
 void test('corner resize commits size and origin together, can undo, and keeps wires', () => {
   const p = initialProject();
+  // Dragging the top-left corner of the 64 × 64 reference at (0, 48): its right and
+  // bottom edges stay at x = 64 and y = 112, and the size snaps to whole size steps.
   const g = new CanvasGestures();
   const initial = reconcileNodes([], [], p.blocks, ['reference']);
   const resizing = g.apply(
     [
-      { id: 'reference', type: 'position', position: { x: -40, y: 65 } },
+      { id: 'reference', type: 'position', position: { x: -144, y: -38 } },
       {
         id: 'reference',
         type: 'dimensions',
@@ -240,8 +250,8 @@ void test('corner resize commits size and origin together, can undo, and keeps w
   );
   assert.equal(finished.layouts.length, 1);
   const next = applyLayout(p, finished.layouts);
-  assert.deepEqual(blockSize(next.blocks[0]), { width: 208, height: 150 });
-  assert.deepEqual(next.blocks[0].position, { x: -40, y: 65 });
+  assert.deepEqual(blockSize(next.blocks[0]), { width: 208, height: 144 });
+  assert.deepEqual(next.blocks[0].position, { x: -144, y: -32 });
   assert.equal(next.wires, p.wires);
   assert.equal(semanticSignature(next), semanticSignature(p));
   const afterCommit = reconcileNodes(finished.nodes, p.blocks, next.blocks, [
@@ -327,9 +337,9 @@ void test('downstream placement is on the grid and to the right', () => {
   const p = initialProject();
   const gain = library.find((d) => d.kind === 'gain')!;
   const at = placeDownstream(p.blocks[0], gain);
-  assert.equal(at.x % 20, 0);
+  assert.equal(at.x % GRID, 0);
   assert.ok(at.x > p.blocks[0].position.x);
-  assert.deepEqual(snapPoint({ x: 13, y: 27 }), { x: 20, y: 20 });
+  assert.deepEqual(snapPoint({ x: 13, y: 27 }), { x: 16, y: 24 });
 });
 
 void test('a new block is placed so the connecting ports share a straight line', () => {

@@ -6,20 +6,25 @@ import {
   showPortLabel,
   sideOf,
 } from '@/lib/gradara/block-design';
-import { portOffset } from '@/lib/gradara/ports';
+import { portOffset, sideLength } from '@/lib/gradara/ports';
 import { BlockSymbol } from './block-symbol';
+import { CircuitSymbol } from './circuit-symbol';
+import { isPictorial } from '@/lib/gradara/pictorial';
 
 /** The sole visual renderer. Port interaction and labels outside the body belong to the canvas. */
 export function BlockFace({
   definition: d,
   thumbnail = false,
+  size = defaultBlockSize(d),
 }: {
   definition: Definition;
   thumbnail?: boolean;
+  /** The face before rotation; port captions follow the block's grid ports. */
+  size?: { width: number; height: number };
 }) {
   const shape = blockShape(d);
   const inset = (side: string) =>
-    shape !== 'box'
+    shape !== 'box' && shape !== 'subsystem'
       ? undefined
       : Math.max(
           8,
@@ -53,10 +58,7 @@ export function BlockFace({
         {shape === 'boundary' ? (
           <rect x="1" y="1" width="98" height="98" rx="14" ry="48" />
         ) : shape === 'subsystem' ? (
-          <>
-            <rect className="sheet-behind" x="5" y="1" width="94" height="94" rx="1" />
-            <rect x="1" y="5" width="94" height="94" rx="1" />
-          </>
+          <rect x="1" y="1" width="98" height="98" rx="3" />
         ) : shape === 'sum' ? (
           <ellipse cx="50" cy="50" rx="49" ry="49" />
         ) : shape === 'gain' ? (
@@ -72,20 +74,24 @@ export function BlockFace({
       {shape === 'boundary' ? (
         <span className="boundary-pill">
           <span className="boundary-glyph" data-domain={d.ports[0]?.domain}>
-            {d.kind === 'connport' ? '' : (d.boundary?.order ?? 0) + 1}
+            {d.kind === 'connport' ? '' : d.symbol}
           </span>
           <span className="boundary-name">{d.name}</span>
         </span>
       ) : (
         <span className="block-symbol">
-          <BlockSymbol definition={d} thumbnail={thumbnail} />
+          {isPictorial(d.kind) ? (
+            <CircuitSymbol definition={d} size={size} />
+          ) : (
+            <BlockSymbol definition={d} thumbnail={thumbnail} />
+          )}
         </span>
       )}
       {d.ports
         .filter((p) => showPortLabel(d, p))
         .map((p) => {
           const side = sideOf(p),
-            offset = portOffset(d, p);
+            offset = portOffset(d, p, sideLength(p, size));
           return (
             <span
               key={p.id}
@@ -142,7 +148,7 @@ export function BlockPreview({
         <BlockFace definition={definition} thumbnail={miniature} />
         {definition.ports.map((p) => {
           const side = sideOf(p),
-            offset = portOffset(definition, p);
+            offset = portOffset(definition, p, sideLength(p, size));
           return (
             <span
               key={p.id}

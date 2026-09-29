@@ -4,24 +4,28 @@ An agent-assisted workbench for graphical, multidomain simulation. Build a diagr
 
 Gradara puts the diagram first: responsive orthogonal wiring, recognizable engineering symbols, domain-colored ports, and equations you can inspect. Agents help author components; the Modelica compiler and numerical runtime execute the model.
 
-**Status: early release.** Desktop installers are built for Windows, macOS, and Linux. The source workflow on macOS has been exercised end to end; installer builds for each platform are validated in CI, and platform reports are welcome. MATLAB script compatibility is outside scope.
+**Status: early release.** Desktop apps are available for Windows, macOS, and Linux. Every installer is built and install-tested automatically; full simulation runs are checked by hand for each release (see [supported platforms](docs/PLATFORMS.md)). Please report problems on your system. Gradara does not run MATLAB scripts or open Simulink files.
 
-Created by **Edgar Duarte**. Engineering consulting through **[Virtu Services](https://virtu-services.us)**.
+Gradara is not certified for safety-critical use; verify results independently. [Validation](docs/VALIDATION.md) shows its results next to closed-form answers.
 
-[Get started](docs/development/SETUP.md) · [Documentation](docs/README.md) · [Contribute](CONTRIBUTING.md) · [Agent instructions](AGENTS.md) · [Roadmap](ROADMAP.md)
+Created by **Edgar Duarte**. Published by **Virtu Services LLC**. Engineering consulting through **[Virtu Services](https://virtu-services.us)**.
+
+[Get started](docs/INSTALL.md) · [User guide](docs/USER_GUIDE.md) · [FAQ](docs/FAQ.md) · [Documentation](docs/README.md) · [Developer setup](docs/development/SETUP.md) · [Contribute](CONTRIBUTING.md) · [Roadmap](ROADMAP.md)
 
 Source: **[edgaralejod/gradara on GitHub](https://github.com/edgaralejod/gradara)** · [Report an issue](https://github.com/edgaralejod/gradara/issues) · Apache-2.0 licensed.
 
 ## Install
 
-Download the installer for your computer from **[gradara.app](https://gradara.app/)** or the [latest GitHub release](https://github.com/edgaralejod/gradara/releases/latest): Windows (`.exe`), macOS (`.dmg`, Apple silicon or Intel), or Linux (`.AppImage` or `.deb`).
+Download the installer for your computer from **[gradara.app](https://gradara.app/)** or the [latest GitHub release](https://github.com/edgaralejod/gradara/releases/latest): Windows (`.exe`), macOS (`.dmg`, Apple silicon or Intel), or Linux (`.AppImage` or `.deb`). The [install guide](docs/INSTALL.md) walks through each system.
 
 On first launch, **Settings → Engine** walks through the one-time simulation engine setup:
 
-- **Windows and Linux:** install [OpenModelica](https://openmodelica.org/download/), then let Gradara install the Modelica Standard Library.
-- **macOS:** install a container runtime (OrbStack, Docker Desktop, or Colima), then let Gradara download the engine image.
+- **Windows and Linux:** install [OpenModelica](https://openmodelica.org/download/) 1.27, then let Gradara install the Modelica Standard Library.
+- **macOS:** install Colima (`brew install colima docker`), then let Gradara start it and download the engine image.
 
-AI features are optional. Choose **Gradara AI** (sign in, prepaid credits, no setup), your own OpenAI or Anthropic API key, or turn AI off in **Settings → AI**. See [AI setup](docs/AGENT_SETUP.md) and [privacy](docs/PRIVACY.md).
+Then follow [your first 10 minutes](docs/USER_GUIDE.md#your-first-10-minutes).
+
+AI features are optional. Choose **Gradara AI** (sign in, 20 free credits, then prepaid packs), your own OpenAI or Anthropic API key, or turn AI off in **Settings → AI**. See [AI features](docs/AGENT_SETUP.md) and [privacy](docs/PRIVACY.md).
 
 ## Run from source
 
@@ -36,11 +40,11 @@ python3 -m venv .venv
 .venv/bin/python scripts/start.py
 ```
 
-Open **[localhost:4317](http://localhost:4317)**. With Docker, the first start builds the OpenModelica image; allow several minutes and network access. On macOS, double-clicking **Start Gradara.command** launches this checkout the same way. See [setup and platform notes](docs/development/SETUP.md) for the desktop build, engine choices, and separate service startup.
+Open **[localhost:4317](http://localhost:4317)**. With Docker, the first start builds the OpenModelica image; allow several minutes and network access. On macOS, double-clicking **Start Gradara.command** launches this checkout the same way. See the [developer setup](docs/development/SETUP.md) for the desktop build, engine choices, and separate service startup.
 
 ## Start with a model
 
-A fresh workspace opens with one empty **Untitled model**. Click its title to rename it, **New model** for another blank document, or **Examples** to create an independent copy of a built-in model. New documents receive unique names.
+A fresh workspace opens with one empty **Untitled model**. Click its title to rename it, choose **New model** for another blank model, or **Examples** to save your own copy of a built-in model.
 
 | Starting point | What to explore |
 | --- | --- |
@@ -53,9 +57,9 @@ A fresh workspace opens with one empty **Untitled model**. Click its title to re
 | [480 VAC flyback](docs/examples/FLYBACK.md) | Bridge rectification, magnetizing energy storage, and 50 kHz switching to 24 V / 1 A. |
 | [Data center cooling](docs/examples/DATACENTER.md) | A one-hour lumped electrical–thermal PI benchmark with load and cooling-capacity disturbances. |
 
-**Models** opens a searchable browser with **My models**, **Examples**, and recoverable **Trash**. Saved rows show block counts and last-save times. **Save a copy** preserves the original; **Import file** always creates a separate document with a unique name. Export a `.gradara.json` file to share a model. Original `.flux.json` files remain supported.
+**Models** opens a searchable browser with **My models**, **Examples**, and **Trash**. **Save a copy** keeps the original; **Import file** always creates a separate model. Export a `.gradara.json` file to share a model.
 
-The repository includes only the curated example templates. Personal models, Trash, simulation runs, and generated artifacts are local data excluded from Git.
+Your models, results, and settings stay in your data folder on your computer (**Help → Open Data Folder**). The repository includes only the built-in examples.
 
 ## What works today
 
@@ -66,22 +70,22 @@ The repository includes only the curated example templates. Personal models, Tra
 - Asynchronous OpenModelica simulation, cancellation, saved runs, plots, and complete CSV downloads. A Problems dock lists live model checks and block-mapped run diagnostics; click one to select the blocks involved.
 - Agent-created signal, electrical, rotational and translational mechanical, magnetic, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.
 - An Assistant that proposes checked edits to the open model and explains or fixes failed runs; every proposal is reviewed and applied as one undo step.
-- Modelica source export, portable project export, and deterministic C11 for a controller: a subsystem or a set of signal blocks, with Tustin, backward, or forward Euler discretization, and a check that replays the last run through the compiled code.
-- Desktop installers with first-run engine setup, a native OpenModelica or container engine, and a choice of Gradara AI credits, your own OpenAI or Anthropic key, or no AI.
+- Modelica source export, portable project export, and C11 code for a controller: a subsystem, the selected signal blocks, or the controller Gradara detects on the sheet. Choose Tustin, backward, or forward Euler for continuous blocks, then check the compiled code against the last run's recorded inputs and outputs.
+- Desktop installers with first-run engine setup, a native OpenModelica or container engine, automatic updates, and a choice of Gradara AI (20 free credits, then prepaid packs), your own OpenAI or Anthropic key, or no AI.
 
-Drawing, dragging, and routing stay in the workbench. The local FastAPI service saves project documents and supervises OpenModelica jobs, using a native OpenModelica install or the pinned container image. The authoring representation is currently **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.
+Drawing, dragging, and routing stay in the workbench. The local FastAPI service saves project documents and supervises OpenModelica jobs, using a native OpenModelica install or the pinned container image. Models are stored as **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.
 
 ## Controls
 
-Drag between ports, or click a port and then its destination. Drop on wire ink to join a net. Select a wire to reshape it; **D** redraws and **R** restores automatic routing. **Escape** cancels a gesture. Drag a block's name to reposition its label.
+Drag between ports, or click a port and then its destination. Drop on a wire to join it. Select a wire to reshape it; **D** redraws and **R** restores automatic routing. **Escape** cancels a gesture. Double-click empty canvas to add a block; double-click a block to edit it.
 
-Drag empty canvas to select. Pan with the middle/right mouse button or Space. **F** fits the model; **⌘/Ctrl+Z** undoes; **⌘/Ctrl+D** duplicates. The in-app Shortcuts dialog lists more gestures. See the [user guide](docs/USER_GUIDE.md) and [wiring contract](docs/architecture/WIRING.md).
+Drag empty canvas to select. Pan with the middle or right mouse button or Space. **F** fits the model; **⌘/Ctrl+Enter** runs; **⌘/Ctrl+Z** undoes. Press **?** in the app for every shortcut, or see the [keyboard shortcuts](docs/USER_GUIDE.md#keyboard-shortcuts) table. Developers: see the [wiring contract](docs/architecture/WIRING.md).
 
 ## Boundaries
 
 This is a trusted, single-user local application. **Do not expose the local service to a public network.** It accepts only loopback requests from its own workbench and has no multi-user authorization. Models and runs live in your data folder (`projects/` in a source checkout). See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
-Vector/bus execution, arbitrary Modelica import and round trips, general solver interchangeability, FMI, remote simulation, and HDL generation are future work. Mux/demux blocks are visible but drawing-only, and report that when you run. C compilation does not establish behavioral equivalence or target-hardware correctness. The [roadmap](ROADMAP.md) describes bounded opportunities to help.
+Vector and bus signals, Modelica import, FMI, remote simulation, and HDL generation are not available. Mux and Demux blocks are drawing-only and report that when you run. Checking C code against a simulation does not prove it behaves correctly on your target hardware. Gradara is not certified for safety-critical use; verify results independently. The [roadmap](ROADMAP.md) lists planned work.
 
 ## Develop and contribute
 

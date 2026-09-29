@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PWM generator · Gradara</title>
+<meta name="description" content="Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/pwmSignal">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Converters</p>
+<h1>PWM generator</h1>
+<p class="lede">Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.</p>
+<h2>Description</h2>
+<p>Generates a pulse-width-modulated fire signal and its complement. The duty-cycle input is clipped to 0…1, sampled at the start of each switching period, and compared with a sawtooth carrier that rises from 0 to 1 once per period.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>d</strong> <code>dutyCycle</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Duty cycle, dimensionless. Values outside 0…1 are clipped.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>fire</strong></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>PWM output (Boolean): true while the held duty cycle exceeds the carrier.</td></tr>
+<tr><td><strong>fire̅</strong> <code>notFire</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Complement of fire.</td></tr>
+</tbody></table>
+
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Switching frequency</strong> <code>f</code></td><td class="nowrap">10000 Hz<br><span class="range">≥ 0</span></td><td>Switching frequency, in Hz. Positive; the switching period is 1 / f.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">dk = min(max(dutyCycle(k / f), 0), 1), held for k / f ≤ time &lt; (k + 1) / f
+carrier = f · time − floor(f · time)
+fire = dk &gt; carrier, notFire = not fire</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Electrical.PowerConverters.DCDC.Control.SignalPWM</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_PowerConverters_DCDC_Control.html#Modelica.Electrical.PowerConverters.DCDC.Control.SignalPWM" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>Sawtooth carrier only, starting at time 0 (trailing-edge modulation). No dead time between fire and notFire.</li><li>The duty cycle is sampled once per period, so the output lags the input by up to one period.</li></ul>
+<h2>Tips</h2>
+<ul><li>Each period adds two events; keep the maximum step size well below 1 / f.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="buckConverter.html">Buck converter</a> <a href="hBridge.html">H-bridge</a> <a href="buckBoostConverter.html">Buck-boost converter</a> <a href="pwmPair.html">Complementary PWM</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

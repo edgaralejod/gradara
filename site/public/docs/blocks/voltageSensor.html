@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voltage sensor · Gradara</title>
+<meta name="description" content="Measures voltage between two electrical nodes without loading the circuit.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/voltageSensor">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Electrical</p>
+<h1>Voltage sensor</h1>
+<p class="lede">Measures voltage between two electrical nodes without loading the circuit.</p>
+<h2>Description</h2>
+<p>Measures the voltage between two nodes and outputs it as a signal. It draws no current, so it does not load the circuit.</p>
+<h2>Ports</h2>
+
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>V</strong> <code>y</code></td><td><span class="port-domain domain-signal">signal</span> · V</td><td>Measured voltage p.v − n.v, in volts.</td></tr>
+</tbody></table>
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>+</strong> <code>p</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>Positive measuring pin.</td></tr>
+<tr><td><strong>−</strong> <code>n</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>Negative measuring pin.</td></tr>
+</tbody></table>
+
+<h2>Equations</h2>
+<pre class="equations">y = p.v − n.v
+p.i = 0
+n.i = 0</pre>
+
+<h2>Assumptions and limitations</h2>
+<ul><li>Ideal: infinite input impedance, no bandwidth limit or noise.</li></ul>
+
+<h2>Examples</h2>
+<p>Used in the shipped examples <strong>Buck converter · Ideal switches</strong>, <strong>EV drivetrain</strong>, <strong>480 VAC → 24 VDC flyback</strong>. Open them from <strong>Examples</strong> in the app.</p>
+<h2>See also</h2>
+<p class="see-also"><a href="currentSensor.html">Current sensor</a> <a href="powerSensor.html">Power sensor</a> <a href="scope.html">Scope</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

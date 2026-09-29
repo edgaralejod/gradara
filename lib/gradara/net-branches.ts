@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { Project, Wire } from './model';
-import { endpointPoint, endpointPort, TAP_HANDLE } from './net';
+import { endpointPoint, endpointPort, netComponents, TAP_HANDLE } from './net';
+import { isCausal, type Project, type Wire } from './model';
 import { polylineOfWire, samePt } from './net-draw';
 import { simplifyPoints, type Pt } from './routing';
 
@@ -29,16 +29,59 @@ function prefix(a: Pt[], b: Pt[]) {
   return { common, a: [at, ...a.slice(i)], b: [at, ...b.slice(j)], at };
 }
 
+/**
+ * Junctions of one net that end up on the same point (a run dragged onto another run
+ * carries its dot along) become one junction, so the wires meeting there can branch
+ * properly. Dots of different nets are never merged: only connectivity decides.
+ */
+export function mergeCoincidentJunctions(project: Project): Project {
+  const junctions = project.junctions ?? [];
+  if (junctions.length < 2) return project;
+  const netOf = new Map<string, number>();
+  netComponents(project).forEach((keys, i) => {
+    for (const k of keys) if (k.startsWith('j:')) netOf.set(k.slice(2), i);
+  });
+  const into = new Map<string, string>();
+  junctions.forEach((j, i) => {
+    const keep = junctions
+      .slice(0, i)
+      .find(
+        (k) =>
+          !into.has(k.id) &&
+          samePt(k.position, j.position) &&
+          netOf.has(j.id) &&
+          netOf.get(k.id) === netOf.get(j.id),
+      );
+    if (keep) into.set(j.id, keep.id);
+  });
+  if (!into.size) return project;
+  const to = (id: string) => into.get(id) ?? id;
+  return {
+    ...project,
+    junctions: junctions.filter((j) => !into.has(j.id)),
+    wires: project.wires
+      .map((w) => ({ ...w, source: to(w.source), target: to(w.target) }))
+      // The link between two merged dots is now a loop on one dot.
+      .filter((w) => w.source !== w.target),
+  };
+}
+
 /** Factor shared terminal-to-branch runs into real, movable junctions in every domain. */
 export function materializeBranches(project: Project): Project {
-  let next = project;
+  let next = mergeCoincidentJunctions(project);
   const limit = project.wires.length;
   for (let pass = 0; pass < limit; pass++) {
     const groups = new Map<string, { wire: Wire; reversed: boolean }[]>();
     for (const wire of next.wires) {
       for (const reversed of [false, true]) {
         const id = reversed ? wire.target : wire.source;
-        if (!next.blocks.some((b) => b.id === id)) continue;
+        // Block terminals, and junctions: two wires leaving one dot along the same
+        // run branch where they part, like two wires leaving one port.
+        if (
+          !next.blocks.some((b) => b.id === id) &&
+          !next.junctions?.some((j) => j.id === id)
+        )
+          continue;
         const key = `${id}.${reversed ? wire.targetHandle : wire.sourceHandle}`;
         const list = groups.get(key) ?? [];
         list.push({ wire, reversed });
@@ -58,6 +101,22 @@ export function materializeBranches(project: Project): Project {
           };
           const branch = prefix(path(first), path(second));
           if (!branch) continue;
+          const dot = next.junctions?.find(
+            (j) =>
+              j.id === (first.reversed ? first.wire.target : first.wire.source),
+          );
+          if (dot) {
+            // A signal dot has one incoming driver; only outgoing wires share a run.
+            if (isCausal(dot.domain) && (first.reversed || second.reversed))
+              continue;
+            // When every wire at the dot leaves along this run, the dot itself belongs
+            // at the divergence: normalizeJunctions moves it instead.
+            const heading = (p: Pt[]) =>
+              `${Math.sign(p[1].x - p[0].x)},${Math.sign(p[1].y - p[0].y)}`;
+            const shared = heading(branch.common);
+            if (group.every((entry) => heading(path(entry)) === shared))
+              continue;
+          }
           // A later fan-out can share a trunk we just materialized. Attach
           // it to that existing node instead of retaining an overlapping wire.
           if (branch.a.length === 1 || branch.b.length === 1) {

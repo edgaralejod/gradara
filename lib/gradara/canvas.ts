@@ -7,6 +7,7 @@ import {
 import type { Block, Definition, Domain, Project } from './model';
 import { TAP_SIZE } from './net';
 import { minimumDesignedSize, snapBlockPosition } from './block-design';
+import { snap as snapGrid, snapLength } from './grid';
 
 export type BlockNodeData = {
   definition: Definition;
@@ -50,19 +51,20 @@ export function minimumBlockSize(definition: Definition, rotation = 0) {
 /** Unsized v1 documents keep their original geometry. New insertions persist defaultBlockSize. */
 export function blockSize(block: Block) {
   if (block.size) return block.size;
+  // Unsized version 1 blocks: their original proportions, in whole size steps.
   const kind = block.definition.kind;
-  if (kind === 'sum' || kind === 'subtract') return { width: 36, height: 36 };
-  if (kind === 'gain') return { width: 72, height: 64 };
-  if (kind === 'ground') return { width: 48, height: 40 };
-  if (kind === 'scope') return { width: 92, height: 64 };
-  if (kind === 'subsystem') return { width: 150, height: 92 };
-  if (kind === 'mux' || kind === 'demux') return { width: 48, height: 72 };
+  if (kind === 'sum' || kind === 'subtract') return { width: 48, height: 48 };
+  if (kind === 'gain') return { width: 80, height: 64 };
+  if (kind === 'ground') return { width: 48, height: 48 };
+  if (kind === 'scope') return { width: 96, height: 64 };
+  if (kind === 'subsystem') return { width: 160, height: 96 };
+  if (kind === 'mux' || kind === 'demux') return { width: 48, height: 80 };
   if (['resistor', 'capacitor', 'inductor', 'diode'].includes(kind))
-    return { width: 80, height: 44 };
-  if (compactKinds.has(kind)) return { width: 64, height: 56 };
+    return { width: 80, height: 48 };
+  if (compactKinds.has(kind)) return { width: 64, height: 64 };
   if (['pid', 'pi', 'filter', 'secondOrder', 'currentPI'].includes(kind))
-    return { width: 96, height: 70 };
-  return { width: 120, height: 90 };
+    return { width: 96, height: 64 };
+  return { width: 128, height: 96 };
 }
 
 const samePosition = (a: Block['position'], b: Block['position']) =>
@@ -216,6 +218,7 @@ export class CanvasGestures {
         changes = changes.map((c) => (c === anchor ? { ...c, position } : c));
       }
     }
+    changes = snapResize(changes, nodes);
     const positions = changes.filter(
       (c): c is NodePositionChange =>
         c.type === 'position' && !!c.position && c.dragging !== undefined,
@@ -276,4 +279,48 @@ export class CanvasGestures {
     }
     return { nodes: next, layouts };
   }
+}
+
+/**
+ * Resizing moves in whole size steps and keeps the edge you are not dragging where
+ * it was, so a resized block's ports stay on the sheet grid (see grid.ts).
+ */
+function snapResize<N extends CanvasNode>(
+  changes: NodeChange<N>[],
+  nodes: N[],
+): NodeChange<N>[] {
+  const resized = new Map<string, { width: number; height: number }>();
+  for (const c of changes)
+    if (c.type === 'dimensions' && c.resizing !== undefined && c.dimensions)
+      resized.set(c.id, {
+        width: snapLength(c.dimensions.width),
+        height: snapLength(c.dimensions.height),
+      });
+  if (!resized.size) return changes;
+  return changes.map((c) => {
+    if (c.type === 'dimensions' && resized.has(c.id))
+      return { ...c, dimensions: resized.get(c.id)! };
+    if (c.type !== 'position' || !c.position || !resized.has(c.id)) return c;
+    const node = nodes.find((n) => n.id === c.id);
+    if (!node) return c;
+    const size = resized.get(c.id)!;
+    const width = node.width ?? size.width;
+    const height = node.height ?? size.height;
+    // Dragging a left or top handle: the right or bottom edge stays put.
+    return {
+      ...c,
+      position: {
+        x: snapGrid(
+          c.position.x !== node.position.x
+            ? node.position.x + width - size.width
+            : node.position.x,
+        ),
+        y: snapGrid(
+          c.position.y !== node.position.y
+            ? node.position.y + height - size.height
+            : node.position.y,
+        ),
+      },
+    };
+  });
 }

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import platform
+import shutil
 import subprocess
 from functools import cache
 
@@ -31,8 +32,27 @@ def _context_exists(name: str) -> bool:
         return False
 
 
+def _default_daemon_ready() -> bool:
+    try:
+        result = subprocess.run(
+            ['docker', 'info', '--format', '{{.ServerVersion}}'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=6,
+        )
+        return result.returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
 @cache
 def docker_context() -> str:
+    """The Docker context Gradara uses.
+
+    On macOS a Colima profile made for Gradara wins. Without one, whatever the
+    default context points at (OrbStack, Docker Desktop, or another runtime) is used
+    when it answers; otherwise Gradara's own Colima profile, which it can start.
+    """
     explicit = _explicit_context()
     if explicit is not None:
         return explicit
@@ -41,6 +61,8 @@ def docker_context() -> str:
     for name in ('colima-gradara', 'colima-flux'):
         if _context_exists(name):
             return name
+    if _default_daemon_ready() or not shutil.which('colima'):
+        return ''
     return 'colima-gradara'
 
 
