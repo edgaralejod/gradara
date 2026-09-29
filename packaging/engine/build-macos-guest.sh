@@ -34,6 +34,18 @@ if [ "$ARCH" = arm64 ] && gzip -t "$work/root/boot/kernel" 2>/dev/null; then
 else
   cp "$work/root/boot/kernel" "$OUT/kernel"
 fi
+# vfkit's Linux boot requires an initrd. An empty one makes the kernel mount the
+# squashfs root itself (all the drivers it needs are built in).
+python3 - "$OUT/initrd" <<'PY'
+import gzip, sys
+# A newc cpio archive with only the trailer entry.
+name = b'TRAILER!!!\0'
+header = b'070701' + b'00000000' * 11 + b'%08X' % len(name) + b'00000000'
+entry = header + name
+entry += b'\0' * (-len(entry) % 4)
+with gzip.open(sys.argv[1], 'wb', 9) as out:
+    out.write(entry + b'\0' * (-len(entry) % 512))
+PY
 cp "$work/root/usr/share/doc/gradara-engine-packages.txt" "$OUT/packages.txt"
 for f in "$work"/root/usr/share/doc/*/copyright; do cp "$f" "$OUT/licenses/$(basename "$(dirname "$f")").copyright"; done
 for f in "$work"/root/opt/modelica/Modelica*/Resources/Licenses/*; do [ -f "$f" ] && cp "$f" "$OUT/licenses/"; done
@@ -50,7 +62,7 @@ curl -fsSL -o "$OUT/OSMC-License.txt" "https://raw.githubusercontent.com/OpenMod
 sed "s/<version>/$OM_VERSION/" "$here/OSMC-USAGE-MODE.txt" > "$OUT/OSMC-USAGE-MODE.txt"
 cat > "$OUT/manifest.json" <<JSON
 {"engine": "openmodelica", "version": "$OM_VERSION", "msl": "$MSL_VERSION", "platform": "macos", "arch": "$ARCH",
- "kernel": "kernel", "kernelVersion": "$kver", "rootfs": "rootfs.img", "vfkit": "vfkit", "vfkitVersion": "$VFKIT_VERSION",
+ "kernel": "kernel", "initrd": "initrd", "kernelVersion": "$kver", "rootfs": "rootfs.img", "vfkit": "vfkit", "vfkitVersion": "$VFKIT_VERSION",
  "omc": "/usr/bin/omc", "gcc": "/usr/bin/gcc", "library": "/opt/modelica", "agentPort": 1024}
 JSON
 ls -la "$OUT"; du -sh "$OUT"

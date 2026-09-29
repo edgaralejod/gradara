@@ -641,11 +641,13 @@ class EngineVM:
         cpus = max(1, min(4, os.cpu_count() or 2))
         cmdline = 'console=hvc0 root=/dev/vda rootfstype=squashfs ro init=/sbin/gradara-init quiet'
         kernel = self.root/self.manifest.get('kernel', 'kernel')
+        # vfkit requires an initrd; the image ships an empty one (the kernel mounts the root itself).
+        initrd = self.root/self.manifest.get('initrd', 'initrd')
         rootfs = self.root/self.manifest.get('rootfs', 'rootfs.img')
         port = int(self.manifest.get('agentPort', 1024))
         LOGS.mkdir(parents=True, exist_ok=True)
         return [str(self.root/self.manifest.get('vfkit', 'vfkit')), '--cpus', str(cpus), '--memory', str(memory),
-                '--bootloader', f'linux,kernel={kernel},cmdline="{cmdline}"',
+                '--bootloader', f'linux,kernel={kernel},initrd={initrd},cmdline="{cmdline}"',
                 '--device', f'virtio-blk,path={rootfs},readonly',
                 '--device', f'virtio-fs,sharedDir={self.shared},mountTag=data',
                 '--device', f'virtio-vsock,port={port},socketURL={self.socket_path},connect',
@@ -806,7 +808,8 @@ class VmBackend(NativeBackend):
         self.vm = EngineVM(root, self.manifest)
 
     def omc(self) -> str | None:  # a path inside the VM
-        files = [self.manifest.get(k, d) for k, d in (('vfkit', 'vfkit'), ('kernel', 'kernel'), ('rootfs', 'rootfs.img'))]
+        files = [self.manifest.get(k, d) for k, d in (('vfkit', 'vfkit'), ('kernel', 'kernel'), ('initrd', 'initrd'),
+                                                       ('rootfs', 'rootfs.img'))]
         return self.manifest.get('omc', '/usr/bin/omc') if all((self.root/f).exists() for f in files) else None
 
     def gcc(self) -> str | None:

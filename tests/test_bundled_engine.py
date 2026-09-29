@@ -118,6 +118,7 @@ def test_vm_paths_map_the_data_folder(tmp_path, monkeypatch):
     script = backend._script_for(tmp_path/'data'/'runs'/'abc', {'duration': 2.0})
     assert 'cd("/data/runs/abc");' in script and script.startswith('setCompiler("gcc")')
     argv = backend.vm.argv()
+    assert ',initrd=' in argv[argv.index('--bootloader') + 1], 'vfkit refuses a Linux boot without an initrd'
     assert argv[argv.index('--device', argv.index('--bootloader')) + 1].endswith(',readonly')
     assert any(a.startswith('virtio-fs,sharedDir=') and a.endswith(',mountTag=data') for a in argv)
     assert any(a.startswith('virtio-vsock,port=1024,') and a.endswith(',connect') for a in argv)
