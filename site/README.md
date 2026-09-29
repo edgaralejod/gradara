@@ -28,6 +28,10 @@ cd site/public && python3 -m http.server 8088
 
 3. For automatic deploys, run `firebase init hosting:github` in `site/` or create a service account with the Firebase Hosting Admin role, and store its JSON key as the repository secret `FIREBASE_SERVICE_ACCOUNT_GRADARA`. The **Website** workflow then deploys `main` and posts preview links on pull requests.
 
+## Links
+
+`python3 scripts/check-site-links.py` checks every link between pages the way Firebase serves them (`cleanUrls`, no trailing slash, and the redirects in `firebase.json`); the Website workflow runs it on every change. Use root-absolute links (`/docs/blocks/…`, `/assets/…`) in generated pages. The redirects keep old block reference addresses (`/docs/<block>.html`, `/docs`) working.
+
 ## Content rules
 
 - Keep claims true to the shipped app: prices must match the gateway's `CREDIT_PRICES` and `CREDIT_PACKS`, and privacy statements must match [docs/PRIVACY.md](../docs/PRIVACY.md).
