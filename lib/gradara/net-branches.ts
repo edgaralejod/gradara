@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { endpointPoint, endpointPort, TAP_HANDLE } from './net';
+import { endpointPoint, endpointPort, netComponents, TAP_HANDLE } from './net';
 import { isCausal, type Project, type Wire } from './model';
 import { polylineOfWire, samePt } from './net-draw';
 import { simplifyPoints, type Pt } from './routing';
@@ -29,9 +29,46 @@ function prefix(a: Pt[], b: Pt[]) {
   return { common, a: [at, ...a.slice(i)], b: [at, ...b.slice(j)], at };
 }
 
+/**
+ * Junctions of one net that end up on the same point (a run dragged onto another run
+ * carries its dot along) become one junction, so the wires meeting there can branch
+ * properly. Dots of different nets are never merged: only connectivity decides.
+ */
+export function mergeCoincidentJunctions(project: Project): Project {
+  const junctions = project.junctions ?? [];
+  if (junctions.length < 2) return project;
+  const netOf = new Map<string, number>();
+  netComponents(project).forEach((keys, i) => {
+    for (const k of keys) if (k.startsWith('j:')) netOf.set(k.slice(2), i);
+  });
+  const into = new Map<string, string>();
+  junctions.forEach((j, i) => {
+    const keep = junctions
+      .slice(0, i)
+      .find(
+        (k) =>
+          !into.has(k.id) &&
+          samePt(k.position, j.position) &&
+          netOf.has(j.id) &&
+          netOf.get(k.id) === netOf.get(j.id),
+      );
+    if (keep) into.set(j.id, keep.id);
+  });
+  if (!into.size) return project;
+  const to = (id: string) => into.get(id) ?? id;
+  return {
+    ...project,
+    junctions: junctions.filter((j) => !into.has(j.id)),
+    wires: project.wires
+      .map((w) => ({ ...w, source: to(w.source), target: to(w.target) }))
+      // The link between two merged dots is now a loop on one dot.
+      .filter((w) => w.source !== w.target),
+  };
+}
+
 /** Factor shared terminal-to-branch runs into real, movable junctions in every domain. */
 export function materializeBranches(project: Project): Project {
-  let next = project;
+  let next = mergeCoincidentJunctions(project);
   const limit = project.wires.length;
   for (let pass = 0; pass < limit; pass++) {
     const groups = new Map<string, { wire: Wire; reversed: boolean }[]>();

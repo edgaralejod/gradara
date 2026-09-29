@@ -702,3 +702,121 @@ void test('two wires leaving a dot along one run branch where they part, like wi
   );
   assert.equal(normalizeProject(after), after);
 });
+
+void test('dragging a run onto another run of its net merges the carried dot and branches where they part', async () => {
+  const { snappedSegment } = await import('../lib/gradara/net-edit');
+  const terminal = (
+    id: string,
+    x: number,
+    y: number,
+    side: 'top' | 'bottom' | 'left',
+  ) => ({
+    id,
+    position: { x, y },
+    size: { width: 32, height: 32 },
+    definition: {
+      kind: 'test',
+      name: id,
+      domain: 'electrical' as const,
+      symbol: 'T',
+      description: '',
+      parameters: [],
+      equations: '',
+      ports: [
+        {
+          id: 'p',
+          name: 'p',
+          domain: 'electrical' as const,
+          direction: 'physical' as const,
+          side,
+        },
+      ],
+    },
+  });
+  // The reported sheet: a source and a voltmeter return to two stacked dots on one net.
+  const sheet = (): Project => ({
+    ...initialProject(),
+    blocks: [
+      terminal('src', -16, -32, 'bottom'),
+      terminal('volt', 184, -48, 'bottom'),
+      terminal('gnd', 304, 96, 'top'),
+      terminal('xf', 400, -216, 'left'),
+    ],
+    junctions: [
+      { id: 'J1', domain: 'electrical', position: { x: 320, y: 32 } },
+      { id: 'J2', domain: 'electrical', position: { x: 320, y: 48 } },
+    ],
+    wires: [
+      {
+        id: 'wsrc',
+        source: 'src',
+        sourceHandle: 'p',
+        target: 'J1',
+        targetHandle: 'node',
+        waypoints: [{ x: 0, y: 32 }],
+      },
+      {
+        id: 'wx',
+        source: 'xf',
+        sourceHandle: 'p',
+        target: 'J1',
+        targetHandle: 'node',
+        waypoints: [{ x: 320, y: -200 }],
+      },
+      {
+        id: 'wj',
+        source: 'J1',
+        sourceHandle: 'node',
+        target: 'J2',
+        targetHandle: 'node',
+      },
+      {
+        id: 'wvolt',
+        source: 'volt',
+        sourceHandle: 'p',
+        target: 'J2',
+        targetHandle: 'node',
+        waypoints: [{ x: 200, y: 48 }],
+      },
+      {
+        id: 'wg',
+        source: 'J2',
+        sourceHandle: 'node',
+        target: 'gnd',
+        targetHandle: 'p',
+      },
+    ],
+    nets: [],
+  });
+  const before = normalizeProject(sheet());
+  const dragged = snappedSegment(
+    before,
+    'wsrc',
+    1,
+    { x: 150, y: 47 },
+    1,
+  ).project;
+  const after = normalizeProject(dragged, before);
+  assert.deepEqual(
+    after.junctions!.map((j) => `${j.position.x},${j.position.y}`).sort(),
+    ['200,48', '320,48'],
+  );
+  assert.ok(after.wires.every((w) => polylineOfWire(after, w.id).length >= 2));
+  const terminals = (p: Project) =>
+    netTopology(p).map((n) =>
+      [...n.keys].filter((e) => !e.startsWith('j:')).sort(),
+    );
+  assert.deepEqual(terminals(after), terminals(before));
+  assert.equal(semanticSignature(after), semanticSignature(before));
+
+  // Two dots of different nets on one point stay apart: only connectivity merges.
+  const apart = sheet();
+  apart.wires = apart.wires.filter((w) => w.id !== 'wj');
+  apart.junctions![1].position = { x: 320, y: 32 };
+  const kept = normalizeProject(apart);
+  assert.equal(netTopology(kept).length, 2);
+  assert.equal(
+    kept.junctions!.filter((j) => j.position.x === 320).length >= 2,
+    true,
+  );
+});
