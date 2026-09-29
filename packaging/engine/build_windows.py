@@ -89,7 +89,12 @@ def main() -> None:
     usage = (HERE/'OSMC-USAGE-MODE.txt').read_text(encoding='utf-8').replace('<version>', OM_VERSION)
     (out/'OSMC-USAGE-MODE.txt').write_text(usage, encoding='utf-8')
     if not (out/'OSMC-License.txt').exists():
-        shutil.copy2(args.install/'OSMC-License.txt', out/'OSMC-License.txt')
+        found = next(iter(sorted(args.install.rglob('OSMC-License.txt'))), None)
+        if found:
+            shutil.copy2(found, out/'OSMC-License.txt')
+        else:
+            download(f'https://raw.githubusercontent.com/OpenModelica/OpenModelica/v{OM_VERSION}/OSMC-License.txt',
+                     out/'OSMC-License.txt')
     (out/'packages.txt').write_text(f'# OpenModelica {OM_VERSION} engine bundle for Windows x64, trimmed from the '
                                     f'official installer {Path(url).name} (MD5 {expected})\n'
                                     f'openmodelica {OM_VERSION}\nmodelica-standard-library {MSL_VERSION}\n',
