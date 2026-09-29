@@ -20,7 +20,10 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      # The Firebase action comments the preview link on the pull request and
+      # records the deploy as a check run.
       pull-requests: write
+      checks: write
     env:
       HAS_DEPLOY_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GRADARA != '' }}
     steps:

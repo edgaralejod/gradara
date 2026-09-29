@@ -4,6 +4,10 @@
  * dialog (lib/gradara/block-reference.ts). Run after changing a block or its docs:
  * `npx tsx scripts/build-block-docs.ts`. `--check` fails instead of writing when the
  * checked-in pages are out of date.
+ *
+ * Links are root-absolute: Firebase serves the index at /docs/blocks (no trailing
+ * slash, cleanUrls), where a relative link like `resistor.html` would resolve to
+ * /docs/resistor.html.
  */
 import {
   mkdirSync,
@@ -71,22 +75,22 @@ function page(
 <meta name="description" content="${esc(description)}">
 <meta name="theme-color" content="#0a0e13">
 <link rel="canonical" href="${canonical}">
-<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../../assets/site.css">
-<script src="../../assets/site.js" defer></script>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/site.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
   <nav class="nav wrap" aria-label="Main">
-    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <a class="brand" href="/"><img src="/assets/icon.svg" alt="" width="28" height="28">Gradara</a>
     <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
     <div class="nav-links" id="site-navigation">
-      <a href="../../#features">Features</a>
-      <a href="../../#pricing">Pricing</a>
-      <a href="index.html">Blocks</a>
+      <a href="/#features">Features</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/docs/blocks/">Blocks</a>
       <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
-      <a class="button small primary" href="../../#download">Download</a>
+      <a class="button small primary" href="/#download">Download</a>
     </div>
   </nav>
 </header>
@@ -97,8 +101,8 @@ ${body}
   <div class="wrap footer-inner">
     <p>© 2026 Virtu Services LLC</p>
     <div class="footer-links">
-      <a href="../../privacy.html">Privacy</a>
-      <a href="../../terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
       <a href="https://github.com/edgaralejod/gradara">GitHub</a>
       <a href="mailto:support@virtu-services.us">Support</a>
     </div>
@@ -151,7 +155,7 @@ ${ref.parameters
     : ref.source
       ? `<h2>Implementation</h2>\n<p>The block’s Modelica equations:</p>\n<pre class="block-source">${esc(ref.source)}</pre>`
       : '';
-  const body = `<p class="meta"><a href="index.html">Block reference</a> › ${esc(ref.category)}</p>
+  const body = `<p class="meta"><a href="/docs/blocks/">Block reference</a> › ${esc(ref.category)}</p>
 <h1>${esc(ref.title)}</h1>
 <p class="lede">${esc(ref.summary)}</p>
 <h2>Description</h2>
@@ -170,7 +174,7 @@ ${implementation}
 ${list('Assumptions and limitations', ref.limitations)}
 ${list('Tips', ref.tips)}
 ${ref.examples.length ? `<h2>Examples</h2>\n<p>Used in the shipped examples ${ref.examples.map((e) => `<strong>${esc(e)}</strong>`).join(', ')}. Open them from <strong>Examples</strong> in the app.</p>` : ''}
-${ref.seeAlso.length ? `<h2>See also</h2>\n<p class="see-also">${ref.seeAlso.map((s) => `<a href="${esc(s.kind)}.html">${esc(s.title)}</a>`).join(' ')}</p>` : ''}
+${ref.seeAlso.length ? `<h2>See also</h2>\n<p class="see-also">${ref.seeAlso.map((s) => `<a href="/docs/blocks/${esc(s.kind)}.html">${esc(s.title)}</a>`).join(' ')}</p>` : ''}
 <p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>`;
   return page(
     ref.title,
@@ -188,7 +192,7 @@ function indexPage(defs: Definition[]) {
       return `<section class="block-category" id="${esc(c.id)}">
 <h2>${esc(c.label)} <span>${blocks.length}</span></h2>
 <ul class="block-index">
-${blocks.map((d) => `<li><a href="${esc(d.kind)}.html"><strong>${esc(d.name)}</strong><span>${esc(blockReference(d, blockDocs[d.kind], library).summary)}</span></a></li>`).join('\n')}
+${blocks.map((d) => `<li><a href="/docs/blocks/${esc(d.kind)}.html"><strong>${esc(d.name)}</strong><span>${esc(blockReference(d, blockDocs[d.kind], library).summary)}</span></a></li>`).join('\n')}
 </ul>
 </section>`;
     })
