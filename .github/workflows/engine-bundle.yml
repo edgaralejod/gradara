@@ -82,9 +82,12 @@ jobs:
       - name: Build the bundle
         run: python packaging/engine/build_windows.py --out build\engine --install C:\OpenModelicaFull
       - name: Move the full installation away
-        # The tests must pass on the trimmed copy alone.
+        # The tests must pass on the trimmed copy alone. Defender scanning of every
+        # compiler input and output makes the suite several times slower; the
+        # installer test keeps it on, as on a user's machine.
         shell: pwsh
         run: |
+          Add-MpPreference -ExclusionPath $env:GITHUB_WORKSPACE, $env:TEMP, $env:APPDATA
           Rename-Item C:\OpenModelicaFull C:\OpenModelicaFull-hidden
           [Environment]::SetEnvironmentVariable('OPENMODELICAHOME', $null, 'Machine')
           Get-ChildItem build\engine | Format-Table Name, Length
