@@ -1,84 +1,381 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charSet="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preload" as="image" href="/assets/icon.svg"/>
 <title>Mechanical load · Gradara</title>
-<meta name="description" content="Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.">
-<meta name="theme-color" content="#0a0e13">
-<link rel="canonical" href="https://gradara.app/docs/blocks/shaftLoad">
-<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/site.css">
-<script src="/assets/site.js" defer></script>
-</head>
-<body>
-<a class="skip" href="#main">Skip to content</a>
+<meta name="description" content="Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s."/>
+<meta name="theme-color" content="#0a0e13"/>
+<link rel="canonical" href="https://gradara.app/docs/blocks/shaftLoad"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="stylesheet" href="/assets/site.css"/>
+<link rel="stylesheet" href="/assets/block-faces.css"/>
+<link rel="stylesheet" href="/assets/docs.css"/>
+<script src="/assets/site.js" defer=""></script>
+<script src="/assets/docs.js" defer=""></script></head>
+<body class="docs"><a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
-  <nav class="nav wrap" aria-label="Main">
-    <a class="brand" href="/"><img src="/assets/icon.svg" alt="" width="28" height="28">Gradara</a>
-    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
-    <div class="nav-links" id="site-navigation">
-      <a href="/#features">Features</a>
-      <a href="/#pricing">Pricing</a>
-      <a href="/docs/blocks/">Blocks</a>
-      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
-      <a class="button small primary" href="/#download">Download</a>
-    </div>
-  </nav>
-</header>
-<main id="main" class="wrap doc block-ref">
-<p class="meta"><a href="/docs/blocks/">Block reference</a> › Rotational</p>
+<nav class="nav wrap docs-wrap" aria-label="Main"><a class="brand" href="/"><img src="/assets/icon.svg" alt="" width="28" height="28"/>Gradara</a><button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+<div class="nav-links" id="site-navigation"><a href="/#features">Features</a><a href="/#pricing">Pricing</a><a href="/docs/blocks" aria-current="page" class="is-current">Blocks</a><a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a><a class="button small primary" href="/#download">Download</a></div></nav></header>
+<div class="docs-shell docs-wrap">
+<main id="main" class="docs-main">
+<article class="block-doc">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/docs/blocks">Block reference</a><span aria-hidden="true">/</span><a href="/docs/blocks#mechanical">Rotational</a></nav>
+<header class="block-head">
 <h1>Mechanical load</h1>
 <p class="lede">Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.</p>
-<h2>Description</h2>
+<ul class="chips" aria-label="At a glance">
+<li class="chip"><span class="port signal" aria-hidden="true"></span>signal</li>
+<li class="chip"><span class="port mechanical" aria-hidden="true"></span>rotational</li>
+<li class="chip">Gradara equations</li>
+<li class="chip quiet">2 ports</li>
+<li class="chip quiet">5 parameters</li></ul></header>
+<figure class="sheet">
+<div class="sheet-canvas"><span class="sheet-stage f-86de4eb5"><span class="block-preview f-45a0fbea" aria-hidden="true"><span class="block-preview-body f-150bcd7c"><span class="block-face shape-box f-16d33b33" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">J</span></span><span class="port-label port-left f-af7a31e9">shaft</span><span class="port-label port-bottom f-4414ad8e">TL</span></span><span class="preview-terminal terminal-left is-physical f-d755340f"></span><span class="preview-terminal terminal-bottom  f-df849ba5"></span></span></span></span></div>
+<figcaption class="title-block"><span><small>Block</small>Mechanical load</span><span><small>Kind</small><code>shaftLoad</code></span><span><small>Library</small>Rotational</span></figcaption></figure>
+<section class="doc-section prose">
+<h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>A complete test load for a motor shaft: an inertia with viscous friction to the housing and a load torque that steps up at a set time. Use it to check how a speed or current controller rejects a load disturbance.</p>
-<p>The load torque is also sent to the TL output, so you can plot it next to the motor torque.</p>
-<h2>Ports</h2>
-
-<h3>Outputs</h3>
-<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
-<tbody>
-<tr><td><strong>TL</strong> <code>loadTorque</code></td><td><span class="port-domain domain-signal">signal</span> · N·m</td><td>The load torque currently applied, in N·m (signal output).</td></tr>
-</tbody></table>
-<h3>Conserving terminals</h3>
-<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
-<tbody>
-<tr><td><strong>shaft</strong> <code>flange</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Shaft flange. Torque into the flange drives the load in the positive direction.</td></tr>
-</tbody></table>
-<h2>Parameters</h2>
-<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
-<tbody>
-<tr><td><strong>Inertia</strong> <code>J</code></td><td class="nowrap">0.002 kg·m²<br><span class="range">≥ 0.00001</span></td><td>Moment of inertia of the load, in kg·m². Must be positive.</td></tr>
-<tr><td><strong>Viscous friction</strong> <code>damping</code></td><td class="nowrap">0.001 N·m·s<br><span class="range">≥ 0</span></td><td>Viscous friction coefficient to the housing, in N·m·s. Zero or positive.</td></tr>
-<tr><td><strong>Initial load torque</strong> <code>initialLoad</code></td><td class="nowrap">0.05 N·m</td><td>Load torque before the step, in N·m.</td></tr>
-<tr><td><strong>Added load torque</strong> <code>stepLoad</code></td><td class="nowrap">0.35 N·m</td><td>Torque added to the load at loadTime, in N·m.</td></tr>
-<tr><td><strong>Load step time</strong> <code>loadTime</code></td><td class="nowrap">0.45 s<br><span class="range">≥ 0</span></td><td>Time of the load step, in seconds.</td></tr>
-</tbody></table>
-<h2>Equations</h2>
-<pre class="equations">loadTorque = initialLoad for time &lt; loadTime, initialLoad + stepLoad afterward
+<p>The load torque is also sent to the TL output, so you can plot it next to the motor torque.</p></section>
+<section class="doc-section">
+<h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
+<div class="port-group">
+<h3>Outputs <span class="count">1</span></h3>
+<ul class="entries">
+<li class="entry">
+<div class="entry-head"><span class="port signal" aria-hidden="true"></span><strong>TL</strong><code class="id">loadTorque</code><span class="entry-meta">signal · <span class="mono">N·m</span></span></div>
+<p>The load torque currently applied, in N·m (signal output).</p></li></ul></div>
+<div class="port-group">
+<h3>Conserving terminals <span class="count">1</span></h3>
+<ul class="entries">
+<li class="entry">
+<div class="entry-head"><span class="port mechanical" aria-hidden="true"></span><strong>shaft</strong><code class="id">flange</code><span class="entry-meta">rotational</span></div>
+<p>Shaft flange. Torque into the flange drives the load in the positive direction.</p></li></ul></div></section>
+<section class="doc-section">
+<h2 id="parameters"><a class="anchor" href="#parameters">Parameters</a></h2>
+<ul class="entries params">
+<li class="entry">
+<div class="entry-head"><strong>Inertia</strong><code class="id">J</code><span class="value">0.002<span class="unit"> kg·m²</span></span></div>
+<p class="range">≥ 0.00001</p>
+<p>Moment of inertia of the load, in kg·m². Must be positive.</p></li>
+<li class="entry">
+<div class="entry-head"><strong>Viscous friction</strong><code class="id">damping</code><span class="value">0.001<span class="unit"> N·m·s</span></span></div>
+<p class="range">≥ 0</p>
+<p>Viscous friction coefficient to the housing, in N·m·s. Zero or positive.</p></li>
+<li class="entry">
+<div class="entry-head"><strong>Initial load torque</strong><code class="id">initialLoad</code><span class="value">0.05<span class="unit"> N·m</span></span></div>
+<p>Load torque before the step, in N·m.</p></li>
+<li class="entry">
+<div class="entry-head"><strong>Added load torque</strong><code class="id">stepLoad</code><span class="value">0.35<span class="unit"> N·m</span></span></div>
+<p>Torque added to the load at loadTime, in N·m.</p></li>
+<li class="entry">
+<div class="entry-head"><strong>Load step time</strong><code class="id">loadTime</code><span class="value">0.45<span class="unit"> s</span></span></div>
+<p class="range">≥ 0</p>
+<p>Time of the load step, in seconds.</p></li></ul></section>
+<section class="doc-section">
+<h2 id="equations"><a class="anchor" href="#equations">Equations</a></h2>
+<div class="code-card">
+<div class="code-label">Modelica</div><pre>loadTorque = initialLoad for time &lt; loadTime, initialLoad + stepLoad afterward
 J · dω/dt = flange.tau − damping · ω − loadTorque
-ω = dφ/dt, with φ(0) = 0 and ω(0) = 0</pre>
-
-<h2>Assumptions and limitations</h2>
-<ul><li>The load torque does not depend on speed or direction: it always acts in the negative direction. If the drive torque is smaller than the load, the shaft turns backward rather than stalling.</li><li>The initial angle and speed are fixed at zero. Driving the flange from a speed source, or rigidly joining another block that also fixes its initial speed, over-determines the initial conditions.</li></ul>
-<h2>Tips</h2>
-<ul><li>For a load with a different profile, combine Inertia (ideal) with Torque source or Torque step.</li></ul>
-<h2>Examples</h2>
-<p>Used in the shipped examples <strong>PMSM · Field-oriented control</strong>. Open them from <strong>Examples</strong> in the app.</p>
-<h2>See also</h2>
-<p class="see-also"><a href="/docs/blocks/inertia.html">Inertia &amp; load</a> <a href="/docs/blocks/rotInertia.html">Inertia (ideal)</a> <a href="/docs/blocks/torqueStep.html">Torque step</a> <a href="/docs/blocks/pmsm.html">PMSM</a> <a href="/docs/blocks/motor.html">DC motor</a></p>
-<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
-</main>
+ω = dφ/dt, with φ(0) = 0 and ω(0) = 0</pre></div></section>
+<section class="doc-section">
+<h2 id="limitations"><a class="anchor" href="#limitations">Assumptions and limitations</a></h2>
+<div class="callout-box warn">
+<ul>
+<li>The load torque does not depend on speed or direction: it always acts in the negative direction. If the drive torque is smaller than the load, the shaft turns backward rather than stalling.</li>
+<li>The initial angle and speed are fixed at zero. Driving the flange from a speed source, or rigidly joining another block that also fixes its initial speed, over-determines the initial conditions.</li></ul></div></section>
+<section class="doc-section">
+<h2 id="tips"><a class="anchor" href="#tips">Tips</a></h2>
+<div class="callout-box tip">
+<ul>
+<li>For a load with a different profile, combine Inertia (ideal) with Torque source or Torque step.</li></ul></div></section>
+<section class="doc-section">
+<h2 id="examples"><a class="anchor" href="#examples">Examples</a></h2>
+<p class="muted">Used in these shipped examples. Open them from <strong>Examples</strong> in the app.</p>
+<ul class="example-list">
+<li>PMSM · Field-oriented control</li></ul></section>
+<section class="doc-section">
+<h2 id="see-also"><a class="anchor" href="#see-also">See also</a></h2>
+<ul class="cards related">
+<li><a class="card" href="/docs/blocks/inertia"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-8351fe1c" aria-hidden="true"><span class="block-preview-body f-dadeff46"><span class="block-face shape-box f-3355b700" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">J</span></span><span class="port-label port-top f-6251f7fe">shaft</span><span class="port-label port-left f-af7a31e9">shaft</span></span><span class="preview-terminal terminal-top is-physical f-7efb7458"></span><span class="preview-terminal terminal-left is-physical f-d755340f"></span></span></span></span><span class="card-text"><strong>Inertia &amp; load</strong><span>A rotating load with inertia and viscous friction.</span></span></a></li>
+<li><a class="card" href="/docs/blocks/rotInertia"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-f45a3f2c" aria-hidden="true"><span class="block-preview-body f-569ae833"><span class="block-face shape-box f-675d0484" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">J</span></span><span class="port-label port-left f-af7a31e9">a</span><span class="port-label port-right f-af7a31e9">b</span></span><span class="preview-terminal terminal-left is-physical f-d755340f"></span><span class="preview-terminal terminal-right is-physical f-d755340f"></span></span></span></span><span class="card-text"><strong>Inertia (ideal)</strong><span>Rotating mass with two flanges and no losses.</span></span></a></li>
+<li><a class="card" href="/docs/blocks/torqueStep"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-8351fe1c" aria-hidden="true"><span class="block-preview-body f-dadeff46"><span class="block-face shape-box f-3702d415" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">τ step</span></span><span class="port-label port-right f-af7a31e9">shaft</span></span><span class="preview-terminal terminal-right is-physical f-d755340f"></span></span></span></span><span class="card-text"><strong>Torque step</strong><span>A torque step at a given time.</span></span></a></li>
+<li><a class="card" href="/docs/blocks/pmsm"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-cc3e0b96" aria-hidden="true"><span class="block-preview-body f-2d40491d"><span class="block-face shape-box f-3bbe47dd" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 80 70"><circle cx="40" cy="31" r="23"></circle><text x="40" y="40" text-anchor="middle">M</text><text class="symbol-small" x="40" y="67" text-anchor="middle">3~</text></svg></span><span class="port-label port-left f-308fe664">a</span><span class="port-label port-left f-525979f6">b</span><span class="port-label port-left f-b5f05b4c">c</span><span class="port-label port-right f-af7a31e9">shaft</span><span class="port-label port-bottom f-22982307">ia</span><span class="port-label port-bottom f-fea73182">ib</span><span class="port-label port-bottom f-09ba2e96">ic</span><span class="port-label port-bottom f-07d4983f">θe</span><span class="port-label port-top f-b9d22660">ω</span><span class="port-label port-top f-4414ad8e">rpm</span><span class="port-label port-top f-bee6cc41">Te</span></span><span class="preview-terminal terminal-left  f-c9ed9434"></span><span class="preview-terminal terminal-left  f-0e89e25e"></span><span class="preview-terminal terminal-left  f-06ed13ba"></span><span class="preview-terminal terminal-right is-physical f-d755340f"></span><span class="preview-terminal terminal-bottom  f-222d4a81"></span><span class="preview-terminal terminal-bottom  f-d2b45432"></span><span class="preview-terminal terminal-bottom  f-32bd7298"></span><span class="preview-terminal terminal-bottom  f-b5c0e90c"></span><span class="preview-terminal terminal-top  f-6f586617"></span><span class="preview-terminal terminal-top  f-df849ba5"></span><span class="preview-terminal terminal-top  f-7158f7be"></span></span></span></span><span class="card-text"><strong>PMSM</strong><span>Three-phase permanent-magnet synchronous motor. Sinusoidal flux, fixed d/q inductances, ideal rotor-angle and current measurements.</span></span></a></li>
+<li><a class="card" href="/docs/blocks/motor"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-8351fe1c" aria-hidden="true"><span class="block-preview-body f-e516ab03"><span class="block-face shape-box f-bbcb66e2" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 80 70"><circle cx="40" cy="31" r="23"></circle><text x="40" y="40" text-anchor="middle">M</text></svg></span><span class="port-label port-left f-bcb38e41">+</span><span class="port-label port-bottom f-d7f1a1f0">−</span><span class="port-label port-bottom f-51200806">shaft</span></span><span class="preview-terminal terminal-left is-physical f-d26444a6"></span><span class="preview-terminal terminal-bottom is-physical f-4e584aba"></span><span class="preview-terminal terminal-bottom is-physical f-413cb0e8"></span></span></span></span><span class="card-text"><strong>DC motor</strong><span>Armature resistance and inductance coupled to a rotational shaft.</span></span></a></li></ul></section>
+<p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
+<nav class="pager" aria-label="More in Rotational"><span></span><a class="next" href="/docs/blocks/inertia"><small>Next</small>Inertia &amp; load</a></nav></article></main>
+<aside class="docs-nav" aria-label="Block library">
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<details data-group=""><summary>Sources <span>6</span></summary>
+<ul>
+<li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
+<li data-name="step step"><a href="/docs/blocks/step">Step</a></li>
+<li data-name="ramp ramp"><a href="/docs/blocks/ramp">Ramp</a></li>
+<li data-name="sine wave sine"><a href="/docs/blocks/sine">Sine wave</a></li>
+<li data-name="pulse pulse"><a href="/docs/blocks/pulse">Pulse</a></li>
+<li data-name="clock clock"><a href="/docs/blocks/clock">Clock</a></li></ul></details>
+<details data-group=""><summary>Math <span>14</span></summary>
+<ul>
+<li data-name="sum sum"><a href="/docs/blocks/sum">Sum</a></li>
+<li data-name="subtract subtract"><a href="/docs/blocks/subtract">Subtract</a></li>
+<li data-name="gain gain"><a href="/docs/blocks/gain">Gain</a></li>
+<li data-name="product product"><a href="/docs/blocks/product">Product</a></li>
+<li data-name="divide divide"><a href="/docs/blocks/divide">Divide</a></li>
+<li data-name="abs abs"><a href="/docs/blocks/abs">Abs</a></li>
+<li data-name="sign sign"><a href="/docs/blocks/sign">Sign</a></li>
+<li data-name="sqrt sqrt"><a href="/docs/blocks/sqrt">Sqrt</a></li>
+<li data-name="min min"><a href="/docs/blocks/min">Min</a></li>
+<li data-name="max max"><a href="/docs/blocks/max">Max</a></li>
+<li data-name="sin sineop"><a href="/docs/blocks/sineOp">Sin</a></li>
+<li data-name="cos cosineop"><a href="/docs/blocks/cosineOp">Cos</a></li>
+<li data-name="unary minus unaryminus"><a href="/docs/blocks/unaryMinus">Unary minus</a></li>
+<li data-name="power power"><a href="/docs/blocks/power">Power</a></li></ul></details>
+<details data-group=""><summary>Continuous <span>5</span></summary>
+<ul>
+<li data-name="limited integrator integrator"><a href="/docs/blocks/integrator">Limited integrator</a></li>
+<li data-name="low-pass filter filter"><a href="/docs/blocks/filter">Low-pass filter</a></li>
+<li data-name="derivative derivative"><a href="/docs/blocks/derivative">Derivative</a></li>
+<li data-name="second-order secondorder"><a href="/docs/blocks/secondOrder">Second-order</a></li>
+<li data-name="transport delay delay"><a href="/docs/blocks/delay">Transport delay</a></li></ul></details>
+<details data-group=""><summary>Discrete <span>3</span></summary>
+<ul>
+<li data-name="unit delay unitdelay"><a href="/docs/blocks/unitDelay">Unit delay</a></li>
+<li data-name="zero-order hold zoh"><a href="/docs/blocks/zoh">Zero-order hold</a></li>
+<li data-name="discrete integrator discreteintegrator"><a href="/docs/blocks/discreteIntegrator">Discrete integrator</a></li></ul></details>
+<details data-group=""><summary>Nonlinear <span>4</span></summary>
+<ul>
+<li data-name="saturation saturation"><a href="/docs/blocks/saturation">Saturation</a></li>
+<li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
+<li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
+<li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
+<details data-group=""><summary>Routing <span>4</span></summary>
+<ul>
+<li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
+<li data-name="demux demux"><a href="/docs/blocks/demux">Demux</a></li>
+<li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
+<li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
+<details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
+<ul>
+<li data-name="subsystem subsystem"><a href="/docs/blocks/subsystem">Subsystem</a></li>
+<li data-name="empty subsystem emptysubsystem"><a href="/docs/blocks/emptySubsystem">Empty subsystem</a></li>
+<li data-name="subsystem input inport"><a href="/docs/blocks/inport">Subsystem input</a></li>
+<li data-name="subsystem output outport"><a href="/docs/blocks/outport">Subsystem output</a></li></ul></details>
+<details data-group=""><summary>Control <span>8</span></summary>
+<ul>
+<li data-name="complementary pwm pwmpair"><a href="/docs/blocks/pwmPair">Complementary PWM</a></li>
+<li data-name="current pi currentpi"><a href="/docs/blocks/currentPI">Current PI</a></li>
+<li data-name="clarke transform clarke"><a href="/docs/blocks/clarke">Clarke transform</a></li>
+<li data-name="park transform park"><a href="/docs/blocks/park">Park transform</a></li>
+<li data-name="inverse transforms inversepark"><a href="/docs/blocks/inversePark">Inverse transforms</a></li>
+<li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
+<li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
+<li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
+<details data-group=""><summary>Sinks <span>3</span></summary>
+<ul>
+<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
+<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
+<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
+<details data-group=""><summary>Logic <span>21</span></summary>
+<ul>
+<li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
+<li data-name="or logicor"><a href="/docs/blocks/logicOr">OR</a></li>
+<li data-name="xor logicxor"><a href="/docs/blocks/logicXor">XOR</a></li>
+<li data-name="nand logicnand"><a href="/docs/blocks/logicNand">NAND</a></li>
+<li data-name="nor logicnor"><a href="/docs/blocks/logicNor">NOR</a></li>
+<li data-name="not logicnot"><a href="/docs/blocks/logicNot">NOT</a></li>
+<li data-name="greater than threshold greaterthreshold"><a href="/docs/blocks/greaterThreshold">Greater than threshold</a></li>
+<li data-name="less than threshold lessthreshold"><a href="/docs/blocks/lessThreshold">Less than threshold</a></li>
+<li data-name="greater than greater"><a href="/docs/blocks/greater">Greater than</a></li>
+<li data-name="less than less"><a href="/docs/blocks/less">Less than</a></li>
+<li data-name="hysteresis boolhysteresis"><a href="/docs/blocks/boolHysteresis">Hysteresis</a></li>
+<li data-name="on-off controller onoffcontroller"><a href="/docs/blocks/onOffController">On-off controller</a></li>
+<li data-name="switch (logic) logicswitch"><a href="/docs/blocks/logicSwitch">Switch (logic)</a></li>
+<li data-name="rs flip-flop rsflipflop"><a href="/docs/blocks/rsFlipFlop">RS flip-flop</a></li>
+<li data-name="timer timer"><a href="/docs/blocks/timer">Timer</a></li>
+<li data-name="boolean to real booleantoreal"><a href="/docs/blocks/booleanToReal">Boolean to real</a></li>
+<li data-name="boolean constant booleanconstant"><a href="/docs/blocks/booleanConstant">Boolean constant</a></li>
+<li data-name="boolean step booleanstep"><a href="/docs/blocks/booleanStep">Boolean step</a></li>
+<li data-name="boolean pulse booleanpulse"><a href="/docs/blocks/booleanPulse">Boolean pulse</a></li>
+<li data-name="triggered sampler triggeredsampler"><a href="/docs/blocks/triggeredSampler">Triggered sampler</a></li>
+<li data-name="rising edge edge"><a href="/docs/blocks/edge">Rising edge</a></li></ul></details>
+<details data-group=""><summary>Electrical <span>40</span></summary>
+<ul>
+<li data-name="dc voltage dcsource"><a href="/docs/blocks/dcSource">DC voltage</a></li>
+<li data-name="ideal switch idealswitch"><a href="/docs/blocks/idealSwitch">Ideal switch</a></li>
+<li data-name="voltage sensor voltagesensor"><a href="/docs/blocks/voltageSensor">Voltage sensor</a></li>
+<li data-name="current sensor currentsensor"><a href="/docs/blocks/currentSensor">Current sensor</a></li>
+<li data-name="three-phase inverter inverter"><a href="/docs/blocks/inverter">Three-phase inverter</a></li>
+<li data-name="pmsm pmsm"><a href="/docs/blocks/pmsm">PMSM</a></li>
+<li data-name="voltage drive voltage"><a href="/docs/blocks/voltage">Voltage drive</a></li>
+<li data-name="dc motor motor"><a href="/docs/blocks/motor">DC motor</a></li>
+<li data-name="ground ground"><a href="/docs/blocks/ground">Ground</a></li>
+<li data-name="resistor resistor"><a href="/docs/blocks/resistor">Resistor</a></li>
+<li data-name="capacitor capacitor"><a href="/docs/blocks/capacitor">Capacitor</a></li>
+<li data-name="inductor inductor"><a href="/docs/blocks/inductor">Inductor</a></li>
+<li data-name="diode diode"><a href="/docs/blocks/diode">Diode</a></li>
+<li data-name="conductor conductor"><a href="/docs/blocks/conductor">Conductor</a></li>
+<li data-name="resistor (thermal) heatingresistor"><a href="/docs/blocks/heatingResistor">Resistor (thermal)</a></li>
+<li data-name="variable resistor variableresistor"><a href="/docs/blocks/variableResistor">Variable resistor</a></li>
+<li data-name="variable capacitor variablecapacitor"><a href="/docs/blocks/variableCapacitor">Variable capacitor</a></li>
+<li data-name="variable inductor variableinductor"><a href="/docs/blocks/variableInductor">Variable inductor</a></li>
+<li data-name="potentiometer potentiometer"><a href="/docs/blocks/potentiometer">Potentiometer</a></li>
+<li data-name="saturating inductor saturatinginductor"><a href="/docs/blocks/saturatingInductor">Saturating inductor</a></li>
+<li data-name="transformer (coupled) mutualinductor"><a href="/docs/blocks/mutualInductor">Transformer (coupled)</a></li>
+<li data-name="ideal transformer idealtransformer"><a href="/docs/blocks/idealTransformer">Ideal transformer</a></li>
+<li data-name="gyrator gyrator"><a href="/docs/blocks/gyrator">Gyrator</a></li>
+<li data-name="voltage-controlled voltage source vcvs"><a href="/docs/blocks/vcvs">Voltage-controlled voltage source</a></li>
+<li data-name="voltage-controlled current source vccs"><a href="/docs/blocks/vccs">Voltage-controlled current source</a></li>
+<li data-name="current-controlled voltage source ccvs"><a href="/docs/blocks/ccvs">Current-controlled voltage source</a></li>
+<li data-name="current-controlled current source cccs"><a href="/docs/blocks/cccs">Current-controlled current source</a></li>
+<li data-name="op-amp (ideal) opamp"><a href="/docs/blocks/opAmp">Op-amp (ideal)</a></li>
+<li data-name="op-amp (limited) opamplimited"><a href="/docs/blocks/opAmpLimited">Op-amp (limited)</a></li>
+<li data-name="ac voltage sinevoltage"><a href="/docs/blocks/sineVoltage">AC voltage</a></li>
+<li data-name="ac current sinecurrent"><a href="/docs/blocks/sineCurrent">AC current</a></li>
+<li data-name="dc current dccurrent"><a href="/docs/blocks/dcCurrent">DC current</a></li>
+<li data-name="step voltage stepvoltage"><a href="/docs/blocks/stepVoltage">Step voltage</a></li>
+<li data-name="ramp voltage rampvoltage"><a href="/docs/blocks/rampVoltage">Ramp voltage</a></li>
+<li data-name="pulse voltage pulsevoltage"><a href="/docs/blocks/pulseVoltage">Pulse voltage</a></li>
+<li data-name="controlled voltage signalvoltage"><a href="/docs/blocks/signalVoltage">Controlled voltage</a></li>
+<li data-name="controlled current signalcurrent"><a href="/docs/blocks/signalCurrent">Controlled current</a></li>
+<li data-name="battery batterystack"><a href="/docs/blocks/batteryStack">Battery</a></li>
+<li data-name="supercapacitor supercap"><a href="/docs/blocks/supercap">Supercapacitor</a></li>
+<li data-name="power sensor powersensor"><a href="/docs/blocks/powerSensor">Power sensor</a></li></ul></details>
+<details data-group=""><summary>Semiconductors <span>13</span></summary>
+<ul>
+<li data-name="ideal diode idealdiode"><a href="/docs/blocks/idealDiode">Ideal diode</a></li>
+<li data-name="diode (exponential) diodeshockley"><a href="/docs/blocks/diodeShockley">Diode (exponential)</a></li>
+<li data-name="zener diode zenerdiode"><a href="/docs/blocks/zenerDiode">Zener diode</a></li>
+<li data-name="thyristor idealthyristor"><a href="/docs/blocks/idealThyristor">Thyristor</a></li>
+<li data-name="gto thyristor idealgto"><a href="/docs/blocks/idealGTO">GTO thyristor</a></li>
+<li data-name="nmos transistor nmos"><a href="/docs/blocks/nmos">NMOS transistor</a></li>
+<li data-name="pmos transistor pmos"><a href="/docs/blocks/pmos">PMOS transistor</a></li>
+<li data-name="npn transistor npn"><a href="/docs/blocks/npn">NPN transistor</a></li>
+<li data-name="pnp transistor pnp"><a href="/docs/blocks/pnp">PNP transistor</a></li>
+<li data-name="switch (boolean) closingswitch"><a href="/docs/blocks/closingSwitch">Switch (Boolean)</a></li>
+<li data-name="opening switch openingswitch"><a href="/docs/blocks/openingSwitch">Opening switch</a></li>
+<li data-name="changeover switch twowayswitch"><a href="/docs/blocks/twoWaySwitch">Changeover switch</a></li>
+<li data-name="breaker (with arc) breaker"><a href="/docs/blocks/breaker">Breaker (with arc)</a></li></ul></details>
+<details data-group=""><summary>Converters <span>9</span></summary>
+<ul>
+<li data-name="buck converter buckconverter"><a href="/docs/blocks/buckConverter">Buck converter</a></li>
+<li data-name="boost converter boostconverter"><a href="/docs/blocks/boostConverter">Boost converter</a></li>
+<li data-name="buck-boost converter buckboostconverter"><a href="/docs/blocks/buckBoostConverter">Buck-boost converter</a></li>
+<li data-name="h-bridge hbridge"><a href="/docs/blocks/hBridge">H-bridge</a></li>
+<li data-name="pwm generator pwmsignal"><a href="/docs/blocks/pwmSignal">PWM generator</a></li>
+<li data-name="diode bridge diodebridge"><a href="/docs/blocks/diodeBridge">Diode bridge</a></li>
+<li data-name="thyristor bridge thyristorbridge"><a href="/docs/blocks/thyristorBridge">Thyristor bridge</a></li>
+<li data-name="inverter (1-phase) singlephaseinverter"><a href="/docs/blocks/singlePhaseInverter">Inverter (1-phase)</a></li>
+<li data-name="inverter (3-phase) threephaseinverter"><a href="/docs/blocks/threePhaseInverter">Inverter (3-phase)</a></li></ul></details>
+<details data-group=""><summary>Machines <span>8</span></summary>
+<ul>
+<li data-name="dc machine (pm) dcpmmachine"><a href="/docs/blocks/dcPmMachine">DC machine (PM)</a></li>
+<li data-name="dc machine (excited) dcshuntmachine"><a href="/docs/blocks/dcShuntMachine">DC machine (excited)</a></li>
+<li data-name="dc machine (series) dcseriesmachine"><a href="/docs/blocks/dcSeriesMachine">DC machine (series)</a></li>
+<li data-name="induction machine inductionmachine"><a href="/docs/blocks/inductionMachine">Induction machine</a></li>
+<li data-name="pmsm (msl) pmsyncmachine"><a href="/docs/blocks/pmSyncMachine">PMSM (MSL)</a></li>
+<li data-name="reluctance machine reluctancemachine"><a href="/docs/blocks/reluctanceMachine">Reluctance machine</a></li>
+<li data-name="electrical angle sensor hallsensor"><a href="/docs/blocks/hallSensor">Electrical angle sensor</a></li>
+<li data-name="resolver resolver"><a href="/docs/blocks/resolver">Resolver</a></li></ul></details>
+<details data-group=""><summary>3-phase <span>13</span></summary>
+<ul>
+<li data-name="3-phase ac source threephasesource"><a href="/docs/blocks/threePhaseSource">3-phase AC source</a></li>
+<li data-name="3-phase resistor threephaseresistor"><a href="/docs/blocks/threePhaseResistor">3-phase resistor</a></li>
+<li data-name="3-phase inductor threephaseinductor"><a href="/docs/blocks/threePhaseInductor">3-phase inductor</a></li>
+<li data-name="3-phase capacitor threephasecapacitor"><a href="/docs/blocks/threePhaseCapacitor">3-phase capacitor</a></li>
+<li data-name="star point star"><a href="/docs/blocks/star">Star point</a></li>
+<li data-name="delta connection delta"><a href="/docs/blocks/delta">Delta connection</a></li>
+<li data-name="phase a tap phasea"><a href="/docs/blocks/phaseA">Phase a tap</a></li>
+<li data-name="phase b tap phaseb"><a href="/docs/blocks/phaseB">Phase b tap</a></li>
+<li data-name="phase c tap phasec"><a href="/docs/blocks/phaseC">Phase c tap</a></li>
+<li data-name="3-phase transformer (dy) threephasetransformer"><a href="/docs/blocks/threePhaseTransformer">3-phase transformer (Dy)</a></li>
+<li data-name="3-phase current sensor threephasecurrentsensor"><a href="/docs/blocks/threePhaseCurrentSensor">3-phase current sensor</a></li>
+<li data-name="3-phase voltage sensor threephasevoltagesensor"><a href="/docs/blocks/threePhaseVoltageSensor">3-phase voltage sensor</a></li>
+<li data-name="3-phase power sensor threephasepowersensor"><a href="/docs/blocks/threePhasePowerSensor">3-phase power sensor</a></li></ul></details>
+<details open="" data-group=""><summary>Rotational <span>24</span></summary>
+<ul>
+<li data-name="mechanical load shaftload"><a href="/docs/blocks/shaftLoad" aria-current="page">Mechanical load</a></li>
+<li data-name="inertia &amp; load inertia"><a href="/docs/blocks/inertia">Inertia &amp; load</a></li>
+<li data-name="speed sensor sensor"><a href="/docs/blocks/sensor">Speed sensor</a></li>
+<li data-name="spring-damper springdamper"><a href="/docs/blocks/springDamper">Spring-damper</a></li>
+<li data-name="torque sensor torquesensor"><a href="/docs/blocks/torqueSensor">Torque sensor</a></li>
+<li data-name="angle sensor anglesensor"><a href="/docs/blocks/angleSensor">Angle sensor</a></li>
+<li data-name="fixed (rotational) rotfixed"><a href="/docs/blocks/rotFixed">Fixed (rotational)</a></li>
+<li data-name="torsion spring rotspring"><a href="/docs/blocks/rotSpring">Torsion spring</a></li>
+<li data-name="torsion damper rotdamper"><a href="/docs/blocks/rotDamper">Torsion damper</a></li>
+<li data-name="backlash rotbacklash"><a href="/docs/blocks/rotBacklash">Backlash</a></li>
+<li data-name="inertia (ideal) rotinertia"><a href="/docs/blocks/rotInertia">Inertia (ideal)</a></li>
+<li data-name="ideal gear idealgear"><a href="/docs/blocks/idealGear">Ideal gear</a></li>
+<li data-name="clutch clutch"><a href="/docs/blocks/clutch">Clutch</a></li>
+<li data-name="rolling wheel rollingwheel"><a href="/docs/blocks/rollingWheel">Rolling wheel</a></li>
+<li data-name="rack and pinion gearr2t"><a href="/docs/blocks/gearR2T">Rack and pinion</a></li>
+<li data-name="torque source torquesource"><a href="/docs/blocks/torqueSource">Torque source</a></li>
+<li data-name="constant torque constanttorque"><a href="/docs/blocks/constantTorque">Constant torque</a></li>
+<li data-name="torque step torquestep"><a href="/docs/blocks/torqueStep">Torque step</a></li>
+<li data-name="speed source speedsource"><a href="/docs/blocks/speedSource">Speed source</a></li>
+<li data-name="constant speed constantspeed"><a href="/docs/blocks/constantSpeed">Constant speed</a></li>
+<li data-name="speed sensor (ideal) rotspeedsensor"><a href="/docs/blocks/rotSpeedSensor">Speed sensor (ideal)</a></li>
+<li data-name="acceleration sensor rotaccsensor"><a href="/docs/blocks/rotAccSensor">Acceleration sensor</a></li>
+<li data-name="power sensor (rotational) rotpowersensor"><a href="/docs/blocks/rotPowerSensor">Power sensor (rotational)</a></li>
+<li data-name="relative speed sensor relspeedsensor"><a href="/docs/blocks/relSpeedSensor">Relative speed sensor</a></li></ul></details>
+<details data-group=""><summary>Translational <span>17</span></summary>
+<ul>
+<li data-name="fixed (translational) transfixed"><a href="/docs/blocks/transFixed">Fixed (translational)</a></li>
+<li data-name="mass mass"><a href="/docs/blocks/mass">Mass</a></li>
+<li data-name="spring transspring"><a href="/docs/blocks/transSpring">Spring</a></li>
+<li data-name="damper transdamper"><a href="/docs/blocks/transDamper">Damper</a></li>
+<li data-name="spring-damper transspringdamper"><a href="/docs/blocks/transSpringDamper">Spring-damper</a></li>
+<li data-name="hard stop hardstop"><a href="/docs/blocks/hardStop">Hard stop</a></li>
+<li data-name="mass with stops massstops"><a href="/docs/blocks/massStops">Mass with stops</a></li>
+<li data-name="force source forcesource"><a href="/docs/blocks/forceSource">Force source</a></li>
+<li data-name="constant force constantforce"><a href="/docs/blocks/constantForce">Constant force</a></li>
+<li data-name="force step forcestep"><a href="/docs/blocks/forceStep">Force step</a></li>
+<li data-name="velocity source transspeedsource"><a href="/docs/blocks/transSpeedSource">Velocity source</a></li>
+<li data-name="position source positionsource"><a href="/docs/blocks/positionSource">Position source</a></li>
+<li data-name="position sensor positionsensor"><a href="/docs/blocks/positionSensor">Position sensor</a></li>
+<li data-name="velocity sensor velocitysensor"><a href="/docs/blocks/velocitySensor">Velocity sensor</a></li>
+<li data-name="acceleration sensor (linear) transaccsensor"><a href="/docs/blocks/transAccSensor">Acceleration sensor (linear)</a></li>
+<li data-name="force sensor forcesensor"><a href="/docs/blocks/forceSensor">Force sensor</a></li>
+<li data-name="relative position sensor relpositionsensor"><a href="/docs/blocks/relPositionSensor">Relative position sensor</a></li></ul></details>
+<details data-group=""><summary>Thermal <span>12</span></summary>
+<ul>
+<li data-name="heat capacitor heatcapacitor"><a href="/docs/blocks/heatCapacitor">Heat capacitor</a></li>
+<li data-name="thermal conductor thermalconductor"><a href="/docs/blocks/thermalConductor">Thermal conductor</a></li>
+<li data-name="thermal resistor thermalresistor"><a href="/docs/blocks/thermalResistor">Thermal resistor</a></li>
+<li data-name="convection convection"><a href="/docs/blocks/convection">Convection</a></li>
+<li data-name="radiation radiation"><a href="/docs/blocks/radiation">Radiation</a></li>
+<li data-name="fixed temperature fixedtemperature"><a href="/docs/blocks/fixedTemperature">Fixed temperature</a></li>
+<li data-name="temperature source prescribedtemperature"><a href="/docs/blocks/prescribedTemperature">Temperature source</a></li>
+<li data-name="fixed heat flow fixedheatflow"><a href="/docs/blocks/fixedHeatFlow">Fixed heat flow</a></li>
+<li data-name="heat flow source prescribedheatflow"><a href="/docs/blocks/prescribedHeatFlow">Heat flow source</a></li>
+<li data-name="temperature sensor temperaturesensor"><a href="/docs/blocks/temperatureSensor">Temperature sensor</a></li>
+<li data-name="heat flow sensor heatflowsensor"><a href="/docs/blocks/heatFlowSensor">Heat flow sensor</a></li>
+<li data-name="temperature difference sensor reltemperaturesensor"><a href="/docs/blocks/relTemperatureSensor">Temperature difference sensor</a></li></ul></details>
+<details data-group=""><summary>Magnetic <span>10</span></summary>
+<ul>
+<li data-name="reluctance reluctance"><a href="/docs/blocks/reluctance">Reluctance</a></li>
+<li data-name="permeance permeance"><a href="/docs/blocks/permeance">Permeance</a></li>
+<li data-name="variable reluctance variablereluctance"><a href="/docs/blocks/variableReluctance">Variable reluctance</a></li>
+<li data-name="winding winding"><a href="/docs/blocks/winding">Winding</a></li>
+<li data-name="magnetic ground magneticground"><a href="/docs/blocks/magneticGround">Magnetic ground</a></li>
+<li data-name="mmf source mmfsource"><a href="/docs/blocks/mmfSource">MMF source</a></li>
+<li data-name="controlled mmf source signalmmfsource"><a href="/docs/blocks/signalMmfSource">Controlled MMF source</a></li>
+<li data-name="flux source fluxsource"><a href="/docs/blocks/fluxSource">Flux source</a></li>
+<li data-name="flux sensor fluxsensor"><a href="/docs/blocks/fluxSensor">Flux sensor</a></li>
+<li data-name="mmf sensor mmfsensor"><a href="/docs/blocks/mmfSensor">MMF sensor</a></li></ul></details>
+<p class="docs-nav-empty" hidden="">No blocks match.</p></div></aside>
+<nav class="docs-toc" aria-label="On this page">
+<p>On this page</p>
+<ul>
+<li><a href="#description">Description</a></li>
+<li><a href="#ports">Ports</a></li>
+<li><a href="#parameters">Parameters</a></li>
+<li><a href="#equations">Equations</a></li>
+<li><a href="#limitations">Limitations</a></li>
+<li><a href="#tips">Tips</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#see-also">See also</a></li></ul></nav></div>
 <footer class="site-footer">
-  <div class="wrap footer-inner">
-    <p>© 2026 Virtu Services LLC</p>
-    <div class="footer-links">
-      <a href="/privacy.html">Privacy</a>
-      <a href="/terms.html">Terms</a>
-      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
-      <a href="mailto:support@virtu-services.us">Support</a>
-    </div>
-  </div>
-</footer>
-</body>
-</html>
+<div class="wrap docs-wrap footer-inner">
+<p>© 2026 Virtu Services LLC</p>
+<div class="footer-links"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="https://github.com/edgaralejod/gradara">GitHub</a><a href="mailto:support@virtu-services.us">Support</a></div></div></footer></body></html>
