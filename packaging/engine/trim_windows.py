@@ -51,7 +51,7 @@ SYSTEM_DLL = re.compile(r'^(api-ms-win-|ext-ms-)|^(kernel32|user32|advapi32|ws2_
 
 
 def pe_imports(path: Path, objdump: str) -> list[str]:
-    out = subprocess.run([objdump, '-p', str(path)], capture_output=True, text=True, errors='replace').stdout
+    out = subprocess.run([objdump, '-p', str(path)], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
     return re.findall(r'DLL Name:\s*(\S+)', out)
 
 

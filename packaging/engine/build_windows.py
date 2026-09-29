@@ -60,7 +60,7 @@ def main() -> None:
     omc_full = args.install/'bin'/'omc.exe'
     if not omc_full.exists():
         raise SystemExit(f'The installer did not produce {omc_full}')
-    print(subprocess.run([str(omc_full), '--version'], capture_output=True, text=True).stdout.strip(), flush=True)
+    print(subprocess.run([str(omc_full), '--version'], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout.strip(), flush=True)
 
     out = args.out.resolve()
     subprocess.run([sys.executable, str(HERE/'trim_windows.py'), '--om', str(args.install), '--out', str(out)], check=True)

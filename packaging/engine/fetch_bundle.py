@@ -44,7 +44,7 @@ def main() -> None:
     if args.out.exists():
         shutil.rmtree(args.out)
     args.out.mkdir(parents=True)
-    with tarfile.open(archive, 'r:*') as tar:
+    with tarfile.open(archive, 'r:*', encoding='utf-8') as tar:
         if sys.version_info >= (3, 12):
             tar.extractall(args.out, filter='data')
         else:

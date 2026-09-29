@@ -27,7 +27,7 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     archive = args.out/f"gradara-engine-{manifest['version']}-{args.name}.tar.{compression}"
     options = {'preset': 6} if compression == 'xz' else {'compresslevel': 6}
-    with tarfile.open(archive, f'w:{compression}', **options) as tar:
+    with tarfile.open(archive, f'w:{compression}', encoding='utf-8', **options) as tar:
         for path in sorted(args.dir.rglob('*')):
             if path.is_symlink():
                 raise SystemExit(f'Engine bundles must not contain symlinks: {path}')

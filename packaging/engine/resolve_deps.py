@@ -18,7 +18,7 @@ SYSTEM = {'libc6', 'libgcc-s1', 'libstdc++6', 'zlib1g', 'libssl3', 'libssl3t64',
 
 
 def show(package: str) -> dict | None:
-    out = subprocess.run(['apt-cache', 'show', '--no-all-versions', package], capture_output=True, text=True).stdout
+    out = subprocess.run(['apt-cache', 'show', '--no-all-versions', package], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
     if not out.strip():
         return None
     fields, key = {}, None
@@ -35,7 +35,7 @@ def provider(name: str) -> str | None:
     """A real package for a (possibly virtual) name."""
     if show(name):
         return name
-    out = subprocess.run(['apt-cache', 'showpkg', name], capture_output=True, text=True).stdout
+    out = subprocess.run(['apt-cache', 'showpkg', name], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
     section = out.split('Reverse Provides:', 1)[-1].strip().splitlines()
     return section[0].split()[0] if section and section[0].strip() else None
 
