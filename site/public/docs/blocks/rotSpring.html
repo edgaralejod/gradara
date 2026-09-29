@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Torsion spring · Gradara</title>
+<meta name="description" content="Linear torsion spring: τ = c·(φ_rel − φ_rel0).">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/rotSpring">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Rotational</p>
+<h1>Torsion spring</h1>
+<p class="lede">Linear torsion spring: τ = c·(φ_rel − φ_rel0).</p>
+<h2>Description</h2>
+<p>A linear torsion spring between two flanges. Connect it between two inertias to model shaft elasticity, or between an inertia and Fixed (rotational) to model a return spring.</p>
+<h2>Ports</h2>
+
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>a</strong> <code>flange_a</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Flange a. Receives −τ.</td></tr>
+<tr><td><strong>b</strong> <code>flange_b</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Flange b. Receives τ, the spring torque.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Stiffness</strong> <code>c</code></td><td class="nowrap">10000 N·m/rad<br><span class="range">≥ 0</span></td><td>Torsional stiffness, in N·m/rad. Zero or positive.</td></tr>
+<tr><td><strong>Unstretched angle</strong> <code>phi_rel0</code></td><td class="nowrap">0 rad</td><td>Relative angle at which the spring exerts no torque, in radians.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">φ_rel = flange_b.phi − flange_a.phi
+τ = c · (φ_rel − phi_rel0)
+flange_b.tau = τ, flange_a.tau = −τ</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Mechanics.Rotational.Components.Spring</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Mechanics_Rotational_Components.html#Modelica.Mechanics.Rotational.Components.Spring" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>No damping and no mass. A stiff spring between two inertias makes the model stiff; add a little damping in parallel.</li></ul>
+
+
+<h2>See also</h2>
+<p class="see-also"><a href="rotDamper.html">Torsion damper</a> <a href="springDamper.html">Spring-damper</a> <a href="rotBacklash.html">Backlash</a> <a href="transSpring.html">Spring</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changeover switch · Gradara</title>
+<meta name="description" content="Connects p to n2 while control is true, otherwise to n1.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/twoWaySwitch">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Semiconductors</p>
+<h1>Changeover switch</h1>
+<p class="lede">Connects p to n2 while control is true, otherwise to n1.</p>
+<h2>Description</h2>
+<p>An ideal single-pole double-throw switch: p connects to n1 while control is false and to n2 while it is true. The unselected path is open.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>sel</strong> <code>control</code></td><td><span class="port-domain domain-boolean">Boolean</span></td><td>Boolean selector: false selects n1, true selects n2.</td></tr>
+</tbody></table>
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>+</strong> <code>p</code></td><td><span class="port-domain domain-electrical">electrical</span></td><td>Common terminal.</td></tr>
+<tr><td><strong>n1</strong></td><td><span class="port-domain domain-electrical">electrical</span></td><td>Terminal selected while control is false.</td></tr>
+<tr><td><strong>n2</strong></td><td><span class="port-domain domain-electrical">electrical</span></td><td>Terminal selected while control is true.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>On resistance</strong> <code>Ron</code></td><td class="nowrap">0.00001 Ω<br><span class="range">≥ 0</span></td><td>On resistance of the selected path, in ohms. 0 or more.</td></tr>
+<tr><td><strong>Off conductance</strong> <code>Goff</code></td><td class="nowrap">0.00001 S<br><span class="range">≥ 0</span></td><td>Off conductance of the unselected path, in siemens. 0 or more.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">p.i + n1.i + n2.i = 0
+control false: p.v − n1.v = Ron · i1, i2 = Goff · (p.v − n2.v)
+control true: p.v − n2.v = Ron · i2, i1 = Goff · (p.v − n1.v)
+i1 = −n1.i and i2 = −n2.i are the currents from p to each terminal</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Electrical.Analog.Ideal.IdealTwoWaySwitch</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_Analog_Ideal.html#Modelica.Electrical.Analog.Ideal.IdealTwoWaySwitch" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>Break-before-make timing is not modeled: both paths change at the same instant.</li></ul>
+
+
+<h2>See also</h2>
+<p class="see-also"><a href="closingSwitch.html">Switch (Boolean)</a> <a href="openingSwitch.html">Opening switch</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -31,6 +31,7 @@ jobs:
       - run: npm audit --audit-level=high
       - run: npm run typecheck
       - run: npm test
+      - run: npm run docs:blocks -- --check
       - run: npm run build
       - name: Lint (existing backlog; advisory)
         continue-on-error: true

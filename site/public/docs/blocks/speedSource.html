@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speed source · Gradara</title>
+<meta name="description" content="Forces the flange to follow the input speed, filtered by a critical frequency.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/speedSource">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Rotational</p>
+<h1>Speed source</h1>
+<p class="lede">Forces the flange to follow the input speed, filtered by a critical frequency.</p>
+<h2>Description</h2>
+<p>Forces the flange to follow a reference speed, supplying whatever torque that takes. The reference is passed through a first-order filter with critical frequency f_crit, so a step in w_ref gives a finite acceleration.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>ω</strong> <code>w_ref</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Reference angular velocity, in rad/s.</td></tr>
+</tbody></table>
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>shaft</strong> <code>flange</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Driven flange.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Filter frequency</strong> <code>f_crit</code></td><td class="nowrap">50 Hz<br><span class="range">≥ 0</span></td><td>Corner frequency of the reference filter, in Hz. Must be positive; at 0 the speed never changes.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">ω = d(flange.phi)/dt
+dω/dt = 2π · f_crit · (w_ref − ω)
+Initial: flange.phi = 0, ω = w_ref</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Mechanics.Rotational.Sources.Speed</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Mechanics_Rotational_Sources.html#Modelica.Mechanics.Rotational.Sources.Speed" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>The initial angle is fixed at 0 and the initial speed at w_ref; do not also fix the initial state of an inertia rigidly attached to the flange.</li><li>Torque is unlimited: the source is ideal.</li></ul>
+<h2>Tips</h2>
+<ul><li>Raise f_crit for closer tracking; a very high value makes the model stiff.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="constantSpeed.html">Constant speed</a> <a href="torqueSource.html">Torque source</a> <a href="transSpeedSource.html">Velocity source</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Divide · Gradara</title>
+<meta name="description" content="Divide two signals: y = a / b. Keep the denominator away from zero.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/divide">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Math</p>
+<h1>Divide</h1>
+<p class="lede">Divide two signals: y = a / b. Keep the denominator away from zero.</p>
+<h2>Description</h2>
+<p>Divides the first input by the second.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>a</strong></td><td><span class="port-domain domain-signal">signal</span></td><td>Numerator.</td></tr>
+<tr><td><strong>b</strong></td><td><span class="port-domain domain-signal">signal</span></td><td>Denominator.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>y</strong></td><td><span class="port-domain domain-signal">signal</span></td><td>Output signal, a / b.</td></tr>
+</tbody></table>
+
+
+<h2>Equations</h2>
+<pre class="equations">y = a / b</pre>
+<h2>Implementation</h2>
+<p>The block’s Modelica equations:</p>
+<pre class="block-source">y = a / b;</pre>
+<h2>Assumptions and limitations</h2>
+<ul><li>The denominator is not guarded. If b reaches 0 during a run, the division fails and the simulation stops with an error.</li></ul>
+<h2>Tips</h2>
+<ul><li>If b can pass through zero, keep it away from zero first, for example with Max against a small constant or with Saturation.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="product.html">Product</a> <a href="max.html">Max</a> <a href="saturation.html">Saturation</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

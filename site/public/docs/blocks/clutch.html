@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clutch · Gradara</title>
+<meta name="description" content="Friction clutch; the normalized normal force f_n (0…1) engages it.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/clutch">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Rotational</p>
+<h1>Clutch</h1>
+<p class="lede">Friction clutch; the normalized normal force f_n (0…1) engages it.</p>
+<h2>Description</h2>
+<p>A friction clutch between two flanges, pressed together by a normal force set through the fn input. While slipping it transmits a friction torque proportional to the normal force; once the relative speed reaches zero the flanges lock until the transmitted torque exceeds the static limit.</p>
+<p>The sliding friction coefficient is fixed at μ = 0.5 for all slip speeds. Stuck and sliding phases are switched by solver events.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>fn</strong> <code>f_normalized</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Normalized normal force, nominally 0 to 1; fn = fn_max · f_normalized. At zero or below, the clutch is open and transmits no torque.</td></tr>
+</tbody></table>
+
+<h3>Conserving terminals</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>a</strong> <code>flange_a</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Flange a. Receives −τ.</td></tr>
+<tr><td><strong>b</strong> <code>flange_b</code></td><td><span class="port-domain domain-rotational">rotational</span></td><td>Flange b. Receives τ, the friction torque.</td></tr>
+</tbody></table>
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Maximum normal force</strong> <code>fn_max</code></td><td class="nowrap">1000 N<br><span class="range">≥ 0</span></td><td>Normal force at f_normalized = 1, in newtons. Zero or positive.</td></tr>
+<tr><td><strong>Geometry constant</strong> <code>cgeo</code></td><td class="nowrap">1</td><td>Geometry constant, in meters, converting force times friction coefficient into torque. For N friction interfaces with inner and outer radii rᵢ and rₒ, cgeo = N · (rₒ + rᵢ)/2.</td></tr>
+<tr><td><strong>Stiction peak</strong> <code>peak</code></td><td class="nowrap">1.1<br><span class="range">≥ 1</span></td><td>Ratio of the maximum static torque to the sliding torque at zero slip. At least 1.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">fn = fn_max · f_normalized
+ω_rel = d(flange_b.phi − flange_a.phi)/dt
+Sliding (ω_rel ≠ 0): τ = sign(ω_rel) · μ · cgeo · fn, with μ = 0.5
+Stuck (ω_rel = 0): τ follows from the torque balance while |τ| ≤ peak · μ · cgeo · fn
+Open (fn ≤ 0): τ = 0
+flange_b.tau = τ, flange_a.tau = −τ</pre>
+<h2>Implementation</h2>
+<p>Instantiates <code>Modelica.Mechanics.Rotational.Components.Clutch</code> from the Modelica Standard Library 4.1.0. <a href="https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Mechanics_Rotational_Components.html#Modelica.Mechanics.Rotational.Components.Clutch" rel="noreferrer">MSL documentation</a></p>
+<h2>Assumptions and limitations</h2>
+<ul><li>The friction coefficient cannot be changed and does not vary with slip speed or temperature.</li><li>f_normalized is not limited; values above 1 give more than fn_max.</li><li>Rigid when stuck: no torsional compliance in the plates.</li></ul>
+<h2>Tips</h2>
+<ul><li>Drive fn from a Ramp or a rate-limited signal for a smooth engagement.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="rotDamper.html">Torsion damper</a> <a href="rotInertia.html">Inertia (ideal)</a> <a href="massStops.html">Mass with stops</a> <a href="ramp.html">Ramp</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

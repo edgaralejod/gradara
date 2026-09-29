@@ -18,6 +18,7 @@ import type { BlockEdits } from '@/lib/gradara/project';
 import type { ComponentType } from 'react';
 import { Input } from '@/components/ui/input';
 import ParameterList from './parameter-list';
+import BlockHelpDialog from './block-help-dialog';
 
 export type BlockDialogTab = 'properties' | 'equations' | 'declarations';
 
@@ -67,6 +68,7 @@ export default function BlockDialog({
   onApply: (edits: BlockEdits) => void;
 }) {
   const definition = block.definition;
+  const [helpOpen, setHelpOpen] = useState(false);
   // Mirrored in a ref so Enter can apply edits committed by the same keystroke.
   const [draft, setDraftState] = useState<Draft>(() => initialDraft(definition));
   const draftRef = useRef<Draft>(draft);
@@ -277,6 +279,12 @@ export default function BlockDialog({
           </div>
         )}
         <div className="dialog-actions">
+          <Button variant="ghost" className="dialog-help" onClick={() => setHelpOpen(true)}>
+            Help
+          </Button>
+          {helpOpen && (
+            <BlockHelpDialog definition={definition} onClose={() => setHelpOpen(false)} />
+          )}
           {dirty && (
             <output className="block-dialog-dirty">
               <i />

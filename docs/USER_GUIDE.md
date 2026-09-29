@@ -60,6 +60,7 @@ Press **?** on the canvas to see this list in the app. On Windows and Linux, use
 | Nudge selected blocks or wires | Arrow keys, one grid step (Shift + arrows for five) |
 | Show or hide the grid | ⌘/Ctrl + ' |
 | Rotate selected blocks clockwise | R |
+| Open the selected block's reference page | F1 |
 | Draw a connection | Drag from port to port, or click two ports |
 | Branch from a wire | Alt + drag |
 | Move a wire segment | Select the wire, then drag |
@@ -127,6 +128,8 @@ Select a block to edit its parameters in the inspector on the right. Double-clic
 
 The **Equations** and **State & declarations** tabs show a block's Modelica equations. You can edit them for signal blocks and AI-generated blocks. Built-in physical blocks use Modelica Standard Library components, so their tab names the library class and is read-only. The inspector's **Edit…** and **Equations → Open** open the same dialog.
 
+**Block reference.** Every block has a reference page, like a Simulink block's Help: what it does, its ports and parameters with defaults and units, the equations it solves, the Modelica class behind it, and what it leaves out. Select a block and press **F1**, or choose **Help** from the canvas menu, the **?** next to Component properties in the inspector, or the **Help** button in the block's properties dialog. In the library, **Block reference** under a part's description opens its page before you place it. The pages work offline, and the same pages are at [gradara.app/docs/blocks](https://gradara.app/docs/blocks/). A custom block the AI wrote shows its own ports, parameters, and equations.
+
 Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it. Double-click the name to put it back. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
 
 ### The library
@@ -170,7 +173,7 @@ Wires route around blocks, stay clear of other wires and block names, and never 
 
 **Fit to view**: tap **Space** or **F**, or use the fit button in the canvas controls. Fit shows everything on the sheet and keeps it clear of the canvas buttons. Holding Space and dragging pans instead. A fitted view stays fitted when you open or close panels or resize the window.
 
-**Canvas menu**: right-click empty canvas. With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
+**Canvas menu**: right-click empty canvas. With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, help, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
 
 **Panels.** Drag the inner edge of the component library or the inspector to resize it, and the top edge of the Problems dock to change its height; in Results, drag the edge of the signal list. Sizes are remembered in this browser. Double-click an edge to restore that panel, or choose **Reset layout** from the canvas menu (or **View → Reset Layout** in the desktop app) to restore every panel, column width, and the dock at once.
 

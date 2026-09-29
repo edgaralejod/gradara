@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scope · Gradara</title>
+<meta name="description" content="A drawing sink for a signal you intend to inspect.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/scope">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Sinks</p>
+<h1>Scope</h1>
+<p class="lede">A drawing sink for a signal you intend to inspect.</p>
+<h2>Description</h2>
+<p>Marks a signal you intend to inspect. It does not plot on the canvas: after a run, view the signal in the Results tab, where every block output is recorded.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>u</strong></td><td><span class="port-domain domain-signal">signal</span></td><td>Signal to inspect.</td></tr>
+</tbody></table>
+
+
+
+
+<h2>Implementation</h2>
+<p>The block’s Modelica equations:</p>
+<pre class="block-source">Real unused;
+unused = u;</pre>
+<h2>Assumptions and limitations</h2>
+<ul><li>The block has no settings and no effect on the simulation; plots, layouts, and axis ranges are set in Results.</li></ul>
+<h2>Tips</h2>
+<ul><li>To record a particular wire rather than a block output, select it and choose Log signal.</li></ul>
+
+<h2>See also</h2>
+<p class="see-also"><a href="display.html">Display</a> <a href="terminator.html">Terminator</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

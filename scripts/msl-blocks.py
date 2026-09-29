@@ -233,7 +233,7 @@ B('mutualInductor', 'Transformer (coupled)', f'{ANALOG}.Basic.Transformer', 'L1:
   names={'p1': '1+', 'n1': '1−', 'p2': '2+', 'n2': '2−'}, sides={'p1': 'left', 'n1': 'left', 'p2': 'right', 'n2': 'right'},
   keywords=['coupling', 'mutual'])
 B('idealTransformer', 'Ideal transformer', f'{ANALOG}.Ideal.IdealTransformer', 'n:1', 'electrical',
-  'Ideal transformer with turns ratio n (optionally with magnetizing inductance).', [P('n', 'Turns ratio', 2, '', 0)],
+  'Ideal transformer with turns ratio n: v1 = n·v2 and i2 = −n·i1, with no magnetizing inductance.', [P('n', 'Turns ratio', 2, '', 0)],
   modifiers={'considerMagnetization': 'false'},
   names={'p1': '1+', 'n1': '1−', 'p2': '2+', 'n2': '2−'}, sides={'p1': 'left', 'n1': 'left', 'p2': 'right', 'n2': 'right'},
   keywords=['isolation', 'ratio'])
@@ -343,7 +343,7 @@ B('twoWaySwitch', 'Changeover switch', f'{ANALOG}.Ideal.IdealTwoWaySwitch', 'SPD
 B('breaker', 'Breaker (with arc)', f'{ANALOG}.Ideal.OpenerWithArc', 'CB', 'semiconductors',
   'Opens while control is true; an arc sustains current until it quenches.',
   [P('Ron', 'On resistance', 1e-5, 'Ω', 0), P('Goff', 'Off conductance', 1e-5, 'S', 0), P('V0', 'Arc voltage', 30, 'V', 0),
-   P('dVdt', 'Arc voltage slope', 10e3, 'V/s', 0), P('Vmax', 'Quench voltage', 60, 'V', 0)],
+   P('dVdt', 'Arc voltage slope', 10e3, 'V/s', 0), P('Vmax', 'Maximum arc voltage', 60, 'V', 0)],
   sides={'control': 'top'}, names={'control': 'trip'}, keywords=['circuit breaker', 'fuse', 'arc'])
 
 # ------------------------------------------------------------------ converters
@@ -360,13 +360,13 @@ B('boostConverter', 'Boost converter', f'{PC}.DCDC.ChopperStepUp', 'boost', 'con
   sides={'dc_p1': 'left', 'dc_n1': 'left', 'dc_p2': 'right', 'dc_n2': 'right', 'fire_p': 'bottom'},
   keywords=['chopper', 'step-up', 'dc-dc'])
 B('buckBoostConverter', 'Buck-boost converter', f'{PC}.DCDC.ChopperBuckBoost', 'b-b', 'converters',
-  'Non-inverting buck-boost chopper: fire_p drives the input (buck) switch, fire_n the output (boost) switch.',
+  'Bidirectional half-bridge: port 1 is the switch node (add a series inductor); fire_p drives the low-side switch, stepping up from port 1 to port 2, and fire_n the high-side switch, stepping down from port 2 to port 1.',
   [P('RonTransistor', 'Transistor on resistance', 1e-5, 'Ω', 0), P('RonDiode', 'Diode on resistance', 1e-5, 'Ω', 0)],
-  names={'dc_p1': 'in+', 'dc_n1': 'in−', 'dc_p2': 'out+', 'dc_n2': 'out−', 'fire_p': 'buck', 'fire_n': 'boost'},
+  names={'dc_p1': '1+', 'dc_n1': '1−', 'dc_p2': '2+', 'dc_n2': '2−', 'fire_p': 'lo', 'fire_n': 'hi'},
   sides={'dc_p1': 'left', 'dc_n1': 'left', 'dc_p2': 'right', 'dc_n2': 'right', 'fire_p': 'bottom', 'fire_n': 'bottom'},
   keywords=['dc-dc', 'four-switch'])
 B('hBridge', 'H-bridge', f'{PC}.DCDC.HBridge', 'H', 'converters',
-  'Four-quadrant DC chopper; fire_p and fire_n drive the two diagonals.',
+  'Four-quadrant DC chopper: fire_p switches out+ and fire_n switches out− between the input rails; drive fire_n with the complement of fire_p for bipolar switching.',
   [P('RonTransistor', 'Transistor on resistance', 1e-5, 'Ω', 0), P('RonDiode', 'Diode on resistance', 1e-5, 'Ω', 0)],
   names={'dc_p1': 'in+', 'dc_n1': 'in−', 'dc_p2': 'out+', 'dc_n2': 'out−', 'fire_p': 'f+', 'fire_n': 'f−'},
   sides={'dc_p1': 'left', 'dc_n1': 'left', 'dc_p2': 'right', 'dc_n2': 'right', 'fire_p': 'bottom', 'fire_n': 'bottom'},
@@ -453,17 +453,20 @@ B('hallSensor', 'Electrical angle sensor', f'{MACH}.Sensors.HallSensor', 'Hall',
   'Electrical rotor angle for p pole pairs, as a Hall or encoder sensor reports it (0…2π).', [P('p', 'Pole pairs', 2, '', 1)],
   names={'y': 'θe'}, sides={'flange': 'left', 'y': 'right'}, domain='mechanical', keywords=['hall', 'commutation', 'bldc', 'encoder'])
 B('resolver', 'Resolver', f'{MACH}.Sensors.SinCosResolver', 'R', 'machines',
-  'Sine–cosine resolver: outputs the sine and cosine of the electrical angle.', [P('p', 'Pole pairs', 1, '', 1)],
-  ports={'flange': 'flange', 'sin': 'y[1]', 'cos': 'y[2]', 'nsin': 'y[3]', 'ncos': 'y[4]'},
+  'Sine–cosine resolver: the sine and cosine of the electrical angle p·φ, and their negatives.', [P('p', 'Pole pairs', 1, '', 1)],
+  # MSL orders the track signals cos, −cos, sin, −sin, around an offset of 1.5 and from a
+  # mounting angle of −π/p; here they are plain sine and cosine of p·φ.
+  modifiers={'offset': '0', 'phi0': '0'},
+  ports={'flange': 'flange', 'sin': 'y[3]', 'cos': 'y[1]', 'nsin': 'y[4]', 'ncos': 'y[2]'},
   names={'sin': 'sin', 'cos': 'cos', 'nsin': '−sin', 'ncos': '−cos'},
   sides={'flange': 'left', 'sin': 'right', 'cos': 'right', 'nsin': 'right', 'ncos': 'right'}, domain='mechanical',
   keywords=['encoder', 'angle'])
 
 # ---------------------------------------------------------------------- 3-phase
 B('threePhaseSource', '3-phase AC source', f'{POLY}.Sources.SineVoltage', '3~ AC', 'threePhase',
-  'Balanced three-phase sinusoidal voltages (star, neutral at plug −).',
+  'Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.',
   [P('V', 'Phase amplitude', 325, 'V'), P('f', 'Frequency', 50, 'Hz', 0)], modifiers={'V': 'fill(V, 3)', 'f': 'fill(f, 3)'},
-  sides={'plug_p': 'right', 'plug_n': 'bottom'}, names={'plug_p': 'abc', 'plug_n': 'N'}, keywords=['grid', 'mains', 'three phase'])
+  sides={'plug_p': 'right', 'plug_n': 'bottom'}, names={'plug_p': 'abc', 'plug_n': 'abc−'}, keywords=['grid', 'mains', 'three phase'])
 B('threePhaseResistor', '3-phase resistor', f'{POLY}.Basic.Resistor', '3R', 'threePhase',
   'Resistor in each phase.', [P('R', 'Resistance per phase', 10, 'Ω', 0)], modifiers={'R': 'fill(R, 3)'})
 B('threePhaseInductor', '3-phase inductor', f'{POLY}.Basic.Inductor', '3L', 'threePhase',

@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block reference · Gradara</title>
+<meta name="description" content="Reference pages for every block in the Gradara library.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<h1>Block reference</h1>
+<p class="lede">Every block in the Gradara library: what it does, its ports and parameters, the equations it solves, and what it leaves out. 218 blocks.</p>
+<nav class="category-links" aria-label="Categories"><a href="#sources">Sources</a> <a href="#math">Math</a> <a href="#continuous">Continuous</a> <a href="#discrete">Discrete</a> <a href="#nonlinear">Nonlinear</a> <a href="#routing">Routing</a> <a href="#subsystems">Ports &amp; subsystems</a> <a href="#control">Control</a> <a href="#sinks">Sinks</a> <a href="#logic">Logic</a> <a href="#electrical">Electrical</a> <a href="#semiconductors">Semiconductors</a> <a href="#converters">Converters</a> <a href="#machines">Machines</a> <a href="#threePhase">3-phase</a> <a href="#mechanical">Rotational</a> <a href="#translational">Translational</a> <a href="#thermal">Thermal</a> <a href="#magnetic">Magnetic</a></nav>
+<section class="block-category" id="sources">
+<h2>Sources <span>6</span></h2>
+<ul class="block-index">
+<li><a href="constant.html"><strong>Constant</strong><span>Outputs a fixed value for the whole run.</span></a></li>
+<li><a href="step.html"><strong>Step</strong><span>A step change from zero to a final value.</span></a></li>
+<li><a href="ramp.html"><strong>Ramp</strong><span>A linearly increasing signal after a start time.</span></a></li>
+<li><a href="sine.html"><strong>Sine wave</strong><span>A continuous sinusoid.</span></a></li>
+<li><a href="pulse.html"><strong>Pulse</strong><span>A periodic rectangular pulse.</span></a></li>
+<li><a href="clock.html"><strong>Clock</strong><span>Simulation time as a signal.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="math">
+<h2>Math <span>14</span></h2>
+<ul class="block-index">
+<li><a href="sum.html"><strong>Sum</strong><span>Adds two signals.</span></a></li>
+<li><a href="subtract.html"><strong>Subtract</strong><span>Subtracts the second input from the first.</span></a></li>
+<li><a href="gain.html"><strong>Gain</strong><span>Multiply an input by an adjustable gain.</span></a></li>
+<li><a href="product.html"><strong>Product</strong><span>Multiply two signals.</span></a></li>
+<li><a href="divide.html"><strong>Divide</strong><span>Divide two signals: y = a / b. Keep the denominator away from zero.</span></a></li>
+<li><a href="abs.html"><strong>Abs</strong><span>Absolute value.</span></a></li>
+<li><a href="sign.html"><strong>Sign</strong><span>Sign of the input: −1, 0, or 1.</span></a></li>
+<li><a href="sqrt.html"><strong>Sqrt</strong><span>Square root of a non-negative input.</span></a></li>
+<li><a href="min.html"><strong>Min</strong><span>The smaller of two signals.</span></a></li>
+<li><a href="max.html"><strong>Max</strong><span>The larger of two signals.</span></a></li>
+<li><a href="sineOp.html"><strong>Sin</strong><span>Sine of the input, in radians.</span></a></li>
+<li><a href="cosineOp.html"><strong>Cos</strong><span>Cosine of the input, in radians.</span></a></li>
+<li><a href="unaryMinus.html"><strong>Unary minus</strong><span>Negate a signal.</span></a></li>
+<li><a href="power.html"><strong>Power</strong><span>Raise a signal to a real exponent.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="continuous">
+<h2>Continuous <span>5</span></h2>
+<ul class="block-index">
+<li><a href="integrator.html"><strong>Limited integrator</strong><span>Integrates its input, starting from 0, and stops integrating at ±Integral limit.</span></a></li>
+<li><a href="filter.html"><strong>Low-pass filter</strong><span>First-order continuous filter.</span></a></li>
+<li><a href="derivative.html"><strong>Derivative</strong><span>Filtered derivative du/dt.</span></a></li>
+<li><a href="secondOrder.html"><strong>Second-order</strong><span>A second-order transfer function ωn² / (s² + 2ζωn s + ωn²).</span></a></li>
+<li><a href="delay.html"><strong>Transport delay</strong><span>A pure time delay.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="discrete">
+<h2>Discrete <span>3</span></h2>
+<ul class="block-index">
+<li><a href="unitDelay.html"><strong>Unit delay</strong><span>One-sample delay.</span></a></li>
+<li><a href="zoh.html"><strong>Zero-order hold</strong><span>Sample and hold.</span></a></li>
+<li><a href="discreteIntegrator.html"><strong>Discrete integrator</strong><span>Sampled integrator accumulating the current input at each sample.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="nonlinear">
+<h2>Nonlinear <span>4</span></h2>
+<ul class="block-index">
+<li><a href="saturation.html"><strong>Saturation</strong><span>Clamp a signal between lower and upper limits.</span></a></li>
+<li><a href="deadzone.html"><strong>Dead zone</strong><span>Zero output inside ±half-width.</span></a></li>
+<li><a href="relay.html"><strong>Relay</strong><span>A two-level relay.</span></a></li>
+<li><a href="rateLimiter.html"><strong>Rate limiter</strong><span>Limits how fast a signal may change.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="routing">
+<h2>Routing <span>4</span></h2>
+<ul class="block-index">
+<li><a href="mux.html"><strong>Mux</strong><span>Three signals into one drawing path. Vector buses come later; this keeps the sheet readable.</span></a></li>
+<li><a href="demux.html"><strong>Demux</strong><span>Split a drawing path into three. Same stand-in as Mux until buses exist.</span></a></li>
+<li><a href="switch2.html"><strong>Switch</strong><span>Pass u₁ when the control is above threshold, otherwise u₂.</span></a></li>
+<li><a href="manualSwitch.html"><strong>Manual switch</strong><span>Pick an input with a parameter. 1 uses the top input.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="subsystems">
+<h2>Ports &amp; subsystems <span>4</span></h2>
+<ul class="block-index">
+<li><a href="subsystem.html"><strong>Subsystem</strong><span>A block with its own diagram inside, starting as in1 wired to out1. Double-click to open it. Drop a wire on it to add a port.</span></a></li>
+<li><a href="emptySubsystem.html"><strong>Empty subsystem</strong><span>A subsystem with nothing inside and no ports yet. Drop wires on it, or add ports in the inspector.</span></a></li>
+<li><a href="inport.html"><strong>Subsystem input</strong><span>An input of the subsystem you are in. Set its type (signal, Boolean, or a physical domain) in its properties.</span></a></li>
+<li><a href="outport.html"><strong>Subsystem output</strong><span>An output of the subsystem you are in. Set its type (signal, Boolean, or a physical domain) in its properties.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="control">
+<h2>Control <span>8</span></h2>
+<ul class="block-index">
+<li><a href="pwmPair.html"><strong>Complementary PWM</strong><span>Complementary 0/1 gate signals at a fixed frequency and duty cycle. Ideal simultaneous switching, with no dead time.</span></a></li>
+<li><a href="currentPI.html"><strong>Current PI</strong><span>Continuous PI current regulator with back-calculation anti-windup.</span></a></li>
+<li><a href="clarke.html"><strong>Clarke transform</strong><span>Amplitude-invariant three-phase to stationary-frame current transform.</span></a></li>
+<li><a href="park.html"><strong>Park transform</strong><span>Rotate stationary-frame currents into the rotor d/q frame.</span></a></li>
+<li><a href="inversePark.html"><strong>Inverse transforms</strong><span>Inverse Park and inverse Clarke transforms produce three phase-voltage commands.</span></a></li>
+<li><a href="pi.html"><strong>PI controller</strong><span>Sampled PI control with output saturation and a bounded integral state.</span></a></li>
+<li><a href="pid.html"><strong>PID</strong><span>Parallel PID with a filtered derivative term.</span></a></li>
+<li><a href="discretePID.html"><strong>Discrete PID</strong><span>Sampled PID with a filtered derivative, a clamped integral, and output saturation. Every state updates at the sample instant, so exported C reproduces it exactly.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="sinks">
+<h2>Sinks <span>3</span></h2>
+<ul class="block-index">
+<li><a href="terminator.html"><strong>Terminator</strong><span>Cap an unused output so the sheet stays tidy.</span></a></li>
+<li><a href="scope.html"><strong>Scope</strong><span>A drawing sink for a signal you intend to inspect.</span></a></li>
+<li><a href="display.html"><strong>Display</strong><span>A sink that marks a signal whose value you want to read. It adds no equations; read the value in Results.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="logic">
+<h2>Logic <span>21</span></h2>
+<ul class="block-index">
+<li><a href="logicAnd.html"><strong>AND</strong><span>Boolean AND of two inputs.</span></a></li>
+<li><a href="logicOr.html"><strong>OR</strong><span>Boolean OR of two inputs.</span></a></li>
+<li><a href="logicXor.html"><strong>XOR</strong><span>Boolean XOR of two inputs.</span></a></li>
+<li><a href="logicNand.html"><strong>NAND</strong><span>Boolean NAND of two inputs.</span></a></li>
+<li><a href="logicNor.html"><strong>NOR</strong><span>Boolean NOR of two inputs.</span></a></li>
+<li><a href="logicNot.html"><strong>NOT</strong><span>Boolean negation.</span></a></li>
+<li><a href="greaterThreshold.html"><strong>Greater than threshold</strong><span>True while the input exceeds the threshold.</span></a></li>
+<li><a href="lessThreshold.html"><strong>Less than threshold</strong><span>True while the input is below the threshold.</span></a></li>
+<li><a href="greater.html"><strong>Greater than</strong><span>True while u1 &gt; u2.</span></a></li>
+<li><a href="less.html"><strong>Less than</strong><span>True while u1 &lt; u2.</span></a></li>
+<li><a href="boolHysteresis.html"><strong>Hysteresis</strong><span>True above uHigh, false below uLow, unchanged in between.</span></a></li>
+<li><a href="onOffController.html"><strong>On-off controller</strong><span>True while the measurement is below the reference minus half the bandwidth; false above plus half.</span></a></li>
+<li><a href="logicSwitch.html"><strong>Switch (logic)</strong><span>Outputs u1 while u2 is true, otherwise u3.</span></a></li>
+<li><a href="rsFlipFlop.html"><strong>RS flip-flop</strong><span>Set/reset latch.</span></a></li>
+<li><a href="timer.html"><strong>Timer</strong><span>Time since the input became true (0 while false).</span></a></li>
+<li><a href="booleanToReal.html"><strong>Boolean to real</strong><span>Converts true/false to two values.</span></a></li>
+<li><a href="booleanConstant.html"><strong>Boolean constant</strong><span>Constant true output.</span></a></li>
+<li><a href="booleanStep.html"><strong>Boolean step</strong><span>False before the step time, true after.</span></a></li>
+<li><a href="booleanPulse.html"><strong>Boolean pulse</strong><span>Periodic true pulses.</span></a></li>
+<li><a href="triggeredSampler.html"><strong>Triggered sampler</strong><span>Samples the input at each rising edge of trigger and holds it.</span></a></li>
+<li><a href="edge.html"><strong>Rising edge</strong><span>True for one instant when the input becomes true.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="electrical">
+<h2>Electrical <span>40</span></h2>
+<ul class="block-index">
+<li><a href="dcSource.html"><strong>DC voltage</strong><span>An ideal constant DC voltage source.</span></a></li>
+<li><a href="idealSwitch.html"><strong>Ideal switch</strong><span>Ideal bidirectional power switch. Gate above 0.5 closes the switch; zero on-resistance and zero off-conductance.</span></a></li>
+<li><a href="voltageSensor.html"><strong>Voltage sensor</strong><span>Measures voltage between two electrical nodes without loading the circuit.</span></a></li>
+<li><a href="currentSensor.html"><strong>Current sensor</strong><span>Measures branch current with zero series voltage drop; positive from + to −.</span></a></li>
+<li><a href="inverter.html"><strong>Three-phase inverter</strong><span>Averaged inverter with common-mode injection and DC-bus voltage clipping. No PWM switching ripple.</span></a></li>
+<li><a href="pmsm.html"><strong>PMSM</strong><span>Three-phase permanent-magnet synchronous motor. Sinusoidal flux, fixed d/q inductances, ideal rotor-angle and current measurements.</span></a></li>
+<li><a href="voltage.html"><strong>Voltage drive</strong><span>An ideal voltage source driven by a control signal.</span></a></li>
+<li><a href="motor.html"><strong>DC motor</strong><span>Armature resistance and inductance coupled to a rotational shaft.</span></a></li>
+<li><a href="ground.html"><strong>Ground</strong><span>Electrical reference potential.</span></a></li>
+<li><a href="resistor.html"><strong>Resistor</strong><span>An ideal resistor between two electrical pins.</span></a></li>
+<li><a href="capacitor.html"><strong>Capacitor</strong><span>An ideal capacitor.</span></a></li>
+<li><a href="inductor.html"><strong>Inductor</strong><span>An ideal inductor.</span></a></li>
+<li><a href="diode.html"><strong>Diode</strong><span>An ideal diode. Forward conducting, reverse open.</span></a></li>
+<li><a href="conductor.html"><strong>Conductor</strong><span>Linear conductance: i = G·v.</span></a></li>
+<li><a href="heatingResistor.html"><strong>Resistor (thermal)</strong><span>Resistor whose losses heat its thermal port and whose resistance changes with its temperature.</span></a></li>
+<li><a href="variableResistor.html"><strong>Variable resistor</strong><span>Resistance set by the input signal.</span></a></li>
+<li><a href="variableCapacitor.html"><strong>Variable capacitor</strong><span>Capacitance set by the input signal.</span></a></li>
+<li><a href="variableInductor.html"><strong>Variable inductor</strong><span>Inductance set by the input signal.</span></a></li>
+<li><a href="potentiometer.html"><strong>Potentiometer</strong><span>Resistor with a wiper at the input position (0…1).</span></a></li>
+<li><a href="saturatingInductor.html"><strong>Saturating inductor</strong><span>Inductance falls from Lzer toward Linf as the core saturates.</span></a></li>
+<li><a href="mutualInductor.html"><strong>Transformer (coupled)</strong><span>Two coupled inductors with mutual inductance M.</span></a></li>
+<li><a href="idealTransformer.html"><strong>Ideal transformer</strong><span>Ideal transformer with turns ratio n: v1 = n·v2 and i2 = −n·i1, with no magnetizing inductance.</span></a></li>
+<li><a href="gyrator.html"><strong>Gyrator</strong><span>Ideal gyrator: i1 = G2·v2, i2 = −G1·v1.</span></a></li>
+<li><a href="vcvs.html"><strong>Voltage-controlled voltage source</strong><span>Linear controlled source: v2 = gain·v1.</span></a></li>
+<li><a href="vccs.html"><strong>Voltage-controlled current source</strong><span>Linear controlled source: i2 = G·v1.</span></a></li>
+<li><a href="ccvs.html"><strong>Current-controlled voltage source</strong><span>Linear controlled source: v2 = R·i1.</span></a></li>
+<li><a href="cccs.html"><strong>Current-controlled current source</strong><span>Linear controlled source: i2 = gain·i1.</span></a></li>
+<li><a href="opAmp.html"><strong>Op-amp (ideal)</strong><span>Ideal operational amplifier: the inputs are at equal voltage and draw no current.</span></a></li>
+<li><a href="opAmpLimited.html"><strong>Op-amp (limited)</strong><span>Op-amp with finite gain and output limited to the supply rails.</span></a></li>
+<li><a href="sineVoltage.html"><strong>AC voltage</strong><span>Sinusoidal voltage: offset + V·sin(2πf·t + phase).</span></a></li>
+<li><a href="sineCurrent.html"><strong>AC current</strong><span>Sinusoidal current source.</span></a></li>
+<li><a href="dcCurrent.html"><strong>DC current</strong><span>An ideal constant current source.</span></a></li>
+<li><a href="stepVoltage.html"><strong>Step voltage</strong><span>Voltage step at a given time.</span></a></li>
+<li><a href="rampVoltage.html"><strong>Ramp voltage</strong><span>Voltage ramp from offset to offset + V.</span></a></li>
+<li><a href="pulseVoltage.html"><strong>Pulse voltage</strong><span>Periodic voltage pulses.</span></a></li>
+<li><a href="signalVoltage.html"><strong>Controlled voltage</strong><span>Voltage equal to the input signal.</span></a></li>
+<li><a href="signalCurrent.html"><strong>Controlled current</strong><span>Current equal to the input signal.</span></a></li>
+<li><a href="batteryStack.html"><strong>Battery</strong><span>Battery stack: open-circuit voltage rising linearly with state of charge, internal resistance, starting full.</span></a></li>
+<li><a href="supercap.html"><strong>Supercapacitor</strong><span>Double-layer capacitor with series resistance.</span></a></li>
+<li><a href="powerSensor.html"><strong>Power sensor</strong><span>Instantaneous power: current path pc→nc, voltage across pv–nv.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="semiconductors">
+<h2>Semiconductors <span>13</span></h2>
+<ul class="block-index">
+<li><a href="idealDiode.html"><strong>Ideal diode</strong><span>Piecewise-linear diode: Ron when conducting, Goff when blocking.</span></a></li>
+<li><a href="diodeShockley.html"><strong>Diode (exponential)</strong><span>Shockley diode with saturation current and thermal voltage.</span></a></li>
+<li><a href="zenerDiode.html"><strong>Zener diode</strong><span>Diode with reverse breakdown at Bv.</span></a></li>
+<li><a href="idealThyristor.html"><strong>Thyristor</strong><span>Ideal thyristor: turns on at a fire pulse when forward biased, off when current reverses.</span></a></li>
+<li><a href="idealGTO.html"><strong>GTO thyristor</strong><span>Gate turn-off thyristor: conducts while fire is true and forward biased.</span></a></li>
+<li><a href="nmos.html"><strong>NMOS transistor</strong><span>Shichman–Hodges N-channel MOSFET.</span></a></li>
+<li><a href="pmos.html"><strong>PMOS transistor</strong><span>Shichman–Hodges P-channel MOSFET.</span></a></li>
+<li><a href="npn.html"><strong>NPN transistor</strong><span>Ebers–Moll NPN bipolar transistor.</span></a></li>
+<li><a href="pnp.html"><strong>PNP transistor</strong><span>Ebers–Moll PNP bipolar transistor.</span></a></li>
+<li><a href="closingSwitch.html"><strong>Switch (Boolean)</strong><span>Ideal switch that closes while its control input is true.</span></a></li>
+<li><a href="openingSwitch.html"><strong>Opening switch</strong><span>Ideal switch that opens while its control input is true.</span></a></li>
+<li><a href="twoWaySwitch.html"><strong>Changeover switch</strong><span>Connects p to n2 while control is true, otherwise to n1.</span></a></li>
+<li><a href="breaker.html"><strong>Breaker (with arc)</strong><span>Opens while control is true; an arc sustains current until it quenches.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="converters">
+<h2>Converters <span>9</span></h2>
+<ul class="block-index">
+<li><a href="buckConverter.html"><strong>Buck converter</strong><span>Switched step-down chopper (transistor and freewheeling diode); fire drives the transistor.</span></a></li>
+<li><a href="boostConverter.html"><strong>Boost converter</strong><span>Switched step-up chopper; fire drives the transistor.</span></a></li>
+<li><a href="buckBoostConverter.html"><strong>Buck-boost converter</strong><span>Bidirectional half-bridge: port 1 is the switch node (add a series inductor); fire_p drives the low-side switch, stepping up from port 1 to port 2, and fire_n the high-side switch, stepping down from port 2 to port 1.</span></a></li>
+<li><a href="hBridge.html"><strong>H-bridge</strong><span>Four-quadrant DC chopper: fire_p switches out+ and fire_n switches out− between the input rails; drive fire_n with the complement of fire_p for bipolar switching.</span></a></li>
+<li><a href="pwmSignal.html"><strong>PWM generator</strong><span>Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.</span></a></li>
+<li><a href="diodeBridge.html"><strong>Diode bridge</strong><span>Single-phase full-wave diode rectifier.</span></a></li>
+<li><a href="thyristorBridge.html"><strong>Thyristor bridge</strong><span>Single-phase full-wave thyristor rectifier with two fire inputs.</span></a></li>
+<li><a href="singlePhaseInverter.html"><strong>Inverter (1-phase)</strong><span>Single-phase two-level half-bridge inverter.</span></a></li>
+<li><a href="threePhaseInverter.html"><strong>Inverter (3-phase)</strong><span>Three-phase two-level inverter with a fire input per switch.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="machines">
+<h2>Machines <span>8</span></h2>
+<ul class="block-index">
+<li><a href="dcPmMachine.html"><strong>DC machine (PM)</strong><span>Permanent-magnet DC machine with armature resistance and inductance.</span></a></li>
+<li><a href="dcShuntMachine.html"><strong>DC machine (excited)</strong><span>Separately excited DC machine; wire the field in parallel for shunt operation.</span></a></li>
+<li><a href="dcSeriesMachine.html"><strong>DC machine (series)</strong><span>Series-excited DC machine (traction motor).</span></a></li>
+<li><a href="inductionMachine.html"><strong>Induction machine</strong><span>Three-phase squirrel-cage induction machine (star-connected stator terminals).</span></a></li>
+<li><a href="pmSyncMachine.html"><strong>PMSM (MSL)</strong><span>Three-phase permanent-magnet synchronous machine with damper cage.</span></a></li>
+<li><a href="reluctanceMachine.html"><strong>Reluctance machine</strong><span>Three-phase synchronous reluctance machine.</span></a></li>
+<li><a href="hallSensor.html"><strong>Electrical angle sensor</strong><span>Electrical rotor angle for p pole pairs, as a Hall or encoder sensor reports it (0…2π).</span></a></li>
+<li><a href="resolver.html"><strong>Resolver</strong><span>Sine–cosine resolver: the sine and cosine of the electrical angle p·φ, and their negatives.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="threePhase">
+<h2>3-phase <span>13</span></h2>
+<ul class="block-index">
+<li><a href="threePhaseSource.html"><strong>3-phase AC source</strong><span>Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.</span></a></li>
+<li><a href="threePhaseResistor.html"><strong>3-phase resistor</strong><span>Resistor in each phase.</span></a></li>
+<li><a href="threePhaseInductor.html"><strong>3-phase inductor</strong><span>Inductor in each phase.</span></a></li>
+<li><a href="threePhaseCapacitor.html"><strong>3-phase capacitor</strong><span>Capacitor in each phase.</span></a></li>
+<li><a href="star.html"><strong>Star point</strong><span>Joins the three phases at a neutral pin.</span></a></li>
+<li><a href="delta.html"><strong>Delta connection</strong><span>Connects the phases in delta (a–b, b–c, c–a).</span></a></li>
+<li><a href="phaseA.html"><strong>Phase a tap</strong><span>Connects phase a of a 3-phase plug to a single-phase pin.</span></a></li>
+<li><a href="phaseB.html"><strong>Phase b tap</strong><span>Connects phase b of a 3-phase plug to a single-phase pin.</span></a></li>
+<li><a href="phaseC.html"><strong>Phase c tap</strong><span>Connects phase c of a 3-phase plug to a single-phase pin.</span></a></li>
+<li><a href="threePhaseTransformer.html"><strong>3-phase transformer (Dy)</strong><span>Three-phase delta–star transformer with a nominal ratio.</span></a></li>
+<li><a href="threePhaseCurrentSensor.html"><strong>3-phase current sensor</strong><span>Phase currents from plug + to plug −.</span></a></li>
+<li><a href="threePhaseVoltageSensor.html"><strong>3-phase voltage sensor</strong><span>Phase voltages between plug + and plug −.</span></a></li>
+<li><a href="threePhasePowerSensor.html"><strong>3-phase power sensor</strong><span>Total instantaneous power of the three phases.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="mechanical">
+<h2>Rotational <span>24</span></h2>
+<ul class="block-index">
+<li><a href="shaftLoad.html"><strong>Mechanical load</strong><span>Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.</span></a></li>
+<li><a href="inertia.html"><strong>Inertia &amp; load</strong><span>A rotating load with inertia and viscous friction.</span></a></li>
+<li><a href="sensor.html"><strong>Speed sensor</strong><span>Measures shaft speed without loading the mechanical system.</span></a></li>
+<li><a href="springDamper.html"><strong>Spring-damper</strong><span>Rotational spring and damper between two shafts.</span></a></li>
+<li><a href="torqueSensor.html"><strong>Torque sensor</strong><span>Measures shaft torque without adding stiffness.</span></a></li>
+<li><a href="angleSensor.html"><strong>Angle sensor</strong><span>Measures shaft angle in radians without loading the mechanical system.</span></a></li>
+<li><a href="rotFixed.html"><strong>Fixed (rotational)</strong><span>A flange fixed in the housing at a constant angle.</span></a></li>
+<li><a href="rotSpring.html"><strong>Torsion spring</strong><span>Linear torsion spring: τ = c·(φ_rel − φ_rel0).</span></a></li>
+<li><a href="rotDamper.html"><strong>Torsion damper</strong><span>Linear rotational damper: τ = d·ω_rel.</span></a></li>
+<li><a href="rotBacklash.html"><strong>Backlash</strong><span>Spring and damper in series with a free play of b.</span></a></li>
+<li><a href="rotInertia.html"><strong>Inertia (ideal)</strong><span>Rotating mass with two flanges and no losses.</span></a></li>
+<li><a href="idealGear.html"><strong>Ideal gear</strong><span>Lossless gear: φ_a = ratio·φ_b.</span></a></li>
+<li><a href="clutch.html"><strong>Clutch</strong><span>Friction clutch; the normalized normal force f_n (0…1) engages it.</span></a></li>
+<li><a href="rollingWheel.html"><strong>Rolling wheel</strong><span>Converts rotation to translation without slip: v = r·ω.</span></a></li>
+<li><a href="gearR2T.html"><strong>Rack and pinion</strong><span>Ideal rack and pinion: rotation to translation by a fixed ratio.</span></a></li>
+<li><a href="torqueSource.html"><strong>Torque source</strong><span>Applies the input signal as torque to the flange.</span></a></li>
+<li><a href="constantTorque.html"><strong>Constant torque</strong><span>A constant torque, independent of speed.</span></a></li>
+<li><a href="torqueStep.html"><strong>Torque step</strong><span>A torque step at a given time.</span></a></li>
+<li><a href="speedSource.html"><strong>Speed source</strong><span>Forces the flange to follow the input speed, filtered by a critical frequency.</span></a></li>
+<li><a href="constantSpeed.html"><strong>Constant speed</strong><span>Holds the flange at a constant speed.</span></a></li>
+<li><a href="rotSpeedSensor.html"><strong>Speed sensor (ideal)</strong><span>Absolute angular velocity of the flange.</span></a></li>
+<li><a href="rotAccSensor.html"><strong>Acceleration sensor</strong><span>Absolute angular acceleration of the flange.</span></a></li>
+<li><a href="rotPowerSensor.html"><strong>Power sensor (rotational)</strong><span>Power flowing from flange a to flange b.</span></a></li>
+<li><a href="relSpeedSensor.html"><strong>Relative speed sensor</strong><span>Speed of flange b relative to flange a.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="translational">
+<h2>Translational <span>17</span></h2>
+<ul class="block-index">
+<li><a href="transFixed.html"><strong>Fixed (translational)</strong><span>A translational flange fixed at a constant position.</span></a></li>
+<li><a href="mass.html"><strong>Mass</strong><span>A sliding mass with two flanges: m·a = f_a + f_b.</span></a></li>
+<li><a href="transSpring.html"><strong>Spring</strong><span>Linear spring: f = c·(s_rel − s_rel0).</span></a></li>
+<li><a href="transDamper.html"><strong>Damper</strong><span>Linear damper: f = d·v_rel.</span></a></li>
+<li><a href="transSpringDamper.html"><strong>Spring-damper</strong><span>Spring and damper in parallel.</span></a></li>
+<li><a href="hardStop.html"><strong>Hard stop</strong><span>Spring and damper that act only when the gap closes (contact).</span></a></li>
+<li><a href="massStops.html"><strong>Mass with stops</strong><span>Mass with Coulomb and viscous friction and hard end stops.</span></a></li>
+<li><a href="forceSource.html"><strong>Force source</strong><span>Applies the input signal as force to the flange.</span></a></li>
+<li><a href="constantForce.html"><strong>Constant force</strong><span>A constant force.</span></a></li>
+<li><a href="forceStep.html"><strong>Force step</strong><span>A force step at a given time.</span></a></li>
+<li><a href="transSpeedSource.html"><strong>Velocity source</strong><span>Forces the flange to follow the input velocity.</span></a></li>
+<li><a href="positionSource.html"><strong>Position source</strong><span>Forces the flange to follow the input position.</span></a></li>
+<li><a href="positionSensor.html"><strong>Position sensor</strong><span>Absolute position of the flange.</span></a></li>
+<li><a href="velocitySensor.html"><strong>Velocity sensor</strong><span>Absolute velocity of the flange.</span></a></li>
+<li><a href="transAccSensor.html"><strong>Acceleration sensor (linear)</strong><span>Absolute acceleration of the flange.</span></a></li>
+<li><a href="forceSensor.html"><strong>Force sensor</strong><span>Force transmitted from flange a to flange b.</span></a></li>
+<li><a href="relPositionSensor.html"><strong>Relative position sensor</strong><span>Distance between flanges a and b.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="thermal">
+<h2>Thermal <span>12</span></h2>
+<ul class="block-index">
+<li><a href="heatCapacitor.html"><strong>Heat capacitor</strong><span>Stores heat: C·dT/dt = Q_flow.</span></a></li>
+<li><a href="thermalConductor.html"><strong>Thermal conductor</strong><span>Linear heat conduction: Q = G·ΔT.</span></a></li>
+<li><a href="thermalResistor.html"><strong>Thermal resistor</strong><span>Linear thermal resistance: ΔT = R·Q.</span></a></li>
+<li><a href="convection.html"><strong>Convection</strong><span>Convective heat transfer with the input conductance Gc.</span></a></li>
+<li><a href="radiation.html"><strong>Radiation</strong><span>Radiative exchange: Q = Gr·σ·(T_a⁴ − T_b⁴).</span></a></li>
+<li><a href="fixedTemperature.html"><strong>Fixed temperature</strong><span>Holds its port at a constant temperature.</span></a></li>
+<li><a href="prescribedTemperature.html"><strong>Temperature source</strong><span>Holds its port at the input temperature (K).</span></a></li>
+<li><a href="fixedHeatFlow.html"><strong>Fixed heat flow</strong><span>Injects a constant heat flow into its port.</span></a></li>
+<li><a href="prescribedHeatFlow.html"><strong>Heat flow source</strong><span>Injects the input heat flow (W) into its port.</span></a></li>
+<li><a href="temperatureSensor.html"><strong>Temperature sensor</strong><span>Absolute temperature of its port (K).</span></a></li>
+<li><a href="heatFlowSensor.html"><strong>Heat flow sensor</strong><span>Heat flow from port a to port b.</span></a></li>
+<li><a href="relTemperatureSensor.html"><strong>Temperature difference sensor</strong><span>Temperature difference between ports a and b.</span></a></li>
+</ul>
+</section>
+<section class="block-category" id="magnetic">
+<h2>Magnetic <span>10</span></h2>
+<ul class="block-index">
+<li><a href="reluctance.html"><strong>Reluctance</strong><span>Constant magnetic reluctance: V_m = R_m·Φ.</span></a></li>
+<li><a href="permeance.html"><strong>Permeance</strong><span>Constant magnetic permeance: Φ = G_m·V_m.</span></a></li>
+<li><a href="variableReluctance.html"><strong>Variable reluctance</strong><span>Reluctance set by the input signal.</span></a></li>
+<li><a href="winding.html"><strong>Winding</strong><span>Couples an electrical winding of N turns to a magnetic circuit.</span></a></li>
+<li><a href="magneticGround.html"><strong>Magnetic ground</strong><span>Zero magnetic potential reference.</span></a></li>
+<li><a href="mmfSource.html"><strong>MMF source</strong><span>A constant magnetomotive force (for example a permanent magnet model).</span></a></li>
+<li><a href="signalMmfSource.html"><strong>Controlled MMF source</strong><span>Magnetomotive force set by the input signal.</span></a></li>
+<li><a href="fluxSource.html"><strong>Flux source</strong><span>A constant magnetic flux.</span></a></li>
+<li><a href="fluxSensor.html"><strong>Flux sensor</strong><span>Magnetic flux through the sensor.</span></a></li>
+<li><a href="mmfSensor.html"><strong>MMF sensor</strong><span>Magnetic potential difference between its ports.</span></a></li>
+</ul>
+</section>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

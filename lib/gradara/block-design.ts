@@ -1,5 +1,6 @@
 import { GRID, SIZE_STEP, snapPoint } from './grid';
 import type { Definition, Port } from './model';
+import { isPictorial, pictorialSizes } from './pictorial';
 
 /** Diagram units at 100% zoom. Keep the matching typography tokens in blocks.css. */
 export const BLOCK_DESIGN = {
@@ -37,7 +38,7 @@ export function blockShape(d: Definition): BlockShape {
   if (d.boundary) return 'boundary';
   if (d.subsystem) return 'subsystem';
   if (d.kind === 'sum' || d.kind === 'subtract') return 'sum';
-  if (physical.has(d.kind)) return 'physical';
+  if (physical.has(d.kind) || isPictorial(d.kind)) return 'physical';
   if (['gain', 'mux', 'demux', 'ground'].includes(d.kind))
     return d.kind as BlockShape;
   return 'box';
@@ -74,6 +75,7 @@ export function defaultBlockSize(d: Definition) {
       height: 32,
     };
   if (shape === 'sum' || shape === 'ground') return { width: 48, height: 48 };
+  if (isPictorial(d.kind)) return { ...pictorialSizes[d.kind] };
   if (shape === 'physical')
     return ['top', 'bottom'].includes(
       d.ports.find((p) => p.direction === 'physical')?.side ?? '',

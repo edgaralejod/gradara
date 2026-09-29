@@ -3033,3 +3033,33 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .di-signals { min-width: 0; }
 .workbench-resizer { top: 44px; }
 @media (max-width: 1100px) { .workbench-resizer { display: none; } }
+
+/* Block reference (Help): the same page as gradara.app/docs/blocks. */
+.block-help-dialog { max-width: 760px !important; max-height: calc(100vh - 48px); grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.block-help { overflow: auto; min-height: 0; padding-right: 6px; color: #27333d; font: var(--text-ui) / 1.55 var(--font-ui); }
+.block-help section + section { margin-top: 18px; }
+.block-help h3 { margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #5d6b77; }
+.block-help h4 { margin: 10px 0 4px; font-size: 13px; font-weight: 600; }
+.block-help p { margin: 0 0 8px; }
+.block-help ul { margin: 0; padding-left: 18px; }
+.block-help li + li { margin-top: 4px; }
+.block-help code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.92em; background: #f1f4f7; border-radius: 3px; padding: 0 4px; }
+.help-entries { margin: 0; display: grid; gap: 6px; }
+.help-entries > div { border-top: 1px solid #edf0f3; padding-top: 6px; }
+.help-entries dt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.help-entries dt > span { color: #73808b; font-size: var(--text-meta); }
+.help-entries dd { margin: 2px 0 0; }
+.help-equations, .help-source { margin: 0; padding: 10px 12px; background: #f6f8fa; border: 1px solid #e3e9ed; border-radius: 4px; font: 13px / 1.6 var(--font-mono, ui-monospace, monospace); white-space: pre-wrap; }
+.help-source { max-height: 220px; overflow: auto; font-size: 12px; }
+.help-see-also { display: flex; flex-wrap: wrap; gap: 6px; }
+.help-see-also button, .help-back { border: 1px solid #cfd9e0; border-radius: 3px; background: #fff; padding: 2px 8px; font: inherit; color: #2477b5; cursor: pointer; }
+.help-see-also button:hover, .help-back:hover { background: #e3eef7; }
+.block-help-dialog .dialog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.block-help-dialog .dialog-actions a { display: inline-flex; align-items: center; gap: 4px; color: #2477b5; }
+.dialog-help { margin-right: auto; }
+.properties-help { margin-left: auto; display: inline-grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 3px; background: none; color: #73808b; cursor: pointer; }
+.properties-help:hover, .properties-help:focus-visible { background: #e3eef7; color: #2477b5; }
+.library-help { margin-top: 4px; border: 0; background: none; padding: 0; color: #2477b5; font: inherit; font-size: var(--text-meta); cursor: pointer; }
+.library-help:hover { text-decoration: underline; }
+.properties-heading { display: flex; align-items: center; min-height: 34px; }
+.block-help-dialog [data-slot='dialog-title'] { font-size: 19px; }

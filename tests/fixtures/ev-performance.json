@@ -771,11 +771,11 @@
           },
           "position": {
             "x": 760,
-            "y": 168
+            "y": 160
           },
           "size": {
             "width": 80,
-            "height": 64
+            "height": 80
           }
         },
         {
@@ -921,11 +921,11 @@
           },
           "position": {
             "x": 392,
-            "y": 168
+            "y": 160
           },
           "size": {
             "width": 80,
-            "height": 64
+            "height": 80
           }
         },
         {
@@ -1937,11 +1937,11 @@
           },
           "position": {
             "x": 120,
-            "y": 96
+            "y": 88
           },
           "size": {
             "width": 80,
-            "height": 64
+            "height": 80
           }
         },
         {

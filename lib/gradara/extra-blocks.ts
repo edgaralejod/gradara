@@ -123,7 +123,7 @@ export const extraBlocks: Definition[] = [
     'y = a / b;',
     [],
     '',
-    'Divide two signals, guarding a zero denominator.',
+    'Divide two signals: y = a / b. Keep the denominator away from zero.',
     ['math'],
   ),
   signal(
@@ -475,7 +475,7 @@ export const extraBlocks: Definition[] = [
     'unused = u;',
     [],
     'Real unused;',
-    'A numeric readout sink.',
+    'A sink that marks a signal whose value you want to read. It adds no equations; read the value in Results.',
     ['sink', 'value'],
   ),
   {

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PI controller · Gradara</title>
+<meta name="description" content="Sampled PI control with output saturation and a bounded integral state.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="canonical" href="https://gradara.app/docs/blocks/pi">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="../../"><img src="../../assets/icon.svg" alt="" width="28" height="28">Gradara</a>
+    <button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
+    <div class="nav-links" id="site-navigation">
+      <a href="../../#features">Features</a>
+      <a href="../../#pricing">Pricing</a>
+      <a href="index.html">Blocks</a>
+      <a href="https://github.com/edgaralejod/gradara/tree/main/docs">Docs</a>
+      <a class="button small primary" href="../../#download">Download</a>
+    </div>
+  </nav>
+</header>
+<main id="main" class="wrap doc block-ref">
+<p class="meta"><a href="index.html">Block reference</a> › Control</p>
+<h1>PI controller</h1>
+<p class="lede">Sampled PI control with output saturation and a bounded integral state.</p>
+<h2>Description</h2>
+<p>A sampled PI controller acting on the error between a reference and a measurement. At each sample it updates a clamped integral and computes a saturated output, which then holds until the next sample.</p>
+<p>Use it for loops such as motor speed or output-voltage regulation where a fixed controller rate matters.</p>
+<h2>Ports</h2>
+<h3>Inputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>ref</strong> <code>reference</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Setpoint.</td></tr>
+<tr><td><strong>meas</strong> <code>measured</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Measured value, in the same units as the reference.</td></tr>
+</tbody></table>
+<h3>Outputs</h3>
+<table><thead><tr><th>Port</th><th>Domain</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>out</strong> <code>y</code></td><td><span class="port-domain domain-signal">signal</span></td><td>Controller output, held between samples and limited to ±limit.</td></tr>
+</tbody></table>
+
+<h2>Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Proportional gain</strong> <code>kp</code></td><td class="nowrap">0.6</td><td>Proportional gain.</td></tr>
+<tr><td><strong>Integral gain</strong> <code>ki</code></td><td class="nowrap">2</td><td>Integral gain, per second.</td></tr>
+<tr><td><strong>Voltage limit</strong> <code>limit</code></td><td class="nowrap">24 V<br><span class="range">≥ 0.1</span></td><td>Output limit, at least 0.1. Clamps both the output and the integral to ±limit. Labeled in volts, but it applies in whatever unit the output uses.</td></tr>
+<tr><td><strong>Sample period</strong> <code>samplePeriod</code></td><td class="nowrap">0.001 s<br><span class="range">≥ 0.0001</span></td><td>Sample period Ts, in seconds, at least 0.1 ms. The first sample is at t = 0.</td></tr>
+</tbody></table>
+<h2>Equations</h2>
+<pre class="equations">error = reference − measured
+At t = k · samplePeriod:
+  integral = max(−limit, min(limit, integral⁻ + samplePeriod · ki · error))
+  y = max(−limit, min(limit, kp · error + integral))
+integral⁻ is the value from the previous sample; integral starts at 0.</pre>
+<h2>Implementation</h2>
+<p>The block’s Modelica equations:</p>
+<pre class="block-source">discrete Real integral(start=0, fixed=true);
+Real error;
+error = reference - measured;
+when sample(0, samplePeriod) then
+  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));
+  y = max(-limit, min(limit, kp*error + integral));
+end when;</pre>
+<h2>Assumptions and limitations</h2>
+<ul><li>The integral is updated with the current error (backward Euler), so a step in error affects y at the same sample, with no computation delay.</li><li>Anti-windup is a clamp on the integral at ±limit, not back-calculation. The integral can still sit at the limit while the proportional term alone saturates the output.</li><li>No derivative term. For one, use Discrete PID.</li><li>The error is read only at sample instants; nothing between samples is seen.</li></ul>
+<h2>Tips</h2>
+<ul><li>Choose samplePeriod well below the loop’s time constants; each sample is a simulation event.</li></ul>
+<h2>Examples</h2>
+<p>Used in the shipped examples <strong>Motor speed control</strong>, <strong>480 VAC → 24 VDC flyback</strong>. Open them from <strong>Examples</strong> in the app.</p>
+<h2>See also</h2>
+<p class="see-also"><a href="discretePID.html">Discrete PID</a> <a href="pid.html">PID</a> <a href="currentPI.html">Current PI</a> <a href="zoh.html">Zero-order hold</a> <a href="saturation.html">Saturation</a></p>
+<p class="meta">Press F1 on a selected block in Gradara to open this page offline.</p>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>© 2026 Virtu Services LLC</p>
+    <div class="footer-links">
+      <a href="../../privacy.html">Privacy</a>
+      <a href="../../terms.html">Terms</a>
+      <a href="https://github.com/edgaralejod/gradara">GitHub</a>
+      <a href="mailto:support@virtu-services.us">Support</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
