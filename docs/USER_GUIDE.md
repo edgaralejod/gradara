@@ -27,11 +27,10 @@ You need a ready engine: **Settings → Engine** shows a green dot. If it does n
    ![The block picker that opens where you double-click](images/inserter.webp)
 
 3. Double-click to the right of it, type `second` and choose **Second-order**. This is a second-order transfer function, ωn² / (s² + 2ζωn s + ωn²).
-4. Double-click again further right, type `scope` and choose **Scope**.
-5. Drag from the Step's output port (right side) to the Second-order's input port. Then connect the Second-order's output to the Scope.
-6. Set **Stop time** next to **Run** to 2 seconds, then choose **Run**.
-7. In **Results**, check the Second-order output in the signal list. You see a step response that overshoots slightly and settles at 1.
-8. Double-click the Second-order block and lower **Damping ratio** to 0.2. Run again and compare.
+4. Drag from the Step's output port (right side) to the Second-order's input port.
+5. Set **Stop time** next to **Run** to 2 seconds, then choose **Run**.
+6. In **Results**, check the Second-order output in the signal list. You see a step response that overshoots slightly and settles at 1. Results lists every block output, so you never need a block just to see a signal.
+7. Double-click the Second-order block and lower **Damping ratio** to 0.2. Run again and compare.
 
 You can also use the block library on the left. It opens with a new blank model; the first button in the toolbar (**Show components** / **Hide components**) toggles it. Press **/** to search it, then click or drag a block onto the sheet.
 
@@ -130,6 +129,12 @@ Select a block to edit its parameters in the inspector on the right. Double-clic
 The **Equations** and **State & declarations** tabs show a block's Modelica equations. You can edit them for signal blocks and AI-generated blocks. Built-in physical blocks use Modelica Standard Library components, so their tab names the library class and is read-only. The inspector's **Edit…** and **Equations → Open** open the same dialog.
 
 **Block reference.** Every block has a reference page, like a Simulink block's Help: what it does, its ports and parameters with defaults and units, the equations it solves, the Modelica class behind it, and what it leaves out. Select a block and press **F1**, or choose **Help** from the canvas menu, the **?** next to Component properties in the inspector, or the **Help** button in the block's properties dialog. In the library, **Block reference** under a part's description opens its page before you place it. The pages work offline, and the same pages are at [gradara.app/docs/blocks](https://gradara.app/docs/blocks/). A custom block the AI wrote shows its own ports, parameters, and equations.
+
+**Notes.** Label parts of a diagram with notes: a heading and an optional detail line. Right-click empty canvas and choose **Add note here**, type the heading, press Tab for the detail, and press Enter. Drag a note to move it; it lands on the sheet grid. Double-click a note to edit it, or select it and press Delete to remove it. Every change can be undone. Notes belong to the top-level sheet; the notes in the built-in examples work the same way.
+
+**Block examples.** Every library block has a small runnable example that shows it at work, such as an RC circuit for the capacitor or a clutch that locks for the clutch. In a block's Help, choose **Open example**: the example opens as a new model in **My models**, with that block selected, ready to run. Each example's description says what to look for in Results. **Examples** lists them all under **Block examples**, grouped by area, and each block's page on gradara.app shows its example's diagram. The only blocks without one are Mux and Demux, which are drawing-only and cannot run yet.
+
+**Scope, Display, and Terminator** are no longer in the library: Results already lists every block output, and an unconnected output is allowed. Models that contain them still open and run unchanged.
 
 Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it. Double-click the name to put it back. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
 
@@ -306,7 +311,7 @@ Every generated block that passes its checks is saved in **Library → AI blocks
 
 ### Edit the open model with the Assistant
 
-Open the **Assistant** tab in the dock and describe a change, for example "Add a scope on the measured angle and connect it" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to point the Assistant at them, or **Whole model**.
+Open the **Assistant** tab in the dock and describe a change, for example "Add a speed sensor on the load shaft" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to point the Assistant at them, or **Whole model**.
 
 The Assistant can add library blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, and connect or disconnect ports. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model passed a trial simulation in OpenModelica. If it still fails after one automatic revision, the proposal is marked **Not verified** and shows the messages.
 
@@ -322,7 +327,7 @@ Limits: flat models (no subsystems) with up to 80 blocks and up to four new bloc
 
 ## Built-in examples
 
-Open any of these from **Examples**. Each guide describes what the model shows, what to look at, and its limits.
+Open any of these from **Examples**. Each guide describes what the model shows, what to look at, and its limits. Below them, **Block examples** has a small model for every library block (see **Block examples** in [Build a diagram](#build-a-diagram)).
 
 | Example | What it shows |
 | --- | --- |

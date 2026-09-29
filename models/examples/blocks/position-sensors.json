@@ -1,0 +1,365 @@
+{
+  "version": 1,
+  "name": "Example: Resolver and Hall sensor",
+  "exampleId": "block-position-sensors",
+  "description": "The shaft angle grows at 10 rad/s. The resolver (one pole pair) outputs the sine and cosine of the angle and their negatives. The Hall sensor reports the electrical angle of a two-pole-pair machine, 2 · φ + π wrapped to 0…2π, as its mounting offset puts π at zero shaft angle. The angle sensor reads the shaft angle itself.",
+  "duration": 1,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "drive",
+      "definition": {
+        "kind": "constantSpeed",
+        "name": "Shaft 10 rad/s",
+        "description": "Holds the flange at a constant speed.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω₀",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "w_fixed",
+            "name": "Speed",
+            "value": 10,
+            "unit": "rad/s"
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Sources.ConstantSpeed from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sources.ConstantSpeed",
+          "modifiers": {
+            "w_fixed": "w_fixed"
+          }
+        }
+      },
+      "position": {
+        "x": 104,
+        "y": 200
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "res",
+      "definition": {
+        "kind": "resolver",
+        "name": "Resolver",
+        "description": "Sine–cosine resolver: the sine and cosine of the electrical angle p·φ, and their negatives.",
+        "domain": "mechanical",
+        "category": "machines",
+        "symbol": "R",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "sin",
+            "name": "sin",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "cos",
+            "name": "cos",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "nsin",
+            "name": "−sin",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "ncos",
+            "name": "−cos",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "p",
+            "name": "Pole pairs",
+            "value": 1,
+            "unit": "",
+            "min": 1
+          }
+        ],
+        "equations": "// Electrical.Machines.Sensors.SinCosResolver from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "encoder",
+          "angle"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.Sensors.SinCosResolver",
+          "modifiers": {
+            "offset": "0",
+            "phi0": "0",
+            "p": "p"
+          },
+          "ports": {
+            "sin": "y[3]",
+            "cos": "y[1]",
+            "nsin": "y[4]",
+            "ncos": "y[2]"
+          }
+        }
+      },
+      "position": {
+        "x": 392,
+        "y": 40
+      },
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "labelOffset": {
+        "x": 104,
+        "y": -78
+      }
+    },
+    {
+      "id": "hall",
+      "definition": {
+        "kind": "hallSensor",
+        "name": "Hall sensor",
+        "description": "Electrical rotor angle for p pole pairs, as a Hall or encoder sensor reports it (0…2π).",
+        "domain": "mechanical",
+        "category": "machines",
+        "symbol": "Hall",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "θe",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "p",
+            "name": "Pole pairs",
+            "value": 2,
+            "unit": "",
+            "min": 1
+          }
+        ],
+        "equations": "// Electrical.Machines.Sensors.HallSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "hall",
+          "commutation",
+          "bldc",
+          "encoder"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.Sensors.HallSensor",
+          "modifiers": {
+            "p": "p"
+          }
+        }
+      },
+      "position": {
+        "x": 392,
+        "y": 248
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 116,
+        "y": -62
+      }
+    },
+    {
+      "id": "ang",
+      "definition": {
+        "kind": "angleSensor",
+        "name": "Shaft angle",
+        "symbol": "θ",
+        "domain": "mechanical",
+        "description": "Measures shaft angle in radians without loading the mechanical system.",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "rad"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = flange.phi;\nflange.tau = 0;",
+        "keywords": [
+          "mechanical",
+          "sensor",
+          "position",
+          "encoder"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 392
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "rotation": 180,
+      "labelOffset": {
+        "x": 116,
+        "y": -62
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id0005",
+      "sourceHandle": "node",
+      "target": "res",
+      "targetHandle": "flange",
+      "waypoints": [
+        {
+          "x": 312,
+          "y": 104
+        }
+      ]
+    },
+    {
+      "id": "id0002",
+      "source": "j_id0007",
+      "sourceHandle": "node",
+      "target": "hall",
+      "targetHandle": "flange",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "j_id0007",
+      "sourceHandle": "node",
+      "target": "ang",
+      "targetHandle": "flange",
+      "waypoints": [
+        {
+          "x": 312,
+          "y": 440
+        }
+      ]
+    },
+    {
+      "id": "w_id0006",
+      "source": "drive",
+      "sourceHandle": "flange",
+      "target": "j_id0005",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0008",
+      "source": "j_id0005",
+      "sourceHandle": "node",
+      "target": "j_id0007",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0005",
+      "domain": "mechanical",
+      "position": {
+        "x": 312,
+        "y": 248
+      }
+    },
+    {
+      "id": "j_id0007",
+      "domain": "mechanical",
+      "position": {
+        "x": 312,
+        "y": 296
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id0009",
+      "anchor": "ang.flange",
+      "wireIds": [
+        "id0001",
+        "id0002",
+        "id0003",
+        "w_id0006",
+        "w_id0008"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Resolver",
+      "series": [
+        "res.sin",
+        "res.cos",
+        "res.nsin",
+        "res.ncos"
+      ],
+      "labels": [
+        "sin",
+        "cos",
+        "−sin",
+        "−cos"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Angles",
+      "series": [
+        "hall.y",
+        "ang.y"
+      ],
+      "labels": [
+        "Hall θe",
+        "Shaft φ"
+      ]
+    }
+  ]
+}

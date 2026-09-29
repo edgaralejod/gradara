@@ -1,0 +1,905 @@
+{
+  "version": 1,
+  "name": "Example: Latch, timer, and sampler",
+  "exampleId": "block-latch-timer",
+  "description": "Start is pressed at 0.5 s and Stop at 1.5 s. Their rising edges set and reset the RS flip-flop, so Running is true from 0.5 s to 1.5 s. The timer counts seconds while Running is true. The logic switch passes the sine only while running and 0 otherwise. The triggered sampler reads the clock on the start edge and holds 0.5. Enable is a Boolean constant ANDed with Start: set it to false and nothing starts.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "enable",
+      "definition": {
+        "kind": "booleanConstant",
+        "name": "Enable",
+        "description": "Constant true output.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "true",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Sources.BooleanConstant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "enable"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanConstant",
+          "modifiers": {
+            "k": "true"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "start",
+      "definition": {
+        "kind": "booleanStep",
+        "name": "Start",
+        "description": "False before the step time, true after.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0.5,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanStep from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "enable",
+          "trigger"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanStep",
+          "modifiers": {
+            "startValue": "false",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 192
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "stop",
+      "definition": {
+        "kind": "booleanStep",
+        "name": "Stop",
+        "description": "False before the step time, true after.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 1.5,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanStep from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "enable",
+          "trigger"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanStep",
+          "modifiers": {
+            "startValue": "false",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "armed",
+      "definition": {
+        "kind": "logicAnd",
+        "name": "Enabled start",
+        "description": "Boolean AND of two inputs.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "&",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.And from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gate",
+          "logic",
+          "boolean"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.And"
+        }
+      },
+      "position": {
+        "x": 240,
+        "y": 112
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "rise",
+      "definition": {
+        "kind": "edge",
+        "name": "Start edge",
+        "description": "True for one instant when the input becomes true.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "↑",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Edge from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "trigger",
+          "event"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Edge"
+        }
+      },
+      "position": {
+        "x": 472,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "fall",
+      "definition": {
+        "kind": "edge",
+        "name": "Stop edge",
+        "description": "True for one instant when the input becomes true.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "↑",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Edge from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "trigger",
+          "event"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Edge"
+        }
+      },
+      "position": {
+        "x": 472,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "latch",
+      "definition": {
+        "kind": "rsFlipFlop",
+        "name": "Running",
+        "description": "Set/reset latch.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "RS",
+        "ports": [
+          {
+            "id": "S",
+            "name": "S",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "R",
+            "name": "R",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "Q",
+            "name": "Q",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          },
+          {
+            "id": "QI",
+            "name": "Q̄",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.RSFlipFlop from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "latch",
+          "memory"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.RSFlipFlop",
+          "modifiers": {
+            "Qini": "false"
+          }
+        }
+      },
+      "position": {
+        "x": 672,
+        "y": 224
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "timer",
+      "definition": {
+        "kind": "timer",
+        "name": "Run time",
+        "description": "Time since the input became true (0 while false).",
+        "domain": "signal",
+        "category": "logic",
+        "symbol": "t",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Timer from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "elapsed",
+          "stopwatch"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Timer"
+        }
+      },
+      "position": {
+        "x": 936,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "sine",
+      "definition": {
+        "kind": "sine",
+        "name": "Sine 1 Hz",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 1,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 696,
+        "y": 432
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "zero",
+      "definition": {
+        "kind": "constant",
+        "name": "0",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 696,
+        "y": 560
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "gate",
+      "definition": {
+        "kind": "logicSwitch",
+        "name": "Gated sine",
+        "description": "Outputs u1 while u2 is true, otherwise u3.",
+        "domain": "signal",
+        "category": "logic",
+        "symbol": "sw",
+        "ports": [
+          {
+            "id": "u2",
+            "name": "sel",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "u1",
+            "name": "true",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "u3",
+            "name": "false",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Switch from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "select",
+          "mux"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Switch"
+        }
+      },
+      "position": {
+        "x": 912,
+        "y": 352
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "clock",
+      "definition": {
+        "kind": "clock",
+        "name": "Clock",
+        "symbol": "clock",
+        "domain": "signal",
+        "description": "Simulation time as a signal.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "t",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "s"
+          }
+        ],
+        "equations": "y = time;",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "time"
+        ]
+      },
+      "position": {
+        "x": 696,
+        "y": 0
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "hold",
+      "definition": {
+        "kind": "triggeredSampler",
+        "name": "Start time",
+        "description": "Samples the input at each rising edge of trigger and holds it.",
+        "domain": "signal",
+        "category": "logic",
+        "symbol": "S/H",
+        "ports": [
+          {
+            "id": "trigger",
+            "name": "trigger",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "y_start",
+            "name": "Initial output",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Discrete.TriggeredSampler from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "sample and hold",
+          "latch"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Discrete.TriggeredSampler",
+          "modifiers": {
+            "y_start": "y_start"
+          }
+        }
+      },
+      "position": {
+        "x": 936,
+        "y": 0
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "enable",
+      "sourceHandle": "y",
+      "target": "armed",
+      "targetHandle": "u1"
+    },
+    {
+      "id": "id0002",
+      "source": "start",
+      "sourceHandle": "y",
+      "target": "armed",
+      "targetHandle": "u2"
+    },
+    {
+      "id": "id0003",
+      "source": "armed",
+      "sourceHandle": "y",
+      "target": "rise",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0004",
+      "source": "stop",
+      "sourceHandle": "y",
+      "target": "fall",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000e",
+      "sourceHandle": "node",
+      "target": "latch",
+      "targetHandle": "S",
+      "waypoints": [
+        {
+          "x": 616,
+          "y": 160
+        },
+        {
+          "x": 616,
+          "y": 256
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "fall",
+      "sourceHandle": "y",
+      "target": "latch",
+      "targetHandle": "R"
+    },
+    {
+      "id": "id0007",
+      "source": "j_id000g",
+      "sourceHandle": "node",
+      "target": "timer",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 872,
+          "y": 256
+        },
+        {
+          "x": 872,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000g",
+      "sourceHandle": "node",
+      "target": "gate",
+      "targetHandle": "u2",
+      "waypoints": [
+        {
+          "x": 856,
+          "y": 376
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "sine",
+      "sourceHandle": "y",
+      "target": "gate",
+      "targetHandle": "u1"
+    },
+    {
+      "id": "id000a",
+      "source": "zero",
+      "sourceHandle": "y",
+      "target": "gate",
+      "targetHandle": "u3"
+    },
+    {
+      "id": "id000b",
+      "source": "clock",
+      "sourceHandle": "y",
+      "target": "hold",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id000c",
+      "source": "j_id000e",
+      "sourceHandle": "node",
+      "target": "hold",
+      "targetHandle": "trigger",
+      "waypoints": [
+        {
+          "x": 568,
+          "y": -16
+        },
+        {
+          "x": 976,
+          "y": -16
+        }
+      ]
+    },
+    {
+      "id": "w_id000f",
+      "source": "rise",
+      "sourceHandle": "y",
+      "target": "j_id000e",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000h",
+      "source": "latch",
+      "sourceHandle": "Q",
+      "target": "j_id000g",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000e",
+      "domain": "boolean",
+      "position": {
+        "x": 568,
+        "y": 160
+      }
+    },
+    {
+      "id": "j_id000g",
+      "domain": "boolean",
+      "position": {
+        "x": 856,
+        "y": 256
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000i",
+      "anchor": "enable.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000j",
+      "anchor": "start.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000k",
+      "anchor": "armed.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000l",
+      "anchor": "stop.y",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000m",
+      "anchor": "rise.y",
+      "wireIds": [
+        "id0005",
+        "id000c",
+        "w_id000f"
+      ]
+    },
+    {
+      "id": "net_id000n",
+      "anchor": "fall.y",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000o",
+      "anchor": "latch.Q",
+      "wireIds": [
+        "id0007",
+        "id0008",
+        "w_id000h"
+      ]
+    },
+    {
+      "id": "net_id000p",
+      "anchor": "sine.y",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id000q",
+      "anchor": "zero.y",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id000r",
+      "anchor": "clock.y",
+      "wireIds": [
+        "id000b"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Running",
+      "series": [
+        "latch.Q",
+        "timer.y"
+      ],
+      "labels": [
+        "Running",
+        "Run time"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Gated signal and start time",
+      "series": [
+        "gate.y",
+        "hold.y"
+      ],
+      "labels": [
+        "Gated sine",
+        "Start time"
+      ]
+    }
+  ]
+}

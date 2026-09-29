@@ -1,0 +1,1045 @@
+{
+  "version": 1,
+  "name": "Example: Thyristor and GTO",
+  "exampleId": "block-thyristors",
+  "description": "Both switch a 10 V, 50 Hz sine into a 10 Ω load and are fired 2.5 ms into each cycle for 2 ms. The thyristor latches: once fired it conducts until its current reaches zero at the end of the positive half-cycle. The GTO stops conducting as soon as its gate goes off at 4.5 ms.",
+  "duration": 0.04,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "tsrc",
+      "definition": {
+        "kind": "sineVoltage",
+        "name": "10 V 50 Hz T",
+        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "AC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Amplitude",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mains",
+          "grid",
+          "sine"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+          "modifiers": {
+            "V": "V",
+            "f": "f",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -80,
+        "y": -54
+      }
+    },
+    {
+      "id": "td",
+      "definition": {
+        "kind": "idealThyristor",
+        "name": "Thyristor",
+        "description": "Ideal thyristor: turns on at a fire pulse when forward biased, off when current reverses.",
+        "domain": "electrical",
+        "category": "semiconductors",
+        "symbol": "SCR",
+        "ports": [
+          {
+            "id": "fire",
+            "name": "g",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "p",
+            "name": "A",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "K",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "On resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Goff",
+            "name": "Off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealThyristor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "scr",
+          "phase control"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealThyristor",
+          "modifiers": {
+            "Ron": "Ron",
+            "Goff": "Goff"
+          }
+        }
+      },
+      "position": {
+        "x": 272,
+        "y": 224
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "tr",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load T",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 432,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "tv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v T",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 592,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "tg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground T",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 408
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "gsrc",
+      "definition": {
+        "kind": "sineVoltage",
+        "name": "10 V 50 Hz G",
+        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "AC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Amplitude",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mains",
+          "grid",
+          "sine"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+          "modifiers": {
+            "V": "V",
+            "f": "f",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 816,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -80,
+        "y": -54
+      }
+    },
+    {
+      "id": "gd",
+      "definition": {
+        "kind": "idealGTO",
+        "name": "GTO",
+        "description": "Gate turn-off thyristor: conducts while fire is true and forward biased.",
+        "domain": "electrical",
+        "category": "semiconductors",
+        "symbol": "GTO",
+        "ports": [
+          {
+            "id": "fire",
+            "name": "g",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "p",
+            "name": "A",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "K",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "On resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Goff",
+            "name": "Off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealGTOThyristor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "igbt",
+          "switch"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealGTOThyristor",
+          "modifiers": {
+            "Ron": "Ron",
+            "Goff": "Goff"
+          }
+        }
+      },
+      "position": {
+        "x": 944,
+        "y": 224
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "gr",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load G",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1104,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "gv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v G",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1264,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "gg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground G",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 816,
+        "y": 408
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "fire",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "Fire at 2.5 ms",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 10,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 0.02,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.0025,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 272,
+        "y": 32
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": -104,
+        "y": -46
+      }
+    },
+    {
+      "id": "fire2",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "Fire at 2.5 ms (GTO)",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 10,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 0.02,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.0025,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 944,
+        "y": 32
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": -128,
+        "y": -46
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "tsrc",
+      "sourceHandle": "p",
+      "target": "td",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0002",
+      "source": "td",
+      "sourceHandle": "n",
+      "target": "j_id000g",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 456,
+          "y": 248
+        }
+      ]
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000i",
+      "sourceHandle": "node",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000k",
+      "sourceHandle": "node",
+      "target": "tg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "tv",
+      "sourceHandle": "p",
+      "target": "j_id000g",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 616,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "tv",
+      "sourceHandle": "n",
+      "target": "j_id000i",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 616,
+          "y": 384
+        }
+      ]
+    },
+    {
+      "id": "id0007",
+      "source": "gsrc",
+      "sourceHandle": "p",
+      "target": "gd",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0008",
+      "source": "gd",
+      "sourceHandle": "n",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1128,
+          "y": 248
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000a",
+      "source": "j_id000q",
+      "sourceHandle": "node",
+      "target": "gg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000b",
+      "source": "gv",
+      "sourceHandle": "p",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1288,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id000c",
+      "source": "gv",
+      "sourceHandle": "n",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1288,
+          "y": 384
+        }
+      ]
+    },
+    {
+      "id": "id000d",
+      "source": "fire",
+      "sourceHandle": "y",
+      "target": "td",
+      "targetHandle": "fire"
+    },
+    {
+      "id": "id000e",
+      "source": "fire2",
+      "sourceHandle": "y",
+      "target": "gd",
+      "targetHandle": "fire"
+    },
+    {
+      "id": "w_id000h",
+      "source": "tr",
+      "sourceHandle": "p",
+      "target": "j_id000g",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000j",
+      "source": "tr",
+      "sourceHandle": "n",
+      "target": "j_id000i",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000l",
+      "source": "tsrc",
+      "sourceHandle": "n",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000n",
+      "source": "gr",
+      "sourceHandle": "p",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000p",
+      "source": "gr",
+      "sourceHandle": "n",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000r",
+      "source": "gsrc",
+      "sourceHandle": "n",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000g",
+      "domain": "electrical",
+      "position": {
+        "x": 456,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000i",
+      "domain": "electrical",
+      "position": {
+        "x": 456,
+        "y": 384
+      }
+    },
+    {
+      "id": "j_id000k",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 384
+      }
+    },
+    {
+      "id": "j_id000m",
+      "domain": "electrical",
+      "position": {
+        "x": 1128,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000o",
+      "domain": "electrical",
+      "position": {
+        "x": 1128,
+        "y": 384
+      }
+    },
+    {
+      "id": "j_id000q",
+      "domain": "electrical",
+      "position": {
+        "x": 840,
+        "y": 384
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000s",
+      "anchor": "td.p",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000t",
+      "anchor": "td.n",
+      "wireIds": [
+        "id0002",
+        "id0005",
+        "w_id000h"
+      ]
+    },
+    {
+      "id": "net_id000u",
+      "anchor": "tg.p",
+      "wireIds": [
+        "id0003",
+        "id0004",
+        "id0006",
+        "w_id000j",
+        "w_id000l"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "gd.p",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "gd.n",
+      "wireIds": [
+        "id0008",
+        "id000b",
+        "w_id000n"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "gg.p",
+      "wireIds": [
+        "id0009",
+        "id000a",
+        "id000c",
+        "w_id000p",
+        "w_id000r"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "fire.y",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id000z",
+      "anchor": "fire2.y",
+      "wireIds": [
+        "id000e"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Load voltages",
+      "series": [
+        "tv.y",
+        "gv.y"
+      ],
+      "labels": [
+        "Thyristor",
+        "GTO"
+      ]
+    }
+  ]
+}

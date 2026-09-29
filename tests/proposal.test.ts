@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GRID } from '../lib/gradara/grid';
-import { initialProject, library } from '../lib/gradara/model';
+import { definitionFor, initialProject, library } from '../lib/gradara/model';
 import { mergeProposal } from '../lib/gradara/proposal';
 
 function proposalFrom(p: ReturnType<typeof initialProject>) {
@@ -15,7 +15,10 @@ function proposalFrom(p: ReturnType<typeof initialProject>) {
 void test('untouched blocks and wires keep their exact objects', () => {
   const current = initialProject();
   current.wires[0] = { ...current.wires[0], waypoints: undefined };
-  const { project, added, changed } = mergeProposal(current, proposalFrom(current));
+  const { project, added, changed } = mergeProposal(
+    current,
+    proposalFrom(current),
+  );
   assert.deepEqual(added, []);
   assert.deepEqual(changed, []);
   project.blocks.forEach((b, i) => assert.equal(b, current.blocks[i]));
@@ -26,8 +29,12 @@ void test('untouched blocks and wires keep their exact objects', () => {
 void test('a new block is snapped with a standard size and a new wire has no route', () => {
   const current = initialProject();
   const proposed = proposalFrom(current);
-  const scope = structuredClone(library.find((d) => d.kind === 'scope')!);
-  proposed.blocks.push({ id: 'b_scope', definition: scope, position: { x: 1213, y: 407 } });
+  const scope = structuredClone(definitionFor('scope')!);
+  proposed.blocks.push({
+    id: 'b_scope',
+    definition: scope,
+    position: { x: 1213, y: 407 },
+  });
   proposed.wires.push({
     id: 'w_ai_1',
     source: 'sensor',

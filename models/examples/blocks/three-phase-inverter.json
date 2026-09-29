@@ -1,0 +1,1141 @@
+{
+  "version": 1,
+  "name": "Example: Three-phase inverter",
+  "exampleId": "block-three-phase-inverter",
+  "description": "Three PWM generators follow duty cycles 0.5 + 0.4 sin(2π·50t − k·120°). The inverter switches each phase between +50 V and −50 V of a split DC bus, so each phase averages a 40 V sine; into 10 Ω per phase that is a 4 A sine, whose positive half-cycle averages 2/π of 4 A. The load star point is tied to the bus midpoint.",
+  "duration": 0.04,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "dhi",
+      "definition": {
+        "kind": "dcSource",
+        "name": "50 V upper",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 50,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 464,
+        "y": 112
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "dlo",
+      "definition": {
+        "kind": "dcSource",
+        "name": "50 V lower",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 50,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 464,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "dmid",
+      "definition": {
+        "kind": "ground",
+        "name": "Midpoint",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 368,
+        "y": 216
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "aref",
+      "definition": {
+        "kind": "sine",
+        "name": "Duty a",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 0.4,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 128,
+        "y": 472
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "apwm",
+      "definition": {
+        "kind": "pwmSignal",
+        "name": "PWM a",
+        "description": "Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.",
+        "domain": "boolean",
+        "category": "converters",
+        "symbol": "PWM",
+        "ports": [
+          {
+            "id": "dutyCycle",
+            "name": "d",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "fire",
+            "name": "fire",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          },
+          {
+            "id": "notFire",
+            "name": "fire̅",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f",
+            "name": "Switching frequency",
+            "value": 10000,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.Control.SignalPWM from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "modulator",
+          "duty cycle",
+          "switching"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.Control.SignalPWM",
+          "modifiers": {
+            "useConstantDutyCycle": "false",
+            "f": "f"
+          }
+        }
+      },
+      "position": {
+        "x": 296,
+        "y": 456
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "bref",
+      "definition": {
+        "kind": "sine",
+        "name": "Duty b",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 0.4,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": -2.0943951023931953,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 128,
+        "y": 608
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "bpwm",
+      "definition": {
+        "kind": "pwmSignal",
+        "name": "PWM b",
+        "description": "Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.",
+        "domain": "boolean",
+        "category": "converters",
+        "symbol": "PWM",
+        "ports": [
+          {
+            "id": "dutyCycle",
+            "name": "d",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "fire",
+            "name": "fire",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          },
+          {
+            "id": "notFire",
+            "name": "fire̅",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f",
+            "name": "Switching frequency",
+            "value": 10000,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.Control.SignalPWM from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "modulator",
+          "duty cycle",
+          "switching"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.Control.SignalPWM",
+          "modifiers": {
+            "useConstantDutyCycle": "false",
+            "f": "f"
+          }
+        }
+      },
+      "position": {
+        "x": 296,
+        "y": 592
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "cref",
+      "definition": {
+        "kind": "sine",
+        "name": "Duty c",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 0.4,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 2.0943951023931953,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 128,
+        "y": 744
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "cpwm",
+      "definition": {
+        "kind": "pwmSignal",
+        "name": "PWM c",
+        "description": "Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.",
+        "domain": "boolean",
+        "category": "converters",
+        "symbol": "PWM",
+        "ports": [
+          {
+            "id": "dutyCycle",
+            "name": "d",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "fire",
+            "name": "fire",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          },
+          {
+            "id": "notFire",
+            "name": "fire̅",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f",
+            "name": "Switching frequency",
+            "value": 10000,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.Control.SignalPWM from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "modulator",
+          "duty cycle",
+          "switching"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.Control.SignalPWM",
+          "modifiers": {
+            "useConstantDutyCycle": "false",
+            "f": "f"
+          }
+        }
+      },
+      "position": {
+        "x": 296,
+        "y": 728
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "inv",
+      "definition": {
+        "kind": "threePhaseInverter",
+        "name": "Inverter",
+        "description": "Three-phase two-level inverter with a fire input per switch.",
+        "domain": "electrical",
+        "category": "converters",
+        "symbol": "3~",
+        "ports": [
+          {
+            "id": "dc_p",
+            "name": "dc+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_n",
+            "name": "dc−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "ac",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "fa_p",
+            "name": "a+",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "fb_p",
+            "name": "b+",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "fc_p",
+            "name": "c+",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "fa_n",
+            "name": "a−",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "fb_n",
+            "name": "b−",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "fc_n",
+            "name": "c−",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "RonTransistor",
+            "name": "Transistor on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "RonDiode",
+            "name": "Diode on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCAC.Polyphase2Level from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "vsi",
+          "motor drive",
+          "dc-ac"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCAC.Polyphase2Level",
+          "modifiers": {
+            "RonTransistor": "RonTransistor",
+            "RonDiode": "RonDiode"
+          },
+          "ports": {
+            "fa_p": "fire_p[1]",
+            "fb_p": "fire_p[2]",
+            "fc_p": "fire_p[3]",
+            "fa_n": "fire_n[1]",
+            "fb_n": "fire_n[2]",
+            "fc_n": "fire_n[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 648,
+        "y": 192
+      },
+      "size": {
+        "width": 224,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "i3",
+      "definition": {
+        "kind": "threePhaseCurrentSensor",
+        "name": "Phase currents",
+        "description": "Phase currents from plug + to plug −.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "iabc",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "ia",
+            "name": "ia",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "ib",
+            "name": "ib",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "ic",
+            "name": "ic",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sensors.CurrentSensor",
+          "ports": {
+            "ia": "i[1]",
+            "ib": "i[2]",
+            "ic": "i[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 960,
+        "y": 192
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "threePhaseResistor",
+        "name": "Load 10 Ω",
+        "description": "Resistor in each phase.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3R",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance per phase",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Basic.Resistor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Resistor",
+          "modifiers": {
+            "R": "fill(R, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 1192,
+        "y": 208
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "star",
+      "definition": {
+        "kind": "star",
+        "name": "Star",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 1360,
+        "y": 216
+      },
+      "size": {
+        "width": 64,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "sg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (star)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1480,
+        "y": 320
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "dlo",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0002",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "dmid",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 440,
+          "y": 208
+        },
+        {
+          "x": 440,
+          "y": 200
+        },
+        {
+          "x": 392,
+          "y": 200
+        }
+      ]
+    },
+    {
+      "id": "id0003",
+      "source": "aref",
+      "sourceHandle": "y",
+      "target": "apwm",
+      "targetHandle": "dutyCycle"
+    },
+    {
+      "id": "id0004",
+      "source": "bref",
+      "sourceHandle": "y",
+      "target": "bpwm",
+      "targetHandle": "dutyCycle"
+    },
+    {
+      "id": "id0005",
+      "source": "cref",
+      "sourceHandle": "y",
+      "target": "cpwm",
+      "targetHandle": "dutyCycle"
+    },
+    {
+      "id": "id0006",
+      "source": "dhi",
+      "sourceHandle": "p",
+      "target": "inv",
+      "targetHandle": "dc_p"
+    },
+    {
+      "id": "id0007",
+      "source": "dlo",
+      "sourceHandle": "n",
+      "target": "inv",
+      "targetHandle": "dc_n"
+    },
+    {
+      "id": "id0008",
+      "source": "inv",
+      "sourceHandle": "ac",
+      "target": "i3",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id0009",
+      "source": "i3",
+      "sourceHandle": "plug_n",
+      "target": "load",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000a",
+      "source": "load",
+      "sourceHandle": "plug_n",
+      "target": "star",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000b",
+      "source": "star",
+      "sourceHandle": "pin_n",
+      "target": "sg",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000c",
+      "source": "apwm",
+      "sourceHandle": "fire",
+      "target": "inv",
+      "targetHandle": "fa_p"
+    },
+    {
+      "id": "id000d",
+      "source": "apwm",
+      "sourceHandle": "notFire",
+      "target": "inv",
+      "targetHandle": "fa_n"
+    },
+    {
+      "id": "id000e",
+      "source": "bpwm",
+      "sourceHandle": "fire",
+      "target": "inv",
+      "targetHandle": "fb_p"
+    },
+    {
+      "id": "id000f",
+      "source": "bpwm",
+      "sourceHandle": "notFire",
+      "target": "inv",
+      "targetHandle": "fb_n"
+    },
+    {
+      "id": "id000g",
+      "source": "cpwm",
+      "sourceHandle": "fire",
+      "target": "inv",
+      "targetHandle": "fc_p"
+    },
+    {
+      "id": "id000h",
+      "source": "cpwm",
+      "sourceHandle": "notFire",
+      "target": "inv",
+      "targetHandle": "fc_n"
+    },
+    {
+      "id": "w_id000k",
+      "source": "dhi",
+      "sourceHandle": "n",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000j",
+      "domain": "electrical",
+      "position": {
+        "x": 488,
+        "y": 208
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000l",
+      "anchor": "dhi.n",
+      "wireIds": [
+        "id0001",
+        "id0002",
+        "w_id000k"
+      ]
+    },
+    {
+      "id": "net_id000m",
+      "anchor": "aref.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000n",
+      "anchor": "bref.y",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000o",
+      "anchor": "cref.y",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000p",
+      "anchor": "dhi.p",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000q",
+      "anchor": "dlo.n",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000r",
+      "anchor": "i3.plug_p",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id000s",
+      "anchor": "i3.plug_n",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id000t",
+      "anchor": "load.plug_n",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id000u",
+      "anchor": "sg.p",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "apwm.fire",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "apwm.notFire",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "bpwm.fire",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "bpwm.notFire",
+      "wireIds": [
+        "id000f"
+      ]
+    },
+    {
+      "id": "net_id000z",
+      "anchor": "cpwm.fire",
+      "wireIds": [
+        "id000g"
+      ]
+    },
+    {
+      "id": "net_id0010",
+      "anchor": "cpwm.notFire",
+      "wireIds": [
+        "id000h"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Phase currents",
+      "series": [
+        "i3.ia",
+        "i3.ib",
+        "i3.ic"
+      ],
+      "labels": [
+        "a",
+        "b",
+        "c"
+      ]
+    }
+  ]
+}

@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/dc.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -37,6 +38,13 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>A permanent-magnet DC motor: armature resistance and inductance in series with a back-EMF proportional to shaft speed. The same constant k gives torque per ampere.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Motor speed control</strong> </p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-16137fe6"><span class="diagram x-92f985f2"><svg class="diagram-wires" viewBox="-4 120 892 440" width="892" height="440" aria-hidden="true"><polyline points="120,224 240,224" stroke="#1f5fbf"></polyline><polyline points="368,224 472,224" stroke="#1f5fbf"></polyline><polyline points="600,224 704,224" stroke="#b86e00"></polyline><polyline points="536,272 536,320 608,320" stroke="#b86e00"></polyline><polyline points="736,272 736,320 608,320" stroke="#b86e00"></polyline><polyline points="800,272 800,416" stroke="#00897b"></polyline><polyline points="736,464 368,464" stroke="#00897b"></polyline><polyline points="240,464 176,464 176,344 304,344 304,272" stroke="#1f5fbf"></polyline><polyline points="608,320 608,336" stroke="#b86e00"></polyline><circle cx="608" cy="320" r="3.5" fill="#b86e00"></circle></svg><span><span class="diagram-block x-5eab873b"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M5 35H26V9H55"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-542b3dc2">Speed reference</span></span><span><span class="diagram-block x-9337452d"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-f5420433"><span class="block-face shape-box x-158310a8" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="pid-symbol">PI</span></span><span class="port-label port-left x-525979f6">ref</span><span class="port-label port-bottom x-4414ad8e">meas</span><span class="port-label port-right x-525979f6">out</span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-bottom  x-df849ba5"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-2c6da432">PI controller</span></span><span><span class="diagram-block x-9ba28d35"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-8167bac2"><span class="block-face shape-box x-e734c9af" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">V</span></span><span class="port-label port-left x-525979f6">in</span><span class="port-label port-right x-bcb38e41">+</span><span class="port-label port-bottom x-16bedd95">−</span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right is-physical x-d26444a6"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-f8255f35">Voltage drive</span></span><span><span class="diagram-block x-e8eda4d4"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-8167bac2"><span class="block-face shape-box x-bbcb66e2" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 80 70"><circle cx="40" cy="31" r="23"></circle><text x="40" y="40" text-anchor="middle">M</text></svg></span><span class="port-label port-left x-bcb38e41">+</span><span class="port-label port-bottom x-e286871b">−</span><span class="port-label port-bottom x-edaab09a">shaft</span></span><span class="preview-terminal terminal-left is-physical x-d26444a6"></span><span class="preview-terminal terminal-bottom is-physical x-b1c74751"></span><span class="preview-terminal terminal-bottom is-physical x-0d8d270a"></span></span></span></span></span><span class="diagram-name x-c1c0546f">DC motor</span></span><span><span class="diagram-block x-0c2ebca6"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-150bcd7c"><span class="block-face shape-box x-3355b700" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">J</span></span><span class="port-label port-top x-6251f7fe">shaft</span><span class="port-label port-left x-af7a31e9">shaft</span></span><span class="preview-terminal terminal-top is-physical x-7efb7458"></span><span class="preview-terminal terminal-left is-physical x-d755340f"></span></span></span></span></span><span class="diagram-name x-5a4d27fe">Inertia &amp; load</span></span><span><span class="diagram-block x-e7378961"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-150bcd7c"><span class="block-face shape-box x-2fb2c0cf" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">ω</span></span><span class="port-label port-right x-af7a31e9">shaft</span><span class="port-label port-left x-525979f6">out</span></span><span class="preview-terminal terminal-right is-physical x-d755340f"></span><span class="preview-terminal terminal-left  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-6aeebf30">Speed sensor</span></span><span><span class="diagram-block x-e9bd0e89"><span class="diagram-turn x-3574e156"><span class="block-preview x-6374f7a4" aria-hidden="true"><span class="block-preview-body x-b102fd91"><span class="block-face shape-ground x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="none"><g><path d="M30 0V16M9 16H51M16 24H44M24 32H36"></path></g></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-d43a6383">Ground</span></span></span></span></div>
+<figcaption>In Gradara, select a DC motor block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/step">Step</a><a href="/docs/blocks/pi">PI controller</a><a href="/docs/blocks/voltage">Voltage drive</a><a href="/docs/blocks/inertia">Inertia &amp; load</a><a href="/docs/blocks/sensor">Speed sensor</a><a href="/docs/blocks/ground">Ground</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -85,8 +93,8 @@ tau = k*i;</pre></div></section>
 <li>No rotor inertia, friction, brush drop, or saturation. Connect an inertia to the shaft; without one the shaft has no mass.</li>
 <li>The armature starts with zero current.</li></ul></div></section>
 <section class="doc-section">
-<h2 id="examples"><a class="anchor" href="#examples">Examples</a></h2>
-<p class="muted">Used in these shipped examples. Open them from <strong>Examples</strong> in the app.</p>
+<h2 id="examples"><a class="anchor" href="#examples">Used in</a></h2>
+<p class="muted">These larger examples use it too. Open them from <strong>Examples</strong> in the app.</p>
 <ul class="example-list">
 <li>Motor speed control</li>
 <li>EV drivetrain</li>
@@ -101,7 +109,7 @@ tau = k*i;</pre></div></section>
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Electrical"><a class="prev" href="/docs/blocks/voltage"><small>Previous</small>Voltage drive</a><a class="next" href="/docs/blocks/ground"><small>Next</small>Ground</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>215</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -166,11 +174,6 @@ tau = k*i;</pre></div></section>
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -363,12 +366,13 @@ tau = k*i;</pre></div></section>
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#parameters">Parameters</a></li>
 <li><a href="#equations">Equations</a></li>
 <li><a href="#implementation">Implementation</a></li>
 <li><a href="#limitations">Limitations</a></li>
-<li><a href="#examples">Examples</a></li>
+<li><a href="#examples">Used in</a></li>
 <li><a href="#see-also">See also</a></li></ul></nav></div>
 <footer class="site-footer">
 <div class="wrap docs-wrap footer-inner">

@@ -1,0 +1,1281 @@
+{
+  "version": 1,
+  "name": "Example: DC machines",
+  "exampleId": "block-dc-machines",
+  "description": "All three have the same nominal point: 100 V, 100 A, 149.2 rad/s. The permanent-magnet and shunt machines run unloaded, so they speed up until their back EMF almost equals the supply: 100 V over a machine constant of 0.637 V·s/rad is 157 rad/s. The series machine would run away unloaded, so it drives a damper sized for its nominal torque and settles at its nominal speed.",
+  "duration": 1,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "va",
+      "definition": {
+        "kind": "dcSource",
+        "name": "100 V (PM)",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 100,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 144
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "vag",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (100 V (PM))",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 264
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "vb",
+      "definition": {
+        "kind": "dcSource",
+        "name": "100 V (shunt)",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 100,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 440
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -84,
+        "y": -54
+      }
+    },
+    {
+      "id": "vbg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (100 V (shunt))",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 560
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "vc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "100 V (series)",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 100,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 736
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -88,
+        "y": -54
+      }
+    },
+    {
+      "id": "vcg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (100 V (series))",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 856
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "pm",
+      "definition": {
+        "kind": "dcPmMachine",
+        "name": "PM machine",
+        "description": "Permanent-magnet DC machine with armature resistance and inductance.",
+        "domain": "electrical",
+        "category": "machines",
+        "symbol": "DC",
+        "ports": [
+          {
+            "id": "pin_ap",
+            "name": "a+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "pin_an",
+            "name": "a−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "VaNominal",
+            "name": "Nominal voltage",
+            "value": 100,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "IaNominal",
+            "name": "Nominal current",
+            "value": 100,
+            "unit": "A",
+            "min": 0
+          },
+          {
+            "id": "wNominal",
+            "name": "Nominal speed",
+            "value": 149.2,
+            "unit": "rad/s",
+            "min": 0
+          },
+          {
+            "id": "Ra",
+            "name": "Armature resistance",
+            "value": 0.05,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "La",
+            "name": "Armature inductance",
+            "value": 0.0015,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Jr",
+            "name": "Rotor inertia",
+            "value": 0.15,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Machines.BasicMachines.DCMachines.DC_PermanentMagnet from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "motor",
+          "generator",
+          "dc motor"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.DCMachines.DC_PermanentMagnet",
+          "modifiers": {
+            "TaOperational": "293.15",
+            "TaNominal": "293.15",
+            "TaRef": "293.15",
+            "VaNominal": "VaNominal",
+            "IaNominal": "IaNominal",
+            "wNominal": "wNominal",
+            "Ra": "Ra",
+            "La": "La",
+            "Jr": "Jr"
+          }
+        }
+      },
+      "position": {
+        "x": 360,
+        "y": 120
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "pmw",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed (PM)",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 584,
+        "y": 120
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 112,
+        "y": -62
+      }
+    },
+    {
+      "id": "sh",
+      "definition": {
+        "kind": "dcShuntMachine",
+        "name": "Shunt machine",
+        "description": "Separately excited DC machine; wire the field in parallel for shunt operation.",
+        "domain": "electrical",
+        "category": "machines",
+        "symbol": "DC ex",
+        "ports": [
+          {
+            "id": "pin_ap",
+            "name": "a+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "pin_an",
+            "name": "a−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "pin_ep",
+            "name": "e+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "pin_en",
+            "name": "e−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "VaNominal",
+            "name": "Nominal voltage",
+            "value": 100,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "IaNominal",
+            "name": "Nominal current",
+            "value": 100,
+            "unit": "A",
+            "min": 0
+          },
+          {
+            "id": "wNominal",
+            "name": "Nominal speed",
+            "value": 149.2,
+            "unit": "rad/s",
+            "min": 0
+          },
+          {
+            "id": "IeNominal",
+            "name": "Nominal field current",
+            "value": 1,
+            "unit": "A",
+            "min": 0
+          },
+          {
+            "id": "Ra",
+            "name": "Armature resistance",
+            "value": 0.05,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "La",
+            "name": "Armature inductance",
+            "value": 0.0015,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Jr",
+            "name": "Rotor inertia",
+            "value": 0.15,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Machines.BasicMachines.DCMachines.DC_ElectricalExcited from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "shunt",
+          "field",
+          "dc motor"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.DCMachines.DC_ElectricalExcited",
+          "modifiers": {
+            "TaOperational": "293.15",
+            "TaNominal": "293.15",
+            "TaRef": "293.15",
+            "TeOperational": "293.15",
+            "TeRef": "293.15",
+            "VaNominal": "VaNominal",
+            "IaNominal": "IaNominal",
+            "wNominal": "wNominal",
+            "IeNominal": "IeNominal",
+            "Ra": "Ra",
+            "La": "La",
+            "Jr": "Jr"
+          }
+        }
+      },
+      "position": {
+        "x": 360,
+        "y": 416
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "shw",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed (shunt)",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 584,
+        "y": 416
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 124,
+        "y": -62
+      }
+    },
+    {
+      "id": "se",
+      "definition": {
+        "kind": "dcSeriesMachine",
+        "name": "Series machine",
+        "description": "Series-excited DC machine (traction motor).",
+        "domain": "electrical",
+        "category": "machines",
+        "symbol": "DC s",
+        "ports": [
+          {
+            "id": "pin_ap",
+            "name": "a+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "pin_an",
+            "name": "a−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "pin_ep",
+            "name": "e+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "pin_en",
+            "name": "e−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "VaNominal",
+            "name": "Nominal voltage",
+            "value": 100,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "IaNominal",
+            "name": "Nominal current",
+            "value": 100,
+            "unit": "A",
+            "min": 0
+          },
+          {
+            "id": "wNominal",
+            "name": "Nominal speed",
+            "value": 149.2,
+            "unit": "rad/s",
+            "min": 0
+          },
+          {
+            "id": "Ra",
+            "name": "Armature resistance",
+            "value": 0.05,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "La",
+            "name": "Armature inductance",
+            "value": 0.0015,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Jr",
+            "name": "Rotor inertia",
+            "value": 0.15,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Machines.BasicMachines.DCMachines.DC_SeriesExcited from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "traction",
+          "series",
+          "dc motor"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.DCMachines.DC_SeriesExcited",
+          "modifiers": {
+            "TaOperational": "293.15",
+            "TaNominal": "293.15",
+            "TaRef": "293.15",
+            "TeOperational": "293.15",
+            "TeRef": "293.15",
+            "VaNominal": "VaNominal",
+            "IaNominal": "IaNominal",
+            "wNominal": "wNominal",
+            "Ra": "Ra",
+            "La": "La",
+            "Jr": "Jr"
+          }
+        }
+      },
+      "position": {
+        "x": 360,
+        "y": 712
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "sew",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed (series)",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 584,
+        "y": 712
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 128,
+        "y": -62
+      }
+    },
+    {
+      "id": "sed",
+      "definition": {
+        "kind": "rotDamper",
+        "name": "Load 0.42 N·m·s",
+        "description": "Linear rotational damper: τ = d·ω_rel.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "d",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "d",
+            "name": "Damping",
+            "value": 0.4223,
+            "unit": "N·m·s/rad",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Damper from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "viscous",
+          "friction"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Damper",
+          "modifiers": {
+            "d": "d"
+          }
+        }
+      },
+      "position": {
+        "x": 608,
+        "y": 872
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "sef",
+      "definition": {
+        "kind": "rotFixed",
+        "name": "Frame",
+        "description": "A flange fixed in the housing at a constant angle.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "top"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "phi0",
+            "name": "Angle",
+            "value": 0,
+            "unit": "rad"
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Fixed from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ground",
+          "reference",
+          "housing"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Fixed",
+          "modifiers": {
+            "phi0": "phi0"
+          }
+        }
+      },
+      "position": {
+        "x": 736,
+        "y": 968
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "vag",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0002",
+      "source": "j_id000l",
+      "sourceHandle": "node",
+      "target": "vbg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000n",
+      "sourceHandle": "node",
+      "target": "vcg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "va",
+      "sourceHandle": "p",
+      "target": "pm",
+      "targetHandle": "pin_ap"
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "pm",
+      "targetHandle": "pin_an",
+      "waypoints": [
+        {
+          "x": 344,
+          "y": 240
+        },
+        {
+          "x": 344,
+          "y": 184
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "pm",
+      "sourceHandle": "flange",
+      "target": "pmw",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id0007",
+      "source": "j_id000p",
+      "sourceHandle": "node",
+      "target": "sh",
+      "targetHandle": "pin_ap",
+      "waypoints": [
+        {
+          "x": 344,
+          "y": 424
+        },
+        {
+          "x": 344,
+          "y": 448
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000r",
+      "sourceHandle": "node",
+      "target": "sh",
+      "targetHandle": "pin_an",
+      "waypoints": [
+        {
+          "x": 344,
+          "y": 536
+        },
+        {
+          "x": 344,
+          "y": 480
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "j_id000p",
+      "sourceHandle": "node",
+      "target": "sh",
+      "targetHandle": "pin_ep",
+      "waypoints": [
+        {
+          "x": 168,
+          "y": 400
+        },
+        {
+          "x": 400,
+          "y": 400
+        }
+      ]
+    },
+    {
+      "id": "id000a",
+      "source": "j_id000r",
+      "sourceHandle": "node",
+      "target": "sh",
+      "targetHandle": "pin_en",
+      "waypoints": [
+        {
+          "x": 280,
+          "y": 376
+        },
+        {
+          "x": 448,
+          "y": 376
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "sh",
+      "sourceHandle": "flange",
+      "target": "shw",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id000c",
+      "source": "vc",
+      "sourceHandle": "p",
+      "target": "se",
+      "targetHandle": "pin_ap"
+    },
+    {
+      "id": "id000d",
+      "source": "se",
+      "sourceHandle": "pin_an",
+      "target": "se",
+      "targetHandle": "pin_ep"
+    },
+    {
+      "id": "id000e",
+      "source": "se",
+      "sourceHandle": "pin_en",
+      "target": "j_id000n",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 448,
+          "y": 672
+        },
+        {
+          "x": 192,
+          "y": 672
+        },
+        {
+          "x": 192,
+          "y": 832
+        }
+      ]
+    },
+    {
+      "id": "id000f",
+      "source": "j_id000t",
+      "sourceHandle": "node",
+      "target": "sew",
+      "targetHandle": "flange",
+      "waypoints": []
+    },
+    {
+      "id": "id000g",
+      "source": "j_id000t",
+      "sourceHandle": "node",
+      "target": "sed",
+      "targetHandle": "flange_a",
+      "waypoints": [
+        {
+          "x": 552,
+          "y": 896
+        }
+      ]
+    },
+    {
+      "id": "id000h",
+      "source": "sed",
+      "sourceHandle": "flange_b",
+      "target": "sef",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "w_id000k",
+      "source": "va",
+      "sourceHandle": "n",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000m",
+      "source": "vb",
+      "sourceHandle": "n",
+      "target": "j_id000l",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000o",
+      "source": "vc",
+      "sourceHandle": "n",
+      "target": "j_id000n",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000q",
+      "source": "vb",
+      "sourceHandle": "p",
+      "target": "j_id000p",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000s",
+      "source": "j_id000l",
+      "sourceHandle": "node",
+      "target": "j_id000r",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000u",
+      "source": "se",
+      "sourceHandle": "flange",
+      "target": "j_id000t",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000j",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 240
+      }
+    },
+    {
+      "id": "j_id000l",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 536
+      }
+    },
+    {
+      "id": "j_id000n",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 832
+      }
+    },
+    {
+      "id": "j_id000p",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 424
+      }
+    },
+    {
+      "id": "j_id000r",
+      "domain": "electrical",
+      "position": {
+        "x": 280,
+        "y": 536
+      }
+    },
+    {
+      "id": "j_id000t",
+      "domain": "mechanical",
+      "position": {
+        "x": 552,
+        "y": 760
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000v",
+      "anchor": "pm.pin_an",
+      "wireIds": [
+        "id0001",
+        "id0005",
+        "w_id000k"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "sh.pin_an",
+      "wireIds": [
+        "id0002",
+        "id0008",
+        "id000a",
+        "w_id000m",
+        "w_id000s"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "se.pin_en",
+      "wireIds": [
+        "id0003",
+        "id000e",
+        "w_id000o"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "pm.pin_ap",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000z",
+      "anchor": "pm.flange",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id0010",
+      "anchor": "sh.pin_ap",
+      "wireIds": [
+        "id0007",
+        "id0009",
+        "w_id000q"
+      ]
+    },
+    {
+      "id": "net_id0011",
+      "anchor": "sh.flange",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id0012",
+      "anchor": "se.pin_ap",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id0013",
+      "anchor": "se.pin_an",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id0014",
+      "anchor": "se.flange",
+      "wireIds": [
+        "id000f",
+        "id000g",
+        "w_id000u"
+      ]
+    },
+    {
+      "id": "net_id0015",
+      "anchor": "sed.flange_b",
+      "wireIds": [
+        "id000h"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Shaft speeds",
+      "series": [
+        "pmw.w",
+        "shw.w",
+        "sew.w"
+      ],
+      "labels": [
+        "PM",
+        "Shunt",
+        "Series"
+      ]
+    }
+  ]
+}

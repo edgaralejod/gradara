@@ -46,6 +46,7 @@ Keep visible terminal names to roughly 1–5 characters. Use meaningful names fo
    See [controller C code](../architecture/EXECUTION.md#controller-c-code).
 
 9. Write its reference page: an entry in the matching file under `lib/gradara/block-docs/` (see `types.ts`) with a description, every port, every parameter, the equations as implemented, and its assumptions and limitations. Derive it from the code or the MSL class, not from the one-line description. `tests/block-docs.test.ts` fails when a block, port, or parameter has no entry. Then run `npm run docs:blocks` to regenerate the gradara.app pages in `site/public/docs/blocks/`; CI fails when they are stale.
+10. Give it an example: add it to a spec in `scripts/block-examples/`, with checks that prove it computes the right thing, and run `npm run examples:blocks`. `tests/block-examples.test.ts` fails when a library block has no example. See [block examples](EXAMPLES.md).
 
 A block is ready when it is recognizable at normal zoom, contributes to a quiet diagram, has no overlapping notation or captions, and behaves through the same selection, wiring, resizing, naming, and history mechanisms as every other block. Record a remaining limitation explicitly instead of implying an icon makes a placeholder simulation feature complete.
 

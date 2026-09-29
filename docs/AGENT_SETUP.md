@@ -6,7 +6,7 @@ AI in Gradara is optional. Drawing, wiring, simulating, reopening models, and ex
 
 - **Create a block** from a description, such as "a first-order low-pass filter with a 50 ms time constant". You choose the block type first (signal, electrical, rotational, translational, magnetic, thermal, or several domains).
 - **Build a complete model** from a description of a system or circuit (**Ask agent → Full model / circuit**).
-- **Edit the open model** from the **Assistant** tab, for example "add a scope on the measured angle".
+- **Edit the open model** from the **Assistant** tab, for example "add a speed sensor on the load shaft".
 - **Explain or fix a failed run** from the **Problems** tab (**Explain**, **Fix with AI**).
 - **Write a C template** for a custom block, so it can be included in a C code export.
 

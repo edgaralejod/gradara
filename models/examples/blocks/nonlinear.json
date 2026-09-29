@@ -1,0 +1,416 @@
+{
+  "version": 1,
+  "name": "Example: Nonlinearities",
+  "exampleId": "block-nonlinear",
+  "description": "The input is a 1 Hz sine of amplitude 2. Saturation clips it to ±1. The dead zone removes the band ±0.5, so the peak of 2 comes out as 1.5. The relay outputs +1 whenever the input is at or above 0 and −1 otherwise. The rate limiter lets the output change by at most 2 per second, so it cannot keep up: it reaches only 0.5 by the first peak.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "sine",
+      "definition": {
+        "kind": "sine",
+        "name": "Sine, amplitude 2",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 1,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 232
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "sat",
+      "definition": {
+        "kind": "saturation",
+        "name": "Saturation ±1",
+        "description": "Clamp a signal between lower and upper limits.",
+        "domain": "signal",
+        "symbol": "sat",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "lower",
+            "name": "Lower limit",
+            "value": -1,
+            "unit": ""
+          },
+          {
+            "id": "upper",
+            "name": "Upper limit",
+            "value": 1,
+            "unit": ""
+          }
+        ],
+        "equations": "y = max(lower, min(upper, u));"
+      },
+      "position": {
+        "x": 392,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "dz",
+      "definition": {
+        "kind": "deadzone",
+        "name": "Dead zone ±0.5",
+        "symbol": "dead",
+        "domain": "signal",
+        "description": "Zero output inside ±half-width.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if u > start then u - start else (if u < -start then u + start else 0);",
+        "parameters": [
+          {
+            "id": "start",
+            "name": "Half-width",
+            "value": 0.5,
+            "unit": "",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "nonlinear"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "relay",
+      "definition": {
+        "kind": "relay",
+        "name": "Relay",
+        "symbol": "relay",
+        "domain": "signal",
+        "description": "A two-level relay.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if u >= offSwitch then onValue else offValue;",
+        "parameters": [
+          {
+            "id": "onValue",
+            "name": "On value",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "offValue",
+            "name": "Off value",
+            "value": -1,
+            "unit": ""
+          },
+          {
+            "id": "offSwitch",
+            "name": "Switch level",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "nonlinear",
+          "hysteresis"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "rate",
+      "definition": {
+        "kind": "rateLimiter",
+        "name": "Rate limit 2/s",
+        "symbol": "du/dt",
+        "domain": "signal",
+        "description": "Limits how fast a signal may change.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "der(x) = if u > x then min(rising, (u - x)*1000) else max(-falling, (u - x)*1000);\ny = x;",
+        "parameters": [
+          {
+            "id": "rising",
+            "name": "Rising limit",
+            "value": 2,
+            "unit": "1/s",
+            "min": 0
+          },
+          {
+            "id": "falling",
+            "name": "Falling limit",
+            "value": 2,
+            "unit": "1/s",
+            "min": 0
+          }
+        ],
+        "declarations": "Real x(start=0, fixed=true);",
+        "keywords": [
+          "nonlinear",
+          "slew"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 400
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id0006",
+      "sourceHandle": "node",
+      "target": "sat",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 256,
+          "y": 96
+        }
+      ]
+    },
+    {
+      "id": "id0002",
+      "source": "j_id0006",
+      "sourceHandle": "node",
+      "target": "dz",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "j_id0008",
+      "sourceHandle": "node",
+      "target": "relay",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "j_id0008",
+      "sourceHandle": "node",
+      "target": "rate",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 256,
+          "y": 432
+        }
+      ]
+    },
+    {
+      "id": "w_id0007",
+      "source": "j_id000a",
+      "sourceHandle": "node",
+      "target": "j_id0006",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0009",
+      "source": "j_id000a",
+      "sourceHandle": "node",
+      "target": "j_id0008",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000b",
+      "source": "sine",
+      "sourceHandle": "y",
+      "target": "j_id000a",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0006",
+      "domain": "signal",
+      "position": {
+        "x": 256,
+        "y": 208
+      }
+    },
+    {
+      "id": "j_id0008",
+      "domain": "signal",
+      "position": {
+        "x": 256,
+        "y": 320
+      }
+    },
+    {
+      "id": "j_id000a",
+      "domain": "signal",
+      "position": {
+        "x": 256,
+        "y": 264
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000c",
+      "anchor": "sine.y",
+      "wireIds": [
+        "id0001",
+        "id0002",
+        "id0003",
+        "id0004",
+        "w_id0007",
+        "w_id0009",
+        "w_id000b"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Nonlinear blocks",
+      "series": [
+        "sine.y",
+        "sat.y",
+        "dz.y",
+        "relay.y",
+        "rate.y"
+      ],
+      "labels": [
+        "Input",
+        "Saturation",
+        "Dead zone",
+        "Relay",
+        "Rate limiter"
+      ]
+    }
+  ]
+}

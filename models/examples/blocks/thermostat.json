@@ -1,0 +1,575 @@
+{
+  "version": 1,
+  "name": "Example: Thermostat",
+  "exampleId": "block-thermostat",
+  "description": "The room is a 1000 J/K heat capacity losing heat to 20 °C outside through 2 W/K. The on-off controller turns the heater on below the set point minus half its 2 K band and off above it plus half, so after warming up for about 7 minutes the temperature cycles between 49 °C and 51 °C. Boolean to real scales the on command into 100 W of heat.",
+  "duration": 2000,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "set",
+      "definition": {
+        "kind": "constant",
+        "name": "Set point 50 °C",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 323.15,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 40,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ctrl",
+      "definition": {
+        "kind": "onOffController",
+        "name": "Thermostat",
+        "description": "True while the measurement is below the reference minus half the bandwidth; false above plus half.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "on/off",
+        "ports": [
+          {
+            "id": "reference",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "u",
+            "name": "meas",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "bandwidth",
+            "name": "Bandwidth",
+            "value": 2,
+            "unit": "",
+            "min": 0
+          }
+        ],
+        "equations": "// Blocks.Logical.OnOffController from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermostat",
+          "bang-bang"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.OnOffController",
+          "modifiers": {
+            "pre_y_start": "false",
+            "bandwidth": "bandwidth"
+          }
+        }
+      },
+      "position": {
+        "x": 240,
+        "y": 128
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "power",
+      "definition": {
+        "kind": "booleanToReal",
+        "name": "Heater 100 W",
+        "description": "Converts true/false to two values.",
+        "domain": "signal",
+        "category": "logic",
+        "symbol": "B→R",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "realTrue",
+            "name": "Value when true",
+            "value": 100,
+            "unit": ""
+          },
+          {
+            "id": "realFalse",
+            "name": "Value when false",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Math.BooleanToReal from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "convert",
+          "cast"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.BooleanToReal",
+          "modifiers": {
+            "realTrue": "realTrue",
+            "realFalse": "realFalse"
+          }
+        }
+      },
+      "position": {
+        "x": 488,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "heater",
+      "definition": {
+        "kind": "prescribedHeatFlow",
+        "name": "Heater",
+        "description": "Injects the input heat flow (W) into its port.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "Q",
+        "ports": [
+          {
+            "id": "Q_flow",
+            "name": "Q",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "port",
+            "name": "Q",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sources.PrescribedHeatFlow from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "losses",
+          "heater"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow"
+        }
+      },
+      "position": {
+        "x": 680,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "room",
+      "definition": {
+        "kind": "heatCapacitor",
+        "name": "Room",
+        "description": "Stores heat: C·dT/dt = Q_flow.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "C",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Heat capacity",
+            "value": 1000,
+            "unit": "J/K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermal mass",
+          "lumped"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
+          "modifiers": {
+            "C": "C"
+          }
+        }
+      },
+      "position": {
+        "x": 872,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "wall",
+      "definition": {
+        "kind": "thermalConductor",
+        "name": "Walls 2 W/K",
+        "description": "Linear heat conduction: Q = G·ΔT.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "G",
+        "ports": [
+          {
+            "id": "port_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "port_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "G",
+            "name": "Conductance",
+            "value": 2,
+            "unit": "W/K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.ThermalConductor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "conduction"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.ThermalConductor",
+          "modifiers": {
+            "G": "G"
+          }
+        }
+      },
+      "position": {
+        "x": 1064,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "outside",
+      "definition": {
+        "kind": "fixedTemperature",
+        "name": "Outside 20 °C",
+        "description": "Holds its port at a constant temperature.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T₀",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "T",
+            "name": "Temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Sources.FixedTemperature from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ambient",
+          "reference",
+          "boundary"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sources.FixedTemperature",
+          "modifiers": {
+            "T": "T"
+          }
+        }
+      },
+      "position": {
+        "x": 1256,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "rotation": 180
+    },
+    {
+      "id": "T",
+      "definition": {
+        "kind": "temperatureSensor",
+        "name": "Room temperature",
+        "description": "Absolute temperature of its port (K).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "T",
+            "name": "T",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.TemperatureSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermometer",
+          "ntc"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.TemperatureSensor"
+        }
+      },
+      "position": {
+        "x": 680,
+        "y": 304
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "rotation": 180
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "set",
+      "sourceHandle": "y",
+      "target": "ctrl",
+      "targetHandle": "reference"
+    },
+    {
+      "id": "id0002",
+      "source": "T",
+      "sourceHandle": "T",
+      "target": "ctrl",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0003",
+      "source": "ctrl",
+      "sourceHandle": "y",
+      "target": "power",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0004",
+      "source": "power",
+      "sourceHandle": "y",
+      "target": "heater",
+      "targetHandle": "Q_flow"
+    },
+    {
+      "id": "id0005",
+      "source": "heater",
+      "sourceHandle": "port",
+      "target": "j_id000a",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0006",
+      "source": "j_id000a",
+      "sourceHandle": "node",
+      "target": "wall",
+      "targetHandle": "port_a",
+      "waypoints": []
+    },
+    {
+      "id": "id0007",
+      "source": "wall",
+      "sourceHandle": "port_b",
+      "target": "outside",
+      "targetHandle": "port"
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000a",
+      "sourceHandle": "node",
+      "target": "T",
+      "targetHandle": "port",
+      "waypoints": [
+        {
+          "x": 912,
+          "y": 336
+        }
+      ]
+    },
+    {
+      "id": "w_id000b",
+      "source": "room",
+      "sourceHandle": "port",
+      "target": "j_id000a",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000a",
+      "domain": "thermal",
+      "position": {
+        "x": 912,
+        "y": 176
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000c",
+      "anchor": "set.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000d",
+      "anchor": "T.T",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000e",
+      "anchor": "ctrl.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000f",
+      "anchor": "power.y",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000g",
+      "anchor": "T.port",
+      "wireIds": [
+        "id0005",
+        "id0006",
+        "id0008",
+        "w_id000b"
+      ]
+    },
+    {
+      "id": "net_id000h",
+      "anchor": "outside.port",
+      "wireIds": [
+        "id0007"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Room temperature",
+      "series": [
+        "T.T"
+      ],
+      "labels": [
+        "T (K)"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Heater command",
+      "series": [
+        "power.y"
+      ],
+      "labels": [
+        "Heat (W)"
+      ]
+    }
+  ]
+}

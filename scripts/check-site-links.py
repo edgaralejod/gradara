@@ -84,7 +84,9 @@ def main() -> int:
             if not exists(url.path):
                 broken.append(f'{page.relative_to(ROOT)}: {link} -> {url.path}')
     # Addresses that existed before and must keep working.
-    for old in ['/docs', '/docs/blocks', '/docs/constant.html', '/docs/blocks/constant.html']:
+    # Retired blocks (Scope, Display, Terminator) send their old pages to the index.
+    for old in ['/docs', '/docs/blocks', '/docs/constant.html', '/docs/blocks/constant.html',
+                '/docs/blocks/scope', '/docs/scope.html', '/docs/blocks/display', '/docs/blocks/terminator']:
         if not exists(old):
             broken.append(f'old address {old} no longer resolves')
     for line in broken:

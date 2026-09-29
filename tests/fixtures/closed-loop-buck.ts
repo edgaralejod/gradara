@@ -1,7 +1,11 @@
 // A closed-loop buck converter: a reference, a discrete voltage loop, and a PWM
 // modulator drive the buck power stage, and the output voltage feeds back.
 import { readFileSync } from 'node:fs';
-import { library, type Block, type Project } from '../../lib/gradara/model';
+import {
+  definitionFor,
+  type Block,
+  type Project,
+} from '../../lib/gradara/model';
 
 export function closedLoopBuck(): Project {
   const buck = JSON.parse(
@@ -9,7 +13,7 @@ export function closedLoopBuck(): Project {
   ) as Project;
   const block = (kind: string, id: string, x: number, y: number): Block => ({
     id,
-    definition: structuredClone(library.find((d) => d.kind === kind)!),
+    definition: structuredClone(definitionFor(kind)!),
     position: { x, y },
   });
   const wire = (s: string, sh: string, t: string, th: string) => ({

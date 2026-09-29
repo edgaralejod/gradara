@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-routing.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -36,6 +37,13 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Passes one of two inputs depending on a control signal: u₁ when the control is at or above Threshold, otherwise u₂.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Switches</strong> A switch that follows a control signal, and a manual switch set by a parameter.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-5eb7b97f"><span class="diagram x-c36f2f80"><svg class="diagram-wires" viewBox="16 40 584 488" width="584" height="488" aria-hidden="true"><polyline points="256,96 256,128 392,128" stroke="#1f5fbf"></polyline><polyline points="120,352 456,352 456,192" stroke="#1f5fbf"></polyline><polyline points="256,224 256,160 392,160" stroke="#1f5fbf"></polyline><polyline points="256,224 256,416 392,416" stroke="#1f5fbf"></polyline><polyline points="256,96 376,96 376,448 392,448" stroke="#1f5fbf"></polyline><polyline points="120,96 256,96" stroke="#1f5fbf"></polyline><polyline points="120,224 256,224" stroke="#1f5fbf"></polyline><circle cx="256" cy="96" r="3.5" fill="#1f5fbf"></circle><circle cx="256" cy="224" r="3.5" fill="#1f5fbf"></circle></svg><span><span class="diagram-block x-71876818"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M6 36H20L54 8"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-07b871ee">Ramp</span></span><span><span class="diagram-block x-5c26cea9"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="value-symbol">-1</span></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-4cb3bfd1">−1</span></span><span><span class="diagram-block x-9745c32d"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M4 36H14V10H30V36H56"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-a2175a27">Control</span></span><span><span class="diagram-block x-4e713f1b"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-f5420433"><span class="block-face shape-box x-16b2fc7f" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M4 10H18M4 34H18M56 22H42L20 11"></path></g></svg></span><span class="port-label port-left x-d333dd9e">u₁</span><span class="port-label port-bottom x-4414ad8e">sel</span><span class="port-label port-left x-bb14480a">u₂</span><span class="port-label port-right x-525979f6">y</span></span><span class="preview-terminal terminal-left  x-b6ca8d2f"></span><span class="preview-terminal terminal-bottom  x-df849ba5"></span><span class="preview-terminal terminal-left  x-4fafc4b5"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-6ec47bcb">Switch</span></span><span><span class="diagram-block x-fd8e7b51"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-f5420433"><span class="block-face shape-box x-6eddf678" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M4 10H18M4 34H18M56 22H42L20 11"></path></g></svg></span><span class="port-label port-left x-d333dd9e">1</span><span class="port-label port-left x-bb14480a">2</span><span class="port-label port-right x-525979f6">y</span></span><span class="preview-terminal terminal-left  x-b6ca8d2f"></span><span class="preview-terminal terminal-left  x-4fafc4b5"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-1ae2e714">Manual switch</span></span></span></span></div>
+<figcaption>In Gradara, select a Switch block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/constant">Constant</a><a href="/docs/blocks/ramp">Ramp</a><a href="/docs/blocks/pulse">Pulse</a><a href="/docs/blocks/manualSwitch">Manual switch</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -85,7 +93,7 @@ y = u3 otherwise</pre></div></section>
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Routing"><a class="prev" href="/docs/blocks/demux"><small>Previous</small>Demux</a><a class="next" href="/docs/blocks/manualSwitch"><small>Next</small>Manual switch</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>215</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -150,11 +158,6 @@ y = u3 otherwise</pre></div></section>
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -347,6 +350,7 @@ y = u3 otherwise</pre></div></section>
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#parameters">Parameters</a></li>
 <li><a href="#equations">Equations</a></li>

@@ -656,17 +656,19 @@ export const docs: Record<string, BlockDoc> = {
 
   terminator: {
     description: [
+      'No longer in the block library. Models that already contain it still open and run. Results lists every block output, so no block is needed to see a signal; to record a particular wire, select it and choose Log signal.',
       'Caps an output you do not use, so the sheet shows it is left open on purpose. It has no effect on the simulation.',
     ],
     ports: { u: 'Signal to discard.' },
     limitations: [
       'The signal is still recorded as the driving block’s output.',
     ],
-    seeAlso: ['scope', 'display'],
+    seeAlso: [],
   },
 
   scope: {
     description: [
+      'No longer in the block library. Models that already contain it still open and run. Results lists every block output, so no block is needed to see a signal; to record a particular wire, select it and choose Log signal.',
       'Marks a signal you intend to inspect. It does not plot on the canvas: after a run, view the signal in the Results tab, where every block output is recorded.',
     ],
     ports: { u: 'Signal to inspect.' },
@@ -676,16 +678,17 @@ export const docs: Record<string, BlockDoc> = {
     tips: [
       'To record a particular wire rather than a block output, select it and choose Log signal.',
     ],
-    seeAlso: ['display', 'terminator'],
+    seeAlso: [],
   },
 
   display: {
     description: [
+      'No longer in the block library. Models that already contain it still open and run. Results lists every block output, so no block is needed to see a signal; to record a particular wire, select it and choose Log signal.',
       'Marks a signal you intend to read as a number. The block itself shows a fixed 123 symbol, not the live value; read values in Results, where Cursor values show the signal at any time.',
     ],
     ports: { u: 'Signal to read.' },
     limitations: ['No effect on the simulation, and no settings.'],
-    seeAlso: ['scope', 'terminator'],
+    seeAlso: [],
   },
 
   // Ports & subsystems

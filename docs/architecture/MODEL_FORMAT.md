@@ -15,7 +15,7 @@ The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation li
 | `duration` | Simulation stop time, in seconds. Server accepts greater than 0 and at most 86,400. Full-model agent planning retains its separate 60-second bound. |
 | `revision` | Edit/undo revision. Save concurrency instead uses a separate content-hash `saveVersion` token. |
 | `exampleId` | Optional template origin, not document identity. |
-| `annotations`, `plots` | Diagram explanations and named result-series groups. |
+| `annotations`, `plots` | Diagram notes (`x`, `y`, a heading `text`, and an optional `detail`) and named result-series groups. Notes live on the top-level sheet; users add, edit, and move them on the canvas. |
 | `subsystems` | Version 2 only. Subsystem definitions, each stored once. See [subsystems and variants](#subsystems-and-variants). |
 | `configurations` | Optional named choices of variant for every subsystem instance with variants. |
 
@@ -34,7 +34,7 @@ An empty document is valid to save, but cannot be simulated:
 }
 ```
 
-Saving assigns a document identity. For realistic fixtures, start with a checked-in template under [models/examples](../../models/examples/) (`dc`, `servo`, `foc`, `buck`, `flyback`, `datacenter`, or `ev`; the template IDs `POST /api/models` accepts) and create an independent model through the UI or API.
+Saving assigns a document identity. For realistic fixtures, start with a checked-in template under [models/examples](../../models/examples/) (`dc`, `servo`, `foc`, `buck`, `flyback`, `datacenter`, or `ev`, or `block-<id>` for a block example in `models/examples/blocks/`; the template IDs `POST /api/models` accepts) and create an independent model through the UI or API.
 
 ## Blocks and definitions
 

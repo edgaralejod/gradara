@@ -1,0 +1,2523 @@
+{
+  "version": 1,
+  "name": "Example: Controlled sources",
+  "exampleId": "block-controlled-sources",
+  "description": "Each block reads its input side and drives its output side into 10 Ω. The VCVS doubles 1 V to 2 V. The VCCS turns 1 V into 0.1 A, 1 V across the load. The current-controlled pair read the 1 A that flows through 1 Ω and the short between their input pins: the CCVS makes 10 V, the CCCS 3 A, which is 30 V on the load. The gyrator turns 1 V on its input into 1 A on its output. A source whose output current flows out of p2 shows a negative voltage on the load.",
+  "duration": 0.01,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "asrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "1 V A",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 1,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 168
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -52,
+        "y": -54
+      }
+    },
+    {
+      "id": "ael",
+      "definition": {
+        "kind": "vcvs",
+        "name": "VCVS ×2",
+        "description": "Linear controlled source: v2 = gain·v1.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "VCVS",
+        "ports": [
+          {
+            "id": "p1",
+            "name": "1+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "1−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "p2",
+            "name": "2+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "2−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "name": "Gain",
+            "value": 2,
+            "unit": ""
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.VCV from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "dependent source",
+          "amplifier"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.VCV",
+          "modifiers": {
+            "gain": "gain"
+          }
+        }
+      },
+      "position": {
+        "x": 352,
+        "y": 112
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "aload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load A",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 536,
+        "y": 168
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "av",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v A",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 664,
+        "y": 168
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "agnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground A",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "agnd2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground A out",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 536,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "bsrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "1 V B",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 1,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 880,
+        "y": 168
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -52,
+        "y": -54
+      }
+    },
+    {
+      "id": "bel",
+      "definition": {
+        "kind": "vccs",
+        "name": "VCCS 0.1 S",
+        "description": "Linear controlled source: i2 = G·v1.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "VCCS",
+        "ports": [
+          {
+            "id": "p1",
+            "name": "1+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "1−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "p2",
+            "name": "2+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "2−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "transConductance",
+            "name": "Transconductance",
+            "value": 0.1,
+            "unit": "S"
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.VCC from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "dependent source",
+          "amplifier"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.VCC",
+          "modifiers": {
+            "transConductance": "transConductance"
+          }
+        }
+      },
+      "position": {
+        "x": 1088,
+        "y": 112
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "bload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load B",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1272,
+        "y": 168
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "bv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v B",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1400,
+        "y": 168
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "bgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground B",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 880,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "bgnd2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground B out",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1272,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "csrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "1 V C",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 1,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 520
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -52,
+        "y": -54
+      }
+    },
+    {
+      "id": "cr1",
+      "definition": {
+        "kind": "resistor",
+        "name": "1 Ω C",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 232,
+        "y": 472
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "cel",
+      "definition": {
+        "kind": "ccvs",
+        "name": "CCVS 10 Ω",
+        "description": "Linear controlled source: v2 = R·i1.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "CCVS",
+        "ports": [
+          {
+            "id": "p1",
+            "name": "1+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "1−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "p2",
+            "name": "2+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "2−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "transResistance",
+            "name": "Transresistance",
+            "value": 10,
+            "unit": "Ω"
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.CCV from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "dependent source",
+          "amplifier"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.CCV",
+          "modifiers": {
+            "transResistance": "transResistance"
+          }
+        }
+      },
+      "position": {
+        "x": 352,
+        "y": 464
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "cload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load C",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 536,
+        "y": 520
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "cv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v C",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 664,
+        "y": 520
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "cgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground C",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 640
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "cgnd2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground C out",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 536,
+        "y": 640
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "dsrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "1 V D",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 1,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 880,
+        "y": 520
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -52,
+        "y": -54
+      }
+    },
+    {
+      "id": "dr1",
+      "definition": {
+        "kind": "resistor",
+        "name": "1 Ω D",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 968,
+        "y": 472
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "del",
+      "definition": {
+        "kind": "cccs",
+        "name": "CCCS ×3",
+        "description": "Linear controlled source: i2 = gain·i1.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "CCCS",
+        "ports": [
+          {
+            "id": "p1",
+            "name": "1+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "1−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "p2",
+            "name": "2+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "2−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "name": "Gain",
+            "value": 3,
+            "unit": ""
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.CCC from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "dependent source",
+          "amplifier"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.CCC",
+          "modifiers": {
+            "gain": "gain"
+          }
+        }
+      },
+      "position": {
+        "x": 1088,
+        "y": 464
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "dload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load D",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1272,
+        "y": 520
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "dv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v D",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1400,
+        "y": 520
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "dgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground D",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 880,
+        "y": 640
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "dgnd2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground D out",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1272,
+        "y": 640
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "esrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "1 V E",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 1,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 872
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -52,
+        "y": -54
+      }
+    },
+    {
+      "id": "eel",
+      "definition": {
+        "kind": "gyrator",
+        "name": "Gyrator 1 S",
+        "description": "Ideal gyrator: i1 = G2·v2, i2 = −G1·v1.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "gyr",
+        "ports": [
+          {
+            "id": "p1",
+            "name": "1+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "1−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "p2",
+            "name": "2+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "2−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "G1",
+            "name": "Gyration conductance 1",
+            "value": 1,
+            "unit": "S"
+          },
+          {
+            "id": "G2",
+            "name": "Gyration conductance 2",
+            "value": 1,
+            "unit": "S"
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.Gyrator from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Gyrator",
+          "modifiers": {
+            "G1": "G1",
+            "G2": "G2"
+          }
+        }
+      },
+      "position": {
+        "x": 352,
+        "y": 816
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "eload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load E",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 536,
+        "y": 872
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "ev",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v E",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 664,
+        "y": 872
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "egnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground E",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 992
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "egnd2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground E out",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 536,
+        "y": 992
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "asrc",
+      "sourceHandle": "p",
+      "target": "ael",
+      "targetHandle": "p1"
+    },
+    {
+      "id": "id0002",
+      "source": "ael",
+      "sourceHandle": "n1",
+      "target": "j_id0018",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 336,
+          "y": 176
+        },
+        {
+          "x": 336,
+          "y": 264
+        }
+      ]
+    },
+    {
+      "id": "id0003",
+      "source": "j_id0018",
+      "sourceHandle": "node",
+      "target": "agnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "ael",
+      "sourceHandle": "p2",
+      "target": "j_id001a",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 560,
+          "y": 144
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "ael",
+      "sourceHandle": "n2",
+      "target": "j_id001c",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 496,
+          "y": 176
+        },
+        {
+          "x": 496,
+          "y": 264
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "j_id001c",
+      "sourceHandle": "node",
+      "target": "agnd2",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0007",
+      "source": "av",
+      "sourceHandle": "p",
+      "target": "j_id001a",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 688,
+          "y": 152
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "av",
+      "sourceHandle": "n",
+      "target": "j_id001c",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 688,
+          "y": 264
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "bsrc",
+      "sourceHandle": "p",
+      "target": "bel",
+      "targetHandle": "p1"
+    },
+    {
+      "id": "id000a",
+      "source": "bel",
+      "sourceHandle": "n1",
+      "target": "j_id001e",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1072,
+          "y": 176
+        },
+        {
+          "x": 1072,
+          "y": 264
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "j_id001e",
+      "sourceHandle": "node",
+      "target": "bgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000c",
+      "source": "bel",
+      "sourceHandle": "p2",
+      "target": "j_id001g",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1296,
+          "y": 144
+        }
+      ]
+    },
+    {
+      "id": "id000d",
+      "source": "bel",
+      "sourceHandle": "n2",
+      "target": "j_id001i",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1232,
+          "y": 176
+        },
+        {
+          "x": 1232,
+          "y": 264
+        }
+      ]
+    },
+    {
+      "id": "id000e",
+      "source": "j_id001i",
+      "sourceHandle": "node",
+      "target": "bgnd2",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000f",
+      "source": "bv",
+      "sourceHandle": "p",
+      "target": "j_id001g",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1424,
+          "y": 152
+        }
+      ]
+    },
+    {
+      "id": "id000g",
+      "source": "bv",
+      "sourceHandle": "n",
+      "target": "j_id001i",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1424,
+          "y": 264
+        }
+      ]
+    },
+    {
+      "id": "id000h",
+      "source": "csrc",
+      "sourceHandle": "p",
+      "target": "cr1",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000i",
+      "source": "cr1",
+      "sourceHandle": "n",
+      "target": "cel",
+      "targetHandle": "p1"
+    },
+    {
+      "id": "id000j",
+      "source": "cel",
+      "sourceHandle": "n1",
+      "target": "j_id001k",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 336,
+          "y": 528
+        },
+        {
+          "x": 336,
+          "y": 616
+        }
+      ]
+    },
+    {
+      "id": "id000k",
+      "source": "j_id001k",
+      "sourceHandle": "node",
+      "target": "cgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000l",
+      "source": "cel",
+      "sourceHandle": "p2",
+      "target": "j_id001m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 560,
+          "y": 496
+        }
+      ]
+    },
+    {
+      "id": "id000m",
+      "source": "cel",
+      "sourceHandle": "n2",
+      "target": "j_id001o",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 496,
+          "y": 528
+        },
+        {
+          "x": 496,
+          "y": 616
+        }
+      ]
+    },
+    {
+      "id": "id000n",
+      "source": "j_id001o",
+      "sourceHandle": "node",
+      "target": "cgnd2",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000o",
+      "source": "cv",
+      "sourceHandle": "p",
+      "target": "j_id001m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 688,
+          "y": 504
+        }
+      ]
+    },
+    {
+      "id": "id000p",
+      "source": "cv",
+      "sourceHandle": "n",
+      "target": "j_id001o",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 688,
+          "y": 616
+        }
+      ]
+    },
+    {
+      "id": "id000q",
+      "source": "dsrc",
+      "sourceHandle": "p",
+      "target": "dr1",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000r",
+      "source": "dr1",
+      "sourceHandle": "n",
+      "target": "del",
+      "targetHandle": "p1"
+    },
+    {
+      "id": "id000s",
+      "source": "del",
+      "sourceHandle": "n1",
+      "target": "j_id001q",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1072,
+          "y": 528
+        },
+        {
+          "x": 1072,
+          "y": 616
+        }
+      ]
+    },
+    {
+      "id": "id000t",
+      "source": "j_id001q",
+      "sourceHandle": "node",
+      "target": "dgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000u",
+      "source": "del",
+      "sourceHandle": "p2",
+      "target": "j_id001s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1296,
+          "y": 496
+        }
+      ]
+    },
+    {
+      "id": "id000v",
+      "source": "del",
+      "sourceHandle": "n2",
+      "target": "j_id001u",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1232,
+          "y": 528
+        },
+        {
+          "x": 1232,
+          "y": 616
+        }
+      ]
+    },
+    {
+      "id": "id000w",
+      "source": "j_id001u",
+      "sourceHandle": "node",
+      "target": "dgnd2",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000x",
+      "source": "dv",
+      "sourceHandle": "p",
+      "target": "j_id001s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1424,
+          "y": 504
+        }
+      ]
+    },
+    {
+      "id": "id000y",
+      "source": "dv",
+      "sourceHandle": "n",
+      "target": "j_id001u",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1424,
+          "y": 616
+        }
+      ]
+    },
+    {
+      "id": "id000z",
+      "source": "esrc",
+      "sourceHandle": "p",
+      "target": "eel",
+      "targetHandle": "p1"
+    },
+    {
+      "id": "id0010",
+      "source": "eel",
+      "sourceHandle": "n1",
+      "target": "j_id001w",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 336,
+          "y": 880
+        },
+        {
+          "x": 336,
+          "y": 968
+        }
+      ]
+    },
+    {
+      "id": "id0011",
+      "source": "j_id001w",
+      "sourceHandle": "node",
+      "target": "egnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0012",
+      "source": "eel",
+      "sourceHandle": "p2",
+      "target": "j_id001y",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 560,
+          "y": 848
+        }
+      ]
+    },
+    {
+      "id": "id0013",
+      "source": "eel",
+      "sourceHandle": "n2",
+      "target": "j_id0020",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 496,
+          "y": 880
+        },
+        {
+          "x": 496,
+          "y": 968
+        }
+      ]
+    },
+    {
+      "id": "id0014",
+      "source": "j_id0020",
+      "sourceHandle": "node",
+      "target": "egnd2",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0015",
+      "source": "ev",
+      "sourceHandle": "p",
+      "target": "j_id001y",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 688,
+          "y": 856
+        }
+      ]
+    },
+    {
+      "id": "id0016",
+      "source": "ev",
+      "sourceHandle": "n",
+      "target": "j_id0020",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 688,
+          "y": 968
+        }
+      ]
+    },
+    {
+      "id": "w_id0019",
+      "source": "asrc",
+      "sourceHandle": "n",
+      "target": "j_id0018",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001b",
+      "source": "aload",
+      "sourceHandle": "p",
+      "target": "j_id001a",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001d",
+      "source": "aload",
+      "sourceHandle": "n",
+      "target": "j_id001c",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001f",
+      "source": "bsrc",
+      "sourceHandle": "n",
+      "target": "j_id001e",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001h",
+      "source": "bload",
+      "sourceHandle": "p",
+      "target": "j_id001g",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001j",
+      "source": "bload",
+      "sourceHandle": "n",
+      "target": "j_id001i",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001l",
+      "source": "csrc",
+      "sourceHandle": "n",
+      "target": "j_id001k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001n",
+      "source": "cload",
+      "sourceHandle": "p",
+      "target": "j_id001m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001p",
+      "source": "cload",
+      "sourceHandle": "n",
+      "target": "j_id001o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001r",
+      "source": "dsrc",
+      "sourceHandle": "n",
+      "target": "j_id001q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001t",
+      "source": "dload",
+      "sourceHandle": "p",
+      "target": "j_id001s",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001v",
+      "source": "dload",
+      "sourceHandle": "n",
+      "target": "j_id001u",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001x",
+      "source": "esrc",
+      "sourceHandle": "n",
+      "target": "j_id001w",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001z",
+      "source": "eload",
+      "sourceHandle": "p",
+      "target": "j_id001y",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0021",
+      "source": "eload",
+      "sourceHandle": "n",
+      "target": "j_id0020",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0018",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 264
+      }
+    },
+    {
+      "id": "j_id001a",
+      "domain": "electrical",
+      "position": {
+        "x": 560,
+        "y": 152
+      }
+    },
+    {
+      "id": "j_id001c",
+      "domain": "electrical",
+      "position": {
+        "x": 560,
+        "y": 264
+      }
+    },
+    {
+      "id": "j_id001e",
+      "domain": "electrical",
+      "position": {
+        "x": 904,
+        "y": 264
+      }
+    },
+    {
+      "id": "j_id001g",
+      "domain": "electrical",
+      "position": {
+        "x": 1296,
+        "y": 152
+      }
+    },
+    {
+      "id": "j_id001i",
+      "domain": "electrical",
+      "position": {
+        "x": 1296,
+        "y": 264
+      }
+    },
+    {
+      "id": "j_id001k",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 616
+      }
+    },
+    {
+      "id": "j_id001m",
+      "domain": "electrical",
+      "position": {
+        "x": 560,
+        "y": 504
+      }
+    },
+    {
+      "id": "j_id001o",
+      "domain": "electrical",
+      "position": {
+        "x": 560,
+        "y": 616
+      }
+    },
+    {
+      "id": "j_id001q",
+      "domain": "electrical",
+      "position": {
+        "x": 904,
+        "y": 616
+      }
+    },
+    {
+      "id": "j_id001s",
+      "domain": "electrical",
+      "position": {
+        "x": 1296,
+        "y": 504
+      }
+    },
+    {
+      "id": "j_id001u",
+      "domain": "electrical",
+      "position": {
+        "x": 1296,
+        "y": 616
+      }
+    },
+    {
+      "id": "j_id001w",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 968
+      }
+    },
+    {
+      "id": "j_id001y",
+      "domain": "electrical",
+      "position": {
+        "x": 560,
+        "y": 856
+      }
+    },
+    {
+      "id": "j_id0020",
+      "domain": "electrical",
+      "position": {
+        "x": 560,
+        "y": 968
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id0022",
+      "anchor": "ael.p1",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id0023",
+      "anchor": "ael.n1",
+      "wireIds": [
+        "id0002",
+        "id0003",
+        "w_id0019"
+      ]
+    },
+    {
+      "id": "net_id0024",
+      "anchor": "ael.p2",
+      "wireIds": [
+        "id0004",
+        "id0007",
+        "w_id001b"
+      ]
+    },
+    {
+      "id": "net_id0025",
+      "anchor": "ael.n2",
+      "wireIds": [
+        "id0005",
+        "id0006",
+        "id0008",
+        "w_id001d"
+      ]
+    },
+    {
+      "id": "net_id0026",
+      "anchor": "bel.p1",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id0027",
+      "anchor": "bel.n1",
+      "wireIds": [
+        "id000a",
+        "id000b",
+        "w_id001f"
+      ]
+    },
+    {
+      "id": "net_id0028",
+      "anchor": "bel.p2",
+      "wireIds": [
+        "id000c",
+        "id000f",
+        "w_id001h"
+      ]
+    },
+    {
+      "id": "net_id0029",
+      "anchor": "bel.n2",
+      "wireIds": [
+        "id000d",
+        "id000e",
+        "id000g",
+        "w_id001j"
+      ]
+    },
+    {
+      "id": "net_id002a",
+      "anchor": "cr1.p",
+      "wireIds": [
+        "id000h"
+      ]
+    },
+    {
+      "id": "net_id002b",
+      "anchor": "cel.p1",
+      "wireIds": [
+        "id000i"
+      ]
+    },
+    {
+      "id": "net_id002c",
+      "anchor": "cel.n1",
+      "wireIds": [
+        "id000j",
+        "id000k",
+        "w_id001l"
+      ]
+    },
+    {
+      "id": "net_id002d",
+      "anchor": "cel.p2",
+      "wireIds": [
+        "id000l",
+        "id000o",
+        "w_id001n"
+      ]
+    },
+    {
+      "id": "net_id002e",
+      "anchor": "cel.n2",
+      "wireIds": [
+        "id000m",
+        "id000n",
+        "id000p",
+        "w_id001p"
+      ]
+    },
+    {
+      "id": "net_id002f",
+      "anchor": "dr1.p",
+      "wireIds": [
+        "id000q"
+      ]
+    },
+    {
+      "id": "net_id002g",
+      "anchor": "del.p1",
+      "wireIds": [
+        "id000r"
+      ]
+    },
+    {
+      "id": "net_id002h",
+      "anchor": "del.n1",
+      "wireIds": [
+        "id000s",
+        "id000t",
+        "w_id001r"
+      ]
+    },
+    {
+      "id": "net_id002i",
+      "anchor": "del.p2",
+      "wireIds": [
+        "id000u",
+        "id000x",
+        "w_id001t"
+      ]
+    },
+    {
+      "id": "net_id002j",
+      "anchor": "del.n2",
+      "wireIds": [
+        "id000v",
+        "id000w",
+        "id000y",
+        "w_id001v"
+      ]
+    },
+    {
+      "id": "net_id002k",
+      "anchor": "eel.p1",
+      "wireIds": [
+        "id000z"
+      ]
+    },
+    {
+      "id": "net_id002l",
+      "anchor": "eel.n1",
+      "wireIds": [
+        "id0010",
+        "id0011",
+        "w_id001x"
+      ]
+    },
+    {
+      "id": "net_id002m",
+      "anchor": "eel.p2",
+      "wireIds": [
+        "id0012",
+        "id0015",
+        "w_id001z"
+      ]
+    },
+    {
+      "id": "net_id002n",
+      "anchor": "eel.n2",
+      "wireIds": [
+        "id0013",
+        "id0014",
+        "id0016",
+        "w_id0021"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Load voltages",
+      "series": [
+        "av.y",
+        "bv.y",
+        "cv.y",
+        "dv.y",
+        "ev.y"
+      ],
+      "labels": [
+        "VCVS",
+        "VCCS",
+        "CCVS",
+        "CCCS",
+        "Gyrator"
+      ]
+    }
+  ]
+}

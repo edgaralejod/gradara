@@ -23,6 +23,8 @@ cd site/public && python3 -m http.server 8088
 
 `scripts/build-block-docs.tsx` draws each block with the workbench's own `BlockPreview`, so the pages show exactly what the canvas shows. The Content-Security-Policy allows no inline styles or scripts, so the script turns every `style` attribute React writes into a class in `public/assets/block-faces.css`, which also carries a copy of `app/blocks.css`. Change the page layout in the script and `docs.css`, never in the generated files; rerun `npm run docs:blocks` after changing a block face or `app/blocks.css`, and CI fails when the pages are stale.
 
+Each block page also draws the block's example (`models/examples/blocks/`, see `docs/blocks/EXAMPLES.md`) with `scripts/example-diagram.tsx`. Each example's geometry goes in its own generated stylesheet, `public/assets/examples/<template>.css`, linked only from the pages that show it. The retired Scope, Display, and Terminator pages redirect to the index.
+
 ## First deploy
 
 1. The Firebase project ID is set in `.firebaserc` (`<firebase-project-id>` below). The custom domains `gradara.app` and `www.gradara.app` are connected in the Firebase Hosting console, which lists the DNS records the domain registrar needs. Check them there, not in this file.

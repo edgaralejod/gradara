@@ -2,7 +2,11 @@
 import { rotateBlocks } from '@/lib/gradara/rotation';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
-import BlockHelpDialog from '@/components/gradara/block-help-dialog';
+import NoteLayer from '@/components/gradara/note-layer';
+import BlockHelpDialog, {
+  OPEN_EXAMPLE_EVENT,
+  type OpenExampleDetail,
+} from '@/components/gradara/block-help-dialog';
 import { useStored } from '@/components/gradara/use-stored';
 import {
   PaneResizer,
@@ -38,7 +42,6 @@ import {
 } from 'react';
 import {
   ReactFlowProvider,
-  ViewportPortal,
   Controls,
   ControlButton,
   SelectionMode,
@@ -71,6 +74,7 @@ import {
   Copy,
   Clipboard,
   ClipboardPaste,
+  StickyNote,
   Trash2,
   Maximize,
   LayoutGrid,
@@ -492,6 +496,7 @@ function Workbench() {
     () => writeGridSetting(showGridRef.current ? '0' : '1'),
     [writeGridSetting],
   );
+  const [editingNote, setEditingNote] = useState<number | null>(null);
   const [canvasMenu, setCanvasMenu] = useState<{
     at: { x: number; y: number };
     point: { x: number; y: number };
@@ -1104,6 +1109,26 @@ function Workbench() {
       endTransition();
     }
   };
+  // Help → Open example: a copy of the example in My models, with the block selected.
+  const openExampleRef = useRef<(detail: OpenExampleDetail) => Promise<void>>(
+    async () => {},
+  );
+  openExampleRef.current = async ({ template, title, kind }) => {
+    await createModel(`Example: ${title}`, template as TemplateId);
+    const ids = projectRef.current.blocks
+      .filter((b) => b.definition.kind === kind)
+      .map((b) => b.id);
+    if (ids.length) selectBlocks(ids);
+    setLibraryOpen(false);
+  };
+  useEffect(() => {
+    const open = (event: Event) =>
+      void openExampleRef
+        .current((event as CustomEvent<OpenExampleDetail>).detail)
+        .catch((e) => notify((e as Error).message));
+    window.addEventListener(OPEN_EXAMPLE_EVENT, open);
+    return () => window.removeEventListener(OPEN_EXAMPLE_EVENT, open);
+  }, []);
   const insertGeneratedModel = async (generated: Project) => {
     if (!beginTransition())
       throw new Error('Wait for the current operation to finish.');
@@ -1488,6 +1513,32 @@ function Workbench() {
         hint: 'Copy or cut blocks first',
         run: () => pasteAt(menu.point),
       },
+      // Notes belong to the top-level sheet.
+      ...(scopeRef.current.length
+        ? []
+        : [
+            {
+              id: 'note',
+              label: 'Add note here',
+              icon: <StickyNote size={13} />,
+              run: () => {
+                const index = projectRef.current.annotations?.length ?? 0;
+                commit((p) => ({
+                  ...p,
+                  annotations: [
+                    ...(p.annotations ?? []),
+                    {
+                      x: snapGrid(menu.point.x),
+                      y: snapGrid(menu.point.y),
+                      text: 'Note',
+                      detail: '',
+                    },
+                  ],
+                }));
+                setEditingNote(index);
+              },
+            } satisfies CanvasMenuItem,
+          ]),
       // Inside a subsystem, an input or output pill can go where you clicked; its
       // Type in the inspector sets what it carries.
       ...(scopeRef.current.length
@@ -2682,8 +2733,8 @@ function Workbench() {
                   !inserter && (
                     <div className="empty-subsystem" role="note">
                       This subsystem is empty. Add blocks from the library, or
-                      right-click to add input and output ports. Esc or ⌘↑
-                      goes back up.
+                      right-click to add input and output ports. Esc or ⌘↑ goes
+                      back up.
                     </div>
                   )}
                 {ready &&
@@ -2834,20 +2885,21 @@ function Workbench() {
                         multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
                       >
                         <GridBackground visible={showGrid} />
-                        <ViewportPortal>
-                          {project.annotations?.map((a, i) => (
-                            <div
-                              key={i}
-                              className="diagram-annotation"
-                              style={{
-                                transform: `translate(${a.x}px, ${a.y}px)`,
-                              }}
-                            >
-                              <strong>{a.text}</strong>
-                              {a.detail && <span>{a.detail}</span>}
-                            </div>
-                          ))}
-                        </ViewportPortal>
+                        <NoteLayer
+                          notes={project.annotations ?? []}
+                          editable={scope.length === 0}
+                          editing={editingNote}
+                          onEditingChange={setEditingNote}
+                          onChange={(index, note) =>
+                            commit((p) => ({
+                              ...p,
+                              annotations: (p.annotations ?? []).flatMap(
+                                (a, i) =>
+                                  i !== index ? [a] : note ? [note] : [],
+                              ),
+                            }))
+                          }
+                        />
                         <NetLayer
                           project={project}
                           selected={selectedEdges}
@@ -3819,6 +3871,8 @@ function Workbench() {
                 ['Show or hide the grid', "⌘ / Ctrl + '"],
                 ['Resize a side panel', 'Drag its inner edge'],
                 ['Restore default panel sizes', 'Canvas menu → Reset layout'],
+                ['Add a note', 'Canvas menu → Add note here'],
+                ['Edit or delete a note', 'Double-click it · Delete'],
                 ['Canvas menu', 'Right-click empty space'],
                 [
                   'Arrange the sheet (or the selection)',

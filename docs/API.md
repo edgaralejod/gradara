@@ -26,14 +26,14 @@ The desktop app picks a free loopback port at each start and serves both the wor
 | `GET /project` | None | `{project: Project \| null, saveVersion: string \| null}` for the last activated document, resolved from its canonical saved file. |
 | `PUT /project` | Project | Legacy creation/idempotent retry only. Changing an existing document returns 409 with a reload instruction; use versioned model saves. |
 | `GET /models` | Optional `?trashed=true` | `{models: [{id, name, blocks, exampleId, updatedAt}]}`, newest saved first. Trash is separate from My models. |
-| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, `flyback`, `datacenter`, `servo`, or `ev`. |
+| `POST /models` | `{name, template}` | Creates, saves, and activates an independent model; returns `{project, saveVersion}`. Template is `blank`, `dc`, `foc`, `buck`, `flyback`, `datacenter`, `servo`, `ev`, or `block-<id>` for a block example listed in `models/examples/blocks/index.json`. |
 | `GET /models/{modelId}` | Saved ID | Returns `{project, saveVersion}` without activating it. |
 | `PUT /models/{modelId}` | `{project, expectedVersion}` | Writes that document without changing active selection; returns `{project, saveVersion}`. ID must match the path. Stale versions return 409. |
 | `POST /models/{modelId}/activate` | None | Opens an existing model as the last active document; returns `{project, saveVersion}`. |
 | `POST /models/copy` | `{project, name}` | Creates and activates an independent saved copy with a unique name; returns `{project, saveVersion}`. Used for import and copy recovery. |
 | `POST /models/{modelId}/trash` | None | Moves an inactive model to recoverable Trash. Returns `{trashed: true}`; removing the active model returns 409. |
 | `POST /models/{modelId}/restore` | None | Restores a trashed model with its original identity, without activating it; returns `{project, saveVersion}`. |
-| `GET /examples/{template}` | `dc`, `foc`, `buck`, `flyback`, `datacenter`, `servo`, or `ev` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
+| `GET /examples/{template}` | Any template except `blank` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
 | `POST /source` | Project | `{source}` containing emitted Modelica. Does not run a solver. |
 | `POST /runs` | Project | Queues a simulation and returns a job. |
 | `GET /jobs/{jobId}` | Job ID | Current job, with result or error once finished. |

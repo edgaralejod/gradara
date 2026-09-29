@@ -1,0 +1,772 @@
+{
+  "version": 1,
+  "name": "Example: RC and RL transients",
+  "exampleId": "block-rc-rl",
+  "description": "Two 10 V steps start at 0 s. The RC branch (1 kΩ, 100 µF) has a time constant of 0.1 s: the capacitor reaches 63 % of 10 V at 0.1 s and is essentially full after 0.5 s. The RL branch (a 0.1 S conductor, which is 10 Ω, and a 1 H inductor) has the same time constant, so its current rises to 63 % of 1 A at 0.1 s.",
+  "duration": 0.5,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "source",
+      "definition": {
+        "kind": "stepVoltage",
+        "name": "Step 10 V",
+        "description": "Voltage step at a given time.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V step",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Step",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          },
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.StepVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.StepVoltage",
+          "modifiers": {
+            "V": "V",
+            "offset": "offset",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 56,
+        "y": 200
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -68,
+        "y": -54
+      }
+    },
+    {
+      "id": "r",
+      "definition": {
+        "kind": "resistor",
+        "name": "R 1 kΩ",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1000,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 160,
+        "y": 136
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "c",
+      "definition": {
+        "kind": "capacitor",
+        "name": "C 100 µF",
+        "symbol": "C",
+        "domain": "electrical",
+        "description": "An ideal capacitor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance",
+            "value": 0.0001,
+            "unit": "F",
+            "min": 1e-12
+          }
+        ],
+        "equations": "i = C*der(v);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 296,
+        "y": 200
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": -64,
+        "y": -54
+      }
+    },
+    {
+      "id": "vc",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "Capacitor voltage",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 408,
+        "y": 200
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 100,
+        "y": -54
+      }
+    },
+    {
+      "id": "ground",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 56,
+        "y": 320
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "source2",
+      "definition": {
+        "kind": "stepVoltage",
+        "name": "Step 10 V (RL)",
+        "description": "Voltage step at a given time.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V step",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Step",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          },
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.StepVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.StepVoltage",
+          "modifiers": {
+            "V": "V",
+            "offset": "offset",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 752,
+        "y": 200
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -88,
+        "y": -54
+      }
+    },
+    {
+      "id": "g",
+      "definition": {
+        "kind": "conductor",
+        "name": "G 0.1 S",
+        "description": "Linear conductance: i = G·v.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "G",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "G",
+            "name": "Conductance",
+            "value": 0.1,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.Conductor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "admittance"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Conductor",
+          "modifiers": {
+            "G": "G"
+          }
+        }
+      },
+      "position": {
+        "x": 856,
+        "y": 136
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "il",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "Inductor current",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 992,
+        "y": 136
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "l",
+      "definition": {
+        "kind": "inductor",
+        "name": "L 1 H",
+        "symbol": "L",
+        "domain": "electrical",
+        "description": "An ideal inductor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 1,
+            "unit": "H",
+            "min": 1e-12
+          }
+        ],
+        "equations": "v = L*der(i);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 1128,
+        "y": 200
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 52,
+        "y": -54
+      }
+    },
+    {
+      "id": "ground2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (RL)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 752,
+        "y": 320
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "source",
+      "sourceHandle": "p",
+      "target": "r",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0002",
+      "source": "r",
+      "sourceHandle": "n",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 320,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000f",
+      "sourceHandle": "node",
+      "target": "j_id000h",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000h",
+      "sourceHandle": "node",
+      "target": "ground",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "vc",
+      "sourceHandle": "p",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 432,
+          "y": 184
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "vc",
+      "sourceHandle": "n",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 432,
+          "y": 296
+        }
+      ]
+    },
+    {
+      "id": "id0007",
+      "source": "source2",
+      "sourceHandle": "p",
+      "target": "g",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0008",
+      "source": "g",
+      "sourceHandle": "n",
+      "target": "il",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0009",
+      "source": "il",
+      "sourceHandle": "n",
+      "target": "l",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000a",
+      "source": "l",
+      "sourceHandle": "n",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1152,
+          "y": 296
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "ground2",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000e",
+      "source": "c",
+      "sourceHandle": "p",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000g",
+      "source": "c",
+      "sourceHandle": "n",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000i",
+      "source": "source",
+      "sourceHandle": "n",
+      "target": "j_id000h",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000k",
+      "source": "source2",
+      "sourceHandle": "n",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000d",
+      "domain": "electrical",
+      "position": {
+        "x": 320,
+        "y": 184
+      }
+    },
+    {
+      "id": "j_id000f",
+      "domain": "electrical",
+      "position": {
+        "x": 320,
+        "y": 296
+      }
+    },
+    {
+      "id": "j_id000h",
+      "domain": "electrical",
+      "position": {
+        "x": 80,
+        "y": 296
+      }
+    },
+    {
+      "id": "j_id000j",
+      "domain": "electrical",
+      "position": {
+        "x": 776,
+        "y": 296
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000l",
+      "anchor": "r.p",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000m",
+      "anchor": "c.p",
+      "wireIds": [
+        "id0002",
+        "id0005",
+        "w_id000e"
+      ]
+    },
+    {
+      "id": "net_id000n",
+      "anchor": "c.n",
+      "wireIds": [
+        "id0003",
+        "id0004",
+        "id0006",
+        "w_id000g",
+        "w_id000i"
+      ]
+    },
+    {
+      "id": "net_id000o",
+      "anchor": "g.p",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000p",
+      "anchor": "g.n",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id000q",
+      "anchor": "il.n",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id000r",
+      "anchor": "ground2.p",
+      "wireIds": [
+        "id000a",
+        "id000b",
+        "w_id000k"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Capacitor voltage",
+      "series": [
+        "vc.y"
+      ],
+      "labels": [
+        "v_C"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Inductor current",
+      "series": [
+        "il.y"
+      ],
+      "labels": [
+        "i_L"
+      ]
+    }
+  ]
+}

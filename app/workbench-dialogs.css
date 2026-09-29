@@ -579,3 +579,57 @@
   font: 500 var(--text-ui) var(--font-ui); cursor: pointer;
 }
 .export-dialog .codegen-ai .codegen-link { font-size: var(--text-micro); }
+
+/* Block examples: a compact index under the curated examples. */
+.model-browser .block-example-index {
+  margin-top: 22px;
+}
+.model-browser .block-example-index h3 {
+  margin: 0 0 2px;
+  font-size: var(--text-ui);
+  font-weight: var(--weight-heading);
+  color: #304b5e;
+}
+.model-browser .block-example-index h4 {
+  margin: 14px 0 4px;
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #899aa5;
+}
+.model-browser .block-example-index ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #d4dde4;
+}
+.model-browser .block-example-index li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #e2e9ee;
+}
+.model-browser .block-example-index li > div {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.model-browser .block-example-index strong {
+  font-size: var(--text-ui);
+  font-weight: var(--weight-medium);
+  color: #304b5e;
+}
+.model-browser .block-example-index span {
+  font-size: var(--text-meta);
+  color: #738591;
+  line-height: 1.45;
+}
+.model-browser .block-example-index button {
+  flex: none;
+  font-size: var(--text-meta);
+  height: 27px;
+  gap: 6px;
+}

@@ -435,7 +435,8 @@ class ExportRequest(BaseModel):
 
 class NewModelRequest(BaseModel):
     name: str = Field(default='Untitled model', min_length=1, max_length=100)
-    template: Literal['blank', 'dc', 'foc', 'buck', 'flyback', 'datacenter', 'servo', 'ev'] = 'blank'
+    # A curated example, or `block-<id>` for a block example (models/examples/blocks/).
+    template: str = Field(default='blank', pattern=r'^(blank|dc|foc|buck|flyback|datacenter|servo|ev|block-[a-z0-9-]{1,60})$')
 
 
 class SaveModelRequest(BaseModel):

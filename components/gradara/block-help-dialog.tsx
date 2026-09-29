@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, FlaskConical } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,15 @@ import {
   codeSpans,
   type ReferencePort,
 } from '@/lib/gradara/block-reference';
+import { exampleForKind } from '@/lib/gradara/block-examples';
+
+/** Asks the workbench to open a block's example as a new model (handled in app/page.tsx). */
+export const OPEN_EXAMPLE_EVENT = 'gradara:open-example';
+export type OpenExampleDetail = {
+  template: string;
+  title: string;
+  kind: string;
+};
 
 /** Text with `code` spans. */
 function Rich({ text }: { text: string }) {
@@ -88,6 +97,7 @@ export default function BlockHelpDialog({
   const page = blockReference(shown, doc, library);
   const published =
     !shown.generated && library.some((d) => d.kind === shown.kind);
+  const example = shown.generated ? undefined : exampleForKind(shown.kind);
   return (
     <Dialog
       open
@@ -218,6 +228,23 @@ export default function BlockHelpDialog({
               onClick={() => setShown(base)}
             >
               Back to {base.name}
+            </button>
+          )}
+          {example && (
+            <button
+              type="button"
+              className="help-example"
+              title={`Opens ${example.title} as a new model in My models`}
+              onClick={() => {
+                window.dispatchEvent(
+                  new CustomEvent<OpenExampleDetail>(OPEN_EXAMPLE_EVENT, {
+                    detail: { ...example, kind: shown.kind },
+                  }),
+                );
+                onClose();
+              }}
+            >
+              <FlaskConical size={13} /> Open example: {example.title}
             </button>
           )}
           {published && (

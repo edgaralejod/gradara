@@ -428,6 +428,69 @@
   font-size: var(--text-heading);
   color: #899aa4;
 }
+/* Notes on the top-level sheet can be moved and edited (note-layer.tsx). */
+.diagram-annotation.is-editable {
+  pointer-events: auto;
+  cursor: move;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  outline: none;
+}
+.diagram-annotation.is-editable:hover {
+  border-color: #cfd9e0;
+  background: rgb(255 255 255 / 70%);
+}
+.diagram-annotation.is-selected,
+.diagram-annotation.is-editable:focus-visible {
+  border-color: #2477b5;
+  background: rgb(255 255 255 / 85%);
+}
+.diagram-annotation.is-editing {
+  pointer-events: auto;
+  padding: 6px 28px 6px 6px;
+  margin: -6px;
+  border: 1px solid #2477b5;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(35 55 70 / 18%);
+  gap: 4px;
+}
+.diagram-annotation.is-editing input {
+  font: 600 var(--text-heading) var(--font-ui);
+  letter-spacing: 1.3px;
+  color: #688391;
+  border: 0;
+  border-bottom: 1px solid #e2e9ee;
+  padding: 2px 0;
+  outline: none;
+  min-width: 220px;
+  background: transparent;
+}
+.diagram-annotation.is-editing input + input {
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #899aa4;
+}
+.diagram-annotation .note-delete {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #899aa4;
+  cursor: pointer;
+}
+.diagram-annotation .note-delete:hover {
+  background: #fbe9e6;
+  color: #9c4a37;
+}
 .canvas-hint {
   font-size: var(--text-micro);
   color: #7d8d99;
@@ -3056,6 +3119,8 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .help-see-also button:hover, .help-back:hover { background: #e3eef7; }
 .block-help-dialog .dialog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
 .block-help-dialog .dialog-actions a { display: inline-flex; align-items: center; gap: 4px; color: #2477b5; }
+.block-help-dialog .help-example { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; border: 1px solid #2477b5; border-radius: 4px; background: #2477b5; color: #fff; padding: 4px 10px; font: inherit; cursor: pointer; }
+.block-help-dialog .help-example:hover { background: #1d6399; }
 .dialog-help { margin-right: auto; }
 .properties-help { margin-left: auto; display: inline-grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 3px; background: none; color: #73808b; cursor: pointer; }
 .properties-help:hover, .properties-help:focus-visible { background: #e3eef7; color: #2477b5; }

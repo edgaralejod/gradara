@@ -7,7 +7,12 @@ import {
   selfIntersects,
 } from '../lib/gradara/routing';
 import assert from 'node:assert/strict';
-import { initialProject, library, type Project } from '../lib/gradara/model';
+import {
+  definitionFor,
+  initialProject,
+  library,
+  type Project,
+} from '../lib/gradara/model';
 import { applyLayout, blockSize } from '../lib/gradara/canvas';
 import { portPoint, sideToPosition } from '../lib/gradara/ports';
 import { endpointPoint, flattenWires } from '../lib/gradara/net';
@@ -29,7 +34,7 @@ import {
   normalizeJunctions,
 } from '../lib/gradara/net-layout';
 
-const def = (kind: string) => library.find((d) => d.kind === kind)!;
+const def = (kind: string) => definitionFor(kind)!;
 
 function place(
   kind: string,

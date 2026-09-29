@@ -1,0 +1,425 @@
+{
+  "version": 1,
+  "name": "Example: Switches",
+  "exampleId": "block-routing",
+  "description": "The Switch passes its top input while the control input (a 1 Hz pulse) is at or above 0.5, and its bottom input otherwise: the output alternates between the ramp and −1 every half second. The Manual switch has no control input: its Position parameter (1 or 2) picks an input. Here it is set to 2, so it passes the ramp. Double-click it in the canvas to flip it.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "ramp",
+      "definition": {
+        "kind": "ramp",
+        "name": "Ramp",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 1,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "low",
+      "definition": {
+        "kind": "constant",
+        "name": "−1",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": -1,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 40,
+        "y": 192
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "pulse",
+      "definition": {
+        "kind": "pulse",
+        "name": "Control",
+        "symbol": "pulse",
+        "domain": "signal",
+        "description": "A periodic rectangular pulse.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if mod(time - startTime + period, period) < width*period then amplitude else 0;",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 1,
+            "unit": "s",
+            "min": 0.0001
+          },
+          {
+            "id": "width",
+            "name": "Duty cycle",
+            "value": 0.5,
+            "unit": "",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "square",
+          "pwm"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 320
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "sw",
+      "definition": {
+        "kind": "switch2",
+        "name": "Switch",
+        "symbol": "switch",
+        "domain": "signal",
+        "description": "Pass u₁ when the control is above threshold, otherwise u₂.",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u₁",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "sel",
+            "name": "sel",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "u3",
+            "name": "u₂",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if sel >= threshold then u1 else u3;",
+        "parameters": [
+          {
+            "id": "threshold",
+            "name": "Threshold",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "routing",
+          "logic"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 96
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 96,
+        "y": -62
+      }
+    },
+    {
+      "id": "manual",
+      "definition": {
+        "kind": "manualSwitch",
+        "name": "Manual switch",
+        "symbol": "1|2",
+        "domain": "signal",
+        "description": "Pick an input with a parameter. 1 uses the top input.",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "1",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "u2",
+            "name": "2",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if sel >= 1.5 then u2 else u1;",
+        "parameters": [
+          {
+            "id": "sel",
+            "name": "Select 1 or 2",
+            "value": 2,
+            "unit": "",
+            "min": 1
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "routing"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 384
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id0007",
+      "sourceHandle": "node",
+      "target": "sw",
+      "targetHandle": "u1",
+      "waypoints": [
+        {
+          "x": 256,
+          "y": 128
+        }
+      ]
+    },
+    {
+      "id": "id0002",
+      "source": "pulse",
+      "sourceHandle": "y",
+      "target": "sw",
+      "targetHandle": "sel"
+    },
+    {
+      "id": "id0003",
+      "source": "j_id0009",
+      "sourceHandle": "node",
+      "target": "sw",
+      "targetHandle": "u3",
+      "waypoints": [
+        {
+          "x": 256,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id0004",
+      "source": "j_id0009",
+      "sourceHandle": "node",
+      "target": "manual",
+      "targetHandle": "u1",
+      "waypoints": [
+        {
+          "x": 256,
+          "y": 416
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "j_id0007",
+      "sourceHandle": "node",
+      "target": "manual",
+      "targetHandle": "u2",
+      "waypoints": [
+        {
+          "x": 376,
+          "y": 96
+        },
+        {
+          "x": 376,
+          "y": 448
+        }
+      ]
+    },
+    {
+      "id": "w_id0008",
+      "source": "ramp",
+      "sourceHandle": "y",
+      "target": "j_id0007",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000a",
+      "source": "low",
+      "sourceHandle": "y",
+      "target": "j_id0009",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0007",
+      "domain": "signal",
+      "position": {
+        "x": 256,
+        "y": 96
+      }
+    },
+    {
+      "id": "j_id0009",
+      "domain": "signal",
+      "position": {
+        "x": 256,
+        "y": 224
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000b",
+      "anchor": "ramp.y",
+      "wireIds": [
+        "id0001",
+        "id0005",
+        "w_id0008"
+      ]
+    },
+    {
+      "id": "net_id000c",
+      "anchor": "pulse.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000d",
+      "anchor": "low.y",
+      "wireIds": [
+        "id0003",
+        "id0004",
+        "w_id000a"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Switched signals",
+      "series": [
+        "sw.y",
+        "manual.y"
+      ],
+      "labels": [
+        "Switch",
+        "Manual switch"
+      ]
+    }
+  ]
+}

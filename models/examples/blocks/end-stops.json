@@ -1,0 +1,1192 @@
+{
+  "version": 1,
+  "name": "Example: End stops and motion sources",
+  "exampleId": "block-end-stops",
+  "description": "The mass with stops is shaken by ±20 N; it sticks until the force overcomes its friction, then slides and stays against the +0.5 m stop while the force pushes it there. The elastic stop starts level with its mass, and its gap of −5 cm gives 5 cm of free travel: the mass pushed by 10 N crosses it and comes to rest pressing 10 µm into the stop. The speed source moves its mass at 0.2 m/s, and the position source makes its mass follow a 0.1 m sine.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "fsig",
+      "definition": {
+        "kind": "sine",
+        "name": "20 sin(πt) N",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 20,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 0.5,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 80,
+        "y": 168
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "fsrc",
+      "definition": {
+        "kind": "forceSource",
+        "name": "Force source",
+        "description": "Applies the input signal as force to the flange.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "F",
+        "ports": [
+          {
+            "id": "f",
+            "name": "F",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Translational.Sources.Force from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "actuator"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sources.Force"
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 152
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "ms",
+      "definition": {
+        "kind": "massStops",
+        "name": "Mass with stops",
+        "description": "Mass with Coulomb and viscous friction and hard end stops.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "m⊣⊢",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "m",
+            "name": "Mass",
+            "value": 1,
+            "unit": "kg",
+            "min": 0
+          },
+          {
+            "id": "smax",
+            "name": "Upper stop",
+            "value": 0.5,
+            "unit": "m"
+          },
+          {
+            "id": "smin",
+            "name": "Lower stop",
+            "value": -0.5,
+            "unit": "m"
+          },
+          {
+            "id": "F_prop",
+            "name": "Viscous friction",
+            "value": 1,
+            "unit": "N·s/m",
+            "min": 0
+          },
+          {
+            "id": "F_Coulomb",
+            "name": "Coulomb friction",
+            "value": 5,
+            "unit": "N",
+            "min": 0
+          },
+          {
+            "id": "F_Stribeck",
+            "name": "Stribeck friction",
+            "value": 10,
+            "unit": "N",
+            "min": 0
+          },
+          {
+            "id": "fexp",
+            "name": "Stribeck decay",
+            "value": 2,
+            "unit": "s/m",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.MassWithStopAndFriction from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "friction",
+          "stiction",
+          "limit"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.MassWithStopAndFriction",
+          "modifiers": {
+            "m": "m",
+            "smax": "smax",
+            "smin": "smin",
+            "F_prop": "F_prop",
+            "F_Coulomb": "F_Coulomb",
+            "F_Stribeck": "F_Stribeck",
+            "fexp": "fexp"
+          }
+        }
+      },
+      "position": {
+        "x": 472,
+        "y": 168
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "xs",
+      "definition": {
+        "kind": "positionSensor",
+        "name": "Position (stops)",
+        "description": "Absolute position of the flange.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "s",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "s",
+            "name": "s",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Translational.Sensors.PositionSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "displacement",
+          "encoder"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sensors.PositionSensor"
+        }
+      },
+      "position": {
+        "x": 648,
+        "y": 152
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 136,
+        "y": -62
+      }
+    },
+    {
+      "id": "push",
+      "definition": {
+        "kind": "constantForce",
+        "name": "Push 10 N",
+        "description": "A constant force.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "F₀",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f_constant",
+            "name": "Force",
+            "value": 10,
+            "unit": "N"
+          }
+        ],
+        "equations": "// Mechanics.Translational.Sources.ConstantForce from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gravity",
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sources.ConstantForce",
+          "modifiers": {
+            "f_constant": "f_constant"
+          }
+        }
+      },
+      "position": {
+        "x": 56,
+        "y": 392
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "mh",
+      "definition": {
+        "kind": "mass",
+        "name": "Mass 1 kg",
+        "description": "A sliding mass with two flanges: m·a = f_a + f_b.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "m",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "m",
+            "name": "Mass",
+            "value": 1,
+            "unit": "kg",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Mass from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "inertia",
+          "body",
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Mass",
+          "modifiers": {
+            "m": "m"
+          }
+        }
+      },
+      "position": {
+        "x": 280,
+        "y": 408
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "hs",
+      "definition": {
+        "kind": "hardStop",
+        "name": "Elastic stop",
+        "description": "Spring and damper that act only when the gap closes (contact).",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "gap",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "c",
+            "name": "Contact stiffness",
+            "value": 1000000,
+            "unit": "N/m",
+            "min": 0
+          },
+          {
+            "id": "d",
+            "name": "Contact damping",
+            "value": 100,
+            "unit": "N·s/m",
+            "min": 0
+          },
+          {
+            "id": "s_rel0",
+            "name": "Gap",
+            "value": -0.05,
+            "unit": "m"
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.ElastoGap from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "contact",
+          "end stop",
+          "impact"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.ElastoGap",
+          "modifiers": {
+            "c": "c",
+            "d": "d",
+            "s_rel0": "s_rel0"
+          }
+        }
+      },
+      "position": {
+        "x": 424,
+        "y": 408
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "wall",
+      "definition": {
+        "kind": "transFixed",
+        "name": "Stop at 0.1 m",
+        "description": "A translational flange fixed at a constant position.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "top"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "s0",
+            "name": "Position",
+            "value": 0.1,
+            "unit": "m"
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Fixed from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ground",
+          "wall",
+          "reference"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Fixed",
+          "modifiers": {
+            "s0": "s0"
+          }
+        }
+      },
+      "position": {
+        "x": 552,
+        "y": 512
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 84,
+        "y": -38
+      }
+    },
+    {
+      "id": "xh",
+      "definition": {
+        "kind": "positionSensor",
+        "name": "Position (elastic stop)",
+        "description": "Absolute position of the flange.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "s",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "s",
+            "name": "s",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Translational.Sensors.PositionSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "displacement",
+          "encoder"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sensors.PositionSensor"
+        }
+      },
+      "position": {
+        "x": 200,
+        "y": 584
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 164,
+        "y": -62
+      }
+    },
+    {
+      "id": "vref",
+      "definition": {
+        "kind": "constant",
+        "name": "0.2 m/s",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0.2,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 80,
+        "y": 792
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "vs",
+      "definition": {
+        "kind": "transSpeedSource",
+        "name": "Speed source",
+        "description": "Forces the flange to follow the input velocity.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "v",
+        "ports": [
+          {
+            "id": "v_ref",
+            "name": "v",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f_crit",
+            "name": "Filter frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Sources.Speed from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sources.Speed",
+          "modifiers": {
+            "exact": "false",
+            "f_crit": "f_crit"
+          }
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 776
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "mv",
+      "definition": {
+        "kind": "mass",
+        "name": "Mass 1 kg (speed)",
+        "description": "A sliding mass with two flanges: m·a = f_a + f_b.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "m",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "m",
+            "name": "Mass",
+            "value": 1,
+            "unit": "kg",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Mass from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "inertia",
+          "body",
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Mass",
+          "modifiers": {
+            "m": "m"
+          }
+        }
+      },
+      "position": {
+        "x": 464,
+        "y": 792
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "vv",
+      "definition": {
+        "kind": "velocitySensor",
+        "name": "Velocity (speed source)",
+        "description": "Absolute velocity of the flange.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "v",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "v",
+            "name": "v",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Translational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "speed"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 640,
+        "y": 776
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 164,
+        "y": -62
+      }
+    },
+    {
+      "id": "sref",
+      "definition": {
+        "kind": "sine",
+        "name": "0.1 sin(πt) m",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 0.1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 0.5,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 80,
+        "y": 1000
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ps",
+      "definition": {
+        "kind": "positionSource",
+        "name": "Position source",
+        "description": "Forces the flange to follow the input position.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "s",
+        "ports": [
+          {
+            "id": "s_ref",
+            "name": "s",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f_crit",
+            "name": "Filter frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Sources.Position from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sources.Position",
+          "modifiers": {
+            "exact": "false",
+            "f_crit": "f_crit"
+          }
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 984
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "mp",
+      "definition": {
+        "kind": "mass",
+        "name": "Mass 1 kg (position)",
+        "description": "A sliding mass with two flanges: m·a = f_a + f_b.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "m",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "m",
+            "name": "Mass",
+            "value": 1,
+            "unit": "kg",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Mass from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "inertia",
+          "body",
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Mass",
+          "modifiers": {
+            "m": "m"
+          }
+        }
+      },
+      "position": {
+        "x": 464,
+        "y": 1000
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "xp",
+      "definition": {
+        "kind": "positionSensor",
+        "name": "Position (position source)",
+        "description": "Absolute position of the flange.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "s",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "s",
+            "name": "s",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Translational.Sensors.PositionSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "displacement",
+          "encoder"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sensors.PositionSensor"
+        }
+      },
+      "position": {
+        "x": 640,
+        "y": 984
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 176,
+        "y": -62
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "fsig",
+      "sourceHandle": "y",
+      "target": "fsrc",
+      "targetHandle": "f"
+    },
+    {
+      "id": "id0002",
+      "source": "fsrc",
+      "sourceHandle": "flange",
+      "target": "ms",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0003",
+      "source": "ms",
+      "sourceHandle": "flange_b",
+      "target": "xs",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id0004",
+      "source": "push",
+      "sourceHandle": "flange",
+      "target": "mh",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0005",
+      "source": "mh",
+      "sourceHandle": "flange_b",
+      "target": "hs",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0006",
+      "source": "hs",
+      "sourceHandle": "flange_b",
+      "target": "wall",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id0007",
+      "source": "mh",
+      "sourceHandle": "flange_a",
+      "target": "xh",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id0008",
+      "source": "vref",
+      "sourceHandle": "y",
+      "target": "vs",
+      "targetHandle": "v_ref"
+    },
+    {
+      "id": "id0009",
+      "source": "vs",
+      "sourceHandle": "flange",
+      "target": "mv",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id000a",
+      "source": "mv",
+      "sourceHandle": "flange_b",
+      "target": "vv",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id000b",
+      "source": "sref",
+      "sourceHandle": "y",
+      "target": "ps",
+      "targetHandle": "s_ref"
+    },
+    {
+      "id": "id000c",
+      "source": "ps",
+      "sourceHandle": "flange",
+      "target": "mp",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id000d",
+      "source": "mp",
+      "sourceHandle": "flange_b",
+      "target": "xp",
+      "targetHandle": "flange"
+    }
+  ],
+  "junctions": [],
+  "nets": [
+    {
+      "id": "net_id000f",
+      "anchor": "fsig.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000g",
+      "anchor": "fsrc.flange",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000h",
+      "anchor": "ms.flange_b",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000i",
+      "anchor": "mh.flange_a",
+      "wireIds": [
+        "id0004",
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000j",
+      "anchor": "hs.flange_a",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000k",
+      "anchor": "hs.flange_b",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000l",
+      "anchor": "vref.y",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id000m",
+      "anchor": "mv.flange_a",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id000n",
+      "anchor": "mv.flange_b",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id000o",
+      "anchor": "sref.y",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id000p",
+      "anchor": "mp.flange_a",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id000q",
+      "anchor": "mp.flange_b",
+      "wireIds": [
+        "id000d"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Stops",
+      "series": [
+        "xs.s",
+        "xh.s"
+      ],
+      "labels": [
+        "Mass with stops",
+        "Elastic stop"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Driven masses",
+      "series": [
+        "vv.v",
+        "xp.s"
+      ],
+      "labels": [
+        "Velocity (speed source)",
+        "Position (position source)"
+      ]
+    }
+  ]
+}

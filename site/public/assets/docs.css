@@ -187,3 +187,24 @@
 @media (prefers-reduced-motion: reduce) {
   .card, .card:hover { transition: none; transform: none; }
 }
+
+/* Example diagram: the example model drawn as the canvas draws it */
+.example-title { color: #c3cdd7; font-size: 0.98rem; line-height: 1.6; }
+.example-title strong { color: var(--ink); margin-right: 0.3rem; }
+.example-sheet { margin: 1rem 0 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #f8f9fc; }
+.example-canvas { padding: 1.2rem; overflow-x: auto; background-color: #f8f9fc; background-image: radial-gradient(#d3d9e3 1px, transparent 1.2px); background-size: 16px 16px; }
+.example-scale { position: relative; display: block; margin: 0 auto; }
+.example-scale > .diagram { position: absolute; left: 0; top: 0; transform: scale(var(--k)); transform-origin: 0 0; }
+.diagram { display: block; }
+.diagram-wires { position: absolute; left: 0; top: 0; overflow: visible; }
+.diagram-wires polyline { fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+.diagram-block { position: absolute; }
+.diagram-turn { position: absolute; left: 50%; top: 50%; }
+.diagram-name { position: absolute; transform: translateX(-50%); font: 12px/20px var(--font-ui); color: #273f50; white-space: nowrap; }
+.example-sheet figcaption { padding: 0.75rem 1rem; border-top: 1px solid #d7dde6; background: #fff; color: #4b5d6b; font-size: 0.86rem; line-height: 1.55; }
+.example-sheet figcaption kbd { background: #f0f1fa; color: #273f50; border-color: #d7dde6; }
+.example-sheet figcaption strong { color: #273f50; }
+.example-others { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.9rem; font-size: 0.86rem; color: var(--muted); }
+.example-others span { margin-right: 0.2rem; }
+.example-others a { padding: 0.15rem 0.6rem; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; color: var(--ink); background: var(--bg-2); }
+.example-others a:hover { border-color: var(--accent); }

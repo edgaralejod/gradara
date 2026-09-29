@@ -242,7 +242,14 @@ const physical = (
   domain: Domain,
   side: Port['side'],
 ): Port => ({ id, name, domain, side, direction: 'physical' });
-export const library: Definition[] = [
+/**
+ * Blocks no longer offered in the library. Models that contain them still open and
+ * run (a document carries its blocks' definitions); these add no equations, and
+ * Results already lists every block output and logged signal.
+ */
+export const RETIRED_KINDS = new Set(['scope', 'display', 'terminator']);
+
+const allBlocks: Definition[] = [
   ...powerBlocks,
   ...controlBlocks,
   {
@@ -385,6 +392,17 @@ export const library: Definition[] = [
   ...mslBlocks,
   ...portBlocks,
 ];
+export const library: Definition[] = allBlocks.filter(
+  (d) => !RETIRED_KINDS.has(d.kind),
+);
+/** Retired definitions, for documents made before they left the library. */
+export const retiredBlocks: Definition[] = allBlocks.filter((d) =>
+  RETIRED_KINDS.has(d.kind),
+);
+/** A library definition, or a retired one an older document may still use. */
+export const definitionFor = (kind: string) =>
+  library.find((d) => d.kind === kind) ??
+  retiredBlocks.find((d) => d.kind === kind);
 const block = (kind: string, id: string, x: number, y: number): Block => ({
   id,
   definition: structuredClone(library.find((d) => d.kind === kind)!),

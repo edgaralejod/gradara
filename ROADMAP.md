@@ -20,7 +20,7 @@ Gradara's priority is a polished, usable diagram-to-simulation workflow. This is
 | Result inspection | Comparisons of arbitrary saved runs (configuration overlays from Run all exist), dual cursors, frequency-domain views, independently scaled dual Y axes, and live streaming. | Remaining inspector gaps are closed without losing event pairs, linked X ranges, or browser-local plot preferences. |
 | Export cancellation cleanup | Process/container lifecycle in the AI export paths (`server/ctemplate.py`, and `server/exporter.py` until the deprecated `/exports` route is removed). | Cancellation and timeout leave no orphan compilation process or container; failure remains visible. |
 | Model folders and organization | Build on the searchable My models / Examples / Trash browser. | Users can organize models into nested folders without changing document identity, physics, or example source files. |
-| Example-driven blocks | Add one useful electrical/mechanical/control block at a time. | Shared design, valid connector contract, documented assumptions, and a meaningful real simulation. |
+| Example-driven blocks | Add one useful electrical/mechanical/control block at a time. | Shared design, valid connector contract, documented assumptions, and a block example that simulates to checked results. |
 | Reusable component libraries | Validation status, saved custom definitions, and refinement review. | A component can be reused and revised without silently changing its existing instances or connections. |
 
 Documentation improvements, synthetic bug fixtures, keyboard QA, and Linux/WSL installation reports are useful first contributions. Do not label a numerical or persistence change “easy” just because the patch is small.

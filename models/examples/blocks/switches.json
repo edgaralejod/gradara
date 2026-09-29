@@ -1,0 +1,2271 @@
+{
+  "version": 1,
+  "name": "Example: Switches and a breaker",
+  "exampleId": "block-switches",
+  "description": "Each circuit is 10 V into a 10 Ω load, 1 A when closed. The ideal switch follows a 5 Hz pulse on its gate. The closing switch closes at 0.1 s and the opening switch opens then. The two-way switch moves the current from a 10 Ω load (1 A) to a 20 Ω load (0.5 A). The breaker opens a 10 Ω, 10 mH circuit at 0.1 s: its arc voltage rises from 30 V until it forces the current to zero.",
+  "duration": 0.3,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "asrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "10 V A",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 10,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -56,
+        "y": -54
+      }
+    },
+    {
+      "id": "ai",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "i A",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 256,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "aload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load A",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 400,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "asw",
+      "definition": {
+        "kind": "idealSwitch",
+        "name": "Ideal switch",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "switch",
+        "description": "Ideal bidirectional power switch. Gate above 0.5 closes the switch; zero on-resistance and zero off-conductance.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "gate",
+            "name": "g",
+            "direction": "input",
+            "side": "left",
+            "domain": "signal",
+            "unit": ""
+          }
+        ],
+        "parameters": [],
+        "equations": "p.i + n.i = 0;\nif gate > 0.5 then\n  p.v = n.v;\nelse\n  p.i = 0;\nend if;",
+        "keywords": [
+          "mosfet",
+          "transistor",
+          "switching",
+          "buck",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 568,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 80,
+        "y": -54
+      }
+    },
+    {
+      "id": "actl",
+      "definition": {
+        "kind": "pulse",
+        "name": "Gate 5 Hz",
+        "symbol": "pulse",
+        "domain": "signal",
+        "description": "A periodic rectangular pulse.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if mod(time - startTime + period, period) < width*period then amplitude else 0;",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 0.2,
+            "unit": "s",
+            "min": 0.0001
+          },
+          {
+            "id": "width",
+            "name": "Duty cycle",
+            "value": 0.5,
+            "unit": "",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "square",
+          "pwm"
+        ]
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "agnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground A",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "bsrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "10 V B",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 10,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 848,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -56,
+        "y": -54
+      }
+    },
+    {
+      "id": "bi",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "i B",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 960,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "bsw",
+      "definition": {
+        "kind": "closingSwitch",
+        "name": "Closing switch",
+        "description": "Ideal switch that closes while its control input is true.",
+        "domain": "electrical",
+        "category": "semiconductors",
+        "symbol": "S",
+        "ports": [
+          {
+            "id": "control",
+            "name": "on",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "On resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Goff",
+            "name": "Off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealClosingSwitch from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "relay",
+          "contactor",
+          "breaker"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealClosingSwitch",
+          "modifiers": {
+            "Ron": "Ron",
+            "Goff": "Goff"
+          }
+        }
+      },
+      "position": {
+        "x": 1104,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "bctl",
+      "definition": {
+        "kind": "booleanStep",
+        "name": "Close at 0.1 s",
+        "description": "False before the step time, true after.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanStep from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "enable",
+          "trigger"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanStep",
+          "modifiers": {
+            "startValue": "false",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 960,
+        "y": 16
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "bload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load B",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1272,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "bgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground B",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 848,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "csrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "10 V C",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 10,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 576
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -56,
+        "y": -54
+      }
+    },
+    {
+      "id": "ci",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "i C",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 256,
+        "y": 512
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "csw",
+      "definition": {
+        "kind": "openingSwitch",
+        "name": "Opening switch",
+        "description": "Ideal switch that opens while its control input is true.",
+        "domain": "electrical",
+        "category": "semiconductors",
+        "symbol": "S̄",
+        "ports": [
+          {
+            "id": "control",
+            "name": "off",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "On resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Goff",
+            "name": "Off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealOpeningSwitch from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "fault",
+          "disconnect"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealOpeningSwitch",
+          "modifiers": {
+            "Ron": "Ron",
+            "Goff": "Goff"
+          }
+        }
+      },
+      "position": {
+        "x": 400,
+        "y": 512
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "cctl",
+      "definition": {
+        "kind": "booleanStep",
+        "name": "Open at 0.1 s",
+        "description": "False before the step time, true after.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanStep from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "enable",
+          "trigger"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanStep",
+          "modifiers": {
+            "startValue": "false",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 400
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "cload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load C",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 568,
+        "y": 576
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "cgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground C",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 696
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "dser",
+      "definition": {
+        "kind": "inductor",
+        "name": "L 10 mH",
+        "symbol": "L",
+        "domain": "electrical",
+        "description": "An ideal inductor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 0.01,
+            "unit": "H",
+            "min": 1e-12
+          }
+        ],
+        "equations": "v = L*der(i);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 1240,
+        "y": 512
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "dsrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "10 V D",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 10,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 848,
+        "y": 576
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -56,
+        "y": -54
+      }
+    },
+    {
+      "id": "di",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "i D",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 960,
+        "y": 512
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "dsw",
+      "definition": {
+        "kind": "breaker",
+        "name": "Breaker",
+        "description": "Opens while control is true; an arc sustains current until it quenches.",
+        "domain": "electrical",
+        "category": "semiconductors",
+        "symbol": "CB",
+        "ports": [
+          {
+            "id": "control",
+            "name": "trip",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "On resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Goff",
+            "name": "Off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          },
+          {
+            "id": "V0",
+            "name": "Arc voltage",
+            "value": 30,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "dVdt",
+            "name": "Arc voltage slope",
+            "value": 10000,
+            "unit": "V/s",
+            "min": 0
+          },
+          {
+            "id": "Vmax",
+            "name": "Maximum arc voltage",
+            "value": 60,
+            "unit": "V",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.OpenerWithArc from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "circuit breaker",
+          "fuse",
+          "arc"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.OpenerWithArc",
+          "modifiers": {
+            "Ron": "Ron",
+            "Goff": "Goff",
+            "V0": "V0",
+            "dVdt": "dVdt",
+            "Vmax": "Vmax"
+          }
+        }
+      },
+      "position": {
+        "x": 1104,
+        "y": 512
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "dctl",
+      "definition": {
+        "kind": "booleanStep",
+        "name": "Trip at 0.1 s",
+        "description": "False before the step time, true after.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanStep from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "enable",
+          "trigger"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanStep",
+          "modifiers": {
+            "startValue": "false",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 960,
+        "y": 400
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "dload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load D",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1400,
+        "y": 576
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "dgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground D",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 848,
+        "y": 696
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "esrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "10 V E",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 10,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 960
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -56,
+        "y": -54
+      }
+    },
+    {
+      "id": "ei",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "i E",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 256,
+        "y": 896
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "esw",
+      "definition": {
+        "kind": "twoWaySwitch",
+        "name": "Two-way switch",
+        "description": "Connects p to n2 while control is true, otherwise to n1.",
+        "domain": "electrical",
+        "category": "semiconductors",
+        "symbol": "SPDT",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "n1",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "n2",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "control",
+            "name": "sel",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "On resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Goff",
+            "name": "Off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealTwoWaySwitch from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "spdt",
+          "selector"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealTwoWaySwitch",
+          "modifiers": {
+            "Ron": "Ron",
+            "Goff": "Goff"
+          }
+        }
+      },
+      "position": {
+        "x": 408,
+        "y": 896
+      },
+      "size": {
+        "width": 64,
+        "height": 48
+      }
+    },
+    {
+      "id": "ectl",
+      "definition": {
+        "kind": "booleanStep",
+        "name": "Change over at 0.1 s",
+        "description": "False before the step time, true after.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "startTime",
+            "name": "Step time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanStep from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "enable",
+          "trigger"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanStep",
+          "modifiers": {
+            "startValue": "false",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 784
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "eload1",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load 10 Ω",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 568,
+        "y": 960
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 68,
+        "y": -54
+      }
+    },
+    {
+      "id": "eload2",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load 20 Ω",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 20,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 728,
+        "y": 960
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 68,
+        "y": -54
+      }
+    },
+    {
+      "id": "egnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground E",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 1080
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "asrc",
+      "sourceHandle": "p",
+      "target": "ai",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0002",
+      "source": "ai",
+      "sourceHandle": "n",
+      "target": "aload",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0003",
+      "source": "aload",
+      "sourceHandle": "n",
+      "target": "asw",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0004",
+      "source": "asw",
+      "sourceHandle": "n",
+      "target": "j_id000z",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 592,
+          "y": 288
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000z",
+      "sourceHandle": "node",
+      "target": "agnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0006",
+      "source": "actl",
+      "sourceHandle": "y",
+      "target": "asw",
+      "targetHandle": "gate"
+    },
+    {
+      "id": "id0007",
+      "source": "bsrc",
+      "sourceHandle": "p",
+      "target": "bi",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0008",
+      "source": "bi",
+      "sourceHandle": "n",
+      "target": "bsw",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0009",
+      "source": "bctl",
+      "sourceHandle": "y",
+      "target": "bsw",
+      "targetHandle": "control"
+    },
+    {
+      "id": "id000a",
+      "source": "bsw",
+      "sourceHandle": "n",
+      "target": "bload",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000b",
+      "source": "bload",
+      "sourceHandle": "n",
+      "target": "j_id0011",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1296,
+          "y": 288
+        }
+      ]
+    },
+    {
+      "id": "id000c",
+      "source": "j_id0011",
+      "sourceHandle": "node",
+      "target": "bgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000d",
+      "source": "csrc",
+      "sourceHandle": "p",
+      "target": "ci",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000e",
+      "source": "ci",
+      "sourceHandle": "n",
+      "target": "csw",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000f",
+      "source": "cctl",
+      "sourceHandle": "y",
+      "target": "csw",
+      "targetHandle": "control"
+    },
+    {
+      "id": "id000g",
+      "source": "csw",
+      "sourceHandle": "n",
+      "target": "cload",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000h",
+      "source": "cload",
+      "sourceHandle": "n",
+      "target": "j_id0013",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 592,
+          "y": 672
+        }
+      ]
+    },
+    {
+      "id": "id000i",
+      "source": "j_id0013",
+      "sourceHandle": "node",
+      "target": "cgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000j",
+      "source": "dsrc",
+      "sourceHandle": "p",
+      "target": "di",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000k",
+      "source": "di",
+      "sourceHandle": "n",
+      "target": "dsw",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000l",
+      "source": "dctl",
+      "sourceHandle": "y",
+      "target": "dsw",
+      "targetHandle": "control"
+    },
+    {
+      "id": "id000m",
+      "source": "dsw",
+      "sourceHandle": "n",
+      "target": "dser",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000n",
+      "source": "dser",
+      "sourceHandle": "n",
+      "target": "dload",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000o",
+      "source": "dload",
+      "sourceHandle": "n",
+      "target": "j_id0015",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1424,
+          "y": 672
+        }
+      ]
+    },
+    {
+      "id": "id000p",
+      "source": "j_id0015",
+      "sourceHandle": "node",
+      "target": "dgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000q",
+      "source": "esrc",
+      "sourceHandle": "p",
+      "target": "ei",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000r",
+      "source": "ei",
+      "sourceHandle": "n",
+      "target": "esw",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000s",
+      "source": "esw",
+      "sourceHandle": "n1",
+      "target": "eload1",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000t",
+      "source": "esw",
+      "sourceHandle": "n2",
+      "target": "eload2",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000u",
+      "source": "eload1",
+      "sourceHandle": "n",
+      "target": "j_id0017",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000v",
+      "source": "eload2",
+      "sourceHandle": "n",
+      "target": "j_id0017",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 752,
+          "y": 1056
+        }
+      ]
+    },
+    {
+      "id": "id000w",
+      "source": "j_id0019",
+      "sourceHandle": "node",
+      "target": "egnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000x",
+      "source": "ectl",
+      "sourceHandle": "y",
+      "target": "esw",
+      "targetHandle": "control"
+    },
+    {
+      "id": "w_id0010",
+      "source": "asrc",
+      "sourceHandle": "n",
+      "target": "j_id000z",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0012",
+      "source": "bsrc",
+      "sourceHandle": "n",
+      "target": "j_id0011",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0014",
+      "source": "csrc",
+      "sourceHandle": "n",
+      "target": "j_id0013",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0016",
+      "source": "dsrc",
+      "sourceHandle": "n",
+      "target": "j_id0015",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0018",
+      "source": "j_id0019",
+      "sourceHandle": "node",
+      "target": "j_id0017",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001a",
+      "source": "esrc",
+      "sourceHandle": "n",
+      "target": "j_id0019",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000z",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 288
+      }
+    },
+    {
+      "id": "j_id0011",
+      "domain": "electrical",
+      "position": {
+        "x": 872,
+        "y": 288
+      }
+    },
+    {
+      "id": "j_id0013",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 672
+      }
+    },
+    {
+      "id": "j_id0015",
+      "domain": "electrical",
+      "position": {
+        "x": 872,
+        "y": 672
+      }
+    },
+    {
+      "id": "j_id0017",
+      "domain": "electrical",
+      "position": {
+        "x": 592,
+        "y": 1056
+      }
+    },
+    {
+      "id": "j_id0019",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 1056
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id001b",
+      "anchor": "ai.p",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id001c",
+      "anchor": "ai.n",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id001d",
+      "anchor": "aload.n",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id001e",
+      "anchor": "agnd.p",
+      "wireIds": [
+        "id0004",
+        "id0005",
+        "w_id0010"
+      ]
+    },
+    {
+      "id": "net_id001f",
+      "anchor": "actl.y",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id001g",
+      "anchor": "bi.p",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id001h",
+      "anchor": "bi.n",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id001i",
+      "anchor": "bctl.y",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id001j",
+      "anchor": "bload.p",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id001k",
+      "anchor": "bgnd.p",
+      "wireIds": [
+        "id000b",
+        "id000c",
+        "w_id0012"
+      ]
+    },
+    {
+      "id": "net_id001l",
+      "anchor": "ci.p",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id001m",
+      "anchor": "ci.n",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id001n",
+      "anchor": "cctl.y",
+      "wireIds": [
+        "id000f"
+      ]
+    },
+    {
+      "id": "net_id001o",
+      "anchor": "cload.p",
+      "wireIds": [
+        "id000g"
+      ]
+    },
+    {
+      "id": "net_id001p",
+      "anchor": "cgnd.p",
+      "wireIds": [
+        "id000h",
+        "id000i",
+        "w_id0014"
+      ]
+    },
+    {
+      "id": "net_id001q",
+      "anchor": "di.p",
+      "wireIds": [
+        "id000j"
+      ]
+    },
+    {
+      "id": "net_id001r",
+      "anchor": "di.n",
+      "wireIds": [
+        "id000k"
+      ]
+    },
+    {
+      "id": "net_id001s",
+      "anchor": "dctl.y",
+      "wireIds": [
+        "id000l"
+      ]
+    },
+    {
+      "id": "net_id001t",
+      "anchor": "dser.p",
+      "wireIds": [
+        "id000m"
+      ]
+    },
+    {
+      "id": "net_id001u",
+      "anchor": "dload.p",
+      "wireIds": [
+        "id000n"
+      ]
+    },
+    {
+      "id": "net_id001v",
+      "anchor": "dgnd.p",
+      "wireIds": [
+        "id000o",
+        "id000p",
+        "w_id0016"
+      ]
+    },
+    {
+      "id": "net_id001w",
+      "anchor": "ei.p",
+      "wireIds": [
+        "id000q"
+      ]
+    },
+    {
+      "id": "net_id001x",
+      "anchor": "ei.n",
+      "wireIds": [
+        "id000r"
+      ]
+    },
+    {
+      "id": "net_id001y",
+      "anchor": "eload1.p",
+      "wireIds": [
+        "id000s"
+      ]
+    },
+    {
+      "id": "net_id001z",
+      "anchor": "eload2.p",
+      "wireIds": [
+        "id000t"
+      ]
+    },
+    {
+      "id": "net_id0020",
+      "anchor": "egnd.p",
+      "wireIds": [
+        "id000u",
+        "id000v",
+        "id000w",
+        "w_id0018",
+        "w_id001a"
+      ]
+    },
+    {
+      "id": "net_id0021",
+      "anchor": "ectl.y",
+      "wireIds": [
+        "id000x"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Switch currents",
+      "series": [
+        "ai.y",
+        "bi.y",
+        "ci.y"
+      ],
+      "labels": [
+        "Ideal switch",
+        "Closing switch",
+        "Opening switch"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Two-way switch and breaker",
+      "series": [
+        "ei.y",
+        "di.y"
+      ],
+      "labels": [
+        "Two-way switch",
+        "Breaker"
+      ]
+    }
+  ]
+}

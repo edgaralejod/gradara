@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-subsystems.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -37,6 +38,13 @@
 <p>An output of the subsystem you are in. What is connected to it inside appears at the matching port on the subsystem block.</p>
 <p>Set its type in its properties: signal, Boolean, or a physical domain. Outputs are numbered from 1.</p></section>
 <section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Subsystems</strong> A gain and a filter grouped into a subsystem with an input and an output port, next to an empty subsystem.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-7a3bbb83"><span class="diagram x-2c602dd5"><svg class="diagram-wires" viewBox="16 24 832 336" width="832" height="336" aria-hidden="true"><polyline points="120,96 440,96" stroke="#1f5fbf"></polyline><polyline points="600,96 744,96" stroke="#1f5fbf"></polyline></svg><span><span class="diagram-block x-863852ae"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M5 35H26V9H55"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-956461fb">Step</span></span><span><span class="diagram-block x-6223c973"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-gain x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="1,1 99,50 1,99"></polygon></svg><span class="block-symbol"><span class="gain-value">1</span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-29931767">Output</span></span><span><span class="diagram-block x-0548df7d"><span class="diagram-turn x-4ffc51af"><span class="block-preview x-990e110c" aria-hidden="true"><span class="block-preview-body x-2dd307c8"><span class="block-face shape-subsystem x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="3"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" class="subsystem-symbol"><rect x="12" y="8" width="36" height="28" rx="4"></rect><rect x="20" y="15" width="20" height="14" rx="2"></rect></svg></span></span></span></span></span></span><span class="diagram-name x-0aa91b17">Empty subsystem</span></span><span><span class="diagram-block x-453bec9b"><span class="diagram-turn x-4ffc51af"><span class="block-preview x-990e110c" aria-hidden="true"><span class="block-preview-body x-2dd307c8"><span class="block-face shape-subsystem x-a0847540" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="3"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" class="subsystem-symbol"><rect x="12" y="8" width="36" height="28" rx="4"></rect><rect x="20" y="15" width="20" height="14" rx="2"></rect></svg></span><span class="port-label port-left x-525979f6">in</span><span class="port-label port-right x-525979f6">out</span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-99cc2035">Plant</span></span></span></span></div>
+<figcaption>In Gradara, select a Subsystem output block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/step">Step</a><a href="/docs/blocks/gain">Gain</a><a href="/docs/blocks/filter">Low-pass filter</a><a href="/docs/blocks/subsystem">Subsystem</a><a href="/docs/blocks/inport">Subsystem input</a></p></section>
+<section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
 <h3>Inputs <span class="count">1</span></h3>
@@ -55,8 +63,8 @@
 <ul>
 <li>Adding, removing, or renaming it updates every instance of the subsystem.</li></ul></div></section>
 <section class="doc-section">
-<h2 id="examples"><a class="anchor" href="#examples">Examples</a></h2>
-<p class="muted">Used in these shipped examples. Open them from <strong>Examples</strong> in the app.</p>
+<h2 id="examples"><a class="anchor" href="#examples">Used in</a></h2>
+<p class="muted">These larger examples use it too. Open them from <strong>Examples</strong> in the app.</p>
 <ul class="example-list">
 <li>EV drivetrain</li></ul></section>
 <section class="doc-section">
@@ -67,7 +75,7 @@
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Ports &amp; subsystems"><a class="prev" href="/docs/blocks/inport"><small>Previous</small>Subsystem input</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>215</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -132,11 +140,6 @@
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -329,10 +332,11 @@
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#limitations">Limitations</a></li>
 <li><a href="#tips">Tips</a></li>
-<li><a href="#examples">Examples</a></li>
+<li><a href="#examples">Used in</a></li>
 <li><a href="#see-also">See also</a></li></ul></nav></div>
 <footer class="site-footer">
 <div class="wrap docs-wrap footer-inner">

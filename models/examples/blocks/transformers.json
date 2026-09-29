@@ -1,0 +1,1472 @@
+{
+  "version": 1,
+  "name": "Example: Transformers and a saturating inductor",
+  "exampleId": "block-transformers",
+  "description": "The coupled inductors (1 H, 1 H, M = 0.9 H) pass 90 % of the 10 V primary to a light 10 kΩ load. The ideal transformer with ratio 2 halves it to 5 V. The saturating inductor carries a current that rises at 1 A/s: while the current is small it acts as 2 H, so 1 V appears across it; as it saturates its incremental inductance falls towards 0.5 H.",
+  "duration": 10,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "s1",
+      "definition": {
+        "kind": "sineVoltage",
+        "name": "10 V 50 Hz",
+        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "AC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Amplitude",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mains",
+          "grid",
+          "sine"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+          "modifiers": {
+            "V": "V",
+            "f": "f",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "m",
+      "definition": {
+        "kind": "mutualInductor",
+        "name": "Coupled inductors",
+        "description": "Two coupled inductors with mutual inductance M.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "L1:L2",
+        "ports": [
+          {
+            "id": "p1",
+            "name": "1+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "1−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "p2",
+            "name": "2+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "2−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L1",
+            "name": "Primary inductance",
+            "value": 1,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "L2",
+            "name": "Secondary inductance",
+            "value": 1,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "M",
+            "name": "Mutual inductance",
+            "value": 0.9,
+            "unit": "H",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.Transformer from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "coupling",
+          "mutual"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Transformer",
+          "modifiers": {
+            "L1": "L1",
+            "L2": "L2",
+            "M": "M"
+          }
+        }
+      },
+      "position": {
+        "x": 304,
+        "y": 152
+      },
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "r1",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load 10 kΩ",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10000,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 456,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 72,
+        "y": -54
+      }
+    },
+    {
+      "id": "v1",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v coupled",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 616,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 68,
+        "y": -54
+      }
+    },
+    {
+      "id": "g1",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 296
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "g1b",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (coupled)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 456,
+        "y": 296
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "s2",
+      "definition": {
+        "kind": "sineVoltage",
+        "name": "10 V 50 Hz (ideal)",
+        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "AC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Amplitude",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mains",
+          "grid",
+          "sine"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+          "modifiers": {
+            "V": "V",
+            "f": "f",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 976,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -104,
+        "y": -54
+      }
+    },
+    {
+      "id": "t",
+      "definition": {
+        "kind": "idealTransformer",
+        "name": "Ideal transformer",
+        "description": "Ideal transformer with turns ratio n: v1 = n·v2 and i2 = −n·i1, with no magnetizing inductance.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "n:1",
+        "ports": [
+          {
+            "id": "p1",
+            "name": "1+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n1",
+            "name": "1−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "p2",
+            "name": "2+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "n2",
+            "name": "2−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "n",
+            "name": "Turns ratio",
+            "value": 2,
+            "unit": "",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealTransformer from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "isolation",
+          "ratio"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealTransformer",
+          "modifiers": {
+            "considerMagnetization": "false",
+            "n": "n"
+          }
+        }
+      },
+      "position": {
+        "x": 1136,
+        "y": 152
+      },
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "r2",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load 100 Ω",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 100,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1288,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 72,
+        "y": -54
+      }
+    },
+    {
+      "id": "v2",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v ideal",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1448,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 60,
+        "y": -54
+      }
+    },
+    {
+      "id": "g2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (ideal)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 976,
+        "y": 296
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "g2b",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (ideal out)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1288,
+        "y": 296
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "ramp",
+      "definition": {
+        "kind": "ramp",
+        "name": "1 A/s",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 1,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 88,
+        "y": 608
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "is",
+      "definition": {
+        "kind": "signalCurrent",
+        "name": "Current source",
+        "description": "Current equal to the input signal.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "i(u)",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          },
+          {
+            "id": "i",
+            "name": "i",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "offset": 80
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Sources.SignalCurrent from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "load",
+          "programmable"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SignalCurrent"
+        }
+      },
+      "position": {
+        "x": 312,
+        "y": 512
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -88,
+        "y": -54
+      }
+    },
+    {
+      "id": "ls",
+      "definition": {
+        "kind": "saturatingInductor",
+        "name": "Saturating inductor",
+        "description": "Inductance falls from Lzer toward Linf as the core saturates.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "L(i)",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Inom",
+            "name": "Nominal current",
+            "value": 1,
+            "unit": "A",
+            "min": 0
+          },
+          {
+            "id": "Lnom",
+            "name": "Nominal inductance",
+            "value": 1,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lzer",
+            "name": "Initial inductance",
+            "value": 2,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Linf",
+            "name": "Saturated inductance",
+            "value": 0.5,
+            "unit": "H",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.SaturatingInductor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "core",
+          "nonlinear"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.SaturatingInductor",
+          "modifiers": {
+            "Inom": "Inom",
+            "Lnom": "Lnom",
+            "Lzer": "Lzer",
+            "Linf": "Linf"
+          }
+        }
+      },
+      "position": {
+        "x": 456,
+        "y": 512
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 270,
+      "labelOffset": {
+        "x": 108,
+        "y": -54
+      }
+    },
+    {
+      "id": "v3",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v L",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 760,
+        "y": 512
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 180,
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "g3",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (saturating)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 312,
+        "y": 632
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "s1",
+      "sourceHandle": "p",
+      "target": "m",
+      "targetHandle": "p1"
+    },
+    {
+      "id": "id0002",
+      "source": "m",
+      "sourceHandle": "n1",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 288,
+          "y": 192
+        },
+        {
+          "x": 288,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "g1",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "m",
+      "sourceHandle": "p2",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 384,
+          "y": 176
+        },
+        {
+          "x": 384,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "m",
+      "sourceHandle": "n2",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 384,
+          "y": 192
+        },
+        {
+          "x": 384,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "j_id000s",
+      "sourceHandle": "node",
+      "target": "g1b",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0007",
+      "source": "v1",
+      "sourceHandle": "p",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 640,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "v1",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 640,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "s2",
+      "sourceHandle": "p",
+      "target": "t",
+      "targetHandle": "p1"
+    },
+    {
+      "id": "id000a",
+      "source": "t",
+      "sourceHandle": "n1",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1120,
+          "y": 192
+        },
+        {
+          "x": 1120,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "j_id000u",
+      "sourceHandle": "node",
+      "target": "g2",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000c",
+      "source": "t",
+      "sourceHandle": "p2",
+      "target": "j_id000w",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1216,
+          "y": 176
+        },
+        {
+          "x": 1216,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id000d",
+      "source": "t",
+      "sourceHandle": "n2",
+      "target": "j_id000y",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1216,
+          "y": 192
+        },
+        {
+          "x": 1216,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id000e",
+      "source": "j_id000y",
+      "sourceHandle": "node",
+      "target": "g2b",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000f",
+      "source": "v2",
+      "sourceHandle": "p",
+      "target": "j_id000w",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1472,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id000g",
+      "source": "v2",
+      "sourceHandle": "n",
+      "target": "j_id000y",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1472,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id000h",
+      "source": "ramp",
+      "sourceHandle": "y",
+      "target": "is",
+      "targetHandle": "i"
+    },
+    {
+      "id": "id000i",
+      "source": "j_id0010",
+      "sourceHandle": "node",
+      "target": "j_id0012",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000j",
+      "source": "j_id0014",
+      "sourceHandle": "node",
+      "target": "is",
+      "targetHandle": "p",
+      "waypoints": [
+        {
+          "x": 336,
+          "y": 496
+        }
+      ]
+    },
+    {
+      "id": "id000k",
+      "source": "j_id0010",
+      "sourceHandle": "node",
+      "target": "g3",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000l",
+      "source": "v3",
+      "sourceHandle": "p",
+      "target": "j_id0012",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 608
+        }
+      ]
+    },
+    {
+      "id": "id000m",
+      "source": "v3",
+      "sourceHandle": "n",
+      "target": "j_id0014",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 496
+        }
+      ]
+    },
+    {
+      "id": "w_id000p",
+      "source": "s1",
+      "sourceHandle": "n",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000r",
+      "source": "r1",
+      "sourceHandle": "p",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000t",
+      "source": "r1",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000v",
+      "source": "s2",
+      "sourceHandle": "n",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000x",
+      "source": "r2",
+      "sourceHandle": "p",
+      "target": "j_id000w",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000z",
+      "source": "r2",
+      "sourceHandle": "n",
+      "target": "j_id000y",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0011",
+      "source": "is",
+      "sourceHandle": "n",
+      "target": "j_id0010",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0013",
+      "source": "ls",
+      "sourceHandle": "p",
+      "target": "j_id0012",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0015",
+      "source": "ls",
+      "sourceHandle": "n",
+      "target": "j_id0014",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000o",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000q",
+      "domain": "electrical",
+      "position": {
+        "x": 480,
+        "y": 160
+      }
+    },
+    {
+      "id": "j_id000s",
+      "domain": "electrical",
+      "position": {
+        "x": 480,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000u",
+      "domain": "electrical",
+      "position": {
+        "x": 1000,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000w",
+      "domain": "electrical",
+      "position": {
+        "x": 1312,
+        "y": 160
+      }
+    },
+    {
+      "id": "j_id000y",
+      "domain": "electrical",
+      "position": {
+        "x": 1312,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id0010",
+      "domain": "electrical",
+      "position": {
+        "x": 336,
+        "y": 608
+      }
+    },
+    {
+      "id": "j_id0012",
+      "domain": "electrical",
+      "position": {
+        "x": 480,
+        "y": 608
+      }
+    },
+    {
+      "id": "j_id0014",
+      "domain": "electrical",
+      "position": {
+        "x": 480,
+        "y": 496
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id0016",
+      "anchor": "m.p1",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id0017",
+      "anchor": "g1.p",
+      "wireIds": [
+        "id0002",
+        "id0003",
+        "w_id000p"
+      ]
+    },
+    {
+      "id": "net_id0018",
+      "anchor": "m.p2",
+      "wireIds": [
+        "id0004",
+        "id0007",
+        "w_id000r"
+      ]
+    },
+    {
+      "id": "net_id0019",
+      "anchor": "g1b.p",
+      "wireIds": [
+        "id0005",
+        "id0006",
+        "id0008",
+        "w_id000t"
+      ]
+    },
+    {
+      "id": "net_id001a",
+      "anchor": "s2.p",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id001b",
+      "anchor": "g2.p",
+      "wireIds": [
+        "id000a",
+        "id000b",
+        "w_id000v"
+      ]
+    },
+    {
+      "id": "net_id001c",
+      "anchor": "r2.p",
+      "wireIds": [
+        "id000c",
+        "id000f",
+        "w_id000x"
+      ]
+    },
+    {
+      "id": "net_id001d",
+      "anchor": "g2b.p",
+      "wireIds": [
+        "id000d",
+        "id000e",
+        "id000g",
+        "w_id000z"
+      ]
+    },
+    {
+      "id": "net_id001e",
+      "anchor": "ramp.y",
+      "wireIds": [
+        "id000h"
+      ]
+    },
+    {
+      "id": "net_id001f",
+      "anchor": "g3.p",
+      "wireIds": [
+        "id000i",
+        "id000k",
+        "id000l",
+        "w_id0011",
+        "w_id0013"
+      ]
+    },
+    {
+      "id": "net_id001g",
+      "anchor": "is.p",
+      "wireIds": [
+        "id000j",
+        "id000m",
+        "w_id0015"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Secondary voltages",
+      "series": [
+        "v1.y",
+        "v2.y"
+      ],
+      "labels": [
+        "Coupled inductors",
+        "Ideal transformer"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Saturating inductor voltage",
+      "series": [
+        "v3.y"
+      ],
+      "labels": [
+        "v = L(i) · di/dt"
+      ]
+    }
+  ]
+}

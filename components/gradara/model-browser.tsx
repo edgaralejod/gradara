@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/gradara/api';
 import { modelTemplates, type TemplateId } from '@/lib/gradara/workspace';
+import { blockExamples } from '@/lib/gradara/block-examples';
 import type { ModelSummary } from '@/lib/gradara/document-store';
 
 export type BrowserSection = 'models' | 'examples' | 'trash';
@@ -139,6 +140,12 @@ export default function ModelBrowser({
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
+  const blockMatches = blockExamples.filter((item) =>
+    `${item.title} ${item.summary} ${item.area}`
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
+  const blockAreas = [...new Set(blockMatches.map((e) => e.area))];
   return (
     <Dialog
       open
@@ -179,7 +186,13 @@ export default function ModelBrowser({
               }}
             >
               <BookOpen size={17} />
-              Examples<span>{modelTemplates.filter((template) => template.id !== 'blank').length}</span>
+              Examples
+              <span>
+                {
+                  modelTemplates.filter((template) => template.id !== 'blank')
+                    .length
+                }
+              </span>
             </button>
             <button
               disabled={!!busy}
@@ -393,7 +406,58 @@ export default function ModelBrowser({
                       );
                     })}
                   </div>
-                  {!examples.length && (
+                  {blockMatches.length > 0 && (
+                    <div className="block-example-index">
+                      <h3>Block examples</h3>
+                      <p className="examples-explanation">
+                        Small models that show each library block at work. A
+                        block's Help opens the one about it.
+                      </p>
+                      {blockAreas.map((area) => (
+                        <section key={area}>
+                          <h4>{area}</h4>
+                          <ul>
+                            {blockMatches
+                              .filter((e) => e.area === area)
+                              .map((item) => {
+                                const id = `block-${item.id}` as TemplateId;
+                                return (
+                                  <li key={item.id}>
+                                    <div>
+                                      <strong>{item.title}</strong>
+                                      <span>{item.summary}</span>
+                                    </div>
+                                    <Button
+                                      variant="outline"
+                                      disabled={!!busy}
+                                      onClick={() =>
+                                        void perform(id, () =>
+                                          onCreate(
+                                            `Example: ${item.title}`,
+                                            id,
+                                          ),
+                                        )
+                                      }
+                                    >
+                                      {busy === id ? (
+                                        <LoaderCircle
+                                          className="spin"
+                                          size={14}
+                                        />
+                                      ) : (
+                                        <Copy size={14} />
+                                      )}
+                                      Use
+                                    </Button>
+                                  </li>
+                                );
+                              })}
+                          </ul>
+                        </section>
+                      ))}
+                    </div>
+                  )}
+                  {!examples.length && !blockMatches.length && (
                     <p className="model-list-empty">No matching examples.</p>
                   )}
                 </>

@@ -65,7 +65,9 @@ export const modelTemplates = [
     detail: '480 V RMS · 24 V / 1 A · switching model',
   },
 ] as const;
-export type TemplateId = (typeof modelTemplates)[number]['id'];
+/** A curated example, or `block-<id>` for a block example (lib/gradara/block-examples.ts). */
+export type TemplateId =
+  (typeof modelTemplates)[number]['id'] | `block-${string}`;
 export function blankProject(name = 'Untitled model'): Project {
   return {
     version: 1,

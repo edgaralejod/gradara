@@ -1,0 +1,1389 @@
+{
+  "version": 1,
+  "name": "Example: AC machines on the mains",
+  "exampleId": "block-ac-machines",
+  "description": "Each machine has two pole pairs, so its synchronous speed at 50 Hz is 2π · 50 / 2 = 157.1 rad/s. The induction machine accelerates until its slip is almost zero. The permanent-magnet and reluctance machines start as induction machines on their damper cages and then pull into step, running at exactly synchronous speed. The permanent-magnet machine is fed at its rated 112.3 V rms, which matches its magnet voltage; well below it, the magnets brake the start and it keeps slipping poles.",
+  "duration": 3,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "imsrc",
+      "definition": {
+        "kind": "threePhaseSource",
+        "name": "100 V rms IM",
+        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3~ AC",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "plug_n",
+            "name": "abc−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Phase amplitude",
+            "value": 141.4,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "grid",
+          "mains",
+          "three phase"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sources.SineVoltage",
+          "modifiers": {
+            "V": "fill(V, 3)",
+            "f": "fill(f, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 104,
+        "y": 128
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": -120,
+        "y": -62
+      }
+    },
+    {
+      "id": "imsrcnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star IM supply",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 272
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 88,
+        "y": -46
+      }
+    },
+    {
+      "id": "imsrcng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground IM supply",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 368
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "imnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star IM",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 432,
+        "y": 272
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 60,
+        "y": -46
+      }
+    },
+    {
+      "id": "imng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground IM",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 432,
+        "y": 368
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "im",
+      "definition": {
+        "kind": "inductionMachine",
+        "name": "Induction",
+        "description": "Three-phase squirrel-cage induction machine (star-connected stator terminals).",
+        "domain": "threePhase",
+        "category": "machines",
+        "symbol": "IM",
+        "ports": [
+          {
+            "id": "plug_sp",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_sn",
+            "name": "n",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "p",
+            "name": "Pole pairs",
+            "value": 2,
+            "unit": "",
+            "min": 1
+          },
+          {
+            "id": "fsNominal",
+            "name": "Nominal frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "Rs",
+            "name": "Stator resistance",
+            "value": 0.03,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Rr",
+            "name": "Rotor resistance",
+            "value": 0.04,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Jr",
+            "name": "Rotor inertia",
+            "value": 0.29,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Machines.BasicMachines.InductionMachines.IM_SquirrelCage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "asynchronous",
+          "motor",
+          "squirrel cage"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.InductionMachines.IM_SquirrelCage",
+          "modifiers": {
+            "TsOperational": "293.15",
+            "TrOperational": "293.15",
+            "TsRef": "293.15",
+            "TrRef": "293.15",
+            "p": "p",
+            "fsNominal": "fsNominal",
+            "Rs": "Rs",
+            "Rr": "Rr",
+            "Jr": "Jr"
+          }
+        }
+      },
+      "position": {
+        "x": 392,
+        "y": 128
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "imw",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed IM",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 632,
+        "y": 128
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 104,
+        "y": -62
+      }
+    },
+    {
+      "id": "pmssrc",
+      "definition": {
+        "kind": "threePhaseSource",
+        "name": "112.3 V rms PMSM",
+        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3~ AC",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "plug_n",
+            "name": "abc−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Phase amplitude",
+            "value": 158.8,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "grid",
+          "mains",
+          "three phase"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sources.SineVoltage",
+          "modifiers": {
+            "V": "fill(V, 3)",
+            "f": "fill(f, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 104,
+        "y": 496
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": -136,
+        "y": -62
+      }
+    },
+    {
+      "id": "pmssrcnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star PMSM supply",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 640
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 96,
+        "y": -46
+      }
+    },
+    {
+      "id": "pmssrcng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground PMSM supply",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 736
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "pmsnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star PMSM",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 432,
+        "y": 640
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 68,
+        "y": -46
+      }
+    },
+    {
+      "id": "pmsng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground PMSM",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 432,
+        "y": 736
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "pms",
+      "definition": {
+        "kind": "pmSyncMachine",
+        "name": "PM synchronous",
+        "description": "Three-phase permanent-magnet synchronous machine with damper cage.",
+        "domain": "threePhase",
+        "category": "machines",
+        "symbol": "PMSM",
+        "ports": [
+          {
+            "id": "plug_sp",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_sn",
+            "name": "n",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "p",
+            "name": "Pole pairs",
+            "value": 2,
+            "unit": "",
+            "min": 1
+          },
+          {
+            "id": "fsNominal",
+            "name": "Nominal frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "Rs",
+            "name": "Stator resistance",
+            "value": 0.03,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Jr",
+            "name": "Rotor inertia",
+            "value": 0.29,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Machines.BasicMachines.SynchronousMachines.SM_PermanentMagnet from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "synchronous",
+          "bldc",
+          "motor"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.SynchronousMachines.SM_PermanentMagnet",
+          "modifiers": {
+            "TsOperational": "293.15",
+            "TsRef": "293.15",
+            "TrOperational": "293.15",
+            "TrRef": "293.15",
+            "p": "p",
+            "fsNominal": "fsNominal",
+            "Rs": "Rs",
+            "Jr": "Jr"
+          }
+        }
+      },
+      "position": {
+        "x": 392,
+        "y": 496
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "pmsw",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed PMSM",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 632,
+        "y": 496
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 112,
+        "y": -62
+      }
+    },
+    {
+      "id": "relsrc",
+      "definition": {
+        "kind": "threePhaseSource",
+        "name": "100 V rms SynRM",
+        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3~ AC",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "plug_n",
+            "name": "abc−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Phase amplitude",
+            "value": 141.4,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "grid",
+          "mains",
+          "three phase"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sources.SineVoltage",
+          "modifiers": {
+            "V": "fill(V, 3)",
+            "f": "fill(f, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 104,
+        "y": 864
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": -132,
+        "y": -62
+      }
+    },
+    {
+      "id": "relsrcnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star SynRM supply",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 1008
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 100,
+        "y": -46
+      }
+    },
+    {
+      "id": "relsrcng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground SynRM supply",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 1104
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "relnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star SynRM",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 432,
+        "y": 1008
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 72,
+        "y": -46
+      }
+    },
+    {
+      "id": "relng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground SynRM",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 432,
+        "y": 1104
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "rel",
+      "definition": {
+        "kind": "reluctanceMachine",
+        "name": "Reluctance",
+        "description": "Three-phase synchronous reluctance machine.",
+        "domain": "threePhase",
+        "category": "machines",
+        "symbol": "SynRM",
+        "ports": [
+          {
+            "id": "plug_sp",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_sn",
+            "name": "n",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "p",
+            "name": "Pole pairs",
+            "value": 2,
+            "unit": "",
+            "min": 1
+          },
+          {
+            "id": "fsNominal",
+            "name": "Nominal frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "Rs",
+            "name": "Stator resistance",
+            "value": 0.03,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Jr",
+            "name": "Rotor inertia",
+            "value": 0.29,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Machines.BasicMachines.SynchronousMachines.SM_ReluctanceRotor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "synrm",
+          "motor"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.SynchronousMachines.SM_ReluctanceRotor",
+          "modifiers": {
+            "TsOperational": "293.15",
+            "TsRef": "293.15",
+            "TrOperational": "293.15",
+            "TrRef": "293.15",
+            "p": "p",
+            "fsNominal": "fsNominal",
+            "Rs": "Rs",
+            "Jr": "Jr"
+          }
+        }
+      },
+      "position": {
+        "x": 392,
+        "y": 864
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "relw",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed SynRM",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 632,
+        "y": 864
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 116,
+        "y": -62
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "imsrc",
+      "sourceHandle": "plug_n",
+      "target": "imsrcnstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id0002",
+      "source": "imsrcnstar",
+      "sourceHandle": "pin_n",
+      "target": "imsrcng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0003",
+      "source": "im",
+      "sourceHandle": "plug_sn",
+      "target": "imnstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id0004",
+      "source": "imnstar",
+      "sourceHandle": "pin_n",
+      "target": "imng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0005",
+      "source": "imsrc",
+      "sourceHandle": "plug_p",
+      "target": "im",
+      "targetHandle": "plug_sp"
+    },
+    {
+      "id": "id0006",
+      "source": "im",
+      "sourceHandle": "flange",
+      "target": "imw",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id0007",
+      "source": "pmssrc",
+      "sourceHandle": "plug_n",
+      "target": "pmssrcnstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id0008",
+      "source": "pmssrcnstar",
+      "sourceHandle": "pin_n",
+      "target": "pmssrcng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0009",
+      "source": "pms",
+      "sourceHandle": "plug_sn",
+      "target": "pmsnstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000a",
+      "source": "pmsnstar",
+      "sourceHandle": "pin_n",
+      "target": "pmsng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000b",
+      "source": "pmssrc",
+      "sourceHandle": "plug_p",
+      "target": "pms",
+      "targetHandle": "plug_sp"
+    },
+    {
+      "id": "id000c",
+      "source": "pms",
+      "sourceHandle": "flange",
+      "target": "pmsw",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id000d",
+      "source": "relsrc",
+      "sourceHandle": "plug_n",
+      "target": "relsrcnstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000e",
+      "source": "relsrcnstar",
+      "sourceHandle": "pin_n",
+      "target": "relsrcng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000f",
+      "source": "rel",
+      "sourceHandle": "plug_sn",
+      "target": "relnstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000g",
+      "source": "relnstar",
+      "sourceHandle": "pin_n",
+      "target": "relng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000h",
+      "source": "relsrc",
+      "sourceHandle": "plug_p",
+      "target": "rel",
+      "targetHandle": "plug_sp"
+    },
+    {
+      "id": "id000i",
+      "source": "rel",
+      "sourceHandle": "flange",
+      "target": "relw",
+      "targetHandle": "flange"
+    }
+  ],
+  "junctions": [],
+  "nets": [
+    {
+      "id": "net_id000k",
+      "anchor": "imsrc.plug_n",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000l",
+      "anchor": "imsrcng.p",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000m",
+      "anchor": "im.plug_sn",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000n",
+      "anchor": "imng.p",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000o",
+      "anchor": "im.plug_sp",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000p",
+      "anchor": "im.flange",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000q",
+      "anchor": "pmssrc.plug_n",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000r",
+      "anchor": "pmssrcng.p",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id000s",
+      "anchor": "pms.plug_sn",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id000t",
+      "anchor": "pmsng.p",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id000u",
+      "anchor": "pms.plug_sp",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "pms.flange",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "relsrc.plug_n",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "relsrcng.p",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "rel.plug_sn",
+      "wireIds": [
+        "id000f"
+      ]
+    },
+    {
+      "id": "net_id000z",
+      "anchor": "relng.p",
+      "wireIds": [
+        "id000g"
+      ]
+    },
+    {
+      "id": "net_id0010",
+      "anchor": "rel.plug_sp",
+      "wireIds": [
+        "id000h"
+      ]
+    },
+    {
+      "id": "net_id0011",
+      "anchor": "rel.flange",
+      "wireIds": [
+        "id000i"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Shaft speeds",
+      "series": [
+        "imw.w",
+        "pmsw.w",
+        "relw.w"
+      ],
+      "labels": [
+        "Induction",
+        "PM synchronous",
+        "Reluctance"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1147 @@
+{
+  "version": 1,
+  "name": "Example: Rectifier bridges",
+  "exampleId": "block-rectifiers",
+  "description": "The diode bridge turns both halves of the 10 V, 50 Hz sine positive, so its output averages 2 · 10 V / π = 6.37 V. The thyristor bridge is fired 5 ms, or 90°, into each half-cycle, so it passes only the second quarter of each half and averages 10 V / π · (1 + cos 90°) = 3.18 V.",
+  "duration": 0.04,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "dsrc",
+      "definition": {
+        "kind": "sineVoltage",
+        "name": "10 V 50 Hz",
+        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "AC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Amplitude",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mains",
+          "grid",
+          "sine"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+          "modifiers": {
+            "V": "V",
+            "f": "f",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "dg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 296
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "db",
+      "definition": {
+        "kind": "diodeBridge",
+        "name": "Diode bridge",
+        "description": "Single-phase full-wave diode rectifier.",
+        "domain": "electrical",
+        "category": "converters",
+        "symbol": "◇",
+        "ports": [
+          {
+            "id": "ac_p",
+            "name": "ac+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "ac_n",
+            "name": "ac−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_p",
+            "name": "dc+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "dc_n",
+            "name": "dc−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "RonDiode",
+            "name": "Diode on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "GoffDiode",
+            "name": "Diode off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.ACDC.DiodeBridge2Pulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "rectifier",
+          "ac-dc"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.ACDC.DiodeBridge2Pulse",
+          "modifiers": {
+            "RonDiode": "RonDiode",
+            "GoffDiode": "GoffDiode"
+          }
+        }
+      },
+      "position": {
+        "x": 296,
+        "y": 152
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "dr",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load (diodes)",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 528,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 84,
+        "y": -54
+      }
+    },
+    {
+      "id": "dv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v DC (diodes)",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 720,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 84,
+        "y": -54
+      }
+    },
+    {
+      "id": "tsrc",
+      "definition": {
+        "kind": "sineVoltage",
+        "name": "10 V 50 Hz (thyristors)",
+        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "AC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Amplitude",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mains",
+          "grid",
+          "sine"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+          "modifiers": {
+            "V": "V",
+            "f": "f",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 1072,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -124,
+        "y": -54
+      }
+    },
+    {
+      "id": "tg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (thyristors)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1072,
+        "y": 296
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "tb",
+      "definition": {
+        "kind": "thyristorBridge",
+        "name": "Thyristor bridge",
+        "description": "Single-phase full-wave thyristor rectifier with two fire inputs.",
+        "domain": "electrical",
+        "category": "converters",
+        "symbol": "◇SCR",
+        "ports": [
+          {
+            "id": "ac_p",
+            "name": "ac+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "ac_n",
+            "name": "ac−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_p",
+            "name": "dc+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "dc_n",
+            "name": "dc−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "fire_p",
+            "name": "f+",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "fire_n",
+            "name": "f−",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "RonThyristor",
+            "name": "Thyristor on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "GoffThyristor",
+            "name": "Thyristor off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.ACDC.ThyristorBridge2Pulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "rectifier",
+          "phase control"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.ACDC.ThyristorBridge2Pulse",
+          "modifiers": {
+            "RonThyristor": "RonThyristor",
+            "GoffThyristor": "GoffThyristor"
+          }
+        }
+      },
+      "position": {
+        "x": 1224,
+        "y": 152
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "tr",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load (thyristors)",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1456,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 100,
+        "y": -54
+      }
+    },
+    {
+      "id": "tv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v DC (thyristors)",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1648,
+        "y": 176
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 100,
+        "y": -54
+      }
+    },
+    {
+      "id": "fp",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "Fire + at 90°",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 25,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 0.02,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.005,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 1144,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "fn",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "Fire − at 90°",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 25,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 0.02,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.015,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 1352,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id000i",
+      "sourceHandle": "node",
+      "target": "dg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0002",
+      "source": "dsrc",
+      "sourceHandle": "p",
+      "target": "db",
+      "targetHandle": "ac_p"
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000i",
+      "sourceHandle": "node",
+      "target": "db",
+      "targetHandle": "ac_n",
+      "waypoints": [
+        {
+          "x": 280,
+          "y": 272
+        },
+        {
+          "x": 280,
+          "y": 216
+        }
+      ]
+    },
+    {
+      "id": "id0004",
+      "source": "db",
+      "sourceHandle": "dc_p",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 440,
+          "y": 184
+        },
+        {
+          "x": 440,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "db",
+      "sourceHandle": "dc_n",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 440,
+          "y": 216
+        },
+        {
+          "x": 440,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "dv",
+      "sourceHandle": "p",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 744,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id0007",
+      "source": "dv",
+      "sourceHandle": "n",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 744,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "tg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0009",
+      "source": "tsrc",
+      "sourceHandle": "p",
+      "target": "tb",
+      "targetHandle": "ac_p"
+    },
+    {
+      "id": "id000a",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "tb",
+      "targetHandle": "ac_n",
+      "waypoints": [
+        {
+          "x": 1208,
+          "y": 272
+        },
+        {
+          "x": 1208,
+          "y": 216
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "tb",
+      "sourceHandle": "dc_p",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1368,
+          "y": 184
+        },
+        {
+          "x": 1368,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id000c",
+      "source": "tb",
+      "sourceHandle": "dc_n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1368,
+          "y": 216
+        },
+        {
+          "x": 1368,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id000d",
+      "source": "tv",
+      "sourceHandle": "p",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1672,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id000e",
+      "source": "tv",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1672,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "id000f",
+      "source": "fp",
+      "sourceHandle": "y",
+      "target": "tb",
+      "targetHandle": "fire_p"
+    },
+    {
+      "id": "id000g",
+      "source": "fn",
+      "sourceHandle": "y",
+      "target": "tb",
+      "targetHandle": "fire_n"
+    },
+    {
+      "id": "w_id000j",
+      "source": "dsrc",
+      "sourceHandle": "n",
+      "target": "j_id000i",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000l",
+      "source": "dr",
+      "sourceHandle": "p",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000n",
+      "source": "dr",
+      "sourceHandle": "n",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000p",
+      "source": "tsrc",
+      "sourceHandle": "n",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000r",
+      "source": "tr",
+      "sourceHandle": "p",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000t",
+      "source": "tr",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000i",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000k",
+      "domain": "electrical",
+      "position": {
+        "x": 552,
+        "y": 160
+      }
+    },
+    {
+      "id": "j_id000m",
+      "domain": "electrical",
+      "position": {
+        "x": 552,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000o",
+      "domain": "electrical",
+      "position": {
+        "x": 1096,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000q",
+      "domain": "electrical",
+      "position": {
+        "x": 1480,
+        "y": 160
+      }
+    },
+    {
+      "id": "j_id000s",
+      "domain": "electrical",
+      "position": {
+        "x": 1480,
+        "y": 272
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000u",
+      "anchor": "db.ac_n",
+      "wireIds": [
+        "id0001",
+        "id0003",
+        "w_id000j"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "db.ac_p",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "db.dc_p",
+      "wireIds": [
+        "id0004",
+        "id0006",
+        "w_id000l"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "db.dc_n",
+      "wireIds": [
+        "id0005",
+        "id0007",
+        "w_id000n"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "tb.ac_n",
+      "wireIds": [
+        "id0008",
+        "id000a",
+        "w_id000p"
+      ]
+    },
+    {
+      "id": "net_id000z",
+      "anchor": "tb.ac_p",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id0010",
+      "anchor": "tb.dc_p",
+      "wireIds": [
+        "id000b",
+        "id000d",
+        "w_id000r"
+      ]
+    },
+    {
+      "id": "net_id0011",
+      "anchor": "tb.dc_n",
+      "wireIds": [
+        "id000c",
+        "id000e",
+        "w_id000t"
+      ]
+    },
+    {
+      "id": "net_id0012",
+      "anchor": "fp.y",
+      "wireIds": [
+        "id000f"
+      ]
+    },
+    {
+      "id": "net_id0013",
+      "anchor": "fn.y",
+      "wireIds": [
+        "id000g"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "DC voltages",
+      "series": [
+        "dv.y",
+        "tv.y"
+      ],
+      "labels": [
+        "Diode bridge",
+        "Thyristor bridge"
+      ]
+    }
+  ]
+}

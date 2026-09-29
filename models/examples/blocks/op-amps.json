@@ -1,0 +1,1109 @@
+{
+  "version": 1,
+  "name": "Example: Op-amp amplifiers",
+  "exampleId": "block-op-amps",
+  "description": "Both amplify a 1 V, 50 Hz sine through 1 kΩ into the inverting input. With 10 kΩ feedback the ideal op-amp outputs −10 times the input, a 10 V sine in antiphase. With 20 kΩ the limited op-amp would need ±20 V, so its output flattens at its ±15 V supply.",
+  "duration": 0.04,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "vin",
+      "definition": {
+        "kind": "sineVoltage",
+        "name": "1 V 50 Hz",
+        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "AC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mains",
+          "grid",
+          "sine"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+          "modifiers": {
+            "V": "V",
+            "f": "f",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -68,
+        "y": -54
+      }
+    },
+    {
+      "id": "rin",
+      "definition": {
+        "kind": "resistor",
+        "name": "R in 1 kΩ",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1000,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 264,
+        "y": 152
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "rf",
+      "definition": {
+        "kind": "resistor",
+        "name": "R f 10 kΩ",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10000,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 440,
+        "y": 56
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "amp",
+      "definition": {
+        "kind": "opAmp",
+        "name": "Ideal op-amp",
+        "description": "Ideal operational amplifier: the inputs are at equal voltage and draw no current.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "op",
+        "ports": [
+          {
+            "id": "in_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left",
+            "offset": 67
+          },
+          {
+            "id": "in_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left",
+            "offset": 33
+          },
+          {
+            "id": "out",
+            "name": "out",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Ideal.IdealOpAmp3Pin from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "amplifier",
+          "opamp"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealOpAmp3Pin"
+        }
+      },
+      "position": {
+        "x": 448,
+        "y": 160
+      },
+      "size": {
+        "width": 64,
+        "height": 48
+      }
+    },
+    {
+      "id": "vout",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v out",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 616,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 52,
+        "y": -54
+      }
+    },
+    {
+      "id": "g1",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "g2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground +",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 376,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "vin2",
+      "definition": {
+        "kind": "sineVoltage",
+        "name": "1 V 50 Hz (limited)",
+        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "AC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mains",
+          "grid",
+          "sine"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+          "modifiers": {
+            "V": "V",
+            "f": "f",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 896,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -108,
+        "y": -54
+      }
+    },
+    {
+      "id": "rin2",
+      "definition": {
+        "kind": "resistor",
+        "name": "R in 1 kΩ (limited)",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1000,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1016,
+        "y": 152
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "rf2",
+      "definition": {
+        "kind": "resistor",
+        "name": "R f 20 kΩ",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 20000,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1192,
+        "y": 56
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "amp2",
+      "definition": {
+        "kind": "opAmpLimited",
+        "name": "Limited op-amp",
+        "description": "Op-amp with finite gain and output limited to the supply rails.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "op±",
+        "ports": [
+          {
+            "id": "in_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left",
+            "offset": 67
+          },
+          {
+            "id": "in_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left",
+            "offset": 33
+          },
+          {
+            "id": "out",
+            "name": "out",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V0",
+            "name": "Open-loop gain",
+            "value": 15000,
+            "unit": "",
+            "min": 0
+          },
+          {
+            "id": "Vps",
+            "name": "Positive supply",
+            "value": 15,
+            "unit": "V"
+          },
+          {
+            "id": "Vns",
+            "name": "Negative supply",
+            "value": -15,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealizedOpAmpLimited from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "amplifier",
+          "saturation"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealizedOpAmpLimited",
+          "modifiers": {
+            "useSupply": "false",
+            "V0": "V0",
+            "Vps": "Vps",
+            "Vns": "Vns"
+          }
+        }
+      },
+      "position": {
+        "x": 1200,
+        "y": 160
+      },
+      "size": {
+        "width": 64,
+        "height": 48
+      }
+    },
+    {
+      "id": "vout2",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v out (limited)",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1368,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 92,
+        "y": -54
+      }
+    },
+    {
+      "id": "g3",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (limited)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 896,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "g4",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground + (limited)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1128,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "vin",
+      "sourceHandle": "p",
+      "target": "rin",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0002",
+      "source": "rin",
+      "sourceHandle": "n",
+      "target": "j_id000i",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "rf",
+      "sourceHandle": "p",
+      "target": "j_id000i",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 424,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "id0004",
+      "source": "rf",
+      "sourceHandle": "n",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 536,
+          "y": 80
+        },
+        {
+          "x": 536,
+          "y": 184
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "amp",
+      "sourceHandle": "in_p",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 400,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "vin",
+      "sourceHandle": "n",
+      "target": "g1",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0007",
+      "source": "vout",
+      "sourceHandle": "p",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 640,
+          "y": 176
+        },
+        {
+          "x": 528,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "vout",
+      "sourceHandle": "n",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 640,
+          "y": 296
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "vin2",
+      "sourceHandle": "p",
+      "target": "rin2",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000a",
+      "source": "rin2",
+      "sourceHandle": "n",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000b",
+      "source": "rf2",
+      "sourceHandle": "p",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1176,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "id000c",
+      "source": "rf2",
+      "sourceHandle": "n",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1288,
+          "y": 80
+        },
+        {
+          "x": 1288,
+          "y": 184
+        }
+      ]
+    },
+    {
+      "id": "id000d",
+      "source": "amp2",
+      "sourceHandle": "in_p",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1152,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "id": "id000e",
+      "source": "vin2",
+      "sourceHandle": "n",
+      "target": "g3",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000f",
+      "source": "vout2",
+      "sourceHandle": "p",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1392,
+          "y": 176
+        },
+        {
+          "x": 1280,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "id000g",
+      "source": "vout2",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1392,
+          "y": 296
+        }
+      ]
+    },
+    {
+      "id": "w_id000j",
+      "source": "amp",
+      "sourceHandle": "in_n",
+      "target": "j_id000i",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000l",
+      "source": "amp",
+      "sourceHandle": "out",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000n",
+      "source": "g2",
+      "sourceHandle": "p",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000p",
+      "source": "amp2",
+      "sourceHandle": "in_n",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000r",
+      "source": "amp2",
+      "sourceHandle": "out",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000t",
+      "source": "g4",
+      "sourceHandle": "p",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000i",
+      "domain": "electrical",
+      "position": {
+        "x": 424,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000k",
+      "domain": "electrical",
+      "position": {
+        "x": 528,
+        "y": 184
+      }
+    },
+    {
+      "id": "j_id000m",
+      "domain": "electrical",
+      "position": {
+        "x": 400,
+        "y": 296
+      }
+    },
+    {
+      "id": "j_id000o",
+      "domain": "electrical",
+      "position": {
+        "x": 1176,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000q",
+      "domain": "electrical",
+      "position": {
+        "x": 1280,
+        "y": 184
+      }
+    },
+    {
+      "id": "j_id000s",
+      "domain": "electrical",
+      "position": {
+        "x": 1152,
+        "y": 296
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000u",
+      "anchor": "rin.p",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "amp.in_n",
+      "wireIds": [
+        "id0002",
+        "id0003",
+        "w_id000j"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "amp.out",
+      "wireIds": [
+        "id0004",
+        "id0007",
+        "w_id000l"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "amp.in_p",
+      "wireIds": [
+        "id0005",
+        "id0008",
+        "w_id000n"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "g1.p",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000z",
+      "anchor": "rin2.p",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id0010",
+      "anchor": "amp2.in_n",
+      "wireIds": [
+        "id000a",
+        "id000b",
+        "w_id000p"
+      ]
+    },
+    {
+      "id": "net_id0011",
+      "anchor": "amp2.out",
+      "wireIds": [
+        "id000c",
+        "id000f",
+        "w_id000r"
+      ]
+    },
+    {
+      "id": "net_id0012",
+      "anchor": "amp2.in_p",
+      "wireIds": [
+        "id000d",
+        "id000g",
+        "w_id000t"
+      ]
+    },
+    {
+      "id": "net_id0013",
+      "anchor": "g3.p",
+      "wireIds": [
+        "id000e"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Amplifier outputs",
+      "series": [
+        "vout.y",
+        "vout2.y"
+      ],
+      "labels": [
+        "Ideal, gain −10",
+        "Limited, gain −20"
+      ]
+    }
+  ]
+}

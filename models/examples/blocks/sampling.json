@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "name": "Example: Sampling",
+  "exampleId": "block-sampling",
+  "description": "Samples are taken every 0.1 s. The zero-order hold turns the 1 Hz sine into a staircase; the unit delay draws the same staircase one sample later. The discrete integrator adds the step times 0.01 s every 0.01 s, so it counts up to 1 after one second.",
+  "duration": 1,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "sine",
+      "definition": {
+        "kind": "sine",
+        "name": "Sine 1 Hz",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 1,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 120
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "zoh",
+      "definition": {
+        "kind": "zoh",
+        "name": "Hold 0.1 s",
+        "symbol": "ZOH",
+        "domain": "signal",
+        "description": "Sample and hold.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "when sample(0, Ts) then\n  y = u;\nend when;",
+        "parameters": [
+          {
+            "id": "Ts",
+            "name": "Sample period",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "discrete",
+          "sample"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "z",
+      "definition": {
+        "kind": "unitDelay",
+        "name": "Unit delay 0.1 s",
+        "symbol": "z⁻¹",
+        "domain": "signal",
+        "description": "One-sample delay.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "when sample(0, Ts) then\n  y = pre(stored);\n  stored = u;\nend when;",
+        "parameters": [
+          {
+            "id": "Ts",
+            "name": "Sample period",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "discrete Real stored(start=0, fixed=true);",
+        "keywords": [
+          "discrete",
+          "z",
+          "delay"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "step",
+      "definition": {
+        "kind": "step",
+        "name": "Step",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "sum",
+      "definition": {
+        "kind": "discreteIntegrator",
+        "name": "Discrete integrator",
+        "symbol": "Ts/z-1",
+        "domain": "signal",
+        "description": "Sampled integrator accumulating the current input at each sample.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "when sample(0, Ts) then\n  x = pre(x) + Ts*u;\nend when;\ny = x;",
+        "parameters": [
+          {
+            "id": "Ts",
+            "name": "Sample period",
+            "value": 0.01,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "discrete Real x(start=0, fixed=true);",
+        "keywords": [
+          "discrete",
+          "sum"
+        ]
+      },
+      "position": {
+        "x": 392,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id0005",
+      "sourceHandle": "node",
+      "target": "zoh",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 256,
+          "y": 96
+        }
+      ]
+    },
+    {
+      "id": "id0002",
+      "source": "j_id0005",
+      "sourceHandle": "node",
+      "target": "z",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 256,
+          "y": 208
+        }
+      ]
+    },
+    {
+      "id": "id0003",
+      "source": "step",
+      "sourceHandle": "y",
+      "target": "sum",
+      "targetHandle": "u"
+    },
+    {
+      "id": "w_id0006",
+      "source": "sine",
+      "sourceHandle": "y",
+      "target": "j_id0005",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0005",
+      "domain": "signal",
+      "position": {
+        "x": 256,
+        "y": 152
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id0007",
+      "anchor": "sine.y",
+      "wireIds": [
+        "id0001",
+        "id0002",
+        "w_id0006"
+      ]
+    },
+    {
+      "id": "net_id0008",
+      "anchor": "step.y",
+      "wireIds": [
+        "id0003"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Sampled sine",
+      "series": [
+        "sine.y",
+        "zoh.y",
+        "z.y"
+      ],
+      "labels": [
+        "Sine",
+        "Held",
+        "Delayed"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Discrete integral",
+      "series": [
+        "sum.y"
+      ],
+      "labels": [
+        "Σ step · Ts"
+      ]
+    }
+  ]
+}
