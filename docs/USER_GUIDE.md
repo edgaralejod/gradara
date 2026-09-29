@@ -59,6 +59,7 @@ Press **?** on the canvas to see this list in the app. On Windows and Linux, use
 | Select several items | Shift + click, or drag a box on empty canvas |
 | Nudge selected blocks or wires | Arrow keys, one grid step (Shift + arrows for five) |
 | Show or hide the grid | ⌘/Ctrl + ' |
+| Drag without alignment snapping | Hold Alt (Option) while dragging |
 | Rotate selected blocks clockwise | R |
 | Open the selected block's reference page | F1 |
 | Draw a connection | Drag from port to port, or click two ports |
@@ -165,7 +166,7 @@ To move between the two, use sensors (physical to signal) and sources or actuato
 
 Use the **arrow keys** to nudge selected blocks, wires, or junctions by one grid step, or **Shift + arrow** for five. Holding an arrow key moves the selection as one undo step.
 
-**The grid.** Blocks, ports, and bends sit on an 8-unit grid, and block sizes change in 16-unit steps, so any two ports can be lined up exactly and a straight wire between them is truly straight, whatever you resized or rotated. Dragging a block snaps it to the grid, and to the line of a wire it connects to when a port comes within a couple of steps of it. Resizing keeps the edge you are not dragging in place. To see the grid, press ⌘/Ctrl + ' or choose **Show grid** from the canvas menu; it is a view setting and stays on in this browser until you turn it off. Models saved by an earlier version are moved onto the grid when they open: a block moves by at most a few units, and a wire that ends up a step out of line is straightened.
+**The grid.** Blocks, ports, and bends sit on an 8-unit grid, and block sizes change in 16-unit steps, so any two ports can be lined up exactly and a straight wire between them is truly straight, whatever you resized or rotated. Dragging a block snaps it to the grid, and to the line of a wire it connects to when a port comes within a couple of steps of it. It also proposes alignments with the other blocks: when its edges or center come close to lining up with another block's, it snaps into line and a dashed pink guide shows the shared line. Drag a little further to ignore the guide, or hold **Alt** (Option on a Mac) while dragging to turn off all snapping except the grid. Resizing keeps the edge you are not dragging in place. To see the grid, press ⌘/Ctrl + ' or choose **Show grid** from the canvas menu; it is a view setting and stays on in this browser until you turn it off. Models saved by an earlier version are moved onto the grid when they open: a block moves by at most a few units, and a wire that ends up a step out of line is straightened.
 
 Wires route around blocks, stay clear of other wires and block names, and never loop back on themselves. A wire you shaped by hand keeps its shape while it still makes sense. When you move a block, the wire section next to it follows. If the shape would then loop or cross a block, the wire goes back to automatic routing. When you move a group selected with a box, wires that only touch the box stretch to the blocks that stay.
 

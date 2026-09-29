@@ -1187,8 +1187,11 @@ function Workbench() {
     }
   };
   const updateLayout = useCallback(
-    (layouts: BlockLayout[]) => {
-      commit((p) => layoutSelection(p, layouts, selectionRef.current));
+    (layouts: BlockLayout[], options?: { free?: boolean }) => {
+      // A drag with Alt held places blocks exactly where they were dropped (on the grid).
+      commit((p) =>
+        layoutSelection(p, layouts, selectionRef.current, !options?.free),
+      );
     },
     [commit],
   );
@@ -2674,6 +2677,18 @@ function Workbench() {
               >
                 {ready &&
                   project.blocks.length === 0 &&
+                  scope.length > 0 &&
+                  !composer &&
+                  !inserter && (
+                    <div className="empty-subsystem" role="note">
+                      This subsystem is empty. Add blocks from the library, or
+                      right-click to add input and output ports. Esc or ⌘↑
+                      goes back up.
+                    </div>
+                  )}
+                {ready &&
+                  project.blocks.length === 0 &&
+                  scope.length === 0 &&
                   !composer &&
                   !inserter && (
                     <div

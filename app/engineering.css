@@ -3063,3 +3063,9 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .library-help:hover { text-decoration: underline; }
 .properties-heading { display: flex; align-items: center; min-height: 34px; }
 .block-help-dialog [data-slot='dialog-title'] { font-size: 19px; }
+
+/* Smart alignment guides while dragging (align-guides.ts). */
+.align-guides { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; z-index: 5; }
+.align-guides line { stroke: #d6336c; stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+/* An empty subsystem keeps its hierarchy bar, so you can always go back up. */
+.empty-subsystem { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); max-width: 360px; padding: 10px 14px; border: 1px dashed #b8c2cc; border-radius: 4px; background: #fff; color: #5d6b77; font-size: var(--text-ui); text-align: center; pointer-events: none; z-index: 4; }
