@@ -40,7 +40,7 @@ The desktop app picks a free loopback port at each start and serves both the wor
 | `DELETE /jobs/{jobId}` | Job ID | Requests cancellation, returns `{cancelled: true}`; poll for terminal status. |
 | `GET /results/latest?model={modelId}` | Optional document ID | `{result: Result \| null}` matching the saved document and source hash. Omitting the ID uses the active model. |
 | `GET /runs/{runId}/diagnostics` | Run ID | `{error, diagnostics}` recorded for a failed run once its folder exists; 404 when none were recorded. |
-| `GET /results/{runId}/csv` | Run ID | Full CSV attachment, when available. |
+| `GET /results/{runId}/csv` | Run ID | CSV attachment named after the model and run: every output row, one column per result signal (`name [unit]`), after a `#` provenance line. |
 | `GET /results/{runId}/data` | Run ID | Stored result metadata with full-resolution time and series from CSV. |
 | `GET /components/library` | None | `{components: [...]}` of saved AI-block definitions. |
 | `POST /components/generate` | `{prompt, existing?}` | Queues component generation; `existing` is an optional Definition to refine. |

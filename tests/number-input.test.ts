@@ -34,3 +34,12 @@ test('an optional positive step: blank is automatic, zero is an error (B02)', ()
   for (const raw of ['0', '-0.001', 'NaN', 'abc', 'Infinity', '-0'])
     assert.equal(parseOptionalPositive(raw), null, raw);
 });
+
+test('download names come from the model name', async () => {
+  const { fileSlug } = await import('../lib/gradara/api');
+  assert.equal(fileSlug('DC motor'), 'DC-motor');
+  assert.equal(fileSlug('  Buck converter (v2) '), 'Buck-converter-v2');
+  assert.equal(fileSlug('Example: Flyback 2.1'), 'Example-Flyback-2.1');
+  assert.equal(fileSlug('***'), 'model');
+  assert.equal(fileSlug('x'.repeat(80)).length, 60);
+});

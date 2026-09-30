@@ -1123,9 +1123,17 @@ function Workbench() {
       activateModel(restoreDocument(created, false));
       setBrowserSection(null);
       setLibraryOpen(template === 'blank');
+      showNewSheet();
     } finally {
       endTransition();
     }
+  };
+  // A model the user has not seen yet (new, an example's copy, an import) opens
+  // on its diagram, fitted, whatever view was showing; a saved model reopens
+  // wherever it was left.
+  const showNewSheet = () => {
+    setWorkspaceMode('diagram');
+    setTimeout(() => window.dispatchEvent(new Event(FIT_VIEW_EVENT)), 80);
   };
   // Help → Open example: a copy of the example in My models, with the block selected.
   const openExampleRef = useRef<(detail: OpenExampleDetail) => Promise<void>>(
@@ -2321,6 +2329,7 @@ function Workbench() {
       });
       activateModel(restoreDocument(copied, false));
       setBrowserSection(null);
+      showNewSheet();
       notify(`${copied.project.name} imported as a separate model.`);
     } catch (e) {
       // The browser stays open, so the explanation goes there (QA B04), not into a toast.
@@ -2435,7 +2444,11 @@ function Workbench() {
     <TooltipProvider delay={450}>
       <main className="workbench">
         <header className="app-header">
-          <AboutDialog />
+          <AboutDialog
+            version={health.version}
+            engine={health.engine}
+            engineReady={health.engineReady}
+          />
           <div className="project-breadcrumb">
             <button
               className="models-button"

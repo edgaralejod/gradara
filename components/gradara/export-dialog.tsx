@@ -20,7 +20,7 @@ import {
   Sparkles,
   Crosshair,
 } from 'lucide-react';
-import { api, downloadText, waitForJob, type Job } from '@/lib/gradara/api';
+import { api, downloadText, fileSlug, waitForJob, type Job } from '@/lib/gradara/api';
 import { notifyAiChanged, useAi } from '@/lib/gradara/ai';
 import type { CTemplate, Project } from '@/lib/gradara/model';
 import { isInstance } from '@/lib/gradara/hierarchy';
@@ -157,7 +157,7 @@ export default function ExportDialog({
         method: 'POST',
         body: JSON.stringify(doc),
       });
-      downloadText('Gradara.mo', r.source);
+      downloadText(`${fileSlug(doc.name)}.mo`, r.source);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -185,7 +185,7 @@ export default function ExportDialog({
       const url = URL.createObjectURL(await response.blob());
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `${options.prefix}.zip`;
+      anchor.download = `${fileSlug(doc.name)}-${options.prefix}.zip`;
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch (e) {
@@ -295,7 +295,7 @@ export default function ExportDialog({
           className="export-option"
           onClick={() =>
             downloadText(
-              'model.gradara.json',
+              `${fileSlug(doc.name)}.gradara.json`,
               JSON.stringify(doc, null, 2),
               'application/json',
             )

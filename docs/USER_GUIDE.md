@@ -106,7 +106,7 @@ The gear button at the top right opens **Settings**. It has four tabs:
 - **Examples** lists the complete example systems (motor drives, converters, the EV, data-center cooling), and **Block examples** the small model for each library block, grouped by area. Select one to preview its diagram and description; search block examples by any block they use. **Use example** (or double-click, or Enter) saves a new copy in My models. Changing the copy never changes the example.
 - **Trash** holds models you removed. Use the trash icon on a row to remove a model (open a different model first if it is the one you are editing). Click a model in Trash to restore it. Trash is never emptied automatically.
 
-**Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`), Modelica source, or C code. Gradara cannot import Modelica files.
+**Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists; a file that is not a Gradara model is reported in the browser, with the reason, and nothing is added. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`), Modelica source, or C code. Gradara cannot import Modelica files.
 
 ### Saving
 
@@ -256,7 +256,7 @@ After a successful run, Gradara switches to the **Results** tab. The panel insid
 
 ### Results
 
-Choose a preset plot or a signal, optionally add a second signal, and choose a time window. **Fit Y** fits the vertical range. **Export CSV** downloads every output row; the on-screen plot is thinned out to stay responsive.
+Choose a preset plot or a signal, optionally add a second signal, and choose a time window. **Fit Y** fits the vertical range. **Export CSV** downloads every output row, one column per signal named as in the list with its unit (`Speed sensor.out [rad/s]`), as `<model name>-<run>.csv`; its first line, starting with `#`, records the model, its revision, the engine, the simulated duration and the run. The on-screen plot is thinned out to stay responsive.
 
 - **Layouts.** One plot, two stacked, two side by side, a 2×2 grid, or a 3×2 grid. Select a plot by its header, then check signals in the left panel, or drag a signal onto any plot. Removing a signal only changes the view.
 - **Navigate.** Use **Pan**, **Box zoom**, or **Cursor**, on **X only**, **Y only**, or **X + Y**. The mouse wheel zooms around the pointer. Link the X axes to keep plots in step. **Fit X**, **Fit Y**, and **Fit both** reset the view; double-click or Home fits both. Arrow keys pan a focused plot. Maximize a plot to see it alone.

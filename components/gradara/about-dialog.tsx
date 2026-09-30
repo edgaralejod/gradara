@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 'use client';
 
-import { Activity, ArrowUpRight } from 'lucide-react';
+import { Activity, ArrowUpRight, Check, Copy } from 'lucide-react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,37 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-export default function AboutDialog() {
+export default function AboutDialog({
+  version,
+  engine,
+  engineReady,
+}: {
+  /** The installed version, from the service's health report. */
+  version?: string;
+  /** The simulation engine's label, such as "OpenModelica 1.27.1 (built in)". */
+  engine?: string;
+  engineReady?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+  // What a bug report needs, without model content: Help → Copy Diagnostic Info
+  // in the desktop menu adds the service log; this works in the browser too.
+  const diagnostics = () =>
+    [
+      `Gradara ${version ?? 'unknown version'}`,
+      `Engine: ${engine ?? 'unknown'} · ${engineReady ? 'ready' : 'not ready'}`,
+      typeof navigator === 'undefined' ? '' : `${navigator.platform} · ${navigator.userAgent}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(diagnostics());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* Clipboard access refused: the values are on screen to copy by hand. */
+    }
+  };
   return (
     <Dialog>
       <DialogTrigger
@@ -28,6 +59,21 @@ export default function AboutDialog() {
         <DialogDescription>
           A graphical workbench for multidomain simulation with OpenModelica.
         </DialogDescription>
+        <dl className="about-versions">
+          <dt>Version</dt>
+          <dd>{version ?? '…'}</dd>
+          <dt>Engine</dt>
+          <dd>
+            {engine ?? '…'}
+            {engine ? (engineReady ? ' · ready' : ' · not ready') : ''}
+          </dd>
+          <dd className="about-copy">
+            <button type="button" onClick={() => void copy()}>
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+              {copied ? 'Copied' : 'Copy diagnostics'}
+            </button>
+          </dd>
+        </dl>
         <div className="about-creator">
           <span>Created by</span>
           <strong>Edgar Duarte</strong>

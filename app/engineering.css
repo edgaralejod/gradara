@@ -50,6 +50,22 @@
 .about-dialog [data-slot='dialog-title'] {
   font-size: 20px;
 }
+.about-versions {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  align-items: center;
+  margin: 0 0 14px;
+  font-size: var(--text-ui);
+}
+.about-versions dt { color: #62717c; }
+.about-versions dd { margin: 0; color: #27333d; font-variant-numeric: tabular-nums; }
+.about-versions .about-copy { grid-column: 2; }
+.about-versions .about-copy button {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px;
+  border: 1px solid var(--border); border-radius: 3px; background: white; color: #354b5b; font: inherit; cursor: pointer;
+}
+.about-versions .about-copy button:hover { background: #f3f6f8; }
 .about-creator {
   border-block: 1px solid var(--border);
   padding-block: 18px;

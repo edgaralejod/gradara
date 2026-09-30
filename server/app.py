@@ -289,12 +289,44 @@ async def full_result_data(run_id: str):
         return result
     return await asyncio.to_thread(read)
 
+def file_slug(name: str, fallback: str = 'model') -> str:
+    """A model name as a file name part: letters, digits, dots and dashes."""
+    import re
+    slug = re.sub(r'[^A-Za-z0-9.]+', '-', name).strip('-.')
+    return slug[:60] or fallback
+
+
 @app.get('/api/results/{run_id}/csv')
-async def csv_download(run_id:str):
-    if not run_id.isalnum(): raise HTTPException(400,'Invalid run ID.')
-    path = RUNS/run_id/'simulation_res.csv'
-    if not path.exists(): raise HTTPException(404,'Results are unavailable.')
-    return FileResponse(path,media_type='text/csv',filename='gradara-simulation.csv')
+async def csv_download(run_id: str):
+    """Every output row of a run, one column per result signal, named as in the app with its unit.
+
+    The first line, starting with #, records what produced the file (model,
+    revision, engine, simulated duration, run) so the file stays identifiable.
+    """
+    if not run_id.isalnum(): raise HTTPException(400, 'Invalid run ID.')
+    folder = RUNS/run_id
+    if not (folder/'result.json').exists() or not (folder/'simulation_res.csv').exists():
+        raise HTTPException(404, 'Results are unavailable.')
+    def build() -> tuple[str, str]:
+        import csv, io
+        result = json.loads((folder/'result.json').read_text(encoding='utf-8'))
+        with (folder/'simulation_res.csv').open(encoding='utf-8') as stream:
+            rows = [row for row in csv.DictReader(stream) if float(row['time']) <= result['duration'] + max(1e-12, result['duration']*1e-12)]
+        from .engine import result_columns
+        column = result_columns(folder, rows)
+        series = [(s, column(s['key'])) for s in result['series']]
+        series = [(s, values) for s, values in series if values is not None]
+        name = (result.get('snapshot') or {}).get('name') or 'model'
+        out = io.StringIO()
+        out.write(f"# Gradara {VERSION} · {name} · revision {result.get('projectRevision', '?')} · {result.get('engine', '')} · "
+                  f"{result['duration']} s simulated in {result.get('elapsed', '?')} s · run {run_id}\n")
+        writer = csv.writer(out, lineterminator='\n')
+        writer.writerow(['time [s]'] + [f"{s['name']} [{s['unit']}]" if s.get('unit') else s['name'] for s, _ in series])
+        for i, row in enumerate(rows):
+            writer.writerow([row['time']] + [repr(values[i]) for _, values in series])
+        return out.getvalue(), f'{file_slug(name)}-{run_id[:8]}.csv'
+    text, filename = await asyncio.to_thread(build)
+    return Response(text, media_type='text/csv', headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
 @app.get('/api/components/library')
 async def component_library():
