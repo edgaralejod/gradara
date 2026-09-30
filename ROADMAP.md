@@ -44,10 +44,13 @@ Build reproducible 100- and 1,000-block interaction workloads and record frame t
 
 ## Installers and the engine
 
-- **Windows:** ship OpenModelica and MSL inside the installer (or chain the official installer silently) so no separate download is needed.
-- **macOS:** embed a small Linux VM (Lima on Apple Virtualization) with a prebuilt engine image so Docker is not required; revisit Apple's `container` tool and native OpenModelica builds as they mature.
+Every installer now includes its engine (a Linux VM on macOS). Remaining:
+
+- **Apple silicon in CI:** GitHub's Apple silicon runners cannot start VMs, so that installer's simulation is checked by hand per release. Add a self-hosted Apple silicon runner, or use hosted runners once they support nested virtualization.
+- **Smaller macOS engine:** revisit native OpenModelica macOS builds or Apple's `container` tool as they mature; a native build would remove the VM.
+- **Linux without a system compiler:** bundle a C toolchain so the AppImage needs no `gcc` either.
 - Publish the engine image to GitHub Container Registry from CI. The app already tries `ghcr.io/edgaralejod/gradara-engine:1.27.0` first, but no workflow pushes it yet, so every Docker setup falls back to building the image locally.
-- Record per-platform install results, including slow disks, proxies, and non-admin accounts.
+- Record per-platform install results, including slow disks, proxies, non-admin accounts, and Windows installs into folders with spaces.
 
 ## AI service
 

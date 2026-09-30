@@ -20,18 +20,29 @@ The optional Sites Vite plugin is a public dependency of the build scaffold. Its
 
 ## Desktop installers and the AI service
 
-Desktop installers bundle Electron (MIT, with Chromium's notices in `LICENSES.chromium.html` inside the app), electron-updater (MIT), a Python runtime (PSF License) frozen with PyInstaller (GPL-2.0 with the bootloader exception, which permits distributing frozen applications), and the service's Python dependencies: FastAPI, Starlette, Pydantic, Uvicorn, httpx (BSD-3-Clause), and keyring (MIT). Installers also include Gradara's example models, `engine_runner.py`, and `Dockerfile.engine` (for building the engine image on the user's machine). Gradara's own license files are copied to the app's `legal/` resources, together with `THIRD_PARTY_LICENSES.txt`: the name, version, declared license, and license text of every npm and Python package the installer ships, plus the Python runtime. `packaging/third_party_licenses.py` generates it from the installed dependencies in every installer build.
+Desktop installers bundle Electron (MIT, with Chromium's notices in `LICENSES.chromium.html` inside the app), electron-updater (MIT), a Python runtime (PSF License) frozen with PyInstaller (GPL-2.0 with the bootloader exception, which permits distributing frozen applications), and the service's Python dependencies: FastAPI, Starlette, Pydantic, Uvicorn, httpx (BSD-3-Clause), and keyring (MIT). Installers also include Gradara's example models, `engine_runner.py`, `Dockerfile.engine` (for the optional container engine), and the built-in simulation engine described below. Gradara's own license files are copied to the app's `legal/` resources, together with `THIRD_PARTY_LICENSES.txt`: the name, version, declared license, and license text of every npm and Python package the installer ships, plus the Python runtime and every component of the built-in engine. `packaging/third_party_licenses.py` generates it from the installed dependencies in every installer build.
 
 The Gradara AI service (`cloud/`) additionally uses SQLAlchemy (MIT), psycopg (LGPL-3.0, used as an unmodified library), the Stripe Python library (MIT), google-auth and firebase-admin (Apache-2.0). The service is operated, not distributed, but the container image contents should still be inventoried.
 
 ## Numerical engine
 
-Neither this repository nor the installers contain OpenModelica binaries. Users install OpenModelica themselves (native backend), or the app pulls `ghcr.io/edgaralejod/gradara-engine:1.27.0` and otherwise builds the image locally from `Dockerfile.engine`, which starts from an upstream OpenModelica image and downloads MSL. Before that image is published to the registry, inventory its contents and satisfy the attribution, license, and source-distribution obligations for everything it includes.
+Every desktop installer includes a built-in engine in `resources/engine`, built by the scripts in `packaging/engine/` from unmodified upstream binaries:
+
+| Installer | Engine contents |
+| --- | --- |
+| Windows | OpenModelica 1.27.1 trimmed from the official Windows installer: `omc`, its DLLs, the C runtime, headers, and the MSYS2 ucrt64 toolchain packages it needs (GCC, binutils, make, OpenBLAS, the MinGW-w64 runtime, and their dependencies) |
+| Linux | OpenModelica 1.27.1 from its Ubuntu 22.04 packages, the shared libraries they need beyond glibc, the gcc runtime, zlib and OpenSSL (BLAS/LAPACK, libcurl and its dependencies, omniORB, expat, gfortran), and GNU make |
+| macOS | A Linux virtual machine: an Ubuntu 24.04 root filesystem with OpenModelica 1.27.1, GCC, make and Python, the Ubuntu Linux kernel, and vfkit (Apache-2.0) to boot it |
+
+All three include the Modelica Standard Library 4.1.0 (BSD-3-Clause, with the licenses of its bundled C libraries). OpenModelica is licensed under the OSMC Public License 1.8; Gradara redistributes it unmodified under that license's GNU AGPL version 3 mode, stated in `OSMC-USAGE-MODE.txt` beside `OSMC-License.txt` in each engine. GCC, binutils, make, the Linux kernel, and several libraries are GPL or LGPL licensed. Each engine records its package inventory (`packages.txt`, and `packages.json` for the Windows toolchain) and carries the packages' license and copyright files; `packaging/third_party_licenses.py` copies all of them into the installer's `THIRD_PARTY_LICENSES.txt`, together with a written offer of the corresponding source code for three years and links to the upstream sources (OpenModelica on GitHub, Ubuntu packages on Launchpad, MSYS2 packages at repo.msys2.org).
+
+Source checkouts contain no OpenModelica binaries. There the optional container engine pulls `ghcr.io/edgaralejod/gradara-engine:1.27.0` or builds it locally from `Dockerfile.engine`, which starts from an upstream OpenModelica image and downloads MSL. Before that image is published to the registry, inventory its contents and satisfy the same obligations.
 
 | Component | Pinned version | Primary license source |
 | --- | --- | --- |
-| OpenModelica compiler | 1.27.0 | [OSMC-PL 1.8 document and AGPL v3 path](https://raw.githubusercontent.com/OpenModelica/OpenModelica/v1.27.0/OSMC-License.txt). |
-| OpenModelica runtime | 1.27.0 | [Separate runtime terms](https://raw.githubusercontent.com/OpenModelica/OpenModelica/v1.27.0/OSMC-Runtime-License.txt), offering BSD New, AGPL v3, or OSMC-PL 1.8 alternatives. |
+| OpenModelica compiler | 1.27.1 (built-in engine), 1.27.0 (container image) | [OSMC-PL 1.8 document and AGPL v3 path](https://raw.githubusercontent.com/OpenModelica/OpenModelica/v1.27.1/OSMC-License.txt). |
+| OpenModelica runtime | 1.27.1 (built-in engine), 1.27.0 (container image) | [Separate runtime terms](https://raw.githubusercontent.com/OpenModelica/OpenModelica/v1.27.1/OSMC-Runtime-License.txt), offering BSD New, AGPL v3, or OSMC-PL 1.8 alternatives. |
+| vfkit | v0.6.4 (macOS engine) | [Apache-2.0](https://github.com/crc-org/vfkit/blob/main/LICENSE). |
 | Modelica Standard Library | 4.1.0 | [BSD-3-Clause license](https://raw.githubusercontent.com/modelica/ModelicaStandardLibrary/v4.1.0/LICENSE). |
 
 ### MSL class index in this repository
@@ -48,4 +59,4 @@ OpenModelica's compiler, simulation runtime, OMPython, the base image's OS/toolc
 
 ## Before distributing an artifact
 
-`THIRD_PARTY_LICENSES.txt` records the exact versions and license texts of the npm and Python packages in each installer. When a dependency is added, check that its license allows redistribution and that its package includes a license file; the generator lists packages that have none. Record copied-code provenance in the table above, and any source-offer obligations for components that are not permissively licensed. This file is not a complete SBOM. The [release checklist](docs/RELEASING.md) separates source preparation from binary packaging.
+`THIRD_PARTY_LICENSES.txt` records the exact versions and license texts of the npm and Python packages and the built-in engine in each installer. When a dependency is added, check that its license allows redistribution and that its package includes a license file; the generator lists packages that have none. Record copied-code provenance in the table above, and any source-offer obligations for components that are not permissively licensed. This file is not a complete SBOM. The [release checklist](docs/RELEASING.md) separates source preparation from binary packaging.

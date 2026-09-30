@@ -1,17 +1,17 @@
 # Gradara user guide
 
-This guide covers the desktop app. To install it and set up the simulation engine, see [Install Gradara](INSTALL.md).
+This guide covers the desktop app. To install it, see [Install Gradara](INSTALL.md); the simulation engine comes with the app.
 
 ## Your first 10 minutes
 
-You need a ready engine: **Settings → Engine** shows a green dot. If it does not, follow [Set up the simulation engine](INSTALL.md#set-up-the-simulation-engine) first.
+The engine is built in, so there is nothing to set up. **Settings → Engine** shows its status with a green dot; if it reports a problem, see [The simulation engine](INSTALL.md#the-simulation-engine).
 
 ### Run an example
 
 ![The DC motor example: a PI speed loop driving a DC motor and an inertia load](images/workbench-dc.webp)
 
 1. Choose **Examples** in the header. Under **DC motor**, choose **Use example**. Gradara saves your own copy in **My models**. The original example does not change.
-2. Choose **Run** at the top right, or press **⌘/Ctrl+Enter**. The first run takes longer while OpenModelica compiles the model.
+2. Choose **Run** at the top right, or press **⌘/Ctrl+Enter**. The first run takes a little longer: OpenModelica compiles the model, and on macOS the built-in engine starts first (a few seconds).
 3. When the run finishes, Gradara switches to the **Results** tab. The plot compares the speed request with the measured motor speed.
 4. Go back to the diagram with the **Diagram** tab or **⌘/Ctrl+1**.
 5. Double-click the **Speed reference** block. Change **Target speed** from 100 to 60, then choose **Apply**.
@@ -91,7 +91,7 @@ Shortcuts do not fire while you type in a text field or an equation editor.
 
 The gear button at the top right opens **Settings**. It has four tabs:
 
-- **Engine** shows whether simulation is ready and walks you through the one-time setup. See [Install Gradara](INSTALL.md#set-up-the-simulation-engine).
+- **Engine** shows whether the built-in engine is ready, can restart it, and lets you choose your own OpenModelica installation or Docker instead. See [The simulation engine](INSTALL.md#the-simulation-engine).
 - **AI** chooses the provider for AI features: Gradara AI (sign in and use prepaid credits), your own OpenAI or Anthropic API key, or **Off**. When you are signed in, it shows your credit balance, prices, and credit packs. See [AI features](AGENT_SETUP.md).
 - **Privacy & data** summarizes what stays on your computer and what AI requests send. See [privacy](PRIVACY.md).
 - **Updates** shows your installed version and has **Check for updates**. See [Updates](INSTALL.md#updates).
@@ -301,7 +301,7 @@ Choose how continuous blocks are discretized (Tustin, backward Euler, or forward
 
 The unit must contain only signal blocks. If it contains a physical block, an algebraic loop, or a block without a C template, the dialog says so and **Show** selects the blocks involved. For a custom AI block, it offers to write a C template for that block with your AI provider. The template is checked, compiled, and saved with the block, so later exports need no AI. Editing the block's equations or ports makes the template out of date, and the dialog offers a new one.
 
-**Verify against last run** compiles the code and feeds it the inputs your last run recorded, step by step, then compares its outputs with the simulation. It needs a run of the current model and a C compiler (see [Install Gradara](INSTALL.md#set-up-the-simulation-engine)). Sampled controllers match to rounding error. Continuous controllers differ by their discretization, and a difference beyond 2% of an output's range fails the check. Verification runs the controller on its own, without the plant. It does not replace testing on your hardware. The [servo example](examples/SERVO.md) walks through it.
+**Verify against last run** compiles the code and feeds it the inputs your last run recorded, step by step, then compares its outputs with the simulation. It needs a run of the current model and uses the built-in engine's C compiler (see [The simulation engine](INSTALL.md#the-simulation-engine)). Sampled controllers match to rounding error. Continuous controllers differ by their discretization, and a difference beyond 2% of an output's range fails the check. Verification runs the controller on its own, without the plant. It does not replace testing on your hardware. The [servo example](examples/SERVO.md) walks through it.
 
 ## AI features
 
@@ -313,7 +313,7 @@ Before you send proprietary equations or model details to an AI provider, read [
 
 Press **A** or choose **Ask agent**, and describe the block: its inputs, outputs, state, and timing. For example: "A first-order low-pass filter with a 50 ms time constant."
 
-First choose the block type: Signal / control, Electrical, Mechanical · rotational, Mechanical · translational, Magnetic, Thermal, or Multiple physical domains. The type decides which terminals the block gets. For example, choose Electrical and ask for an ideal transformer to get real winding terminals instead of signal inputs and outputs. Generated blocks cannot have Boolean or 3-phase ports. The preview shows each terminal. Gradara checks the block with OpenModelica before inserting it, so the engine must be set up. For signal blocks defined by equations, **Refine with agent** in the block's dialog asks for a changed version. Refining keeps the block's type and terminals.
+First choose the block type: Signal / control, Electrical, Mechanical · rotational, Mechanical · translational, Magnetic, Thermal, or Multiple physical domains. The type decides which terminals the block gets. For example, choose Electrical and ask for an ideal transformer to get real winding terminals instead of signal inputs and outputs. Generated blocks cannot have Boolean or 3-phase ports. The preview shows each terminal. Gradara checks the block with OpenModelica before inserting it, so the engine must be ready. For signal blocks defined by equations, **Refine with agent** in the block's dialog asks for a changed version. Refining keeps the block's type and terminals.
 
 ### Reuse AI blocks
 

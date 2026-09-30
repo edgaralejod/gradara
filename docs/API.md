@@ -54,9 +54,9 @@ The desktop app picks a free loopback port at each start and serves both the wor
 | `POST /variants/check` | Project | Queues a compile check of every inactive variant (job kind `variants`, with `progress`). The result is `{variants: [{key, sheetId, blockId, variantId, variant, name, ok, message}]}`. |
 | `POST /exports` | `{project, blockId}` | Queues AI-written C for one controller or custom signal block as a whole file. The workbench uses `/codegen/template` instead. The job result is `{id, blockId, header, source, notes, compiled, compiler}`. |
 | `GET /exports/{exportId}/download` | Export ID | ZIP with C source/header, original contract, and integration notes. |
-| `GET /engine` | None | Engine status: `backend` (`native` or `docker`), `preference`, `ready`, `label`, `detail`, suggested `actions`, `version`. |
-| `PUT /engine` | `{engine}` | `auto`, `native`, or `docker`; returns the new status. |
-| `POST /engine/prepare` | None | Job (kind `engine`) that installs MSL for native OpenModelica or pulls/builds the container image, with `progress`. |
+| `GET /engine` | None | Engine status: `backend` (`bundled`, `native`, or `docker`), `preference`, `recommended`, `bundled` (whether this build carries a built-in engine), `platform`, `ready`, `label`, `detail`, suggested `actions` (`install-openmodelica`, `install-docker`, `install-gcc`, `start-runtime`, `prepare`), `version`. `?refresh=true` repeats cached checks. On macOS the first call starts the built-in engine VM. |
+| `PUT /engine` | `{engine}` | `auto`, `bundled`, `native`, or `docker`; returns the new status. |
+| `POST /engine/prepare` | None | Job (kind `engine`) with `progress`: restarts the built-in engine (macOS VM) or rechecks it, installs MSL for native OpenModelica, or pulls/builds the container image. |
 | `GET /ai` / `PUT /ai` | `{provider?, openaiModel?, anthropicModel?}` | AI provider status and choice: `gradara`, `openai`, `anthropic`, `codex`, or `off`. Never returns keys. |
 | `PUT /ai/keys/{provider}` / `DELETE` | `{key}` | Verifies the key with the provider, then stores it in the OS keychain; or removes it. |
 | `POST /account/signin` | None | Starts Gradara AI device sign-in: `{id, userCode, verificationUrl, interval}`. |

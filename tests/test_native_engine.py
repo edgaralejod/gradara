@@ -149,3 +149,25 @@ def test_docker_probe_is_cached_and_detects_windows_containers(monkeypatch):
     backend.forget()
     asyncio.run(backend.status())
     assert len(calls) == 2
+
+
+def test_library_check_is_shared_by_concurrent_callers(monkeypatch, tmp_path):
+    # Two status calls at once (the app's engine poll and a run request after the
+    # macOS VM boots): the second must wait for the MSL check, not read the
+    # in-progress check as a recent failure.
+    monkeypatch.setattr(engines, 'DATA', tmp_path)
+    backend = engines.NativeBackend()
+    scripts = []
+
+    async def slow_script(omc, folder, body, timeout):
+        scripts.append(body)
+        await asyncio.sleep(0.2)
+        return 0, 'true\n""\n'
+
+    monkeypatch.setattr(backend, 'script', slow_script)
+
+    async def both():
+        return await asyncio.gather(backend.library_ready(engines.Path('/omc')), backend.library_ready(engines.Path('/omc')))
+
+    assert asyncio.run(both()) == [True, True]
+    assert len(scripts) == 1, 'MSL is loaded once, not once per caller'

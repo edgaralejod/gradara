@@ -8,8 +8,7 @@ No. Gradara is an independent tool. It has its own model format and simulates wi
 
 ### Do I need Docker?
 
-- **Windows and Linux:** no. Gradara uses OpenModelica installed on your computer. You can choose a container engine instead if you prefer.
-- **macOS:** yes, for now. OpenModelica does not publish macOS builds, so Gradara runs it in a small Linux container. Install Colima (free) and Gradara starts it for you. See [Install Gradara](INSTALL.md#macos-1).
+No, on any system. Every installer includes the simulation engine (OpenModelica with the Modelica Standard Library). On macOS, where OpenModelica publishes no builds, the app runs it in a small virtual machine that ships inside Gradara and uses Apple's built-in Virtualization framework. See [The simulation engine](INSTALL.md#the-simulation-engine).
 
 ### Is Gradara free?
 
@@ -17,7 +16,7 @@ Yes. The app is free and open source under the [Apache License 2.0](../LICENSE).
 
 ### Which systems does it run on?
 
-Windows 10 and 11 (64-bit), macOS 13 or newer on Apple silicon or Intel, and 64-bit Linux (tested on Ubuntu 22.04 and 24.04). See [Install Gradara](INSTALL.md) and [supported platforms](PLATFORMS.md).
+Windows 10 and 11 (64-bit), macOS 13 or newer on Apple silicon or Intel, and 64-bit Linux (tested on Ubuntu 22.04 and 24.04 and Debian 12). See [Install Gradara](INSTALL.md) and [supported platforms](PLATFORMS.md).
 
 ## Modeling
 
@@ -49,7 +48,7 @@ Gradara cannot import Modelica files. See [Export](USER_GUIDE.md#export).
 
 ### Can I use it offline?
 
-Yes, after the one-time engine setup, which needs an internet connection. Drawing, simulating, and exporting then work offline. AI features and update checks need a connection.
+Yes. Once the app is installed, drawing, simulating, and exporting work offline; the engine is part of the app. AI features and update checks need a connection.
 
 ### Where are my files?
 

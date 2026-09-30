@@ -19,7 +19,7 @@ Agents author inspectable, saved component definitions and export artifacts. Ord
 | Model operations | `lib/gradara/` | Serializable document, names, nets, ports, routing, selection, immutable edit operations. |
 | Block dialog | Monaco | Edits a block's name and parameters, and bounded component declarations and equations. |
 | Local service | Python 3.12, FastAPI, Pydantic | Persistence, validation, source emission, asynchronous jobs, agent and export adapters. Loopback only; refuses cross-site requests. |
-| Simulation | OpenModelica 1.27.0 and MSL 4.1.0, native install or Docker image (`server/engines.py`) | Equation processing, initialization, integration, and events. |
+| Simulation | OpenModelica 1.27.1 and MSL 4.1.0: the engine built into each installer (a Linux VM on macOS), or a native install or Docker image from a source checkout (`server/engines.py`, `packaging/engine/`) | Equation processing, initialization, integration, and events. |
 | AI providers | `server/llm/`: Gradara AI, OpenAI, Anthropic, Codex CLI | One schema-constrained generation interface; provider chosen in Settings. |
 | Desktop app | Electron shell, PyInstaller-frozen service, static workbench build | Installers per OS; see [distribution](docs/architecture/DISTRIBUTION.md). |
 | Gradara AI service | `cloud/`: FastAPI, PostgreSQL, Firebase Auth, Stripe | Accounts and prepaid credits; never stores prompts or responses. |
@@ -105,7 +105,8 @@ Keep these boundaries modular within the current application. Microservices, an 
 
 ## Upstream references
 
-- [OpenModelica 1.27.0](https://github.com/OpenModelica/OpenModelica/releases/tag/v1.27.0) and [OMPython](https://github.com/OpenModelica/OMPython).
+- [OpenModelica 1.27.1](https://github.com/OpenModelica/OpenModelica/releases/tag/v1.27.1) (1.27.0 in the container image) and [OMPython](https://github.com/OpenModelica/OMPython).
+- [vfkit](https://github.com/crc-org/vfkit) and Apple's Virtualization framework for the macOS engine VM.
 - [Modelica Standard Library 4.1.0](https://github.com/modelica/ModelicaStandardLibrary/releases/tag/v4.1.0) and [Modelica 3.6 specification](https://specification.modelica.org/maint/3.6/MLS.pdf).
 - [React Flow](https://github.com/xyflow/xyflow); Gradara keeps its engineering wire behavior in this repository.
 - [Third-party licensing](THIRD_PARTY_NOTICES.md). Process separation is an engineering choice, not a determination of distribution license obligations.

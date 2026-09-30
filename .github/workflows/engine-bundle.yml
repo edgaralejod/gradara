@@ -1,0 +1,242 @@
+name: Engine bundles
+
+# Builds the simulation engine each desktop installer ships, and proves each one
+# on its own before an installer uses it:
+# - Linux: OpenModelica relocated from the Ubuntu 22.04 packages; simulates in
+#   clean containers that have only gcc, then runs the full engine test suite.
+# - Windows: the official installer, trimmed; the full install is moved away
+#   before the full engine test suite runs against the trimmed copy.
+# - macOS: the Linux VM image (arm64 and x64), whose contents run the full suite
+#   under Docker on a Linux runner of the same architecture; then the VM itself
+#   boots with vfkit on macOS runners and simulates.
+# The Desktop installers workflow calls this in the same run and packs the
+# resulting engine-<platform> artifacts into its installers, so every installer
+# carries an engine built and tested from the same commit. With test off, only
+# the build and the quick checks run.
+on:
+  workflow_call:
+    inputs:
+      test:
+        description: Run the engine test suites
+        type: boolean
+        default: true
+  workflow_dispatch:
+    inputs:
+      test:
+        description: Run the engine test suites
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  OM_VERSION: '1.27.1'
+  MSL_VERSION: '4.1.0'
+
+jobs:
+  linux:
+    name: Linux x64 engine
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - name: Build the bundle
+        run: sudo -E bash packaging/engine/build-linux.sh "$PWD/build/engine" && sudo chown -R "$USER" build
+      - name: Simulate on clean systems with only gcc
+        run: packaging/engine/test_clean_linux.sh build/engine ubuntu:22.04 ubuntu:24.04 debian:12
+      - run: python -m pip install -r server/requirements-dev.txt
+        if: inputs.test
+      - name: Engine test suite on the bundle
+        if: inputs.test
+        env:
+          GRADARA_ENGINE: bundled
+          GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
+        run: |
+          python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
+          # One simulation first with its full output, so a broken engine shows why at once.
+          python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
+          python -m pytest -v -m integration --durations=15 --maxfail=10
+      - name: Keep the run folders of a failed engine test
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-test-runs-linux
+          path: projects/runs
+          if-no-files-found: ignore
+      - name: Pack
+        run: python packaging/engine/pack_bundle.py --dir build/engine --name linux-x64 --out dist-engine
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-linux-x64
+          path: dist-engine/*
+          if-no-files-found: error
+
+  windows:
+    name: Windows x64 engine
+    runs-on: windows-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - name: Build the bundle
+        run: python packaging/engine/build_windows.py --out build\engine --install C:\OpenModelicaFull
+      - name: Move the full installation away
+        # The tests must pass on the trimmed copy alone. Defender scanning of every
+        # compiler input and output makes the suite several times slower; the
+        # installer test keeps it on, as on a user's machine.
+        shell: pwsh
+        run: |
+          Add-MpPreference -ExclusionPath $env:GITHUB_WORKSPACE, $env:TEMP, $env:APPDATA
+          Rename-Item C:\OpenModelicaFull C:\OpenModelicaFull-hidden
+          [Environment]::SetEnvironmentVariable('OPENMODELICAHOME', $null, 'Machine')
+          Get-ChildItem build\engine | Format-Table Name, Length
+      - run: python -m pip install -r server/requirements-dev.txt
+        if: inputs.test
+      - name: Engine test suite on the bundle
+        if: inputs.test
+        env:
+          GRADARA_ENGINE: bundled
+          GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}\build\engine
+          OPENMODELICAHOME: ''
+        run: |
+          python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
+          # One simulation first with its full output, so a broken engine shows why at once.
+          python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
+          python -m pytest -v -m integration --durations=15 --maxfail=10
+      - name: Keep the run folders of a failed engine test
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-test-runs-windows
+          path: projects/runs
+          if-no-files-found: ignore
+      - name: Pack
+        run: python packaging/engine/pack_bundle.py --dir build/engine --name windows-x64 --out dist-engine
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-windows-x64
+          path: dist-engine/*
+          if-no-files-found: error
+
+  macos-image:
+    name: macOS ${{ matrix.arch }} engine image
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+          - arch: x64
+            docker: amd64
+            runner: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get install -y -qq squashfs-tools
+      - name: Build the VM image
+        run: sudo -E bash packaging/engine/build-macos-guest.sh ${{ matrix.docker || matrix.arch }} "$PWD/build/engine" && sudo chown -R "$USER" build
+      - run: python -m pip install -r server/requirements-dev.txt
+        if: inputs.test
+      - name: Engine test suite through the VM backend (image under Docker)
+        if: inputs.test
+        # Same image, same agent, same /data layout as the VM; only vsock is replaced by TCP.
+        env:
+          GRADARA_ENGINE: bundled
+          GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
+          GRADARA_ENGINE_VM_TCP: 127.0.0.1:18024
+        run: |
+          mkdir -p projects
+          docker run -d --name agent --user "$(id -u):$(id -g)" -p 127.0.0.1:18024:18024 -e GRADARA_AGENT_TCP=18024 \
+            -v "$PWD/projects:/data" gradara-guest:${{ matrix.docker || matrix.arch }} python3 -u /opt/gradara/agent.py
+          sleep 2
+          python -c "import asyncio, json; from server import engines; print(json.dumps(asyncio.run(engines.status()), indent=2))"
+          # One simulation first with its full output, so a broken engine shows why at once.
+          python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
+          python -m pytest -v -m integration --durations=15 --maxfail=10
+      - name: Keep the run folders of a failed engine test
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-test-runs-macos-${{ matrix.arch }}
+          path: projects/runs
+          if-no-files-found: ignore
+      - name: Pack
+        run: python packaging/engine/pack_bundle.py --dir build/engine --name macos-${{ matrix.arch }} --out dist-engine
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: engine-macos-${{ matrix.arch }}
+          path: dist-engine/*
+          if-no-files-found: error
+
+  macos-boot:
+    name: macOS VM boots / ${{ matrix.name }}
+    needs: macos-image
+    if: inputs.test
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    # GitHub's Apple silicon runners are themselves VMs without nested
+    # virtualization, so the arm64 image cannot boot there; Intel runners can.
+    # The arm64 boot runs only on a self-hosted Apple silicon Mac, when the
+    # repository variable APPLE_SILICON_RUNNER is 'true' (docs/development/TESTING.md);
+    # otherwise it is checked on a real Mac before each release (docs/RELEASING.md).
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(vars.APPLE_SILICON_RUNNER == 'true'
+          && '[{"name":"Intel","arch":"x64","runner":"macos-15-intel"},{"name":"Apple silicon","arch":"arm64","runner":["self-hosted","macOS","ARM64"]}]'
+          || '[{"name":"Intel","arch":"x64","runner":"macos-15-intel"}]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: engine-macos-${{ matrix.arch }}
+          path: dist-engine
+      - run: python packaging/engine/fetch_bundle.py --name macos-${{ matrix.arch }} --from dist-engine
+      - name: vfkit and its entitlements
+        run: |
+          file build/engine/vfkit
+          codesign -d --entitlements - build/engine/vfkit 2>&1 || true
+          sysctl -n machdep.cpu.brand_string kern.hv_support || true
+      - run: python -m pip install -r server/requirements-dev.txt
+      - name: Boot the VM and run engine tests
+        env:
+          GRADARA_ENGINE: bundled
+          GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
+        run: |
+          python - <<'EOF'
+          import asyncio, json, time
+          from server import engines
+          started = time.monotonic()
+          status = asyncio.run(engines.status())
+          print(json.dumps(status, indent=2))
+          print(f'first status (boots the VM): {time.monotonic() - started:.1f}s')
+          if not status['ready']:
+              raise SystemExit('The engine VM is not ready.')
+          EOF
+          python -m pytest -v -m integration --durations=10 tests/test_validation.py tests/test_codegen.py tests/test_buck.py
+      - name: VM logs
+        if: always()
+        run: |
+          for f in projects/logs/engine-vm*.log; do [ -f "$f" ] && { echo "--- $f"; tail -60 "$f"; }; done
+          pgrep -l vfkit && echo 'vfkit still running' || true

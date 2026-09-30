@@ -26,7 +26,7 @@ The local service listens only on the loopback interface. It rejects requests fr
 Network requests the app makes:
 
 - **Update checks** to GitHub Releases at launch and every few hours (disable with `GRADARA_DISABLE_UPDATES=1`). GitHub sees the IP address and app version.
-- **Engine setup**, only when the user starts it: the OpenModelica library download or the engine container image.
+- **Engine setup** for an optional engine of your own (native OpenModelica or Docker), only when the user starts it: the OpenModelica library download or the engine container image. The built-in engine needs no download and no network; on macOS its virtual machine has no network device.
 - **AI requests**, only when the user asks for an AI feature, to the provider selected in Settings.
 - **Links the user clicks** open in the system browser.
 

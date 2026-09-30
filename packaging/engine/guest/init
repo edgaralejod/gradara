@@ -1,0 +1,16 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+# PID 1 of the Gradara engine VM. The root filesystem is a read-only squashfs;
+# scratch space is tmpfs; /data is the app's data folder shared over virtio-fs.
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mountpoint -q /dev || mount -t devtmpfs devtmpfs /dev
+mount -t tmpfs -o mode=1777,size=75% tmpfs /tmp
+mount -t tmpfs -o mode=755 tmpfs /run
+modprobe virtiofs
+modprobe vmw_vsock_virtio_transport
+mount -t virtiofs data /data || echo "gradara-init: could not mount the data folder" > /dev/hvc0
+hostname gradara-engine 2>/dev/null
+echo "gradara-init: ready" > /dev/hvc0
+exec /usr/bin/python3 -u /opt/gradara/agent.py
