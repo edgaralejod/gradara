@@ -848,7 +848,9 @@ def _stop_at_exit(pid: int) -> None:
 class VmBackend(NativeBackend):
     """OpenModelica inside the macOS engine VM, driven exactly like a native install."""
     name = 'bundled'
-    COMPILER_SETUP = 'setCompiler("gcc"); setCXXCompiler("g++");'
+    # The VM has 3 GiB: compiling a large model (buck) on all four CPUs at once
+    # has exhausted it ("virtual memory exhausted"), so cap the parallel build.
+    COMPILER_SETUP = 'setCompiler("gcc"); setCXXCompiler("g++"); setCommandLineOptions("-n=2");'
 
     def __init__(self, root: Path):
         super().__init__()
