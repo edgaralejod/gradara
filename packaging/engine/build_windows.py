@@ -58,6 +58,14 @@ def ensure_external_c(out: Path) -> None:
                                       'ModelicaStrings.c', 'win32_dirent.c')]
     gcc = out/'tools'/'msys'/'ucrt64'/'bin'/'gcc.exe'
     home = Path(tempfile.mkdtemp(prefix='gradara-ffi-'))
+    # OpenModelica's runtime DLL has every ModelicaUtilities function but this one
+    # (MSL 4.1 uses it in ModelicaInternal.c), so the library carries its own.
+    shim = home/'duplicate_string.c'
+    shim.write_text('#include <string.h>\n#include "ModelicaUtilities.h"\n'
+                    'char* ModelicaDuplicateStringWithErrorReturn(const char* source) {\n'
+                    '  char* copy = ModelicaAllocateStringWithErrorReturn(strlen(source));\n'
+                    '  if (copy != NULL) strcpy(copy, source);\n  return copy;\n}\n', encoding='utf-8')
+    files.append(str(shim))
     result = subprocess.run([str(gcc), '-shared', '-O2', '-o', str(target), *files, f'-I{sources}',
                              str(out/'bin'/'libOpenModelicaRuntimeC.dll')], env=bundle_env(out, home),
                             capture_output=True, text=True, encoding='utf-8', errors='replace')
