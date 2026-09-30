@@ -34,7 +34,7 @@ flowchart LR
     DOC --> SAVE[Local filesystem persistence]
     DOC --> EMIT[Modelica emitter]
     EMIT --> JOB[Immutable run directory]
-    JOB --> OM[OpenModelica<br>native or container]
+    JOB --> OM[OpenModelica<br>built-in, native, or container]
     OM --> RESULT[CSV and result preview]
     RESULT --> UI
     ASK[Component request] --> AGENT[Optional agent adapter]
@@ -66,7 +66,7 @@ Smooth interaction is a product requirement. Large-model frame-rate and latency 
 
 ## Simulation boundary
 
-The Python service validates the document, checks connected scalar inputs, emits Modelica, and runs OpenModelica under supervision (native install or container) on an immutable snapshot. Signal nets have at most one output driver; physical nets use Modelica potential/flow connection semantics. A visual junction is not an executable block, and canvas order is not evaluation order.
+The Python service validates the document, checks connected scalar inputs, emits Modelica, and runs OpenModelica under supervision (the built-in engine, a native install, or a container) on an immutable snapshot. Signal nets have at most one output driver; physical nets use Modelica potential/flow connection semantics. A visual junction is not an executable block, and canvas order is not evaluation order.
 
 Built-in, non-generated physical `kind` values select canonical wrappers in `server/modelica.py`. Their display equations are explanatory; editing that text does not replace their physical implementation. Signal definitions and generated physical definitions use their bounded declarations and equations. Generated physical ports emit standard electrical pins, rotational or translational flanges, heat ports, or magnetic ports. Most built-in physical, logic, and machine blocks instead name a Modelica Standard Library 4.1.0 class (`definition.modelica`); `server/msl.py` checks them against `server/msl_index.json` and the emitter instantiates the class directly. Generated additions use typed standard connectors and bounded equations. Assigning a domain color alone does not create physical connectivity.
 
@@ -99,7 +99,6 @@ Editing the open model (`server/model_edit.py`) and diagnosis (`server/diagnose_
 | Remote execution | Authentication, authorization, isolation, quotas, durable jobs, versioned requests and artifacts. |
 | FMI or another numerical backend | A concrete interoperability requirement and a capability contract; Modelica equation semantics are not universally interchangeable. |
 | Verilog/VHDL | Clocks, resets, numeric representation, latency, synthesis checks, and behavioral comparisons. |
-| Bundled engine | A Windows installer that includes OpenModelica, and an embedded Linux VM for macOS, each with license packaging and update behavior. The desktop app itself is implemented; see [distribution](docs/architecture/DISTRIBUTION.md). |
 
 Keep these boundaries modular within the current application. Microservices, an intermediate language, or a Rust solver are not prerequisites for improving the workbench. The [roadmap](ROADMAP.md) orders the next work.
 

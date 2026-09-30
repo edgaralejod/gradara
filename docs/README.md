@@ -2,13 +2,13 @@
 
 ## Use Gradara
 
-- [Install Gradara](INSTALL.md): download, install, set up the simulation engine, update, and uninstall.
+- [Install Gradara](INSTALL.md): download, install, the built-in simulation engine, update, and uninstall.
 - [Your first 10 minutes](USER_GUIDE.md#your-first-10-minutes): run an example, then build a model from scratch.
 - [User guide](USER_GUIDE.md): diagrams, subsystems, variants, the Explorer, results, export, and [keyboard shortcuts](USER_GUIDE.md#keyboard-shortcuts).
 - [FAQ](FAQ.md) and glossary.
 - [Validation](VALIDATION.md): Gradara's results next to closed-form answers, checked by automated tests.
 - [AI features](AGENT_SETUP.md): Gradara AI credits, your own API key, and what each task costs.
-- [Troubleshooting](development/TROUBLESHOOTING.md): engine setup, failed runs, AI sign-in, updates, logs, and bug reports.
+- [Troubleshooting](development/TROUBLESHOOTING.md): the engine not being ready, failed runs, AI sign-in, updates, logs, and bug reports.
 - [Supported platforms](PLATFORMS.md).
 - [Privacy and data handling](PRIVACY.md) and [security](../SECURITY.md).
 
@@ -47,6 +47,6 @@ User documentation (install guide, user guide, FAQ, AI features, troubleshooting
 
 Describe shipped behavior in the architecture and user guides. Put proposals in the roadmap or a clearly marked design note. Code and schemas define the actual contract; update these guides when the contract changes.
 
-`python3 scripts/check-docs.py` checks relative Markdown file links in repository content. It does not validate external URLs or heading anchors. `npm run report:blocks` generates an ignored local catalog inventory in `reports/`; inspect the live `/block-catalog` page for visual review.
+`python3 scripts/check-docs.py` checks relative Markdown links, backticked repository paths, `npm run` scripts, `cloud/deploy.sh` commands, and `GRADARA_*` variables in repository content. It does not validate external URLs or heading anchors. `npm run report:blocks` generates an ignored local catalog inventory in `reports/`; inspect the live `/block-catalog` page for visual review.
 
 Keep task-specific verification in pull requests and release evidence. The repository documentation should explain how to use, extend, test, and release the current product, without development-session diaries or generated report snapshots.

@@ -4,7 +4,7 @@ An agent-assisted workbench for graphical, multidomain simulation. Build a diagr
 
 Gradara puts the diagram first: responsive orthogonal wiring, recognizable engineering symbols, domain-colored ports, and equations you can inspect. Agents help author components; the Modelica compiler and numerical runtime execute the model.
 
-**Status: early release.** Desktop apps are available for Windows, macOS, and Linux. Every installer is built and install-tested automatically; full simulation runs are checked by hand for each release (see [supported platforms](docs/PLATFORMS.md)). Please report problems on your system. Gradara does not run MATLAB scripts or open Simulink files.
+**Status: early release.** Desktop apps are available for Windows, macOS, and Linux. Every installer is built, installed on a clean machine, and run automatically, including a simulation on Windows, macOS Intel, and Ubuntu; the Apple silicon simulation is checked by hand for each release (see [supported platforms](docs/PLATFORMS.md)). Please report problems on your system. Gradara does not run MATLAB scripts or open Simulink files.
 
 Gradara is not certified for safety-critical use; verify results independently. [Validation](docs/VALIDATION.md) shows its results next to closed-form answers.
 
@@ -52,7 +52,7 @@ A fresh workspace opens with one empty **Untitled model**. Click its title to re
 | [480 VAC flyback](docs/examples/FLYBACK.md) | Bridge rectification, magnetizing energy storage, and 50 kHz switching to 24 V / 1 A. |
 | [Data center cooling](docs/examples/DATACENTER.md) | A one-hour lumped electrical–thermal PI benchmark with load and cooling-capacity disturbances. |
 
-**Models** opens a searchable browser with **My models**, **Examples**, and **Trash**. **Save a copy** keeps the original; **Import file** always creates a separate model. Export a `.gradara.json` file to share a model.
+**Models** opens a searchable browser with **My models**, **Examples**, **Block examples** (a small runnable model for every library block), and **Trash**. **Save a copy** keeps the original; **Import file** always creates a separate model. Export a `.gradara.json` file to share a model.
 
 Your models, results, and settings stay in your data folder on your computer (**Help → Open Data Folder**). The repository includes only the built-in examples.
 
@@ -68,7 +68,7 @@ Your models, results, and settings stay in your data folder on your computer (**
 - Modelica source export, portable project export, and C11 code for a controller: a subsystem, the selected signal blocks, or the controller Gradara detects on the sheet. Choose Tustin, backward, or forward Euler for continuous blocks, then check the compiled code against the last run's recorded inputs and outputs.
 - Desktop installers with a built-in simulation engine (no setup; a small built-in VM on macOS), automatic updates, and a choice of Gradara AI (20 free credits, then prepaid packs), your own OpenAI or Anthropic key, or no AI.
 
-Drawing, dragging, and routing stay in the workbench. The local FastAPI service saves project documents and supervises OpenModelica jobs, using a native OpenModelica install or the pinned container image. Models are stored as **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.
+Drawing, dragging, and routing stay in the workbench. The local FastAPI service saves project documents and supervises OpenModelica jobs on the built-in engine (installed apps), a native OpenModelica install, or the pinned container image. Models are stored as **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.
 
 ## Controls
 

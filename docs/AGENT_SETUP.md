@@ -10,7 +10,7 @@ AI in Gradara is optional. Drawing, wiring, simulating, reopening models, and ex
 - **Explain or fix a failed run** from the **Problems** tab (**Explain**, **Fix with AI**).
 - **Write a C template** for a custom block, so it can be included in a C code export.
 
-Every AI result is checked before you see it. Generated blocks must pass OpenModelica's compiler. Assistant edits and full models must also pass a trial simulation. So the simulation engine must be set up (**Settings → Engine**). **Explain** only reads the problems and does not compile anything. You always review a proposal before it changes your model. See the [user guide](USER_GUIDE.md#ai-features) for how each feature works.
+Every AI result is checked before you see it. Generated blocks must pass OpenModelica's compiler. Assistant edits and full models must also pass a trial simulation. So the simulation engine must be ready (**Settings → Engine** shows its status). **Explain** only reads the problems and does not compile anything. You always review a proposal before it changes your model. See the [user guide](USER_GUIDE.md#ai-features) for how each feature works.
 
 Passing these checks does not make a block physically correct. Review generated equations as you would any model.
 

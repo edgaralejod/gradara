@@ -4,9 +4,9 @@ Gradara's priority is a polished, usable diagram-to-simulation workflow. This is
 
 ## Before the first public release
 
-- Run the complete new-model/run/reopen/export workflow with a real engine from each installer (CI install tests start the app and create a model, but do not simulate); record actual platform results.
+- Run the complete new-model/run/reopen/export workflow by hand from each installer (CI install tests already simulate and verify generated C on Windows, macOS Intel, and Ubuntu; only the Apple silicon simulation is manual); record actual platform results.
 - Deploy the Gradara AI service in live mode and verify sign-in, one real purchase, a refund, and the webhook. Have the privacy notice and terms of service reviewed by counsel.
-- Sign and notarize installers (Apple Developer ID; Windows code signing such as Azure Trusted Signing) so they open without security warnings. Auto-update already runs on Windows and the Linux AppImage; macOS applies updates only to signed builds.
+- Sign the Windows installer (for example Azure Trusted Signing) so it opens without SmartScreen warnings; macOS builds are already signed and notarized. Auto-update runs on Windows, macOS, and the Linux AppImage.
 - Review dependency inventory and attribution for the source distribution and each installer. Resolve the lint backlog before promoting lint to a required check.
 
 ## Near-term, bounded work
@@ -19,7 +19,7 @@ Gradara's priority is a polished, usable diagram-to-simulation workflow. This is
 | Simulation settings | Solver/tolerance, output interval, initialization, and parameter sweeps. | Settings have useful defaults, are validated and recorded with each immutable run, and expose failures clearly. |
 | Result inspection | Comparisons of arbitrary saved runs (configuration overlays from Run all exist), dual cursors, frequency-domain views, independently scaled dual Y axes, and live streaming. | Remaining inspector gaps are closed without losing event pairs, linked X ranges, or browser-local plot preferences. |
 | Export cancellation cleanup | Process/container lifecycle in the AI export paths (`server/ctemplate.py`, and `server/exporter.py` until the deprecated `/exports` route is removed). | Cancellation and timeout leave no orphan compilation process or container; failure remains visible. |
-| Model folders and organization | Build on the searchable My models / Examples / Trash browser. | Users can organize models into nested folders without changing document identity, physics, or example source files. |
+| Model folders and organization | Build on the searchable My models / Examples / Block examples / Trash browser. | Users can organize models into nested folders without changing document identity, physics, or example source files. |
 | Example-driven blocks | Add one useful electrical/mechanical/control block at a time. | Shared design, valid connector contract, documented assumptions, and a block example that simulates to checked results. |
 | Reusable component libraries | Validation status, saved custom definitions, and refinement review. | A component can be reused and revised without silently changing its existing instances or connections. |
 

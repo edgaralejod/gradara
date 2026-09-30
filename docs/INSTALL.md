@@ -8,7 +8,7 @@ After that, see [Your first 10 minutes](USER_GUIDE.md#your-first-10-minutes).
 
 | | Windows | macOS | Linux |
 | --- | --- | --- | --- |
-| System | Windows 10 or 11, 64-bit (x64) | macOS 13 Ventura or newer, Apple silicon or Intel | 64-bit (x86-64). Tested on Ubuntu 22.04 and 24.04 and Debian 12. |
+| System | Windows 10 or 11, 64-bit (x64) | macOS 13 Ventura or newer, Apple silicon or Intel | 64-bit (x86-64). The installers are tested on Ubuntu 22.04 and 24.04; the engine is also checked on Debian 12. |
 | Download | `Gradara-win-x64.exe` | `Gradara-mac-arm64.dmg` (Apple silicon) or `Gradara-mac-x64.dmg` (Intel) | `Gradara-linux-amd64.deb` (Debian, Ubuntu) or `Gradara-linux-x86_64.AppImage` (other distributions) |
 | Simulation engine | Included | Included (runs in a small built-in virtual machine) | Included. It uses the system's `gcc`, which the `.deb` installs for you. |
 | Disk space | About 1 GB installed | About 700 MB installed | About 600 MB installed |
