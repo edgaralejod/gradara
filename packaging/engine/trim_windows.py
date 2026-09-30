@@ -10,8 +10,8 @@ the MSYS2 ucrt64 C toolchain (gcc, make, OpenBLAS) that Compile.bat drives.
 
 Selection:
 - OpenModelica's own `bin`: omc.exe, the runtime DLLs simulations link
-  against (those with an import library in lib/omc), and every DLL they load,
-  found by reading PE import tables.
+  against, the MSL C libraries omc loads by name (`Modelica*.dll`), and every
+  DLL they load, found by reading PE import tables.
 - `tools/msys`: the MSYS2 packages (from its pacman database) that provide the
   C toolchain and those DLLs, with their dependency closure, plus a minimal
   MSYS base (sh, coreutils) for the makefiles. Static archives are dropped
@@ -51,6 +51,9 @@ SKIP_OM = re.compile(r'^(lib/omc/(cpp|omsicpp|omsi|omsic)/|include/omc/(cpp|omsi
                      r'|antlr4|ipopt|colpack|OMCDLL)[^/]*$)', re.I)
 # The simulation runtime and what it loads; other DLLs in bin/ belong to the GUI tools.
 RUNTIME_ROOTS = ['omc.exe', 'libSimulationRuntimeC.dll', 'libOpenModelicaRuntimeC.dll', 'libomcgc-1.dll']
+# The Modelica Standard Library's C functions, which omc loads by name (not by an
+# import) to evaluate functions such as Modelica.Utilities.Strings at compile time.
+FFI_DLLS = re.compile(r'^(lib)?Modelica\w*\.dll$', re.I)
 # Toolchain files not needed to compile C: the C++ and LTO compilers, C++ headers.
 SKIP_MSYS = re.compile(r'^ucrt64/(lib/gcc/[^/]+/[^/]+/(cc1plus|lto1)\.exe|include/c\+\+/|share/(doc|man|info|locale)/)', re.I)
 SYSTEM_DLL = re.compile(r'^(api-ms-win-|ext-ms-)|^(kernel32|user32|advapi32|ws2_32|shell32|ole32|oleaut32|gdi32|'
@@ -129,6 +132,13 @@ def main() -> None:
     # 1. DLL closure from omc.exe and the linkable runtime DLLs.
     om_bin = om/'bin'
     roots = [om_bin/name for name in RUNTIME_ROOTS if (om_bin/name).exists()]
+    # omc looks for them in bin/ (and bin/ffi); take lib/omc's copies if bin/ has none.
+    ffi = [p for folder in (om_bin, om/'lib'/'omc') for p in sorted(folder.glob('*.dll')) if FFI_DLLS.match(p.name)]
+    ffi = list({p.name.lower(): p for p in reversed(ffi)}.values())
+    if not any(p.name.lower() in ('libmodelicaexternalc.dll', 'modelicaexternalc.dll') for p in ffi):
+        raise SystemExit(f'ModelicaExternalC.dll is in neither {om_bin} nor lib/omc; omc could not evaluate '
+                         'MSL string functions.')
+    roots += ffi
     search = [om_bin, ucrt_bin]
     found: dict[str, Path] = {}
     todo = list(roots)
@@ -171,7 +181,7 @@ def main() -> None:
         copied += src.stat().st_size
 
     for key, path in found.items():
-        if path.parent == om_bin:
+        if path.parent == om_bin or path in ffi:
             copy(path, f'bin/{path.name}')
     for sub in ('include/omc', 'lib/omc', 'share/omc'):
         base = om/sub
