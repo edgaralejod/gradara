@@ -191,19 +191,16 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     # GitHub's Apple silicon runners are themselves VMs without nested
-    # virtualization, so the arm64 image cannot boot there; it is checked on a
-    # real Mac before each release (docs/RELEASING.md). Intel runners can.
-    continue-on-error: ${{ matrix.arch == 'arm64' }}
+    # virtualization, so the arm64 image cannot boot there; Intel runners can.
+    # The arm64 boot runs only on a self-hosted Apple silicon Mac, when the
+    # repository variable APPLE_SILICON_RUNNER is 'true' (docs/development/TESTING.md);
+    # otherwise it is checked on a real Mac before each release (docs/RELEASING.md).
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: Intel
-            arch: x64
-            runner: macos-15-intel
-          - name: Apple silicon
-            arch: arm64
-            runner: macos-15
+        include: ${{ fromJSON(vars.APPLE_SILICON_RUNNER == 'true'
+          && '[{"name":"Intel","arch":"x64","runner":"macos-15-intel"},{"name":"Apple silicon","arch":"arm64","runner":["self-hosted","macOS","ARM64"]}]'
+          || '[{"name":"Intel","arch":"x64","runner":"macos-15-intel"}]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
