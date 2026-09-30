@@ -8,7 +8,7 @@ Use this checklist for a source release. Engine images and desktop installers re
 - [ ] Check that the private reporting address in [SECURITY.md](../SECURITY.md) and [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) still receives mail.
 - [ ] Run `python3 scripts/check-repo.py --history` and review anything it reports: personal models, credentials, prompts or logs, deployment identifiers, and private paths. Rotate any exposed secret; deleting the file does not remove it from history.
 - [ ] Run the [local checks](#local-checks) from a clean checkout with no `.venv`, `node_modules`, local model data, or provider configuration.
-- [ ] Confirm Core CI is green on the release commit, and dispatch Engine CI and Native OpenModelica for it.
+- [ ] Confirm Core CI is green on the release commit, and dispatch **OpenModelica integration** (`engine.yml`) and **Native OpenModelica** for it.
 - [ ] Review the final diff. Build the source archive from the tagged commit, not from a working folder; a filesystem ZIP can include ignored data.
 - [ ] Choose the tag, write release notes with known limitations, and publish.
 
@@ -53,7 +53,7 @@ Self-test mode: launching the app with `GRADARA_SELF_TEST_REPORT=<file>` makes i
 
 Pull-request builds never sign (electron-builder skips signing on pull requests), so a signing problem first shows up on a tag. After a change to signing, run **Desktop installers** manually on `main` before tagging (Actions → Desktop installers → Run workflow). A manual run takes the same non-pull-request path as a tag and tests every installer, but creates no release. If a tag build fails before anything is published, delete the tag (`git push origin :refs/tags/vX.Y.Z` and `git tag -d vX.Y.Z`), fix `main`, and tag again.
 
-Signing secrets (optional until configured; unsigned builds warn users):
+Signing secrets (the macOS ones are configured; the Windows certificate is not yet, so Windows builds are unsigned and SmartScreen warns):
 
 | Secret | Purpose |
 | --- | --- |

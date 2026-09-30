@@ -14,7 +14,7 @@ DEFAULT_GATEWAY = 'https://api.gradara.app'
 _lock = threading.Lock()
 
 DEFAULTS: dict[str, Any] = {
-    'engine': 'auto',              # auto | native | docker
+    'engine': 'auto',              # auto | bundled | native | docker
     'ai': {
         # gradara (hosted, prepaid credits) | openai | anthropic | codex | off
         'provider': None,          # None: chosen by default_provider()

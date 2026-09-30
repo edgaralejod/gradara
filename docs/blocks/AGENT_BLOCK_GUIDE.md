@@ -63,7 +63,7 @@ Wrapper blocks live in `lib/gradara/msl-blocks.ts`, which is generated. Do not e
 
 ## Subsystems are not blocks to author
 
-Subsystem instances, port pills, and variants are built by the workbench from the document (see the [model format](../architecture/MODEL_FORMAT.md#subsystems-and-variants)). Do not add a library definition that sets `subsystem` or `boundary`. The library's **Subsystem** entry and the three port entries in `lib/gradara/port-blocks.ts` are the only ways in.
+Subsystem instances, port pills, and variants are built by the workbench from the document (see the [model format](../architecture/MODEL_FORMAT.md#subsystems-and-variants)). Do not add a library definition that sets `subsystem` or `boundary`. The library's **Subsystem** entry and the two port entries in `lib/gradara/port-blocks.ts` (a terminal pill comes from retyping one, or from dropping a physical wire on a subsystem) are the only ways in.
 
 ## When building a complete model
 

@@ -16,7 +16,7 @@ Yes. The app is free and open source under the [Apache License 2.0](../LICENSE).
 
 ### Which systems does it run on?
 
-Windows 10 and 11 (64-bit), macOS 13 or newer on Apple silicon or Intel, and 64-bit Linux (tested on Ubuntu 22.04 and 24.04 and Debian 12). See [Install Gradara](INSTALL.md) and [supported platforms](PLATFORMS.md).
+Windows 10 and 11 (64-bit), macOS 13 or newer on Apple silicon or Intel, and 64-bit Linux (installers tested on Ubuntu 22.04 and 24.04; the engine is also checked on Debian 12). See [Install Gradara](INSTALL.md) and [supported platforms](PLATFORMS.md).
 
 ## Modeling
 

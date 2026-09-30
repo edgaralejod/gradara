@@ -10,7 +10,7 @@ Enlarging a block changes the space around its symbol, not its text size. Zoom s
 
 | Family | Default body | Reason |
 | --- | --- | --- |
-| Standard | 80 × 64 | Sources, unary math, most dynamics, limits, sinks, controllers with one input |
+| Standard | 80 × 64 | Sources, unary math, most dynamics, limits, controllers with one input |
 | Gain | 80 × 64 | Same envelope, familiar triangle |
 | Sum / subtract | 48 × 48 | Compact circular junction; input signs belong at their terminals |
 | Multi-terminal | 128 × 96 or larger | A central symbol well plus independent terminal-caption gutters |
