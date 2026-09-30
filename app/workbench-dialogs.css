@@ -508,6 +508,10 @@
   display: flex; gap: 5px; margin: 6px 0 0; font-size: var(--text-micro); color: #8193a0;
 }
 .block-dialog-identity code { font-family: var(--font-code); }
+/* A bus block's Signals (the inspector's panel) sit where Parameters would. */
+.block-dialog-signals .inspector-section { border-top: 0; padding: 0; }
+.block-dialog-signals .inspector-section > .section-label { margin: 8px 0 6px; }
+.block-dialog-signals > .size-hint { margin: 6px 0 0; color: #8193a0; }
 .block-dialog .dialog-actions { align-items: center; justify-content: flex-end; }
 .block-dialog-dirty {
   display: inline-flex; align-items: center; gap: 6px; margin-right: auto;

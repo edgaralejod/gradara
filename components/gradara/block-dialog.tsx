@@ -20,6 +20,8 @@ import type { ComponentType } from 'react';
 import { Input } from '@/components/ui/input';
 import ParameterList from './parameter-list';
 import BlockHelpDialog from './block-help-dialog';
+import { BusSignalsPanel } from './bus-signals-panel';
+import type { Project } from '@/lib/gradara/model';
 
 export type BlockDialogTab = 'properties' | 'equations' | 'declarations';
 
@@ -41,12 +43,13 @@ function initialDraft(definition: Definition): Draft {
   };
 }
 
-function isDirty(definition: Definition, draft: Draft) {
+function isDirty(definition: Definition, draft: Draft, readonly: boolean) {
   return (
     draft.name.trim() !== definition.name ||
     definition.parameters.some((p) => draft.values[p.id] !== p.value) ||
-    draft.equations !== definition.equations ||
-    draft.declarations !== (definition.declarations ?? '')
+    (!readonly &&
+      (draft.equations !== definition.equations ||
+        draft.declarations !== (definition.declarations ?? '')))
   );
 }
 
@@ -62,11 +65,14 @@ export default function BlockDialog({
   initialTab = 'properties',
   onClose,
   onApply,
+  onCommit,
 }: {
   block: Block;
   initialTab?: BlockDialogTab;
   onClose: () => void;
   onApply: (edits: BlockEdits) => void;
+  /** Applies a whole-project change at once (a bus block's Signals). */
+  onCommit?: (change: (p: Project) => Project) => void;
 }) {
   const definition = block.definition;
   const [helpOpen, setHelpOpen] = useState(false);
@@ -81,11 +87,13 @@ export default function BlockDialog({
   const [Editor, setEditor] = useState<ComponentType<any> | null>(null);
   const firstParameter = useRef<HTMLInputElement>(null);
   // A bus block's equations follow its Signals (buses.ts), so they are shown, not edited.
+  const bus = isBusBlock(definition);
   const readonly =
     !definition.generated &&
-    (definition.domain !== 'signal' ||
-      !!definition.modelica ||
-      isBusBlock(definition));
+    (definition.domain !== 'signal' || !!definition.modelica || bus);
+  const readOnlyMessage = bus
+    ? 'These equations follow the Signals on the Properties tab.'
+    : 'Built-in equations are shown for inspection and cannot be edited.';
   const defaults = libraryDefaults(definition);
   // Show only what this block has: code tabs for blocks defined by equations you
   // can read or edit, and a Parameters section only when there are parameters.
@@ -96,11 +104,11 @@ export default function BlockDialog({
     (tab === 'declarations' && !showDeclarations)
       ? 'properties'
       : tab;
-  const dirty = isDirty(definition, draft);
+  const dirty = isDirty(definition, draft, readonly);
 
   const apply = () => {
     const current = draftRef.current;
-    if (!isDirty(definition, current)) return;
+    if (!isDirty(definition, current, readonly)) return;
     onApply({
       name: current.name,
       parameters: current.values,
@@ -144,7 +152,15 @@ export default function BlockDialog({
     };
   }, []);
 
-  const code = activeTab === 'equations' ? draft.equations : draft.declarations;
+  // Read-only code is the definition's own (a bus block's equations follow its
+  // Signals, which change while this dialog is open); editable code is the draft's.
+  const code = readonly
+    ? activeTab === 'equations'
+      ? definition.equations
+      : (definition.declarations ?? '')
+    : activeTab === 'equations'
+      ? draft.equations
+      : draft.declarations;
   const setCode = (value: string) =>
     setDraft(activeTab === 'equations' ? { equations: value } : { declarations: value });
 
@@ -211,6 +227,14 @@ export default function BlockDialog({
                 <code>{block.id}</code>
               </p>
             </section>
+            {bus && onCommit && (
+              <section className="block-dialog-signals">
+                <BusSignalsPanel block={block} onCommit={onCommit} />
+                <p className="size-hint">
+                  Changes to the signals apply at once, each as one undo step.
+                </p>
+              </section>
+            )}
             {definition.parameters.length > 0 && (
             <section>
               <div className="section-label">
@@ -259,6 +283,10 @@ export default function BlockDialog({
                 onChange={(value: string | undefined) => setCode(value ?? '')}
                 options={{
                   readOnly: readonly,
+                  readOnlyMessage: { value: readOnlyMessage },
+                  // Widgets (this message, hovers) may extend past the editor's
+                  // box; the dialog clips overflow, so they are positioned on the page.
+                  fixedOverflowWidgets: true,
                   fontSize: 14,
                   minimap: { enabled: false },
                   scrollBeyondLastLine: false,

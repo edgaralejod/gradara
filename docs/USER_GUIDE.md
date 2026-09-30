@@ -157,7 +157,7 @@ To move between the two, use sensors (physical to signal) and sources or actuato
 
 A bus carries several signals on one wire, drawn heavy so it stands out. Four blocks in **Routing** make and take them apart, as in Simulink:
 
-- **Mux** joins its inputs into one vector, in order. **Demux** splits a vector back into equal parts. Set how many inputs or outputs under **Signals** in the block's properties; the bar grows to fit, and **Match incoming** gives a Demux one output per signal.
+- **Mux** joins its inputs into one vector, in order. **Demux** splits a vector back into equal parts. Set how many inputs or outputs under **Signals** in the block's properties (in the inspector, or in the dialog a double-click opens); the bar grows to fit, and **Match incoming** gives a Demux one output per signal.
 - **Bus Creator** bundles signals under names: each input label is the signal's name, edited under **Signals**. A bus plugged into a Bus Creator keeps its signals under that input's name, such as `motor.speed`.
 - **Bus Selector** picks signals out of a bus by name, wherever they are in it. Tick them under **Signals**; each becomes an output labeled with its name. Ticking a bus inside the bus (`motor`) gives all its signals as one vector.
 

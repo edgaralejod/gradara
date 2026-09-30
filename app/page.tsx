@@ -3831,6 +3831,7 @@ function Workbench() {
               block={project.blocks.find((b) => b.id === equationBlock.id)!}
               initialTab={equationBlock.tab}
               onClose={() => setEquationBlock(null)}
+              onCommit={(change) => commit(change)}
               onApply={(edits) => {
                 const before = projectRef.current.blocks.find(
                   (b) => b.id === equationBlock.id,
