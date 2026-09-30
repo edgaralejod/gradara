@@ -32,7 +32,7 @@ The engine is built in, so there is nothing to set up. **Settings → Engine** s
 6. In **Results**, check the Second-order output in the signal list. You see a step response that overshoots slightly and settles at 1. Results lists every block output, so you never need a block just to see a signal.
 7. Double-click the Second-order block and lower **Damping ratio** to 0.2. Run again and compare.
 
-You can also use the block library on the left. It opens with a new blank model; the first button in the toolbar (**Show components** / **Hide components**) toggles it. Press **/** to search it, then click or drag a block onto the sheet.
+You can also use the block library on the left. It opens with a new blank model; the first button in the toolbar (**Show components** / **Hide components**) toggles it. Press **/** to search it, then click or drag a block onto the sheet. A search looks through every category, whatever the category menu shows: blocks whose name or description contains what you typed come first as **Matches**, and blocks that only share scattered letters with it are listed apart as **Approximate matches**.
 
 Next, read [Build a diagram](#build-a-diagram) and [Simulate and read results](#simulate-and-read-results), or open other examples from [Built-in examples](#built-in-examples).
 
@@ -106,7 +106,7 @@ The gear button at the top right opens **Settings**. It has four tabs:
 - **Examples** lists the complete example systems (motor drives, converters, the EV, data-center cooling), and **Block examples** the small model for each library block, grouped by area. Select one to preview its diagram and description; search block examples by any block they use. **Use example** (or double-click, or Enter) saves a new copy in My models. Changing the copy never changes the example.
 - **Trash** holds models you removed. Use the trash icon on a row to remove a model (open a different model first if it is the one you are editing). Click a model in Trash to restore it. Trash is never emptied automatically.
 
-**Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`), Modelica source, or C code. Gradara cannot import Modelica files.
+**Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists; a file that is not a Gradara model is reported in the browser, with the reason, and nothing is added. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`), Modelica source, or C code. Gradara cannot import Modelica files.
 
 ### Saving
 
@@ -256,8 +256,9 @@ After a successful run, Gradara switches to the **Results** tab. The panel insid
 
 ### Results
 
-Choose a preset plot or a signal, optionally add a second signal, and choose a time window. **Fit Y** fits the vertical range. **Export CSV** downloads every output row; the on-screen plot is thinned out to stay responsive.
+Choose a preset plot or a signal, optionally add a second signal, and choose a time window. **Fit Y** fits the vertical range. **Export CSV** downloads every output row, one column per signal named as in the list with its unit (`Speed sensor.out [rad/s]`), as `<model name>-<run>.csv`; its first line, starting with `#`, records the model, its revision, the engine, the simulated duration and the run. The on-screen plot is thinned out to stay responsive.
 
+- **Compare runs.** **Keep run** in the heading holds the current run (up to three) while you change parameters and run again; with **Overlay** on, the kept runs are drawn on the same plots as the latest, named `[Run 1] …` and `[Latest] …`, and each kept run's chip says how many parameters differ from the latest (hover it for the list, such as `Speed reference · Final value: 100 → 60`). Kept runs belong to the open model and are forgotten when you switch models; × forgets one.
 - **Layouts.** One plot, two stacked, two side by side, a 2×2 grid, or a 3×2 grid. Select a plot by its header, then check signals in the left panel, or drag a signal onto any plot. Removing a signal only changes the view.
 - **Navigate.** Use **Pan**, **Box zoom**, or **Cursor**, on **X only**, **Y only**, or **X + Y**. The mouse wheel zooms around the pointer. Link the X axes to keep plots in step. **Fit X**, **Fit Y**, and **Fit both** reset the view; double-click or Home fits both. Arrow keys pan a focused plot. Maximize a plot to see it alone.
 - **Cursor values** show the stored sample at or just before the cursor time, so jumps at events stay sharp.

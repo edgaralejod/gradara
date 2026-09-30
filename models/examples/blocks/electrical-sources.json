@@ -1341,6 +1341,7 @@
             "direction": "input",
             "domain": "signal",
             "side": "left",
+            "unit": "V",
             "offset": 80
           }
         ],
@@ -1571,6 +1572,7 @@
             "direction": "input",
             "domain": "signal",
             "side": "left",
+            "unit": "A",
             "offset": 80
           }
         ],

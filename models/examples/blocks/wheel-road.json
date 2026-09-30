@@ -361,7 +361,8 @@
             "name": "v",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "m/s"
           }
         ],
         "parameters": [],
@@ -570,7 +571,8 @@
             "name": "s",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "m"
           }
         ],
         "parameters": [],

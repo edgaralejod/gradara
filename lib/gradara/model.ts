@@ -1,3 +1,4 @@
+import portUnits from './port-units.json';
 import { controlBlocks } from './control-blocks';
 import { extraBlocks } from './extra-blocks';
 import { mslBlocks } from './msl-blocks';
@@ -404,6 +405,15 @@ const allBlocks: Definition[] = [
   ...mslBlocks,
   ...portBlocks,
 ];
+// Physical units of ports whose meaning the block fixes (a speed sensor reads
+// rad/s; a controlled voltage source takes V). One table serves the library and
+// the server (lib/gradara/port-units.json), so results from documents saved
+// before a unit existed still show it.
+const PORT_UNITS = portUnits as unknown as Record<string, Record<string, string> | string>;
+for (const d of allBlocks)
+  for (const port of d.ports)
+    if (!port.unit && typeof PORT_UNITS[d.kind] === 'object')
+      port.unit = (PORT_UNITS[d.kind] as Record<string, string>)[port.id] || undefined;
 export const library: Definition[] = allBlocks.filter(
   (d) => !RETIRED_KINDS.has(d.kind),
 );

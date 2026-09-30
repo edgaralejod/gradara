@@ -67,7 +67,8 @@
             "name": "ω",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "rad/s"
           },
           {
             "id": "flange",
@@ -314,7 +315,8 @@
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "rad/s"
           }
         ],
         "parameters": [],
@@ -417,7 +419,8 @@
             "name": "ω",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "rad/s"
           },
           {
             "id": "flange",
@@ -620,7 +623,8 @@
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "rad/s"
           }
         ],
         "parameters": [],
@@ -699,7 +703,8 @@
             "name": "τ",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "N·m"
           },
           {
             "id": "flange",
@@ -868,7 +873,8 @@
             "name": "out",
             "direction": "output",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "rad/s"
           }
         ],
         "parameters": [],
@@ -1030,7 +1036,8 @@
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "rad/s"
           }
         ],
         "parameters": [],

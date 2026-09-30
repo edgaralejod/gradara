@@ -417,21 +417,24 @@
             "name": "va",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "V"
           },
           {
             "id": "vb",
             "name": "vb",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "V"
           },
           {
             "id": "vc",
             "name": "vc",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "V"
           }
         ],
         "parameters": [],

@@ -202,7 +202,8 @@
             "name": "P",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "W"
           },
           {
             "id": "flange_a",
@@ -545,7 +546,8 @@
             "name": "α",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "rad/s²"
           }
         ],
         "parameters": [],
@@ -583,7 +585,8 @@
             "name": "Δω",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "rad/s"
           },
           {
             "id": "flange_a",
@@ -642,7 +645,8 @@
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "rad/s"
           }
         ],
         "parameters": [],

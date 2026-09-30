@@ -1,6 +1,7 @@
 """Log signal nets only. Physical quantities are selected through sensor blocks."""
 from . import msl
 from .models import BOUNDARY_KINDS, CAUSAL_DOMAINS, Project
+from .units import signal_units
 
 
 def _scopes(project: Project):
@@ -18,6 +19,7 @@ def _scopes(project: Project):
 
 def logged_signals(project: Project):
     used = {b.id for b in project.blocks}
+    units = signal_units(project)
     result = []
     for diagram, prefix, label, top in _scopes(project):
         blocks = {b.id: b for b in diagram.blocks}
@@ -39,7 +41,7 @@ def logged_signals(project: Project):
             block, port = terminals[key]
             if port.domain not in CAUSAL_DOMAINS:
                 raise ValueError('Only signal/control nets can be logged. Add a sensor and log its signal output.')
-            field, unit = '', port.unit
+            field, unit = '', units.get(f'{prefix}{block.id}.{port.id}', port.unit)
             variable = f'gradara_log_{prefix.replace(".", "_")}{net.id}'
             while variable in used:
                 variable += '_value'

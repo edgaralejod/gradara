@@ -187,7 +187,8 @@
             "name": "Q",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "W"
           },
           {
             "id": "port",
@@ -402,7 +403,8 @@
             "name": "T",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "K"
           }
         ],
         "parameters": [],

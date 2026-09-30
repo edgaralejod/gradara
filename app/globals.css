@@ -2192,3 +2192,12 @@ input:hover::-webkit-inner-spin-button {
 .model-composer .composer-input { margin: 14px 0 0; width: 100%; }
 .model-composer .preview-checked { margin-top: 14px; }
 .model-creation-note { margin: 12px 0 0; }
+
+/* A field whose text is not a usable value (stop time, export step): what is allowed. */
+.field-error {
+  color: #b42318;
+  font-size: var(--text-micro);
+  line-height: 1.3;
+}
+label > .field-error { margin-left: 6px; white-space: nowrap; }
+.model-duration-field + .field-error { margin: -4px 0 8px; }

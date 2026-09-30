@@ -741,6 +741,7 @@
             "direction": "input",
             "domain": "signal",
             "side": "left",
+            "unit": "A",
             "offset": 80
           }
         ],

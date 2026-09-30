@@ -1,4 +1,5 @@
 import type { SimulationResult } from './api';
+import type { Project } from './model';
 
 export type ComparisonRun = { name: string; result: SimulationResult };
 
@@ -48,4 +49,31 @@ export function mergeRuns(runs: ComparisonRun[]): SimulationResult {
     elapsed: runs.reduce((t, r) => t + r.result.elapsed, 0),
     comparison: runs.map((r) => ({ name: r.name, runId: r.result.id })),
   };
+}
+
+/**
+ * What changed in the block parameters between two documents (a kept run's
+ * snapshot and the latest): "Speed reference · Final value: 100 → 60". Blocks
+ * are matched by ID; added or removed blocks are named as such. Top-level only.
+ */
+export function parameterDifferences(from: Project, to: Project): string[] {
+  const out: string[] = [];
+  const before = new Map(from.blocks.map((b) => [b.id, b]));
+  const after = new Map(to.blocks.map((b) => [b.id, b]));
+  for (const [id, b] of after) {
+    const a = before.get(id);
+    if (!a) {
+      out.push(`${b.definition.name}: added`);
+      continue;
+    }
+    const was = new Map(a.definition.parameters.map((p) => [p.id, p]));
+    for (const p of b.definition.parameters) {
+      const q = was.get(p.id);
+      if (q && q.value !== p.value)
+        out.push(`${b.definition.name} · ${p.name}: ${q.value} → ${p.value}${p.unit ? ` ${p.unit}` : ''}`);
+    }
+  }
+  for (const [id, a] of before) if (!after.has(id)) out.push(`${a.definition.name}: removed`);
+  if (from.duration !== to.duration) out.push(`Stop time: ${from.duration} → ${to.duration} s`);
+  return out;
 }

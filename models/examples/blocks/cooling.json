@@ -129,7 +129,8 @@
             "name": "Q",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "W"
           },
           {
             "id": "port_a",
@@ -353,6 +354,7 @@
             "direction": "input",
             "domain": "signal",
             "side": "top",
+            "unit": "W/K",
             "offset": 25
           }
         ],
@@ -564,7 +566,8 @@
             "name": "T",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "K"
           }
         ],
         "parameters": [],
@@ -605,7 +608,8 @@
             "name": "ΔT",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "K"
           },
           {
             "id": "port_a",
@@ -691,7 +695,8 @@
             "name": "T",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "K"
           },
           {
             "id": "port",
@@ -900,7 +905,8 @@
             "name": "Q",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "W"
           },
           {
             "id": "port",
@@ -955,7 +961,8 @@
             "name": "T",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "K"
           }
         ],
         "parameters": [],

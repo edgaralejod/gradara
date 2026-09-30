@@ -6,6 +6,7 @@ import time
 import xml.etree.ElementTree as ET
 from . import msl
 from .hierarchy import all_blocks, instances
+from .units import signal_units
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
 from .runtime import IMAGE, LEGACY_IMAGE
@@ -118,10 +119,11 @@ async def run(project: Project, job_id: str, folder: Path):
     # and final values inside the requested interval; retain the raw CSV.
     rows = [row for row in rows if float(row['time']) <= project.duration + max(1e-12, project.duration * 1e-12)]
     column = result_columns(folder, rows)
+    units = signal_units(project)
     outputs = []
     for prefix, label, block, owner in instances(project):
         definition = block.definition
-        candidates = [(p.id, p.name, p.unit) for p in definition.ports if p.direction == 'output' or (definition.kind in {'scope', 'display'} and p.direction == 'input')]
+        candidates = [(p.id, p.name, units.get(f'{prefix}{block.id}.{p.id}', p.unit)) for p in definition.ports if p.direction == 'output' or (definition.kind in {'scope', 'display'} and p.direction == 'input')]
         if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
         if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
         widths = {p.id: p for p in definition.ports}

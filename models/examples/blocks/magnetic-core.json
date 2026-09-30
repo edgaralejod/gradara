@@ -230,7 +230,8 @@
             "name": "Phi",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "Wb"
           },
           {
             "id": "port_p",
@@ -428,7 +429,8 @@
             "name": "V_m",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "A"
           },
           {
             "id": "port_p",
@@ -631,7 +633,8 @@
             "name": "Rm",
             "direction": "input",
             "domain": "signal",
-            "side": "top"
+            "side": "top",
+            "unit": "1/H"
           },
           {
             "id": "port_p",
@@ -679,7 +682,8 @@
             "name": "Phi",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "Wb"
           },
           {
             "id": "port_p",
@@ -807,7 +811,8 @@
             "name": "Vm",
             "direction": "input",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "A"
           },
           {
             "id": "port_p",
@@ -942,7 +947,8 @@
             "name": "Phi",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "Wb"
           },
           {
             "id": "port_p",
@@ -1164,7 +1170,8 @@
             "name": "V_m",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "A"
           },
           {
             "id": "port_p",

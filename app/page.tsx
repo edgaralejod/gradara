@@ -137,6 +137,7 @@ import {
   type BlockLayout,
 } from '@/lib/gradara/canvas';
 import NumberField from '@/components/gradara/number-field';
+import { STOP_TIME, rangeText } from '@/lib/gradara/number-input';
 import NameField from '@/components/gradara/name-field';
 import Results from '@/components/gradara/results';
 import {
@@ -144,8 +145,10 @@ import {
   removeTerminators,
   terminateOpenOutputs,
 } from '@/lib/gradara/terminators';
+import { type KeptRuns } from '@/components/gradara/data-inspector';
 import ModelBrowser, {
   type BrowserSection,
+  type ImportError,
 } from '@/components/gradara/model-browser';
 import ModelComposer from '@/components/gradara/model-composer';
 import SaveCopyDialog from '@/components/gradara/save-copy-dialog';
@@ -183,7 +186,7 @@ import ExplorerWorkspace, {
 } from '@/components/gradara/model-explorer';
 import { explorerIndex } from '@/lib/gradara/explorer';
 import ConfigurationMenu from '@/components/gradara/configuration-menu';
-import { mergeRuns, type ComparisonRun } from '@/lib/gradara/compare';
+import { mergeRuns, parameterDifferences, type ComparisonRun } from '@/lib/gradara/compare';
 import {
   applyConfiguration,
   removeConfiguration,
@@ -513,6 +516,16 @@ function Workbench() {
     items: CanvasMenuItem[];
   } | null>(null);
   const [running, setRunning] = useState(false);
+  // Earlier runs of this model kept for comparison (QA Q03): overlaid on the
+  // latest single run through the configuration-comparison merge.
+  const [keptRuns, setKeptRuns] = useState<{ name: string; result: SimulationResult }[]>([]);
+  const [overlayKept, setOverlayKept] = useState(true);
+  // Stop-time fields whose text is not a usable value (B01): the toolbar's and
+  // the model inspector's. While any is set, Run is held and the field explains.
+  const [badStopTime, setBadStopTime] = useState<{ toolbar?: boolean; inspector?: boolean }>({});
+  const stopTimeInvalid = !!(badStopTime.toolbar || badStopTime.inspector);
+  const stopTimeRefs = useRef<{ toolbar: HTMLInputElement | null; inspector: HTMLInputElement | null }>({ toolbar: null, inspector: null });
+  const STOP_TIME_MESSAGE = `Stop time must be a number ${rangeText(STOP_TIME.min, STOP_TIME.max)} seconds.`;
   const [runError, setRunError] = useState('');
   const [runFailure, setRunFailure] = useState<RunFailure | null>(null);
   const [result, setResult] = useState<SimulationResult | null>(null);
@@ -555,6 +568,7 @@ function Workbench() {
     [store],
   );
   const importRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState<ImportError | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const flow = useReactFlow();
   const notify = useCallback((message: string) => {
@@ -658,6 +672,30 @@ function Workbench() {
     });
   };
   const signature = useMemo(() => semanticSignature(doc), [doc]);
+  const shownResult = useMemo(
+    () =>
+      result && !result.comparison && overlayKept && keptRuns.length
+        ? mergeRuns([{ name: 'Latest', result }, ...keptRuns])
+        : result,
+    [result, keptRuns, overlayKept],
+  );
+  const kept: KeptRuns = {
+    runs: keptRuns.map((run) => ({
+      ...run,
+      differences:
+        result?.snapshot && run.result.snapshot
+          ? parameterDifferences(run.result.snapshot, result.snapshot)
+          : [],
+    })),
+    overlay: overlayKept,
+    canKeep: !!result && !result.comparison && !keptRuns.some((k) => k.result.id === result.id),
+    onKeep: () => {
+      if (!result || result.comparison) return;
+      setKeptRuns((runs) => [...runs, { name: `Run ${runs.length + 1}`, result }].slice(0, 3));
+    },
+    onForget: (index) => setKeptRuns((runs) => runs.filter((_, i) => i !== index)),
+    onOverlay: setOverlayKept,
+  };
   const [dock, updateDock] = useDockState();
   const [liveProblems, setLiveProblems] = useState<Diagnostic[]>([]);
   useEffect(() => {
@@ -1087,6 +1125,7 @@ function Workbench() {
     setSaveError('');
     setResult(null);
     setResultSignature('');
+    setKeptRuns([]);
     setSaving(store.isSaved(next) ? 'Saved' : 'Unsaved changes');
   };
   const beginTransition = () => {
@@ -1114,9 +1153,17 @@ function Workbench() {
       activateModel(restoreDocument(created, false));
       setBrowserSection(null);
       setLibraryOpen(template === 'blank');
+      showNewSheet();
     } finally {
       endTransition();
     }
+  };
+  // A model the user has not seen yet (new, an example's copy, an import) opens
+  // on its diagram, fitted, whatever view was showing; a saved model reopens
+  // wherever it was left.
+  const showNewSheet = () => {
+    setWorkspaceMode('diagram');
+    setTimeout(() => window.dispatchEvent(new Event(FIT_VIEW_EVENT)), 80);
   };
   // Help → Open example: a copy of the example in My models, with the block selected.
   const openExampleRef = useRef<(detail: OpenExampleDetail) => Promise<void>>(
@@ -1813,6 +1860,11 @@ function Workbench() {
   );
   async function runSimulation() {
     if (runController.current || switching || !ready) return;
+    if (stopTimeInvalid) {
+      notify(STOP_TIME_MESSAGE);
+      (badStopTime.toolbar ? stopTimeRefs.current.toolbar : stopTimeRefs.current.inspector)?.focus();
+      return;
+    }
     if (!docRef.current.blocks.length) {
       notify('Add a block from the library or ask the agent to create one.');
       return;
@@ -1882,6 +1934,11 @@ function Workbench() {
       configurations.length < 2
     )
       return;
+    if (stopTimeInvalid) {
+      notify(STOP_TIME_MESSAGE);
+      (badStopTime.toolbar ? stopTimeRefs.current.toolbar : stopTimeRefs.current.inspector)?.focus();
+      return;
+    }
     const controller = new AbortController();
     runController.current = controller;
     setRunning(true);
@@ -2286,9 +2343,15 @@ function Workbench() {
   };
   async function importProject(file: File) {
     if (!beginTransition()) return;
+    setImportError(null);
+    let stage = 'read';
     try {
-      const imported = JSON.parse(await file.text()) as Project;
+      const text = await file.text();
+      stage = 'parse';
+      const imported = JSON.parse(text) as Project;
+      stage = 'check';
       await api('/source', { method: 'POST', body: JSON.stringify(imported) });
+      stage = 'save';
       await saveCurrent();
       const copied = await api<SavedDocument>('/models/copy', {
         method: 'POST',
@@ -2296,9 +2359,24 @@ function Workbench() {
       });
       activateModel(restoreDocument(copied, false));
       setBrowserSection(null);
+      showNewSheet();
       notify(`${copied.project.name} imported as a separate model.`);
     } catch (e) {
-      notify('Could not import this model. ' + (e as Error).message);
+      // The browser stays open, so the explanation goes there (QA B04), not into a toast.
+      const detail = (e as Error).message;
+      setImportError({
+        file: file.name,
+        message:
+          stage === 'parse'
+            ? 'the file is not valid JSON. A Gradara model is the .gradara.json file that Export writes.'
+            : stage === 'check'
+              ? 'it is not a Gradara model, or was made by a newer version.'
+              : stage === 'read'
+                ? 'the file could not be read.'
+                : 'it could not be saved as a new model.',
+        detail,
+      });
+      setBrowserSection((s) => s ?? 'models');
     } finally {
       endTransition();
     }
@@ -2396,7 +2474,11 @@ function Workbench() {
     <TooltipProvider delay={450}>
       <main className="workbench">
         <header className="app-header">
-          <AboutDialog />
+          <AboutDialog
+            version={health.version}
+            engine={health.engine}
+            engineReady={health.engineReady}
+          />
           <div className="project-breadcrumb">
             <button
               className="models-button"
@@ -2648,11 +2730,22 @@ function Workbench() {
                 <NumberField
                   value={project.duration}
                   onChange={(duration) => commit((p) => ({ ...p, duration }))}
-                  min={0.000001}
-                  max={86400}
+                  min={STOP_TIME.min}
+                  max={STOP_TIME.max}
                   ariaLabel="Simulation stop time"
+                  inputRef={(el) => {
+                    stopTimeRefs.current.toolbar = el;
+                  }}
+                  onValidity={(valid) =>
+                    setBadStopTime((b) => (b.toolbar === !valid ? b : { ...b, toolbar: !valid }))
+                  }
                 />
                 <span>s</span>
+                {badStopTime.toolbar && (
+                  <span role="alert" className="field-error">
+                    {STOP_TIME.min} to {STOP_TIME.max}
+                  </span>
+                )}
               </label>
               <ConfigurationMenu
                 doc={doc}
@@ -2667,10 +2760,12 @@ function Workbench() {
               <Button
                 className={`run-button ${running ? 'running' : ''}`}
                 onClick={() => void (running ? cancelRun() : runSimulation())}
+                title={stopTimeInvalid && !running ? STOP_TIME_MESSAGE : undefined}
                 disabled={
                   (!health.engineReady ||
                     !ready ||
                     switching ||
+                    stopTimeInvalid ||
                     !project.blocks.length) &&
                   !running
                 }
@@ -3132,12 +3227,13 @@ function Workbench() {
                 <Results
                   key={project.modelId ?? 'workspace'}
                   modelId={project.modelId}
-                  result={result}
+                  result={shownResult}
                   running={running}
                   error={runError}
                   stale={!!result && signature !== resultSignature}
                   empty={!project.blocks.length}
                   dedicated
+                  kept={kept}
                 />
               </div>
             )}
@@ -3672,13 +3768,24 @@ function Workbench() {
                     <NumberField
                       ariaLabel="Model stop time"
                       value={project.duration}
-                      min={0.000001}
-                      max={86400}
+                      min={STOP_TIME.min}
+                      max={STOP_TIME.max}
                       onChange={(duration) =>
                         commit((p) => ({ ...p, duration }))
                       }
+                      inputRef={(el) => {
+                        stopTimeRefs.current.inspector = el;
+                      }}
+                      onValidity={(valid) =>
+                        setBadStopTime((b) => (b.inspector === !valid ? b : { ...b, inspector: !valid }))
+                      }
                     />
                   </label>
+                  {badStopTime.inspector && (
+                    <p role="alert" className="field-error">
+                      {STOP_TIME_MESSAGE}
+                    </p>
+                  )}
                   {project.description && (
                     <details className="property-description">
                       <summary>Description</summary>
@@ -3853,10 +3960,15 @@ function Workbench() {
           <ModelBrowser
             section={browserSection}
             activeId={project.modelId}
-            onClose={() => setBrowserSection(null)}
+            onClose={() => {
+              setBrowserSection(null);
+              setImportError(null);
+            }}
             onOpen={openModel}
             onCreate={createModel}
             onImport={() => importRef.current?.click()}
+            importError={importError}
+            onDismissImportError={() => setImportError(null)}
             onCopy={() => {
               setBrowserSection(null);
               setCopyOpen(true);

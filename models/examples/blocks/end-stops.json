@@ -83,7 +83,8 @@
             "name": "F",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "N"
           },
           {
             "id": "flange",
@@ -243,7 +244,8 @@
             "name": "s",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "m"
           }
         ],
         "parameters": [],
@@ -525,7 +527,8 @@
             "name": "s",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "m"
           }
         ],
         "parameters": [],
@@ -604,7 +607,8 @@
             "name": "v",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "m/s"
           },
           {
             "id": "flange",
@@ -728,7 +732,8 @@
             "name": "v",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "m/s"
           }
         ],
         "parameters": [],
@@ -830,7 +835,8 @@
             "name": "s",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "m"
           },
           {
             "id": "flange",
@@ -954,7 +960,8 @@
             "name": "s",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "m"
           }
         ],
         "parameters": [],

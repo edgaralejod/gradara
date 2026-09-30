@@ -83,6 +83,21 @@ def test_success_warnings_become_problems():
     assert problems[1].source == 'runtime'
 
 
+def test_solver_warnings_are_said_in_gradara_terms():
+    model = feedback()
+    text = ('Warning: The initial conditions are not fully specified. For more information set -d=initialization. '
+            'In OMEdit Tools->Options->Simulation->Show additional information from the initialization process, '
+            'in OMNotebook call setCommandLineOptions("-d=initialization").\n'
+            'Warning: Alias set with conflicting start values\n'
+            'Warning: Something the table does not know.')
+    problems = warning_diagnostics(model, text)
+    assert 'OMEdit' not in problems[0].message and 'initial state' in problems[0].message
+    assert problems[0].hint and 'initial value' in problems[0].hint
+    assert 'OMEdit' in problems[0].detail, 'the engine text is kept for the details'
+    assert problems[1].message.startswith('Two connected quantities')
+    assert problems[2].message == 'Something the table does not know.' and problems[2].hint is None
+
+
 def test_failed_jobs_record_diagnostics(monkeypatch, tmp_path):
     from fastapi.testclient import TestClient
     from server import app as service

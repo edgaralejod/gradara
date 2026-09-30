@@ -26,6 +26,8 @@ def main() -> None:
         '--copy-metadata', 'keyring',
         # The MSL class index is data, which module collection does not pick up.
         '--add-data', f'{ROOT/"server"/"msl_index.json"}{os.pathsep}server',
+        # Physical port units, shared with the workbench library (server/units.py).
+        '--add-data', f'{ROOT/"lib"/"gradara"/"port-units.json"}{os.pathsep}lib/gradara',
         '--exclude-module', 'tkinter',
         '--exclude-module', 'pytest',
     ]

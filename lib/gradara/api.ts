@@ -142,6 +142,11 @@ export type SimulationResult = {
   /** Set on an overlay of several configurations' runs (Run all configurations); not a stored run. */
   comparison?: { name: string; runId: string }[];
 };
+/** A model name as a file name part: letters, digits, dots and dashes, as the service does. */
+export function fileSlug(name: string, fallback = 'model'): string {
+  const slug = name.replace(/[^A-Za-z0-9.]+/g, '-').replace(/^[-.]+|[-.]+$/g, '');
+  return slug.slice(0, 60) || fallback;
+}
 export function downloadText(name: string, text: string, type = 'text/plain') {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const anchor = document.createElement('a');

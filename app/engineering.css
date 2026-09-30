@@ -50,6 +50,22 @@
 .about-dialog [data-slot='dialog-title'] {
   font-size: 20px;
 }
+.about-versions {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  align-items: center;
+  margin: 0 0 14px;
+  font-size: var(--text-ui);
+}
+.about-versions dt { color: #62717c; }
+.about-versions dd { margin: 0; color: #27333d; font-variant-numeric: tabular-nums; }
+.about-versions .about-copy { grid-column: 2; }
+.about-versions .about-copy button {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px;
+  border: 1px solid var(--border); border-radius: 3px; background: white; color: #354b5b; font: inherit; cursor: pointer;
+}
+.about-versions .about-copy button:hover { background: #f3f6f8; }
 .about-creator {
   border-block: 1px solid var(--border);
   padding-block: 18px;
@@ -3153,3 +3169,15 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .align-guides line { stroke: #d6336c; stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
 /* An empty subsystem keeps its hierarchy bar, so you can always go back up. */
 .empty-subsystem { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); max-width: 360px; padding: 10px 14px; border: 1px dashed #b8c2cc; border-radius: 4px; background: #fff; color: #5d6b77; font-size: var(--text-ui); text-align: center; pointer-events: none; z-index: 4; }
+/* Import failures stay in the browser, where the file was chosen. */
+.model-browser-error.import-error { display: grid; gap: 6px; padding: 10px 12px; }
+.model-browser-error.import-error details { font-size: var(--text-micro); }
+.model-browser-error.import-error pre { margin: 4px 0 0; white-space: pre-wrap; word-break: break-word; font-family: var(--font-code); }
+.model-browser-error.import-error .import-error-actions button { margin: 0 12px 0 0; }
+/* Kept runs in the Data Inspector heading (QA Q03). */
+.di-kept { display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap; }
+.di-kept + a { margin-left:0; }
+.di-kept-run { display:inline-flex; align-items:center; gap:4px; padding:2px 4px 2px 8px; border:1px solid #c6cdd4; border-radius:2px; background:#fff; font-size:var(--text-meta); color:#354b5b; }
+.di-kept-run small { color:#65717c; }
+.di-kept-run button { padding:0 5px; border:0; background:none; color:#65717c; font-size:14px; line-height:1; }
+.di-kept-run button:hover { color:#b42318; background:none; }

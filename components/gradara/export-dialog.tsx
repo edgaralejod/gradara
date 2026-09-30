@@ -7,6 +7,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { parseOptionalPositive } from '@/lib/gradara/number-input';
 import {
   Code2,
   FileJson,
@@ -19,7 +20,7 @@ import {
   Sparkles,
   Crosshair,
 } from 'lucide-react';
-import { api, downloadText, waitForJob, type Job } from '@/lib/gradara/api';
+import { api, downloadText, fileSlug, waitForJob, type Job } from '@/lib/gradara/api';
 import { notifyAiChanged, useAi } from '@/lib/gradara/ai';
 import type { CTemplate, Project } from '@/lib/gradara/model';
 import { isInstance } from '@/lib/gradara/hierarchy';
@@ -110,10 +111,14 @@ export default function ExportDialog({
   const [file, setFile] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const step = Number(stepText);
+  // Blank means the automatic step; 0, a negative number or text is an error
+  // that holds generation, download and verification (B02), never the automatic step.
+  const stepValue = parseOptionalPositive(stepText);
+  const stepInvalid = stepValue === null;
+  const STEP_MESSAGE = 'Enter a step above 0 seconds, or leave it blank for the automatic step.';
   const effective: CodegenOptions = {
     ...options,
-    ...(stepText.trim() && Number.isFinite(step) && step > 0 ? { step } : {}),
+    ...(typeof stepValue === 'number' ? { step: stepValue } : {}),
   };
   const request = choice
     ? codegenBody(doc, path, choice.unit, effective, runId)
@@ -122,6 +127,11 @@ export default function ExportDialog({
   // Generation is deterministic and fast, so the code follows the options live.
   useEffect(() => {
     if (!request) return;
+    if (stepInvalid) {
+      // The shown code no longer matches the field; a verification of it does not apply.
+      setVerified(null);
+      return;
+    }
     let live = true;
     const timer = setTimeout(() => {
       api<CodegenResult>('/codegen', { method: 'POST', body: request })
@@ -137,7 +147,7 @@ export default function ExportDialog({
       live = false;
       clearTimeout(timer);
     };
-  }, [request, options.prefix]);
+  }, [request, options.prefix, stepInvalid]);
 
   async function source() {
     setBusy('modelica');
@@ -147,7 +157,7 @@ export default function ExportDialog({
         method: 'POST',
         body: JSON.stringify(doc),
       });
-      downloadText('Gradara.mo', r.source);
+      downloadText(`${fileSlug(doc.name)}.mo`, r.source);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -175,7 +185,7 @@ export default function ExportDialog({
       const url = URL.createObjectURL(await response.blob());
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `${options.prefix}.zip`;
+      anchor.download = `${fileSlug(doc.name)}-${options.prefix}.zip`;
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch (e) {
@@ -285,7 +295,7 @@ export default function ExportDialog({
           className="export-option"
           onClick={() =>
             downloadText(
-              'model.gradara.json',
+              `${fileSlug(doc.name)}.gradara.json`,
               JSON.stringify(doc, null, 2),
               'application/json',
             )
@@ -364,11 +374,19 @@ export default function ExportDialog({
                   <input
                     value={stepText}
                     inputMode="decimal"
+                    aria-label="Step in seconds; blank for automatic"
+                    aria-invalid={stepInvalid || undefined}
+                    title={stepInvalid ? STEP_MESSAGE : undefined}
                     placeholder={
                       generated?.ok ? `auto · ${generated.step}` : 'auto'
                     }
                     onChange={(e) => setStepText(e.target.value)}
                   />
+                  {stepInvalid && (
+                    <span role="alert" className="field-error" title={STEP_MESSAGE}>
+                      Above 0 s, or blank for automatic
+                    </span>
+                  )}
                 </label>
                 <label>
                   <span>Name</span>
@@ -463,6 +481,7 @@ export default function ExportDialog({
                   {generated.outputs.length} output
                   {generated.outputs.length === 1 ? '' : 's'} · step{' '}
                   {generated.step} s
+                  {typeof stepValue !== 'number' && !stepInvalid ? ' (automatic)' : ''}
                   {choice && (
                     <button
                       onClick={() => onShowBlocks(unitBlockIds(choice.unit))}
@@ -505,7 +524,11 @@ export default function ExportDialog({
               </div>
               {
                 <div className="codegen-actions">
-                  <Button onClick={() => void downloadZip()} disabled={!!busy}>
+                  <Button
+                    onClick={() => void downloadZip()}
+                    disabled={!!busy || stepInvalid}
+                    title={stepInvalid ? STEP_MESSAGE : undefined}
+                  >
                     {busy === 'zip' ? (
                       <LoaderCircle className="spin" />
                     ) : (
@@ -516,11 +539,13 @@ export default function ExportDialog({
                   <Button
                     variant="outline"
                     onClick={() => void verify()}
-                    disabled={!!busy || !runId}
+                    disabled={!!busy || !runId || stepInvalid}
                     title={
-                      runId
-                        ? 'Compile the code and replay the last run through it'
-                        : 'Run the model first'
+                      stepInvalid
+                        ? STEP_MESSAGE
+                        : runId
+                          ? 'Compile the code and replay the last run through it'
+                          : 'Run the model first'
                     }
                   >
                     {busy === 'verify' ? (
