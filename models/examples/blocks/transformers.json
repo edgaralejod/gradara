@@ -479,6 +479,7 @@
           "class": "Modelica.Electrical.Analog.Ideal.IdealTransformer",
           "modifiers": {
             "considerMagnetization": "false",
+            "Lm1": "1",
             "n": "n"
           }
         }

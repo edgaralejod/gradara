@@ -140,3 +140,34 @@ for (const name of [
     assert.deepEqual([...new Set(issues)], []);
   });
 }
+
+// Every block in a shipped example is a current library block, so each one has a
+// Help page and a reference page. Subsystem instances and their ports are structure.
+void test('examples use only current library blocks', async () => {
+  const { library } = await import('../lib/gradara/model');
+  const kinds = new Set(library.map((d) => d.kind));
+  const folder = new URL('../models/examples/', import.meta.url);
+  const { readdirSync } = await import('node:fs');
+  const files = [
+    ...readdirSync(folder)
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => new URL(f, folder)),
+    ...readdirSync(new URL('blocks/', folder))
+      .filter((f) => f.endsWith('.json') && f !== 'index.json')
+      .map((f) => new URL(`blocks/${f}`, folder)),
+  ];
+  const found: string[] = [];
+  for (const file of files) {
+    const p: Project = JSON.parse(readFileSync(file, 'utf8'));
+    for (const sheet of [p, ...(p.subsystems ?? [])])
+      for (const b of sheet.blocks) {
+        const d = b.definition;
+        if (d.subsystem || d.boundary) continue;
+        if (d.generated || !kinds.has(d.kind))
+          found.push(
+            `${file.pathname.split('/').pop()}: ${d.name} (${d.kind})`,
+          );
+      }
+  }
+  assert.deepEqual(found, []);
+});

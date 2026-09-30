@@ -1560,6 +1560,13 @@ export const mslBlocks: Definition[] = [
         "value": 1000,
         "unit": "J/K",
         "min": 0
+      },
+      {
+        "id": "T0",
+        "name": "Initial temperature",
+        "value": 293.15,
+        "unit": "K",
+        "min": 0
       }
     ],
     "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
@@ -1570,7 +1577,8 @@ export const mslBlocks: Definition[] = [
     "modelica": {
       "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
       "modifiers": {
-        "C": "C"
+        "C": "C",
+        "T.start": "T0"
       }
     }
   },
@@ -2890,6 +2898,7 @@ export const mslBlocks: Definition[] = [
       "class": "Modelica.Electrical.Analog.Ideal.IdealTransformer",
       "modifiers": {
         "considerMagnetization": "false",
+        "Lm1": "1",
         "n": "n"
       }
     }

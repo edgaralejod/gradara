@@ -42,7 +42,9 @@ def check(definition: Definition) -> None:
         raise ValueError(f'{definition.name}: {wrapper.class_} is not an available library class.')
     parameters = {p.id for p in definition.parameters}
     for name, expression in wrapper.modifiers.items():
-        if name.split('.')[0] not in info['parameters']:
+        head, _, rest = name.partition('.')
+        # `T.start` sets the initial value of a variable the class declares with a start.
+        if not (head in info['parameters'] or (rest == 'start' and head in info.get('starts', ()))):
             raise ValueError(f'{definition.name}: {wrapper.class_} has no parameter {name}.')
         for ident in IDENT.findall(expression):
             if ident not in parameters and ident not in LITERALS and ident not in FUNCTIONS and not ident.isdigit() \

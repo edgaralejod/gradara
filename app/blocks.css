@@ -149,6 +149,15 @@
   bottom: 4px;
   transform: translateX(-50%);
 }
+/* A block turned half round keeps its text upright, as Simulink draws a flipped gain. */
+[data-turn='180'] .block-face .gain-value,
+[data-turn='180'] .block-face .value-symbol,
+[data-turn='180'] .block-face .math-op,
+[data-turn='180'] .block-face .pid-symbol,
+[data-turn='180'] .block-face .transfer-symbol,
+[data-turn='180'] .block-face .port-label {
+  rotate: 180deg;
+}
 .block-face.has-signal-names .port-label {
   max-width: none;
 }

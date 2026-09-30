@@ -143,7 +143,7 @@ The service reads process environment variables directly. `.env.example` is docu
 
 ## Regenerate the MSL library
 
-Library blocks that wrap Modelica Standard Library classes come from two checked-in generated files. `server/msl_index.json` lists the MSL 4.1.0 classes Gradara may instantiate, with their parameters and connectors; `lib/gradara/msl-blocks.ts` holds the block definitions. Normal work needs neither script. Regenerate the index only when changing MSL versions or the packages it covers, from an MSL source checkout:
+Library blocks that wrap Modelica Standard Library classes come from two checked-in generated files. `server/msl_index.json` lists the MSL 4.1.0 classes Gradara may instantiate, with their parameters, connectors, and the variables whose start value a wrapper may set; `lib/gradara/msl-blocks.ts` holds the block definitions. Normal work needs neither script. Regenerate the index only when changing MSL versions or the packages it covers, from an MSL source checkout:
 
 ```sh
 git clone --depth 1 --branch v4.1.0 https://github.com/modelica/ModelicaStandardLibrary msl

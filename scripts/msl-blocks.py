@@ -151,7 +151,9 @@ B('relPositionSensor', 'Relative position sensor', f'{TRANS}.Sensors.RelPosition
 
 # -------------------------------------------------------------------- thermal
 B('heatCapacitor', 'Heat capacitor', f'{HEAT}.Components.HeatCapacitor', 'C', 'thermal',
-  'Stores heat: C·dT/dt = Q_flow.', [P('C', 'Heat capacity', 1000, 'J/K', 0)], sides={'port': 'bottom'},
+  'Stores heat: C·dT/dt = Q_flow.',
+  [P('C', 'Heat capacity', 1000, 'J/K', 0), P('T0', 'Initial temperature', 293.15, 'K', 0, modifier='T.start')],
+  sides={'port': 'bottom'},
   names={'port': 'T'}, keywords=['thermal mass', 'lumped'])
 B('thermalConductor', 'Thermal conductor', f'{HEAT}.Components.ThermalConductor', 'G', 'thermal',
   'Linear heat conduction: Q = G·ΔT.', [P('G', 'Conductance', 1, 'W/K', 0)], keywords=['conduction'])
@@ -234,7 +236,8 @@ B('mutualInductor', 'Transformer (coupled)', f'{ANALOG}.Basic.Transformer', 'L1:
   keywords=['coupling', 'mutual'])
 B('idealTransformer', 'Ideal transformer', f'{ANALOG}.Ideal.IdealTransformer', 'n:1', 'electrical',
   'Ideal transformer with turns ratio n: v1 = n·v2 and i2 = −n·i1, with no magnetizing inductance.', [P('n', 'Turns ratio', 2, '', 0)],
-  modifiers={'considerMagnetization': 'false'},
+  # Lm1 is unused without magnetization; a value keeps OpenModelica from warning about it.
+  modifiers={'considerMagnetization': 'false', 'Lm1': '1'},
   names={'p1': '1+', 'n1': '1−', 'p2': '2+', 'n2': '2−'}, sides={'p1': 'left', 'n1': 'left', 'p2': 'right', 'n2': 'right'},
   keywords=['isolation', 'ratio'])
 B('gyrator', 'Gyrator', f'{ANALOG}.Basic.Gyrator', 'gyr', 'electrical',
@@ -561,7 +564,8 @@ def build(spec: dict) -> dict:
         if key not in modifiers:
             modifiers[key] = param['id']
     for key in modifiers:
-        if key.split('.')[0] not in info['parameters']:
+        head, _, rest = key.partition('.')
+        if head not in info['parameters'] and not (rest == 'start' and head in info.get('starts', ())):
             raise SystemExit(f'{spec["kind"]}: {cls} has no parameter {key}')
     enabled = {k for k, v in modifiers.items() if v == 'true'}
     if spec['ports']:

@@ -3,7 +3,6 @@
 import { writeFileSync } from 'node:fs';
 import {
   library,
-  type Definition,
   type Block,
   type Project,
   type Port,
@@ -13,6 +12,13 @@ import { portPoint } from '../lib/gradara/ports';
 import { simplifyPoints } from '../lib/gradara/routing';
 import { materializeBranches } from '../lib/gradara/net-branches';
 import { reconcileNets } from '../lib/gradara/net-registry';
+import {
+  groupIntoSubsystem,
+  scopeView,
+  syncInstances,
+  writeScope,
+} from '../lib/gradara/hierarchy';
+import { normalizeProject } from '../lib/gradara/normalize-project';
 const pin = (id: string, side: Port['side']): Port => ({
   id,
   name: id,
@@ -26,95 +32,23 @@ const param = (id: string, value: number, unit = '') => ({
   value,
   unit,
 });
-const transformer: Definition = {
-  kind: 'flybackTransformer',
-  name: '8:1 transformer',
-  domain: 'electrical',
-  symbol: '8:1',
-  generated: true,
-  description:
-    'Ideal lossless 8:1 transformer. The separate parallel magnetizing inductor stores flyback energy. No leakage inductance or saturation.',
-  ports: [
-    pin('p1', 'left'),
-    pin('n1', 'left'),
-    pin('p2', 'right'),
-    pin('n2', 'right'),
-  ],
-  parameters: [param('turnsRatio', 8)],
-  equations:
-    'p1.v-n1.v = turnsRatio*(p2.v-n2.v); p1.i+n1.i=0; p2.i+n2.i=0; turnsRatio*p1.i+p2.i=0;',
-};
-const pwm: Definition = {
-  kind: 'flybackPWM',
-  name: '50 kHz PWM',
-  domain: 'signal',
-  symbol: 'PWM',
-  generated: true,
-  description:
-    'Sample duty at each cycle; explicit time events resolve falling edges. Disable switching until 30 ms for bus precharge.',
-  ports: [
-    {
-      id: 'duty',
-      name: 'duty',
-      domain: 'signal',
-      direction: 'input',
-      side: 'left',
-    },
-    {
-      id: 'gate',
-      name: 'gate',
-      domain: 'signal',
-      direction: 'output',
-      side: 'right',
-    },
-  ],
-  parameters: [param('frequency', 50000, 'Hz'), param('enableTime', 0.03, 's')],
-  declarations:
-    'discrete Real sampledDuty(start=0, fixed=true); discrete Real cycleStart(start=0, fixed=true);',
-  equations:
-    'when {initial(), sample(0, 1/frequency)} then sampledDuty=min(1,max(0,duty)); cycleStart=time; end when; gate=if time < enableTime then 0 else if sampledDuty <= 0 then 0 else if sampledDuty >= 1 then 1 else if time < cycleStart+sampledDuty/frequency then 1 else 0;',
-};
 const blocks: Block[] = [];
 function add(
   id: string,
-  kind: string | Definition,
+  kind: string,
   name: string,
   x: number,
   y: number,
   overrides: Record<string, number> = {},
   vertical = false,
 ) {
-  const d = structuredClone(
-    typeof kind === 'string' ? library.find((d) => d.kind === kind)! : kind,
-  );
+  // Library blocks only: every part of the example has its Help page.
+  const found = library.find((d) => d.kind === kind);
+  if (!found) throw new Error(`${kind} is not a library block`);
+  const d = structuredClone(found);
   d.name = name;
   for (const p of d.parameters)
     if (p.id in overrides) p.value = overrides[p.id];
-  if (d.kind === 'diode')
-    Object.assign(d, {
-      generated: true,
-      description:
-        'Piecewise-linear diode: 0.7 V forward drop, 0.05 ohm conduction resistance, 10 nS reverse conductance. Finite slopes make commutation well posed.',
-      declarations: 'Real v;',
-      parameters: [
-        param('Vf', 0.7, 'V'),
-        param('Ron', 0.05, 'Ohm'),
-        param('Goff', 1e-8, 'S'),
-      ],
-      equations:
-        'v=p.v-n.v; p.i=if v > Vf then (v-Vf)/Ron else Goff*(v-Vf); p.i+n.i=0;',
-    });
-  if (d.kind === 'idealSwitch')
-    Object.assign(d, {
-      kind: 'finiteSwitch',
-      generated: true,
-      symbol: 'SW',
-      description:
-        'Gate-controlled switch: 0.2 ohm on resistance and 10 nS off conductance. No capacitance, switching loss, body diode or avalanche model.',
-      parameters: [param('Ron', 0.2, 'Ohm'), param('Goff', 1e-8, 'S')],
-      equations:
-        'p.i=if gate > 0.5 then (p.v-n.v)/Ron else Goff*(p.v-n.v); p.i+n.i=0;',
-    });
   if (vertical)
     for (const p of d.ports)
       if (p.direction === 'physical') p.side = p.id === 'p' ? 'top' : 'bottom';
@@ -133,19 +67,26 @@ add('line', 'sine', '480 V RMS · 60 Hz', 0, 160, {
 });
 add('ac', 'voltage', 'AC source', 160, 160);
 add('rin', 'resistor', '10 Ω inrush', 320, 160, { R: 10 });
-add('d1', 'diode', 'Bridge A+', 500, 160);
-add('d2', 'diode', 'Bridge B+', 500, 320);
-add('d3', 'diode', 'Bridge A−', 500, 480);
-add('d4', 'diode', 'Bridge B−', 500, 640);
+add('bridge', 'diodeBridge', 'Bridge rectifier', 500, 160, {
+  RonDiode: 0.05,
+  GoffDiode: 1e-8,
+});
 add('bulk', 'capacitor', '100 µF bus', 740, 320, { C: 0.0001 }, true);
 add('bleed', 'resistor', '1 MΩ bleeder', 880, 320, { R: 1e6 }, true);
 add('acref', 'resistor', '100 MΩ reference', 320, 640, { R: 1e8 }, true);
-add('xfmr', transformer, '8:1 transformer', 1240, 280);
+add('xfmr', 'idealTransformer', '8:1 transformer', 1240, 280, { n: 8 });
 add('mag', 'inductor', '2 mH magnetizing', 1040, 320, { L: 0.002 }, true);
 add('ip', 'currentSensor', 'Primary current', 1100, 560);
 add('rpri', 'resistor', '0.5 Ω winding', 1260, 560, { R: 0.5 });
-add('sw', 'idealSwitch', 'Primary switch', 1400, 560);
-add('rect', 'diode', 'Secondary diode', 1520, 320);
+add('sw', 'closingSwitch', 'Primary switch', 1400, 560, {
+  Ron: 0.2,
+  Goff: 1e-8,
+});
+add('rect', 'idealDiode', 'Secondary diode', 1520, 320, {
+  Ron: 0.05,
+  Goff: 1e-8,
+  Vknee: 0.7,
+});
 add('rout', 'resistor', '50 mΩ ESR', 1660, 320, { R: 0.05 });
 add('cout', 'capacitor', '1000 µF output', 1820, 480, { C: 0.001 }, true);
 add('load', 'resistor', '24 Ω · 24 W load', 1960, 480, { R: 24 }, true);
@@ -165,18 +106,14 @@ add('pi', 'pi', 'Voltage PI', 560, 1000, {
   samplePeriod: 0.0001,
 });
 add('duty', 'saturation', '0–18% duty', 800, 1000, { lower: 0, upper: 0.18 });
-add('pwm', pwm, '50 kHz PWM', 1040, 1000);
+add('pwm', 'pwmSignal', '50 kHz PWM', 1040, 1000, { f: 50000 });
 const pairs: string[][] = [
   ['line.y', 'ac.u'],
   ['ac.p', 'rin.p'],
-  ['rin.n', 'd1.p'],
-  ['rin.n', 'd3.n'],
-  ['ac.n', 'd2.p'],
-  ['ac.n', 'd4.n'],
-  ['d1.n', 'd2.n'],
-  ['d1.n', 'bulk.p'],
-  ['d3.p', 'd4.p'],
-  ['d3.p', 'bulk.n'],
+  ['rin.n', 'bridge.ac_p'],
+  ['ac.n', 'bridge.ac_n'],
+  ['bridge.dc_p', 'bulk.p'],
+  ['bridge.dc_n', 'bulk.n'],
   ['bulk.n', 'gpri.p'],
   ['bulk.p', 'bleed.p'],
   ['bulk.n', 'bleed.n'],
@@ -208,8 +145,8 @@ const pairs: string[][] = [
   ['start.y', 'ref.u'],
   ['ref.y', 'pi.reference'],
   ['pi.y', 'duty.u'],
-  ['duty.y', 'pwm.duty'],
-  ['pwm.gate', 'sw.gate'],
+  ['duty.y', 'pwm.dutyCycle'],
+  ['pwm.fire', 'sw.control'],
 ];
 // Schematic layout: rectifier columns, shared DC rails, isolated output,
 // and a separate left-to-right control chain below the power stage.
@@ -217,27 +154,24 @@ const positions: Record<string, [number, number]> = {
   line: [0, 320],
   ac: [160, 320],
   rin: [320, 328],
-  d1: [480, 184],
-  d2: [640, 184],
-  d3: [480, 424],
-  d4: [640, 424],
+  bridge: [520, 296],
   acref: [320, 544],
-  bulk: [840, 304],
-  bleed: [1000, 304],
+  bulk: [840, 288],
+  bleed: [1000, 288],
   vbus: [840, 484],
-  mag: [1180, 304],
-  xfmr: [1400, 240],
+  mag: [1320, 288],
+  xfmr: [1400, 272],
   ip: [1200, 464],
   rpri: [1400, 472],
   sw: [1580, 464],
   vsw: [1760, 464],
-  rect: [1660, 248],
-  rout: [1840, 248],
-  cout: [2020, 304],
-  load: [2200, 304],
-  vout: [2380, 304],
+  rect: [1600, 264],
+  rout: [1800, 264],
+  cout: [2008, 288],
+  load: [2168, 288],
+  vout: [2408, 288],
   gpri: [1080, 644],
-  gsec: [2200, 544],
+  gsec: [2168, 544],
   start: [440, 824],
   ref: [640, 824],
   pi: [1060, 808],
@@ -249,11 +183,14 @@ const positions: Record<string, [number, number]> = {
 for (const block of blocks) {
   const [x, y] = positions[block.id];
   block.position = { x, y };
-  if (['d1', 'd2', 'd3', 'd4'].includes(block.id)) {
-    block.rotation = 270;
-    block.size = { width: 48, height: 80 };
-  }
 }
+// Vertical parts sit between the rails: their names go beside them, clear of the rail below.
+for (const block of blocks)
+  if (['bulk', 'bleed', 'mag', 'cout', 'load'].includes(block.id)) {
+    const chars = block.definition.name.length;
+    const side = block.id === 'mag' ? -1 : 1;
+    block.labelOffset = { x: side * (32 + Math.ceil(chars * 3.4)), y: -52 };
+  }
 // Flyback winding polarity: positive secondary rail exits above its return.
 const winding = blocks.find((b) => b.id === 'xfmr')!;
 winding.definition.ports.find((p) => p.id === 'n2')!.offset = 25;
@@ -261,14 +198,14 @@ winding.definition.ports.find((p) => p.id === 'p2')!.offset = 75;
 winding.definition.ports.find((p) => p.id === 'p1')!.offset = 25;
 winding.definition.ports.find((p) => p.id === 'n1')!.offset = 75;
 let project: Project = {
-  version: 1,
+  version: 2,
   exampleId: 'flyback',
   name: '480 VAC → 24 VDC flyback',
   duration: 0.3,
   revision: 0,
   blocks,
   description:
-    'Hand-authored switching example: single-phase 480 V RMS / 60 Hz, 24 V at 1 A into 24 Ω. Bridge rectifier, 100 µF bulk, 8:1 transformer plus 2 mH magnetizing inductance, 50 kHz PWM, 30 ms enable delay, 50 ms soft start, sampled PI regulation. Finite diode/switch resistances and off conductances regularize commutation. Separate primary/secondary references; ideal magnetic coupling. Omits leakage inductance, core saturation/loss, device capacitances, clamp/snubber, EMI filter and practical isolation/control circuitry. Simulation example, not a hardware design.',
+    'Hand-authored switching example: single-phase 480 V RMS / 60 Hz, 24 V at 1 A into 24 Ω. Diode bridge, 100 µF bulk, ideal 8:1 transformer plus 2 mH magnetizing inductance, Boolean-controlled primary switch, 50 kHz PWM generator, 50 ms soft start after 30 ms of bus precharge, sampled PI regulation. Finite diode and switch resistances and off conductances regularize commutation. Separate primary/secondary references; ideal magnetic coupling. Omits leakage inductance, core saturation/loss, device capacitances, clamp/snubber, EMI filter and practical isolation/control circuitry. Simulation example, not a hardware design.',
   wires: pairs.map(([a, b], i) => {
     const [source, sourceHandle] = a.split('.');
     const [target, targetHandle] = b.split('.');
@@ -280,7 +217,7 @@ let project: Project = {
       x: 0,
       y: 80,
       text: 'RECTIFY · 480 V RMS',
-      detail: '60 Hz · finite-conductance bridge',
+      detail: '60 Hz · diode bridge with finite conductances',
     },
     {
       x: 840,
@@ -473,6 +410,127 @@ for (const [index, net] of (project.nets ?? []).entries()) {
   net.id = `net_flyback_${index}`;
   net.hidden = true;
 }
+// Two subsystems, as in a real product: the power stage (circuit, sensors, and the
+// PWM modulator) and the controller, which is pure signal flow and so exports to C.
+const CONTROL = ['start', 'ref', 'filt', 'norm', 'pi', 'duty'];
+let uuid = 0;
+Object.defineProperty(globalThis.crypto, 'randomUUID', {
+  value: () => `fb${(++uuid).toString(36).padStart(8, '0')}-0000`,
+  configurable: true,
+});
+project.annotations = [];
+const control = groupIntoSubsystem(project, CONTROL, 'Controller');
+if (!control) throw new Error('Could not group the controller');
+const power = groupIntoSubsystem(
+  control.project,
+  control.project.blocks
+    .filter((b) => b.id !== control.instanceId)
+    .map((b) => b.id),
+  'Power stage',
+);
+if (!power) throw new Error('Could not group the power stage');
+// Readable instance IDs: result keys read power.vout.y and control.duty.y.
+let text = JSON.stringify(syncInstances(power.project));
+for (const [from, to] of [
+  [power.instanceId, 'power'],
+  [control.instanceId, 'control'],
+])
+  text = text
+    .replaceAll(`"${from}"`, `"${to}"`)
+    .replaceAll(`"${from}.`, `"${to}.`);
+project = JSON.parse(text) as Project;
+// Port names say what crosses the boundary: the measured output voltage one way,
+// the duty command the other.
+for (const sub of project.subsystems ?? [])
+  for (const b of sub.blocks)
+    if (b.definition.boundary)
+      b.definition.name =
+        (b.definition.kind === 'inport') === (sub.name === 'Controller')
+          ? 'Vout'
+          : 'duty';
+// Each subsystem port sits level with the port it feeds, a short run away.
+for (const sub of project.subsystems ?? []) {
+  for (const b of sub.blocks) {
+    if (!b.definition.boundary) continue;
+    const w = sub.wires.find((w) => w.source === b.id || w.target === b.id);
+    if (!w) continue;
+    const [otherId, handle] =
+      w.source === b.id
+        ? [w.target, w.targetHandle]
+        : [w.source, w.sourceHandle];
+    const other = sub.blocks.find((o) => o.id === otherId);
+    const at = other && portPoint(other, handle);
+    if (!at) continue;
+    const size = b.size ?? defaultBlockSize(b.definition);
+    const gap = 96;
+    b.position = {
+      x: at.side === 'left' ? at.x - gap - size.width : at.x + gap,
+      y: at.y - size.height / 2,
+    };
+    w.waypoints = [];
+  }
+}
+project = syncInstances(project);
+const place = (id: string, x: number, y: number) => {
+  const b = project.blocks.find((b) => b.id === id)!;
+  b.position = { x, y };
+};
+// Controller → duty → power stage; the measured output returns below both.
+place('control', 160, 256);
+place('power', 720, 256);
+project = normalizeProject({
+  ...project,
+  wires: project.wires.map((w) => ({ ...w, waypoints: [] })),
+});
+// The measured voltage returns below both names, not through them.
+{
+  const back = project.wires.find((w) => w.source === 'power')!;
+  const from = portPoint(
+    project.blocks.find((b) => b.id === 'power')!,
+    back.sourceHandle,
+  )!;
+  const to = portPoint(
+    project.blocks.find((b) => b.id === 'control')!,
+    back.targetHandle,
+  )!;
+  const below =
+    Math.max(
+      ...project.blocks.map((b) => b.position.y + (b.size?.height ?? 0)),
+    ) + 64;
+  back.waypoints = [
+    { x: from.x + 32, y: from.y },
+    { x: from.x + 32, y: below },
+    { x: to.x - 32, y: below },
+    { x: to.x - 32, y: to.y },
+  ];
+}
+// Route the wires to the moved subsystem ports inside each sheet.
+for (const id of ['power', 'control'])
+  project = writeScope(
+    project,
+    [id],
+    normalizeProject(scopeView(project, [id])),
+  );
+project.annotations = [
+  {
+    x: 160,
+    y: 128,
+    text: 'CONTROLLER',
+    detail: 'Soft start, sampled PI, 0–18 % duty. Exports to C.',
+  },
+  {
+    x: 720,
+    y: 128,
+    text: 'POWER STAGE',
+    detail: '480 V RMS to 24 V at 1 A through an 8:1 flyback.',
+  },
+];
+project.plots = project.plots?.map((plot) => ({
+  ...plot,
+  series: plot.series.map((key) =>
+    key.startsWith('duty.') ? `control.${key}` : `power.${key}`,
+  ),
+}));
 writeFileSync(
   'models/examples/flyback.json',
   JSON.stringify(project, null, 2) + '\n',

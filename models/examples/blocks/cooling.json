@@ -79,6 +79,13 @@
             "value": 100,
             "unit": "J/K",
             "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
           }
         ],
         "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
@@ -89,7 +96,8 @@
         "modelica": {
           "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
           "modifiers": {
-            "C": "C"
+            "C": "C",
+            "T.start": "T0"
           }
         }
       },
@@ -242,6 +250,13 @@
             "value": 500,
             "unit": "J/K",
             "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
           }
         ],
         "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
@@ -252,7 +267,8 @@
         "modelica": {
           "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
           "modifiers": {
-            "C": "C"
+            "C": "C",
+            "T.start": "T0"
           }
         }
       },
@@ -788,6 +804,13 @@
             "value": 100,
             "unit": "J/K",
             "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
           }
         ],
         "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
@@ -798,7 +821,8 @@
         "modelica": {
           "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
           "modifiers": {
-            "C": "C"
+            "C": "C",
+            "T.start": "T0"
           }
         }
       },

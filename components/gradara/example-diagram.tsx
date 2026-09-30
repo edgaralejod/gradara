@@ -124,6 +124,7 @@ export function ExampleDiagram({ project }: { project: Project }) {
             >
               <span
                 className="diagram-turn"
+                data-turn={b.rotation || undefined}
                 style={
                   {
                     width:

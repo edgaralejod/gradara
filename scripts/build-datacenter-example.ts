@@ -1,331 +1,452 @@
 // SPDX-License-Identifier: Apache-2.0
-/** Lumped cooling-control benchmark. All values are illustrative, not facility data. */
+/**
+ * Lumped cooling-control benchmark, built from library blocks only, so every part
+ * has its Help page. All values are illustrative, not facility data.
+ *
+ * Electrical: an ideal 800 V DC supply feeds the IT load (two heating resistors;
+ * the second switches in at 10 min) and the cooling plant's electricity (a
+ * controlled current, cooling / COP / 800 V).
+ * Thermal: IT heat flows into the rack mass, through a conductance into the room,
+ * and cooling takes heat out of the room.
+ * Control: a sampled PI holds the room at 24 °C; its command, limited by the
+ * available capacity (halved from 30 to 35 min), sets the cooling.
+ */
 import { writeFileSync } from 'node:fs';
-import {
-  library,
-  type Definition,
-  type Port,
-  type Project,
-} from '../lib/gradara/model';
+import { library, type Block, type Project } from '../lib/gradara/model';
 import { defaultBlockSize } from '../lib/gradara/block-design';
-import { portPoint } from '../lib/gradara/ports';
-import { reconcileNets } from '../lib/gradara/net-registry';
-const param = (id: string, value: number, unit = '') => ({
-  id,
-  name: id,
-  value,
-  unit,
+import { linkEnds } from '../lib/gradara/project';
+import { normalizeProject } from '../lib/gradara/normalize-project';
+import {
+  centers,
+  groupAs,
+  insideCenters,
+  namePorts,
+  placePorts,
+  reroute,
+  setSides,
+} from './example-hierarchy';
+
+let uuid = 0;
+Object.defineProperty(globalThis.crypto, 'randomUUID', {
+  value: () => `dc${(++uuid).toString(36).padStart(8, '0')}-0000`,
+  configurable: true,
 });
-const physical = (
+
+const COP = 4;
+const VOLTS = 800;
+type Place = {
+  rotation?: 90 | 180 | 270;
+  /** Move ports to another side. */
+  ports?: Record<string, 'left' | 'right' | 'top' | 'bottom'>;
+  label?: 'left' | 'right' | 'above' | [number, number];
+};
+const blocks: Block[] = [];
+function add(
   id: string,
-  domain: 'electrical' | 'thermal',
-  side: Port['side'],
-): Port => ({ id, name: id, domain, side, direction: 'physical' });
-const output = (
-  id: string,
-  unit: string,
-  side: Port['side'] = 'bottom',
-): Port => ({
-  id,
-  name: id,
-  unit,
-  side,
-  domain: 'signal',
-  direction: 'output',
-});
-const input = (id: string, side: Port['side']): Port => ({
-  id,
-  name: id,
-  side,
-  domain: 'signal',
-  direction: 'input',
-});
-const pins = () => [
-  physical('p', 'electrical', 'top'),
-  physical('n', 'electrical', 'top'),
-];
-const it: Definition = {
-  kind: 'dataCenterIT',
-  name: 'IT load',
-  domain: 'electrical',
-  symbol: 'IT',
-  generated: true,
-  description:
-    'Illustrative IT load: 600 to 900 kW at 600 s. All absorbed electricity becomes rack heat. Constant power above minimumVoltage; resistive rolloff below it. No server throttling or UPS.',
-  ports: [...pins(), physical('heat', 'thermal', 'right'), output('kW', 'kW')],
-  parameters: [
-    param('basePower', 600000, 'W'),
-    param('addedPower', 300000, 'W'),
-    param('stepTime', 600, 's'),
-    param('minimumVoltage', 400, 'V'),
-  ],
-  declarations:
-    'Real demand; Real voltage; Real power; Real energy(start=0, fixed=true);',
-  equations:
-    'demand = basePower + (if time < stepTime then 0 else addedPower);\nvoltage = p.v-n.v;\np.i = demand*voltage/max(voltage*voltage, minimumVoltage*minimumVoltage);\np.i+n.i = 0;\npower = voltage*p.i;\nheat.Q_flow = -power;\nkW = power/1000;\nder(energy) = power;',
-};
-const rack: Definition = {
-  kind: 'dataCenterRack',
-  name: 'Rack thermal mass',
-  domain: 'thermal',
-  symbol: 'C/G',
-  generated: true,
-  description:
-    'One lumped equipment temperature with thermal storage and fixed rack-to-room conductance. This is not chip junction temperature or an airflow model.',
-  ports: [
-    physical('heat', 'thermal', 'left'),
-    physical('air', 'thermal', 'right'),
-    output('degC', 'degC'),
-  ],
-  parameters: [
-    param('capacity', 20000000, 'J/K'),
-    param('conductance', 100000, 'W/K'),
-    param('initialTemperature', 303.15, 'K'),
-  ],
-  declarations:
-    'Real temperature(start=initialTemperature, fixed=true); Real transfer; Real energy;',
-  equations:
-    'heat.T = temperature;\ntransfer = conductance*(temperature-air.T);\nair.Q_flow = -transfer;\ncapacity*der(temperature) = heat.Q_flow-transfer;\ndegC = temperature-273.15;\nenergy = capacity*(temperature-initialTemperature);',
-};
-const room: Definition = {
-  kind: 'dataCenterRoom',
-  name: 'Room thermal mass',
-  domain: 'thermal',
-  symbol: 'C',
-  generated: true,
-  description:
-    'Well-mixed room and effective coupled building mass. No humidity, spatial hot spots, or envelope heat gains. degC is the controlled room temperature, not a predicted rack inlet distribution.',
-  ports: [
-    physical('rack', 'thermal', 'left'),
-    physical('cool', 'thermal', 'right'),
-    output('degC', 'degC'),
-  ],
-  parameters: [
-    param('capacity', 10000000, 'J/K'),
-    param('initialTemperature', 297.15, 'K'),
-  ],
-  declarations:
-    'Real temperature(start=initialTemperature, fixed=true); Real energy;',
-  equations:
-    'rack.T = temperature;\ncool.T = temperature;\ncapacity*der(temperature) = rack.Q_flow+cool.Q_flow;\ndegC = temperature-273.15;\nenergy = capacity*(temperature-initialTemperature);',
-};
-const cooling: Definition = {
-  kind: 'dataCenterCooling',
-  name: 'Cooling plant',
-  domain: 'thermal',
-  symbol: 'COP',
-  generated: true,
-  description:
-    'Aggregate sensible cooling with fixed COP, 20 s response, and a temporary 50% capacity limit from 1800 to 2100 s. Electrical compressor power and condenser heat are conserved. No pumps, fans, fluid circuit, humidity, or weather-dependent performance.',
-  ports: [
-    ...pins(),
-    physical('cold', 'thermal', 'left'),
-    physical('hot', 'thermal', 'right'),
-    input('u', 'bottom'),
-    output('kW', 'kW'),
-    { ...output('coolkW', 'kW'), name: 'Q' },
-  ],
-  parameters: [
-    param('ratedCooling', 1200000, 'W'),
-    param('COP', 4),
-    param('responseTime', 20, 's'),
-    param('initialCooling', 600000, 'W'),
-    param('derateStart', 1800, 's'),
-    param('derateEnd', 2100, 's'),
-    param('availableFraction', 0.5),
-    param('minimumVoltage', 400, 'V'),
-  ],
-  declarations:
-    'Real cooling(start=initialCooling, fixed=true); Real available; Real voltage; Real power; Real removedEnergy(start=0, fixed=true);',
-  equations:
-    'voltage = p.v-n.v;\navailable = if time >= derateStart and time < derateEnd then availableFraction else 1;\nresponseTime*der(cooling) = ratedCooling*min(max(u, 0), available)*min(voltage*voltage/(minimumVoltage*minimumVoltage), 1)-cooling;\np.i = (cooling/COP)*voltage/max(voltage*voltage, minimumVoltage*minimumVoltage);\np.i+n.i = 0;\npower = voltage*p.i;\ncold.Q_flow = cooling;\nhot.Q_flow = -cooling-power;\nkW = power/1000;\ncoolkW = cooling/1000;\nder(removedEnergy) = cooling;',
-};
-const ambient: Definition = {
-  kind: 'dataCenterAmbient',
-  name: 'Outdoor heat sink',
-  domain: 'thermal',
-  symbol: 'T',
-  generated: true,
-  description:
-    'Infinite fixed-temperature heat sink. COP is fixed independently of this temperature; changing ambient temperature does not predict weather sensitivity.',
-  ports: [physical('heat', 'thermal', 'left'), output('kW', 'kW')],
-  parameters: [param('temperature', 308.15, 'K')],
-  equations: 'heat.T = temperature;\nkW = heat.Q_flow/1000;',
-};
-const controller: Definition = {
-  kind: 'dataCenterPI',
-  name: 'Room temperature PI',
-  domain: 'signal',
-  symbol: 'PI',
-  generated: true,
-  controller: true,
-  description:
-    'PI room-temperature controller with back-calculation anti-windup and bounded 0–1 output. Baseline 0.5 command balances 600 kW. Positive temperature error increases cooling.',
-  ports: [input('degC', 'left'), output('u', '1', 'right')],
-  parameters: [
-    param('setpoint', 24, 'degC'),
-    param('gain', 0.1, '1/K'),
-    param('integralTime', 120, 's'),
-    param('initialCommand', 0.5),
-  ],
-  declarations:
-    'Real integral(start=initialCommand, fixed=true); Real error; Real raw;',
-  equations:
-    'error = degC-setpoint;\nraw = gain*error+integral;\nu = min(max(raw, 0), 1);\nintegralTime*der(integral) = gain*error+u-raw;',
-};
-const project: Project = {
-  version: 1,
-  name: 'Data center cooling control',
-  exampleId: 'datacenter',
-  duration: 3600,
-  revision: 0,
-  description:
-    'Illustrative lumped electrical–thermal cooling benchmark: 600 → 900 kW IT load at 10 min; cooling capacity halved at 30–35 min. Ideal 800 V DC supply equivalent, fixed COP=4. Not an SST, fluid-network, CFD, or validated facility model.',
-  blocks: [],
-  wires: [],
-  junctions: [],
-  annotations: [
-    {
-      x: 480,
-      y: 110,
-      text: 'DATA CENTER · COOLING CONTROL',
-      detail: '1 hour · illustrative parameters · ideal 800 V DC equivalent',
-    },
-    {
-      x: 340,
-      y: 400,
-      text: 'DISTURBANCES',
-      detail: '10 min: IT 600 → 900 kW\n30–35 min: cooling capacity 50%',
-    },
-    {
-      x: 1040,
-      y: 500,
-      text: 'MODEL LIMITS',
-      detail:
-        'Fixed COP 4 · no fluid network or humidity\nRoom and rack are lumped temperatures',
-    },
-  ],
-  plots: [
-    {
-      id: 'temperatures',
-      label: 'Temperatures (°C)',
-      series: ['room.degC', 'rack.degC'],
-      labels: ['Room', 'Rack mass'],
-    },
-    {
-      id: 'power',
-      label: 'Power (kW)',
-      series: ['it.kW', 'cooling.coolkW', 'cooling.kW', 'ambient.kW'],
-      labels: [
-        'IT electricity / heat',
-        'Heat removed',
-        'Cooling electricity',
-        'Heat rejected',
-      ],
-    },
-    {
-      id: 'control',
-      label: 'Cooling command (0–1)',
-      series: ['controller.u'],
-      labels: ['PI command'],
-    },
-  ],
-};
-function add(id: string, definition: Definition, x: number, y: number) {
-  const size = defaultBlockSize(definition);
-  project.blocks.push({
+  kind: string,
+  name: string,
+  [cx, cy]: [number, number],
+  values: Record<string, number> = {},
+  place: Place = {},
+) {
+  const found = library.find((d) => d.kind === kind);
+  if (!found) throw new Error(`${kind} is not a library block`);
+  const definition = structuredClone(found);
+  definition.name = name;
+  for (const [key, value] of Object.entries(values)) {
+    const p = definition.parameters.find((p) => p.id === key);
+    if (!p) throw new Error(`${kind} has no parameter ${key}`);
+    p.value = value;
+  }
+  for (const [portId, side] of Object.entries(place.ports ?? {})) {
+    const port = definition.ports.find((p) => p.id === portId);
+    if (!port) throw new Error(`${kind} has no port ${portId}`);
+    port.side = side;
+  }
+  const standard = defaultBlockSize(definition);
+  const turned = place.rotation === 90 || place.rotation === 270;
+  const size = turned
+    ? { width: standard.height, height: standard.width }
+    : standard;
+  const width = Math.min(240, Math.max(24, name.length * 8));
+  const label = place.label;
+  blocks.push({
     id,
     definition,
-    position: { x, y: y - size.height / 2 },
+    position: { x: cx - size.width / 2, y: cy - size.height / 2 },
     size,
+    ...(place.rotation ? { rotation: place.rotation } : {}),
+    ...(label
+      ? {
+          labelOffset: Array.isArray(label)
+            ? { x: label[0], y: label[1] }
+            : label === 'above'
+              ? { x: 0, y: -size.height - 32 }
+              : {
+                  x:
+                    (label === 'right' ? 1 : -1) *
+                    (size.width / 2 + width / 2 + 8),
+                  y: -size.height / 2 - 14,
+                },
+        }
+      : {}),
   });
 }
-const supply = structuredClone(library.find((d) => d.kind === 'dcSource')!);
-supply.name = '800 V DC equivalent';
-supply.parameters[0].value = 800;
-add('supply', supply, 0, 240);
-add('it', it, 240, 240);
-add('rack', rack, 480, 240);
-add('room', room, 720, 240);
-add('cooling', cooling, 1000, 240);
-add('ambient', ambient, 1320, 240);
-add('controller', controller, 720, 500);
-for (const block of project.blocks)
-  if (block.id === 'room' || block.id === 'cooling')
-    block.labelOffset = { x: 80, y: 0 };
+
+// ---------------------------------------------------------------- electrical
 add(
-  'ground',
-  structuredClone(library.find((d) => d.kind === 'ground')!),
-  0,
-  420,
+  'supply',
+  'dcSource',
+  '800 V DC',
+  [120, 240],
+  { V: VOLTS },
+  { label: 'left' },
 );
-function wire(
-  source: string,
-  sourceHandle: string,
-  target: string,
-  targetHandle: string,
-  mode: 'direct' | 'positive' | 'negative' | 'feedback' | 'command' = 'direct',
-) {
-  const a = portPoint(
-    project.blocks.find((b) => b.id === source)!,
-    sourceHandle,
-  );
-  const b = portPoint(
-    project.blocks.find((b) => b.id === target)!,
-    targetHandle,
-  );
-  if (!a || !b)
-    throw new Error(
-      `Missing terminal: ${source}.${sourceHandle} or ${target}.${targetHandle}`,
-    );
-  let waypoints: { x: number; y: number }[] = [];
-  if (mode === 'positive' || mode === 'negative') {
-    const rail = mode === 'positive' ? 40 : 80;
-    if (source === 'supply' && mode === 'negative')
-      waypoints = [
-        { x: a.x, y: 340 },
-        { x: 120, y: 340 },
-        { x: 120, y: rail },
-        { x: b.x, y: rail },
-      ];
-    else
-      waypoints = [
-        { x: a.x, y: rail },
-        { x: b.x, y: rail },
-      ];
-  } else if (mode === 'feedback')
-    waypoints = [
-      { x: a.x, y: 380 },
-      { x: 660, y: 380 },
-      { x: 660, y: b.y },
-    ];
-  else if (mode === 'command') waypoints = [{ x: b.x, y: a.y }];
-  project.wires.push({
-    id: `dc_w${project.wires.length}`,
-    source,
-    sourceHandle,
-    target,
-    targetHandle,
-    waypoints,
-  });
-}
-wire('supply', 'p', 'it', 'p', 'positive');
-wire('it', 'p', 'cooling', 'p', 'positive');
-wire('supply', 'n', 'it', 'n', 'negative');
-wire('it', 'n', 'cooling', 'n', 'negative');
-wire('supply', 'n', 'ground', 'p');
-wire('it', 'heat', 'rack', 'heat');
-wire('rack', 'air', 'room', 'rack');
-wire('room', 'cool', 'cooling', 'cold');
-wire('cooling', 'hot', 'ambient', 'heat');
-wire('room', 'degC', 'controller', 'degC', 'feedback');
-wire('controller', 'u', 'cooling', 'u', 'command');
-const normalized = reconcileNets(project);
-normalized.nets?.forEach((net, i) => {
-  net.id = `datacenter_net${i}`;
-  net.hidden = true;
+add('ground', 'ground', 'Ground', [120, 376]);
+add(
+  'plant',
+  'signalCurrent',
+  'Cooling electricity',
+  [280, 240],
+  {},
+  { label: 'right' },
+);
+add(
+  'itBase',
+  'heatingResistor',
+  'IT load 600 kW',
+  [456, 240],
+  { R: VOLTS ** 2 / 600e3, alpha: 0 },
+  { rotation: 270, label: 'left' },
+);
+add('addLoad', 'closingSwitch', 'Load step', [616, 200], {
+  Ron: 1e-5,
+  Goff: 1e-9,
 });
+add('at10min', 'booleanStep', 'At 10 min', [616, 88], { startTime: 600 });
+add(
+  'itAdded',
+  'heatingResistor',
+  'IT load +300 kW',
+  [776, 240],
+  { R: VOLTS ** 2 / 300e3, alpha: 0 },
+  { rotation: 270, label: 'right' },
+);
+
+// ------------------------------------------------------------------- thermal
+add('itHeat', 'heatFlowSensor', 'IT heat', [616, 456], {}, { label: 'left' });
+add(
+  'rack',
+  'heatCapacitor',
+  'Rack mass 20 MJ/K',
+  [808, 392],
+  { C: 20e6, T0: 303.15 },
+  { ports: { port: 'top' } },
+);
+add(
+  'path',
+  'thermalConductor',
+  'Rack to room 100 kW/K',
+  [968, 456],
+  { G: 1e5 },
+  { label: 'above' },
+);
+add(
+  'room',
+  'heatCapacitor',
+  'Room 10 MJ/K',
+  [1128, 392],
+  { C: 10e6, T0: 297.15 },
+  { ports: { port: 'top' } },
+);
+add(
+  'cooler',
+  'prescribedHeatFlow',
+  'Cooling',
+  [1288, 456],
+  {},
+  { rotation: 180, label: 'above' },
+);
+add('rackT', 'temperatureSensor', 'Rack temperature', [968, 584]);
+add('roomT', 'temperatureSensor', 'Room temperature', [1288, 584]);
+
+// ------------------------------------------------------------------- control
+add('kelvin', 'constant', '273.15 K', [1288, 712], { value: 273.15 });
+add('rackC', 'subtract', 'Rack °C', [1448, 568]);
+add('roomC', 'subtract', 'Room °C', [1448, 696]);
+add('setpoint', 'constant', '24 °C setpoint', [1448, 840], { value: 24 });
+add('pi', 'pi', 'Room temperature PI', [1664, 744], {
+  kp: 0.1,
+  ki: 0.1 / 120,
+  limit: 0.5,
+  samplePeriod: 1,
+});
+add('bias', 'constant', 'Base command 0.5', [1664, 904], { value: 0.5 });
+add('command', 'sum', 'Command', [1856, 744], {}, { label: 'above' });
+add('outage', 'pulse', 'Outage 30–35 min', [1856, 904], {
+  amplitude: 0.5,
+  period: 1e5,
+  width: 300 / 1e5,
+  startTime: 1800,
+});
+add('one', 'constant', 'Full capacity', [2016, 1032], { value: 1 });
+add('available', 'subtract', 'Available', [2016, 904], {}, { label: 'right' });
+add('limit', 'min', 'Limit', [2016, 744], {}, { label: 'above' });
+add(
+  'capacity',
+  'gain',
+  'Cooling kW (1200 kW rated)',
+  [2176, 744],
+  { k: 1200 },
+  { label: 'above' },
+);
+add(
+  'toWatts',
+  'gain',
+  'Heat out, W',
+  [2176, 584],
+  { k: -1000 },
+  { rotation: 180, label: 'above' },
+);
+add(
+  'amps',
+  'gain',
+  'Plant current, A',
+  [2176, 312],
+  { k: 1000 / COP / VOLTS },
+  { label: 'above' },
+);
+add('electric', 'gain', 'Cooling electricity kW', [2336, 872], { k: 1 / COP });
+add('rejected', 'sum', 'Heat rejected', [2496, 744], {}, { label: 'above' });
+add('itKW', 'gain', 'IT kW', [616, 584], { k: 0.001 });
+
+let project: Project = {
+  version: 2,
+  exampleId: 'datacenter',
+  name: 'Data center cooling control',
+  description:
+    'Illustrative lumped electrical–thermal cooling benchmark built from library blocks: 600 → 900 kW IT load at 10 min; cooling capacity halved at 30–35 min. Ideal 800 V DC supply, fixed COP 4, sampled PI on room temperature. Not an SST, fluid-network, CFD, or validated facility model.',
+  duration: 3600,
+  revision: 0,
+  blocks,
+  wires: [],
+  junctions: [],
+  nets: [],
+  annotations: [],
+  plots: [],
+};
+const link = (from: string, to: string) => {
+  const [a, ah] = from.split('.'),
+    [b, bh] = to.split('.');
+  try {
+    project = linkEnds(project, { id: a, handle: ah }, { id: b, handle: bh });
+  } catch (e) {
+    throw new Error(`${from} → ${to}: ${(e as Error).message}`);
+  }
+};
+// Electrical: + rail across the top, − rail below.
+link('supply.p', 'plant.p');
+link('plant.p', 'itBase.n');
+link('itBase.n', 'addLoad.p');
+link('addLoad.n', 'itAdded.n');
+link('supply.n', 'plant.n');
+link('plant.n', 'itBase.p');
+link('itBase.p', 'itAdded.p');
+link('supply.n', 'ground.p');
+link('at10min.y', 'addLoad.control');
+// Thermal.
+link('itBase.heatPort', 'itHeat.port_a');
+link('itAdded.heatPort', 'itHeat.port_a');
+link('itHeat.port_b', 'rack.port');
+link('rack.port', 'path.port_a');
+link('path.port_b', 'room.port');
+link('room.port', 'cooler.port');
+link('rack.port', 'rackT.port');
+link('room.port', 'roomT.port');
+// Control.
+link('rackT.T', 'rackC.a');
+link('roomT.T', 'roomC.a');
+link('kelvin.y', 'rackC.b');
+link('kelvin.y', 'roomC.b');
+link('roomC.y', 'pi.reference');
+link('setpoint.y', 'pi.measured');
+link('pi.y', 'command.a');
+link('bias.y', 'command.b');
+link('command.y', 'limit.a');
+link('one.y', 'available.a');
+link('outage.y', 'available.b');
+link('available.y', 'limit.b');
+link('limit.y', 'capacity.u');
+link('capacity.y', 'toWatts.u');
+link('toWatts.y', 'cooler.Q_flow');
+link('capacity.y', 'amps.u');
+link('amps.y', 'plant.i');
+link('capacity.y', 'electric.u');
+link('capacity.y', 'rejected.a');
+link('electric.y', 'rejected.b');
+link('itHeat.Q_flow', 'itKW.u');
+
+project = normalizeProject(normalizeProject(project));
+project = {
+  ...project,
+  wires: project.wires.map((w) => ({ ...w, waypoints: [] })),
+};
+// Three subsystems, as the facility is built: the IT load, the cooling plant, and
+// its controller (pure signal flow, so it exports to C).
+project = groupAs(
+  project,
+  ['setpoint', 'pi', 'bias', 'command'],
+  'Controller',
+  'control',
+);
+project = groupAs(
+  project,
+  ['itBase', 'addLoad', 'at10min', 'itAdded', 'itHeat', 'itKW'],
+  'IT load',
+  'it',
+);
+project = groupAs(
+  project,
+  [
+    'outage',
+    'one',
+    'available',
+    'limit',
+    'capacity',
+    'toWatts',
+    'cooler',
+    'amps',
+    'plant',
+    'electric',
+    'rejected',
+  ],
+  'Cooling plant',
+  'cooling',
+);
+project = namePorts(project, 'Controller', {
+  'pi.reference': '°C',
+  'command.y': 'u',
+});
+project = namePorts(project, 'IT load', {
+  'itBase.n': '+',
+  'itBase.p': '−',
+  'itHeat.port_b': 'heat',
+});
+project = namePorts(project, 'Cooling plant', {
+  'limit.a': 'u',
+  'plant.p': '+',
+  'plant.n': '−',
+  'cooler.port': 'room',
+});
+project = setSides(project, 'IT load', {
+  '+': 'top',
+  '−': 'top',
+  heat: 'right',
+});
+project = setSides(project, 'Cooling plant', {
+  '+': 'top',
+  '−': 'top',
+  room: 'left',
+  u: 'bottom',
+});
+project = setSides(project, 'Controller', { '°C': 'left', u: 'top' });
+// Supply and rails on top, the heat path left to right, measurement and control below.
+project = centers(placePorts(project), {
+  supply: [104, 216],
+  ground: [104, 336],
+  it: [392, 400],
+  rack: [584, 480],
+  path: [712, 400],
+  room: [840, 480],
+  cooling: [1328, 400],
+  rackT: [680, 632],
+  rackC: [824, 632],
+  roomT: [984, 632],
+  roomC: [1128, 632],
+  kelvin: [728, 760],
+  control: [1328, 632],
+});
+project = insideCenters(project, 'IT load', {
+  '@+': [120, 200],
+  '@−': [120, 392],
+  at10min: [480, 88],
+  addLoad: [480, 200],
+  itBase: [320, 296],
+  itAdded: [640, 296],
+  itHeat: [480, 552],
+  '@heat': [680, 552],
+  itKW: [480, 680],
+});
+// Heat leaves on the left, where the room is; the signal chain runs left to right
+// below it and feeds the heat flow back through a flipped gain.
+project = insideCenters(project, 'Cooling plant', {
+  '@room': [104, 200],
+  cooler: [320, 200],
+  toWatts: [504, 200],
+  '@u': [120, 480],
+  limit: [344, 480],
+  one: [104, 616],
+  available: [248, 616],
+  outage: [104, 744],
+  capacity: [504, 480],
+  amps: [720, 336],
+  plant: [872, 336],
+  '@+': [720, 240],
+  '@−': [720, 424],
+  electric: [720, 616],
+  rejected: [904, 480],
+});
+project = reroute(project, ['control', 'it', 'cooling']);
+delete project.modelId;
+project.annotations = [
+  {
+    x: 80,
+    y: 8,
+    text: 'DATA CENTER · COOLING CONTROL',
+    detail: '1 hour · illustrative values · ideal 800 V DC supply',
+  },
+  {
+    x: 720,
+    y: 8,
+    text: 'DISTURBANCES',
+    detail: '10 min: IT 600 → 900 kW · 30–35 min: cooling capacity 50 %',
+  },
+];
+project.plots = [
+  {
+    id: 'temperatures',
+    label: 'Temperatures (°C)',
+    series: ['roomC.y', 'rackC.y'],
+    labels: ['Room', 'Rack mass'],
+  },
+  {
+    id: 'power',
+    label: 'Power (kW)',
+    series: [
+      'it.itKW.y',
+      'cooling.capacity.y',
+      'cooling.electric.y',
+      'cooling.rejected.y',
+    ],
+    labels: [
+      'IT electricity / heat',
+      'Heat removed',
+      'Cooling electricity',
+      'Heat rejected',
+    ],
+  },
+  {
+    id: 'control',
+    label: 'Cooling command (0–1)',
+    series: ['control.command.y'],
+    labels: ['PI command'],
+  },
+];
+for (const [index, net] of (project.nets ?? []).entries()) {
+  net.id = `datacenter_net${index}`;
+  net.hidden = true;
+}
 writeFileSync(
   'models/examples/datacenter.json',
-  JSON.stringify(normalized, null, 2) + '\n',
+  JSON.stringify(project, null, 2) + '\n',
 );

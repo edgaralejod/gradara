@@ -246,6 +246,7 @@ def test_api_generates_and_reports_problems():
     ('servo', ['controller'], None, []),
     ('foc', FOC, 1e-4, []),
     ('grouped-dc', ['controller'], None, ['b_2f80d45f5e']),
+    ('flyback', 'control', None, []),
 ])
 def test_generated_code_reproduces_the_simulation(name, ids, step, path):
     """Software in the loop: the compiled controller, fed the simulated plant signals, gives the simulated commands."""
@@ -256,7 +257,9 @@ def test_generated_code_reproduces_the_simulation(name, ids, step, path):
     project = Project.model_validate_json(source.read_text(encoding='utf-8'))
     run_id = 'sil' + uuid.uuid4().hex[:10]
     asyncio.run(simulate(project, run_id))
-    request = CodegenRequest(project=project, path=path, blockIds=ids, runId=run_id, options=CodegenOptions(step=step))
+    # A string names a subsystem instance: the whole controller is the code unit.
+    unit = {'instanceId': ids} if isinstance(ids, str) else {'blockIds': ids}
+    request = CodegenRequest(project=project, path=path, runId=run_id, options=CodegenOptions(step=step), **unit)
     report = asyncio.run(verify(request, RUNS, engines.run_c))
     assert report['ok'], report
 

@@ -35,7 +35,7 @@ These capabilities extend the current drawing engine; keep manual route intent, 
 | Crowded target selection | Preview the exact receiving port/net and provide a way to disambiguate nearby targets. Crossing lines never connect by appearance alone. |
 | Insert or remove in a connection | Insert a compatible signal block into one branch atomically, preserving other sinks and labels. Provide an explicit remove-and-heal action for unambiguous one-input/one-output cases. |
 | Lanes for parallel wires | Automatic routes already go around blocks and avoid other nets' lines where a lane exists. Assign evenly spaced lanes to parallel runs in a shared channel, and report a route that cannot avoid a body instead of drawing through it. |
-| Arrange quality on large circuits | Arranging the flyback converter twice gives the same drawing, as it already does for the other examples. Add crossing-minimizing column ordering and power/control section banding, and measure Arrange time on 100-block sheets. |
+| Arrange quality on large circuits | Arranging the flyback converter or the data center twice gives the same drawing, as it already does for the other examples. Add crossing-minimizing column ordering and power/control section banding, and measure Arrange time on 100-block sheets. |
 | Flip | Mirror selected blocks through model operations, updating ports, labels, and incident routes; clockwise 90° rotation is already implemented. |
 
 ## Workbench quality at scale

@@ -77,6 +77,8 @@ Every block sits on one grid (`lib/gradara/grid.ts`), so wires between ports run
 2. Block widths and heights are multiples of **16 units** (`SIZE_STEP`), so a block's center and the middle of each side are on the grid too, and a quarter turn about the center keeps the block on the grid.
 3. Ports on a side are spread at whole grid steps about its middle (`gridPortOffsets`): one port sits at the middle; several are evenly spaced as close as possible to the classic (i + 1) / (n + 1) spread. An even number of ports is exactly centered when its spacing is an even number of steps; when an odd number fits much better, the group sits half a step toward the side's start. An explicit `offset` is moved to the nearest grid step.
 
+A block turned half round (180°), such as a gain drawn in a feedback path, keeps its value, operator, and port labels upright; only the outline and glyphs turn.
+
 Together these put every port on a grid point at every size and rotation, so two ports can always be lined up by moving a block whole steps. Every default size above is a size step. Resizing moves in size steps and keeps the edge you are not dragging where it was; the inspector's width and height fields round to size steps the same way.
 
 Never place ports at fractions of a side or give a block an off-grid size to line up a wire: move the block instead.

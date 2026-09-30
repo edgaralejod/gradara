@@ -127,6 +127,7 @@ function BlockNode({
       />
       <div
         className="rotated-block-face"
+        data-turn={rotation || undefined}
         style={{
           position: 'absolute',
           left: '50%',
