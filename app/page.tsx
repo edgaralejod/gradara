@@ -145,6 +145,7 @@ import {
   removeTerminators,
   terminateOpenOutputs,
 } from '@/lib/gradara/terminators';
+import { type KeptRuns } from '@/components/gradara/data-inspector';
 import ModelBrowser, {
   type BrowserSection,
   type ImportError,
@@ -185,7 +186,7 @@ import ExplorerWorkspace, {
 } from '@/components/gradara/model-explorer';
 import { explorerIndex } from '@/lib/gradara/explorer';
 import ConfigurationMenu from '@/components/gradara/configuration-menu';
-import { mergeRuns, type ComparisonRun } from '@/lib/gradara/compare';
+import { mergeRuns, parameterDifferences, type ComparisonRun } from '@/lib/gradara/compare';
 import {
   applyConfiguration,
   removeConfiguration,
@@ -515,6 +516,10 @@ function Workbench() {
     items: CanvasMenuItem[];
   } | null>(null);
   const [running, setRunning] = useState(false);
+  // Earlier runs of this model kept for comparison (QA Q03): overlaid on the
+  // latest single run through the configuration-comparison merge.
+  const [keptRuns, setKeptRuns] = useState<{ name: string; result: SimulationResult }[]>([]);
+  const [overlayKept, setOverlayKept] = useState(true);
   // Stop-time fields whose text is not a usable value (B01): the toolbar's and
   // the model inspector's. While any is set, Run is held and the field explains.
   const [badStopTime, setBadStopTime] = useState<{ toolbar?: boolean; inspector?: boolean }>({});
@@ -667,6 +672,30 @@ function Workbench() {
     });
   };
   const signature = useMemo(() => semanticSignature(doc), [doc]);
+  const shownResult = useMemo(
+    () =>
+      result && !result.comparison && overlayKept && keptRuns.length
+        ? mergeRuns([{ name: 'Latest', result }, ...keptRuns])
+        : result,
+    [result, keptRuns, overlayKept],
+  );
+  const kept: KeptRuns = {
+    runs: keptRuns.map((run) => ({
+      ...run,
+      differences:
+        result?.snapshot && run.result.snapshot
+          ? parameterDifferences(run.result.snapshot, result.snapshot)
+          : [],
+    })),
+    overlay: overlayKept,
+    canKeep: !!result && !result.comparison && !keptRuns.some((k) => k.result.id === result.id),
+    onKeep: () => {
+      if (!result || result.comparison) return;
+      setKeptRuns((runs) => [...runs, { name: `Run ${runs.length + 1}`, result }].slice(0, 3));
+    },
+    onForget: (index) => setKeptRuns((runs) => runs.filter((_, i) => i !== index)),
+    onOverlay: setOverlayKept,
+  };
   const [dock, updateDock] = useDockState();
   const [liveProblems, setLiveProblems] = useState<Diagnostic[]>([]);
   useEffect(() => {
@@ -1096,6 +1125,7 @@ function Workbench() {
     setSaveError('');
     setResult(null);
     setResultSignature('');
+    setKeptRuns([]);
     setSaving(store.isSaved(next) ? 'Saved' : 'Unsaved changes');
   };
   const beginTransition = () => {
@@ -3197,12 +3227,13 @@ function Workbench() {
                 <Results
                   key={project.modelId ?? 'workspace'}
                   modelId={project.modelId}
-                  result={result}
+                  result={shownResult}
                   running={running}
                   error={runError}
                   stale={!!result && signature !== resultSignature}
                   empty={!project.blocks.length}
                   dedicated
+                  kept={kept}
                 />
               </div>
             )}

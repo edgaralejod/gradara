@@ -3174,3 +3174,10 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .model-browser-error.import-error details { font-size: var(--text-micro); }
 .model-browser-error.import-error pre { margin: 4px 0 0; white-space: pre-wrap; word-break: break-word; font-family: var(--font-code); }
 .model-browser-error.import-error .import-error-actions button { margin: 0 12px 0 0; }
+/* Kept runs in the Data Inspector heading (QA Q03). */
+.di-kept { display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap; }
+.di-kept + a { margin-left:0; }
+.di-kept-run { display:inline-flex; align-items:center; gap:4px; padding:2px 4px 2px 8px; border:1px solid #c6cdd4; border-radius:2px; background:#fff; font-size:var(--text-meta); color:#354b5b; }
+.di-kept-run small { color:#65717c; }
+.di-kept-run button { padding:0 5px; border:0; background:none; color:#65717c; font-size:14px; line-height:1; }
+.di-kept-run button:hover { color:#b42318; background:none; }

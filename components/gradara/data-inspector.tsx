@@ -85,18 +85,31 @@ function validConfig(value: unknown): value is Config {
     )
   );
 }
+/** Earlier runs kept for comparison: the page holds them; the header shows and controls them. */
+export type KeptRuns = {
+  runs: { name: string; result: SimulationResult; differences: string[] }[];
+  overlay: boolean;
+  /** The latest run is a single stored run that could be kept. */
+  canKeep: boolean;
+  onKeep: () => void;
+  onForget: (index: number) => void;
+  onOverlay: (on: boolean) => void;
+};
+
 function InspectorSession({
   result,
   running,
   error,
   stale,
   modelId,
+  kept,
 }: {
   result: SimulationResult;
   running: boolean;
   error: string;
   stale: boolean;
   modelId?: string;
+  kept?: KeptRuns;
 }) {
   const storageKey = `gradara-inspector:${modelId ?? result.snapshot?.modelId ?? 'workspace'}${result.comparison ? ':compare' : ''}`;
   const [resolution, setResolution] = useState<{
@@ -296,6 +309,43 @@ function InspectorSession({
                     ? `Comparing ${result.comparison.map((c) => c.name).join(' · ')}`
                     : 'Completed'}
         </span>
+        {kept && (
+          <span className="di-kept">
+            {kept.runs.map((run, i) => (
+              <span key={run.name} className="di-kept-run" title={run.differences.length ? `Latest run differs: ${run.differences.join('; ')}` : 'Same parameters as the latest run'}>
+                {run.name}
+                {run.differences.length > 0 && <small> · {run.differences.length} change{run.differences.length === 1 ? '' : 's'}</small>}
+                <button type="button" aria-label={`Forget ${run.name}`} onClick={() => kept.onForget(i)}>
+                  ×
+                </button>
+              </span>
+            ))}
+            {kept.runs.length > 0 && (
+              <button
+                type="button"
+                aria-pressed={kept.overlay}
+                title="Show the kept runs on the same plots as the latest run"
+                onClick={() => kept.onOverlay(!kept.overlay)}
+              >
+                Overlay
+              </button>
+            )}
+            {kept.canKeep && (
+              <button
+                type="button"
+                disabled={kept.runs.length >= 3}
+                title={
+                  kept.runs.length >= 3
+                    ? 'Three runs are kept; forget one to keep this one.'
+                    : 'Keep this run to compare it with the next ones (up to three)'
+                }
+                onClick={kept.onKeep}
+              >
+                Keep run
+              </button>
+            )}
+          </span>
+        )}
         {result && !result.comparison && (
           <a href={`/api/results/${result.id}/csv`} download>
             <Download size={13} aria-hidden="true" /> Export CSV
@@ -673,6 +723,7 @@ export default function DataInspector(props: {
   error: string;
   stale: boolean;
   modelId?: string;
+  kept?: KeptRuns;
 }) {
   if (!props.result)
     return (

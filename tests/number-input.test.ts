@@ -43,3 +43,20 @@ test('download names come from the model name', async () => {
   assert.equal(fileSlug('***'), 'model');
   assert.equal(fileSlug('x'.repeat(80)).length, 60);
 });
+
+test('kept runs name what changed between them (parameters, blocks, stop time)', async () => {
+  const { parameterDifferences } = await import('../lib/gradara/compare');
+  const { readFileSync } = await import('node:fs');
+  const from = JSON.parse(readFileSync(new URL('../models/examples/dc.json', import.meta.url), 'utf8'));
+  const to = structuredClone(from);
+  const reference = to.blocks.find((b: { id: string }) => b.id === 'reference');
+  const height = reference.definition.parameters.find((p: { id: string; value: number }) => p.value === 100);
+  height.value = 60;
+  to.duration = 2;
+  to.blocks = to.blocks.filter((b: { id: string }) => b.id !== 'ground');
+  const diff = parameterDifferences(from, to);
+  assert.ok(diff.some((d) => /Speed reference · .*: 100 → 60/.test(d)), diff.join('\n'));
+  assert.ok(diff.includes('Ground: removed'));
+  assert.ok(diff.includes('Stop time: 4 → 2 s'));
+  assert.deepEqual(parameterDifferences(from, from), []);
+});
