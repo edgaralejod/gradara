@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-comparators.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -38,6 +39,13 @@
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>A Schmitt trigger: the output turns true when the input rises above uHigh and turns false only when it falls below uLow. Between the two thresholds it keeps its previous value.</p>
 <p>The output starts false.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Comparators</strong> A sine compared with thresholds, with a ramp, and through a hysteresis band.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-2be0c7f2"><span class="diagram x-3d3da18e"><svg class="diagram-wires" viewBox="16 120 1352 424" width="1352" height="424" aria-hidden="true"><polyline points="320,176 320,288" stroke="#1f5fbf"></polyline><polyline points="520,176 520,288" stroke="#1f5fbf"></polyline><polyline points="720,176 720,288" stroke="#1f5fbf"></polyline><polyline points="960,176 960,288" stroke="#1f5fbf"></polyline><polyline points="960,464 960,352" stroke="#1f5fbf"></polyline><polyline points="960,176 1208,176 1208,288" stroke="#1f5fbf"></polyline><polyline points="960,464 1208,464 1208,352" stroke="#1f5fbf"></polyline><polyline points="120,176 320,176" stroke="#1f5fbf"></polyline><polyline points="520,176 720,176" stroke="#1f5fbf"></polyline><polyline points="120,464 960,464" stroke="#1f5fbf"></polyline><polyline points="320,176 520,176" stroke="#1f5fbf"></polyline><polyline points="720,176 960,176" stroke="#1f5fbf"></polyline><circle cx="320" cy="176" r="3.5" fill="#1f5fbf"></circle><circle cx="720" cy="176" r="3.5" fill="#1f5fbf"></circle><circle cx="960" cy="464" r="3.5" fill="#1f5fbf"></circle><circle cx="520" cy="176" r="3.5" fill="#1f5fbf"></circle><circle cx="960" cy="176" r="3.5" fill="#1f5fbf"></circle></svg><span><span class="diagram-block x-71876818"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M4 22C10 22 12 8 18 8S26 36 32 36 38 8 44 8 50 22 56 22"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-07b871ee">sin(πt)</span></span><span><span class="diagram-block x-fbc9b3ce"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M6 36H20L54 8"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-e4fb87b6">t / 4</span></span><span><span class="diagram-block x-60efbfe0"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-61e711ca"><span class="block-face shape-box x-99ae9d06" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">u&gt;k</span></span><span class="port-label port-top x-4414ad8e">u</span><span class="port-label port-right x-d0eeec3e">y</span></span><span class="preview-terminal terminal-top  x-df849ba5"></span><span class="preview-terminal terminal-right  x-dd3c0ac0"></span></span></span></span></span><span class="diagram-name x-a23e21a6">Above 0.5</span></span><span><span class="diagram-block x-0b2b74d5"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-61e711ca"><span class="block-face shape-box x-99ae9d06" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">u&lt;k</span></span><span class="port-label port-top x-4414ad8e">u</span><span class="port-label port-right x-d0eeec3e">y</span></span><span class="preview-terminal terminal-top  x-df849ba5"></span><span class="preview-terminal terminal-right  x-dd3c0ac0"></span></span></span></span></span><span class="diagram-name x-c126e7cb">Below −0.5</span></span><span><span class="diagram-block x-25ea3b89"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-61e711ca"><span class="block-face shape-box x-99ae9d06" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">⊏⊐</span></span><span class="port-label port-top x-4414ad8e">u</span><span class="port-label port-right x-d0eeec3e">y</span></span><span class="preview-terminal terminal-top  x-df849ba5"></span><span class="preview-terminal terminal-right  x-dd3c0ac0"></span></span></span></span></span><span class="diagram-name x-dedd68f2">Hysteresis ±0.5</span></span><span><span class="diagram-block x-7553ee72"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-61e711ca"><span class="block-face shape-box x-db6099cd" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">u1&gt;u2</span></span><span class="port-label port-top x-4414ad8e">u1</span><span class="port-label port-bottom x-4414ad8e">u2</span><span class="port-label port-right x-d0eeec3e">y</span></span><span class="preview-terminal terminal-top  x-df849ba5"></span><span class="preview-terminal terminal-bottom  x-df849ba5"></span><span class="preview-terminal terminal-right  x-dd3c0ac0"></span></span></span></span></span><span class="diagram-name x-ddafbe64">Sine &gt; ramp</span></span><span><span class="diagram-block x-15326226"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-61e711ca"><span class="block-face shape-box x-db6099cd" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">u1&lt;u2</span></span><span class="port-label port-top x-4414ad8e">u1</span><span class="port-label port-bottom x-4414ad8e">u2</span><span class="port-label port-right x-d0eeec3e">y</span></span><span class="preview-terminal terminal-top  x-df849ba5"></span><span class="preview-terminal terminal-bottom  x-df849ba5"></span><span class="preview-terminal terminal-right  x-dd3c0ac0"></span></span></span></span></span><span class="diagram-name x-e55623ad">Sine &lt; ramp</span></span></span></span></div>
+<figcaption>In Gradara, select a Hysteresis block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/ramp">Ramp</a><a href="/docs/blocks/sine">Sine wave</a><a href="/docs/blocks/greaterThreshold">Greater than threshold</a><a href="/docs/blocks/lessThreshold">Less than threshold</a><a href="/docs/blocks/greater">Greater than</a><a href="/docs/blocks/less">Less than</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -90,7 +98,7 @@ y⁻ is the value just before the current event; y⁻ = false at t = 0.</pre></d
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Logic"><a class="prev" href="/docs/blocks/less"><small>Previous</small>Less than</a><a class="next" href="/docs/blocks/onOffController"><small>Next</small>On-off controller</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>217</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -133,10 +141,12 @@ y⁻ is the value just before the current event; y⁻ = false at t = 0.</pre></d
 <li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
 <li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
 <li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
-<details data-group=""><summary>Routing <span>4</span></summary>
+<details data-group=""><summary>Routing <span>6</span></summary>
 <ul>
 <li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
 <li data-name="demux demux"><a href="/docs/blocks/demux">Demux</a></li>
+<li data-name="bus creator buscreator"><a href="/docs/blocks/busCreator">Bus Creator</a></li>
+<li data-name="bus selector busselector"><a href="/docs/blocks/busSelector">Bus Selector</a></li>
 <li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
 <li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
 <details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
@@ -155,11 +165,6 @@ y⁻ is the value just before the current event; y⁻ = false at t = 0.</pre></d
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details open="" data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -352,6 +357,7 @@ y⁻ is the value just before the current event; y⁻ = false at t = 0.</pre></d
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#parameters">Parameters</a></li>
 <li><a href="#equations">Equations</a></li>

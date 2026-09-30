@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-step-responses.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -36,6 +37,13 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Approximates the time derivative of its input, filtered by a first-order lag with Filter time τ. Smaller τ comes closer to the true derivative but amplifies noise and fast edges more.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Step responses</strong> A unit step through a first-order filter, a second-order system, an integrator, and a delay; a ramp through a derivative.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-276bd681"><span class="diagram x-ea74e6b3"><svg class="diagram-wires" viewBox="4 40 572 640" width="572" height="640" aria-hidden="true"><polyline points="256,208 256,96 392,96" stroke="#1f5fbf"></polyline><polyline points="256,208 392,208" stroke="#1f5fbf"></polyline><polyline points="256,320 392,320" stroke="#1f5fbf"></polyline><polyline points="256,320 256,432 392,432" stroke="#1f5fbf"></polyline><polyline points="120,600 392,600" stroke="#1f5fbf"></polyline><polyline points="256,264 256,208" stroke="#1f5fbf"></polyline><polyline points="256,264 256,320" stroke="#1f5fbf"></polyline><polyline points="120,264 256,264" stroke="#1f5fbf"></polyline><circle cx="256" cy="208" r="3.5" fill="#1f5fbf"></circle><circle cx="256" cy="320" r="3.5" fill="#1f5fbf"></circle><circle cx="256" cy="264" r="3.5" fill="#1f5fbf"></circle></svg><span><span class="diagram-block x-3af53a01"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M5 35H26V9H55"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-d3acc95f">Step at 0.1 s</span></span><span><span class="diagram-block x-1184c41b"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="transfer-symbol"><span>1</span><span>τs+1</span></span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-4bd55586">First order</span></span><span><span class="diagram-block x-88d81463"><span class="diagram-turn x-82187263"><span class="block-preview x-57b6d6c8" aria-hidden="true"><span class="block-preview-body x-3b07185b"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="transfer-symbol"><span>ωₙ²</span><span>s² + 2ζωₙs + ωₙ²</span></span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-04178a2b">Second order</span></span><span><span class="diagram-block x-af9ceae6"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="transfer-symbol"><span>1</span><span>s</span></span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-53ef24a0">Integrator</span></span><span><span class="diagram-block x-ffad5444"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="transfer-symbol"><span>e<sup>−sT</sup></span></span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-b1516604">Delay 0.3 s</span></span><span><span class="diagram-block x-fbe6b6a6"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M6 36H20L54 8"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-79543a98">Ramp, slope 2</span></span><span><span class="diagram-block x-56b7f31d"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="transfer-symbol"><span>s</span><span>τs+1</span></span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-24450542">Derivative</span></span></span></span></div>
+<figcaption>In Gradara, select a Derivative block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/integrator">Limited integrator</a><a href="/docs/blocks/step">Step</a><a href="/docs/blocks/filter">Low-pass filter</a><a href="/docs/blocks/ramp">Ramp</a><a href="/docs/blocks/secondOrder">Second-order</a><a href="/docs/blocks/delay">Transport delay</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -83,7 +91,7 @@ y = (u - x)/tau;</pre></div></section>
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Continuous"><a class="prev" href="/docs/blocks/filter"><small>Previous</small>Low-pass filter</a><a class="next" href="/docs/blocks/secondOrder"><small>Next</small>Second-order</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>217</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -126,10 +134,12 @@ y = (u - x)/tau;</pre></div></section>
 <li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
 <li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
 <li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
-<details data-group=""><summary>Routing <span>4</span></summary>
+<details data-group=""><summary>Routing <span>6</span></summary>
 <ul>
 <li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
 <li data-name="demux demux"><a href="/docs/blocks/demux">Demux</a></li>
+<li data-name="bus creator buscreator"><a href="/docs/blocks/busCreator">Bus Creator</a></li>
+<li data-name="bus selector busselector"><a href="/docs/blocks/busSelector">Bus Selector</a></li>
 <li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
 <li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
 <details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
@@ -148,11 +158,6 @@ y = (u - x)/tau;</pre></div></section>
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -345,6 +350,7 @@ y = (u - x)/tau;</pre></div></section>
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#parameters">Parameters</a></li>
 <li><a href="#equations">Equations</a></li>

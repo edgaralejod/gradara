@@ -15,6 +15,7 @@ import {
   useStoreApi,
 } from '@xyflow/react';
 import { domainColors, type Project } from '@/lib/gradara/model';
+import { busWireIds } from '@/lib/gradara/buses';
 import { endpointPoint, endpointPort, isTap } from '@/lib/gradara/net';
 import { NetSession } from '@/lib/gradara/net-session';
 import {
@@ -702,18 +703,25 @@ export default function NetLayer(baseProps: Props) {
   const s = view;
   const drawing = s.mode !== 'idle';
   const document = drawing || view.editing ? view.project : scene;
+  // Every wire of a net that carries a bus, including those between junctions.
+  const busNets = useMemo(() => busWireIds(document), [document]);
   const paths = useMemo(
     () =>
-      document.wires.map((w) => ({
-        wire: w,
-        points: polylineOfWire(document, w.id),
-        color:
-          domainColors[
-            endpointPort(document, w.source, w.sourceHandle, 'source')
-              ?.domain ?? 'signal'
-          ],
-      })),
-    [document],
+      document.wires.map((w) => {
+        const source = endpointPort(
+          document,
+          w.source,
+          w.sourceHandle,
+          'source',
+        );
+        return {
+          wire: w,
+          points: polylineOfWire(document, w.id),
+          color: domainColors[source?.domain ?? 'signal'],
+          bus: busNets.has(w.id),
+        };
+      }),
+    [document, busNets],
   );
   const wireNets = useMemo(
     () =>
@@ -737,9 +745,20 @@ export default function NetLayer(baseProps: Props) {
     props.selection.blockIds.length === 0 &&
     props.selected.length === 1 &&
     paths.some((p) => p.wire.id === props.selected[0]);
-  const loggingWire = props.project.wires.find((w) => w.id === props.selected[0]);
-  const loggingNet = loggingWire ? netForWire(props.project, loggingWire.id) : undefined;
-  const canLog = loggingWire && endpointPort(props.project, loggingWire.source, loggingWire.sourceHandle, 'source')?.domain === 'signal';
+  const loggingWire = props.project.wires.find(
+    (w) => w.id === props.selected[0],
+  );
+  const loggingNet = loggingWire
+    ? netForWire(props.project, loggingWire.id)
+    : undefined;
+  const canLog =
+    loggingWire &&
+    endpointPort(
+      props.project,
+      loggingWire.source,
+      loggingWire.sourceHandle,
+      'source',
+    )?.domain === 'signal';
   return (
     <>
       <ViewportPortal>
@@ -763,6 +782,18 @@ export default function NetLayer(baseProps: Props) {
             >
               <path d="M 0 1 L 9 5 L 0 9 z" fill="context-stroke" />
             </marker>
+            {/* The same arrowhead on a heavy bus wire, which would otherwise scale it up. */}
+            <marker
+              id="net-arrow-bus"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="3.2"
+              markerHeight="3.2"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="context-stroke" />
+            </marker>
           </defs>
           {s.wireEdit && (
             <path
@@ -770,7 +801,7 @@ export default function NetLayer(baseProps: Props) {
               d={pointsToPath(s.wireEdit.originalPoints)}
             />
           )}
-          {paths.map(({ wire: w, points, color }) => {
+          {paths.map(({ wire: w, points, color, bus }) => {
             const selected = selectedGeometry.wireIds.includes(w.id);
             return (
               <g
@@ -783,7 +814,7 @@ export default function NetLayer(baseProps: Props) {
                     : undefined
                 }
                 aria-label={`${wireNets.get(w.id) ? netDisplayName(document, wireNets.get(w.id)!) : 'Connection'} · ${wireNets.get(w.id)?.id ?? w.id}`}
-                className={`net-wire ${selected ? 'is-selected' : ''} ${hover === w.id ? 'is-hovered' : ''}`}
+                className={`net-wire ${selected ? 'is-selected' : ''} ${hover === w.id ? 'is-hovered' : ''}${bus ? ' is-bus' : ''}`}
                 style={{ color }}
                 onPointerEnter={() => setHover(w.id)}
                 onPointerLeave={() => setHover(null)}
@@ -796,7 +827,9 @@ export default function NetLayer(baseProps: Props) {
                     endpointPort(document, w.target, w.targetHandle, 'target')
                       ?.direction === 'input' &&
                     !document.junctions?.some((j) => j.id === w.target)
-                      ? 'url(#net-arrow)'
+                      ? bus
+                        ? 'url(#net-arrow-bus)'
+                        : 'url(#net-arrow)'
                       : undefined
                   }
                 />
@@ -1035,7 +1068,29 @@ export default function NetLayer(baseProps: Props) {
           ) : (
             <>
               <span className="net-toolbar-label">Wire</span>
-              {loggingNet && <button disabled={!canLog} aria-pressed={!!loggingNet.logged} title={canLog ? 'Capture this signal in the next simulation' : 'Add a sensor and log its signal output'} onClick={() => props.onCommit({...props.project, nets: props.project.nets?.map(n => n.id === loggingNet.id ? {...n, logged: !n.logged} : n)})}>{loggingNet.logged ? '● Logging on' : 'Log signal'}</button>}
+              {loggingNet && (
+                <button
+                  disabled={!canLog}
+                  aria-pressed={!!loggingNet.logged}
+                  title={
+                    canLog
+                      ? 'Capture this signal in the next simulation'
+                      : 'Add a sensor and log its signal output'
+                  }
+                  onClick={() =>
+                    props.onCommit({
+                      ...props.project,
+                      nets: props.project.nets?.map((n) =>
+                        n.id === loggingNet.id
+                          ? { ...n, logged: !n.logged }
+                          : n,
+                      ),
+                    })
+                  }
+                >
+                  {loggingNet.logged ? '● Logging on' : 'Log signal'}
+                </button>
+              )}
               <button
                 onClick={() => commands.current('name')}
                 title="Name this net (F2)"

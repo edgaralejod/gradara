@@ -14,6 +14,7 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | --- | --- | --- |
 | Workspace and panels | `app/page.tsx`, `app/engineering.css`, `components/gradara/` | User guide, browser acceptance checks, component agent guidance. |
 | Block visuals / library | `block-face.tsx`, `block-symbol.tsx`, `lib/gradara/block-design.ts` | `docs/blocks/DESIGN.md`, `docs/blocks/AGENT_BLOCK_GUIDE.md`. |
+| Block examples | `scripts/block-examples/`, `scripts/build-block-examples.tsx`, `lib/gradara/block-examples.ts`, `models/examples/blocks/` | `docs/blocks/EXAMPLES.md`. Rebuild with `npm run examples:blocks`, then `npm run docs:blocks`. |
 | Block reference (Help and gradara.app/docs/blocks) | `lib/gradara/block-docs/`, `lib/gradara/block-reference.ts`, `components/gradara/block-help-dialog.tsx`, `scripts/build-block-docs.tsx` | `docs/blocks/AGENT_BLOCK_GUIDE.md`. Regenerate the site pages with `npm run docs:blocks`. |
 | Wiring / selection / routing | `lib/gradara/net-*.ts`, `routing.ts`, `selection.ts`, `grid.ts`, canvas/net components | `docs/architecture/WIRING.md`, model format, browser acceptance checks. |
 | Definitions and physical blocks | `lib/gradara/*blocks.ts`, `model.ts`, `server/modelica.py` | Block guide and simulation execution guide. |
@@ -64,6 +65,7 @@ Pull requests get an advisory warning (`scripts/check-doc-drift.py`) when they c
 | `lib/gradara/net-*.ts`, `lib/gradara/routing.ts`, `lib/gradara/selection.ts` | `docs/architecture/WIRING.md` |
 | `lib/gradara/block-design.ts`, `components/gradara/block-face.tsx`, `app/blocks.css` | `docs/blocks/DESIGN.md`, `site/public/docs/blocks/` and `site/public/assets/block-faces.css` (run `npm run docs:blocks`) |
 | `lib/gradara/block-docs/`, block definitions, `models/examples/` | `site/public/docs/blocks/` (run `npm run docs:blocks`) |
+| `scripts/block-examples/`, block definitions | `models/examples/blocks/` (run `npm run examples:blocks`), `docs/blocks/EXAMPLES.md` |
 | `components/gradara/settings-dialog.tsx` | `docs/USER_GUIDE.md`, `docs/AGENT_SETUP.md` |
 | `desktop/`, `packaging/`, `vite.desktop.config.ts` | `docs/architecture/DISTRIBUTION.md`, `docs/development/SETUP.md`, `docs/RELEASING.md` |
 | `cloud/gateway/` | `cloud/README.md`, `docs/PRIVACY.md`, `site/public/privacy.html` |

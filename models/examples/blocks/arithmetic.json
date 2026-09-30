@@ -1,0 +1,733 @@
+{
+  "version": 1,
+  "name": "Example: Arithmetic",
+  "exampleId": "block-arithmetic",
+  "description": "Input a is a ramp that equals time, input b is the constant 2. The six blocks combine them, so their traces are straight lines that cross or bend at t = 2 s, where a = b. At 4 s: a + b = 6, a − b = 2, a · b = 8, a / b = 2, min = 2, max = 4.",
+  "duration": 4,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "a",
+      "definition": {
+        "kind": "ramp",
+        "name": "a = t",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 1,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 160
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "b",
+      "definition": {
+        "kind": "constant",
+        "name": "b = 2",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 2,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 40,
+        "y": 384
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "sum",
+      "definition": {
+        "kind": "sum",
+        "name": "a + b",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Sum",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "b",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a + b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 280,
+        "y": 280
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 52,
+        "y": -38
+      }
+    },
+    {
+      "id": "diff",
+      "definition": {
+        "kind": "subtract",
+        "name": "a − b",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Subtract",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "b",
+            "name": "−",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a - b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 456,
+        "y": 280
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 52,
+        "y": -38
+      }
+    },
+    {
+      "id": "prod",
+      "definition": {
+        "kind": "product",
+        "name": "a · b",
+        "symbol": "×",
+        "domain": "signal",
+        "description": "Multiply two signals.",
+        "ports": [
+          {
+            "id": "a",
+            "name": "a",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "b",
+            "name": "b",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a * b;",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "math",
+          "multiply"
+        ]
+      },
+      "position": {
+        "x": 616,
+        "y": 272
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 68,
+        "y": -46
+      }
+    },
+    {
+      "id": "quot",
+      "definition": {
+        "kind": "divide",
+        "name": "a / b",
+        "symbol": "÷",
+        "domain": "signal",
+        "description": "Divide two signals: y = a / b. Keep the denominator away from zero.",
+        "ports": [
+          {
+            "id": "a",
+            "name": "a",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "b",
+            "name": "b",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a / b;",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "math"
+        ]
+      },
+      "position": {
+        "x": 792,
+        "y": 272
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 68,
+        "y": -46
+      }
+    },
+    {
+      "id": "lo",
+      "definition": {
+        "kind": "min",
+        "name": "min(a, b)",
+        "symbol": "min",
+        "domain": "signal",
+        "description": "The smaller of two signals.",
+        "ports": [
+          {
+            "id": "a",
+            "name": "a",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "b",
+            "name": "b",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = min(a, b);",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "math"
+        ]
+      },
+      "position": {
+        "x": 968,
+        "y": 272
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 84,
+        "y": -46
+      }
+    },
+    {
+      "id": "hi",
+      "definition": {
+        "kind": "max",
+        "name": "max(a, b)",
+        "symbol": "max",
+        "domain": "signal",
+        "description": "The larger of two signals.",
+        "ports": [
+          {
+            "id": "a",
+            "name": "a",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "b",
+            "name": "b",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = max(a, b);",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "math"
+        ]
+      },
+      "position": {
+        "x": 1144,
+        "y": 272
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 84,
+        "y": -46
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id000e",
+      "sourceHandle": "node",
+      "target": "sum",
+      "targetHandle": "a",
+      "waypoints": []
+    },
+    {
+      "id": "id0002",
+      "source": "j_id000g",
+      "sourceHandle": "node",
+      "target": "sum",
+      "targetHandle": "b",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000q",
+      "sourceHandle": "node",
+      "target": "diff",
+      "targetHandle": "a",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000w",
+      "sourceHandle": "node",
+      "target": "diff",
+      "targetHandle": "b",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000i",
+      "sourceHandle": "node",
+      "target": "prod",
+      "targetHandle": "a",
+      "waypoints": []
+    },
+    {
+      "id": "id0006",
+      "source": "j_id000k",
+      "sourceHandle": "node",
+      "target": "prod",
+      "targetHandle": "b",
+      "waypoints": []
+    },
+    {
+      "id": "id0007",
+      "source": "j_id000s",
+      "sourceHandle": "node",
+      "target": "quot",
+      "targetHandle": "a",
+      "waypoints": []
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000y",
+      "sourceHandle": "node",
+      "target": "quot",
+      "targetHandle": "b",
+      "waypoints": []
+    },
+    {
+      "id": "id0009",
+      "source": "j_id000m",
+      "sourceHandle": "node",
+      "target": "lo",
+      "targetHandle": "a",
+      "waypoints": []
+    },
+    {
+      "id": "id000a",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "lo",
+      "targetHandle": "b",
+      "waypoints": []
+    },
+    {
+      "id": "id000b",
+      "source": "j_id000m",
+      "sourceHandle": "node",
+      "target": "hi",
+      "targetHandle": "a",
+      "waypoints": [
+        {
+          "x": 1184,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "id": "id000c",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "hi",
+      "targetHandle": "b",
+      "waypoints": [
+        {
+          "x": 1184,
+          "y": 416
+        }
+      ]
+    },
+    {
+      "id": "w_id000f",
+      "source": "a",
+      "sourceHandle": "y",
+      "target": "j_id000e",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000h",
+      "source": "b",
+      "sourceHandle": "y",
+      "target": "j_id000g",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000j",
+      "source": "j_id000q",
+      "sourceHandle": "node",
+      "target": "j_id000i",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000l",
+      "source": "j_id000w",
+      "sourceHandle": "node",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000n",
+      "source": "j_id000s",
+      "sourceHandle": "node",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000p",
+      "source": "j_id000y",
+      "sourceHandle": "node",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000r",
+      "source": "j_id000e",
+      "sourceHandle": "node",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000t",
+      "source": "j_id000i",
+      "sourceHandle": "node",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000x",
+      "source": "j_id000g",
+      "sourceHandle": "node",
+      "target": "j_id000w",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000z",
+      "source": "j_id000k",
+      "sourceHandle": "node",
+      "target": "j_id000y",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000e",
+      "domain": "signal",
+      "position": {
+        "x": 304,
+        "y": 192
+      }
+    },
+    {
+      "id": "j_id000g",
+      "domain": "signal",
+      "position": {
+        "x": 304,
+        "y": 416
+      }
+    },
+    {
+      "id": "j_id000i",
+      "domain": "signal",
+      "position": {
+        "x": 656,
+        "y": 192
+      }
+    },
+    {
+      "id": "j_id000k",
+      "domain": "signal",
+      "position": {
+        "x": 656,
+        "y": 416
+      }
+    },
+    {
+      "id": "j_id000m",
+      "domain": "signal",
+      "position": {
+        "x": 1008,
+        "y": 192
+      }
+    },
+    {
+      "id": "j_id000o",
+      "domain": "signal",
+      "position": {
+        "x": 1008,
+        "y": 416
+      }
+    },
+    {
+      "id": "j_id000q",
+      "domain": "signal",
+      "position": {
+        "x": 480,
+        "y": 192
+      }
+    },
+    {
+      "id": "j_id000s",
+      "domain": "signal",
+      "position": {
+        "x": 832,
+        "y": 192
+      }
+    },
+    {
+      "id": "j_id000w",
+      "domain": "signal",
+      "position": {
+        "x": 480,
+        "y": 416
+      }
+    },
+    {
+      "id": "j_id000y",
+      "domain": "signal",
+      "position": {
+        "x": 832,
+        "y": 416
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000u",
+      "anchor": "a.y",
+      "wireIds": [
+        "id0001",
+        "id0003",
+        "id0005",
+        "id0007",
+        "id0009",
+        "id000b",
+        "w_id000f",
+        "w_id000j",
+        "w_id000n",
+        "w_id000r",
+        "w_id000t"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "b.y",
+      "wireIds": [
+        "id0002",
+        "id0004",
+        "id0006",
+        "id0008",
+        "id000a",
+        "id000c",
+        "w_id000h",
+        "w_id000l",
+        "w_id000p",
+        "w_id000x",
+        "w_id000z"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Results",
+      "series": [
+        "sum.y",
+        "diff.y",
+        "prod.y",
+        "quot.y",
+        "lo.y",
+        "hi.y"
+      ],
+      "labels": [
+        "a + b",
+        "a − b",
+        "a · b",
+        "a / b",
+        "min",
+        "max"
+      ]
+    }
+  ]
+}

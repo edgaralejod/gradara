@@ -12,7 +12,7 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/project.test.ts tests/wiring.test.ts tests/selection.test.ts tests/nets.test.ts tests/names.test.ts tests/block-design.test.ts tests/results.test.ts tests/examples.test.ts tests/document-store.test.ts tests/inserter.test.ts tests/updates.test.ts tests/validate-project.test.ts tests/proposal.test.ts tests/auto-layout.test.ts tests/drag.test.ts tests/hierarchy.test.ts tests/codegen.test.ts tests/variants.test.ts tests/explorer.test.ts tests/arrange.test.ts tests/subsystem-ports.test.ts tests/grid.test.ts tests/block-docs.test.ts tests/circuit-symbols.test.ts tests/align-guides.test.ts",
+    "test": "tsx --test tests/project.test.ts tests/wiring.test.ts tests/selection.test.ts tests/nets.test.ts tests/names.test.ts tests/block-design.test.ts tests/results.test.ts tests/examples.test.ts tests/document-store.test.ts tests/inserter.test.ts tests/updates.test.ts tests/validate-project.test.ts tests/proposal.test.ts tests/auto-layout.test.ts tests/drag.test.ts tests/hierarchy.test.ts tests/codegen.test.ts tests/variants.test.ts tests/explorer.test.ts tests/arrange.test.ts tests/subsystem-ports.test.ts tests/grid.test.ts tests/block-docs.test.ts tests/circuit-symbols.test.ts tests/align-guides.test.ts tests/block-examples.test.ts tests/buses.test.ts tests/terminators.test.ts",
     "engine:test": ".venv/bin/python -m pytest -q",
     "local": "python3 scripts/start.py",
     "postinstall": "node scripts/patch-react-flow.mjs",
@@ -22,7 +22,8 @@
     "desktop:backend": "python3 packaging/build_backend.py && python3 packaging/third_party_licenses.py",
     "desktop:prepare": "npm run desktop:web && npm run desktop:backend",
     "desktop:start": "npm run desktop:web && cd desktop && npm start",
-    "desktop:dist": "npm run desktop:prepare && cd desktop && npm run dist"
+    "desktop:dist": "npm run desktop:prepare && cd desktop && npm run dist",
+    "examples:blocks": "tsx scripts/build-block-examples.tsx"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

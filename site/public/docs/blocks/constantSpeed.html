@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-position-sensors.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -36,6 +37,13 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Holds the flange at a constant angular velocity, independent of the torque needed.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Resolver and Hall sensor</strong> A shaft turning at 10 rad/s read by a resolver, a Hall sensor, and an angle sensor.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-e837e9a9"><span class="diagram x-818e6f66"><svg class="diagram-wires" viewBox="80 16 560 496" width="560" height="496" aria-hidden="true"><polyline points="312,248 312,104 392,104" stroke="#00897b"></polyline><polyline points="312,296 392,296" stroke="#00897b"></polyline><polyline points="312,296 312,440 392,440" stroke="#00897b"></polyline><polyline points="232,248 312,248" stroke="#00897b"></polyline><polyline points="312,248 312,296" stroke="#00897b"></polyline><circle cx="312" cy="248" r="3.5" fill="#00897b"></circle><circle cx="312" cy="296" r="3.5" fill="#00897b"></circle></svg><span><span class="diagram-block x-0029484a"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-150bcd7c"><span class="block-face shape-box x-3702d415" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">ω₀</span></span><span class="port-label port-right x-af7a31e9">shaft</span></span><span class="preview-terminal terminal-right is-physical x-d755340f"></span></span></span></span></span><span class="diagram-name x-4bbab741">Shaft 10 rad/s</span></span><span><span class="diagram-block x-f5801029"><span class="diagram-turn x-97248c84"><span class="block-preview x-b6f1dcc4" aria-hidden="true"><span class="block-preview-body x-6fc60c48"><span class="block-face shape-box x-587f1d4a" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">R</span></span><span class="port-label port-left x-af7a31e9">shaft</span><span class="port-label port-right x-a50dfb52">sin</span><span class="port-label port-right x-8483e170">cos</span><span class="port-label port-right x-2e2ef076">−sin</span><span class="port-label port-right x-b5f05b4c">−cos</span></span><span class="preview-terminal terminal-left is-physical x-d755340f"></span><span class="preview-terminal terminal-right  x-591676df"></span><span class="preview-terminal terminal-right  x-6490ebd5"></span><span class="preview-terminal terminal-right  x-66b93b51"></span><span class="preview-terminal terminal-right  x-06ed13ba"></span></span></span></span></span><span class="diagram-name x-a10d624c">Resolver</span></span><span><span class="diagram-block x-89200d92"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-150bcd7c"><span class="block-face shape-box x-d549e731" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">Hall</span></span><span class="port-label port-left x-af7a31e9">shaft</span><span class="port-label port-right x-525979f6">θe</span></span><span class="preview-terminal terminal-left is-physical x-d755340f"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-fb5cd89b">Hall sensor</span></span><span><span class="diagram-block x-5b1a1759"><span class="diagram-turn x-f21b9329" data-turn="180"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-150bcd7c"><span class="block-face shape-box x-3b71e106" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">θ</span></span><span class="port-label port-right x-af7a31e9">shaft</span><span class="port-label port-left x-525979f6">y</span></span><span class="preview-terminal terminal-right is-physical x-d755340f"></span><span class="preview-terminal terminal-left  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-7b86d667">Shaft angle</span></span></span></span></div>
+<figcaption>In Gradara, select a Constant speed block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/angleSensor">Angle sensor</a><a href="/docs/blocks/hallSensor">Electrical angle sensor</a><a href="/docs/blocks/resolver">Resolver</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -71,7 +79,7 @@
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Rotational"><a class="prev" href="/docs/blocks/speedSource"><small>Previous</small>Speed source</a><a class="next" href="/docs/blocks/rotSpeedSensor"><small>Next</small>Speed sensor (ideal)</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>217</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -114,10 +122,12 @@
 <li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
 <li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
 <li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
-<details data-group=""><summary>Routing <span>4</span></summary>
+<details data-group=""><summary>Routing <span>6</span></summary>
 <ul>
 <li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
 <li data-name="demux demux"><a href="/docs/blocks/demux">Demux</a></li>
+<li data-name="bus creator buscreator"><a href="/docs/blocks/busCreator">Bus Creator</a></li>
+<li data-name="bus selector busselector"><a href="/docs/blocks/busSelector">Bus Selector</a></li>
 <li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
 <li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
 <details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
@@ -136,11 +146,6 @@
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -333,6 +338,7 @@
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#parameters">Parameters</a></li>
 <li><a href="#equations">Equations</a></li>

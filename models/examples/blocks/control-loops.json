@@ -1,0 +1,988 @@
+{
+  "version": 1,
+  "name": "Example: PI and PID loops",
+  "exampleId": "block-control-loops",
+  "description": "Each plant is a lag with τ = 0.5 s and each loop follows a unit step at 0.1 s. The PI and sampled PID blocks take the reference and the measurement and form the error themselves; the continuous PID takes the error from a subtract block. All three reach the set point with no steady error, because each has integral action. Change a gain and run again to compare.",
+  "duration": 4,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "ref1",
+      "definition": {
+        "kind": "step",
+        "name": "Set point (PI)",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 112
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "pi",
+      "definition": {
+        "kind": "pi",
+        "name": "PI (sampled)",
+        "description": "Sampled PI control with output saturation and a bounded integral state.",
+        "domain": "signal",
+        "symbol": "PI",
+        "controller": true,
+        "ports": [
+          {
+            "id": "reference",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "measured",
+            "name": "meas",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "limit",
+            "name": "Voltage limit",
+            "value": 10,
+            "unit": "V",
+            "min": 0.1
+          },
+          {
+            "id": "samplePeriod",
+            "name": "Sample period",
+            "value": 0.001,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
+        "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+      },
+      "position": {
+        "x": 256,
+        "y": 112
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "plant1",
+      "definition": {
+        "kind": "filter",
+        "name": "Plant (PI)",
+        "description": "First-order continuous filter.",
+        "domain": "signal",
+        "symbol": "1/(τs+1)",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "tau",
+            "name": "Time constant",
+            "value": 0.5,
+            "unit": "s",
+            "min": 0.00001
+          }
+        ],
+        "declarations": "Real x(start=0, fixed=true);",
+        "equations": "der(x) = (u-x)/tau;\ny = x;"
+      },
+      "position": {
+        "x": 520,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "y1",
+      "definition": {
+        "kind": "gain",
+        "name": "y (PI)",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 1,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 720,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ref2",
+      "definition": {
+        "kind": "step",
+        "name": "Set point (PID)",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "err",
+      "definition": {
+        "kind": "subtract",
+        "name": "Error",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Subtract",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "−",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a - b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 240,
+        "y": 376
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "pid",
+      "definition": {
+        "kind": "pid",
+        "name": "PID",
+        "symbol": "PID",
+        "domain": "signal",
+        "description": "Parallel PID with a filtered derivative term.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "e",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "der(xi) = u;\nder(xf) = (u - xf)/tf;\ny = kp*u + ki*xi + kd*(u - xf)/tf;",
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "kd",
+            "name": "Derivative gain",
+            "value": 0.05,
+            "unit": ""
+          },
+          {
+            "id": "tf",
+            "name": "Derivative filter",
+            "value": 0.01,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "Real xi(start=0, fixed=true);\nReal xf(start=0, fixed=true);",
+        "keywords": [
+          "control",
+          "regulator"
+        ],
+        "controller": true
+      },
+      "position": {
+        "x": 392,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "plant2",
+      "definition": {
+        "kind": "filter",
+        "name": "Plant (PID)",
+        "description": "First-order continuous filter.",
+        "domain": "signal",
+        "symbol": "1/(τs+1)",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "tau",
+            "name": "Time constant",
+            "value": 0.5,
+            "unit": "s",
+            "min": 0.00001
+          }
+        ],
+        "declarations": "Real x(start=0, fixed=true);",
+        "equations": "der(x) = (u-x)/tau;\ny = x;"
+      },
+      "position": {
+        "x": 568,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "y2",
+      "definition": {
+        "kind": "gain",
+        "name": "y (PID)",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 1,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 744,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ref3",
+      "definition": {
+        "kind": "step",
+        "name": "Set point (sampled PID)",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 592
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "dpid",
+      "definition": {
+        "kind": "discretePID",
+        "name": "PID (sampled)",
+        "symbol": "PID(z)",
+        "domain": "signal",
+        "description": "Sampled PID with a filtered derivative, a clamped integral, and output saturation. Every state updates at the sample instant, so exported C reproduces it exactly.",
+        "ports": [
+          {
+            "id": "reference",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "measured",
+            "name": "meas",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "when sample(0, samplePeriod) then\n  e = reference - measured;\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*e));\n  derivative = (filterTime*pre(derivative) + kd*(e - pre(errorPrev)))/(filterTime + samplePeriod);\n  errorPrev = e;\n  y = max(-limit, min(limit, kp*e + integral + derivative));\nend when;",
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "kd",
+            "name": "Derivative gain",
+            "value": 0.05,
+            "unit": ""
+          },
+          {
+            "id": "filterTime",
+            "name": "Derivative filter",
+            "value": 0.01,
+            "unit": "s",
+            "min": 0.0001
+          },
+          {
+            "id": "limit",
+            "name": "Output limit",
+            "value": 10,
+            "unit": "",
+            "min": 0.001
+          },
+          {
+            "id": "samplePeriod",
+            "name": "Sample period",
+            "value": 0.001,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "discrete Real e(start=0, fixed=true);\ndiscrete Real integral(start=0, fixed=true);\ndiscrete Real derivative(start=0, fixed=true);\ndiscrete Real errorPrev(start=0, fixed=true);",
+        "keywords": [
+          "control",
+          "regulator",
+          "discrete",
+          "sampled",
+          "export",
+          "c"
+        ],
+        "controller": true
+      },
+      "position": {
+        "x": 256,
+        "y": 592
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "plant3",
+      "definition": {
+        "kind": "filter",
+        "name": "Plant (sampled PID)",
+        "description": "First-order continuous filter.",
+        "domain": "signal",
+        "symbol": "1/(τs+1)",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "tau",
+            "name": "Time constant",
+            "value": 0.5,
+            "unit": "s",
+            "min": 0.00001
+          }
+        ],
+        "declarations": "Real x(start=0, fixed=true);",
+        "equations": "der(x) = (u-x)/tau;\ny = x;"
+      },
+      "position": {
+        "x": 520,
+        "y": 608
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "y3",
+      "definition": {
+        "kind": "gain",
+        "name": "y (sampled PID)",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 1,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 720,
+        "y": 608
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "ref1",
+      "sourceHandle": "y",
+      "target": "pi",
+      "targetHandle": "reference"
+    },
+    {
+      "id": "id0002",
+      "source": "pi",
+      "sourceHandle": "y",
+      "target": "plant1",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000f",
+      "sourceHandle": "node",
+      "target": "y1",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000f",
+      "sourceHandle": "node",
+      "target": "pi",
+      "targetHandle": "measured",
+      "waypoints": [
+        {
+          "x": 616,
+          "y": 208
+        },
+        {
+          "x": 240,
+          "y": 208
+        },
+        {
+          "x": 240,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "ref2",
+      "sourceHandle": "y",
+      "target": "err",
+      "targetHandle": "a"
+    },
+    {
+      "id": "id0006",
+      "source": "err",
+      "sourceHandle": "y",
+      "target": "pid",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0007",
+      "source": "pid",
+      "sourceHandle": "y",
+      "target": "plant2",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000h",
+      "sourceHandle": "node",
+      "target": "y2",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id0009",
+      "source": "j_id000h",
+      "sourceHandle": "node",
+      "target": "err",
+      "targetHandle": "b",
+      "waypoints": [
+        {
+          "x": 664,
+          "y": 464
+        },
+        {
+          "x": 264,
+          "y": 464
+        }
+      ]
+    },
+    {
+      "id": "id000a",
+      "source": "ref3",
+      "sourceHandle": "y",
+      "target": "dpid",
+      "targetHandle": "reference"
+    },
+    {
+      "id": "id000b",
+      "source": "dpid",
+      "sourceHandle": "y",
+      "target": "plant3",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id000c",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "y3",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id000d",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "dpid",
+      "targetHandle": "measured",
+      "waypoints": [
+        {
+          "x": 616,
+          "y": 688
+        },
+        {
+          "x": 240,
+          "y": 688
+        },
+        {
+          "x": 240,
+          "y": 656
+        }
+      ]
+    },
+    {
+      "id": "w_id000g",
+      "source": "plant1",
+      "sourceHandle": "y",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000i",
+      "source": "plant2",
+      "sourceHandle": "y",
+      "target": "j_id000h",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000k",
+      "source": "plant3",
+      "sourceHandle": "y",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000f",
+      "domain": "signal",
+      "position": {
+        "x": 616,
+        "y": 160
+      }
+    },
+    {
+      "id": "j_id000h",
+      "domain": "signal",
+      "position": {
+        "x": 664,
+        "y": 400
+      }
+    },
+    {
+      "id": "j_id000j",
+      "domain": "signal",
+      "position": {
+        "x": 616,
+        "y": 640
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000l",
+      "anchor": "ref1.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000m",
+      "anchor": "pi.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000n",
+      "anchor": "plant1.y",
+      "wireIds": [
+        "id0003",
+        "id0004",
+        "w_id000g"
+      ]
+    },
+    {
+      "id": "net_id000o",
+      "anchor": "ref2.y",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000p",
+      "anchor": "err.y",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000q",
+      "anchor": "pid.y",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000r",
+      "anchor": "plant2.y",
+      "wireIds": [
+        "id0008",
+        "id0009",
+        "w_id000i"
+      ]
+    },
+    {
+      "id": "net_id000s",
+      "anchor": "ref3.y",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id000t",
+      "anchor": "dpid.y",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id000u",
+      "anchor": "plant3.y",
+      "wireIds": [
+        "id000c",
+        "id000d",
+        "w_id000k"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Plant outputs",
+      "series": [
+        "ref1.y",
+        "y1.y",
+        "y2.y",
+        "y3.y"
+      ],
+      "labels": [
+        "Set point",
+        "PI (sampled)",
+        "PID",
+        "PID (sampled)"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Controller outputs",
+      "series": [
+        "pi.y",
+        "pid.y",
+        "dpid.y"
+      ],
+      "labels": [
+        "PI (sampled)",
+        "PID",
+        "PID (sampled)"
+      ]
+    }
+  ]
+}

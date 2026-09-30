@@ -167,7 +167,7 @@ export function useAssistant(
 export type Assistant = ReturnType<typeof useAssistant>;
 
 const SUGGESTIONS = [
-  'Add a scope on the measured output and connect it',
+  'Add a speed sensor on the load shaft',
   'Increase the controller gain by 20%',
   'Replace the step reference with a ramp',
 ];

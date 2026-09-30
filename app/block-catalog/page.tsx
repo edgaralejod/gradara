@@ -126,9 +126,6 @@ export default function BlockCatalog() {
               <div className="catalog-grid">
                 {group.items.map((d) => {
                   const size = defaultBlockSize(d);
-                  const drawingOnly =
-                    !d.generated &&
-                    ['mux', 'demux'].includes(d.kind);
                   return (
                     <article
                       className="catalog-card"
@@ -174,11 +171,7 @@ export default function BlockCatalog() {
                           <i style={{ background: domainColors[d.domain] }} />
                           {domainLabels[d.domain]}
                         </span>
-                        {drawingOnly ? (
-                          <span className="catalog-warning">Drawing only</span>
-                        ) : (
-                          <code>{d.kind}</code>
-                        )}
+                        <code>{d.kind}</code>
                       </footer>
                     </article>
                   );

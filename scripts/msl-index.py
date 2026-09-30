@@ -192,10 +192,10 @@ def top_level_finals(stmt: str) -> list[str]:
 def describe(classes, path: str, seen=None) -> dict:
     seen = seen or set()
     if path in seen:
-        return {'parameters': {}, 'connectors': {}}
+        return {'parameters': {}, 'connectors': {}, 'starts': set()}
     seen.add(path)
     cls = classes[path]
-    result = {'parameters': {}, 'connectors': {}}
+    result = {'parameters': {}, 'connectors': {}, 'starts': set()}
     if cls.short:
         base = re.match(r'([\w.]+)', cls.short)
         if base:
@@ -224,6 +224,7 @@ def describe(classes, path: str, seen=None) -> dict:
                 for name, value in inherited['parameters'].items():
                     result['parameters'].setdefault(name, value)
                 result['connectors'].update(inherited['connectors'])
+                result['starts'] |= inherited['starts']
             continue
         m = re.match(r'(?:(?:replaceable|redeclare|inner|outer|protected|public) )*(final )?parameter ([\w.]+)(\[[^\]]*\])? (.*)', stmt)
         if m:
@@ -239,6 +240,12 @@ def describe(classes, path: str, seen=None) -> dict:
         m = re.match(r'(?:(?:input|output|flow|stream|discrete|inner|outer|replaceable) )*([A-Z][\w.]*)(\[[^\]]*\])?(?:\([^;]*?\))? (\w+)(\[[^\]]*\])?(.*)', stmt)
         if m:
             target = resolve(classes, path, m.group(1))
+            # A plain variable with a start value (a state such as a heat capacitor's T):
+            # a wrapper may set its initial value with the modifier `T.start`.
+            if (not target or classes[target].kind == 'type') and not m.group(2) and not m.group(4) \
+                    and re.search(r'\bstart\s*=', stmt.split(m.group(3), 1)[1]):
+                result['starts'].add(m.group(3))
+                continue
             if target and classes[target].kind == 'connector':
                 domain = connector_domain(classes, target)
                 if domain:
@@ -265,6 +272,8 @@ def main():
                        'connectors': {k: [v['domain'], v['direction']] + (['conditional'] if v['conditional'] else [])
                                       + (['array'] if v['array'] else [])
                                       for k, v in sorted(info['connectors'].items())}}
+        if info['starts']:
+            index[path]['starts'] = sorted(info['starts'])
     json.dump({'msl': '4.1.0', 'classes': index}, sys.stdout, indent=0, sort_keys=True, separators=(',', ':'))
     sys.stdout.write('\n')
 

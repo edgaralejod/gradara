@@ -45,6 +45,14 @@ export type Port = {
   side?: 'left' | 'right' | 'bottom' | 'top';
   unit?: string;
   offset?: number;
+  /**
+   * Signals carried by a bus port (two or more). Absent means one signal. Only bus
+   * blocks, subsystem ports, and boundary blocks take a width; `propagateBuses`
+   * (buses.ts) derives it from what is connected.
+   */
+  width?: number;
+  /** Element names of a named bus (from a Bus Creator), one per signal. */
+  elements?: string[];
 };
 export type Parameter = {
   id: string;
@@ -63,7 +71,6 @@ export type LibraryCategoryId =
   | 'routing'
   | 'subsystems'
   | 'control'
-  | 'sinks'
   | 'electrical'
   | 'semiconductors'
   | 'converters'
@@ -152,6 +159,11 @@ export type Block = {
   rotation?: 0 | 90 | 180 | 270;
   /** Canvas offset from the centered label below the block; never part of simulation. */
   labelOffset?: { x: number; y: number };
+  /**
+   * Output ports left unconnected on purpose, drawn with a terminator mark as in
+   * Simulink. Presentation only; a wire to the port removes the mark (terminators.ts).
+   */
+  terminated?: string[];
 };
 export type Wire = {
   id: string;
@@ -242,7 +254,14 @@ const physical = (
   domain: Domain,
   side: Port['side'],
 ): Port => ({ id, name, domain, side, direction: 'physical' });
-export const library: Definition[] = [
+/**
+ * Blocks no longer offered in the library. Models that contain them still open and
+ * run (a document carries its blocks' definitions); these add no equations, and
+ * Results already lists every block output and logged signal.
+ */
+export const RETIRED_KINDS = new Set(['scope', 'display', 'terminator']);
+
+const allBlocks: Definition[] = [
   ...powerBlocks,
   ...controlBlocks,
   {
@@ -385,6 +404,17 @@ export const library: Definition[] = [
   ...mslBlocks,
   ...portBlocks,
 ];
+export const library: Definition[] = allBlocks.filter(
+  (d) => !RETIRED_KINDS.has(d.kind),
+);
+/** Retired definitions, for documents made before they left the library. */
+export const retiredBlocks: Definition[] = allBlocks.filter((d) =>
+  RETIRED_KINDS.has(d.kind),
+);
+/** A library definition, or a retired one an older document may still use. */
+export const definitionFor = (kind: string) =>
+  library.find((d) => d.kind === kind) ??
+  retiredBlocks.find((d) => d.kind === kind);
 const block = (kind: string, id: string, x: number, y: number): Block => ({
   id,
   definition: structuredClone(library.find((d) => d.kind === kind)!),

@@ -23,7 +23,7 @@ Passing these checks means the diagram becomes the intended Modelica model and t
 | DC motor speed loop | settles at the 100 rad/s reference, and at 60 rad/s when the reference changes; controller output never exceeds its 24 V limit | within 1 rad/s | `tests/test_modelica.py` |
 | Field-oriented control of a PMSM | tracks 1500 rpm and 1000 rpm; d-axis current near zero; phase currents sum to zero | within 2 rpm; \|i_d\| < 0.02 A; \|i_a + i_b + i_c\| < 1e-8 A | `tests/test_modelica.py` |
 | 480 VAC flyback | regulated 24 V output; DC bus near the 679 V peak of 480 VAC | 23.9–24.1 V with < 50 mV ripple; 660–680 V | `tests/test_flyback.py` |
-| Data center cooling | energy balance at every sample: stored heat = IT load − removed heat; electrical power = IT + cooling; cooling = COP × electrical | holds to 1e-6 | `tests/test_datacenter.py` |
+| Data center cooling | stored heat in rack and room = ∫ IT heat − ∫ heat removed over the run; at every sample, electrical power = IT + cooling electricity and heat removed = COP × cooling electricity | within 2 MJ of about 3 GJ; 10 W (the load switch's own loss); 1e-6 kW | `tests/test_datacenter.py` |
 | EV drivetrain, each configuration | reaches the 5 m/s cruise speed without exceeding 6 m/s | within 5 % | `tests/test_variants.py` |
 
 ## Structure and code generation

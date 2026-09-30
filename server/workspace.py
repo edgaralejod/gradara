@@ -143,15 +143,34 @@ def model_summaries(directory: Path, trashed: bool = False):
     return sorted(summaries, key=lambda item: item['updatedAt'], reverse=True)
 
 
+SHOWCASE = {'dc', 'foc', 'buck', 'flyback', 'datacenter', 'servo', 'ev'}
+
+
+def template_path(templates: Path, template: str) -> Path | None:
+    """The file behind a template id: a curated example, or a block example
+    (`block-<id>`, listed in models/examples/blocks/index.json). Ids are checked
+    against those lists, never used as paths directly."""
+    if template in SHOWCASE:
+        return templates/f'{template}.json'
+    if template.startswith('block-'):
+        manifest = templates/'blocks'/'index.json'
+        if manifest.exists():
+            ids = {entry['id'] for entry in json.loads(manifest.read_text(encoding='utf-8'))['examples']}
+            if template[len('block-'):] in ids:
+                return templates/'blocks'/f"{template[len('block-'):]}.json"
+    return None
+
+
 def new_model(directory: Path, templates: Path, name: str, template: str = 'blank') -> Project:
-    if template not in {'blank', 'dc', 'foc', 'buck', 'flyback', 'datacenter', 'servo', 'ev'}:
+    path = None if template == 'blank' else template_path(templates, template)
+    if template != 'blank' and path is None:
         raise ValueError('Unknown model template.')
     name = name.strip()
     if not name: raise ValueError('Enter a model name.')
-    if template == 'blank':
+    if path is None:
         data = {'version':1,'name':name,'duration':1,'revision':0,'blocks':[],'wires':[],'junctions':[],'nets':[]}
     else:
-        data = json.loads((templates/f'{template}.json').read_text(encoding='utf-8'))
+        data = json.loads(path.read_text(encoding='utf-8'))
     data.update(name=unique_name(directory, name),modelId=uuid.uuid4().hex,revision=0)
     return save(directory, document(data))
 

@@ -399,7 +399,7 @@ export const docs: Record<string, BlockDoc> = {
     },
     equations: ['y = d(flange.phi)/dt', 'flange.tau = 0'],
     limitations: ['Ideal: no noise, delay, or resolution limit.'],
-    seeAlso: ['rotSpeedSensor', 'angleSensor', 'relSpeedSensor', 'scope'],
+    seeAlso: ['rotSpeedSensor', 'angleSensor', 'relSpeedSensor'],
   },
 
   rotSpeedSensor: {

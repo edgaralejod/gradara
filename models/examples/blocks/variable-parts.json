@@ -1,0 +1,1618 @@
+{
+  "version": 1,
+  "name": "Example: Variable parts",
+  "exampleId": "block-variable-parts",
+  "description": "The variable resistor swings between 5 Ω and 15 Ω on 10 V, so its current is 10/R: 0.67 A at 0.25 s and 2 A at 0.75 s. The inductor on 1 V builds flux linkage t, so its current is t/L: 1/3 A at 1 s, when L = 3 H, and 1 A at 2 s, when L = 2 H. The capacitor charges at 1 mA; when its capacitance doubles at 0.5 s its charge stays, so its voltage halves. The potentiometer wiper sweeps from 0 V to 10 V as the position input goes from 0 to 1.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "rsig",
+      "definition": {
+        "kind": "sine",
+        "name": "R = 10 + 5 sin 2πt",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 5,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 1,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 10,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 128,
+        "y": 80
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "rsrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "DC 10 V",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 10,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 144,
+        "y": 240
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -60,
+        "y": -54
+      }
+    },
+    {
+      "id": "rel",
+      "definition": {
+        "kind": "variableResistor",
+        "name": "Variable resistor",
+        "description": "Resistance set by the input signal.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R(u)",
+        "ports": [
+          {
+            "id": "R",
+            "name": "R",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Basic.VariableResistor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "rheostat"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.VariableResistor"
+        }
+      },
+      "position": {
+        "x": 280,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "ri",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "i R",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 440,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "rgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground R",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 360
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "lsig",
+      "definition": {
+        "kind": "sine",
+        "name": "L = 2 + sin(πt/2)",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 0.25,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 2,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 704,
+        "y": 80
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "lsrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "DC 1 V",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 1,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 720,
+        "y": 240
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -56,
+        "y": -54
+      }
+    },
+    {
+      "id": "lel",
+      "definition": {
+        "kind": "variableInductor",
+        "name": "Variable inductor",
+        "description": "Inductance set by the input signal.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "L(u)",
+        "ports": [
+          {
+            "id": "L",
+            "name": "L",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Lmin",
+            "name": "Minimum inductance",
+            "value": 1e-12,
+            "unit": "H",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.VariableInductor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.VariableInductor",
+          "modifiers": {
+            "Lmin": "Lmin"
+          }
+        }
+      },
+      "position": {
+        "x": 856,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "li",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "i L",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "side": "bottom",
+            "domain": "signal",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1016,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "lgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground L",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 720,
+        "y": 360
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "cbase",
+      "definition": {
+        "kind": "constant",
+        "name": "C₀ = 1 mF",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0.001,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 128,
+        "y": 448
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "cstep",
+      "definition": {
+        "kind": "step",
+        "name": "+1 mF at 0.5 s",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 0.001,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.5,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 128,
+        "y": 560
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "csum",
+      "definition": {
+        "kind": "sum",
+        "name": "C",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Sum",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a + b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 312,
+        "y": 512
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "csrc",
+      "definition": {
+        "kind": "dcCurrent",
+        "name": "DC 1 mA",
+        "description": "An ideal constant current source.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "I",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "I",
+            "name": "Current",
+            "value": 0.001,
+            "unit": "A"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.ConstantCurrent from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantCurrent",
+          "modifiers": {
+            "I": "I"
+          }
+        }
+      },
+      "position": {
+        "x": 472,
+        "y": 592
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 180,
+      "labelOffset": {
+        "x": -60,
+        "y": -54
+      }
+    },
+    {
+      "id": "cel",
+      "definition": {
+        "kind": "variableCapacitor",
+        "name": "Variable capacitor",
+        "description": "Capacitance set by the input signal.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "C(u)",
+        "ports": [
+          {
+            "id": "C",
+            "name": "C",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Cmin",
+            "name": "Minimum capacitance",
+            "value": 1e-12,
+            "unit": "F",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.VariableCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.VariableCapacitor",
+          "modifiers": {
+            "Cmin": "Cmin"
+          }
+        }
+      },
+      "position": {
+        "x": 616,
+        "y": 592
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 104,
+        "y": -54
+      }
+    },
+    {
+      "id": "cv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v C",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 856,
+        "y": 592
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "cgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground C",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 472,
+        "y": 712
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "psig",
+      "definition": {
+        "kind": "ramp",
+        "name": "Wiper position",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 1,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 1000,
+        "y": 416
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "psrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "DC 10 V (pot)",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 10,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 1136,
+        "y": 592
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -84,
+        "y": -54
+      }
+    },
+    {
+      "id": "pot",
+      "definition": {
+        "kind": "potentiometer",
+        "name": "Potentiometer",
+        "description": "Resistor with a wiper at the input position (0…1).",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "pot",
+        "ports": [
+          {
+            "id": "pin_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "contact",
+            "name": "w",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          },
+          {
+            "id": "r",
+            "name": "pos",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Total resistance",
+            "value": 1000,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.Potentiometer from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "wiper",
+          "divider"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Potentiometer",
+          "modifiers": {
+            "useRinput": "true",
+            "R": "R"
+          }
+        }
+      },
+      "position": {
+        "x": 1296,
+        "y": 528
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 96,
+        "y": -60
+      }
+    },
+    {
+      "id": "pv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "Wiper voltage",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1472,
+        "y": 592
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 84,
+        "y": -54
+      }
+    },
+    {
+      "id": "pgnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground P",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1136,
+        "y": 712
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "rsig",
+      "sourceHandle": "y",
+      "target": "rel",
+      "targetHandle": "R"
+    },
+    {
+      "id": "id0002",
+      "source": "rsrc",
+      "sourceHandle": "p",
+      "target": "rel",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0003",
+      "source": "rel",
+      "sourceHandle": "n",
+      "target": "ri",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0004",
+      "source": "ri",
+      "sourceHandle": "n",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 536,
+          "y": 200
+        },
+        {
+          "x": 536,
+          "y": 336
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000q",
+      "sourceHandle": "node",
+      "target": "rgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0006",
+      "source": "lsig",
+      "sourceHandle": "y",
+      "target": "lel",
+      "targetHandle": "L"
+    },
+    {
+      "id": "id0007",
+      "source": "lsrc",
+      "sourceHandle": "p",
+      "target": "lel",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0008",
+      "source": "lel",
+      "sourceHandle": "n",
+      "target": "li",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0009",
+      "source": "li",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1112,
+          "y": 200
+        },
+        {
+          "x": 1112,
+          "y": 336
+        }
+      ]
+    },
+    {
+      "id": "id000a",
+      "source": "j_id000s",
+      "sourceHandle": "node",
+      "target": "lgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000b",
+      "source": "cbase",
+      "sourceHandle": "y",
+      "target": "csum",
+      "targetHandle": "a"
+    },
+    {
+      "id": "id000c",
+      "source": "cstep",
+      "sourceHandle": "y",
+      "target": "csum",
+      "targetHandle": "b"
+    },
+    {
+      "id": "id000d",
+      "source": "csum",
+      "sourceHandle": "y",
+      "target": "cel",
+      "targetHandle": "C"
+    },
+    {
+      "id": "id000e",
+      "source": "csrc",
+      "sourceHandle": "n",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 496,
+          "y": 576
+        }
+      ]
+    },
+    {
+      "id": "id000f",
+      "source": "j_id000w",
+      "sourceHandle": "node",
+      "target": "j_id000y",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000g",
+      "source": "j_id000y",
+      "sourceHandle": "node",
+      "target": "cgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000h",
+      "source": "cv",
+      "sourceHandle": "p",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 880,
+          "y": 576
+        }
+      ]
+    },
+    {
+      "id": "id000i",
+      "source": "cv",
+      "sourceHandle": "n",
+      "target": "j_id000w",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 880,
+          "y": 688
+        }
+      ]
+    },
+    {
+      "id": "id000j",
+      "source": "psig",
+      "sourceHandle": "y",
+      "target": "pot",
+      "targetHandle": "r"
+    },
+    {
+      "id": "id000k",
+      "source": "psrc",
+      "sourceHandle": "p",
+      "target": "pot",
+      "targetHandle": "pin_p"
+    },
+    {
+      "id": "id000l",
+      "source": "pot",
+      "sourceHandle": "pin_n",
+      "target": "j_id0012",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1392,
+          "y": 552
+        }
+      ]
+    },
+    {
+      "id": "id000m",
+      "source": "j_id0010",
+      "sourceHandle": "node",
+      "target": "pgnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000n",
+      "source": "pv",
+      "sourceHandle": "p",
+      "target": "pot",
+      "targetHandle": "contact"
+    },
+    {
+      "id": "id000o",
+      "source": "pv",
+      "sourceHandle": "n",
+      "target": "j_id0012",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1496,
+          "y": 688
+        }
+      ]
+    },
+    {
+      "id": "w_id000r",
+      "source": "rsrc",
+      "sourceHandle": "n",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000t",
+      "source": "lsrc",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000v",
+      "source": "cel",
+      "sourceHandle": "p",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000x",
+      "source": "cel",
+      "sourceHandle": "n",
+      "target": "j_id000w",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000z",
+      "source": "csrc",
+      "sourceHandle": "p",
+      "target": "j_id000y",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0011",
+      "source": "psrc",
+      "sourceHandle": "n",
+      "target": "j_id0010",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0013",
+      "source": "j_id0010",
+      "sourceHandle": "node",
+      "target": "j_id0012",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000q",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 336
+      }
+    },
+    {
+      "id": "j_id000s",
+      "domain": "electrical",
+      "position": {
+        "x": 744,
+        "y": 336
+      }
+    },
+    {
+      "id": "j_id000u",
+      "domain": "electrical",
+      "position": {
+        "x": 632,
+        "y": 576
+      }
+    },
+    {
+      "id": "j_id000w",
+      "domain": "electrical",
+      "position": {
+        "x": 640,
+        "y": 688
+      }
+    },
+    {
+      "id": "j_id000y",
+      "domain": "electrical",
+      "position": {
+        "x": 496,
+        "y": 688
+      }
+    },
+    {
+      "id": "j_id0010",
+      "domain": "electrical",
+      "position": {
+        "x": 1160,
+        "y": 688
+      }
+    },
+    {
+      "id": "j_id0012",
+      "domain": "electrical",
+      "position": {
+        "x": 1392,
+        "y": 688
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id0014",
+      "anchor": "rsig.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id0015",
+      "anchor": "rel.p",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id0016",
+      "anchor": "rel.n",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id0017",
+      "anchor": "rgnd.p",
+      "wireIds": [
+        "id0004",
+        "id0005",
+        "w_id000r"
+      ]
+    },
+    {
+      "id": "net_id0018",
+      "anchor": "lsig.y",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id0019",
+      "anchor": "lel.p",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id001a",
+      "anchor": "lel.n",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id001b",
+      "anchor": "lgnd.p",
+      "wireIds": [
+        "id0009",
+        "id000a",
+        "w_id000t"
+      ]
+    },
+    {
+      "id": "net_id001c",
+      "anchor": "cbase.y",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id001d",
+      "anchor": "cstep.y",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id001e",
+      "anchor": "csum.y",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id001f",
+      "anchor": "cel.p",
+      "wireIds": [
+        "id000e",
+        "id000h",
+        "w_id000v"
+      ]
+    },
+    {
+      "id": "net_id001g",
+      "anchor": "cel.n",
+      "wireIds": [
+        "id000f",
+        "id000g",
+        "id000i",
+        "w_id000x",
+        "w_id000z"
+      ]
+    },
+    {
+      "id": "net_id001h",
+      "anchor": "psig.y",
+      "wireIds": [
+        "id000j"
+      ]
+    },
+    {
+      "id": "net_id001i",
+      "anchor": "pot.pin_p",
+      "wireIds": [
+        "id000k"
+      ]
+    },
+    {
+      "id": "net_id001j",
+      "anchor": "pgnd.p",
+      "wireIds": [
+        "id000l",
+        "id000m",
+        "id000o",
+        "w_id0011",
+        "w_id0013"
+      ]
+    },
+    {
+      "id": "net_id001k",
+      "anchor": "pot.contact",
+      "wireIds": [
+        "id000n"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Currents",
+      "series": [
+        "ri.y",
+        "li.y"
+      ],
+      "labels": [
+        "Variable resistor",
+        "Variable inductor"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Voltages",
+      "series": [
+        "cv.y",
+        "pv.y"
+      ],
+      "labels": [
+        "Variable capacitor",
+        "Wiper"
+      ]
+    }
+  ]
+}

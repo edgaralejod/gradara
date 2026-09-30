@@ -1,0 +1,414 @@
+{
+  "version": 1,
+  "name": "Example: Signal buses",
+  "exampleId": "block-buses",
+  "description": "The Bus Creator names each input (speed, torque, current) and carries all three on one bus wire. The Bus Selector picks speed and current by name, whatever their order in the bus, and the Gain scales the speed by 0.5. Rename a signal or choose different ones in the blocks’ properties. A bus can hold another bus: its signals get dotted names such as motor.speed, and selecting motor gives them all as a vector.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "speed",
+      "definition": {
+        "kind": "ramp",
+        "name": "Speed",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 2,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "torque",
+      "definition": {
+        "kind": "constant",
+        "name": "Torque",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 40,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "current",
+      "definition": {
+        "kind": "sine",
+        "name": "Current",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 1,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "sensors",
+      "definition": {
+        "kind": "busCreator",
+        "name": "Sensors",
+        "symbol": "bus",
+        "domain": "signal",
+        "description": "Bundles named signals into one bus wire. Each input is named in its properties; a bus can carry another bus.",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "speed",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "u2",
+            "name": "torque",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "u3",
+            "name": "current",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "bus",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "",
+            "width": 3,
+            "elements": [
+              "speed",
+              "torque",
+              "current"
+            ]
+          }
+        ],
+        "equations": "y = {u1, u2, u3};",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "routing",
+          "bus",
+          "bundle",
+          "named",
+          "signals"
+        ]
+      },
+      "position": {
+        "x": 240,
+        "y": 160
+      },
+      "size": {
+        "width": 144,
+        "height": 96
+      }
+    },
+    {
+      "id": "pick",
+      "definition": {
+        "kind": "busSelector",
+        "name": "Pick",
+        "symbol": "select",
+        "domain": "signal",
+        "description": "Picks signals out of a bus by name. Choose the signals in its properties; each becomes an output.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "bus",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "width": 3,
+            "elements": [
+              "speed",
+              "torque",
+              "current"
+            ]
+          },
+          {
+            "id": "y1",
+            "name": "speed",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "y2",
+            "name": "current",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "equations": "y1 = u[1];\ny2 = u[3];",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "routing",
+          "bus",
+          "select",
+          "named",
+          "signals"
+        ]
+      },
+      "position": {
+        "x": 536,
+        "y": 160
+      },
+      "size": {
+        "width": 144,
+        "height": 96
+      }
+    },
+    {
+      "id": "scale",
+      "definition": {
+        "kind": "gain",
+        "name": "Scale",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 776,
+        "y": 120
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "speed",
+      "sourceHandle": "y",
+      "target": "sensors",
+      "targetHandle": "u1"
+    },
+    {
+      "id": "id0002",
+      "source": "torque",
+      "sourceHandle": "y",
+      "target": "sensors",
+      "targetHandle": "u2"
+    },
+    {
+      "id": "id0003",
+      "source": "current",
+      "sourceHandle": "y",
+      "target": "sensors",
+      "targetHandle": "u3"
+    },
+    {
+      "id": "id0004",
+      "source": "sensors",
+      "sourceHandle": "y",
+      "target": "pick",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0005",
+      "source": "pick",
+      "sourceHandle": "y1",
+      "target": "scale",
+      "targetHandle": "u"
+    }
+  ],
+  "junctions": [],
+  "nets": [
+    {
+      "id": "net_id0007",
+      "anchor": "speed.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id0008",
+      "anchor": "torque.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id0009",
+      "anchor": "current.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000a",
+      "anchor": "sensors.y",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000b",
+      "anchor": "pick.y1",
+      "wireIds": [
+        "id0005"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Selected signals",
+      "series": [
+        "pick.y1",
+        "pick.y2",
+        "scale.y"
+      ],
+      "labels": [
+        "speed",
+        "current",
+        "0.5 × speed"
+      ]
+    }
+  ]
+}

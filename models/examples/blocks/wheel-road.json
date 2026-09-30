@@ -1,0 +1,781 @@
+{
+  "version": 1,
+  "name": "Example: Wheel and rack",
+  "exampleId": "block-wheel-road",
+  "description": "A constant 30 N·m on a 0.3 m wheel pushes the 100 kg vehicle with 100 N against 10 N·s/m of drag, so it approaches 10 m/s with a time constant of about 10 s (the wheel inertia adds 1.1 kg). The rack and pinion turns 100 rad per metre, so a pinion at 10 rad/s moves the rack 0.1 m every second.",
+  "duration": 20,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "tq",
+      "definition": {
+        "kind": "constantTorque",
+        "name": "30 N·m",
+        "description": "A constant torque, independent of speed.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "τ₀",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "tau_constant",
+            "name": "Torque",
+            "value": 30,
+            "unit": "N·m"
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Sources.ConstantTorque from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sources.ConstantTorque",
+          "modifiers": {
+            "tau_constant": "tau_constant"
+          }
+        }
+      },
+      "position": {
+        "x": 56,
+        "y": 152
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "jw",
+      "definition": {
+        "kind": "rotInertia",
+        "name": "Wheel 0.1 kg·m²",
+        "description": "Rotating mass with two flanges and no losses.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "J",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 0.1,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Inertia from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mass",
+          "flywheel",
+          "rotor"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Inertia",
+          "modifiers": {
+            "J": "J"
+          }
+        }
+      },
+      "position": {
+        "x": 280,
+        "y": 168
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "wh",
+      "definition": {
+        "kind": "rollingWheel",
+        "name": "Wheel r 0.3 m",
+        "description": "Converts rotation to translation without slip: v = r·ω.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "wheel",
+        "ports": [
+          {
+            "id": "flangeR",
+            "name": "rot",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flangeT",
+            "name": "lin",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "radius",
+            "name": "Radius",
+            "value": 0.3,
+            "unit": "m",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.IdealRollingWheel from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "vehicle",
+          "tire",
+          "rack"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.IdealRollingWheel",
+          "modifiers": {
+            "radius": "radius"
+          }
+        }
+      },
+      "position": {
+        "x": 424,
+        "y": 152
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "car",
+      "definition": {
+        "kind": "mass",
+        "name": "Vehicle 100 kg",
+        "description": "A sliding mass with two flanges: m·a = f_a + f_b.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "m",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "m",
+            "name": "Mass",
+            "value": 100,
+            "unit": "kg",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Mass from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "inertia",
+          "body",
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Mass",
+          "modifiers": {
+            "m": "m"
+          }
+        }
+      },
+      "position": {
+        "x": 616,
+        "y": 168
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "drag",
+      "definition": {
+        "kind": "transDamper",
+        "name": "Drag 10 N·s/m",
+        "description": "Linear damper: f = d·v_rel.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "b",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "d",
+            "name": "Damping",
+            "value": 10,
+            "unit": "N·s/m",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Damper from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "viscous",
+          "shock absorber"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Damper",
+          "modifiers": {
+            "d": "d"
+          }
+        }
+      },
+      "position": {
+        "x": 760,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "road",
+      "definition": {
+        "kind": "transFixed",
+        "name": "Road",
+        "description": "A translational flange fixed at a constant position.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "top"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "s0",
+            "name": "Position",
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Fixed from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ground",
+          "wall",
+          "reference"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Fixed",
+          "modifiers": {
+            "s0": "s0"
+          }
+        }
+      },
+      "position": {
+        "x": 888,
+        "y": 272
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "v",
+      "definition": {
+        "kind": "velocitySensor",
+        "name": "Vehicle speed",
+        "description": "Absolute velocity of the flange.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "v",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "v",
+            "name": "v",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Translational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "speed"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 656,
+        "y": 344
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 124,
+        "y": -62
+      }
+    },
+    {
+      "id": "w10",
+      "definition": {
+        "kind": "constantSpeed",
+        "name": "Pinion 10 rad/s",
+        "description": "Holds the flange at a constant speed.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω₀",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "w_fixed",
+            "name": "Speed",
+            "value": 10,
+            "unit": "rad/s"
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Sources.ConstantSpeed from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sources.ConstantSpeed",
+          "modifiers": {
+            "w_fixed": "w_fixed"
+          }
+        }
+      },
+      "position": {
+        "x": 56,
+        "y": 536
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "rack",
+      "definition": {
+        "kind": "gearR2T",
+        "name": "Rack and pinion",
+        "description": "Ideal rack and pinion: rotation to translation by a fixed ratio.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "R→T",
+        "ports": [
+          {
+            "id": "flangeR",
+            "name": "rot",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flangeT",
+            "name": "lin",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "ratio",
+            "name": "Ratio",
+            "value": 100,
+            "unit": "rad/m"
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.IdealGearR2T from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "pinion",
+          "linear"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.IdealGearR2T",
+          "modifiers": {
+            "ratio": "ratio"
+          }
+        }
+      },
+      "position": {
+        "x": 288,
+        "y": 536
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "rm",
+      "definition": {
+        "kind": "mass",
+        "name": "Rack 1 kg",
+        "description": "A sliding mass with two flanges: m·a = f_a + f_b.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "m",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "m",
+            "name": "Mass",
+            "value": 1,
+            "unit": "kg",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Translational.Components.Mass from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "inertia",
+          "body",
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Components.Mass",
+          "modifiers": {
+            "m": "m"
+          }
+        }
+      },
+      "position": {
+        "x": 496,
+        "y": 552
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "s",
+      "definition": {
+        "kind": "positionSensor",
+        "name": "Rack position",
+        "description": "Absolute position of the flange.",
+        "domain": "translational",
+        "category": "translational",
+        "symbol": "s",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "translational",
+            "side": "left"
+          },
+          {
+            "id": "s",
+            "name": "s",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Translational.Sensors.PositionSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "displacement",
+          "encoder"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Translational.Sensors.PositionSensor"
+        }
+      },
+      "position": {
+        "x": 672,
+        "y": 536
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 124,
+        "y": -62
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "tq",
+      "sourceHandle": "flange",
+      "target": "jw",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0002",
+      "source": "jw",
+      "sourceHandle": "flange_b",
+      "target": "wh",
+      "targetHandle": "flangeR"
+    },
+    {
+      "id": "id0003",
+      "source": "wh",
+      "sourceHandle": "flangeT",
+      "target": "car",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000b",
+      "sourceHandle": "node",
+      "target": "drag",
+      "targetHandle": "flange_a",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "drag",
+      "sourceHandle": "flange_b",
+      "target": "road",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id0006",
+      "source": "j_id000b",
+      "sourceHandle": "node",
+      "target": "v",
+      "targetHandle": "flange",
+      "waypoints": [
+        {
+          "x": 712,
+          "y": 296
+        },
+        {
+          "x": 640,
+          "y": 296
+        },
+        {
+          "x": 640,
+          "y": 392
+        }
+      ]
+    },
+    {
+      "id": "id0007",
+      "source": "w10",
+      "sourceHandle": "flange",
+      "target": "rack",
+      "targetHandle": "flangeR"
+    },
+    {
+      "id": "id0008",
+      "source": "rack",
+      "sourceHandle": "flangeT",
+      "target": "rm",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0009",
+      "source": "rm",
+      "sourceHandle": "flange_b",
+      "target": "s",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "w_id000c",
+      "source": "car",
+      "sourceHandle": "flange_b",
+      "target": "j_id000b",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000b",
+      "domain": "translational",
+      "position": {
+        "x": 712,
+        "y": 200
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000d",
+      "anchor": "jw.flange_a",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000e",
+      "anchor": "jw.flange_b",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000f",
+      "anchor": "car.flange_a",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000g",
+      "anchor": "car.flange_b",
+      "wireIds": [
+        "id0004",
+        "id0006",
+        "w_id000c"
+      ]
+    },
+    {
+      "id": "net_id000h",
+      "anchor": "drag.flange_b",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000i",
+      "anchor": "rack.flangeR",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000j",
+      "anchor": "rack.flangeT",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id000k",
+      "anchor": "rm.flange_b",
+      "wireIds": [
+        "id0009"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Vehicle speed",
+      "series": [
+        "v.v"
+      ],
+      "labels": [
+        "v (m/s)"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Rack position",
+      "series": [
+        "s.s"
+      ],
+      "labels": [
+        "s (m)"
+      ]
+    }
+  ]
+}

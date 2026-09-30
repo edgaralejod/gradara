@@ -1,0 +1,621 @@
+{
+  "version": 1,
+  "name": "Example: Comparators",
+  "exampleId": "block-comparators",
+  "description": "The sine is sin(πt); the ramp is t/4. Above threshold is true while the sine exceeds 0.5, Below threshold while it is under −0.5. Greater and Less compare the sine with the ramp. Hysteresis turns on above 0.5 and off only below −0.5: at 1.05 s the sine is slightly negative, so Above threshold is already false but Hysteresis is still true.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "s",
+      "definition": {
+        "kind": "sine",
+        "name": "sin(πt)",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 0.5,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "r",
+      "definition": {
+        "kind": "ramp",
+        "name": "t / 4",
+        "symbol": "ramp",
+        "domain": "signal",
+        "description": "A linearly increasing signal after a start time.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
+        "parameters": [
+          {
+            "id": "slope",
+            "name": "Slope",
+            "value": 0.25,
+            "unit": "1/s"
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 432
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "above",
+      "definition": {
+        "kind": "greaterThreshold",
+        "name": "Above 0.5",
+        "description": "True while the input exceeds the threshold.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "u>k",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "threshold",
+            "name": "Threshold",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Logical.GreaterThreshold from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "compare",
+          "comparator"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.GreaterThreshold",
+          "modifiers": {
+            "threshold": "threshold"
+          }
+        }
+      },
+      "position": {
+        "x": 280,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 84,
+        "y": -46
+      }
+    },
+    {
+      "id": "below",
+      "definition": {
+        "kind": "lessThreshold",
+        "name": "Below −0.5",
+        "description": "True while the input is below the threshold.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "u<k",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "threshold",
+            "name": "Threshold",
+            "value": -0.5,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Logical.LessThreshold from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "compare"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.LessThreshold",
+          "modifiers": {
+            "threshold": "threshold"
+          }
+        }
+      },
+      "position": {
+        "x": 480,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 88,
+        "y": -46
+      }
+    },
+    {
+      "id": "band",
+      "definition": {
+        "kind": "boolHysteresis",
+        "name": "Hysteresis ±0.5",
+        "description": "True above uHigh, false below uLow, unchanged in between.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⊏⊐",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "uLow",
+            "name": "Lower threshold",
+            "value": -0.5,
+            "unit": ""
+          },
+          {
+            "id": "uHigh",
+            "name": "Upper threshold",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Logical.Hysteresis from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "schmitt",
+          "bang-bang",
+          "thermostat"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Hysteresis",
+          "modifiers": {
+            "pre_y_start": "false",
+            "uLow": "uLow",
+            "uHigh": "uHigh"
+          }
+        }
+      },
+      "position": {
+        "x": 680,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 108,
+        "y": -46
+      }
+    },
+    {
+      "id": "gt",
+      "definition": {
+        "kind": "greater",
+        "name": "Sine > ramp",
+        "description": "True while u1 > u2.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "u1>u2",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Greater from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "compare",
+          "comparator"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Greater"
+        }
+      },
+      "position": {
+        "x": 920,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 92,
+        "y": -46
+      }
+    },
+    {
+      "id": "lt",
+      "definition": {
+        "kind": "less",
+        "name": "Sine < ramp",
+        "description": "True while u1 < u2.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "u1<u2",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Less from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "compare"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Less"
+        }
+      },
+      "position": {
+        "x": 1168,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 92,
+        "y": -46
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id0009",
+      "sourceHandle": "node",
+      "target": "above",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id0002",
+      "source": "j_id000f",
+      "sourceHandle": "node",
+      "target": "below",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000b",
+      "sourceHandle": "node",
+      "target": "band",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "gt",
+      "targetHandle": "u1",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000d",
+      "sourceHandle": "node",
+      "target": "gt",
+      "targetHandle": "u2",
+      "waypoints": []
+    },
+    {
+      "id": "id0006",
+      "source": "j_id000j",
+      "sourceHandle": "node",
+      "target": "lt",
+      "targetHandle": "u1",
+      "waypoints": [
+        {
+          "x": 1208,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "id0007",
+      "source": "j_id000d",
+      "sourceHandle": "node",
+      "target": "lt",
+      "targetHandle": "u2",
+      "waypoints": [
+        {
+          "x": 1208,
+          "y": 464
+        }
+      ]
+    },
+    {
+      "id": "w_id000a",
+      "source": "s",
+      "sourceHandle": "y",
+      "target": "j_id0009",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000c",
+      "source": "j_id000f",
+      "sourceHandle": "node",
+      "target": "j_id000b",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000e",
+      "source": "r",
+      "sourceHandle": "y",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000g",
+      "source": "j_id0009",
+      "sourceHandle": "node",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000k",
+      "source": "j_id000b",
+      "sourceHandle": "node",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0009",
+      "domain": "signal",
+      "position": {
+        "x": 320,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000b",
+      "domain": "signal",
+      "position": {
+        "x": 720,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000d",
+      "domain": "signal",
+      "position": {
+        "x": 960,
+        "y": 464
+      }
+    },
+    {
+      "id": "j_id000f",
+      "domain": "signal",
+      "position": {
+        "x": 520,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000j",
+      "domain": "signal",
+      "position": {
+        "x": 960,
+        "y": 176
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000h",
+      "anchor": "s.y",
+      "wireIds": [
+        "id0001",
+        "id0002",
+        "id0003",
+        "id0004",
+        "id0006",
+        "w_id000a",
+        "w_id000c",
+        "w_id000g",
+        "w_id000k"
+      ]
+    },
+    {
+      "id": "net_id000i",
+      "anchor": "r.y",
+      "wireIds": [
+        "id0005",
+        "id0007",
+        "w_id000e"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Inputs",
+      "series": [
+        "s.y",
+        "r.y"
+      ],
+      "labels": [
+        "sin(πt)",
+        "t / 4"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Comparisons",
+      "series": [
+        "above.y",
+        "below.y",
+        "band.y",
+        "gt.y",
+        "lt.y"
+      ],
+      "labels": [
+        "Above 0.5",
+        "Below −0.5",
+        "Hysteresis",
+        "Sine > ramp",
+        "Sine < ramp"
+      ]
+    }
+  ]
+}

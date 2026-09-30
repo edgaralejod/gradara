@@ -60,7 +60,7 @@ Your models, results, and settings stay in your data folder on your computer (**
 
 - Orthogonal wires with snapping, branching onto existing wires, junctions, reconnecting, segment editing, redraw, and undo. Nets have stable IDs and readable automatic or custom names.
 - A shared block design system, searchable library, model inspector, resize handles, movable labels, selection tools, and Ctrl-drag duplication.
-- A library of 218 blocks: signal, Boolean logic, electrical, semiconductor, converter, machine, 3-phase, rotational and translational mechanical, thermal, and magnetic. Most physical blocks are Modelica Standard Library 4.1.0 components. Physical ports can cross block domains through explicit sensors and actuators.
+- A library of 217 blocks: signal, Boolean logic, electrical, semiconductor, converter, machine, 3-phase, rotational and translational mechanical, thermal, and magnetic. Most physical blocks are Modelica Standard Library 4.1.0 components. Physical ports can cross block domains through explicit sensors and actuators.
 - Hierarchical subsystems: group a selection with ⌘/Ctrl+G, open and navigate nested sheets, share one definition between instances, and promote parameters. Variants keep alternative insides behind one set of ports, and configurations switch them together or run them all for comparison.
 - Asynchronous OpenModelica simulation, cancellation, saved runs, plots, and complete CSV downloads. A Problems dock lists live model checks and block-mapped run diagnostics; click one to select the blocks involved.
 - Agent-created signal, electrical, rotational and translational mechanical, magnetic, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.
@@ -80,7 +80,7 @@ Drag empty canvas to select. Pan with the middle or right mouse button or Space.
 
 This is a trusted, single-user local application. **Do not expose the local service to a public network.** It accepts only loopback requests from its own workbench and has no multi-user authorization. Models and runs live in your data folder (`projects/` in a source checkout). See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
-Vector and bus signals, Modelica import, FMI, remote simulation, and HDL generation are not available. Mux and Demux blocks are drawing-only and report that when you run. Checking C code against a simulation does not prove it behaves correctly on your target hardware. Gradara is not certified for safety-critical use; verify results independently. The [roadmap](ROADMAP.md) lists planned work.
+Signal buses (Mux, Demux, Bus Creator, Bus Selector) carry and route several signals on one wire, but element-wise math on a bus is not available yet. Modelica import, FMI, remote simulation, and HDL generation are not available. Checking C code against a simulation does not prove it behaves correctly on your target hardware. Gradara is not certified for safety-critical use; verify results independently. The [roadmap](ROADMAP.md) lists planned work.
 
 ## Develop and contribute
 

@@ -127,6 +127,7 @@ function BlockNode({
       />
       <div
         className="rotated-block-face"
+        data-turn={rotation || undefined}
         style={{
           position: 'absolute',
           left: '50%',
@@ -198,10 +199,46 @@ function BlockNode({
               className={`react-flow__handle react-flow__handle-${side} diagram-port nodrag nopan ${port.direction === 'physical' ? 'physical-port' : ''}`}
               title={`${port.name} · ${port.domain} ${port.direction === 'physical' ? 'connection' : port.direction}${port.unit ? ' · ' + port.unit : ''}`}
             />
+            {data.terminated?.includes(port.id) && (
+              <Terminator side={side} offset={offset} />
+            )}
           </div>
         );
       })}
     </div>
   );
 }
+/** Simulink's terminator, drawn on an output left open on purpose: a stub and a cap. */
+function Terminator({
+  side,
+  offset,
+}: {
+  side: 'left' | 'right' | 'top' | 'bottom';
+  offset: number;
+}) {
+  const at = {
+    right: { left: '100%', top: `${offset}%` },
+    left: { left: '0%', top: `${offset}%` },
+    top: { left: `${offset}%`, top: '0%' },
+    bottom: { left: `${offset}%`, top: '100%' },
+  }[side];
+  const turn = { right: 0, bottom: 90, left: 180, top: 270 }[side];
+  return (
+    <svg
+      className="port-terminator"
+      width="20"
+      height="16"
+      viewBox="0 0 20 16"
+      aria-hidden="true"
+      style={{
+        ...at,
+        transform: `translate(0, -50%) rotate(${turn}deg)`,
+      }}
+    >
+      <title>Unused output (terminated)</title>
+      <path d="M0 8H11M11 1.5V14.5M15 4.5V11.5" />
+    </svg>
+  );
+}
+
 export default memo(BlockNode);

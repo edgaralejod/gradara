@@ -1,0 +1,1368 @@
+{
+  "version": 1,
+  "name": "Example: Cooling a hot part",
+  "exampleId": "block-cooling",
+  "description": "The part dissipates 10 W. It reaches the heatsink through 2 K/W, and the heatsink loses heat by convection (5 W/K, set by a signal) and by radiation. At steady state the heatsink sits 22.0 °C and the part 20 K hotter; the heat flow sensor reads the full 10 W. Below, a prescribed temperature holds one side of a 1 W/K conductor at 350 K while a prescribed heat flow adds 20 W from 1500 s, which lifts the body 20 K above it.",
+  "duration": 3000,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "q",
+      "definition": {
+        "kind": "fixedHeatFlow",
+        "name": "10 W",
+        "description": "Injects a constant heat flow into its port.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "Q₀",
+        "ports": [
+          {
+            "id": "port",
+            "name": "Q",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Q_flow",
+            "name": "Heat flow",
+            "value": 10,
+            "unit": "W"
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Sources.FixedHeatFlow from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "losses",
+          "heater",
+          "dissipation"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sources.FixedHeatFlow",
+          "modifiers": {
+            "Q_flow": "Q_flow"
+          }
+        }
+      },
+      "position": {
+        "x": 64,
+        "y": 168
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "part",
+      "definition": {
+        "kind": "heatCapacitor",
+        "name": "Part 100 J/K",
+        "description": "Stores heat: C·dT/dt = Q_flow.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "C",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Heat capacity",
+            "value": 100,
+            "unit": "J/K",
+            "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermal mass",
+          "lumped"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
+          "modifiers": {
+            "C": "C",
+            "T.start": "T0"
+          }
+        }
+      },
+      "position": {
+        "x": 224,
+        "y": 72
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "qflow",
+      "definition": {
+        "kind": "heatFlowSensor",
+        "name": "Heat flow",
+        "description": "Heat flow from port a to port b.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "Q",
+        "ports": [
+          {
+            "id": "Q_flow",
+            "name": "Q",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "port_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "port_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.HeatFlowSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.HeatFlowSensor"
+        }
+      },
+      "position": {
+        "x": 384,
+        "y": 168
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "rth",
+      "definition": {
+        "kind": "thermalResistor",
+        "name": "R 2 K/W",
+        "description": "Linear thermal resistance: ΔT = R·Q.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "Rθ",
+        "ports": [
+          {
+            "id": "port_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "port_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 2,
+            "unit": "K/W",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.ThermalResistor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "heatsink",
+          "junction"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.ThermalResistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
+      },
+      "position": {
+        "x": 544,
+        "y": 168
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "sink",
+      "definition": {
+        "kind": "heatCapacitor",
+        "name": "Heatsink 500 J/K",
+        "description": "Stores heat: C·dT/dt = Q_flow.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "C",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Heat capacity",
+            "value": 500,
+            "unit": "J/K",
+            "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermal mass",
+          "lumped"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
+          "modifiers": {
+            "C": "C",
+            "T.start": "T0"
+          }
+        }
+      },
+      "position": {
+        "x": 704,
+        "y": 72
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "h",
+      "definition": {
+        "kind": "constant",
+        "name": "h·A 5 W/K",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 5,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 808,
+        "y": -16
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "conv",
+      "definition": {
+        "kind": "convection",
+        "name": "Convection",
+        "description": "Convective heat transfer with the input conductance Gc.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "hA",
+        "ports": [
+          {
+            "id": "solid",
+            "name": "solid",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "fluid",
+            "name": "fluid",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          },
+          {
+            "id": "Gc",
+            "name": "Gc",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top",
+            "offset": 25
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Components.Convection from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "cooling",
+          "air",
+          "fluid"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.Convection"
+        }
+      },
+      "position": {
+        "x": 864,
+        "y": 152
+      },
+      "size": {
+        "width": 144,
+        "height": 96
+      }
+    },
+    {
+      "id": "air",
+      "definition": {
+        "kind": "fixedTemperature",
+        "name": "Air 20 °C",
+        "description": "Holds its port at a constant temperature.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T₀",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "T",
+            "name": "Temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Sources.FixedTemperature from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ambient",
+          "reference",
+          "boundary"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sources.FixedTemperature",
+          "modifiers": {
+            "T": "T"
+          }
+        }
+      },
+      "position": {
+        "x": 1088,
+        "y": 168
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "rotation": 180,
+      "labelOffset": {
+        "x": 84,
+        "y": -46
+      }
+    },
+    {
+      "id": "rad",
+      "definition": {
+        "kind": "radiation",
+        "name": "Radiation",
+        "description": "Radiative exchange: Q = Gr·σ·(T_a⁴ − T_b⁴).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "σT⁴",
+        "ports": [
+          {
+            "id": "port_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "port_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Gr",
+            "name": "Net radiation conductance",
+            "value": 0.01,
+            "unit": "m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.BodyRadiation from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "emissivity"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.BodyRadiation",
+          "modifiers": {
+            "Gr": "Gr"
+          }
+        }
+      },
+      "position": {
+        "x": 896,
+        "y": 312
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "room",
+      "definition": {
+        "kind": "fixedTemperature",
+        "name": "Room 20 °C",
+        "description": "Holds its port at a constant temperature.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T₀",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "T",
+            "name": "Temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Sources.FixedTemperature from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ambient",
+          "reference",
+          "boundary"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sources.FixedTemperature",
+          "modifiers": {
+            "T": "T"
+          }
+        }
+      },
+      "position": {
+        "x": 1088,
+        "y": 312
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "rotation": 180,
+      "labelOffset": {
+        "x": 88,
+        "y": -46
+      }
+    },
+    {
+      "id": "Tp",
+      "definition": {
+        "kind": "temperatureSensor",
+        "name": "Part temperature",
+        "description": "Absolute temperature of its port (K).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "T",
+            "name": "T",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.TemperatureSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermometer",
+          "ntc"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.TemperatureSensor"
+        }
+      },
+      "position": {
+        "x": 224,
+        "y": 312
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 112,
+        "y": -46
+      }
+    },
+    {
+      "id": "dT",
+      "definition": {
+        "kind": "relTemperatureSensor",
+        "name": "Across R",
+        "description": "Temperature difference between ports a and b.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "ΔT",
+        "ports": [
+          {
+            "id": "T_rel",
+            "name": "ΔT",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "port_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "port_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.RelTemperatureSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.RelTemperatureSensor"
+        }
+      },
+      "position": {
+        "x": 544,
+        "y": 312
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "Tset",
+      "definition": {
+        "kind": "constant",
+        "name": "350 K",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 350,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 64,
+        "y": 536
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "hold",
+      "definition": {
+        "kind": "prescribedTemperature",
+        "name": "Held at 350 K",
+        "description": "Holds its port at the input temperature (K).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T",
+        "ports": [
+          {
+            "id": "T",
+            "name": "T",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sources.PrescribedTemperature from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sources.PrescribedTemperature"
+        }
+      },
+      "position": {
+        "x": 224,
+        "y": 536
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "g",
+      "definition": {
+        "kind": "thermalConductor",
+        "name": "G 1 W/K",
+        "description": "Linear heat conduction: Q = G·ΔT.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "G",
+        "ports": [
+          {
+            "id": "port_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "port_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "G",
+            "name": "Conductance",
+            "value": 1,
+            "unit": "W/K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.ThermalConductor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "conduction"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.ThermalConductor",
+          "modifiers": {
+            "G": "G"
+          }
+        }
+      },
+      "position": {
+        "x": 384,
+        "y": 536
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "body",
+      "definition": {
+        "kind": "heatCapacitor",
+        "name": "Body 100 J/K",
+        "description": "Stores heat: C·dT/dt = Q_flow.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "C",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Heat capacity",
+            "value": 100,
+            "unit": "J/K",
+            "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermal mass",
+          "lumped"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
+          "modifiers": {
+            "C": "C",
+            "T.start": "T0"
+          }
+        }
+      },
+      "position": {
+        "x": 544,
+        "y": 456
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "qset",
+      "definition": {
+        "kind": "step",
+        "name": "20 W at 1500 s",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 20,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 1500,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 384,
+        "y": 680
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "heat",
+      "definition": {
+        "kind": "prescribedHeatFlow",
+        "name": "Heater",
+        "description": "Injects the input heat flow (W) into its port.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "Q",
+        "ports": [
+          {
+            "id": "Q_flow",
+            "name": "Q",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "port",
+            "name": "Q",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sources.PrescribedHeatFlow from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "losses",
+          "heater"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow"
+        }
+      },
+      "position": {
+        "x": 544,
+        "y": 680
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 72,
+        "y": -46
+      }
+    },
+    {
+      "id": "Tb",
+      "definition": {
+        "kind": "temperatureSensor",
+        "name": "Body temperature",
+        "description": "Absolute temperature of its port (K).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "T",
+            "name": "T",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.TemperatureSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermometer",
+          "ntc"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.TemperatureSensor"
+        }
+      },
+      "position": {
+        "x": 736,
+        "y": 536
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 112,
+        "y": -46
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "q",
+      "sourceHandle": "port",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0002",
+      "source": "j_id000k",
+      "sourceHandle": "node",
+      "target": "qflow",
+      "targetHandle": "port_a",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "qflow",
+      "sourceHandle": "port_b",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000q",
+      "sourceHandle": "node",
+      "target": "conv",
+      "targetHandle": "solid",
+      "waypoints": []
+    },
+    {
+      "id": "id0006",
+      "source": "h",
+      "sourceHandle": "y",
+      "target": "conv",
+      "targetHandle": "Gc"
+    },
+    {
+      "id": "id0007",
+      "source": "conv",
+      "sourceHandle": "fluid",
+      "target": "air",
+      "targetHandle": "port"
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000q",
+      "sourceHandle": "node",
+      "target": "rad",
+      "targetHandle": "port_a",
+      "waypoints": [
+        {
+          "x": 744,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "rad",
+      "sourceHandle": "port_b",
+      "target": "room",
+      "targetHandle": "port"
+    },
+    {
+      "id": "id000a",
+      "source": "j_id000s",
+      "sourceHandle": "node",
+      "target": "Tp",
+      "targetHandle": "port",
+      "waypoints": [
+        {
+          "x": 208,
+          "y": 152
+        },
+        {
+          "x": 208,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "dT",
+      "sourceHandle": "port_a",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 528,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "id000c",
+      "source": "dT",
+      "sourceHandle": "port_b",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 640,
+          "y": 344
+        }
+      ]
+    },
+    {
+      "id": "id000d",
+      "source": "Tset",
+      "sourceHandle": "y",
+      "target": "hold",
+      "targetHandle": "T"
+    },
+    {
+      "id": "id000e",
+      "source": "hold",
+      "sourceHandle": "port",
+      "target": "g",
+      "targetHandle": "port_a"
+    },
+    {
+      "id": "id000f",
+      "source": "g",
+      "sourceHandle": "port_b",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000g",
+      "source": "qset",
+      "sourceHandle": "y",
+      "target": "heat",
+      "targetHandle": "Q_flow"
+    },
+    {
+      "id": "id000h",
+      "source": "heat",
+      "sourceHandle": "port",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000i",
+      "source": "j_id000u",
+      "sourceHandle": "node",
+      "target": "Tb",
+      "targetHandle": "port",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000l",
+      "source": "j_id000s",
+      "sourceHandle": "node",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000n",
+      "source": "rth",
+      "sourceHandle": "port_a",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000p",
+      "source": "rth",
+      "sourceHandle": "port_b",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000r",
+      "source": "sink",
+      "sourceHandle": "port",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000t",
+      "source": "part",
+      "sourceHandle": "port",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000v",
+      "source": "body",
+      "sourceHandle": "port",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000k",
+      "domain": "thermal",
+      "position": {
+        "x": 264,
+        "y": 200
+      }
+    },
+    {
+      "id": "j_id000m",
+      "domain": "thermal",
+      "position": {
+        "x": 528,
+        "y": 200
+      }
+    },
+    {
+      "id": "j_id000o",
+      "domain": "thermal",
+      "position": {
+        "x": 640,
+        "y": 200
+      }
+    },
+    {
+      "id": "j_id000q",
+      "domain": "thermal",
+      "position": {
+        "x": 744,
+        "y": 200
+      }
+    },
+    {
+      "id": "j_id000s",
+      "domain": "thermal",
+      "position": {
+        "x": 264,
+        "y": 152
+      }
+    },
+    {
+      "id": "j_id000u",
+      "domain": "thermal",
+      "position": {
+        "x": 584,
+        "y": 568
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000w",
+      "anchor": "Tp.port",
+      "wireIds": [
+        "id0001",
+        "id0002",
+        "id000a",
+        "w_id000l",
+        "w_id000t"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "dT.port_a",
+      "wireIds": [
+        "id0003",
+        "id000b",
+        "w_id000n"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "conv.solid",
+      "wireIds": [
+        "id0004",
+        "id0005",
+        "id0008",
+        "id000c",
+        "w_id000p",
+        "w_id000r"
+      ]
+    },
+    {
+      "id": "net_id000z",
+      "anchor": "h.y",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id0010",
+      "anchor": "air.port",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id0011",
+      "anchor": "rad.port_b",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id0012",
+      "anchor": "Tset.y",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id0013",
+      "anchor": "g.port_a",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id0014",
+      "anchor": "Tb.port",
+      "wireIds": [
+        "id000f",
+        "id000h",
+        "id000i",
+        "w_id000v"
+      ]
+    },
+    {
+      "id": "net_id0015",
+      "anchor": "qset.y",
+      "wireIds": [
+        "id000g"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Part temperature",
+      "series": [
+        "Tp.T"
+      ],
+      "labels": [
+        "T part (K)"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Heat flow and drop across R",
+      "series": [
+        "qflow.Q_flow",
+        "dT.T_rel"
+      ],
+      "labels": [
+        "Q (W)",
+        "ΔT (K)"
+      ]
+    },
+    {
+      "id": "plot3",
+      "label": "Body temperature",
+      "series": [
+        "Tb.T"
+      ],
+      "labels": [
+        "T body (K)"
+      ]
+    }
+  ]
+}

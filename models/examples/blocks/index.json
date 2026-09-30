@@ -1,0 +1,2736 @@
+{
+  "examples": [
+    {
+      "id": "signal-sources",
+      "title": "Signal sources",
+      "area": "Signals",
+      "summary": "The signal sources side by side: step, ramp, sine, pulse, and clock, plus a constant.",
+      "about": [
+        "step",
+        "ramp",
+        "sine",
+        "pulse",
+        "clock"
+      ],
+      "kinds": [
+        "clock",
+        "constant",
+        "pulse",
+        "ramp",
+        "sine",
+        "step"
+      ],
+      "checks": [
+        {
+          "signal": "step.y",
+          "at": 0.4,
+          "value": 0,
+          "tol": 1e-9,
+          "why": "before the 0.5 s step"
+        },
+        {
+          "signal": "step.y",
+          "value": 2,
+          "tol": 1e-9,
+          "why": "height = 2 after the step"
+        },
+        {
+          "signal": "ramp.y",
+          "value": 2.25,
+          "tol": 0.000001,
+          "why": "1.5 × (2 − 0.5)"
+        },
+        {
+          "signal": "sine.y",
+          "min": -1.000001,
+          "max": 1.000001,
+          "why": "amplitude 1"
+        },
+        {
+          "signal": "sine.y",
+          "at": 0.125,
+          "value": 1,
+          "tol": 0.001,
+          "why": "sin(2π·2·0.125) = 1"
+        },
+        {
+          "signal": "pulse.y",
+          "at": 0.1,
+          "value": 1,
+          "tol": 1e-9,
+          "why": "on for the first 25 % of each period"
+        },
+        {
+          "signal": "pulse.y",
+          "at": 0.5,
+          "value": 0,
+          "tol": 1e-9,
+          "why": "off after 0.25 s"
+        },
+        {
+          "signal": "clock.y",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "the clock is time"
+        }
+      ]
+    },
+    {
+      "id": "arithmetic",
+      "title": "Arithmetic",
+      "area": "Signals",
+      "summary": "Sum, difference, product, quotient, minimum, and maximum of a ramp and a constant.",
+      "about": [
+        "constant",
+        "sum",
+        "subtract",
+        "product",
+        "divide",
+        "min",
+        "max"
+      ],
+      "kinds": [
+        "constant",
+        "divide",
+        "max",
+        "min",
+        "product",
+        "ramp",
+        "subtract",
+        "sum"
+      ],
+      "checks": [
+        {
+          "signal": "sum.y",
+          "value": 6,
+          "tol": 0.000001,
+          "why": "4 + 2"
+        },
+        {
+          "signal": "diff.y",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "4 − 2"
+        },
+        {
+          "signal": "prod.y",
+          "value": 8,
+          "tol": 0.000001,
+          "why": "4 · 2"
+        },
+        {
+          "signal": "quot.y",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "4 / 2"
+        },
+        {
+          "signal": "lo.y",
+          "at": 1,
+          "value": 1,
+          "tol": 0.000001,
+          "why": "min(1, 2)"
+        },
+        {
+          "signal": "lo.y",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "min(4, 2)"
+        },
+        {
+          "signal": "hi.y",
+          "at": 1,
+          "value": 2,
+          "tol": 0.000001,
+          "why": "max(1, 2)"
+        },
+        {
+          "signal": "hi.y",
+          "value": 4,
+          "tol": 0.000001,
+          "why": "max(4, 2)"
+        }
+      ]
+    },
+    {
+      "id": "functions",
+      "title": "Math functions",
+      "area": "Signals",
+      "summary": "Gain, absolute value, square root, sign, negation, and power of a sine; sine and cosine of time.",
+      "about": [
+        "gain",
+        "abs",
+        "sqrt",
+        "sign",
+        "unaryMinus",
+        "power",
+        "sineOp",
+        "cosineOp"
+      ],
+      "kinds": [
+        "abs",
+        "clock",
+        "cosineOp",
+        "gain",
+        "power",
+        "sign",
+        "sine",
+        "sineOp",
+        "sqrt",
+        "unaryMinus"
+      ],
+      "checks": [
+        {
+          "signal": "gain.y",
+          "at": 1,
+          "value": 1,
+          "tol": 0.0001,
+          "why": "0.5 · 2"
+        },
+        {
+          "signal": "gain.y",
+          "at": 3,
+          "value": -1,
+          "tol": 0.0001,
+          "why": "0.5 · −2"
+        },
+        {
+          "signal": "abs.y",
+          "at": 3,
+          "value": 2,
+          "tol": 0.0001,
+          "why": "|−2|"
+        },
+        {
+          "signal": "root.y",
+          "at": 3,
+          "value": 1.4142135623730951,
+          "tol": 0.0001,
+          "why": "√2"
+        },
+        {
+          "signal": "sign.y",
+          "at": 1,
+          "value": 1,
+          "tol": 1e-9,
+          "why": "u > 0"
+        },
+        {
+          "signal": "sign.y",
+          "at": 3,
+          "value": -1,
+          "tol": 1e-9,
+          "why": "u < 0"
+        },
+        {
+          "signal": "neg.y",
+          "at": 1,
+          "value": -2,
+          "tol": 0.0001,
+          "why": "−2"
+        },
+        {
+          "signal": "square.y",
+          "at": 3,
+          "value": 4,
+          "tol": 0.001,
+          "why": "(−2)²"
+        },
+        {
+          "signal": "sin.y",
+          "value": -0.7568024953079282,
+          "tol": 0.0001,
+          "why": "sin 4"
+        },
+        {
+          "signal": "cos.y",
+          "value": -0.6536436208636119,
+          "tol": 0.0001,
+          "why": "cos 4"
+        }
+      ]
+    },
+    {
+      "id": "step-responses",
+      "title": "Step responses",
+      "area": "Signals",
+      "summary": "A unit step through a first-order filter, a second-order system, an integrator, and a delay; a ramp through a derivative.",
+      "about": [
+        "filter",
+        "secondOrder",
+        "integrator",
+        "delay",
+        "derivative"
+      ],
+      "kinds": [
+        "delay",
+        "derivative",
+        "filter",
+        "integrator",
+        "ramp",
+        "secondOrder",
+        "step"
+      ],
+      "checks": [
+        {
+          "signal": "filter.y",
+          "at": 0.3,
+          "value": 0.6321205588285577,
+          "tol": 0.002,
+          "why": "one time constant after the step"
+        },
+        {
+          "signal": "second.y",
+          "at": 0.42932839419151547,
+          "value": 1.3723261049265865,
+          "tol": 0.003,
+          "why": "peak overshoot 1 + e^(−πζ/√(1−ζ²)) at t_p = π/(ωn√(1−ζ²))"
+        },
+        {
+          "signal": "second.y",
+          "value": 1,
+          "tol": 0.004,
+          "why": "settles at the step height: the ringing envelope is e^(−ζωn·1.9 s) ≈ 0.003"
+        },
+        {
+          "signal": "int.y",
+          "value": 1.9,
+          "tol": 0.001,
+          "why": "∫ from 0.1 s to 2 s"
+        },
+        {
+          "signal": "delay.y",
+          "at": 0.35,
+          "value": 0,
+          "tol": 1e-9,
+          "why": "the step has not arrived"
+        },
+        {
+          "signal": "delay.y",
+          "at": 0.45,
+          "value": 1,
+          "tol": 1e-9,
+          "why": "arrives at 0.4 s"
+        },
+        {
+          "signal": "deriv.y",
+          "value": 2,
+          "tol": 0.001,
+          "why": "slope of the ramp"
+        }
+      ]
+    },
+    {
+      "id": "sampling",
+      "title": "Sampling",
+      "area": "Signals",
+      "summary": "A sine held, delayed by one sample, and a step summed at a fixed sample rate.",
+      "about": [
+        "zoh",
+        "unitDelay",
+        "discreteIntegrator"
+      ],
+      "kinds": [
+        "discreteIntegrator",
+        "sine",
+        "step",
+        "unitDelay",
+        "zoh"
+      ],
+      "checks": [
+        {
+          "signal": "zoh.y",
+          "at": 0.25,
+          "value": 0.9510565162951535,
+          "tol": 0.0001,
+          "why": "held since the 0.2 s sample"
+        },
+        {
+          "signal": "z.y",
+          "at": 0.25,
+          "value": 0.5877852522924731,
+          "tol": 0.0001,
+          "why": "the 0.1 s sample, one period late"
+        },
+        {
+          "signal": "sum.y",
+          "value": 1,
+          "tol": 0.011,
+          "why": "100 samples of 0.01"
+        }
+      ]
+    },
+    {
+      "id": "nonlinear",
+      "title": "Nonlinearities",
+      "area": "Signals",
+      "summary": "Saturation, dead zone, relay, and rate limiter acting on the same sine.",
+      "about": [
+        "saturation",
+        "deadzone",
+        "relay",
+        "rateLimiter"
+      ],
+      "kinds": [
+        "deadzone",
+        "rateLimiter",
+        "relay",
+        "saturation",
+        "sine"
+      ],
+      "checks": [
+        {
+          "signal": "sat.y",
+          "min": -1.000001,
+          "max": 1.000001,
+          "why": "clipped to ±1"
+        },
+        {
+          "signal": "sat.y",
+          "at": 0.25,
+          "value": 1,
+          "tol": 0.000001,
+          "why": "input 2 is clipped"
+        },
+        {
+          "signal": "dz.y",
+          "at": 0.25,
+          "value": 1.5,
+          "tol": 0.0001,
+          "why": "2 − 0.5"
+        },
+        {
+          "signal": "dz.y",
+          "at": 0.02,
+          "value": 0,
+          "tol": 1e-9,
+          "why": "input 0.25 is inside the band"
+        },
+        {
+          "signal": "relay.y",
+          "at": 0.25,
+          "value": 1,
+          "tol": 1e-9,
+          "why": "input above 0"
+        },
+        {
+          "signal": "relay.y",
+          "at": 0.75,
+          "value": -1,
+          "tol": 1e-9,
+          "why": "input below 0"
+        },
+        {
+          "signal": "rate.y",
+          "at": 0.25,
+          "value": 0.5,
+          "tol": 0.01,
+          "why": "rising at 2 per second for 0.25 s"
+        }
+      ]
+    },
+    {
+      "id": "routing",
+      "title": "Switches",
+      "area": "Signals",
+      "summary": "A switch that follows a control signal, and a manual switch set by a parameter.",
+      "about": [
+        "switch2",
+        "manualSwitch"
+      ],
+      "kinds": [
+        "constant",
+        "manualSwitch",
+        "pulse",
+        "ramp",
+        "switch2"
+      ],
+      "checks": [
+        {
+          "signal": "sw.y",
+          "at": 0.25,
+          "value": 0.25,
+          "tol": 0.000001,
+          "why": "control on: the ramp"
+        },
+        {
+          "signal": "sw.y",
+          "at": 0.75,
+          "value": -1,
+          "tol": 1e-9,
+          "why": "control off: −1"
+        },
+        {
+          "signal": "sw.y",
+          "at": 1.25,
+          "value": 1.25,
+          "tol": 0.000001,
+          "why": "control on again"
+        },
+        {
+          "signal": "manual.y",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "position 2: the ramp"
+        }
+      ]
+    },
+    {
+      "id": "subsystems",
+      "title": "Subsystems",
+      "area": "Signals",
+      "summary": "A gain and a filter grouped into a subsystem with an input and an output port, next to an empty subsystem.",
+      "about": [
+        "subsystem",
+        "emptySubsystem",
+        "inport",
+        "outport"
+      ],
+      "kinds": [
+        "filter",
+        "gain",
+        "inport",
+        "outport",
+        "step",
+        "subsystem"
+      ],
+      "checks": [
+        {
+          "signal": "yout.y",
+          "at": 0.5,
+          "value": 1.2642411176571153,
+          "tol": 0.002,
+          "why": "one time constant"
+        },
+        {
+          "signal": "yout.y",
+          "value": 1.9950424956466672,
+          "tol": 0.002,
+          "why": "settles at the gain, 2"
+        }
+      ]
+    },
+    {
+      "id": "mux-demux",
+      "title": "Mux and Demux",
+      "area": "Signals",
+      "summary": "Three signals carried across the sheet on one vector wire, then split apart again.",
+      "about": [
+        "mux",
+        "demux"
+      ],
+      "kinds": [
+        "constant",
+        "demux",
+        "mux",
+        "ramp",
+        "sine",
+        "sum"
+      ],
+      "checks": [
+        {
+          "signal": "demux.y1",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "first signal: the ramp, 1 × 2 s"
+        },
+        {
+          "signal": "demux.y2",
+          "at": 0.25,
+          "value": 1,
+          "tol": 0.001,
+          "why": "second signal: sin(2π · 0.25) = 1"
+        },
+        {
+          "signal": "demux.y3",
+          "value": 2,
+          "tol": 1e-9,
+          "why": "third signal: the constant 2"
+        },
+        {
+          "signal": "add.y",
+          "at": 1,
+          "value": 1,
+          "tol": 0.001,
+          "why": "ramp 1 + sin(2π) = 1"
+        }
+      ]
+    },
+    {
+      "id": "buses",
+      "title": "Signal buses",
+      "area": "Signals",
+      "summary": "Named signals bundled into a bus with a Bus Creator, and picked out by name with a Bus Selector.",
+      "about": [
+        "busCreator",
+        "busSelector"
+      ],
+      "kinds": [
+        "busCreator",
+        "busSelector",
+        "constant",
+        "gain",
+        "ramp",
+        "sine"
+      ],
+      "checks": [
+        {
+          "signal": "pick.y1",
+          "value": 4,
+          "tol": 0.000001,
+          "why": "speed: the ramp, 2 × 2 s"
+        },
+        {
+          "signal": "pick.y2",
+          "at": 0.25,
+          "value": 1,
+          "tol": 0.001,
+          "why": "current: sin(2π · 0.25) = 1"
+        },
+        {
+          "signal": "scale.y",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "0.5 × speed 4"
+        }
+      ]
+    },
+    {
+      "id": "logic-gates",
+      "title": "Logic gates",
+      "area": "Logic",
+      "summary": "AND, OR, XOR, NAND, NOR, and NOT on two Boolean pulse trains, and a Boolean turned into a number.",
+      "about": [
+        "booleanPulse",
+        "logicAnd",
+        "logicOr",
+        "logicXor",
+        "logicNand",
+        "logicNor",
+        "logicNot",
+        "booleanToReal"
+      ],
+      "kinds": [
+        "booleanPulse",
+        "booleanToReal",
+        "logicAnd",
+        "logicNand",
+        "logicNor",
+        "logicNot",
+        "logicOr",
+        "logicXor"
+      ],
+      "checks": [
+        {
+          "signal": "gAnd.y",
+          "at": 0.25,
+          "value": 1,
+          "why": "A and B"
+        },
+        {
+          "signal": "gAnd.y",
+          "at": 0.75,
+          "value": 0,
+          "why": "A is false"
+        },
+        {
+          "signal": "gOr.y",
+          "at": 0.75,
+          "value": 1,
+          "why": "B is true"
+        },
+        {
+          "signal": "gOr.y",
+          "at": 1.75,
+          "value": 0,
+          "why": "neither"
+        },
+        {
+          "signal": "gXor.y",
+          "at": 0.25,
+          "value": 0,
+          "why": "both true"
+        },
+        {
+          "signal": "gXor.y",
+          "at": 0.75,
+          "value": 1,
+          "why": "exactly one"
+        },
+        {
+          "signal": "gNand.y",
+          "at": 0.25,
+          "value": 0,
+          "why": "not (A and B)"
+        },
+        {
+          "signal": "gNand.y",
+          "at": 0.75,
+          "value": 1,
+          "why": "not (A and B)"
+        },
+        {
+          "signal": "gNor.y",
+          "at": 0.75,
+          "value": 0,
+          "why": "not (A or B)"
+        },
+        {
+          "signal": "gNor.y",
+          "at": 1.75,
+          "value": 1,
+          "why": "not (A or B)"
+        },
+        {
+          "signal": "num.y",
+          "at": 0.25,
+          "value": 0,
+          "why": "NOT A is false: 0"
+        },
+        {
+          "signal": "num.y",
+          "at": 0.75,
+          "value": 1,
+          "why": "NOT A is true: 1"
+        }
+      ]
+    },
+    {
+      "id": "comparators",
+      "title": "Comparators",
+      "area": "Logic",
+      "summary": "A sine compared with thresholds, with a ramp, and through a hysteresis band.",
+      "about": [
+        "greaterThreshold",
+        "lessThreshold",
+        "boolHysteresis",
+        "greater",
+        "less"
+      ],
+      "kinds": [
+        "boolHysteresis",
+        "greater",
+        "greaterThreshold",
+        "less",
+        "lessThreshold",
+        "ramp",
+        "sine"
+      ],
+      "checks": [
+        {
+          "signal": "above.y",
+          "at": 0.5,
+          "value": 1,
+          "why": "sine 1 > 0.5"
+        },
+        {
+          "signal": "above.y",
+          "at": 1.05,
+          "value": 0,
+          "why": "sine −0.16 < 0.5"
+        },
+        {
+          "signal": "below.y",
+          "at": 1.5,
+          "value": 1,
+          "why": "sine −1 < −0.5"
+        },
+        {
+          "signal": "below.y",
+          "at": 0.5,
+          "value": 0,
+          "why": "sine 1"
+        },
+        {
+          "signal": "band.y",
+          "at": 1.05,
+          "value": 1,
+          "why": "on until the sine falls below −0.5"
+        },
+        {
+          "signal": "band.y",
+          "at": 1.3,
+          "value": 0,
+          "why": "sine −0.81 < −0.5 turned it off"
+        },
+        {
+          "signal": "gt.y",
+          "at": 0.5,
+          "value": 1,
+          "why": "1 > 0.125"
+        },
+        {
+          "signal": "gt.y",
+          "at": 1.5,
+          "value": 0,
+          "why": "−1 < 0.375"
+        },
+        {
+          "signal": "lt.y",
+          "at": 1.5,
+          "value": 1,
+          "why": "−1 < 0.375"
+        }
+      ]
+    },
+    {
+      "id": "latch-timer",
+      "title": "Latch, timer, and sampler",
+      "area": "Logic",
+      "summary": "Start and stop buttons set and reset a flip-flop, which times the run, gates a signal, and samples the start time.",
+      "about": [
+        "rsFlipFlop",
+        "edge",
+        "timer",
+        "logicSwitch",
+        "triggeredSampler",
+        "booleanStep",
+        "booleanConstant"
+      ],
+      "kinds": [
+        "booleanConstant",
+        "booleanStep",
+        "clock",
+        "constant",
+        "edge",
+        "logicAnd",
+        "logicSwitch",
+        "rsFlipFlop",
+        "sine",
+        "timer",
+        "triggeredSampler"
+      ],
+      "checks": [
+        {
+          "signal": "latch.Q",
+          "at": 0.4,
+          "value": 0,
+          "why": "not started"
+        },
+        {
+          "signal": "latch.Q",
+          "at": 1,
+          "value": 1,
+          "why": "set at 0.5 s"
+        },
+        {
+          "signal": "latch.Q",
+          "value": 0,
+          "why": "reset at 1.5 s"
+        },
+        {
+          "signal": "timer.y",
+          "at": 1,
+          "value": 0.5,
+          "tol": 0.0001,
+          "why": "running for 0.5 s"
+        },
+        {
+          "signal": "gate.y",
+          "at": 1.25,
+          "value": 1,
+          "tol": 0.0001,
+          "why": "running: sin(2π·1.25) = 1"
+        },
+        {
+          "signal": "gate.y",
+          "at": 1.75,
+          "value": 0,
+          "tol": 1e-9,
+          "why": "stopped: 0"
+        },
+        {
+          "signal": "hold.y",
+          "value": 0.5,
+          "tol": 0.0001,
+          "why": "the clock at the start edge"
+        }
+      ]
+    },
+    {
+      "id": "thermostat",
+      "title": "Thermostat",
+      "area": "Logic",
+      "summary": "An on-off controller switches a 100 W heater to hold a room at 50 °C.",
+      "about": [
+        "onOffController"
+      ],
+      "kinds": [
+        "booleanToReal",
+        "constant",
+        "fixedTemperature",
+        "heatCapacitor",
+        "onOffController",
+        "prescribedHeatFlow",
+        "temperatureSensor",
+        "thermalConductor"
+      ],
+      "checks": [
+        {
+          "signal": "T.T",
+          "at": 0,
+          "value": 293.15,
+          "tol": 0.000001,
+          "why": "starts at the outside temperature"
+        },
+        {
+          "signal": "T.T",
+          "at": 1500,
+          "min": 321.9,
+          "max": 324.4,
+          "why": "inside the 2 K band around 50 °C"
+        },
+        {
+          "signal": "T.T",
+          "value": 323.15,
+          "tol": 1.25,
+          "why": "inside the 2 K band around 50 °C"
+        }
+      ]
+    },
+    {
+      "id": "control-loops",
+      "title": "PI and PID loops",
+      "area": "Control",
+      "summary": "The same first-order plant under a sampled PI, a continuous PID, and a sampled PID controller.",
+      "about": [
+        "pi",
+        "pid",
+        "discretePID"
+      ],
+      "kinds": [
+        "discretePID",
+        "filter",
+        "gain",
+        "pi",
+        "pid",
+        "step",
+        "subtract"
+      ],
+      "checks": [
+        {
+          "signal": "y1.y",
+          "value": 1,
+          "tol": 0.01,
+          "why": "integral action removes the error"
+        },
+        {
+          "signal": "y2.y",
+          "value": 1,
+          "tol": 0.01,
+          "why": "integral action removes the error"
+        },
+        {
+          "signal": "y3.y",
+          "value": 1,
+          "tol": 0.01,
+          "why": "integral action removes the error"
+        },
+        {
+          "signal": "y1.y",
+          "at": 0.09,
+          "value": 0,
+          "tol": 1e-9,
+          "why": "before the step"
+        }
+      ]
+    },
+    {
+      "id": "rc-rl",
+      "title": "RC and RL transients",
+      "area": "Electrical",
+      "summary": "A 10 V step charges a capacitor through a resistor, and another builds current in an inductor through a conductor.",
+      "about": [
+        "resistor",
+        "capacitor",
+        "inductor",
+        "conductor",
+        "stepVoltage",
+        "voltageSensor",
+        "currentSensor",
+        "ground"
+      ],
+      "kinds": [
+        "capacitor",
+        "conductor",
+        "currentSensor",
+        "ground",
+        "inductor",
+        "resistor",
+        "stepVoltage",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "vc.y",
+          "at": 0.1,
+          "value": 6.321205588285577,
+          "tol": 0.05,
+          "why": "10 V · (1 − e⁻¹) at one RC"
+        },
+        {
+          "signal": "vc.y",
+          "value": 9.932620530009146,
+          "tol": 0.05,
+          "why": "five time constants"
+        },
+        {
+          "signal": "il.y",
+          "at": 0.1,
+          "value": 0.6321205588285577,
+          "tol": 0.01,
+          "why": "1 A · (1 − e⁻¹) at one L/R"
+        },
+        {
+          "signal": "il.y",
+          "value": 0.9932620530009145,
+          "tol": 0.01,
+          "why": "five time constants"
+        }
+      ]
+    },
+    {
+      "id": "electrical-sources",
+      "title": "Electrical sources",
+      "area": "Electrical",
+      "summary": "Every voltage and current source driving a resistor, each with a voltmeter across it.",
+      "about": [
+        "dcSource",
+        "dcCurrent",
+        "sineVoltage",
+        "sineCurrent",
+        "rampVoltage",
+        "pulseVoltage",
+        "signalVoltage",
+        "signalCurrent"
+      ],
+      "kinds": [
+        "constant",
+        "dcCurrent",
+        "dcSource",
+        "ground",
+        "pulseVoltage",
+        "rampVoltage",
+        "resistor",
+        "signalCurrent",
+        "signalVoltage",
+        "sine",
+        "sineCurrent",
+        "sineVoltage",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "av.y",
+          "value": 12,
+          "tol": 0.000001,
+          "why": "the source voltage"
+        },
+        {
+          "signal": "bv.y",
+          "value": -10,
+          "tol": 0.000001,
+          "why": "−I · R: the current leaves through n"
+        },
+        {
+          "signal": "cv.y",
+          "at": 0.005,
+          "value": 10,
+          "tol": 0.001,
+          "why": "the sine peak"
+        },
+        {
+          "signal": "dv.y",
+          "at": 0.005,
+          "value": -10,
+          "tol": 0.001,
+          "why": "−I · R at the current peak"
+        },
+        {
+          "signal": "ev.y",
+          "at": 0.02,
+          "value": 5,
+          "tol": 0.001,
+          "why": "halfway up the ramp"
+        },
+        {
+          "signal": "ev.y",
+          "value": 10,
+          "tol": 0.000001,
+          "why": "the ramp has ended"
+        },
+        {
+          "signal": "fv.y",
+          "at": 0.002,
+          "value": 5,
+          "tol": 0.000001,
+          "why": "pulse on"
+        },
+        {
+          "signal": "fv.y",
+          "at": 0.007,
+          "value": 0,
+          "tol": 0.000001,
+          "why": "pulse off"
+        },
+        {
+          "signal": "gv.y",
+          "at": 0.005,
+          "value": 3,
+          "tol": 0.001,
+          "why": "follows the 3 V sine"
+        },
+        {
+          "signal": "hv.y",
+          "value": -5,
+          "tol": 0.000001,
+          "why": "−0.5 A · 10 Ω"
+        }
+      ]
+    },
+    {
+      "id": "variable-parts",
+      "title": "Variable parts",
+      "area": "Electrical",
+      "summary": "A resistor, an inductor, and a capacitor whose values follow signals, and a potentiometer.",
+      "about": [
+        "variableResistor",
+        "variableInductor",
+        "variableCapacitor",
+        "potentiometer"
+      ],
+      "kinds": [
+        "constant",
+        "currentSensor",
+        "dcCurrent",
+        "dcSource",
+        "ground",
+        "potentiometer",
+        "ramp",
+        "sine",
+        "step",
+        "sum",
+        "variableCapacitor",
+        "variableInductor",
+        "variableResistor",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "ri.y",
+          "at": 0.25,
+          "value": 0.6666666666666666,
+          "tol": 0.001,
+          "why": "10 V / 15 Ω"
+        },
+        {
+          "signal": "ri.y",
+          "at": 0.75,
+          "value": 2,
+          "tol": 0.001,
+          "why": "10 V / 5 Ω"
+        },
+        {
+          "signal": "li.y",
+          "at": 1,
+          "value": 0.3333333333333333,
+          "tol": 0.001,
+          "why": "Ψ = 1 V · 1 s over L = 3 H"
+        },
+        {
+          "signal": "li.y",
+          "at": 2,
+          "value": 1,
+          "tol": 0.001,
+          "why": "Ψ = 2 over L = 2 H"
+        },
+        {
+          "signal": "cv.y",
+          "at": 0.4,
+          "value": 0.4,
+          "tol": 0.001,
+          "why": "Q/C = 0.4 mC / 1 mF"
+        },
+        {
+          "signal": "cv.y",
+          "at": 0.6,
+          "value": 0.3,
+          "tol": 0.001,
+          "why": "Q/C = 0.6 mC / 2 mF"
+        },
+        {
+          "signal": "pv.y",
+          "at": 0.5,
+          "value": 5,
+          "tol": 0.001,
+          "why": "wiper halfway: 5 V"
+        }
+      ]
+    },
+    {
+      "id": "op-amps",
+      "title": "Op-amp amplifiers",
+      "area": "Electrical",
+      "summary": "Two inverting amplifiers: an ideal op-amp with a gain of −10, and a limited one that clips at its ±15 V rails.",
+      "about": [
+        "opAmp",
+        "opAmpLimited"
+      ],
+      "kinds": [
+        "ground",
+        "opAmp",
+        "opAmpLimited",
+        "resistor",
+        "sineVoltage",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "vout.y",
+          "at": 0.025,
+          "value": -10,
+          "tol": 0.01,
+          "why": "−10 × the 1 V peak"
+        },
+        {
+          "signal": "vout.y",
+          "at": 0.035,
+          "value": 10,
+          "tol": 0.01,
+          "why": "−10 × the −1 V trough"
+        },
+        {
+          "signal": "vout2.y",
+          "at": 0.025,
+          "value": -15,
+          "tol": 0.05,
+          "why": "clipped at the −15 V rail"
+        },
+        {
+          "signal": "vout2.y",
+          "min": -15.05,
+          "max": 15.05,
+          "why": "never beyond the rails"
+        },
+        {
+          "signal": "vout2.y",
+          "at": 0.0205,
+          "value": -3.12868930080463,
+          "tol": 0.05,
+          "why": "linear below the rails"
+        }
+      ]
+    },
+    {
+      "id": "controlled-sources",
+      "title": "Controlled sources",
+      "area": "Electrical",
+      "summary": "Voltage- and current-controlled sources and a gyrator, each driving a 10 Ω load.",
+      "about": [
+        "vcvs",
+        "vccs",
+        "ccvs",
+        "cccs",
+        "gyrator"
+      ],
+      "kinds": [
+        "cccs",
+        "ccvs",
+        "dcSource",
+        "ground",
+        "gyrator",
+        "resistor",
+        "vccs",
+        "vcvs",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "av.y",
+          "value": 2,
+          "tol": 0.000001,
+          "why": "2 × 1 V"
+        },
+        {
+          "signal": "bv.y",
+          "value": -1,
+          "tol": 0.000001,
+          "why": "0.1 S × 1 V into p2, out of the load"
+        },
+        {
+          "signal": "cv.y",
+          "value": 10,
+          "tol": 0.0001,
+          "why": "10 Ω × 1 A"
+        },
+        {
+          "signal": "dv.y",
+          "value": -30,
+          "tol": 0.001,
+          "why": "3 × 1 A into p2, through 10 Ω"
+        },
+        {
+          "signal": "ev.y",
+          "value": 10,
+          "tol": 0.0001,
+          "why": "1 S × 1 V gives 1 A, 10 V on 10 Ω"
+        }
+      ]
+    },
+    {
+      "id": "transformers",
+      "title": "Transformers and a saturating inductor",
+      "area": "Electrical",
+      "summary": "A coupled-inductor and an ideal transformer on a 10 V sine, and an inductor that saturates as its current rises.",
+      "about": [
+        "mutualInductor",
+        "idealTransformer",
+        "saturatingInductor"
+      ],
+      "kinds": [
+        "ground",
+        "idealTransformer",
+        "mutualInductor",
+        "ramp",
+        "resistor",
+        "saturatingInductor",
+        "signalCurrent",
+        "sineVoltage",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "v1.y",
+          "at": 9.985,
+          "value": 9,
+          "tol": 0.1,
+          "why": "M/L1 × the 10 V peak, lightly loaded"
+        },
+        {
+          "signal": "v2.y",
+          "at": 9.985,
+          "value": 5,
+          "tol": 0.001,
+          "why": "the 10 V peak over the ratio 2"
+        },
+        {
+          "signal": "v3.y",
+          "at": 0.01,
+          "value": 2,
+          "tol": 0.01,
+          "why": "unsaturated: 2 H × 1 A/s"
+        },
+        {
+          "signal": "v3.y",
+          "value": 0.5,
+          "tol": 0.02,
+          "why": "saturated at 10 A: close to 0.5 H × 1 A/s"
+        }
+      ]
+    },
+    {
+      "id": "storage",
+      "title": "Battery, supercapacitor, and a heating load",
+      "area": "Electrical",
+      "summary": "A battery cell heats a temperature-dependent resistor while a power sensor measures it, and a supercapacitor charges at 1 A.",
+      "about": [
+        "batteryStack",
+        "supercap",
+        "powerSensor",
+        "heatingResistor"
+      ],
+      "kinds": [
+        "batteryStack",
+        "dcCurrent",
+        "ground",
+        "heatCapacitor",
+        "heatingResistor",
+        "powerSensor",
+        "supercap",
+        "temperatureSensor",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "pw.power",
+          "at": 0.001,
+          "value": 4.398995637475628,
+          "tol": 0.02,
+          "why": "V²/R of a full cell through its 5 mΩ into 4 Ω"
+        },
+        {
+          "signal": "vcap.y",
+          "value": 2.01,
+          "tol": 0.001,
+          "why": "1 A · 2 s / 1 F + 1 A · 10 mΩ"
+        },
+        {
+          "signal": "Tb.T",
+          "value": 293.238,
+          "tol": 0.01,
+          "why": "≈ 4.4 W for 2 s into 100 J/K"
+        }
+      ]
+    },
+    {
+      "id": "switches",
+      "title": "Switches and a breaker",
+      "area": "Electrical",
+      "summary": "An ideal switch, closing and opening switches, a two-way switch, and a breaker that opens an inductive circuit.",
+      "about": [
+        "idealSwitch",
+        "closingSwitch",
+        "openingSwitch",
+        "twoWaySwitch",
+        "breaker"
+      ],
+      "kinds": [
+        "booleanStep",
+        "breaker",
+        "closingSwitch",
+        "currentSensor",
+        "dcSource",
+        "ground",
+        "idealSwitch",
+        "inductor",
+        "openingSwitch",
+        "pulse",
+        "resistor",
+        "twoWaySwitch"
+      ],
+      "checks": [
+        {
+          "signal": "ai.y",
+          "at": 0.05,
+          "value": 1,
+          "tol": 0.001,
+          "why": "gate on"
+        },
+        {
+          "signal": "ai.y",
+          "at": 0.15,
+          "value": 0,
+          "tol": 0.001,
+          "why": "gate off"
+        },
+        {
+          "signal": "bi.y",
+          "at": 0.05,
+          "value": 0,
+          "tol": 0.001,
+          "why": "still open"
+        },
+        {
+          "signal": "bi.y",
+          "value": 1,
+          "tol": 0.001,
+          "why": "closed"
+        },
+        {
+          "signal": "ci.y",
+          "at": 0.05,
+          "value": 1,
+          "tol": 0.001,
+          "why": "still closed"
+        },
+        {
+          "signal": "ci.y",
+          "value": 0,
+          "tol": 0.001,
+          "why": "open"
+        },
+        {
+          "signal": "di.y",
+          "at": 0.09,
+          "value": 1,
+          "tol": 0.001,
+          "why": "closed: 10 V / 10 Ω"
+        },
+        {
+          "signal": "di.y",
+          "value": 0,
+          "tol": 0.001,
+          "why": "the arc has cleared"
+        },
+        {
+          "signal": "ei.y",
+          "at": 0.05,
+          "value": 1,
+          "tol": 0.001,
+          "why": "on the 10 Ω load"
+        },
+        {
+          "signal": "ei.y",
+          "value": 0.5,
+          "tol": 0.001,
+          "why": "changed over to 20 Ω"
+        }
+      ]
+    },
+    {
+      "id": "diodes",
+      "title": "Diodes and a Zener regulator",
+      "area": "Semiconductors",
+      "summary": "Three diode models rectifying a 10 V sine, and a Zener diode holding 5.1 V.",
+      "about": [
+        "diode",
+        "idealDiode",
+        "diodeShockley",
+        "zenerDiode"
+      ],
+      "kinds": [
+        "dcSource",
+        "diode",
+        "diodeShockley",
+        "ground",
+        "idealDiode",
+        "resistor",
+        "sineVoltage",
+        "voltageSensor",
+        "zenerDiode"
+      ],
+      "checks": [
+        {
+          "signal": "av.y",
+          "at": 0.005,
+          "value": 10,
+          "tol": 0.01,
+          "why": "forward: the 10 V peak"
+        },
+        {
+          "signal": "av.y",
+          "at": 0.015,
+          "value": 0,
+          "tol": 0.01,
+          "why": "reverse: blocked"
+        },
+        {
+          "signal": "bv.y",
+          "at": 0.005,
+          "value": 10,
+          "tol": 0.01,
+          "why": "ideal diode: the 10 V peak"
+        },
+        {
+          "signal": "bv.y",
+          "at": 0.015,
+          "value": 0,
+          "tol": 0.01,
+          "why": "reverse: blocked"
+        },
+        {
+          "signal": "cv.y",
+          "at": 0.005,
+          "min": 9,
+          "max": 9.8,
+          "why": "a Shockley diode drops some tenths of a volt"
+        },
+        {
+          "signal": "cv.y",
+          "at": 0.015,
+          "value": 0,
+          "tol": 0.01,
+          "why": "reverse: blocked"
+        },
+        {
+          "signal": "vz.y",
+          "value": 5.031716351488603,
+          "tol": 0.002,
+          "why": "Bv + Nbv·Vt·ln(i/Ibv): about 70 mA against the 0.7 A knee current"
+        }
+      ]
+    },
+    {
+      "id": "transistors",
+      "title": "Transistor switches",
+      "area": "Semiconductors",
+      "summary": "A CMOS inverter of an NMOS and a PMOS transistor, and NPN and PNP transistors switching loads.",
+      "about": [
+        "nmos",
+        "pmos",
+        "npn",
+        "pnp"
+      ],
+      "kinds": [
+        "dcSource",
+        "ground",
+        "nmos",
+        "npn",
+        "pmos",
+        "pnp",
+        "pulseVoltage",
+        "resistor",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "vout.y",
+          "at": 0.0025,
+          "value": 0,
+          "tol": 0.05,
+          "why": "input high: NMOS on, output low"
+        },
+        {
+          "signal": "vout.y",
+          "at": 0.0075,
+          "value": 5,
+          "tol": 0.05,
+          "why": "input low: PMOS on, output high"
+        },
+        {
+          "signal": "vce.y",
+          "at": 0.0025,
+          "max": 0.3,
+          "why": "base driven: saturated"
+        },
+        {
+          "signal": "vce.y",
+          "at": 0.0075,
+          "value": 5,
+          "tol": 0.05,
+          "why": "base low: off, no drop on R C"
+        },
+        {
+          "signal": "vl2.y",
+          "at": 0.0075,
+          "min": 3.5,
+          "max": 5,
+          "why": "base low: the PNP sources current into its load"
+        },
+        {
+          "signal": "vl2.y",
+          "at": 0.0025,
+          "value": 0,
+          "tol": 0.05,
+          "why": "base high: off"
+        }
+      ]
+    },
+    {
+      "id": "thyristors",
+      "title": "Thyristor and GTO",
+      "area": "Semiconductors",
+      "summary": "A thyristor that stays on until its current falls to zero, and a GTO that turns off with its gate.",
+      "about": [
+        "idealThyristor",
+        "idealGTO"
+      ],
+      "kinds": [
+        "booleanPulse",
+        "ground",
+        "idealGTO",
+        "idealThyristor",
+        "resistor",
+        "sineVoltage",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "tv.y",
+          "at": 0.002,
+          "value": 0,
+          "tol": 0.01,
+          "why": "not fired yet"
+        },
+        {
+          "signal": "tv.y",
+          "at": 0.007,
+          "value": 8.090169943749475,
+          "tol": 0.01,
+          "why": "latched on after the gate pulse"
+        },
+        {
+          "signal": "tv.y",
+          "at": 0.015,
+          "value": 0,
+          "tol": 0.01,
+          "why": "turned off at the current zero"
+        },
+        {
+          "signal": "gv.y",
+          "at": 0.004,
+          "value": 9.510565162951535,
+          "tol": 0.01,
+          "why": "gate on: conducting"
+        },
+        {
+          "signal": "gv.y",
+          "at": 0.007,
+          "value": 0,
+          "tol": 0.01,
+          "why": "gate off: turned off"
+        }
+      ]
+    },
+    {
+      "id": "dc-dc",
+      "title": "DC-DC converters",
+      "area": "Converters",
+      "summary": "Buck, boost, and bidirectional half-bridge converters switching at 10 kHz with 50 % duty.",
+      "about": [
+        "buckConverter",
+        "boostConverter",
+        "buckBoostConverter",
+        "pwmSignal"
+      ],
+      "kinds": [
+        "boostConverter",
+        "buckBoostConverter",
+        "buckConverter",
+        "capacitor",
+        "constant",
+        "dcSource",
+        "ground",
+        "inductor",
+        "pwmSignal",
+        "resistor",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "av.y",
+          "mean": [
+            0.04,
+            0.05
+          ],
+          "value": 12,
+          "tol": 0.1,
+          "why": "D · 24 V"
+        },
+        {
+          "signal": "bv.y",
+          "mean": [
+            0.04,
+            0.05
+          ],
+          "value": 24,
+          "tol": 0.2,
+          "why": "12 V / (1 − D)"
+        },
+        {
+          "signal": "cv.y",
+          "mean": [
+            0.04,
+            0.05
+          ],
+          "value": 24,
+          "tol": 0.2,
+          "why": "12 V / (1 − D)"
+        }
+      ]
+    },
+    {
+      "id": "inverters",
+      "title": "H-bridge and single-phase inverter",
+      "area": "Converters",
+      "summary": "An H-bridge driving an RL load with 75 % duty, and an inverter leg making 50 Hz AC from a split supply.",
+      "about": [
+        "hBridge",
+        "singlePhaseInverter"
+      ],
+      "kinds": [
+        "constant",
+        "currentSensor",
+        "dcSource",
+        "ground",
+        "hBridge",
+        "inductor",
+        "pwmSignal",
+        "resistor",
+        "sine",
+        "singlePhaseInverter",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "hi.y",
+          "mean": [
+            0.04,
+            0.05
+          ],
+          "value": 6,
+          "tol": 0.1,
+          "why": "(2D − 1) · 24 V / 2 Ω"
+        },
+        {
+          "signal": "sv.y",
+          "mean": [
+            0.02,
+            0.03
+          ],
+          "value": 6.1115498147287814,
+          "tol": 0.15,
+          "why": "2/π of the 9.6 V fundamental"
+        },
+        {
+          "signal": "sv.y",
+          "min": -12.01,
+          "max": 12.01,
+          "why": "switches between ±12 V"
+        }
+      ]
+    },
+    {
+      "id": "rectifiers",
+      "title": "Rectifier bridges",
+      "area": "Converters",
+      "summary": "A diode bridge and a thyristor bridge fired at 90°, each feeding a 10 Ω load from a 10 V sine.",
+      "about": [
+        "diodeBridge",
+        "thyristorBridge"
+      ],
+      "kinds": [
+        "booleanPulse",
+        "diodeBridge",
+        "ground",
+        "resistor",
+        "sineVoltage",
+        "thyristorBridge",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "dv.y",
+          "mean": [
+            0.02,
+            0.04
+          ],
+          "value": 6.366197723675814,
+          "tol": 0.02,
+          "why": "2 · 10 V / π"
+        },
+        {
+          "signal": "tv.y",
+          "mean": [
+            0.02,
+            0.04
+          ],
+          "value": 3.183098861837907,
+          "tol": 0.02,
+          "why": "10 V / π · (1 + cos 90°)"
+        },
+        {
+          "signal": "tv.y",
+          "at": 0.023,
+          "value": 0,
+          "tol": 0.01,
+          "why": "not yet fired in this half-cycle"
+        }
+      ]
+    },
+    {
+      "id": "three-phase-inverter",
+      "title": "Three-phase inverter",
+      "area": "Converters",
+      "summary": "A two-level inverter makes 50 Hz three-phase current in a star-connected resistive load.",
+      "about": [
+        "threePhaseInverter"
+      ],
+      "kinds": [
+        "dcSource",
+        "ground",
+        "pwmSignal",
+        "sine",
+        "star",
+        "threePhaseCurrentSensor",
+        "threePhaseInverter",
+        "threePhaseResistor"
+      ],
+      "checks": [
+        {
+          "signal": "i3.ia",
+          "mean": [
+            0.02,
+            0.03
+          ],
+          "value": 2.5464790894703255,
+          "tol": 0.06,
+          "why": "2/π of the 4 A fundamental"
+        },
+        {
+          "signal": "i3.ib",
+          "mean": [
+            0.02,
+            0.04
+          ],
+          "value": 0,
+          "tol": 0.05,
+          "why": "no DC in a balanced phase"
+        }
+      ]
+    },
+    {
+      "id": "dc-machines",
+      "title": "DC machines",
+      "area": "Machines",
+      "summary": "Permanent-magnet, shunt, and series DC machines on 100 V, with their shaft speeds.",
+      "about": [
+        "dcPmMachine",
+        "dcShuntMachine",
+        "dcSeriesMachine"
+      ],
+      "kinds": [
+        "dcPmMachine",
+        "dcSeriesMachine",
+        "dcShuntMachine",
+        "dcSource",
+        "ground",
+        "rotDamper",
+        "rotFixed",
+        "rotSpeedSensor"
+      ],
+      "checks": [
+        {
+          "signal": "pmw.w",
+          "value": 157.05263157894734,
+          "tol": 0.5,
+          "why": "no load: V / k"
+        },
+        {
+          "signal": "shw.w",
+          "value": 157.05263157894734,
+          "tol": 0.5,
+          "why": "no load at nominal field: V / k"
+        },
+        {
+          "signal": "sew.w",
+          "value": 149.2,
+          "tol": 1.5,
+          "why": "the damper is sized for the nominal point"
+        }
+      ]
+    },
+    {
+      "id": "ac-machines",
+      "title": "AC machines on the mains",
+      "area": "Machines",
+      "summary": "Induction, permanent-magnet, and reluctance machines started straight from a 50 Hz supply.",
+      "about": [
+        "inductionMachine",
+        "pmSyncMachine",
+        "reluctanceMachine",
+        "threePhaseSource"
+      ],
+      "kinds": [
+        "ground",
+        "inductionMachine",
+        "pmSyncMachine",
+        "reluctanceMachine",
+        "rotSpeedSensor",
+        "star",
+        "threePhaseSource"
+      ],
+      "checks": [
+        {
+          "signal": "imw.w",
+          "value": 157.07963267948966,
+          "tol": 0.5,
+          "why": "no load: slip close to zero"
+        },
+        {
+          "signal": "pmsw.w",
+          "value": 157.07963267948966,
+          "tol": 0.1,
+          "why": "in step at synchronous speed"
+        },
+        {
+          "signal": "relw.w",
+          "value": 157.07963267948966,
+          "tol": 0.1,
+          "why": "in step at synchronous speed"
+        }
+      ]
+    },
+    {
+      "id": "position-sensors",
+      "title": "Resolver and Hall sensor",
+      "area": "Machines",
+      "summary": "A shaft turning at 10 rad/s read by a resolver, a Hall sensor, and an angle sensor.",
+      "about": [
+        "resolver",
+        "hallSensor",
+        "constantSpeed"
+      ],
+      "kinds": [
+        "angleSensor",
+        "constantSpeed",
+        "hallSensor",
+        "resolver"
+      ],
+      "checks": [
+        {
+          "signal": "res.sin",
+          "at": 0.1,
+          "value": 0.8414709848078965,
+          "tol": 0.0001,
+          "why": "sin(10 rad/s · 0.1 s)"
+        },
+        {
+          "signal": "res.cos",
+          "at": 0.1,
+          "value": 0.5403023058681398,
+          "tol": 0.0001,
+          "why": "cos 1"
+        },
+        {
+          "signal": "res.nsin",
+          "at": 0.1,
+          "value": -0.8414709848078965,
+          "tol": 0.0001,
+          "why": "−sin 1"
+        },
+        {
+          "signal": "hall.y",
+          "at": 0.1,
+          "value": 5.141592653589793,
+          "tol": 0.001,
+          "why": "2 · 1 rad + π"
+        },
+        {
+          "signal": "hall.y",
+          "at": 0.5,
+          "value": 0.5752220392306207,
+          "tol": 0.001,
+          "why": "2 · 5 + π, wrapped"
+        },
+        {
+          "signal": "ang.y",
+          "value": 10,
+          "tol": 0.0001,
+          "why": "10 rad/s for 1 s"
+        }
+      ]
+    },
+    {
+      "id": "three-phase-loads",
+      "title": "Three-phase loads",
+      "area": "3-phase",
+      "summary": "A 10 V three-phase supply into a resistive star load, a series R–L star load, and a capacitor bank in delta.",
+      "about": [
+        "threePhaseResistor",
+        "threePhaseInductor",
+        "threePhaseCapacitor",
+        "star",
+        "delta",
+        "phaseA",
+        "phaseB",
+        "phaseC",
+        "threePhaseCurrentSensor",
+        "threePhasePowerSensor"
+      ],
+      "kinds": [
+        "delta",
+        "ground",
+        "phaseA",
+        "phaseB",
+        "phaseC",
+        "star",
+        "threePhaseCapacitor",
+        "threePhaseCurrentSensor",
+        "threePhaseInductor",
+        "threePhasePowerSensor",
+        "threePhaseResistor",
+        "threePhaseSource",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "p3.power",
+          "value": 15,
+          "tol": 0.001,
+          "why": "3 · (10 V)² / (2 · 10 Ω), constant in a balanced load"
+        },
+        {
+          "signal": "i3.ia",
+          "at": 0.085,
+          "value": 1,
+          "tol": 0.001,
+          "why": "10 V / 10 Ω at the phase a peak"
+        },
+        {
+          "signal": "il.ia",
+          "at": 0.0875,
+          "value": 0.7071067811865475,
+          "tol": 0.003,
+          "why": "10 V / |10 + j10| Ω, 45° after the voltage peak"
+        },
+        {
+          "signal": "ic.ia",
+          "at": 0.08,
+          "value": 0.9424777960769379,
+          "tol": 0.01,
+          "why": "√3 × the capacitor current √3 · 10 V · ωC, peaking at the phase voltage zero"
+        },
+        {
+          "signal": "va.y",
+          "at": 0.085,
+          "value": 10,
+          "tol": 0.001,
+          "why": "phase a peak"
+        },
+        {
+          "signal": "vb.y",
+          "at": 0.085,
+          "value": -4.999999999999998,
+          "tol": 0.001,
+          "why": "phase b lags a by 120°"
+        },
+        {
+          "signal": "vc.y",
+          "at": 0.085,
+          "value": -4.999999999999997,
+          "tol": 0.001,
+          "why": "phase c leads a by 120°"
+        }
+      ]
+    },
+    {
+      "id": "three-phase-transformer",
+      "title": "Three-phase transformer",
+      "area": "3-phase",
+      "summary": "A Dy1 transformer with ratio 2 steps 100 V phase voltage down into a star-connected load.",
+      "about": [
+        "threePhaseTransformer",
+        "threePhaseVoltageSensor"
+      ],
+      "kinds": [
+        "ground",
+        "star",
+        "threePhaseResistor",
+        "threePhaseSource",
+        "threePhaseTransformer",
+        "threePhaseVoltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "v3.va",
+          "min": -50.01,
+          "max": 50.01,
+          "why": "never above half of the 100 V input"
+        },
+        {
+          "signal": "v3.va",
+          "at": 0.08666666666666667,
+          "value": 50,
+          "tol": 1.5,
+          "why": "about 50 V, peaking 30° after the input (Dy1)"
+        }
+      ]
+    },
+    {
+      "id": "drivetrain",
+      "title": "Rotational drivetrain",
+      "area": "Mechanical",
+      "summary": "A torque step drives a motor inertia through a 2:1 gear and a shaft spring into a damped load, with every rotational sensor.",
+      "about": [
+        "torqueStep",
+        "rotInertia",
+        "idealGear",
+        "rotPowerSensor",
+        "torqueSensor",
+        "rotSpring",
+        "rotDamper",
+        "rotFixed",
+        "rotAccSensor",
+        "relSpeedSensor",
+        "rotSpeedSensor"
+      ],
+      "kinds": [
+        "idealGear",
+        "relSpeedSensor",
+        "rotAccSensor",
+        "rotDamper",
+        "rotFixed",
+        "rotInertia",
+        "rotPowerSensor",
+        "rotSpeedSensor",
+        "rotSpring",
+        "torqueSensor",
+        "torqueStep"
+      ],
+      "checks": [
+        {
+          "signal": "w2.w",
+          "value": 19.987465466031033,
+          "tol": 0.05,
+          "why": "2 N·m / 0.1 N·m·s, τ = (0.04 + 4 · 0.01) / 0.1 = 0.8 s"
+        },
+        {
+          "signal": "tq.y",
+          "value": 2,
+          "tol": 0.02,
+          "why": "twice the 1 N·m after the gear"
+        },
+        {
+          "signal": "pw.power",
+          "value": 40,
+          "tol": 0.5,
+          "why": "2 N·m · 20 rad/s"
+        },
+        {
+          "signal": "acc.a",
+          "at": 0.101,
+          "value": 100,
+          "tol": 2,
+          "why": "1 N·m / 0.01 kg·m²: at first only the motor moves, as the shaft has not twisted yet"
+        },
+        {
+          "signal": "dw.w_rel",
+          "value": 0,
+          "tol": 0.05,
+          "why": "no twisting once settled"
+        }
+      ]
+    },
+    {
+      "id": "rotational-sources",
+      "title": "Clutch, backlash, and rotational sources",
+      "area": "Mechanical",
+      "summary": "A clutch that locks, gear backlash, a spring-damper coupling, and a load that steps its torque.",
+      "about": [
+        "clutch",
+        "rotBacklash",
+        "speedSource",
+        "torqueSource",
+        "constantTorque",
+        "springDamper",
+        "shaftLoad",
+        "inertia",
+        "sensor"
+      ],
+      "kinds": [
+        "clutch",
+        "constant",
+        "constantTorque",
+        "inertia",
+        "rotBacklash",
+        "rotInertia",
+        "rotSpeedSensor",
+        "sensor",
+        "shaftLoad",
+        "sine",
+        "speedSource",
+        "springDamper",
+        "step",
+        "torqueSource"
+      ],
+      "checks": [
+        {
+          "signal": "wc.w",
+          "at": 0.45,
+          "value": 0,
+          "tol": 0.000001,
+          "why": "clutch open"
+        },
+        {
+          "signal": "wc.w",
+          "value": 100,
+          "tol": 0.001,
+          "why": "locked to the source"
+        },
+        {
+          "signal": "wb.w",
+          "at": 0.03,
+          "value": 0,
+          "tol": 0.000001,
+          "why": "the gap is not yet taken up"
+        },
+        {
+          "signal": "wb.w",
+          "at": 0.25,
+          "value": 10,
+          "tol": 0.3,
+          "why": "in contact: follows the source"
+        },
+        {
+          "signal": "ws.y",
+          "value": 10,
+          "tol": 0.1,
+          "why": "0.5 N·m / 0.05 N·m·s"
+        },
+        {
+          "signal": "wl.w",
+          "at": 0.45,
+          "value": 70.51932343421802,
+          "tol": 0.5,
+          "why": "(0.4 − 0.05) N·m against J = 0.002, d = 0.001"
+        },
+        {
+          "signal": "wl.w",
+          "value": 32.48851893963322,
+          "tol": 0.5,
+          "why": "the load torque now equals the drive: it coasts down with τ = 2 s"
+        }
+      ]
+    },
+    {
+      "id": "wheel-road",
+      "title": "Wheel and rack",
+      "area": "Mechanical",
+      "summary": "A wheel turns axle torque into force on a vehicle mass, and a rack and pinion turns speed into travel.",
+      "about": [
+        "rollingWheel",
+        "gearR2T"
+      ],
+      "kinds": [
+        "constantSpeed",
+        "constantTorque",
+        "gearR2T",
+        "mass",
+        "positionSensor",
+        "rollingWheel",
+        "rotInertia",
+        "transDamper",
+        "transFixed",
+        "velocitySensor"
+      ],
+      "checks": [
+        {
+          "signal": "v.v",
+          "value": 8.616573884221964,
+          "tol": 0.02,
+          "why": "F / d with m = 100 kg + J / r²"
+        },
+        {
+          "signal": "s.s",
+          "value": 2,
+          "tol": 0.0001,
+          "why": "10 rad/s / 100 rad/m for 20 s"
+        }
+      ]
+    },
+    {
+      "id": "mass-spring-damper",
+      "title": "Mass, spring, and damper",
+      "area": "Mechanical",
+      "summary": "Two 1 kg masses on 100 N/m springs and 2 N·s/m dampers, pushed by 1 N, with every translational sensor.",
+      "about": [
+        "mass",
+        "transSpringDamper",
+        "transSpring",
+        "transDamper",
+        "transFixed",
+        "forceStep",
+        "constantForce",
+        "forceSensor",
+        "positionSensor",
+        "velocitySensor",
+        "transAccSensor",
+        "relPositionSensor"
+      ],
+      "kinds": [
+        "constantForce",
+        "forceSensor",
+        "forceStep",
+        "mass",
+        "positionSensor",
+        "relPositionSensor",
+        "transAccSensor",
+        "transDamper",
+        "transFixed",
+        "transSpring",
+        "transSpringDamper",
+        "velocitySensor"
+      ],
+      "checks": [
+        {
+          "signal": "x1.s",
+          "value": 0.01,
+          "tol": 0.0001,
+          "why": "1 N / 100 N/m"
+        },
+        {
+          "signal": "x2.s",
+          "value": 0.01,
+          "tol": 0.0001,
+          "why": "1 N / 100 N/m"
+        },
+        {
+          "signal": "x2.s",
+          "at": 0.3157419416998276,
+          "value": 0.017292476142876708,
+          "tol": 0.0001,
+          "why": "peak overshoot of a ζ = 0.1 system"
+        },
+        {
+          "signal": "fs.f",
+          "value": 1,
+          "tol": 0.000001,
+          "why": "the applied 1 N"
+        },
+        {
+          "signal": "a1.a",
+          "at": 0.1001,
+          "value": 1,
+          "tol": 0.01,
+          "why": "F / m at the instant of the step"
+        },
+        {
+          "signal": "v1.v",
+          "value": 0,
+          "tol": 0.0001,
+          "why": "at rest"
+        },
+        {
+          "signal": "ds.s_rel",
+          "value": -0.01,
+          "tol": 0.0001,
+          "why": "the wall end is 1 cm behind the mass end"
+        }
+      ]
+    },
+    {
+      "id": "end-stops",
+      "title": "End stops and motion sources",
+      "area": "Mechanical",
+      "summary": "A sliding mass that hits its stops, a mass pushed into an elastic stop, and masses driven by speed and position sources.",
+      "about": [
+        "massStops",
+        "hardStop",
+        "forceSource",
+        "transSpeedSource",
+        "positionSource"
+      ],
+      "kinds": [
+        "constant",
+        "constantForce",
+        "forceSource",
+        "hardStop",
+        "mass",
+        "massStops",
+        "positionSensor",
+        "positionSource",
+        "sine",
+        "transFixed",
+        "transSpeedSource",
+        "velocitySensor"
+      ],
+      "checks": [
+        {
+          "signal": "xs.s",
+          "min": -0.5001,
+          "max": 0.5001,
+          "why": "never beyond the stops"
+        },
+        {
+          "signal": "xs.s",
+          "at": 0.9,
+          "value": 0.5,
+          "tol": 0.000001,
+          "why": "held against the upper stop"
+        },
+        {
+          "signal": "xh.s",
+          "value": 0.15001,
+          "tol": 0.0001,
+          "why": "starts at the wall position 0.1 m, travels the 5 cm free length, then compresses 10 N / 10⁶ N/m"
+        },
+        {
+          "signal": "vv.v",
+          "value": 0.2,
+          "tol": 0.0001,
+          "why": "the reference speed"
+        },
+        {
+          "signal": "xp.s",
+          "at": 0.5,
+          "value": 0.1,
+          "tol": 0.002,
+          "why": "follows the reference peak at 0.5 s"
+        }
+      ]
+    },
+    {
+      "id": "cooling",
+      "title": "Cooling a hot part",
+      "area": "Thermal",
+      "summary": "A 10 W part cools through a thermal resistance into a heatsink that convects and radiates to 20 °C.",
+      "about": [
+        "heatCapacitor",
+        "fixedHeatFlow",
+        "heatFlowSensor",
+        "thermalResistor",
+        "convection",
+        "fixedTemperature",
+        "radiation",
+        "temperatureSensor",
+        "relTemperatureSensor",
+        "prescribedTemperature",
+        "thermalConductor",
+        "prescribedHeatFlow"
+      ],
+      "kinds": [
+        "constant",
+        "convection",
+        "fixedHeatFlow",
+        "fixedTemperature",
+        "heatCapacitor",
+        "heatFlowSensor",
+        "prescribedHeatFlow",
+        "prescribedTemperature",
+        "radiation",
+        "relTemperatureSensor",
+        "step",
+        "temperatureSensor",
+        "thermalConductor",
+        "thermalResistor"
+      ],
+      "checks": [
+        {
+          "signal": "Tp.T",
+          "value": 315.12717515786323,
+          "tol": 0.05,
+          "why": "heatsink balance of convection and radiation, plus 10 W · 2 K/W"
+        },
+        {
+          "signal": "qflow.Q_flow",
+          "value": 10,
+          "tol": 0.01,
+          "why": "all of the 10 W flows to the heatsink"
+        },
+        {
+          "signal": "dT.T_rel",
+          "value": 20,
+          "tol": 0.02,
+          "why": "port a is 10 W · 2 K/W hotter than port b"
+        },
+        {
+          "signal": "Tb.T",
+          "at": 1400,
+          "value": 350,
+          "tol": 0.01,
+          "why": "held at 350 K through 1 W/K"
+        },
+        {
+          "signal": "Tb.T",
+          "value": 370,
+          "tol": 0.01,
+          "why": "20 W / 1 W/K above 350 K"
+        }
+      ]
+    },
+    {
+      "id": "magnetic-core",
+      "title": "Magnetic circuits",
+      "area": "Magnetic",
+      "summary": "A 100-turn winding drives flux through an air gap and a core, next to magnetic sources and a variable reluctance.",
+      "about": [
+        "winding",
+        "reluctance",
+        "permeance",
+        "magneticGround",
+        "fluxSensor",
+        "mmfSensor",
+        "mmfSource",
+        "variableReluctance",
+        "signalMmfSource",
+        "fluxSource"
+      ],
+      "kinds": [
+        "dcSource",
+        "fluxSensor",
+        "fluxSource",
+        "ground",
+        "magneticGround",
+        "mmfSensor",
+        "mmfSource",
+        "permeance",
+        "reluctance",
+        "resistor",
+        "signalMmfSource",
+        "sine",
+        "step",
+        "variableReluctance",
+        "winding"
+      ],
+      "checks": [
+        {
+          "signal": "phi.Phi",
+          "value": 0.0000909090909090909,
+          "tol": 1e-7,
+          "why": "100 A over 1.1 · 10⁶ A/Wb"
+        },
+        {
+          "signal": "phi.Phi",
+          "at": 0.0091,
+          "value": 0.00005746550534805069,
+          "tol": 0.000001,
+          "why": "one L/R time constant"
+        },
+        {
+          "signal": "umm.V_m",
+          "value": 90.9090909090909,
+          "tol": 0.01,
+          "why": "the gap takes 10/11 of the mmf"
+        },
+        {
+          "signal": "phi2.Phi",
+          "at": 0.05,
+          "value": 0.000033333333333333335,
+          "tol": 1e-9,
+          "why": "100 A over 3 · 10⁶ A/Wb"
+        },
+        {
+          "signal": "phi3.Phi",
+          "value": 0.00005,
+          "tol": 1e-9,
+          "why": "50 A · 1 µWb/A"
+        },
+        {
+          "signal": "umm2.V_m",
+          "value": 1000,
+          "tol": 0.001,
+          "why": "1 mWb · 10⁶ A/Wb: the source drives its flux out of n into the reluctance"
+        }
+      ]
+    }
+  ],
+  "showcase": [
+    {
+      "id": "buck",
+      "title": "Buck converter · Ideal switches",
+      "kinds": [
+        "capacitor",
+        "currentSensor",
+        "dcSource",
+        "ground",
+        "idealSwitch",
+        "inductor",
+        "pwmPair",
+        "resistor",
+        "voltageSensor"
+      ]
+    },
+    {
+      "id": "datacenter",
+      "title": "Data center cooling control",
+      "kinds": [
+        "booleanStep",
+        "closingSwitch",
+        "connport",
+        "constant",
+        "dcSource",
+        "gain",
+        "ground",
+        "heatCapacitor",
+        "heatFlowSensor",
+        "heatingResistor",
+        "inport",
+        "min",
+        "outport",
+        "pi",
+        "prescribedHeatFlow",
+        "pulse",
+        "signalCurrent",
+        "subsystem",
+        "subtract",
+        "sum",
+        "temperatureSensor",
+        "thermalConductor"
+      ]
+    },
+    {
+      "id": "dc",
+      "title": "Motor speed control",
+      "kinds": [
+        "ground",
+        "inertia",
+        "motor",
+        "pi",
+        "sensor",
+        "step",
+        "voltage"
+      ]
+    },
+    {
+      "id": "ev",
+      "title": "EV drivetrain",
+      "kinds": [
+        "batteryStack",
+        "connport",
+        "currentSensor",
+        "dcPmMachine",
+        "ground",
+        "idealGear",
+        "inport",
+        "mass",
+        "motor",
+        "outport",
+        "pid",
+        "product",
+        "ramp",
+        "rollingWheel",
+        "rotInertia",
+        "saturation",
+        "signalCurrent",
+        "signalVoltage",
+        "subsystem",
+        "subtract",
+        "transDamper",
+        "transFixed",
+        "velocitySensor",
+        "voltageSensor"
+      ]
+    },
+    {
+      "id": "flyback",
+      "title": "480 VAC → 24 VDC flyback",
+      "kinds": [
+        "capacitor",
+        "closingSwitch",
+        "currentSensor",
+        "diodeBridge",
+        "filter",
+        "gain",
+        "ground",
+        "idealDiode",
+        "idealTransformer",
+        "inductor",
+        "inport",
+        "outport",
+        "pi",
+        "pwmSignal",
+        "ramp",
+        "resistor",
+        "saturation",
+        "sine",
+        "subsystem",
+        "voltage",
+        "voltageSensor"
+      ]
+    },
+    {
+      "id": "foc",
+      "title": "PMSM · Field-oriented control",
+      "kinds": [
+        "clarke",
+        "constant",
+        "currentPI",
+        "gain",
+        "integrator",
+        "inversePark",
+        "inverter",
+        "park",
+        "pmsm",
+        "saturation",
+        "shaftLoad",
+        "step",
+        "subtract",
+        "sum"
+      ]
+    },
+    {
+      "id": "servo",
+      "title": "Servo position control",
+      "kinds": [
+        "angleSensor",
+        "discretePID",
+        "ground",
+        "inertia",
+        "motor",
+        "step",
+        "voltage"
+      ]
+    }
+  ]
+}

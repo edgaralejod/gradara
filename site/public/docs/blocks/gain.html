@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-functions.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -37,6 +38,13 @@
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Multiplies its input by a constant. Use it for fixed scaling, unit conversion, and proportional control.</p>
 <p>The block has no state and passes changes straight through.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Math functions</strong> Gain, absolute value, square root, sign, negation, and power of a sine; sine and cosine of time.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-c051777b"><span class="diagram x-d590005e"><svg class="diagram-wires" viewBox="-4 40 676 864" width="676" height="864" aria-hidden="true"><polyline points="256,208 256,96 392,96" stroke="#1f5fbf"></polyline><polyline points="256,208 392,208" stroke="#1f5fbf"></polyline><polyline points="472,208 568,208" stroke="#1f5fbf"></polyline><polyline points="256,320 392,320" stroke="#1f5fbf"></polyline><polyline points="256,432 392,432" stroke="#1f5fbf"></polyline><polyline points="256,432 256,544 392,544" stroke="#1f5fbf"></polyline><polyline points="256,712 392,712" stroke="#1f5fbf"></polyline><polyline points="256,712 256,824 392,824" stroke="#1f5fbf"></polyline><polyline points="256,320 256,208" stroke="#1f5fbf"></polyline><polyline points="120,320 256,320" stroke="#1f5fbf"></polyline><polyline points="256,320 256,432" stroke="#1f5fbf"></polyline><polyline points="120,712 256,712" stroke="#1f5fbf"></polyline><circle cx="256" cy="208" r="3.5" fill="#1f5fbf"></circle><circle cx="256" cy="320" r="3.5" fill="#1f5fbf"></circle><circle cx="256" cy="432" r="3.5" fill="#1f5fbf"></circle><circle cx="256" cy="712" r="3.5" fill="#1f5fbf"></circle></svg><span><span class="diagram-block x-050269ee"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M4 22C10 22 12 8 18 8S26 36 32 36 38 8 44 8 50 22 56 22"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-2a8e2a18">u = 2 sin(πt/2)</span></span><span><span class="diagram-block x-8fd0b938"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-gain x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="1,1 99,50 1,99"></polygon></svg><span class="block-symbol"><span class="gain-value">0.5</span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-f2507380">Gain 0.5</span></span><span><span class="diagram-block x-5449d3b2"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">|u|</span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-2bae7f45">|u|</span></span><span><span class="diagram-block x-6b1f36e1"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M8 24H16L20 34L32 8H54"></path></g></svg></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-c3b926c9">√|u|</span></span><span><span class="diagram-block x-71056987"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">sgn</span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-6a37ca90">sign(u)</span></span><span><span class="diagram-block x-c32795fd"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">−</span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-a76acadc">−u</span></span><span><span class="diagram-block x-e6d23ea0"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">uⁿ</span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-fdd83499">u²</span></span><span><span class="diagram-block x-31f645b3"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><circle cx="30" cy="22" r="14"></circle><path d="M30 12V22L38 26"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-ca8297e4">Time</span></span><span><span class="diagram-block x-567e7ca7"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">sin</span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-74048872">sin(t)</span></span><span><span class="diagram-block x-17669385"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="math-op">cos</span></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-6f4654fa">cos(t)</span></span></span></span></div>
+<figcaption>In Gradara, select a Gain block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/sine">Sine wave</a><a href="/docs/blocks/clock">Clock</a><a href="/docs/blocks/abs">Abs</a><a href="/docs/blocks/sign">Sign</a><a href="/docs/blocks/sqrt">Sqrt</a><a href="/docs/blocks/sineOp">Sin</a><a href="/docs/blocks/cosineOp">Cos</a><a href="/docs/blocks/unaryMinus">Unary minus</a><a href="/docs/blocks/power">Power</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -71,9 +79,10 @@
 <ul>
 <li>The gain is fixed during a run. For a gain that changes, multiply by a signal with Product.</li></ul></div></section>
 <section class="doc-section">
-<h2 id="examples"><a class="anchor" href="#examples">Examples</a></h2>
-<p class="muted">Used in these shipped examples. Open them from <strong>Examples</strong> in the app.</p>
+<h2 id="examples"><a class="anchor" href="#examples">Used in</a></h2>
+<p class="muted">These larger examples use it too. Open them from <strong>Examples</strong> in the app.</p>
 <ul class="example-list">
+<li>Data center cooling control</li>
 <li>480 VAC → 24 VDC flyback</li>
 <li>PMSM · Field-oriented control</li></ul></section>
 <section class="doc-section">
@@ -85,7 +94,7 @@
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Math"><a class="prev" href="/docs/blocks/subtract"><small>Previous</small>Subtract</a><a class="next" href="/docs/blocks/product"><small>Next</small>Product</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>217</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -128,10 +137,12 @@
 <li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
 <li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
 <li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
-<details data-group=""><summary>Routing <span>4</span></summary>
+<details data-group=""><summary>Routing <span>6</span></summary>
 <ul>
 <li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
 <li data-name="demux demux"><a href="/docs/blocks/demux">Demux</a></li>
+<li data-name="bus creator buscreator"><a href="/docs/blocks/busCreator">Bus Creator</a></li>
+<li data-name="bus selector busselector"><a href="/docs/blocks/busSelector">Bus Selector</a></li>
 <li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
 <li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
 <details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
@@ -150,11 +161,6 @@
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -347,12 +353,13 @@
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#parameters">Parameters</a></li>
 <li><a href="#equations">Equations</a></li>
 <li><a href="#implementation">Implementation</a></li>
 <li><a href="#limitations">Limitations</a></li>
-<li><a href="#examples">Examples</a></li>
+<li><a href="#examples">Used in</a></li>
 <li><a href="#see-also">See also</a></li></ul></nav></div>
 <footer class="site-footer">
 <div class="wrap docs-wrap footer-inner">

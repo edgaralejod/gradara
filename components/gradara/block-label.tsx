@@ -30,6 +30,7 @@ export default function BlockLabel({
     drag = useRef<Drag | null>(null),
     frame = useRef<number | null>(null);
   const [preview, setPreview] = useState<Offset | null>(null);
+  const [renaming, setRenaming] = useState(false);
   useEffect(
     () => () => {
       if (frame.current !== null) cancelAnimationFrame(frame.current);
@@ -70,6 +71,35 @@ export default function BlockLabel({
         if (drag.current) setPreview({ ...drag.current.current });
       });
   };
+  if (renaming && editing)
+    return (
+      <input
+        className="block-name block-name-editor nodrag nopan nowheel"
+        aria-label={`Name of ${name}`}
+        defaultValue={name}
+        autoFocus
+        size={Math.max(6, name.length + 2)}
+        style={{
+          transform: `translate(calc(-50% + ${position.x}px), ${position.y}px)`,
+        }}
+        onFocus={(event) => event.currentTarget.select()}
+        onPointerDown={(event) => event.stopPropagation()}
+        onDoubleClick={(event) => event.stopPropagation()}
+        onBlur={(event) => {
+          setRenaming(false);
+          const next = event.currentTarget.value.trim();
+          if (next && next !== name) editing.onRename(id, next);
+        }}
+        onKeyDown={(event) => {
+          event.stopPropagation();
+          if (event.key === 'Enter') event.currentTarget.blur();
+          else if (event.key === 'Escape') {
+            event.currentTarget.value = name;
+            event.currentTarget.blur();
+          }
+        }}
+      />
+    );
   return (
     <button
       ref={element}
@@ -77,8 +107,8 @@ export default function BlockLabel({
       data-label-id={id}
       type="button"
       tabIndex={0}
-      aria-label={`Move ${name} label`}
-      title="Drag to move name · Double-click to reset · Arrow keys to nudge"
+      aria-label={`${name}: drag to move the name, double-click to rename`}
+      title="Drag to move · Double-click to rename · Arrow keys to nudge · Home to put it back"
       style={{
         transform: `translate(calc(-50% + ${position.x}px), ${position.y}px)`,
       }}
@@ -127,7 +157,7 @@ export default function BlockLabel({
         event.preventDefault();
         event.stopPropagation();
         release();
-        editing?.onMove(id, undefined);
+        if (editing) setRenaming(true);
       }}
       onKeyDown={(event) => {
         const key = event.key;
@@ -155,6 +185,11 @@ export default function BlockLabel({
             x: position.x + delta[key].x * step,
             y: position.y + delta[key].y * step,
           });
+        }
+        if (key === 'Enter' || key === 'F2') {
+          event.preventDefault();
+          event.stopPropagation();
+          if (editing) setRenaming(true);
         }
         if (key === 'Home') {
           event.preventDefault();

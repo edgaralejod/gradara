@@ -201,6 +201,7 @@ type Props = Omit<
   onLayout: (layouts: BlockLayout[], options?: { free?: boolean }) => void;
   onLabelOffset: (id: string, offset: Block['labelOffset']) => void;
   onLabelSelect: (id: string) => void;
+  onLabelRename: (id: string, name: string) => void;
   /** The open sheet (subsystem path); the view refits when it changes. */
   sheet?: string;
 };
@@ -216,6 +217,7 @@ export default function ModelCanvas({
   onLayout,
   onLabelOffset,
   onLabelSelect,
+  onLabelRename,
   sheet,
   ...props
 }: Props) {
@@ -245,8 +247,12 @@ export default function ModelCanvas({
   const gestures = useRef(new CanvasGestures());
   const paintFrame = useRef<number | null>(null);
   const labelEditing = useMemo(
-    () => ({ onMove: onLabelOffset, onSelect: onLabelSelect }),
-    [onLabelOffset, onLabelSelect],
+    () => ({
+      onMove: onLabelOffset,
+      onSelect: onLabelSelect,
+      onRename: onLabelRename,
+    }),
+    [onLabelOffset, onLabelSelect, onLabelRename],
   );
   useEffect(
     () => () => {

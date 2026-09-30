@@ -28,7 +28,8 @@ def instance_ports(subsystem: 'Subsystem') -> list[Port]:
     for block in boundary_blocks(subsystem):
         inner = block.definition.ports[0]
         ports.append(Port(id=block.id, name=block.definition.name, direction=BOUNDARY_KINDS[block.definition.kind],
-                          domain=inner.domain, unit=inner.unit, side=block.definition.boundary.side))
+                          domain=inner.domain, unit=inner.unit, side=block.definition.boundary.side,
+                          width=inner.width, elements=inner.elements))
     return ports
 
 

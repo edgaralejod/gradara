@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
+  definitionFor,
   initialProject,
   library,
   type Block,
@@ -15,8 +16,7 @@ import {
 import { portPoint } from '../lib/gradara/ports';
 import { GRID } from '../lib/gradara/grid';
 
-const definition = (kind: string) =>
-  structuredClone(library.find((d) => d.kind === kind)!);
+const definition = (kind: string) => structuredClone(definitionFor(kind)!);
 const far = { x: 5000, y: 5000 };
 
 function add(project: Project, block: Block, wires: Project['wires']): Project {

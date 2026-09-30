@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  definitionFor,
   initialProject,
   library,
   type Block,
@@ -36,7 +37,7 @@ import { selfIntersects } from '../lib/gradara/routing';
 function block(kind: string, id: string, x: number, y: number): Block {
   return {
     id,
-    definition: structuredClone(library.find((d) => d.kind === kind)!),
+    definition: structuredClone(definitionFor(kind)!),
     position: { x, y },
   };
 }

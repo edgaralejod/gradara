@@ -177,8 +177,8 @@ async def load_model(model_id: str):
 
 @app.get('/api/examples/{example_id}')
 async def load_example(example_id: str):
-    if example_id not in {'dc','foc','buck','flyback','datacenter','servo','ev'}: raise HTTPException(404,'Example not found.')
-    path = EXAMPLES/f'{example_id}.json'
+    path = workspace.template_path(EXAMPLES, example_id)
+    if path is None: raise HTTPException(404,'Example not found.')
     if not path.exists(): raise HTTPException(404,'Example is unavailable.')
     data = json.loads(path.read_text(encoding='utf-8'))
     data['modelId'] = uuid.uuid4().hex
@@ -277,8 +277,13 @@ async def full_result_data(run_id: str):
         with (folder/'simulation_res.csv').open(encoding='utf-8') as stream:
             rows = [row for row in csv.DictReader(stream) if float(row['time']) <= result['duration'] + max(1e-12, result['duration']*1e-12)]
         result['time'] = [float(row['time']) for row in rows]
+        from .engine import result_columns
+        column = result_columns(folder, rows)  # constants and aliases are not CSV columns
         for series in result['series']:
-            series['values'] = [float(row[series['key']]) for row in rows]
+            values = column(series['key'])
+            if values is None:
+                raise ValueError(f"Stored results lack {series['key']}.")
+            series['values'] = values
         if not all(math.isfinite(v) for v in result['time']) or not all(math.isfinite(v) for s in result['series'] for v in s['values']):
             raise ValueError('Non-finite samples in stored results.')
         return result

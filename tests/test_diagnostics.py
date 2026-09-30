@@ -37,7 +37,7 @@ def test_unconnected_inputs_name_the_block_and_port():
 
 def test_drawing_only_blocks_are_reported_individually():
     model = feedback()
-    model.blocks[0].definition.kind = 'mux'
+    model.blocks[0].definition.kind = 'subsystem'
     model.blocks[0].definition.generated = False
     model.blocks[0].definition.ports = [p for p in model.blocks[0].definition.ports if p.direction != 'input']
     with pytest.raises(SimulationFailure, match='full simulation behavior') as failure:

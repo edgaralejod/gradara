@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-nonlinear.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -36,6 +37,13 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Clamps its input between a lower and an upper limit. Inside the limits the input passes unchanged.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Nonlinearities</strong> Saturation, dead zone, relay, and rate limiter acting on the same sine.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-6c985886"><span class="diagram x-79762465"><svg class="diagram-wires" viewBox="-12 40 524 472" width="524" height="472" aria-hidden="true"><polyline points="256,208 256,96 392,96" stroke="#1f5fbf"></polyline><polyline points="256,208 392,208" stroke="#1f5fbf"></polyline><polyline points="256,320 392,320" stroke="#1f5fbf"></polyline><polyline points="256,320 256,432 392,432" stroke="#1f5fbf"></polyline><polyline points="256,264 256,208" stroke="#1f5fbf"></polyline><polyline points="256,264 256,320" stroke="#1f5fbf"></polyline><polyline points="120,264 256,264" stroke="#1f5fbf"></polyline><circle cx="256" cy="208" r="3.5" fill="#1f5fbf"></circle><circle cx="256" cy="320" r="3.5" fill="#1f5fbf"></circle><circle cx="256" cy="264" r="3.5" fill="#1f5fbf"></circle></svg><span><span class="diagram-block x-e6b1f42f"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M4 22C10 22 12 8 18 8S26 36 32 36 38 8 44 8 50 22 56 22"></path></g></svg></span></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-bb3de5eb">Sine, amplitude 2</span></span><span><span class="diagram-block x-b2b6d21c"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path class="symbol-axis" d="M7 22H53M30 5V39"></path><path d="M6 34H20L40 10H54"></path></g></svg></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-3f8c21f1">Saturation ±1</span></span><span><span class="diagram-block x-aedd71fb"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path class="symbol-axis" d="M7 22H53M30 5V39"></path><path d="M6 36L22 22H38L54 8"></path></g></svg></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-2d134eda">Dead zone ±0.5</span></span><span><span class="diagram-block x-36881a5c"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path class="symbol-axis" d="M7 22H53M30 5V39"></path><path d="M8 34H28V10H52"></path></g></svg></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-16c735ed">Relay</span></span><span><span class="diagram-block x-287c890a"><span class="diagram-turn x-43bf891d"><span class="block-preview x-38a224e5" aria-hidden="true"><span class="block-preview-body x-f4f810b5"><span class="block-face shape-box x-61b0782b" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="xMidYMid meet"><g><path d="M6 36H18L42 8H54"></path></g></svg></span></span><span class="preview-terminal terminal-left  x-0e89e25e"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-d98b2f2b">Rate limit 2/s</span></span></span></span></div>
+<figcaption>In Gradara, select a Saturation block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/sine">Sine wave</a><a href="/docs/blocks/deadzone">Dead zone</a><a href="/docs/blocks/relay">Relay</a><a href="/docs/blocks/rateLimiter">Rate limiter</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -78,8 +86,8 @@
 <ul>
 <li>To limit an integrator itself rather than its output, use Limited integrator.</li></ul></div></section>
 <section class="doc-section">
-<h2 id="examples"><a class="anchor" href="#examples">Examples</a></h2>
-<p class="muted">Used in these shipped examples. Open them from <strong>Examples</strong> in the app.</p>
+<h2 id="examples"><a class="anchor" href="#examples">Used in</a></h2>
+<p class="muted">These larger examples use it too. Open them from <strong>Examples</strong> in the app.</p>
 <ul class="example-list">
 <li>EV drivetrain</li>
 <li>480 VAC → 24 VDC flyback</li>
@@ -94,7 +102,7 @@
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Nonlinear"><span></span><a class="next" href="/docs/blocks/deadzone"><small>Next</small>Dead zone</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>217</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -137,10 +145,12 @@
 <li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
 <li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
 <li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
-<details data-group=""><summary>Routing <span>4</span></summary>
+<details data-group=""><summary>Routing <span>6</span></summary>
 <ul>
 <li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
 <li data-name="demux demux"><a href="/docs/blocks/demux">Demux</a></li>
+<li data-name="bus creator buscreator"><a href="/docs/blocks/busCreator">Bus Creator</a></li>
+<li data-name="bus selector busselector"><a href="/docs/blocks/busSelector">Bus Selector</a></li>
 <li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
 <li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
 <details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
@@ -159,11 +169,6 @@
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -356,13 +361,14 @@
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#parameters">Parameters</a></li>
 <li><a href="#equations">Equations</a></li>
 <li><a href="#implementation">Implementation</a></li>
 <li><a href="#limitations">Limitations</a></li>
 <li><a href="#tips">Tips</a></li>
-<li><a href="#examples">Examples</a></li>
+<li><a href="#examples">Used in</a></li>
 <li><a href="#see-also">See also</a></li></ul></nav></div>
 <footer class="site-footer">
 <div class="wrap docs-wrap footer-inner">

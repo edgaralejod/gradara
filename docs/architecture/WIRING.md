@@ -121,6 +121,8 @@ Grouping (⌘/Ctrl+G) cuts every wire that crosses the selection boundary. The o
 
 Signal nets permit at most one output driver; required signal inputs must be connected for simulation. Physical nets join compatible terminals through Modelica potential/flow semantics. The frontend and backend flatten connected components consistently; physical emission uses a unique spanning tree. Ports on the same block remain separate graph vertices.
 
+A signal net may carry a bus: the width of its driver's port (`lib/gradara/buses.ts`). Drawing a bus into a one-signal input is allowed and reported as a model problem rather than refused, as in Simulink, so the user sees the wire and the fix. Every wire of a net with a bus port is drawn heavy (`busWireIds`), junction to junction too, with a smaller arrowhead so it keeps the normal size.
+
 Waypoints, junction positions, names, and label placement are presentation metadata. Geometry-only changes must preserve emitted connections and simulation identity. Python validates unique net IDs, complete/disjoint wire ownership, connected membership, anchors, and label attachment. See [execution](EXECUTION.md) for compilation and result validity.
 
 ## Implementation and verification

@@ -315,7 +315,6 @@ void test('library kinds are unique and cover the drawing catalog', () => {
     'sine',
     'pid',
     'mux',
-    'scope',
     'resistor',
     'subsystem',
     'gain',

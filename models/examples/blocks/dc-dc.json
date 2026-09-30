@@ -1,0 +1,2310 @@
+{
+  "version": 1,
+  "name": "Example: DC-DC converters",
+  "exampleId": "block-dc-dc",
+  "description": "Each converter is switched by a 10 kHz PWM generator at a duty cycle of 0.5 and filtered by 1 mH and 100 µF. The buck halves 24 V to 12 V. The boost doubles 12 V to 24 V, 12 V / (1 − 0.5). The half-bridge is driven with complementary gates, so it boosts the same way while its upper switch rectifies synchronously. Zoom into the output to see the switching ripple.",
+  "duration": 0.05,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "aduty",
+      "definition": {
+        "kind": "constant",
+        "name": "Duty A 0.5",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 320,
+        "y": 320
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "apwm",
+      "definition": {
+        "kind": "pwmSignal",
+        "name": "PWM 10 kHz",
+        "description": "Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.",
+        "domain": "boolean",
+        "category": "converters",
+        "symbol": "PWM",
+        "ports": [
+          {
+            "id": "dutyCycle",
+            "name": "d",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "fire",
+            "name": "fire",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          },
+          {
+            "id": "notFire",
+            "name": "fire̅",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f",
+            "name": "Switching frequency",
+            "value": 10000,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.Control.SignalPWM from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "modulator",
+          "duty cycle",
+          "switching"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.Control.SignalPWM",
+          "modifiers": {
+            "useConstantDutyCycle": "false",
+            "f": "f"
+          }
+        }
+      },
+      "position": {
+        "x": 488,
+        "y": 304
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "ac",
+      "definition": {
+        "kind": "capacitor",
+        "name": "C A 100 µF",
+        "symbol": "C",
+        "domain": "electrical",
+        "description": "An ideal capacitor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance",
+            "value": 0.0001,
+            "unit": "F",
+            "min": 1e-12
+          }
+        ],
+        "equations": "i = C*der(v);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 888,
+        "y": 112
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "ar",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load A 10 Ω",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1016,
+        "y": 112
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 76,
+        "y": -54
+      }
+    },
+    {
+      "id": "av",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v out A",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1176,
+        "y": 112
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 60,
+        "y": -54
+      }
+    },
+    {
+      "id": "asrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "24 V",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 24,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 336,
+        "y": 112
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -48,
+        "y": -54
+      }
+    },
+    {
+      "id": "ag",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (buck)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 336,
+        "y": 232
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "aconv",
+      "definition": {
+        "kind": "buckConverter",
+        "name": "Buck",
+        "description": "Switched step-down chopper (transistor and freewheeling diode); fire drives the transistor.",
+        "domain": "electrical",
+        "category": "converters",
+        "symbol": "buck",
+        "ports": [
+          {
+            "id": "dc_p1",
+            "name": "in+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_n1",
+            "name": "in−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_p2",
+            "name": "out+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "dc_n2",
+            "name": "out−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "fire_p",
+            "name": "fire",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "RonTransistor",
+            "name": "Transistor on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "RonDiode",
+            "name": "Diode on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.ChopperStepDown from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "chopper",
+          "step-down",
+          "dc-dc",
+          "smps"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.ChopperStepDown",
+          "modifiers": {
+            "RonTransistor": "RonTransistor",
+            "RonDiode": "RonDiode"
+          }
+        }
+      },
+      "position": {
+        "x": 488,
+        "y": 88
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "al",
+      "definition": {
+        "kind": "inductor",
+        "name": "L 1 mH",
+        "symbol": "L",
+        "domain": "electrical",
+        "description": "An ideal inductor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 0.001,
+            "unit": "H",
+            "min": 1e-12
+          }
+        ],
+        "equations": "v = L*der(i);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 720,
+        "y": 96
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "bduty",
+      "definition": {
+        "kind": "constant",
+        "name": "Duty B 0.5",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 320,
+        "y": 688
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "bpwm",
+      "definition": {
+        "kind": "pwmSignal",
+        "name": "PWM 10 kHz (boost)",
+        "description": "Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.",
+        "domain": "boolean",
+        "category": "converters",
+        "symbol": "PWM",
+        "ports": [
+          {
+            "id": "dutyCycle",
+            "name": "d",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "fire",
+            "name": "fire",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          },
+          {
+            "id": "notFire",
+            "name": "fire̅",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f",
+            "name": "Switching frequency",
+            "value": 10000,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.Control.SignalPWM from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "modulator",
+          "duty cycle",
+          "switching"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.Control.SignalPWM",
+          "modifiers": {
+            "useConstantDutyCycle": "false",
+            "f": "f"
+          }
+        }
+      },
+      "position": {
+        "x": 488,
+        "y": 672
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "bc",
+      "definition": {
+        "kind": "capacitor",
+        "name": "C B 100 µF",
+        "symbol": "C",
+        "domain": "electrical",
+        "description": "An ideal capacitor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance",
+            "value": 0.0001,
+            "unit": "F",
+            "min": 1e-12
+          }
+        ],
+        "equations": "i = C*der(v);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 888,
+        "y": 480
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "br",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load B 50 Ω",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 50,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1016,
+        "y": 480
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 76,
+        "y": -54
+      }
+    },
+    {
+      "id": "bv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v out B",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1176,
+        "y": 480
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 60,
+        "y": -54
+      }
+    },
+    {
+      "id": "bsrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "12 V",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 12,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 336,
+        "y": 480
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -48,
+        "y": -54
+      }
+    },
+    {
+      "id": "bg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (boost)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 336,
+        "y": 600
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "bl",
+      "definition": {
+        "kind": "inductor",
+        "name": "L 1 mH (boost)",
+        "symbol": "L",
+        "domain": "electrical",
+        "description": "An ideal inductor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 0.001,
+            "unit": "H",
+            "min": 1e-12
+          }
+        ],
+        "equations": "v = L*der(i);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 448,
+        "y": 464
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "bconv",
+      "definition": {
+        "kind": "boostConverter",
+        "name": "Boost",
+        "description": "Switched step-up chopper; fire drives the transistor.",
+        "domain": "electrical",
+        "category": "converters",
+        "symbol": "boost",
+        "ports": [
+          {
+            "id": "dc_p1",
+            "name": "in+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_n1",
+            "name": "in−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_p2",
+            "name": "out+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "dc_n2",
+            "name": "out−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "fire_p",
+            "name": "fire",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "RonTransistor",
+            "name": "Transistor on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "RonDiode",
+            "name": "Diode on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.ChopperStepUp from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "chopper",
+          "step-up",
+          "dc-dc"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.ChopperStepUp",
+          "modifiers": {
+            "RonTransistor": "RonTransistor",
+            "RonDiode": "RonDiode"
+          }
+        }
+      },
+      "position": {
+        "x": 640,
+        "y": 456
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "cduty",
+      "definition": {
+        "kind": "constant",
+        "name": "Duty C 0.5",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 320,
+        "y": 1056
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "cpwm",
+      "definition": {
+        "kind": "pwmSignal",
+        "name": "PWM 10 kHz (half-bridge)",
+        "description": "Compares the duty-cycle input (0…1) with a sawtooth to produce fire and its complement.",
+        "domain": "boolean",
+        "category": "converters",
+        "symbol": "PWM",
+        "ports": [
+          {
+            "id": "dutyCycle",
+            "name": "d",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "fire",
+            "name": "fire",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          },
+          {
+            "id": "notFire",
+            "name": "fire̅",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f",
+            "name": "Switching frequency",
+            "value": 10000,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.Control.SignalPWM from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "modulator",
+          "duty cycle",
+          "switching"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.Control.SignalPWM",
+          "modifiers": {
+            "useConstantDutyCycle": "false",
+            "f": "f"
+          }
+        }
+      },
+      "position": {
+        "x": 488,
+        "y": 1040
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "cc",
+      "definition": {
+        "kind": "capacitor",
+        "name": "C C 100 µF",
+        "symbol": "C",
+        "domain": "electrical",
+        "description": "An ideal capacitor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance",
+            "value": 0.0001,
+            "unit": "F",
+            "min": 1e-12
+          }
+        ],
+        "equations": "i = C*der(v);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 888,
+        "y": 848
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "cr",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load C 50 Ω",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 50,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 1016,
+        "y": 848
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 76,
+        "y": -54
+      }
+    },
+    {
+      "id": "cv",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v out C",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1176,
+        "y": 848
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 60,
+        "y": -54
+      }
+    },
+    {
+      "id": "csrc",
+      "definition": {
+        "kind": "dcSource",
+        "name": "12 V (half-bridge)",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 12,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 336,
+        "y": 848
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -104,
+        "y": -54
+      }
+    },
+    {
+      "id": "cg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (half-bridge)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 336,
+        "y": 968
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "cl",
+      "definition": {
+        "kind": "inductor",
+        "name": "L 1 mH (half-bridge)",
+        "symbol": "L",
+        "domain": "electrical",
+        "description": "An ideal inductor.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L",
+            "name": "Inductance",
+            "value": 0.001,
+            "unit": "H",
+            "min": 1e-12
+          }
+        ],
+        "equations": "v = L*der(i);",
+        "keywords": [
+          "electrical"
+        ]
+      },
+      "position": {
+        "x": 448,
+        "y": 832
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "cconv",
+      "definition": {
+        "kind": "buckBoostConverter",
+        "name": "Half-bridge",
+        "description": "Bidirectional half-bridge: port 1 is the switch node (add a series inductor); fire_p drives the low-side switch, stepping up from port 1 to port 2, and fire_n the high-side switch, stepping down from port 2 to port 1.",
+        "domain": "electrical",
+        "category": "converters",
+        "symbol": "b-b",
+        "ports": [
+          {
+            "id": "dc_p1",
+            "name": "1+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_n1",
+            "name": "1−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "dc_p2",
+            "name": "2+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "dc_n2",
+            "name": "2−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "fire_p",
+            "name": "lo",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "fire_n",
+            "name": "hi",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "RonTransistor",
+            "name": "Transistor on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "RonDiode",
+            "name": "Diode on resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.PowerConverters.DCDC.ChopperBuckBoost from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "dc-dc",
+          "four-switch"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.PowerConverters.DCDC.ChopperBuckBoost",
+          "modifiers": {
+            "RonTransistor": "RonTransistor",
+            "RonDiode": "RonDiode"
+          }
+        }
+      },
+      "position": {
+        "x": 640,
+        "y": 824
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "aduty",
+      "sourceHandle": "y",
+      "target": "apwm",
+      "targetHandle": "dutyCycle"
+    },
+    {
+      "id": "id0002",
+      "source": "j_id0013",
+      "sourceHandle": "node",
+      "target": "j_id0015",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "j_id0017",
+      "sourceHandle": "node",
+      "target": "j_id0019",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "av",
+      "sourceHandle": "p",
+      "target": "j_id0015",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1200,
+          "y": 96
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "av",
+      "sourceHandle": "n",
+      "target": "j_id0019",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1200,
+          "y": 208
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "j_id001b",
+      "sourceHandle": "node",
+      "target": "ag",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0007",
+      "source": "asrc",
+      "sourceHandle": "p",
+      "target": "aconv",
+      "targetHandle": "dc_p1"
+    },
+    {
+      "id": "id0008",
+      "source": "j_id001b",
+      "sourceHandle": "node",
+      "target": "aconv",
+      "targetHandle": "dc_n1",
+      "waypoints": [
+        {
+          "x": 472,
+          "y": 208
+        },
+        {
+          "x": 472,
+          "y": 152
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "aconv",
+      "sourceHandle": "dc_p2",
+      "target": "al",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000a",
+      "source": "al",
+      "sourceHandle": "n",
+      "target": "j_id0013",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 816,
+          "y": 120
+        },
+        {
+          "x": 816,
+          "y": 96
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "aconv",
+      "sourceHandle": "dc_n2",
+      "target": "j_id0017",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 152
+        },
+        {
+          "x": 784,
+          "y": 208
+        }
+      ]
+    },
+    {
+      "id": "id000c",
+      "source": "apwm",
+      "sourceHandle": "fire",
+      "target": "aconv",
+      "targetHandle": "fire_p"
+    },
+    {
+      "id": "id000d",
+      "source": "bduty",
+      "sourceHandle": "y",
+      "target": "bpwm",
+      "targetHandle": "dutyCycle"
+    },
+    {
+      "id": "id000e",
+      "source": "j_id001d",
+      "sourceHandle": "node",
+      "target": "j_id001f",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000f",
+      "source": "j_id001h",
+      "sourceHandle": "node",
+      "target": "j_id001j",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000g",
+      "source": "bv",
+      "sourceHandle": "p",
+      "target": "j_id001f",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1200,
+          "y": 464
+        }
+      ]
+    },
+    {
+      "id": "id000h",
+      "source": "bv",
+      "sourceHandle": "n",
+      "target": "j_id001j",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1200,
+          "y": 576
+        }
+      ]
+    },
+    {
+      "id": "id000i",
+      "source": "j_id001l",
+      "sourceHandle": "node",
+      "target": "bg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000j",
+      "source": "bsrc",
+      "sourceHandle": "p",
+      "target": "bl",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000k",
+      "source": "bl",
+      "sourceHandle": "n",
+      "target": "bconv",
+      "targetHandle": "dc_p1"
+    },
+    {
+      "id": "id000l",
+      "source": "j_id001l",
+      "sourceHandle": "node",
+      "target": "bconv",
+      "targetHandle": "dc_n1",
+      "waypoints": [
+        {
+          "x": 624,
+          "y": 576
+        },
+        {
+          "x": 624,
+          "y": 520
+        }
+      ]
+    },
+    {
+      "id": "id000m",
+      "source": "bconv",
+      "sourceHandle": "dc_p2",
+      "target": "j_id001d",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 488
+        },
+        {
+          "x": 784,
+          "y": 464
+        }
+      ]
+    },
+    {
+      "id": "id000n",
+      "source": "bconv",
+      "sourceHandle": "dc_n2",
+      "target": "j_id001h",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 520
+        },
+        {
+          "x": 784,
+          "y": 576
+        }
+      ]
+    },
+    {
+      "id": "id000o",
+      "source": "bpwm",
+      "sourceHandle": "fire",
+      "target": "bconv",
+      "targetHandle": "fire_p"
+    },
+    {
+      "id": "id000p",
+      "source": "cduty",
+      "sourceHandle": "y",
+      "target": "cpwm",
+      "targetHandle": "dutyCycle"
+    },
+    {
+      "id": "id000q",
+      "source": "j_id001n",
+      "sourceHandle": "node",
+      "target": "j_id001p",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000r",
+      "source": "j_id001r",
+      "sourceHandle": "node",
+      "target": "j_id001t",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000s",
+      "source": "cv",
+      "sourceHandle": "p",
+      "target": "j_id001p",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1200,
+          "y": 832
+        }
+      ]
+    },
+    {
+      "id": "id000t",
+      "source": "cv",
+      "sourceHandle": "n",
+      "target": "j_id001t",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1200,
+          "y": 944
+        }
+      ]
+    },
+    {
+      "id": "id000u",
+      "source": "j_id001v",
+      "sourceHandle": "node",
+      "target": "cg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000v",
+      "source": "csrc",
+      "sourceHandle": "p",
+      "target": "cl",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000w",
+      "source": "cl",
+      "sourceHandle": "n",
+      "target": "cconv",
+      "targetHandle": "dc_p1"
+    },
+    {
+      "id": "id000x",
+      "source": "j_id001v",
+      "sourceHandle": "node",
+      "target": "cconv",
+      "targetHandle": "dc_n1",
+      "waypoints": [
+        {
+          "x": 624,
+          "y": 944
+        },
+        {
+          "x": 624,
+          "y": 888
+        }
+      ]
+    },
+    {
+      "id": "id000y",
+      "source": "cconv",
+      "sourceHandle": "dc_p2",
+      "target": "j_id001n",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 856
+        },
+        {
+          "x": 784,
+          "y": 832
+        }
+      ]
+    },
+    {
+      "id": "id000z",
+      "source": "cconv",
+      "sourceHandle": "dc_n2",
+      "target": "j_id001r",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 888
+        },
+        {
+          "x": 784,
+          "y": 944
+        }
+      ]
+    },
+    {
+      "id": "id0010",
+      "source": "cpwm",
+      "sourceHandle": "fire",
+      "target": "cconv",
+      "targetHandle": "fire_p"
+    },
+    {
+      "id": "id0011",
+      "source": "cpwm",
+      "sourceHandle": "notFire",
+      "target": "cconv",
+      "targetHandle": "fire_n"
+    },
+    {
+      "id": "w_id0014",
+      "source": "ac",
+      "sourceHandle": "p",
+      "target": "j_id0013",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0016",
+      "source": "ar",
+      "sourceHandle": "p",
+      "target": "j_id0015",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0018",
+      "source": "ac",
+      "sourceHandle": "n",
+      "target": "j_id0017",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001a",
+      "source": "ar",
+      "sourceHandle": "n",
+      "target": "j_id0019",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001c",
+      "source": "asrc",
+      "sourceHandle": "n",
+      "target": "j_id001b",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001e",
+      "source": "bc",
+      "sourceHandle": "p",
+      "target": "j_id001d",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001g",
+      "source": "br",
+      "sourceHandle": "p",
+      "target": "j_id001f",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001i",
+      "source": "bc",
+      "sourceHandle": "n",
+      "target": "j_id001h",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001k",
+      "source": "br",
+      "sourceHandle": "n",
+      "target": "j_id001j",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001m",
+      "source": "bsrc",
+      "sourceHandle": "n",
+      "target": "j_id001l",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001o",
+      "source": "cc",
+      "sourceHandle": "p",
+      "target": "j_id001n",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001q",
+      "source": "cr",
+      "sourceHandle": "p",
+      "target": "j_id001p",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001s",
+      "source": "cc",
+      "sourceHandle": "n",
+      "target": "j_id001r",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001u",
+      "source": "cr",
+      "sourceHandle": "n",
+      "target": "j_id001t",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001w",
+      "source": "csrc",
+      "sourceHandle": "n",
+      "target": "j_id001v",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0013",
+      "domain": "electrical",
+      "position": {
+        "x": 912,
+        "y": 96
+      }
+    },
+    {
+      "id": "j_id0015",
+      "domain": "electrical",
+      "position": {
+        "x": 1040,
+        "y": 96
+      }
+    },
+    {
+      "id": "j_id0017",
+      "domain": "electrical",
+      "position": {
+        "x": 912,
+        "y": 208
+      }
+    },
+    {
+      "id": "j_id0019",
+      "domain": "electrical",
+      "position": {
+        "x": 1040,
+        "y": 208
+      }
+    },
+    {
+      "id": "j_id001b",
+      "domain": "electrical",
+      "position": {
+        "x": 360,
+        "y": 208
+      }
+    },
+    {
+      "id": "j_id001d",
+      "domain": "electrical",
+      "position": {
+        "x": 912,
+        "y": 464
+      }
+    },
+    {
+      "id": "j_id001f",
+      "domain": "electrical",
+      "position": {
+        "x": 1040,
+        "y": 464
+      }
+    },
+    {
+      "id": "j_id001h",
+      "domain": "electrical",
+      "position": {
+        "x": 912,
+        "y": 576
+      }
+    },
+    {
+      "id": "j_id001j",
+      "domain": "electrical",
+      "position": {
+        "x": 1040,
+        "y": 576
+      }
+    },
+    {
+      "id": "j_id001l",
+      "domain": "electrical",
+      "position": {
+        "x": 360,
+        "y": 576
+      }
+    },
+    {
+      "id": "j_id001n",
+      "domain": "electrical",
+      "position": {
+        "x": 912,
+        "y": 832
+      }
+    },
+    {
+      "id": "j_id001p",
+      "domain": "electrical",
+      "position": {
+        "x": 1040,
+        "y": 832
+      }
+    },
+    {
+      "id": "j_id001r",
+      "domain": "electrical",
+      "position": {
+        "x": 912,
+        "y": 944
+      }
+    },
+    {
+      "id": "j_id001t",
+      "domain": "electrical",
+      "position": {
+        "x": 1040,
+        "y": 944
+      }
+    },
+    {
+      "id": "j_id001v",
+      "domain": "electrical",
+      "position": {
+        "x": 360,
+        "y": 944
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id001x",
+      "anchor": "aduty.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id001y",
+      "anchor": "ac.p",
+      "wireIds": [
+        "id0002",
+        "id0004",
+        "id000a",
+        "w_id0014",
+        "w_id0016"
+      ]
+    },
+    {
+      "id": "net_id001z",
+      "anchor": "ac.n",
+      "wireIds": [
+        "id0003",
+        "id0005",
+        "id000b",
+        "w_id0018",
+        "w_id001a"
+      ]
+    },
+    {
+      "id": "net_id0020",
+      "anchor": "aconv.dc_n1",
+      "wireIds": [
+        "id0006",
+        "id0008",
+        "w_id001c"
+      ]
+    },
+    {
+      "id": "net_id0021",
+      "anchor": "aconv.dc_p1",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id0022",
+      "anchor": "aconv.dc_p2",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id0023",
+      "anchor": "apwm.fire",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id0024",
+      "anchor": "bduty.y",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id0025",
+      "anchor": "bc.p",
+      "wireIds": [
+        "id000e",
+        "id000g",
+        "id000m",
+        "w_id001e",
+        "w_id001g"
+      ]
+    },
+    {
+      "id": "net_id0026",
+      "anchor": "bc.n",
+      "wireIds": [
+        "id000f",
+        "id000h",
+        "id000n",
+        "w_id001i",
+        "w_id001k"
+      ]
+    },
+    {
+      "id": "net_id0027",
+      "anchor": "bconv.dc_n1",
+      "wireIds": [
+        "id000i",
+        "id000l",
+        "w_id001m"
+      ]
+    },
+    {
+      "id": "net_id0028",
+      "anchor": "bl.p",
+      "wireIds": [
+        "id000j"
+      ]
+    },
+    {
+      "id": "net_id0029",
+      "anchor": "bconv.dc_p1",
+      "wireIds": [
+        "id000k"
+      ]
+    },
+    {
+      "id": "net_id002a",
+      "anchor": "bpwm.fire",
+      "wireIds": [
+        "id000o"
+      ]
+    },
+    {
+      "id": "net_id002b",
+      "anchor": "cduty.y",
+      "wireIds": [
+        "id000p"
+      ]
+    },
+    {
+      "id": "net_id002c",
+      "anchor": "cc.p",
+      "wireIds": [
+        "id000q",
+        "id000s",
+        "id000y",
+        "w_id001o",
+        "w_id001q"
+      ]
+    },
+    {
+      "id": "net_id002d",
+      "anchor": "cc.n",
+      "wireIds": [
+        "id000r",
+        "id000t",
+        "id000z",
+        "w_id001s",
+        "w_id001u"
+      ]
+    },
+    {
+      "id": "net_id002e",
+      "anchor": "cconv.dc_n1",
+      "wireIds": [
+        "id000u",
+        "id000x",
+        "w_id001w"
+      ]
+    },
+    {
+      "id": "net_id002f",
+      "anchor": "cl.p",
+      "wireIds": [
+        "id000v"
+      ]
+    },
+    {
+      "id": "net_id002g",
+      "anchor": "cconv.dc_p1",
+      "wireIds": [
+        "id000w"
+      ]
+    },
+    {
+      "id": "net_id002h",
+      "anchor": "cpwm.fire",
+      "wireIds": [
+        "id0010"
+      ]
+    },
+    {
+      "id": "net_id002i",
+      "anchor": "cpwm.notFire",
+      "wireIds": [
+        "id0011"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Output voltages",
+      "series": [
+        "av.y",
+        "bv.y",
+        "cv.y"
+      ],
+      "labels": [
+        "Buck",
+        "Boost",
+        "Half-bridge"
+      ]
+    }
+  ]
+}

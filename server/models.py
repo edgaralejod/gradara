@@ -18,6 +18,20 @@ class Port(BaseModel):
     side: Literal['left', 'right', 'top', 'bottom'] | None = None
     unit: str = Field(default='', max_length=40)
     offset: float | None = Field(default=None, ge=0, le=100)
+    # A bus port carries `width` signals (see lib/gradara/buses.ts); `elements` names them.
+    width: int | None = Field(default=None, ge=2, le=1000)
+    elements: list[str] | None = Field(default=None, max_length=1000)
+
+    @model_validator(mode='after')
+    def check_bus(self):
+        if self.elements is not None:
+            if self.width is None or len(self.elements) != self.width:
+                raise ValueError(f'Port {self.id} names {len(self.elements)} bus elements but carries {self.width or 1} signals.')
+            if any(not e or len(e) > 200 for e in self.elements):
+                raise ValueError(f'Port {self.id} has an empty or overlong bus element name.')
+        if self.width is not None and self.domain != 'signal':
+            raise ValueError(f'Port {self.id}: only signal ports can carry a bus.')
+        return self
 
 class Parameter(BaseModel):
     id: str = Field(pattern=IDENTIFIER, max_length=60)
@@ -187,6 +201,8 @@ class Block(BaseModel):
     size: Size | None = None
     labelOffset: Position | None = None
     rotation: Literal[0, 90, 180, 270] | None = None
+    # Outputs left open on purpose, drawn with a terminator mark; presentation only.
+    terminated: list[str] | None = Field(default=None, max_length=100)
 
 class Wire(BaseModel):
     id: str = Field(max_length=100)
@@ -435,7 +451,8 @@ class ExportRequest(BaseModel):
 
 class NewModelRequest(BaseModel):
     name: str = Field(default='Untitled model', min_length=1, max_length=100)
-    template: Literal['blank', 'dc', 'foc', 'buck', 'flyback', 'datacenter', 'servo', 'ev'] = 'blank'
+    # A curated example, or `block-<id>` for a block example (models/examples/blocks/).
+    template: str = Field(default='blank', pattern=r'^(blank|dc|foc|buck|flyback|datacenter|servo|ev|block-[a-z0-9-]{1,60})$')
 
 
 class SaveModelRequest(BaseModel):

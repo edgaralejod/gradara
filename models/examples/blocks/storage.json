@@ -1,0 +1,983 @@
+{
+  "version": 1,
+  "name": "Example: Battery, supercapacitor, and a heating load",
+  "exampleId": "block-storage",
+  "description": "The battery is one fully charged 4.2 V cell of 1 Ah. It discharges into a 4 Ω heating resistor whose resistance rises with temperature; the resistor warms a 100 J/K body, and the power sensor reads the electrical power it takes, about 4.4 W. The supercapacitor (1 F, 10 mΩ) charges at a constant 1 A, so its voltage rises 1 V per second plus the 10 mV drop across its series resistance.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "cell",
+      "definition": {
+        "kind": "batteryStack",
+        "name": "Cell 4.2 V",
+        "description": "Battery stack: open-circuit voltage rising linearly with state of charge, internal resistance, starting full.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "bat",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ns",
+            "name": "Cells in series",
+            "value": 1,
+            "unit": "",
+            "min": 1
+          },
+          {
+            "id": "Np",
+            "name": "Cells in parallel",
+            "value": 1,
+            "unit": "",
+            "min": 1
+          },
+          {
+            "id": "Q",
+            "name": "Cell capacity",
+            "value": 1,
+            "unit": "A·h",
+            "min": 0
+          },
+          {
+            "id": "OCVmax",
+            "name": "Cell voltage when full",
+            "value": 4.2,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "OCVmin",
+            "name": "Cell voltage when empty",
+            "value": 2.5,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "Ri",
+            "name": "Cell resistance",
+            "value": 0.005,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Batteries.BatteryStacks.CellStack from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "cell",
+          "lithium",
+          "ev",
+          "soc",
+          "pack"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Batteries.BatteryStacks.CellStack",
+          "modifiers": {
+            "cellData.Qnom": "Q*3600",
+            "cellData.OCVmax": "OCVmax",
+            "cellData.OCVmin": "OCVmin",
+            "cellData.Ri": "Ri",
+            "Ns": "Ns",
+            "Np": "Np"
+          }
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -72,
+        "y": -54
+      }
+    },
+    {
+      "id": "pw",
+      "definition": {
+        "kind": "powerSensor",
+        "name": "Power",
+        "description": "Instantaneous power: current path pc→nc, voltage across pv–nv.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "P",
+        "ports": [
+          {
+            "id": "pc",
+            "name": "i+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "nc",
+            "name": "i−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "pv",
+            "name": "v+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "nv",
+            "name": "v−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          },
+          {
+            "id": "power",
+            "name": "P",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Sensors.PowerSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "watt meter"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.PowerSensor"
+        }
+      },
+      "position": {
+        "x": 288,
+        "y": 112
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 80,
+        "y": 0
+      }
+    },
+    {
+      "id": "heat",
+      "definition": {
+        "kind": "heatingResistor",
+        "name": "Heater 4 Ω",
+        "description": "Resistor whose losses heat its thermal port and whose resistance changes with its temperature.",
+        "domain": "thermal",
+        "category": "electrical",
+        "symbol": "R(T)",
+        "ports": [
+          {
+            "id": "heatPort",
+            "name": "heat",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "bottom"
+          },
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance at T_ref",
+            "value": 4,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "T_ref",
+            "name": "Reference temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          },
+          {
+            "id": "alpha",
+            "name": "Temperature coefficient",
+            "value": 0.0039,
+            "unit": "1/K"
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "losses",
+          "self-heating",
+          "copper"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "useHeatPort": "true",
+            "R": "R",
+            "T_ref": "T_ref",
+            "alpha": "alpha"
+          }
+        }
+      },
+      "position": {
+        "x": 552,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 72,
+        "y": -54
+      }
+    },
+    {
+      "id": "body",
+      "definition": {
+        "kind": "heatCapacitor",
+        "name": "Body 100 J/K",
+        "description": "Stores heat: C·dT/dt = Q_flow.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "C",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Heat capacity",
+            "value": 100,
+            "unit": "J/K",
+            "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermal mass",
+          "lumped"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
+          "modifiers": {
+            "C": "C",
+            "T.start": "T0"
+          }
+        }
+      },
+      "position": {
+        "x": 544,
+        "y": 352
+      },
+      "size": {
+        "width": 64,
+        "height": 80
+      },
+      "rotation": 90
+    },
+    {
+      "id": "Tb",
+      "definition": {
+        "kind": "temperatureSensor",
+        "name": "Body temperature",
+        "description": "Absolute temperature of its port (K).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "T",
+            "name": "T",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.TemperatureSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermometer",
+          "ntc"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.TemperatureSensor"
+        }
+      },
+      "position": {
+        "x": 744,
+        "y": 360
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 112,
+        "y": -46
+      }
+    },
+    {
+      "id": "gb",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "cap",
+      "definition": {
+        "kind": "supercap",
+        "name": "Supercap 1 F",
+        "description": "Double-layer capacitor with series resistance.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "SC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance",
+            "value": 1,
+            "unit": "F",
+            "min": 0
+          },
+          {
+            "id": "Rs",
+            "name": "Series resistance",
+            "value": 0.01,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Vnom",
+            "name": "Nominal voltage",
+            "value": 2.7,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "V0",
+            "name": "Initial voltage",
+            "value": 0,
+            "unit": "V",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Batteries.BatteryStacks.SuperCap from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ultracapacitor",
+          "storage"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Batteries.BatteryStacks.SuperCap",
+          "modifiers": {
+            "C": "C",
+            "Rs": "Rs",
+            "Vnom": "Vnom",
+            "V0": "V0"
+          }
+        }
+      },
+      "position": {
+        "x": 1272,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 80,
+        "y": -54
+      }
+    },
+    {
+      "id": "chg",
+      "definition": {
+        "kind": "dcCurrent",
+        "name": "Charger 1 A",
+        "description": "An ideal constant current source.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "I",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "I",
+            "name": "Current",
+            "value": 1,
+            "unit": "A"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.ConstantCurrent from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantCurrent",
+          "modifiers": {
+            "I": "I"
+          }
+        }
+      },
+      "position": {
+        "x": 1128,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 180,
+      "labelOffset": {
+        "x": -76,
+        "y": -54
+      }
+    },
+    {
+      "id": "vcap",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v supercap",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1480,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 72,
+        "y": -54
+      }
+    },
+    {
+      "id": "gc",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (supercap)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1128,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "cell",
+      "sourceHandle": "p",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 168,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id0002",
+      "source": "pw",
+      "sourceHandle": "nc",
+      "target": "heat",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0003",
+      "source": "heat",
+      "sourceHandle": "n",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 576,
+          "y": 288
+        }
+      ]
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000h",
+      "sourceHandle": "node",
+      "target": "gb",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "pw",
+      "sourceHandle": "pv",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 352,
+          "y": 96
+        },
+        {
+          "x": 272,
+          "y": 96
+        }
+      ]
+    },
+    {
+      "id": "id0006",
+      "source": "pw",
+      "sourceHandle": "nv",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0007",
+      "source": "heat",
+      "sourceHandle": "heatPort",
+      "target": "j_id000l",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 528,
+          "y": 232
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000l",
+      "sourceHandle": "node",
+      "target": "Tb",
+      "targetHandle": "port",
+      "waypoints": [
+        {
+          "x": 728,
+          "y": 344
+        },
+        {
+          "x": 728,
+          "y": 392
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "chg",
+      "sourceHandle": "n",
+      "target": "j_id000n",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1152,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "id000a",
+      "source": "j_id000p",
+      "sourceHandle": "node",
+      "target": "j_id000r",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000b",
+      "source": "j_id000r",
+      "sourceHandle": "node",
+      "target": "gc",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id000c",
+      "source": "vcap",
+      "sourceHandle": "p",
+      "target": "j_id000n",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1504,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "id000d",
+      "source": "vcap",
+      "sourceHandle": "n",
+      "target": "j_id000p",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1504,
+          "y": 288
+        }
+      ]
+    },
+    {
+      "id": "w_id000g",
+      "source": "pw",
+      "sourceHandle": "pc",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000i",
+      "source": "cell",
+      "sourceHandle": "n",
+      "target": "j_id000h",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000k",
+      "source": "j_id000h",
+      "sourceHandle": "node",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000m",
+      "source": "body",
+      "sourceHandle": "port",
+      "target": "j_id000l",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 528,
+          "y": 392
+        }
+      ]
+    },
+    {
+      "id": "w_id000o",
+      "source": "cap",
+      "sourceHandle": "p",
+      "target": "j_id000n",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000q",
+      "source": "cap",
+      "sourceHandle": "n",
+      "target": "j_id000p",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000s",
+      "source": "chg",
+      "sourceHandle": "p",
+      "target": "j_id000r",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000f",
+      "domain": "electrical",
+      "position": {
+        "x": 272,
+        "y": 160
+      }
+    },
+    {
+      "id": "j_id000h",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 288
+      }
+    },
+    {
+      "id": "j_id000j",
+      "domain": "electrical",
+      "position": {
+        "x": 352,
+        "y": 288
+      }
+    },
+    {
+      "id": "j_id000l",
+      "domain": "thermal",
+      "position": {
+        "x": 528,
+        "y": 344
+      }
+    },
+    {
+      "id": "j_id000n",
+      "domain": "electrical",
+      "position": {
+        "x": 1296,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000p",
+      "domain": "electrical",
+      "position": {
+        "x": 1296,
+        "y": 288
+      }
+    },
+    {
+      "id": "j_id000r",
+      "domain": "electrical",
+      "position": {
+        "x": 1152,
+        "y": 288
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000t",
+      "anchor": "cell.p",
+      "wireIds": [
+        "id0001",
+        "id0005",
+        "w_id000g"
+      ]
+    },
+    {
+      "id": "net_id000u",
+      "anchor": "heat.p",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "cell.n",
+      "wireIds": [
+        "id0003",
+        "id0004",
+        "id0006",
+        "w_id000i",
+        "w_id000k"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "Tb.port",
+      "wireIds": [
+        "id0007",
+        "id0008",
+        "w_id000m"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "cap.p",
+      "wireIds": [
+        "id0009",
+        "id000c",
+        "w_id000o"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "cap.n",
+      "wireIds": [
+        "id000a",
+        "id000b",
+        "id000d",
+        "w_id000q",
+        "w_id000s"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Heater power",
+      "series": [
+        "pw.power"
+      ],
+      "labels": [
+        "P (W)"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Body temperature",
+      "series": [
+        "Tb.T"
+      ],
+      "labels": [
+        "T (K)"
+      ]
+    },
+    {
+      "id": "plot3",
+      "label": "Supercapacitor voltage",
+      "series": [
+        "vcap.y"
+      ],
+      "labels": [
+        "v (V)"
+      ]
+    }
+  ]
+}

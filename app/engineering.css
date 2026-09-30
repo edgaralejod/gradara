@@ -428,6 +428,69 @@
   font-size: var(--text-heading);
   color: #899aa4;
 }
+/* Notes on the top-level sheet can be moved and edited (note-layer.tsx). */
+.diagram-annotation.is-editable {
+  pointer-events: auto;
+  cursor: move;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  outline: none;
+}
+.diagram-annotation.is-editable:hover {
+  border-color: #cfd9e0;
+  background: rgb(255 255 255 / 70%);
+}
+.diagram-annotation.is-selected,
+.diagram-annotation.is-editable:focus-visible {
+  border-color: #2477b5;
+  background: rgb(255 255 255 / 85%);
+}
+.diagram-annotation.is-editing {
+  pointer-events: auto;
+  padding: 6px 28px 6px 6px;
+  margin: -6px;
+  border: 1px solid #2477b5;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(35 55 70 / 18%);
+  gap: 4px;
+}
+.diagram-annotation.is-editing input {
+  font: 600 var(--text-heading) var(--font-ui);
+  letter-spacing: 1.3px;
+  color: #688391;
+  border: 0;
+  border-bottom: 1px solid #e2e9ee;
+  padding: 2px 0;
+  outline: none;
+  min-width: 220px;
+  background: transparent;
+}
+.diagram-annotation.is-editing input + input {
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #899aa4;
+}
+.diagram-annotation .note-delete {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #899aa4;
+  cursor: pointer;
+}
+.diagram-annotation .note-delete:hover {
+  background: #fbe9e6;
+  color: #9c4a37;
+}
 .canvas-hint {
   font-size: var(--text-micro);
   color: #7d8d99;
@@ -921,6 +984,13 @@
 .net-wire.is-selected .net-wire-ink {
   stroke-width: 2;
 }
+/* A bus or vector wire is drawn heavy, as in Simulink. */
+.net-wire.is-bus .net-wire-ink {
+  stroke-width: 3.4;
+}
+.net-wire.is-bus.is-selected .net-wire-ink {
+  stroke-width: 4;
+}
 .net-vertex {
   fill: white;
   stroke: #3283b7;
@@ -1221,6 +1291,30 @@
   cursor: grabbing;
   outline: 1px dashed #3283b7;
   outline-offset: 3px;
+}
+.port-terminator {
+  position: absolute;
+  z-index: 3;
+  overflow: visible;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  fill: none;
+  stroke: #4b6273;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.engineering-label .block-name-editor {
+  cursor: text;
+  user-select: text;
+  border: 1px solid #3283b7;
+  background: #fff;
+  padding: 0 4px;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 1px 4px rgb(20 50 80 / 0.15);
+}
+.engineering-label .block-name-editor:focus-visible {
+  outline: none;
 }
 .react-flow[data-wiring='connecting'] .block-name,
 .react-flow[data-wiring='drawing'] .block-name {
@@ -1946,9 +2040,9 @@
   color: #4b6474;
 }
 .model-browser {
-  width: min(900px, calc(100vw - 32px));
-  max-width: 900px;
-  height: min(610px, calc(100dvh - 48px));
+  width: min(1080px, calc(100vw - 32px));
+  max-width: 1080px;
+  height: min(680px, calc(100dvh - 48px));
   padding: 0;
   gap: 0;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -1971,7 +2065,7 @@
 }
 .model-browser-layout {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
+  grid-template-columns: 196px minmax(0, 1fr);
   min-height: 0;
 }
 .model-browser-nav {
@@ -2048,9 +2142,13 @@
   background: #fafcfd;
 }
 .model-browser-content {
+  flex: 1;
   overflow: auto;
   min-height: 0;
   padding: 0 20px 20px;
+}
+.model-browser-content:has(> .example-gallery) {
+  overflow: hidden;
 }
 .model-list-heading {
   display: flex;
@@ -2146,54 +2244,6 @@
 .model-browser-footer button {
   height: 29px;
   font-size: var(--text-ui);
-}
-.examples-explanation {
-  font-size: var(--text-ui);
-  line-height: 1.6;
-  color: #7a8c98;
-  margin: 3px 0 17px;
-}
-.example-file-list {
-  display: grid;
-  gap: 12px;
-}
-.example-file {
-  display: flex;
-  gap: 16px;
-  border: 1px solid #e2e9ee;
-  border-radius: 7px;
-  padding: 18px;
-  background: linear-gradient(130deg, #fff, #f9fbfc);
-}
-.example-file > .template-icon {
-  flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-}
-.example-file > div > small {
-  display: block;
-  font-size: 9px;
-  letter-spacing: 0.5px;
-  color: #899aa5;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-.example-file h3 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: #304b5e;
-}
-.example-file p {
-  font-size: var(--text-ui);
-  line-height: 1.6;
-  color: #738591;
-  margin: 7px 0 12px;
-}
-.example-file button {
-  font-size: var(--text-meta);
-  height: 29px;
-  gap: 6px;
 }
 .model-browser-error {
   margin: 0 20px 10px;
@@ -2748,6 +2798,38 @@
 }
 .instance-port-tools { display: flex; }
 
+/* Bus blocks: the Signals section (Mux and Demux counts, Bus Creator names, Bus Selector picks). */
+.bus-section .field-row {
+  display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 8px; margin: 6px 0;
+}
+.bus-stepper { display: inline-flex; align-items: center; gap: 3px; }
+.bus-stepper input { width: 44px; height: 24px; text-align: center; font-size: 12px; }
+.bus-stepper button,
+.bus-match {
+  display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+  min-width: 24px; height: 24px; border: 1px solid #c9d6df; border-radius: 3px; background: #fff;
+  color: #34495a; font: 500 11px/16px var(--font-ui); cursor: pointer;
+}
+.bus-match { padding: 0 8px; margin: 2px 0 4px; }
+.bus-stepper button:hover:not(:disabled),
+.bus-match:hover { background: #eef3f7; }
+.bus-stepper button:disabled { opacity: .35; cursor: default; }
+.bus-section .instance-ports-head { margin-top: 8px; }
+.bus-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; }
+.bus-list li {
+  display: grid; grid-template-columns: 18px minmax(0, 1fr) auto auto; align-items: center; gap: 4px;
+}
+.bus-list input { min-width: 0; width: 100%; height: 24px; font-size: 12px; }
+.bus-list input[aria-invalid] { border-color: #c2412d; outline-color: #c2412d; }
+.bus-index { color: #7a8894; font: 600 10px/16px var(--font-ui); text-align: right; }
+.bus-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #1f3444; }
+.bus-width { color: #7a8894; font-size: 11px; white-space: nowrap; }
+.bus-list li.is-missing .bus-name { color: #c2412d; text-decoration: line-through; }
+.bus-list li.is-missing .bus-width { color: #c2412d; }
+.bus-choices { list-style: none; margin: 4px 0 0; padding: 0; max-height: 220px; overflow: auto; }
+.bus-choices label { display: flex; align-items: center; gap: 6px; padding: 2px 0; font-size: 12px; color: #1f3444; cursor: pointer; }
+.bus-choices .bus-width { margin-left: auto; }
+
 /* Variants: the switch on a subsystem block, the inspector list, the configuration menu. */
 .variant-switch {
   position: absolute;
@@ -3056,6 +3138,8 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .help-see-also button:hover, .help-back:hover { background: #e3eef7; }
 .block-help-dialog .dialog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
 .block-help-dialog .dialog-actions a { display: inline-flex; align-items: center; gap: 4px; color: #2477b5; }
+.block-help-dialog .help-example { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; border: 1px solid #2477b5; border-radius: 4px; background: #2477b5; color: #fff; padding: 4px 10px; font: inherit; cursor: pointer; }
+.block-help-dialog .help-example:hover { background: #1d6399; }
 .dialog-help { margin-right: auto; }
 .properties-help { margin-left: auto; display: inline-grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 3px; background: none; color: #73808b; cursor: pointer; }
 .properties-help:hover, .properties-help:focus-visible { background: #e3eef7; color: #2477b5; }

@@ -845,7 +845,7 @@ export const docs: Record<string, BlockDoc> = {
     limitations: [
       'Ideal: infinite input impedance, no bandwidth limit or noise.',
     ],
-    seeAlso: ['currentSensor', 'powerSensor', 'scope'],
+    seeAlso: ['currentSensor', 'powerSensor'],
   },
 
   currentSensor: {
@@ -860,7 +860,7 @@ export const docs: Record<string, BlockDoc> = {
     equations: ['y = p.i', 'p.v = n.v', 'p.i + n.i = 0'],
     limitations: ['Ideal: zero resistance, no bandwidth limit or noise.'],
     tips: ['If the reading has the wrong sign, swap p and n.'],
-    seeAlso: ['voltageSensor', 'powerSensor', 'scope'],
+    seeAlso: ['voltageSensor', 'powerSensor'],
   },
 
   powerSensor: {

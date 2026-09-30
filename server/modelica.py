@@ -3,6 +3,7 @@ from .logging_signals import logged_signals
 import hashlib
 import json
 from . import msl
+from .buses import array_suffix, bus_equations, is_bus_block
 from .models import BOUNDARY_KINDS, Definition, Project, flatten_connects
 
 PHYSICAL = {
@@ -212,12 +213,14 @@ def component_source(definition: Definition, name: str) -> str:
             if kind is None:
                 raise ValueError('Input/output ports must use the signal or Boolean domain; physical terminals use physical direction.')
             connector = f'Modelica.Blocks.Interfaces.{kind}' + ('Input' if port.direction == 'input' else 'Output')
-        lines.append(f'  {connector} {port.id};')
+        lines.append(f'  {connector} {port.id}{array_suffix(port)};')
     for param in definition.parameters:
         lines.append(f'  parameter Real {param.id} = {param.value:.16g};')
     if definition.declarations.strip():
         lines.append('  '+definition.declarations.replace('\n','\n  '))
-    lines.extend(['equation', '  '+definition.equations.replace('\n', '\n  '), f'end {name};'])
+    # A bus block's equations follow its port widths; the stored text is only a preview.
+    equations = bus_equations(definition) if is_bus_block(definition) else definition.equations
+    lines.extend(['equation', '  '+equations.replace('\n', '\n  '), f'end {name};'])
     return '\n'.join(lines)
 
 
@@ -251,9 +254,10 @@ def _idle_wrapper(ref: str, ports) -> str:
             equations.append('  ' + IDLE_EQUATION[port.domain].format(c=port.id))
         else:
             kind = 'Boolean' if port.domain == 'boolean' else 'Real'
-            lines.append(f'  Modelica.Blocks.Interfaces.{kind}{"Input" if port.direction == "input" else "Output"} {port.id};')
+            lines.append(f'  Modelica.Blocks.Interfaces.{kind}{"Input" if port.direction == "input" else "Output"} {port.id}{array_suffix(port)};')
             if port.direction == 'output':
-                equations.append(f'  {port.id} = {"false" if kind == "Boolean" else "0"};')
+                zero = 'false' if kind == 'Boolean' else f'fill(0, {port.width})' if port.width else '0'
+                equations.append(f'  {port.id} = {zero};')
     return '\n'.join(lines + (['equation'] + equations if equations else []) + [f'end {idle_class(ref, ports)};'])
 
 
@@ -330,7 +334,7 @@ def _emit_subsystem(subsystem, idle: dict) -> list[str]:
             connector = BOUNDARY_CONNECTOR.get((d.kind, domain)) if d.kind != 'connport' else PHYSICAL_CONNECTORS.get(domain)
             if connector is None:
                 raise ValueError(f'Subsystem port {d.name} has an unsupported domain.')
-            lines.append(f'  {connector} {block.id};')
+            lines.append(f'  {connector} {block.id}{array_suffix(d.ports[0]) if d.kind != "connport" else ""};')
             continue
         lines.append(_declaration(block, f'C_{subsystem.id}_{block.id}', promoted.get(block.id, {}), idle))
     lines.append('equation')
@@ -361,7 +365,7 @@ def emit_project(project: Project) -> str:
         parts.append(_declaration(block, f'Component_{block.id}', {}, top_idle))
     logs = logged_signals(project)
     for log in logs:
-        parts.append(f"  output Real {log['key']};")
+        parts.append(f"  output Real {log['key']}{'[%d]' % log['width'] if log.get('width') else ''};")
     parts.append('equation')
     for log in logs:
         parts.append(f"  {log['key']} = {log['expression']};")
@@ -395,6 +399,7 @@ def project_key(project: Project) -> str:
         block.pop('position', None)
         block.pop('size', None)
         block.pop('labelOffset', None)
+        block.pop('terminated', None)
         block.pop('rotation', None)
         block['definition'].pop('name', None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:20]

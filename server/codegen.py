@@ -19,6 +19,7 @@ from typing import Callable, Literal
 
 from pydantic import BaseModel, Field
 
+from .buses import BUS_KINDS
 from .models import BOUNDARY_KINDS, CAUSAL_DOMAINS, Block, Definition, Project, net_components
 
 Method = Literal['forward', 'backward', 'tustin']
@@ -356,10 +357,6 @@ def t_signal(kind: str, c: Ctx) -> Code | None:
         return Code(output=[line], feedthrough=any(port.direction == 'input' for port in c.node.definition.ports))
     if kind in ('terminator', 'scope', 'display'):
         return Code(feedthrough=False)
-    if kind == 'mux':  # a drawing aid: the path carries its first input
-        return Code(output=[f'{y("y")} = {u("u1")};'])
-    if kind == 'demux':
-        return Code(output=[f'{y(o)} = {u("u")};' for o in ('y1', 'y2', 'y3')])
     if kind == 'clarke':
         return Code(output=[f'{y("alpha")} = (2 * {u("ia")} - {u("ib")} - {u("ic")}) / 3;',
                             f'{y("beta")} = ({u("ib")} - {u("ic")}) / sqrt(3);'])
@@ -537,6 +534,9 @@ def t_custom(d: Definition, c: Ctx) -> Code | None:
 
 def template(node: Node, c: Ctx) -> Code:
     d = node.definition
+    if d.kind in BUS_KINDS or any(p.width for p in d.ports):
+        raise CodegenError(f'{d.name} carries a bus. C export handles single signals only: '
+                           'leave bus blocks outside the code unit, or split the bus before it.', [node.block_id])
     if d.modelica is not None:
         code = t_msl(d.modelica.class_, c)
     elif d.generated:

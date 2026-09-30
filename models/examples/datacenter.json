@@ -1,16 +1,16 @@
 {
-  "version": 1,
-  "name": "Data center cooling control",
+  "version": 2,
   "exampleId": "datacenter",
+  "name": "Data center cooling control",
+  "description": "Illustrative lumped electrical–thermal cooling benchmark built from library blocks: 600 → 900 kW IT load at 10 min; cooling capacity halved at 30–35 min. Ideal 800 V DC supply, fixed COP 4, sampled PI on room temperature. Not an SST, fluid-network, CFD, or validated facility model.",
   "duration": 3600,
   "revision": 0,
-  "description": "Illustrative lumped electrical–thermal cooling benchmark: 600 → 900 kW IT load at 10 min; cooling capacity halved at 30–35 min. Ideal 800 V DC supply equivalent, fixed COP=4. Not an SST, fluid-network, CFD, or validated facility model.",
   "blocks": [
     {
       "id": "supply",
       "definition": {
         "kind": "dcSource",
-        "name": "800 V DC equivalent",
+        "name": "800 V DC",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
@@ -48,456 +48,16 @@
         ]
       },
       "position": {
-        "x": 0,
-        "y": 200
+        "x": 80,
+        "y": 176
       },
       "size": {
         "width": 48,
         "height": 80
-      }
-    },
-    {
-      "id": "it",
-      "definition": {
-        "kind": "dataCenterIT",
-        "name": "IT load",
-        "domain": "electrical",
-        "symbol": "IT",
-        "generated": true,
-        "description": "Illustrative IT load: 600 to 900 kW at 600 s. All absorbed electricity becomes rack heat. Constant power above minimumVoltage; resistive rolloff below it. No server throttling or UPS.",
-        "ports": [
-          {
-            "id": "p",
-            "name": "p",
-            "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
-          },
-          {
-            "id": "n",
-            "name": "n",
-            "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
-          },
-          {
-            "id": "heat",
-            "name": "heat",
-            "domain": "thermal",
-            "side": "right",
-            "direction": "physical"
-          },
-          {
-            "id": "kW",
-            "name": "kW",
-            "unit": "kW",
-            "side": "bottom",
-            "domain": "signal",
-            "direction": "output"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "basePower",
-            "name": "basePower",
-            "value": 600000,
-            "unit": "W"
-          },
-          {
-            "id": "addedPower",
-            "name": "addedPower",
-            "value": 300000,
-            "unit": "W"
-          },
-          {
-            "id": "stepTime",
-            "name": "stepTime",
-            "value": 600,
-            "unit": "s"
-          },
-          {
-            "id": "minimumVoltage",
-            "name": "minimumVoltage",
-            "value": 400,
-            "unit": "V"
-          }
-        ],
-        "declarations": "Real demand; Real voltage; Real power; Real energy(start=0, fixed=true);",
-        "equations": "demand = basePower + (if time < stepTime then 0 else addedPower);\nvoltage = p.v-n.v;\np.i = demand*voltage/max(voltage*voltage, minimumVoltage*minimumVoltage);\np.i+n.i = 0;\npower = voltage*p.i;\nheat.Q_flow = -power;\nkW = power/1000;\nder(energy) = power;"
-      },
-      "position": {
-        "x": 240,
-        "y": 192
-      },
-      "size": {
-        "width": 128,
-        "height": 96
-      }
-    },
-    {
-      "id": "rack",
-      "definition": {
-        "kind": "dataCenterRack",
-        "name": "Rack thermal mass",
-        "domain": "thermal",
-        "symbol": "C/G",
-        "generated": true,
-        "description": "One lumped equipment temperature with thermal storage and fixed rack-to-room conductance. This is not chip junction temperature or an airflow model.",
-        "ports": [
-          {
-            "id": "heat",
-            "name": "heat",
-            "domain": "thermal",
-            "side": "left",
-            "direction": "physical"
-          },
-          {
-            "id": "air",
-            "name": "air",
-            "domain": "thermal",
-            "side": "right",
-            "direction": "physical"
-          },
-          {
-            "id": "degC",
-            "name": "degC",
-            "unit": "degC",
-            "side": "bottom",
-            "domain": "signal",
-            "direction": "output"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "capacity",
-            "name": "capacity",
-            "value": 20000000,
-            "unit": "J/K"
-          },
-          {
-            "id": "conductance",
-            "name": "conductance",
-            "value": 100000,
-            "unit": "W/K"
-          },
-          {
-            "id": "initialTemperature",
-            "name": "initialTemperature",
-            "value": 303.15,
-            "unit": "K"
-          }
-        ],
-        "declarations": "Real temperature(start=initialTemperature, fixed=true); Real transfer; Real energy;",
-        "equations": "heat.T = temperature;\ntransfer = conductance*(temperature-air.T);\nair.Q_flow = -transfer;\ncapacity*der(temperature) = heat.Q_flow-transfer;\ndegC = temperature-273.15;\nenergy = capacity*(temperature-initialTemperature);"
-      },
-      "position": {
-        "x": 480,
-        "y": 192
-      },
-      "size": {
-        "width": 128,
-        "height": 96
-      }
-    },
-    {
-      "id": "room",
-      "definition": {
-        "kind": "dataCenterRoom",
-        "name": "Room thermal mass",
-        "domain": "thermal",
-        "symbol": "C",
-        "generated": true,
-        "description": "Well-mixed room and effective coupled building mass. No humidity, spatial hot spots, or envelope heat gains. degC is the controlled room temperature, not a predicted rack inlet distribution.",
-        "ports": [
-          {
-            "id": "rack",
-            "name": "rack",
-            "domain": "thermal",
-            "side": "left",
-            "direction": "physical"
-          },
-          {
-            "id": "cool",
-            "name": "cool",
-            "domain": "thermal",
-            "side": "right",
-            "direction": "physical"
-          },
-          {
-            "id": "degC",
-            "name": "degC",
-            "unit": "degC",
-            "side": "bottom",
-            "domain": "signal",
-            "direction": "output"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "capacity",
-            "name": "capacity",
-            "value": 10000000,
-            "unit": "J/K"
-          },
-          {
-            "id": "initialTemperature",
-            "name": "initialTemperature",
-            "value": 297.15,
-            "unit": "K"
-          }
-        ],
-        "declarations": "Real temperature(start=initialTemperature, fixed=true); Real energy;",
-        "equations": "rack.T = temperature;\ncool.T = temperature;\ncapacity*der(temperature) = rack.Q_flow+cool.Q_flow;\ndegC = temperature-273.15;\nenergy = capacity*(temperature-initialTemperature);"
-      },
-      "position": {
-        "x": 720,
-        "y": 192
-      },
-      "size": {
-        "width": 128,
-        "height": 96
       },
       "labelOffset": {
-        "x": 80,
-        "y": 0
-      }
-    },
-    {
-      "id": "cooling",
-      "definition": {
-        "kind": "dataCenterCooling",
-        "name": "Cooling plant",
-        "domain": "thermal",
-        "symbol": "COP",
-        "generated": true,
-        "description": "Aggregate sensible cooling with fixed COP, 20 s response, and a temporary 50% capacity limit from 1800 to 2100 s. Electrical compressor power and condenser heat are conserved. No pumps, fans, fluid circuit, humidity, or weather-dependent performance.",
-        "ports": [
-          {
-            "id": "p",
-            "name": "p",
-            "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
-          },
-          {
-            "id": "n",
-            "name": "n",
-            "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
-          },
-          {
-            "id": "cold",
-            "name": "cold",
-            "domain": "thermal",
-            "side": "left",
-            "direction": "physical"
-          },
-          {
-            "id": "hot",
-            "name": "hot",
-            "domain": "thermal",
-            "side": "right",
-            "direction": "physical"
-          },
-          {
-            "id": "u",
-            "name": "u",
-            "side": "bottom",
-            "domain": "signal",
-            "direction": "input"
-          },
-          {
-            "id": "kW",
-            "name": "kW",
-            "unit": "kW",
-            "side": "bottom",
-            "domain": "signal",
-            "direction": "output"
-          },
-          {
-            "id": "coolkW",
-            "name": "Q",
-            "unit": "kW",
-            "side": "bottom",
-            "domain": "signal",
-            "direction": "output"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "ratedCooling",
-            "name": "ratedCooling",
-            "value": 1200000,
-            "unit": "W"
-          },
-          {
-            "id": "COP",
-            "name": "COP",
-            "value": 4,
-            "unit": ""
-          },
-          {
-            "id": "responseTime",
-            "name": "responseTime",
-            "value": 20,
-            "unit": "s"
-          },
-          {
-            "id": "initialCooling",
-            "name": "initialCooling",
-            "value": 600000,
-            "unit": "W"
-          },
-          {
-            "id": "derateStart",
-            "name": "derateStart",
-            "value": 1800,
-            "unit": "s"
-          },
-          {
-            "id": "derateEnd",
-            "name": "derateEnd",
-            "value": 2100,
-            "unit": "s"
-          },
-          {
-            "id": "availableFraction",
-            "name": "availableFraction",
-            "value": 0.5,
-            "unit": ""
-          },
-          {
-            "id": "minimumVoltage",
-            "name": "minimumVoltage",
-            "value": 400,
-            "unit": "V"
-          }
-        ],
-        "declarations": "Real cooling(start=initialCooling, fixed=true); Real available; Real voltage; Real power; Real removedEnergy(start=0, fixed=true);",
-        "equations": "voltage = p.v-n.v;\navailable = if time >= derateStart and time < derateEnd then availableFraction else 1;\nresponseTime*der(cooling) = ratedCooling*min(max(u, 0), available)*min(voltage*voltage/(minimumVoltage*minimumVoltage), 1)-cooling;\np.i = (cooling/COP)*voltage/max(voltage*voltage, minimumVoltage*minimumVoltage);\np.i+n.i = 0;\npower = voltage*p.i;\ncold.Q_flow = cooling;\nhot.Q_flow = -cooling-power;\nkW = power/1000;\ncoolkW = cooling/1000;\nder(removedEnergy) = cooling;"
-      },
-      "position": {
-        "x": 1000,
-        "y": 192
-      },
-      "size": {
-        "width": 128,
-        "height": 96
-      },
-      "labelOffset": {
-        "x": 80,
-        "y": 0
-      }
-    },
-    {
-      "id": "ambient",
-      "definition": {
-        "kind": "dataCenterAmbient",
-        "name": "Outdoor heat sink",
-        "domain": "thermal",
-        "symbol": "T",
-        "generated": true,
-        "description": "Infinite fixed-temperature heat sink. COP is fixed independently of this temperature; changing ambient temperature does not predict weather sensitivity.",
-        "ports": [
-          {
-            "id": "heat",
-            "name": "heat",
-            "domain": "thermal",
-            "side": "left",
-            "direction": "physical"
-          },
-          {
-            "id": "kW",
-            "name": "kW",
-            "unit": "kW",
-            "side": "bottom",
-            "domain": "signal",
-            "direction": "output"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "temperature",
-            "name": "temperature",
-            "value": 308.15,
-            "unit": "K"
-          }
-        ],
-        "equations": "heat.T = temperature;\nkW = heat.Q_flow/1000;"
-      },
-      "position": {
-        "x": 1320,
-        "y": 192
-      },
-      "size": {
-        "width": 128,
-        "height": 96
-      }
-    },
-    {
-      "id": "controller",
-      "definition": {
-        "kind": "dataCenterPI",
-        "name": "Room temperature PI",
-        "domain": "signal",
-        "symbol": "PI",
-        "generated": true,
-        "controller": true,
-        "description": "PI room-temperature controller with back-calculation anti-windup and bounded 0–1 output. Baseline 0.5 command balances 600 kW. Positive temperature error increases cooling.",
-        "ports": [
-          {
-            "id": "degC",
-            "name": "degC",
-            "side": "left",
-            "domain": "signal",
-            "direction": "input"
-          },
-          {
-            "id": "u",
-            "name": "u",
-            "unit": "1",
-            "side": "right",
-            "domain": "signal",
-            "direction": "output"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "setpoint",
-            "name": "setpoint",
-            "value": 24,
-            "unit": "degC"
-          },
-          {
-            "id": "gain",
-            "name": "gain",
-            "value": 0.1,
-            "unit": "1/K"
-          },
-          {
-            "id": "integralTime",
-            "name": "integralTime",
-            "value": 120,
-            "unit": "s"
-          },
-          {
-            "id": "initialCommand",
-            "name": "initialCommand",
-            "value": 0.5,
-            "unit": ""
-          }
-        ],
-        "declarations": "Real integral(start=initialCommand, fixed=true); Real error; Real raw;",
-        "equations": "error = degC-setpoint;\nraw = gain*error+integral;\nu = min(max(raw, 0), 1);\nintegralTime*der(integral) = gain*error+u-raw;"
-      },
-      "position": {
-        "x": 720,
-        "y": 472
-      },
-      "size": {
-        "width": 80,
-        "height": 64
+        "x": -64,
+        "y": -54
       }
     },
     {
@@ -521,186 +81,942 @@
         "equations": "p.v = 0;"
       },
       "position": {
-        "x": 0,
-        "y": 400
+        "x": 80,
+        "y": 312
       },
       "size": {
         "width": 48,
         "height": 48
       }
+    },
+    {
+      "id": "rack",
+      "definition": {
+        "kind": "heatCapacitor",
+        "name": "Rack mass 20 MJ/K",
+        "description": "Stores heat: C·dT/dt = Q_flow.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "C",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "top"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Heat capacity",
+            "value": 20000000,
+            "unit": "J/K",
+            "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 303.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermal mass",
+          "lumped"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
+          "modifiers": {
+            "C": "C",
+            "T.start": "T0"
+          }
+        }
+      },
+      "position": {
+        "x": 544,
+        "y": 448
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "path",
+      "definition": {
+        "kind": "thermalConductor",
+        "name": "Rack to room 100 kW/K",
+        "description": "Linear heat conduction: Q = G·ΔT.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "G",
+        "ports": [
+          {
+            "id": "port_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "port_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "G",
+            "name": "Conductance",
+            "value": 100000,
+            "unit": "W/K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.ThermalConductor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "conduction"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.ThermalConductor",
+          "modifiers": {
+            "G": "G"
+          }
+        }
+      },
+      "position": {
+        "x": 672,
+        "y": 368
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "room",
+      "definition": {
+        "kind": "heatCapacitor",
+        "name": "Room 10 MJ/K",
+        "description": "Stores heat: C·dT/dt = Q_flow.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "C",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "top"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Heat capacity",
+            "value": 10000000,
+            "unit": "J/K",
+            "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 297.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermal mass",
+          "lumped"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
+          "modifiers": {
+            "C": "C",
+            "T.start": "T0"
+          }
+        }
+      },
+      "position": {
+        "x": 800,
+        "y": 448
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "rackT",
+      "definition": {
+        "kind": "temperatureSensor",
+        "name": "Rack temperature",
+        "description": "Absolute temperature of its port (K).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "T",
+            "name": "T",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.TemperatureSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermometer",
+          "ntc"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.TemperatureSensor"
+        }
+      },
+      "position": {
+        "x": 640,
+        "y": 600
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "roomT",
+      "definition": {
+        "kind": "temperatureSensor",
+        "name": "Room temperature",
+        "description": "Absolute temperature of its port (K).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "T",
+            "name": "T",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.TemperatureSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermometer",
+          "ntc"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.TemperatureSensor"
+        }
+      },
+      "position": {
+        "x": 944,
+        "y": 600
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "kelvin",
+      "definition": {
+        "kind": "constant",
+        "name": "273.15 K",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 273.15,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 688,
+        "y": 728
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "rackC",
+      "definition": {
+        "kind": "subtract",
+        "name": "Rack °C",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Subtract",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "−",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a - b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 800,
+        "y": 608
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "roomC",
+      "definition": {
+        "kind": "subtract",
+        "name": "Room °C",
+        "symbol": "sum",
+        "domain": "signal",
+        "description": "Subtract",
+        "ports": [
+          {
+            "id": "a",
+            "name": "+",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "−",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = a - b;",
+        "parameters": [],
+        "declarations": ""
+      },
+      "position": {
+        "x": 1104,
+        "y": 608
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "control",
+      "definition": {
+        "kind": "subsystem",
+        "name": "Controller",
+        "description": "Subsystem Controller: 4 blocks inside.",
+        "domain": "signal",
+        "symbol": "Controller",
+        "ports": [
+          {
+            "id": "p_dc0000002o",
+            "name": "°C",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "p_dc0000002q",
+            "name": "u",
+            "direction": "output",
+            "domain": "signal",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "subsystem": {
+          "ref": "sub_dc0000002m"
+        }
+      },
+      "size": {
+        "width": 160,
+        "height": 96
+      },
+      "position": {
+        "x": 1248,
+        "y": 584
+      }
+    },
+    {
+      "id": "it",
+      "definition": {
+        "kind": "subsystem",
+        "name": "IT load",
+        "description": "Subsystem IT load: 6 blocks inside.",
+        "domain": "electrical",
+        "symbol": "IT load",
+        "ports": [
+          {
+            "id": "p_dc0000002u",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "p_dc0000002w",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "p_dc0000002y",
+            "name": "heat",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "subsystem": {
+          "ref": "sub_dc0000002s"
+        }
+      },
+      "size": {
+        "width": 160,
+        "height": 96
+      },
+      "position": {
+        "x": 312,
+        "y": 352
+      }
+    },
+    {
+      "id": "cooling",
+      "definition": {
+        "kind": "subsystem",
+        "name": "Cooling plant",
+        "description": "Subsystem Cooling plant: 11 blocks inside.",
+        "domain": "thermal",
+        "symbol": "Cooling plant",
+        "ports": [
+          {
+            "id": "p_dc00000036",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "p_dc00000034",
+            "name": "room",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "p_dc00000038",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "p_dc0000003a",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "subsystem": {
+          "ref": "sub_dc00000032"
+        }
+      },
+      "size": {
+        "width": 160,
+        "height": 96
+      },
+      "position": {
+        "x": 1248,
+        "y": 352
+      }
     }
   ],
   "wires": [
     {
-      "id": "dc_w0",
-      "source": "supply",
-      "sourceHandle": "p",
+      "id": "dc00000054-0000",
+      "source": "control",
+      "sourceHandle": "p_dc0000002q",
+      "target": "cooling",
+      "targetHandle": "p_dc00000036"
+    },
+    {
+      "id": "dc00000055-0000",
+      "source": "j_dc0000005l0000",
+      "sourceHandle": "node",
+      "target": "path",
+      "targetHandle": "port_b",
+      "waypoints": []
+    },
+    {
+      "id": "dc00000056-0000",
+      "source": "j_dc0000005l0000",
+      "sourceHandle": "node",
+      "target": "room",
+      "targetHandle": "port",
+      "waypoints": []
+    },
+    {
+      "id": "dc00000057-0000",
+      "source": "j_dc0000005n0000",
+      "sourceHandle": "node",
+      "target": "roomT",
+      "targetHandle": "port",
+      "waypoints": [
+        {
+          "x": 928,
+          "y": 632
+        }
+      ]
+    },
+    {
+      "id": "dc00000058-0000",
+      "source": "j_dc0000005p0000",
+      "sourceHandle": "node",
       "target": "it",
+      "targetHandle": "p_dc0000002u",
+      "waypoints": [
+        {
+          "x": 368,
+          "y": 320
+        }
+      ]
+    },
+    {
+      "id": "dc00000059-0000",
+      "source": "j_dc0000005p0000",
+      "sourceHandle": "node",
+      "target": "supply",
       "targetHandle": "p",
       "waypoints": [
         {
-          "x": 24,
-          "y": 40
+          "x": 1304,
+          "y": 160
         },
         {
-          "x": 280,
-          "y": 40
+          "x": 104,
+          "y": 160
         }
       ]
     },
     {
-      "id": "dc_w1",
-      "source": "it",
-      "sourceHandle": "p",
-      "target": "cooling",
-      "targetHandle": "p",
-      "waypoints": [
-        {
-          "x": 280,
-          "y": 40
-        },
-        {
-          "x": 1040,
-          "y": 40
-        }
-      ]
-    },
-    {
-      "id": "dc_w2",
-      "source": "supply",
-      "sourceHandle": "n",
-      "target": "it",
-      "targetHandle": "n",
-      "waypoints": [
-        {
-          "x": 24,
-          "y": 344
-        },
-        {
-          "x": 120,
-          "y": 344
-        },
-        {
-          "x": 120,
-          "y": 80
-        },
-        {
-          "x": 328,
-          "y": 80
-        }
-      ]
-    },
-    {
-      "id": "dc_w3",
-      "source": "it",
-      "sourceHandle": "n",
-      "target": "cooling",
-      "targetHandle": "n",
-      "waypoints": [
-        {
-          "x": 328,
-          "y": 80
-        },
-        {
-          "x": 1088,
-          "y": 80
-        }
-      ]
-    },
-    {
-      "id": "dc_w4",
-      "source": "supply",
-      "sourceHandle": "n",
+      "id": "dc0000005a-0000",
+      "source": "j_dc0000005t0000",
+      "sourceHandle": "node",
       "target": "ground",
       "targetHandle": "p",
       "waypoints": []
     },
     {
-      "id": "dc_w5",
-      "source": "it",
-      "sourceHandle": "heat",
+      "id": "dc0000005b-0000",
+      "source": "j_dc0000005r0000",
+      "sourceHandle": "node",
+      "target": "it",
+      "targetHandle": "p_dc0000002w",
+      "waypoints": []
+    },
+    {
+      "id": "dc0000005c-0000",
+      "source": "j_dc0000005t0000",
+      "sourceHandle": "node",
+      "target": "supply",
+      "targetHandle": "n",
+      "waypoints": []
+    },
+    {
+      "id": "dc0000005d-0000",
+      "source": "j_dc0000005v0000",
+      "sourceHandle": "node",
+      "target": "path",
+      "targetHandle": "port_a",
+      "waypoints": []
+    },
+    {
+      "id": "dc0000005e-0000",
+      "source": "j_dc0000005v0000",
+      "sourceHandle": "node",
       "target": "rack",
-      "targetHandle": "heat",
+      "targetHandle": "port",
       "waypoints": []
     },
     {
-      "id": "dc_w6",
-      "source": "rack",
-      "sourceHandle": "air",
-      "target": "room",
-      "targetHandle": "rack",
+      "id": "dc0000005f-0000",
+      "source": "j_dc0000005x0000",
+      "sourceHandle": "node",
+      "target": "rackT",
+      "targetHandle": "port",
+      "waypoints": [
+        {
+          "x": 512,
+          "y": 632
+        }
+      ]
+    },
+    {
+      "id": "dc0000005g-0000",
+      "source": "j_dc0000005z0000",
+      "sourceHandle": "node",
+      "target": "rackC",
+      "targetHandle": "b",
       "waypoints": []
     },
     {
-      "id": "dc_w7",
-      "source": "room",
-      "sourceHandle": "cool",
-      "target": "cooling",
-      "targetHandle": "cold",
+      "id": "dc0000005h-0000",
+      "source": "j_dc0000005z0000",
+      "sourceHandle": "node",
+      "target": "roomC",
+      "targetHandle": "b",
+      "waypoints": [
+        {
+          "x": 1128,
+          "y": 760
+        }
+      ]
+    },
+    {
+      "id": "dc0000005i-0000",
+      "source": "rackT",
+      "sourceHandle": "T",
+      "target": "rackC",
+      "targetHandle": "a"
+    },
+    {
+      "id": "dc0000005j-0000",
+      "source": "roomC",
+      "sourceHandle": "y",
+      "target": "control",
+      "targetHandle": "p_dc0000002o"
+    },
+    {
+      "id": "dc0000005k-0000",
+      "source": "roomT",
+      "sourceHandle": "T",
+      "target": "roomC",
+      "targetHandle": "a"
+    },
+    {
+      "id": "w_dc0000005m0000",
+      "source": "j_dc0000005n0000",
+      "sourceHandle": "node",
+      "target": "j_dc0000005l0000",
+      "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "dc_w8",
+      "id": "w_dc0000005o0000",
       "source": "cooling",
-      "sourceHandle": "hot",
-      "target": "ambient",
-      "targetHandle": "heat",
+      "sourceHandle": "p_dc00000034",
+      "target": "j_dc0000005n0000",
+      "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "dc_w9",
-      "source": "room",
-      "sourceHandle": "degC",
-      "target": "controller",
-      "targetHandle": "degC",
+      "id": "w_dc0000005q0000",
+      "source": "cooling",
+      "sourceHandle": "p_dc00000038",
+      "target": "j_dc0000005p0000",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_dc0000005s0000",
+      "source": "cooling",
+      "sourceHandle": "p_dc0000003a",
+      "target": "j_dc0000005r0000",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 784,
-          "y": 384
-        },
-        {
-          "x": 664,
-          "y": 384
-        },
-        {
-          "x": 664,
-          "y": 504
+          "x": 1352,
+          "y": 296
         }
       ]
     },
     {
-      "id": "dc_w10",
-      "source": "controller",
-      "sourceHandle": "u",
-      "target": "cooling",
-      "targetHandle": "u",
-      "waypoints": [
-        {
-          "x": 1032,
-          "y": 504
-        }
-      ]
+      "id": "w_dc0000005u0000",
+      "source": "j_dc0000005r0000",
+      "sourceHandle": "node",
+      "target": "j_dc0000005t0000",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_dc0000005w0000",
+      "source": "j_dc0000005x0000",
+      "sourceHandle": "node",
+      "target": "j_dc0000005v0000",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_dc0000005y0000",
+      "source": "it",
+      "sourceHandle": "p_dc0000002y",
+      "target": "j_dc0000005x0000",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_dc000000600000",
+      "source": "kelvin",
+      "sourceHandle": "y",
+      "target": "j_dc0000005z0000",
+      "targetHandle": "node",
+      "waypoints": []
     }
   ],
-  "junctions": [],
+  "junctions": [
+    {
+      "id": "j_dc0000005l0000",
+      "domain": "thermal",
+      "position": {
+        "x": 840,
+        "y": 400
+      }
+    },
+    {
+      "id": "j_dc0000005n0000",
+      "domain": "thermal",
+      "position": {
+        "x": 928,
+        "y": 400
+      }
+    },
+    {
+      "id": "j_dc0000005p0000",
+      "domain": "electrical",
+      "position": {
+        "x": 1304,
+        "y": 320
+      }
+    },
+    {
+      "id": "j_dc0000005r0000",
+      "domain": "electrical",
+      "position": {
+        "x": 416,
+        "y": 296
+      }
+    },
+    {
+      "id": "j_dc0000005t0000",
+      "domain": "electrical",
+      "position": {
+        "x": 104,
+        "y": 296
+      }
+    },
+    {
+      "id": "j_dc0000005v0000",
+      "domain": "thermal",
+      "position": {
+        "x": 584,
+        "y": 400
+      }
+    },
+    {
+      "id": "j_dc0000005x0000",
+      "domain": "thermal",
+      "position": {
+        "x": 512,
+        "y": 400
+      }
+    },
+    {
+      "id": "j_dc0000005z0000",
+      "domain": "signal",
+      "position": {
+        "x": 824,
+        "y": 760
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "datacenter_net0",
+      "anchor": "control.p_dc0000002q",
+      "wireIds": [
+        "dc00000054-0000"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net1",
+      "anchor": "cooling.p_dc00000034",
+      "wireIds": [
+        "dc00000055-0000",
+        "dc00000056-0000",
+        "dc00000057-0000",
+        "w_dc0000005m0000",
+        "w_dc0000005o0000"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net2",
+      "anchor": "cooling.p_dc00000038",
+      "wireIds": [
+        "dc00000058-0000",
+        "dc00000059-0000",
+        "w_dc0000005q0000"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net3",
+      "anchor": "cooling.p_dc0000003a",
+      "wireIds": [
+        "dc0000005a-0000",
+        "dc0000005b-0000",
+        "dc0000005c-0000",
+        "w_dc0000005s0000",
+        "w_dc0000005u0000"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net4",
+      "anchor": "it.p_dc0000002y",
+      "wireIds": [
+        "dc0000005d-0000",
+        "dc0000005e-0000",
+        "dc0000005f-0000",
+        "w_dc0000005w0000",
+        "w_dc0000005y0000"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net5",
+      "anchor": "kelvin.y",
+      "wireIds": [
+        "dc0000005g-0000",
+        "dc0000005h-0000",
+        "w_dc000000600000"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net6",
+      "anchor": "rackT.T",
+      "wireIds": [
+        "dc0000005i-0000"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net7",
+      "anchor": "roomC.y",
+      "wireIds": [
+        "dc0000005j-0000"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "datacenter_net8",
+      "anchor": "roomT.T",
+      "wireIds": [
+        "dc0000005k-0000"
+      ],
+      "hidden": true
+    }
+  ],
   "annotations": [
     {
-      "x": 480,
-      "y": 110,
+      "x": 80,
+      "y": 8,
       "text": "DATA CENTER · COOLING CONTROL",
-      "detail": "1 hour · illustrative parameters · ideal 800 V DC equivalent"
+      "detail": "1 hour · illustrative values · ideal 800 V DC supply"
     },
     {
-      "x": 340,
-      "y": 400,
+      "x": 720,
+      "y": 8,
       "text": "DISTURBANCES",
-      "detail": "10 min: IT 600 → 900 kW\n30–35 min: cooling capacity 50%"
-    },
-    {
-      "x": 1040,
-      "y": 500,
-      "text": "MODEL LIMITS",
-      "detail": "Fixed COP 4 · no fluid network or humidity\nRoom and rack are lumped temperatures"
+      "detail": "10 min: IT 600 → 900 kW · 30–35 min: cooling capacity 50 %"
     }
   ],
   "plots": [
@@ -708,8 +1024,8 @@
       "id": "temperatures",
       "label": "Temperatures (°C)",
       "series": [
-        "room.degC",
-        "rack.degC"
+        "roomC.y",
+        "rackC.y"
       ],
       "labels": [
         "Room",
@@ -720,10 +1036,10 @@
       "id": "power",
       "label": "Power (kW)",
       "series": [
-        "it.kW",
-        "cooling.coolkW",
-        "cooling.kW",
-        "ambient.kW"
+        "it.itKW.y",
+        "cooling.capacity.y",
+        "cooling.electric.y",
+        "cooling.rejected.y"
       ],
       "labels": [
         "IT electricity / heat",
@@ -736,80 +1052,1992 @@
       "id": "control",
       "label": "Cooling command (0–1)",
       "series": [
-        "controller.u"
+        "control.command.y"
       ],
       "labels": [
         "PI command"
       ]
     }
   ],
-  "nets": [
+  "subsystems": [
     {
-      "id": "datacenter_net0",
-      "anchor": "cooling.p",
-      "wireIds": [
-        "dc_w0",
-        "dc_w1"
+      "id": "sub_dc0000002m",
+      "name": "Controller",
+      "blocks": [
+        {
+          "id": "setpoint",
+          "definition": {
+            "kind": "constant",
+            "name": "24 °C setpoint",
+            "symbol": "constant",
+            "domain": "signal",
+            "description": "Constant",
+            "ports": [
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = value;",
+            "parameters": [
+              {
+                "id": "value",
+                "name": "Value",
+                "value": 24,
+                "unit": ""
+              }
+            ],
+            "declarations": ""
+          },
+          "position": {
+            "x": 1408,
+            "y": 808
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "pi",
+          "definition": {
+            "kind": "pi",
+            "name": "Room temperature PI",
+            "description": "Sampled PI control with output saturation and a bounded integral state.",
+            "domain": "signal",
+            "symbol": "PI",
+            "controller": true,
+            "ports": [
+              {
+                "id": "reference",
+                "name": "ref",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "measured",
+                "name": "meas",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "kp",
+                "name": "Proportional gain",
+                "value": 0.1,
+                "unit": ""
+              },
+              {
+                "id": "ki",
+                "name": "Integral gain",
+                "value": 0.0008333333333333334,
+                "unit": ""
+              },
+              {
+                "id": "limit",
+                "name": "Voltage limit",
+                "value": 0.5,
+                "unit": "V",
+                "min": 0.1
+              },
+              {
+                "id": "samplePeriod",
+                "name": "Sample period",
+                "value": 1,
+                "unit": "s",
+                "min": 0.0001
+              }
+            ],
+            "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
+            "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+          },
+          "position": {
+            "x": 1600,
+            "y": 696
+          },
+          "size": {
+            "width": 128,
+            "height": 96
+          }
+        },
+        {
+          "id": "bias",
+          "definition": {
+            "kind": "constant",
+            "name": "Base command 0.5",
+            "symbol": "constant",
+            "domain": "signal",
+            "description": "Constant",
+            "ports": [
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = value;",
+            "parameters": [
+              {
+                "id": "value",
+                "name": "Value",
+                "value": 0.5,
+                "unit": ""
+              }
+            ],
+            "declarations": ""
+          },
+          "position": {
+            "x": 1624,
+            "y": 872
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "command",
+          "definition": {
+            "kind": "sum",
+            "name": "Command",
+            "symbol": "sum",
+            "domain": "signal",
+            "description": "Sum",
+            "ports": [
+              {
+                "id": "a",
+                "name": "+",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "b",
+                "name": "+",
+                "direction": "input",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = a + b;",
+            "parameters": [],
+            "declarations": ""
+          },
+          "position": {
+            "x": 1832,
+            "y": 720
+          },
+          "size": {
+            "width": 48,
+            "height": 48
+          },
+          "labelOffset": {
+            "x": 0,
+            "y": -80
+          }
+        },
+        {
+          "id": "p_dc0000002o",
+          "definition": {
+            "kind": "inport",
+            "name": "°C",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "y",
+                "name": "ref",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0,
+              "side": "left"
+            }
+          },
+          "position": {
+            "x": 1424,
+            "y": 712
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_dc0000002q",
+          "definition": {
+            "kind": "outport",
+            "name": "u",
+            "description": "Subsystem output.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "u",
+                "name": "out",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1,
+              "side": "top"
+            }
+          },
+          "position": {
+            "x": 1984,
+            "y": 728
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        }
       ],
-      "hidden": true
+      "wires": [
+        {
+          "id": "dc0000003c-0000",
+          "source": "bias",
+          "sourceHandle": "y",
+          "target": "command",
+          "targetHandle": "b"
+        },
+        {
+          "id": "dc0000003d-0000",
+          "source": "command",
+          "sourceHandle": "y",
+          "target": "p_dc0000002q",
+          "targetHandle": "u"
+        },
+        {
+          "id": "dc0000003e-0000",
+          "source": "p_dc0000002o",
+          "sourceHandle": "y",
+          "target": "pi",
+          "targetHandle": "reference"
+        },
+        {
+          "id": "dc0000003f-0000",
+          "source": "pi",
+          "sourceHandle": "y",
+          "target": "command",
+          "targetHandle": "a"
+        },
+        {
+          "id": "dc0000003g-0000",
+          "source": "setpoint",
+          "sourceHandle": "y",
+          "target": "pi",
+          "targetHandle": "measured"
+        }
+      ],
+      "junctions": [],
+      "nets": [
+        {
+          "id": "net_dc0000003h0000",
+          "anchor": "bias.y",
+          "wireIds": [
+            "dc0000003c-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000003i0000",
+          "anchor": "command.y",
+          "wireIds": [
+            "dc0000003d-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000003j0000",
+          "anchor": "p_dc0000002o.y",
+          "wireIds": [
+            "dc0000003e-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000003k0000",
+          "anchor": "pi.y",
+          "wireIds": [
+            "dc0000003f-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000003l0000",
+          "anchor": "setpoint.y",
+          "wireIds": [
+            "dc0000003g-0000"
+          ]
+        }
+      ]
     },
     {
-      "id": "datacenter_net1",
-      "anchor": "cooling.n",
-      "wireIds": [
-        "dc_w2",
-        "dc_w3",
-        "dc_w4"
+      "id": "sub_dc0000002s",
+      "name": "IT load",
+      "blocks": [
+        {
+          "id": "itBase",
+          "definition": {
+            "kind": "heatingResistor",
+            "name": "IT load 600 kW",
+            "description": "Resistor whose losses heat its thermal port and whose resistance changes with its temperature.",
+            "domain": "thermal",
+            "category": "electrical",
+            "symbol": "R(T)",
+            "ports": [
+              {
+                "id": "heatPort",
+                "name": "heat",
+                "direction": "physical",
+                "domain": "thermal",
+                "side": "bottom"
+              },
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "R",
+                "name": "Resistance at T_ref",
+                "value": 1.0666666666666667,
+                "unit": "Ω",
+                "min": 0
+              },
+              {
+                "id": "T_ref",
+                "name": "Reference temperature",
+                "value": 300.15,
+                "unit": "K",
+                "min": 0
+              },
+              {
+                "id": "alpha",
+                "name": "Temperature coefficient",
+                "value": 0,
+                "unit": "1/K"
+              }
+            ],
+            "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "losses",
+              "self-heating",
+              "copper"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Resistor",
+              "modifiers": {
+                "useHeatPort": "true",
+                "R": "R",
+                "T_ref": "T_ref",
+                "alpha": "alpha"
+              }
+            }
+          },
+          "position": {
+            "x": 296,
+            "y": 256
+          },
+          "size": {
+            "width": 48,
+            "height": 80
+          },
+          "rotation": 270,
+          "labelOffset": {
+            "x": -88,
+            "y": -54
+          }
+        },
+        {
+          "id": "addLoad",
+          "definition": {
+            "kind": "closingSwitch",
+            "name": "Load step",
+            "description": "Ideal switch that closes while its control input is true.",
+            "domain": "electrical",
+            "category": "semiconductors",
+            "symbol": "S",
+            "ports": [
+              {
+                "id": "control",
+                "name": "on",
+                "direction": "input",
+                "domain": "boolean",
+                "side": "top"
+              },
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "Ron",
+                "name": "On resistance",
+                "value": 0.00001,
+                "unit": "Ω",
+                "min": 0
+              },
+              {
+                "id": "Goff",
+                "name": "Off conductance",
+                "value": 1e-9,
+                "unit": "S",
+                "min": 0
+              }
+            ],
+            "equations": "// Electrical.Analog.Ideal.IdealClosingSwitch from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "relay",
+              "contactor",
+              "breaker"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Ideal.IdealClosingSwitch",
+              "modifiers": {
+                "Ron": "Ron",
+                "Goff": "Goff"
+              }
+            }
+          },
+          "position": {
+            "x": 440,
+            "y": 176
+          },
+          "size": {
+            "width": 80,
+            "height": 48
+          }
+        },
+        {
+          "id": "at10min",
+          "definition": {
+            "kind": "booleanStep",
+            "name": "At 10 min",
+            "description": "False before the step time, true after.",
+            "domain": "boolean",
+            "category": "logic",
+            "symbol": "⎍",
+            "ports": [
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "boolean",
+                "side": "right"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "startTime",
+                "name": "Step time",
+                "value": 600,
+                "unit": "s",
+                "min": 0
+              }
+            ],
+            "equations": "// Blocks.Sources.BooleanStep from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "enable",
+              "trigger"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Sources.BooleanStep",
+              "modifiers": {
+                "startValue": "false",
+                "startTime": "startTime"
+              }
+            }
+          },
+          "position": {
+            "x": 440,
+            "y": 56
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "itAdded",
+          "definition": {
+            "kind": "heatingResistor",
+            "name": "IT load +300 kW",
+            "description": "Resistor whose losses heat its thermal port and whose resistance changes with its temperature.",
+            "domain": "thermal",
+            "category": "electrical",
+            "symbol": "R(T)",
+            "ports": [
+              {
+                "id": "heatPort",
+                "name": "heat",
+                "direction": "physical",
+                "domain": "thermal",
+                "side": "bottom"
+              },
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "left"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "R",
+                "name": "Resistance at T_ref",
+                "value": 2.1333333333333333,
+                "unit": "Ω",
+                "min": 0
+              },
+              {
+                "id": "T_ref",
+                "name": "Reference temperature",
+                "value": 300.15,
+                "unit": "K",
+                "min": 0
+              },
+              {
+                "id": "alpha",
+                "name": "Temperature coefficient",
+                "value": 0,
+                "unit": "1/K"
+              }
+            ],
+            "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "losses",
+              "self-heating",
+              "copper"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Resistor",
+              "modifiers": {
+                "useHeatPort": "true",
+                "R": "R",
+                "T_ref": "T_ref",
+                "alpha": "alpha"
+              }
+            }
+          },
+          "position": {
+            "x": 616,
+            "y": 256
+          },
+          "size": {
+            "width": 48,
+            "height": 80
+          },
+          "rotation": 270,
+          "labelOffset": {
+            "x": 92,
+            "y": -54
+          }
+        },
+        {
+          "id": "itHeat",
+          "definition": {
+            "kind": "heatFlowSensor",
+            "name": "IT heat",
+            "description": "Heat flow from port a to port b.",
+            "domain": "thermal",
+            "category": "thermal",
+            "symbol": "Q",
+            "ports": [
+              {
+                "id": "Q_flow",
+                "name": "Q",
+                "direction": "output",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "port_a",
+                "name": "a",
+                "direction": "physical",
+                "domain": "thermal",
+                "side": "left"
+              },
+              {
+                "id": "port_b",
+                "name": "b",
+                "direction": "physical",
+                "domain": "thermal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "// Thermal.HeatTransfer.Sensors.HeatFlowSensor from the Modelica Standard Library 4.1.0",
+            "keywords": [],
+            "modelica": {
+              "class": "Modelica.Thermal.HeatTransfer.Sensors.HeatFlowSensor"
+            }
+          },
+          "position": {
+            "x": 440,
+            "y": 520
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          },
+          "labelOffset": {
+            "x": -76,
+            "y": -46
+          }
+        },
+        {
+          "id": "itKW",
+          "definition": {
+            "kind": "gain",
+            "name": "IT kW",
+            "description": "Multiply an input by an adjustable gain.",
+            "domain": "signal",
+            "symbol": "K",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "k",
+                "name": "Gain",
+                "value": 0.001,
+                "unit": ""
+              }
+            ],
+            "equations": "y = k*u;"
+          },
+          "position": {
+            "x": 440,
+            "y": 648
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "p_dc0000002u",
+          "definition": {
+            "kind": "connport",
+            "name": "+",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0,
+              "side": "top"
+            }
+          },
+          "position": {
+            "x": 88,
+            "y": 184
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_dc0000002w",
+          "definition": {
+            "kind": "connport",
+            "name": "−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "2",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+2",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1,
+              "side": "top"
+            }
+          },
+          "position": {
+            "x": 88,
+            "y": 376
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_dc0000002y",
+          "definition": {
+            "kind": "connport",
+            "name": "heat",
+            "description": "Physical thermal terminal of the subsystem.",
+            "domain": "thermal",
+            "symbol": "3",
+            "ports": [
+              {
+                "id": "p",
+                "name": "b",
+                "direction": "physical",
+                "domain": "thermal",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2,
+              "side": "right"
+            }
+          },
+          "position": {
+            "x": 632,
+            "y": 536
+          },
+          "size": {
+            "width": 96,
+            "height": 32
+          }
+        }
       ],
-      "hidden": true
+      "wires": [
+        {
+          "id": "dc0000003m-0000",
+          "source": "addLoad",
+          "sourceHandle": "n",
+          "target": "itAdded",
+          "targetHandle": "n"
+        },
+        {
+          "id": "dc0000003n-0000",
+          "source": "j_dc0000003w0000",
+          "sourceHandle": "node",
+          "target": "itBase",
+          "targetHandle": "n",
+          "waypoints": []
+        },
+        {
+          "id": "dc0000003o-0000",
+          "source": "j_dc0000003w0000",
+          "sourceHandle": "node",
+          "target": "p_dc0000002u",
+          "targetHandle": "p",
+          "waypoints": []
+        },
+        {
+          "id": "dc0000003p-0000",
+          "source": "at10min",
+          "sourceHandle": "y",
+          "target": "addLoad",
+          "targetHandle": "control"
+        },
+        {
+          "id": "dc0000003q-0000",
+          "source": "j_dc0000003y0000",
+          "sourceHandle": "node",
+          "target": "itBase",
+          "targetHandle": "heatPort",
+          "waypoints": [
+            {
+              "x": 680,
+              "y": 256
+            },
+            {
+              "x": 360,
+              "y": 256
+            },
+            {
+              "x": 360,
+              "y": 296
+            }
+          ]
+        },
+        {
+          "id": "dc0000003r-0000",
+          "source": "j_dc0000003y0000",
+          "sourceHandle": "node",
+          "target": "itHeat",
+          "targetHandle": "port_a",
+          "waypoints": [
+            {
+              "x": 680,
+              "y": 424
+            },
+            {
+              "x": 424,
+              "y": 424
+            },
+            {
+              "x": 424,
+              "y": 552
+            }
+          ]
+        },
+        {
+          "id": "dc0000003s-0000",
+          "source": "j_dc000000400000",
+          "sourceHandle": "node",
+          "target": "itBase",
+          "targetHandle": "p",
+          "waypoints": [
+            {
+              "x": 320,
+              "y": 352
+            }
+          ]
+        },
+        {
+          "id": "dc0000003t-0000",
+          "source": "j_dc000000400000",
+          "sourceHandle": "node",
+          "target": "p_dc0000002w",
+          "targetHandle": "p",
+          "waypoints": [
+            {
+              "x": 640,
+              "y": 392
+            }
+          ]
+        },
+        {
+          "id": "dc0000003u-0000",
+          "source": "itHeat",
+          "sourceHandle": "port_b",
+          "target": "p_dc0000002y",
+          "targetHandle": "p"
+        },
+        {
+          "id": "dc0000003v-0000",
+          "source": "itHeat",
+          "sourceHandle": "Q_flow",
+          "target": "itKW",
+          "targetHandle": "u"
+        },
+        {
+          "id": "w_dc0000003x0000",
+          "source": "addLoad",
+          "sourceHandle": "p",
+          "target": "j_dc0000003w0000",
+          "targetHandle": "node",
+          "waypoints": []
+        },
+        {
+          "id": "w_dc0000003z0000",
+          "source": "itAdded",
+          "sourceHandle": "heatPort",
+          "target": "j_dc0000003y0000",
+          "targetHandle": "node",
+          "waypoints": []
+        },
+        {
+          "id": "w_dc000000410000",
+          "source": "itAdded",
+          "sourceHandle": "p",
+          "target": "j_dc000000400000",
+          "targetHandle": "node",
+          "waypoints": []
+        }
+      ],
+      "junctions": [
+        {
+          "id": "j_dc0000003w0000",
+          "domain": "electrical",
+          "position": {
+            "x": 320,
+            "y": 200
+          }
+        },
+        {
+          "id": "j_dc0000003y0000",
+          "domain": "thermal",
+          "position": {
+            "x": 680,
+            "y": 296
+          }
+        },
+        {
+          "id": "j_dc000000400000",
+          "domain": "electrical",
+          "position": {
+            "x": 640,
+            "y": 352
+          }
+        }
+      ],
+      "nets": [
+        {
+          "id": "net_dc000000420000",
+          "anchor": "addLoad.n",
+          "wireIds": [
+            "dc0000003m-0000"
+          ]
+        },
+        {
+          "id": "net_dc000000430000",
+          "anchor": "addLoad.p",
+          "wireIds": [
+            "dc0000003n-0000",
+            "dc0000003o-0000",
+            "w_dc0000003x0000"
+          ]
+        },
+        {
+          "id": "net_dc000000440000",
+          "anchor": "at10min.y",
+          "wireIds": [
+            "dc0000003p-0000"
+          ]
+        },
+        {
+          "id": "net_dc000000450000",
+          "anchor": "itAdded.heatPort",
+          "wireIds": [
+            "dc0000003q-0000",
+            "dc0000003r-0000",
+            "w_dc0000003z0000"
+          ]
+        },
+        {
+          "id": "net_dc000000460000",
+          "anchor": "itAdded.p",
+          "wireIds": [
+            "dc0000003s-0000",
+            "dc0000003t-0000",
+            "w_dc000000410000"
+          ]
+        },
+        {
+          "id": "net_dc000000470000",
+          "anchor": "itHeat.port_b",
+          "wireIds": [
+            "dc0000003u-0000"
+          ]
+        },
+        {
+          "id": "net_dc000000480000",
+          "anchor": "itHeat.Q_flow",
+          "wireIds": [
+            "dc0000003v-0000"
+          ]
+        }
+      ]
     },
     {
-      "id": "datacenter_net2",
-      "anchor": "it.heat",
-      "wireIds": [
-        "dc_w5"
+      "id": "sub_dc00000032",
+      "name": "Cooling plant",
+      "blocks": [
+        {
+          "id": "plant",
+          "definition": {
+            "kind": "signalCurrent",
+            "name": "Cooling electricity",
+            "description": "Current equal to the input signal.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "i(u)",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "top"
+              },
+              {
+                "id": "n",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "bottom"
+              },
+              {
+                "id": "i",
+                "name": "i",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "// Electrical.Analog.Sources.SignalCurrent from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "load",
+              "programmable"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sources.SignalCurrent"
+            }
+          },
+          "position": {
+            "x": 848,
+            "y": 296
+          },
+          "size": {
+            "width": 48,
+            "height": 80
+          },
+          "labelOffset": {
+            "x": 108,
+            "y": -54
+          }
+        },
+        {
+          "id": "cooler",
+          "definition": {
+            "kind": "prescribedHeatFlow",
+            "name": "Cooling",
+            "description": "Injects the input heat flow (W) into its port.",
+            "domain": "thermal",
+            "category": "thermal",
+            "symbol": "Q",
+            "ports": [
+              {
+                "id": "Q_flow",
+                "name": "Q",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "port",
+                "name": "Q",
+                "direction": "physical",
+                "domain": "thermal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "// Thermal.HeatTransfer.Sources.PrescribedHeatFlow from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "losses",
+              "heater"
+            ],
+            "modelica": {
+              "class": "Modelica.Thermal.HeatTransfer.Sources.PrescribedHeatFlow"
+            }
+          },
+          "position": {
+            "x": 280,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          },
+          "rotation": 180,
+          "labelOffset": {
+            "x": 0,
+            "y": -96
+          }
+        },
+        {
+          "id": "outage",
+          "definition": {
+            "kind": "pulse",
+            "name": "Outage 30–35 min",
+            "symbol": "pulse",
+            "domain": "signal",
+            "description": "A periodic rectangular pulse.",
+            "ports": [
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = if mod(time - startTime + period, period) < width*period then amplitude else 0;",
+            "parameters": [
+              {
+                "id": "amplitude",
+                "name": "Amplitude",
+                "value": 0.5,
+                "unit": ""
+              },
+              {
+                "id": "period",
+                "name": "Period",
+                "value": 100000,
+                "unit": "s",
+                "min": 0.0001
+              },
+              {
+                "id": "width",
+                "name": "Duty cycle",
+                "value": 0.003,
+                "unit": "",
+                "min": 0
+              },
+              {
+                "id": "startTime",
+                "name": "Start time",
+                "value": 1800,
+                "unit": "s",
+                "min": 0
+              }
+            ],
+            "declarations": "",
+            "keywords": [
+              "source",
+              "square",
+              "pwm"
+            ]
+          },
+          "position": {
+            "x": 64,
+            "y": 712
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "one",
+          "definition": {
+            "kind": "constant",
+            "name": "Full capacity",
+            "symbol": "constant",
+            "domain": "signal",
+            "description": "Constant",
+            "ports": [
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = value;",
+            "parameters": [
+              {
+                "id": "value",
+                "name": "Value",
+                "value": 1,
+                "unit": ""
+              }
+            ],
+            "declarations": ""
+          },
+          "position": {
+            "x": 64,
+            "y": 584
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "available",
+          "definition": {
+            "kind": "subtract",
+            "name": "Available",
+            "symbol": "sum",
+            "domain": "signal",
+            "description": "Subtract",
+            "ports": [
+              {
+                "id": "a",
+                "name": "+",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "b",
+                "name": "−",
+                "direction": "input",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = a - b;",
+            "parameters": [],
+            "declarations": ""
+          },
+          "position": {
+            "x": 224,
+            "y": 592
+          },
+          "size": {
+            "width": 48,
+            "height": 48
+          },
+          "labelOffset": {
+            "x": 68,
+            "y": -38
+          }
+        },
+        {
+          "id": "limit",
+          "definition": {
+            "kind": "min",
+            "name": "Limit",
+            "symbol": "min",
+            "domain": "signal",
+            "description": "The smaller of two signals.",
+            "ports": [
+              {
+                "id": "a",
+                "name": "a",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "b",
+                "name": "b",
+                "direction": "input",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = min(a, b);",
+            "parameters": [],
+            "declarations": "",
+            "keywords": [
+              "math"
+            ]
+          },
+          "position": {
+            "x": 304,
+            "y": 448
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          },
+          "labelOffset": {
+            "x": 0,
+            "y": -96
+          }
+        },
+        {
+          "id": "capacity",
+          "definition": {
+            "kind": "gain",
+            "name": "Cooling kW (1200 kW rated)",
+            "description": "Multiply an input by an adjustable gain.",
+            "domain": "signal",
+            "symbol": "K",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "k",
+                "name": "Gain",
+                "value": 1200,
+                "unit": ""
+              }
+            ],
+            "equations": "y = k*u;"
+          },
+          "position": {
+            "x": 464,
+            "y": 448
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          },
+          "labelOffset": {
+            "x": 0,
+            "y": -96
+          }
+        },
+        {
+          "id": "toWatts",
+          "definition": {
+            "kind": "gain",
+            "name": "Heat out, W",
+            "description": "Multiply an input by an adjustable gain.",
+            "domain": "signal",
+            "symbol": "K",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "k",
+                "name": "Gain",
+                "value": -1000,
+                "unit": ""
+              }
+            ],
+            "equations": "y = k*u;"
+          },
+          "position": {
+            "x": 464,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          },
+          "rotation": 180,
+          "labelOffset": {
+            "x": 0,
+            "y": -96
+          }
+        },
+        {
+          "id": "amps",
+          "definition": {
+            "kind": "gain",
+            "name": "Plant current, A",
+            "description": "Multiply an input by an adjustable gain.",
+            "domain": "signal",
+            "symbol": "K",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "k",
+                "name": "Gain",
+                "value": 0.3125,
+                "unit": ""
+              }
+            ],
+            "equations": "y = k*u;"
+          },
+          "position": {
+            "x": 680,
+            "y": 304
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          },
+          "labelOffset": {
+            "x": 0,
+            "y": -96
+          }
+        },
+        {
+          "id": "electric",
+          "definition": {
+            "kind": "gain",
+            "name": "Cooling electricity kW",
+            "description": "Multiply an input by an adjustable gain.",
+            "domain": "signal",
+            "symbol": "K",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "k",
+                "name": "Gain",
+                "value": 0.25,
+                "unit": ""
+              }
+            ],
+            "equations": "y = k*u;"
+          },
+          "position": {
+            "x": 680,
+            "y": 584
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "rejected",
+          "definition": {
+            "kind": "sum",
+            "name": "Heat rejected",
+            "symbol": "sum",
+            "domain": "signal",
+            "description": "Sum",
+            "ports": [
+              {
+                "id": "a",
+                "name": "+",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "b",
+                "name": "+",
+                "direction": "input",
+                "domain": "signal",
+                "side": "bottom"
+              },
+              {
+                "id": "y",
+                "name": "y",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
+              }
+            ],
+            "equations": "y = a + b;",
+            "parameters": [],
+            "declarations": ""
+          },
+          "position": {
+            "x": 880,
+            "y": 456
+          },
+          "size": {
+            "width": 48,
+            "height": 48
+          },
+          "labelOffset": {
+            "x": 0,
+            "y": -80
+          }
+        },
+        {
+          "id": "p_dc00000034",
+          "definition": {
+            "kind": "connport",
+            "name": "room",
+            "description": "Physical thermal terminal of the subsystem.",
+            "domain": "thermal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "p",
+                "name": "Q",
+                "direction": "physical",
+                "domain": "thermal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1,
+              "side": "left"
+            }
+          },
+          "position": {
+            "x": 56,
+            "y": 184
+          },
+          "size": {
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_dc00000036",
+          "definition": {
+            "kind": "inport",
+            "name": "u",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "y",
+                "name": "a",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0,
+              "side": "bottom"
+            }
+          },
+          "position": {
+            "x": 88,
+            "y": 464
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_dc00000038",
+          "definition": {
+            "kind": "connport",
+            "name": "+",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "2",
+            "ports": [
+              {
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2,
+              "side": "top"
+            }
+          },
+          "position": {
+            "x": 688,
+            "y": 224
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_dc0000003a",
+          "definition": {
+            "kind": "connport",
+            "name": "−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "3",
+            "ports": [
+              {
+                "id": "p",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 3,
+              "side": "top"
+            }
+          },
+          "position": {
+            "x": 688,
+            "y": 408
+          },
+          "size": {
+            "width": 64,
+            "height": 32
+          }
+        }
       ],
-      "hidden": true
-    },
-    {
-      "id": "datacenter_net3",
-      "anchor": "rack.air",
-      "wireIds": [
-        "dc_w6"
+      "wires": [
+        {
+          "id": "dc00000049-0000",
+          "source": "amps",
+          "sourceHandle": "y",
+          "target": "plant",
+          "targetHandle": "i"
+        },
+        {
+          "id": "dc0000004a-0000",
+          "source": "available",
+          "sourceHandle": "y",
+          "target": "limit",
+          "targetHandle": "b"
+        },
+        {
+          "id": "dc0000004b-0000",
+          "source": "j_dc0000004o0000",
+          "sourceHandle": "node",
+          "target": "amps",
+          "targetHandle": "u",
+          "waypoints": [
+            {
+              "x": 616,
+              "y": 336
+            }
+          ]
+        },
+        {
+          "id": "dc0000004c-0000",
+          "source": "j_dc0000004o0000",
+          "sourceHandle": "node",
+          "target": "electric",
+          "targetHandle": "u",
+          "waypoints": [
+            {
+              "x": 616,
+              "y": 616
+            }
+          ]
+        },
+        {
+          "id": "dc0000004d-0000",
+          "source": "j_dc0000004o0000",
+          "sourceHandle": "node",
+          "target": "rejected",
+          "targetHandle": "a",
+          "waypoints": []
+        },
+        {
+          "id": "dc0000004e-0000",
+          "source": "j_dc0000004q0000",
+          "sourceHandle": "node",
+          "target": "toWatts",
+          "targetHandle": "u",
+          "waypoints": [
+            {
+              "x": 560,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "dc0000004f-0000",
+          "source": "cooler",
+          "sourceHandle": "port",
+          "target": "p_dc00000034",
+          "targetHandle": "p"
+        },
+        {
+          "id": "dc0000004g-0000",
+          "source": "electric",
+          "sourceHandle": "y",
+          "target": "rejected",
+          "targetHandle": "b"
+        },
+        {
+          "id": "dc0000004h-0000",
+          "source": "limit",
+          "sourceHandle": "y",
+          "target": "capacity",
+          "targetHandle": "u"
+        },
+        {
+          "id": "dc0000004i-0000",
+          "source": "one",
+          "sourceHandle": "y",
+          "target": "available",
+          "targetHandle": "a"
+        },
+        {
+          "id": "dc0000004j-0000",
+          "source": "outage",
+          "sourceHandle": "y",
+          "target": "available",
+          "targetHandle": "b"
+        },
+        {
+          "id": "dc0000004k-0000",
+          "source": "p_dc00000036",
+          "sourceHandle": "y",
+          "target": "limit",
+          "targetHandle": "a"
+        },
+        {
+          "id": "dc0000004l-0000",
+          "source": "p_dc00000038",
+          "sourceHandle": "p",
+          "target": "plant",
+          "targetHandle": "p"
+        },
+        {
+          "id": "dc0000004m-0000",
+          "source": "p_dc0000003a",
+          "sourceHandle": "p",
+          "target": "plant",
+          "targetHandle": "n"
+        },
+        {
+          "id": "dc0000004n-0000",
+          "source": "toWatts",
+          "sourceHandle": "y",
+          "target": "cooler",
+          "targetHandle": "Q_flow"
+        },
+        {
+          "id": "w_dc0000004p0000",
+          "source": "j_dc0000004q0000",
+          "sourceHandle": "node",
+          "target": "j_dc0000004o0000",
+          "targetHandle": "node",
+          "waypoints": []
+        },
+        {
+          "id": "w_dc0000004r0000",
+          "source": "capacity",
+          "sourceHandle": "y",
+          "target": "j_dc0000004q0000",
+          "targetHandle": "node",
+          "waypoints": []
+        }
       ],
-      "hidden": true
-    },
-    {
-      "id": "datacenter_net4",
-      "anchor": "cooling.cold",
-      "wireIds": [
-        "dc_w7"
+      "junctions": [
+        {
+          "id": "j_dc0000004o0000",
+          "domain": "signal",
+          "position": {
+            "x": 616,
+            "y": 480
+          }
+        },
+        {
+          "id": "j_dc0000004q0000",
+          "domain": "signal",
+          "position": {
+            "x": 560,
+            "y": 480
+          }
+        }
       ],
-      "hidden": true
-    },
-    {
-      "id": "datacenter_net5",
-      "anchor": "ambient.heat",
-      "wireIds": [
-        "dc_w8"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "datacenter_net6",
-      "anchor": "room.degC",
-      "wireIds": [
-        "dc_w9"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "datacenter_net7",
-      "anchor": "controller.u",
-      "wireIds": [
-        "dc_w10"
-      ],
-      "hidden": true
+      "nets": [
+        {
+          "id": "net_dc0000004s0000",
+          "anchor": "amps.y",
+          "wireIds": [
+            "dc00000049-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000004t0000",
+          "anchor": "available.y",
+          "wireIds": [
+            "dc0000004a-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000004u0000",
+          "anchor": "capacity.y",
+          "wireIds": [
+            "dc0000004b-0000",
+            "dc0000004c-0000",
+            "dc0000004d-0000",
+            "dc0000004e-0000",
+            "w_dc0000004p0000",
+            "w_dc0000004r0000"
+          ]
+        },
+        {
+          "id": "net_dc0000004v0000",
+          "anchor": "cooler.port",
+          "wireIds": [
+            "dc0000004f-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000004w0000",
+          "anchor": "electric.y",
+          "wireIds": [
+            "dc0000004g-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000004x0000",
+          "anchor": "limit.y",
+          "wireIds": [
+            "dc0000004h-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000004y0000",
+          "anchor": "one.y",
+          "wireIds": [
+            "dc0000004i-0000"
+          ]
+        },
+        {
+          "id": "net_dc0000004z0000",
+          "anchor": "outage.y",
+          "wireIds": [
+            "dc0000004j-0000"
+          ]
+        },
+        {
+          "id": "net_dc000000500000",
+          "anchor": "p_dc00000036.y",
+          "wireIds": [
+            "dc0000004k-0000"
+          ]
+        },
+        {
+          "id": "net_dc000000510000",
+          "anchor": "p_dc00000038.p",
+          "wireIds": [
+            "dc0000004l-0000"
+          ]
+        },
+        {
+          "id": "net_dc000000520000",
+          "anchor": "p_dc0000003a.p",
+          "wireIds": [
+            "dc0000004m-0000"
+          ]
+        },
+        {
+          "id": "net_dc000000530000",
+          "anchor": "toWatts.y",
+          "wireIds": [
+            "dc0000004n-0000"
+          ]
+        }
+      ]
     }
   ]
 }

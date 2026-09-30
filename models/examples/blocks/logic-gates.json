@@ -1,0 +1,848 @@
+{
+  "version": 1,
+  "name": "Example: Logic gates",
+  "exampleId": "block-logic-gates",
+  "description": "A is true for the first half of every second, B for the first second of every two. Read the gates at 0.25 s (A and B true), 0.75 s (only B), and 1.75 s (neither): AND is true only at 0.25 s, OR at 0.25 and 0.75 s, XOR only at 0.75 s, NAND and NOR are their inverses, and NOT inverts A. Boolean to real turns the NOT output into 0 or 1 for arithmetic.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "A",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "A",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 50,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 1,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "B",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "B",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 50,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 2,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 432
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "gAnd",
+      "definition": {
+        "kind": "logicAnd",
+        "name": "AND",
+        "description": "Boolean AND of two inputs.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "&",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.And from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gate",
+          "logic",
+          "boolean"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.And"
+        }
+      },
+      "position": {
+        "x": 280,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 60,
+        "y": -46
+      }
+    },
+    {
+      "id": "gOr",
+      "definition": {
+        "kind": "logicOr",
+        "name": "OR",
+        "description": "Boolean OR of two inputs.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "≥1",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Or from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gate",
+          "logic",
+          "boolean"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Or"
+        }
+      },
+      "position": {
+        "x": 504,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 60,
+        "y": -46
+      }
+    },
+    {
+      "id": "gXor",
+      "definition": {
+        "kind": "logicXor",
+        "name": "XOR",
+        "description": "Boolean XOR of two inputs.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "=1",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Xor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gate",
+          "logic",
+          "boolean"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Xor"
+        }
+      },
+      "position": {
+        "x": 728,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 60,
+        "y": -46
+      }
+    },
+    {
+      "id": "gNand",
+      "definition": {
+        "kind": "logicNand",
+        "name": "NAND",
+        "description": "Boolean NAND of two inputs.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "&̄",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Nand from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gate",
+          "logic",
+          "boolean"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Nand"
+        }
+      },
+      "position": {
+        "x": 952,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 64,
+        "y": -46
+      }
+    },
+    {
+      "id": "gNor",
+      "definition": {
+        "kind": "logicNor",
+        "name": "NOR",
+        "description": "Boolean NOR of two inputs.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "≥1̄",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Nor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gate",
+          "logic",
+          "boolean"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Nor"
+        }
+      },
+      "position": {
+        "x": 1176,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 60,
+        "y": -46
+      }
+    },
+    {
+      "id": "gNot",
+      "definition": {
+        "kind": "logicNot",
+        "name": "NOT A",
+        "description": "Boolean negation.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "¬",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Not from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "invert"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Not"
+        }
+      },
+      "position": {
+        "x": 1360,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "num",
+      "definition": {
+        "kind": "booleanToReal",
+        "name": "Boolean to real",
+        "description": "Converts true/false to two values.",
+        "domain": "signal",
+        "category": "logic",
+        "symbol": "B→R",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "realTrue",
+            "name": "Value when true",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "realFalse",
+            "name": "Value when false",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Math.BooleanToReal from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "convert",
+          "cast"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.BooleanToReal",
+          "modifiers": {
+            "realTrue": "realTrue",
+            "realFalse": "realFalse"
+          }
+        }
+      },
+      "position": {
+        "x": 1536,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id000e",
+      "sourceHandle": "node",
+      "target": "gAnd",
+      "targetHandle": "u1",
+      "waypoints": []
+    },
+    {
+      "id": "id0002",
+      "source": "j_id000g",
+      "sourceHandle": "node",
+      "target": "gAnd",
+      "targetHandle": "u2",
+      "waypoints": []
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000q",
+      "sourceHandle": "node",
+      "target": "gOr",
+      "targetHandle": "u1",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "gOr",
+      "targetHandle": "u2",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000i",
+      "sourceHandle": "node",
+      "target": "gXor",
+      "targetHandle": "u1",
+      "waypoints": []
+    },
+    {
+      "id": "id0006",
+      "source": "j_id000k",
+      "sourceHandle": "node",
+      "target": "gXor",
+      "targetHandle": "u2",
+      "waypoints": []
+    },
+    {
+      "id": "id0007",
+      "source": "j_id000v",
+      "sourceHandle": "node",
+      "target": "gNand",
+      "targetHandle": "u1",
+      "waypoints": []
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000x",
+      "sourceHandle": "node",
+      "target": "gNand",
+      "targetHandle": "u2",
+      "waypoints": []
+    },
+    {
+      "id": "id0009",
+      "source": "j_id000m",
+      "sourceHandle": "node",
+      "target": "gNor",
+      "targetHandle": "u1",
+      "waypoints": []
+    },
+    {
+      "id": "id000a",
+      "source": "j_id000x",
+      "sourceHandle": "node",
+      "target": "gNor",
+      "targetHandle": "u2",
+      "waypoints": [
+        {
+          "x": 1216,
+          "y": 464
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "j_id000m",
+      "sourceHandle": "node",
+      "target": "gNot",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id000c",
+      "source": "gNot",
+      "sourceHandle": "y",
+      "target": "num",
+      "targetHandle": "u"
+    },
+    {
+      "id": "w_id000f",
+      "source": "A",
+      "sourceHandle": "y",
+      "target": "j_id000e",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000h",
+      "source": "B",
+      "sourceHandle": "y",
+      "target": "j_id000g",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000j",
+      "source": "j_id000q",
+      "sourceHandle": "node",
+      "target": "j_id000i",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000l",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000n",
+      "source": "j_id000v",
+      "sourceHandle": "node",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000p",
+      "source": "j_id000g",
+      "sourceHandle": "node",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000r",
+      "source": "j_id000e",
+      "sourceHandle": "node",
+      "target": "j_id000q",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000w",
+      "source": "j_id000i",
+      "sourceHandle": "node",
+      "target": "j_id000v",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000y",
+      "source": "j_id000k",
+      "sourceHandle": "node",
+      "target": "j_id000x",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000e",
+      "domain": "boolean",
+      "position": {
+        "x": 320,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000g",
+      "domain": "boolean",
+      "position": {
+        "x": 320,
+        "y": 464
+      }
+    },
+    {
+      "id": "j_id000i",
+      "domain": "boolean",
+      "position": {
+        "x": 768,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000k",
+      "domain": "boolean",
+      "position": {
+        "x": 768,
+        "y": 464
+      }
+    },
+    {
+      "id": "j_id000m",
+      "domain": "boolean",
+      "position": {
+        "x": 1216,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000o",
+      "domain": "boolean",
+      "position": {
+        "x": 544,
+        "y": 464
+      }
+    },
+    {
+      "id": "j_id000q",
+      "domain": "boolean",
+      "position": {
+        "x": 544,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000v",
+      "domain": "boolean",
+      "position": {
+        "x": 992,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000x",
+      "domain": "boolean",
+      "position": {
+        "x": 992,
+        "y": 464
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000s",
+      "anchor": "A.y",
+      "wireIds": [
+        "id0001",
+        "id0003",
+        "id0005",
+        "id0007",
+        "id0009",
+        "id000b",
+        "w_id000f",
+        "w_id000j",
+        "w_id000n",
+        "w_id000r",
+        "w_id000w"
+      ]
+    },
+    {
+      "id": "net_id000t",
+      "anchor": "B.y",
+      "wireIds": [
+        "id0002",
+        "id0004",
+        "id0006",
+        "id0008",
+        "id000a",
+        "w_id000h",
+        "w_id000l",
+        "w_id000p",
+        "w_id000y"
+      ]
+    },
+    {
+      "id": "net_id000u",
+      "anchor": "gNot.y",
+      "wireIds": [
+        "id000c"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Inputs",
+      "series": [
+        "A.y",
+        "B.y"
+      ],
+      "labels": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Gates",
+      "series": [
+        "gAnd.y",
+        "gOr.y",
+        "gXor.y",
+        "gNand.y",
+        "gNor.y",
+        "num.y"
+      ],
+      "labels": [
+        "AND",
+        "OR",
+        "XOR",
+        "NAND",
+        "NOR",
+        "NOT A as a number"
+      ]
+    }
+  ]
+}

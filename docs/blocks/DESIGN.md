@@ -17,7 +17,8 @@ Enlarging a block changes the space around its symbol, not its text size. Zoom s
 | Dense terminal arrays | Computed in 16-unit steps | At least 24 units of vertical pitch; nominal 32-unit horizontal pitch |
 | PMSM | 160 × 96 | Four bottom terminals plus top measurements and mixed-domain side terminals |
 | Wide notation | 160 × 64 | Complete second-order transfer function at the normal font size |
-| Mux / demux | 48 × 96 | Narrow tapered body; indexed terminals replace redundant internal text |
+| Mux / demux | 48 × 96, one 24-unit pitch taller per signal past three | Narrow tapered body; numbered terminals on the many-signal side, none on the bus side |
+| Bus Creator / Bus Selector | Labeled box, as wide as the signal names | Signal names are the port labels and are never cut short; bus glyph in the middle |
 | Electrical primitive | 80 × 48 horizontal; 48 × 80 vertical | Unboxed circuit symbol; leads reach the exact terminal coordinates |
 | Ground | 48 × 48 | Unboxed reference glyph with its lead at the top terminal |
 | Pictorial schematic symbols | 80 × 48 two-terminal; 48 × 80 vertical sources; 64 × 80 transistors; 64 × 48 op-amps and changeover; 64 × 64 transformers; 48 × 48 fixed points | Unboxed standard symbol (`lib/gradara/circuit-symbols.ts`) at its design size, with leads to the grid ports |
@@ -75,6 +76,8 @@ Every block sits on one grid (`lib/gradara/grid.ts`), so wires between ports run
 1. Block corners are multiples of **8 units** (`GRID`).
 2. Block widths and heights are multiples of **16 units** (`SIZE_STEP`), so a block's center and the middle of each side are on the grid too, and a quarter turn about the center keeps the block on the grid.
 3. Ports on a side are spread at whole grid steps about its middle (`gridPortOffsets`): one port sits at the middle; several are evenly spaced as close as possible to the classic (i + 1) / (n + 1) spread. An even number of ports is exactly centered when its spacing is an even number of steps; when an odd number fits much better, the group sits half a step toward the side's start. An explicit `offset` is moved to the nearest grid step.
+
+A block turned half round (180°), such as a gain drawn in a feedback path, keeps its value, operator, and port labels upright; only the outline and glyphs turn.
 
 Together these put every port on a grid point at every size and rotation, so two ports can always be lined up by moving a block whole steps. Every default size above is a size step. Resizing moves in size steps and keeps the edge you are not dragging where it was; the inspector's width and height fields round to size steps the same way.
 

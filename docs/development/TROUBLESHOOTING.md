@@ -44,7 +44,7 @@ Open **Settings → Engine**. The top line says what is wrong; choose **Check ag
 
 1. Open the **Problems** tab (⌘/Ctrl+J). Model checks list problems Gradara found before running, such as an unconnected input. **Last run** lists what the compiler or solver reported, with chips that select the blocks involved. Expand a row for the full message.
 2. Common causes:
-   - An unconnected signal input, or a Mux or Demux block (drawing-only; it cannot run).
+   - An unconnected signal input, an empty subsystem placeholder, or a bus mistake: a bus wired into a block that takes one signal (split it with a Demux or Bus Selector), a Demux whose output count does not divide its input, or a Bus Selector naming a signal the bus no longer has.
    - A problem inside a subsystem. Open the subsystem to see it on its sheet.
    - A subsystem variant that lacks one of the block's ports. Add the port inside the active variant, or mark it **not used here** in the inspector's **Variants** section.
    - An algebraic loop: a feedback path of signal blocks with no state, delay, or integrator. Problems lists the blocks it found on the loop (a best-effort hint).

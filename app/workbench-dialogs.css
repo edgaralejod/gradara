@@ -579,3 +579,120 @@
   font: 500 var(--text-ui) var(--font-ui); cursor: pointer;
 }
 .export-dialog .codegen-ai .codegen-link { font-size: var(--text-micro); }
+
+/* Examples and Block examples: a list beside a preview of the selected one. */
+.model-browser .example-gallery {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+}
+.example-gallery-list {
+  overflow: auto;
+  min-height: 0;
+  padding-right: 4px;
+}
+.example-gallery-list h4 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 10px 8px 4px;
+  background: #fff;
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #899aa5;
+}
+.example-gallery-list section:first-child h4 { padding-top: 0; }
+.example-gallery-list button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: 5px;
+  text-align: left;
+  cursor: pointer;
+}
+.example-gallery-list button:hover { background: #f1f5f8; }
+.example-gallery-list button[aria-selected='true'] { background: #e3edf5; }
+.example-gallery-list button > span:last-child { display: grid; gap: 1px; min-width: 0; }
+.example-gallery-list strong {
+  font-size: var(--text-ui);
+  font-weight: var(--weight-medium);
+  color: #304b5e;
+}
+.example-gallery-list button[aria-selected='true'] strong { color: #1d5a82; }
+.example-gallery-list small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-micro);
+  color: #7f909c;
+}
+.example-gallery-list .template-icon { flex: none; width: 30px; height: 30px; }
+.example-preview {
+  display: grid;
+  grid-template-rows: minmax(160px, 1fr) auto auto;
+  min-height: 0;
+  border: 1px solid #e2e9ee;
+  border-radius: 7px;
+  overflow: hidden;
+}
+.example-preview-canvas {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  background: #f7f9fb radial-gradient(circle, #dbe3ea 1px, transparent 1px) 0 0 / 16px 16px;
+  border-bottom: 1px solid #e2e9ee;
+}
+.example-preview-status { color: #8695a0; font-size: var(--text-meta); }
+.example-preview-copy { padding: 12px 16px 4px; overflow: auto; max-height: 190px; }
+.example-preview-copy small {
+  display: block;
+  font-size: var(--text-micro);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #899aa5;
+}
+.example-preview-copy h3 { margin: 2px 0 6px; font-size: 15px; font-weight: 600; color: #304b5e; }
+.example-preview-copy p { margin: 0 0 8px; font-size: var(--text-ui); line-height: 1.55; color: #5f7382; }
+.example-preview-blocks { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.example-preview-blocks span {
+  padding: 1px 7px;
+  border: 1px solid #dde5eb;
+  border-radius: 10px;
+  font-size: var(--text-micro);
+  color: #6b7d8a;
+}
+.example-preview-blocks span.is-about { border-color: #9cc1dc; background: #eef5fb; color: #1d5a82; }
+.example-preview-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px 12px;
+}
+.example-preview-actions span { font-size: var(--text-micro); color: #8695a0; }
+.example-preview-actions button { gap: 6px; }
+
+/* The static diagram (components/gradara/example-diagram.tsx). */
+.diagram { position: relative; display: block; }
+.diagram-wires { position: absolute; left: 0; top: 0; overflow: visible; }
+.diagram-wires polyline { fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+.diagram-wires polyline.is-bus { stroke-width: 3.4; }
+.diagram-terminator { fill: none; stroke: #4b6273; stroke-width: 1.5; stroke-linecap: round; }
+.diagram-block { position: absolute; }
+.diagram-turn { position: absolute; left: 50%; top: 50%; }
+.diagram-name {
+  position: absolute;
+  transform: translateX(-50%);
+  font: 12px/20px var(--font-ui);
+  color: #273f50;
+  white-space: nowrap;
+}

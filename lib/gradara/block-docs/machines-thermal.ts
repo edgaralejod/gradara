@@ -511,11 +511,11 @@ export const docs: Record<string, BlockDoc> = {
     },
     parameters: {
       C: 'Heat capacity, in J/K: specific heat times mass (cp · m). Use a positive value.',
+      T0: 'Temperature at the start of the run, in kelvin (293.15 K is 20 °C). It is the initial value of the body temperature; when the port is tied to a fixed temperature, that wins.',
     },
-    equations: ['C · dT/dt = port.Q_flow, with T = port.T'],
+    equations: ['C · dT/dt = port.Q_flow, with T = port.T', 'T = T0 at time 0'],
     limitations: [
       'One lumped temperature: no gradients inside the body.',
-      'The initial temperature is the library default of 293.15 K (20 °C) and is not a parameter.',
     ],
     tips: [
       'Connect it to Fixed temperature through a Thermal conductor for a first-order heat-up with time constant C / G.',

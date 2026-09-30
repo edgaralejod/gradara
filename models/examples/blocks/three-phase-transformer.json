@@ -1,0 +1,649 @@
+{
+  "version": 1,
+  "name": "Example: Three-phase transformer",
+  "exampleId": "block-three-phase-transformer",
+  "description": "The ratio 2 halves the line-to-line voltage, so the 100 V peak phase voltage on the delta side becomes about 50 V on the star side, 30° later (vector group Dy1). The load draws about 1 A per phase; the winding resistance and leakage take a little of the voltage. The three-phase voltage sensor reads each output phase against the load star point, which is grounded with the transformer neutral.",
+  "duration": 0.1,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "s",
+      "definition": {
+        "kind": "threePhaseSource",
+        "name": "100 V 50 Hz",
+        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3~ AC",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "plug_n",
+            "name": "abc−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Phase amplitude",
+            "value": 100,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "grid",
+          "mains",
+          "three phase"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sources.SineVoltage",
+          "modifiers": {
+            "V": "fill(V, 3)",
+            "f": "fill(f, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 104,
+        "y": 128
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": -116,
+        "y": -62
+      }
+    },
+    {
+      "id": "snstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star supply",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 272
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 76,
+        "y": -46
+      }
+    },
+    {
+      "id": "sng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground supply",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 368
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "lnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star load",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 912,
+        "y": 224
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 68,
+        "y": -46
+      }
+    },
+    {
+      "id": "lng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground load",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 912,
+        "y": 320
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "t",
+      "definition": {
+        "kind": "threePhaseTransformer",
+        "name": "Dy1 transformer",
+        "description": "Three-phase delta–star transformer with a nominal ratio.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Dy",
+        "ports": [
+          {
+            "id": "plug1",
+            "name": "HV",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug2",
+            "name": "LV",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "starpoint2",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "n",
+            "name": "Ratio",
+            "value": 2,
+            "unit": "",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Machines.BasicMachines.Transformers.Dy.Dy01 from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "delta-wye",
+          "distribution"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.Transformers.Dy.Dy01",
+          "modifiers": {
+            "n": "n",
+            "R1": "0.01",
+            "L1sigma": "0.001",
+            "R2": "0.01",
+            "L2sigma": "0.001",
+            "T1Ref": "293.15",
+            "T2Ref": "293.15",
+            "T1Operational": "293.15",
+            "T2Operational": "293.15"
+          }
+        }
+      },
+      "position": {
+        "x": 360,
+        "y": 128
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "tg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (neutral)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 400,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "r",
+      "definition": {
+        "kind": "threePhaseResistor",
+        "name": "Load 50 Ω",
+        "description": "Resistor in each phase.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3R",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance per phase",
+            "value": 50,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Basic.Resistor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Resistor",
+          "modifiers": {
+            "R": "fill(R, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 664,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "v3",
+      "definition": {
+        "kind": "threePhaseVoltageSensor",
+        "name": "Output voltages",
+        "description": "Phase voltages between plug + and plug −.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "vabc",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "va",
+            "name": "va",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "vb",
+            "name": "vb",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "vc",
+            "name": "vc",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sensors.VoltageSensor",
+          "ports": {
+            "va": "v[1]",
+            "vb": "v[2]",
+            "vc": "v[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 640,
+        "y": 352
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "s",
+      "sourceHandle": "plug_n",
+      "target": "snstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id0002",
+      "source": "snstar",
+      "sourceHandle": "pin_n",
+      "target": "sng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000b",
+      "sourceHandle": "node",
+      "target": "lnstar",
+      "targetHandle": "plug_p",
+      "waypoints": [
+        {
+          "x": 936,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "id0004",
+      "source": "lnstar",
+      "sourceHandle": "pin_n",
+      "target": "lng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0005",
+      "source": "s",
+      "sourceHandle": "plug_p",
+      "target": "t",
+      "targetHandle": "plug1"
+    },
+    {
+      "id": "id0006",
+      "source": "t",
+      "sourceHandle": "starpoint2",
+      "target": "tg",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0007",
+      "source": "t",
+      "sourceHandle": "plug2",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0008",
+      "source": "v3",
+      "sourceHandle": "plug_p",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 624,
+          "y": 400
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "v3",
+      "sourceHandle": "plug_n",
+      "target": "j_id000b",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 400
+        }
+      ]
+    },
+    {
+      "id": "w_id000c",
+      "source": "r",
+      "sourceHandle": "plug_n",
+      "target": "j_id000b",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000e",
+      "source": "r",
+      "sourceHandle": "plug_p",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000b",
+      "domain": "threePhase",
+      "position": {
+        "x": 784,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000d",
+      "domain": "threePhase",
+      "position": {
+        "x": 624,
+        "y": 176
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000f",
+      "anchor": "s.plug_n",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000g",
+      "anchor": "sng.p",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000h",
+      "anchor": "lnstar.plug_p",
+      "wireIds": [
+        "id0003",
+        "id0009",
+        "w_id000c"
+      ]
+    },
+    {
+      "id": "net_id000i",
+      "anchor": "lng.p",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000j",
+      "anchor": "s.plug_p",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000k",
+      "anchor": "t.starpoint2",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000l",
+      "anchor": "r.plug_p",
+      "wireIds": [
+        "id0007",
+        "id0008",
+        "w_id000e"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Output phase voltages",
+      "series": [
+        "v3.va",
+        "v3.vb",
+        "v3.vc"
+      ],
+      "labels": [
+        "a",
+        "b",
+        "c"
+      ]
+    }
+  ]
+}

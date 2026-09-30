@@ -68,13 +68,21 @@ def validate_simulation(project: Project):
                         ports=[PortRef(blockId=b.id, portId=p.id)],
                         hint='Connect a signal source to this input, or remove the block.')
              for name, (b, p) in zip(names, missing)])
+    from .buses import bus_problems
+    buses = [(diagram, p) for _, diagram in active_diagrams(project) for p in bus_problems(diagram)]
+    if buses:
+        raise SimulationFailure(
+            'Fix these signal buses before running:\n' + '\n'.join(f'• {p["message"]}' for _, p in buses),
+            [Diagnostic(source='validation', message=p['message'], blockIds=[p['blockId']],
+                        ports=[PortRef(blockId=p['blockId'], portId=p['portId'])] if p['portId'] else [],
+                        hint=p['hint']) for _, p in buses])
     idle_problems = variant_port_problems(project)
     if idle_problems:
         raise SimulationFailure('Some active variants leave subsystem ports without an inside:\n'
                                 + '\n'.join(f'• {d.message}' for d in idle_problems), idle_problems)
     unfinished = [b for _, diagram in active_diagrams(project) for b in diagram.blocks
                   if not b.definition.generated and b.definition.subsystem is None
-                  and b.definition.kind in {'mux', 'demux', 'subsystem'}]
+                  and b.definition.kind == 'subsystem']
     if unfinished:
         raise SimulationFailure(
             'These blocks do not have their full simulation behavior yet: ' + ', '.join(b.definition.name for b in unfinished)

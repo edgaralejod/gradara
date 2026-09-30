@@ -198,9 +198,6 @@ export default function LibraryNavigator({
             )}
             {group.items.map((hit) => {
               const index = flat.indexOf(hit);
-              const drawingOnly =
-                !hit.definition.generated &&
-                ['mux', 'demux'].includes(hit.definition.kind);
               return (
                 <button
                   key={
@@ -210,11 +207,7 @@ export default function LibraryNavigator({
                   type="button"
                   draggable={variant === 'panel'}
                   className={`legend-row ${index === highlight ? 'is-active' : ''}`}
-                  title={
-                    drawingOnly
-                      ? 'Drawing only — simulation is not available for this block yet.'
-                      : hit.definition.description
-                  }
+                  title={hit.definition.description}
                   onMouseEnter={() => setActive(index)}
                   onFocus={() => setActive(index)}
                   onDragStart={(e) => {
@@ -248,9 +241,6 @@ export default function LibraryNavigator({
                     <span className="legend-name">
                       <Highlight text={hit.definition.name} query={query} />
                     </span>
-                    {drawingOnly && (
-                      <span className="legend-availability">Drawing only</span>
-                    )}
                   </span>
                 </button>
               );

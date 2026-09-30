@@ -13,6 +13,7 @@ export type BlockNodeData = {
   definition: Definition;
   labelOffset?: Block['labelOffset'];
   rotation?: Block['rotation'];
+  terminated?: Block['terminated'];
 };
 export type BlockCanvasNode = Node<BlockNodeData, 'block'>;
 export type CanvasNode = BlockCanvasNode | Node<{ domain: Domain }, 'tap'>;
@@ -105,7 +106,8 @@ export function reconcileNodes(
       n.selected === isSelected &&
       n.data.definition === b.definition &&
       n.data.labelOffset === b.labelOffset &&
-      n.data.rotation === b.rotation
+      n.data.rotation === b.rotation &&
+      n.data.terminated === b.terminated
     )
       return n;
     return {
@@ -120,12 +122,14 @@ export function reconcileNodes(
       data:
         n?.data.definition === b.definition &&
         n.data.labelOffset === b.labelOffset &&
-        n.data.rotation === b.rotation
+        n.data.rotation === b.rotation &&
+        n.data.terminated === b.terminated
           ? n.data
           : {
               definition: b.definition,
               labelOffset: b.labelOffset,
               rotation: b.rotation,
+              terminated: b.terminated,
             },
       ariaLabel: b.definition.name,
     };

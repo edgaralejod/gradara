@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/buck.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -37,6 +38,13 @@
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Generates two complementary gate signals at a fixed switching frequency and duty cycle. <code>high</code> is 1 for the first <code>duty</code> fraction of each period and 0 for the rest; <code>low</code> is always its complement.</p>
 <p>Use it to drive the two switches of a half bridge, such as the high-side and low-side switches of a buck converter.</p></section>
+<section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>Buck converter · Ideal switches</strong> 24 V synchronous buck: complementary ideal switches at 10 kHz and 50% duty, 1 mH / 100 µF filter, 10 Ω load. Start from zero stored energy. Expect approximately 12 V and 1.2 A after settling. No losses, dead time, or parasitics.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-158e71c1"><span class="diagram x-eaeb3171"><svg class="diagram-wires" viewBox="-20 104 1164 480" width="1164" height="480" aria-hidden="true"><polyline points="48,352 48,128 424,128 424,168" stroke="#b86e00"></polyline><polyline points="288,208 400,208" stroke="#1f5fbf"></polyline><polyline points="288,240 344,240 344,392 400,392" stroke="#1f5fbf"></polyline><polyline points="424,248 424,288" stroke="#b86e00"></polyline><polyline points="424,288 424,352" stroke="#b86e00"></polyline><polyline points="424,288 544,288" stroke="#b86e00"></polyline><polyline points="624,288 680,288" stroke="#b86e00"></polyline><polyline points="760,288 824,288" stroke="#b86e00"></polyline><polyline points="824,288 824,352" stroke="#b86e00"></polyline><polyline points="824,288 944,288 944,352" stroke="#b86e00"></polyline><polyline points="824,288 1064,288 1064,352" stroke="#b86e00"></polyline><polyline points="48,432 48,488 424,488" stroke="#b86e00"></polyline><polyline points="424,432 424,488" stroke="#b86e00"></polyline><polyline points="424,488" stroke="#b86e00"></polyline><polyline points="824,432 824,488 424,488" stroke="#b86e00"></polyline><polyline points="944,432 944,488 424,488" stroke="#b86e00"></polyline><polyline points="1064,432 1064,488 424,488" stroke="#b86e00"></polyline><circle cx="424" cy="288" r="3.5" fill="#b86e00"></circle><circle cx="824" cy="288" r="3.5" fill="#b86e00"></circle><circle cx="424" cy="488" r="3.5" fill="#b86e00"></circle></svg><span><span class="diagram-block x-42d769d4"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 48 80" preserveAspectRatio="none"><path d="M24 0V22M24 58V80"></path><ellipse cx="24" cy="40" rx="17" ry="18"></ellipse><path d="M20 32H28M24 28V36M20 48H28"></path></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-f69b5201">24 V supply</span></span><span><span class="diagram-block x-a6071e0d"><span class="diagram-turn x-e8f809a7"><span class="block-preview x-45a0fbea" aria-hidden="true"><span class="block-preview-body x-f5420433"><span class="block-face shape-box x-7027d243" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1" y="1" width="98" height="98" rx="1"></rect></svg><span class="block-symbol"><span class="custom-symbol">PWM</span></span><span class="port-label port-right x-d333dd9e">hi</span><span class="port-label port-right x-bb14480a">lo</span></span><span class="preview-terminal terminal-right  x-b6ca8d2f"></span><span class="preview-terminal terminal-right  x-4fafc4b5"></span></span></span></span></span><span class="diagram-name x-54117198">Gate drive</span></span><span><span class="diagram-block x-3af9a2b6"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 48 80" preserveAspectRatio="none"><path d="M24 0V25M24 55V80M24 55L38 28"></path><circle cx="24" cy="25" r="2"></circle><circle cx="24" cy="55" r="2"></circle><path d="M0 40H13" stroke="#1f5fbf" stroke-dasharray="3 3"></path></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span><span class="preview-terminal terminal-left  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-4a290336">High-side switch</span></span><span><span class="diagram-block x-486d0a0e"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 48 80" preserveAspectRatio="none"><path d="M24 0V25M24 55V80M24 55L38 28"></path><circle cx="24" cy="25" r="2"></circle><circle cx="24" cy="55" r="2"></circle><path d="M0 40H13" stroke="#1f5fbf" stroke-dasharray="3 3"></path></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span><span class="preview-terminal terminal-left  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-71fb37d8">Low-side switch</span></span><span><span class="diagram-block x-5e0607b5"><span class="diagram-turn x-03ff9fcc"><span class="block-preview x-ea2187c3" aria-hidden="true"><span class="block-preview-body x-abca2b0b"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="none"><g><path d="M0 22H12C12 10 20 10 20 22C20 10 28 10 28 22C28 10 36 10 36 22C36 10 44 10 44 22H60"></path></g></svg></span></span><span class="preview-terminal terminal-left is-physical x-d26444a6"></span><span class="preview-terminal terminal-right is-physical x-d26444a6"></span></span></span></span></span><span class="diagram-name x-08db0d16">1 mH inductor</span></span><span><span class="diagram-block x-3cd7983b"><span class="diagram-turn x-03ff9fcc"><span class="block-preview x-ea2187c3" aria-hidden="true"><span class="block-preview-body x-abca2b0b"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 80 48" preserveAspectRatio="none"><path d="M0 24H22M58 24H80"></path><circle cx="40" cy="24" r="18"></circle><path d="M33 32L40 16L47 32M36 26H44"></path><path d="M40 42V48" stroke="#1f5fbf"></path></svg></span></span><span class="preview-terminal terminal-left is-physical x-d26444a6"></span><span class="preview-terminal terminal-right is-physical x-d26444a6"></span><span class="preview-terminal terminal-bottom  x-df849ba5"></span></span></span></span></span><span class="diagram-name x-b1b8637e">Inductor current</span></span><span><span class="diagram-block x-adfa035f"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 44 60" preserveAspectRatio="none"><g transform="translate(44 0) rotate(90)"><path d="M0 22H24M36 22H60M24 8V36M36 8V36"></path></g></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-2c660743">100 µF capacitor</span></span><span><span class="diagram-block x-6e5241bf"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 44 60" preserveAspectRatio="none"><g transform="translate(44 0) rotate(90)"><path d="M0 22H14L18 12L26 32L34 12L42 32L46 22H60"></path></g></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-4f20e2b9">10 Ω load</span></span><span><span class="diagram-block x-33672d99"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 48 80" preserveAspectRatio="none"><path d="M24 0V22M24 58V80"></path><ellipse cx="24" cy="40" rx="17" ry="18"></ellipse><path d="M18 34L24 46L30 34"></path><path d="M41 40H48" stroke="#1f5fbf"></path></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-2e076e46">Output voltage</span></span><span><span class="diagram-block x-6f3bf25e"><span class="diagram-turn x-3574e156"><span class="block-preview x-6374f7a4" aria-hidden="true"><span class="block-preview-body x-b102fd91"><span class="block-face shape-ground x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="none"><g><path d="M30 0V16M9 16H51M16 24H44M24 32H36"></path></g></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-0d038967">Ground</span></span></span></span></div>
+<figcaption>In Gradara, select a Complementary PWM block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/dcSource">DC voltage</a><a href="/docs/blocks/idealSwitch">Ideal switch</a><a href="/docs/blocks/voltageSensor">Voltage sensor</a><a href="/docs/blocks/currentSensor">Current sensor</a><a href="/docs/blocks/ground">Ground</a><a href="/docs/blocks/resistor">Resistor</a><a href="/docs/blocks/capacitor">Capacitor</a><a href="/docs/blocks/inductor">Inductor</a></p></section>
 <section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
@@ -85,8 +93,8 @@ low = 1 - high;</pre></div></section>
 <li>The pulse comes from the MSL BooleanPulse with width = 100 · duty %. That source declares a pulse width greater than 0, so duty = 0 lies outside its stated range; use a small positive duty instead.</li>
 <li>Every edge is a simulation event. A high frequency over a long run means many events and a slower simulation.</li></ul></div></section>
 <section class="doc-section">
-<h2 id="examples"><a class="anchor" href="#examples">Examples</a></h2>
-<p class="muted">Used in these shipped examples. Open them from <strong>Examples</strong> in the app.</p>
+<h2 id="examples"><a class="anchor" href="#examples">Used in</a></h2>
+<p class="muted">These larger examples use it too. Open them from <strong>Examples</strong> in the app.</p>
 <ul class="example-list">
 <li>Buck converter · Ideal switches</li></ul></section>
 <section class="doc-section">
@@ -99,7 +107,7 @@ low = 1 - high;</pre></div></section>
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Control"><span></span><a class="next" href="/docs/blocks/currentPI"><small>Next</small>Current PI</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>217</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -142,10 +150,12 @@ low = 1 - high;</pre></div></section>
 <li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
 <li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
 <li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
-<details data-group=""><summary>Routing <span>4</span></summary>
+<details data-group=""><summary>Routing <span>6</span></summary>
 <ul>
 <li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
 <li data-name="demux demux"><a href="/docs/blocks/demux">Demux</a></li>
+<li data-name="bus creator buscreator"><a href="/docs/blocks/busCreator">Bus Creator</a></li>
+<li data-name="bus selector busselector"><a href="/docs/blocks/busSelector">Bus Selector</a></li>
 <li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
 <li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
 <details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
@@ -164,11 +174,6 @@ low = 1 - high;</pre></div></section>
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -361,13 +366,14 @@ low = 1 - high;</pre></div></section>
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#parameters">Parameters</a></li>
 <li><a href="#equations">Equations</a></li>
 <li><a href="#implementation">Implementation</a></li>
 <li><a href="#limitations">Limitations</a></li>
 <li><a href="#tips">Tips</a></li>
-<li><a href="#examples">Examples</a></li>
+<li><a href="#examples">Used in</a></li>
 <li><a href="#see-also">See also</a></li></ul></nav></div>
 <footer class="site-footer">
 <div class="wrap docs-wrap footer-inner">

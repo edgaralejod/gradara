@@ -25,6 +25,7 @@ import { reconcileNets } from './net-registry';
 import { defaultBlockSize, snapBlockPosition } from './block-design';
 import { blockSize } from './canvas';
 import { portPoint } from './ports';
+import { propagateBuses } from './buses';
 
 import {
   boundaryDefinition,
@@ -115,6 +116,8 @@ export function instancePorts(subsystem: SubsystemDefinition): Port[] {
       direction,
       domain: inner.domain,
       ...(inner.unit ? { unit: inner.unit } : {}),
+      ...(inner.width ? { width: inner.width } : {}),
+      ...(inner.elements ? { elements: [...inner.elements] } : {}),
       side:
         block.definition.boundary?.side ??
         (direction === 'input'
@@ -369,8 +372,15 @@ function referenced(project: Project) {
   return used;
 }
 
-/** Every instance in the document matches its definition; the format version follows. */
+/**
+ * Every instance in the document matches its definition, bus widths follow the
+ * wiring (buses.ts), and the format version follows.
+ */
 export function syncInstances(project: Project): Project {
+  return propagateBuses(syncDefinitions(project));
+}
+
+function syncDefinitions(project: Project): Project {
   if (!project.subsystems?.length && project.version === 1) return project;
   const numbered = subsystemsOf(project).map(renumberBoundaries);
   if (numbered.some((s, i) => s !== project.subsystems![i]))

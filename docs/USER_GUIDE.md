@@ -27,11 +27,10 @@ The engine is built in, so there is nothing to set up. **Settings → Engine** s
    ![The block picker that opens where you double-click](images/inserter.webp)
 
 3. Double-click to the right of it, type `second` and choose **Second-order**. This is a second-order transfer function, ωn² / (s² + 2ζωn s + ωn²).
-4. Double-click again further right, type `scope` and choose **Scope**.
-5. Drag from the Step's output port (right side) to the Second-order's input port. Then connect the Second-order's output to the Scope.
-6. Set **Stop time** next to **Run** to 2 seconds, then choose **Run**.
-7. In **Results**, check the Second-order output in the signal list. You see a step response that overshoots slightly and settles at 1.
-8. Double-click the Second-order block and lower **Damping ratio** to 0.2. Run again and compare.
+4. Drag from the Step's output port (right side) to the Second-order's input port.
+5. Set **Stop time** next to **Run** to 2 seconds, then choose **Run**.
+6. In **Results**, check the Second-order output in the signal list. You see a step response that overshoots slightly and settles at 1. Results lists every block output, so you never need a block just to see a signal.
+7. Double-click the Second-order block and lower **Damping ratio** to 0.2. Run again and compare.
 
 You can also use the block library on the left. It opens with a new blank model; the first button in the toolbar (**Show components** / **Hide components**) toggles it. Press **/** to search it, then click or drag a block onto the sheet.
 
@@ -78,7 +77,7 @@ Press **?** on the canvas to see this list in the app. On Windows and Linux, use
 | Pan the canvas | Space + drag, middle or right mouse button, or trackpad |
 | Fit the model to the view | Tap Space, or F |
 | Arrange the sheet (or the selection) | ⌘/Ctrl + Shift + A |
-| Canvas menu | Right-click empty canvas |
+| Canvas menu | Right-click empty canvas or a block |
 | Make subsystem / ungroup | ⌘/Ctrl + G / ⌘/Ctrl + Shift + G |
 | Leave a subsystem | Escape (nothing selected), or ⌘/Ctrl + ↑ |
 | Diagram / Results / Explorer tab | ⌘/Ctrl + 1 / 2 / 3 |
@@ -104,7 +103,7 @@ The gear button at the top right opens **Settings**. It has four tabs:
 **Models** opens the model browser:
 
 - **My models** lists your saved models, newest first, with a search box. Each row shows the block count and, for copies of examples, which example it came from.
-- **Examples** lists the built-in examples. **Use example** saves a new copy in My models. Changing the copy never changes the example.
+- **Examples** lists the complete example systems (motor drives, converters, the EV, data-center cooling), and **Block examples** the small model for each library block, grouped by area. Select one to preview its diagram and description; search block examples by any block they use. **Use example** (or double-click, or Enter) saves a new copy in My models. Changing the copy never changes the example.
 - **Trash** holds models you removed. Use the trash icon on a row to remove a model (open a different model first if it is the one you are editing). Click a model in Trash to restore it. Trash is never emptied automatically.
 
 **Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`), Modelica source, or C code. Gradara cannot import Modelica files.
@@ -131,11 +130,17 @@ The **Equations** and **State & declarations** tabs show a block's Modelica equa
 
 **Block reference.** Every block has a reference page, like a Simulink block's Help: what it does, its ports and parameters with defaults and units, the equations it solves, the Modelica class behind it, and what it leaves out. Select a block and press **F1**, or choose **Help** from the canvas menu, the **?** next to Component properties in the inspector, or the **Help** button in the block's properties dialog. In the library, **Block reference** under a part's description opens its page before you place it. The pages work offline, and the same pages are at [gradara.app/docs/blocks](https://gradara.app/docs/blocks/). A custom block the AI wrote shows its own ports, parameters, and equations.
 
-Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it. Double-click the name to put it back. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
+**Notes.** Label parts of a diagram with notes: a heading and an optional detail line. Right-click empty canvas and choose **Add note here**, type the heading, press Tab for the detail, and press Enter. Drag a note to move it; it lands on the sheet grid. Double-click a note to edit it, or select it and press Delete to remove it. Every change can be undone. Notes belong to the top-level sheet; the notes in the built-in examples work the same way.
+
+**Block examples.** Every library block has a small runnable example that shows it at work, such as an RC circuit for the capacitor or a clutch that locks for the clutch. In a block's Help, choose **Open example**: the example opens as a new model in **My models**, with that block selected, ready to run. Each example's description says what to look for in Results. The model browser lists them all under **Block examples**, grouped by area and searchable by block name, and each block's page on gradara.app shows its example's diagram.
+
+**Scope, Display, and Terminator** are no longer in the library: Results already lists every block output, and an unconnected output is allowed. Models that contain them still open and run unchanged. To show that an output is unused on purpose, right-click its block and choose **Terminate unused outputs**: each open output gets a terminator mark, as in Simulink, with no block and no effect on the simulation. Wiring the output removes its mark; **Remove terminators** removes them all.
+
+Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it; select it and press Home to put it back. Double-click a block's name (or select it and press Enter) to rename the block in place, subsystems included: Enter or clicking away saves, Escape cancels. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
 
 ### The library
 
-The library has 218 built-in blocks in 19 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Sinks, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. Most physical, logic, and machine blocks are components of the Modelica Standard Library 4.1.0. Their parameters map directly onto the library component. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
+The library has 217 built-in blocks in 18 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. Most physical, logic, and machine blocks are components of the Modelica Standard Library 4.1.0. Their parameters map directly onto the library component. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
 
 ### Ports and connections
 
@@ -147,6 +152,16 @@ There are two kinds of connection:
 - **Physical connections** join physical terminals of the same kind, like wiring a circuit or coupling shafts. They have no direction. The solver works out currents, torques, forces, or heat flows from the laws of physics.
 
 To move between the two, use sensors (physical to signal) and sources or actuators (signal to physical). Wires that only cross do not connect.
+
+### Signal buses
+
+A bus carries several signals on one wire, drawn heavy so it stands out. Four blocks in **Routing** make and take them apart, as in Simulink:
+
+- **Mux** joins its inputs into one vector, in order. **Demux** splits a vector back into equal parts. Set how many inputs or outputs under **Signals** in the block's properties; the bar grows to fit, and **Match incoming** gives a Demux one output per signal.
+- **Bus Creator** bundles signals under names: each input label is the signal's name, edited under **Signals**. A bus plugged into a Bus Creator keeps its signals under that input's name, such as `motor.speed`.
+- **Bus Selector** picks signals out of a bus by name, wherever they are in it. Tick them under **Signals**; each becomes an output labeled with its name. Ticking a bus inside the bus (`motor`) gives all its signals as one vector.
+
+Buses pass through subsystem ports unchanged, so one wire can carry a group of signals into and out of a subsystem. Widths follow the wiring automatically. Other blocks take one signal: a bus wired into a Gain or Sum is reported as a problem that says to split it first. Results show one trace per signal of a bus, named after its element (for example `Sensors.bus.speed`), and logging a bus wire logs every signal on it. The **Mux and Demux** and **Signal buses** examples show both kinds.
 
 ## Wire and arrange
 
@@ -174,7 +189,7 @@ Wires route around blocks, stay clear of other wires and block names, and never 
 
 **Fit to view**: tap **Space** or **F**, or use the fit button in the canvas controls. Fit shows everything on the sheet and keeps it clear of the canvas buttons. Holding Space and dragging pans instead. A fitted view stays fitted when you open or close panels or resize the window.
 
-**Canvas menu**: right-click empty canvas. With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, help, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
+**Canvas menu**: right-click empty canvas, or a block (which selects it unless it is already part of the selection). With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, terminate unused outputs, help, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
 
 **Panels.** Drag the inner edge of the component library or the inspector to resize it, and the top edge of the Problems dock to change its height; in Results, drag the edge of the signal list. Sizes are remembered in this browser. Double-click an edge to restore that panel, or choose **Reset layout** from the canvas menu (or **View → Reset Layout** in the desktop app) to restore every panel, column width, and the dock at once.
 
@@ -233,7 +248,7 @@ Drag the borders between panes to widen them, and drag a column heading's edge t
 
 ## Simulate and read results
 
-Set **Stop time** and choose **Run**. The stop time must be more than 0 and at most 86,400 seconds (one day). You can cancel a run from the same button. Gradara checks the model before it simulates. Unconnected signal inputs, drawing-only blocks (Mux and Demux), and missing variant ports are reported as problems. A failed or incomplete simulation never shows as a successful plot.
+Set **Stop time** and choose **Run**. The stop time must be more than 0 and at most 86,400 seconds (one day). You can cancel a run from the same button. Gradara checks the model before it simulates. Unconnected signal inputs, bus mistakes, the empty subsystem placeholder, and missing variant ports are reported as problems. A failed or incomplete simulation never shows as a successful plot.
 
 Each run saves 6,000 evenly spaced output points plus every event, and stops if it takes longer than 120 seconds of real time. For long simulations with fast events, shorten the stop time to see the details.
 
@@ -262,7 +277,7 @@ Moving blocks or names does not change results. Changing equations, connections,
 
 The **Problems** tab sits in the dock under the canvas. Open or close it from the status bar ("No problems", or a count of errors and warnings), from its header, or with ⌘/Ctrl+J. Drag its top edge to resize it.
 
-- **Model checks** update while you edit: unconnected signal inputs, drawing-only blocks, and wires that end on a missing port (errors), and blocks with nothing connected (notes). They also include variant problems anywhere in the model. **Run** refuses the model while errors remain.
+- **Model checks** update while you edit: unconnected signal inputs, bus mistakes (a bus into a block that takes one signal, a Demux that cannot split its input evenly, a Bus Selector naming a signal the bus lacks), drawing-only blocks, and wires that end on a missing port (errors), and blocks with nothing connected (notes). They also include variant problems anywhere in the model. **Run** refuses the model while errors remain.
 - **Last run** appears when a run fails. The dock opens by itself. Each row names where the problem came from (Validation, Safety, Compiler, Runtime, Engine) and has chips for the blocks it concerns. Click a row or chip to select those blocks and center them. Expand a row (▸) for a hint and the full solver message. After you edit the model, this section is marked out of date.
 - **Run warnings** lists solver warnings from a successful run.
 
@@ -306,7 +321,7 @@ Every generated block that passes its checks is saved in **Library → AI blocks
 
 ### Edit the open model with the Assistant
 
-Open the **Assistant** tab in the dock and describe a change, for example "Add a scope on the measured angle and connect it" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to point the Assistant at them, or **Whole model**.
+Open the **Assistant** tab in the dock and describe a change, for example "Add a speed sensor on the load shaft" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to point the Assistant at them, or **Whole model**.
 
 The Assistant can add library blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, and connect or disconnect ports. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model passed a trial simulation in OpenModelica. If it still fails after one automatic revision, the proposal is marked **Not verified** and shows the messages.
 
@@ -322,7 +337,7 @@ Limits: flat models (no subsystems) with up to 80 blocks and up to four new bloc
 
 ## Built-in examples
 
-Open any of these from **Examples**. Each guide describes what the model shows, what to look at, and its limits.
+Open any of these from **Examples**. Each guide describes what the model shows, what to look at, and its limits. **Block examples**, next to it in the model browser, has a small model for every library block (see **Block examples** in [Build a diagram](#build-a-diagram)).
 
 | Example | What it shows |
 | --- | --- |
@@ -339,5 +354,5 @@ Open any of these from **Examples**. Each guide describes what the model shows, 
 - Gradara is not certified or validated for safety-critical use. Verify results independently before you rely on them for design decisions, and do not use it as the only evidence for safety-related work.
 - Examples use illustrative parameters, not data-sheet values.
 - AI-generated blocks and edits pass compiler checks, but compiling does not make a model physically correct. Review them as you would any model.
-- Mux and Demux are drawing-only and cannot run. Vector and bus signals, Modelica import, FMI, and HDL export are not available.
+- Buses route signals but do not do math: a Gain, Sum, or other block takes one signal, so split a bus with a Demux or Bus Selector first. Buses are signal-only (not Boolean or physical), and C export does not accept them. Modelica import, FMI, and HDL export are not available.
 - Exported C code is checked against the simulation, not on your target hardware.

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Energy conservation and control response in the lumped cooling example."""
+"""Energy conservation and control response in the data-center cooling example."""
 import asyncio
 import csv
 from pathlib import Path
@@ -11,6 +11,7 @@ from server.models import Project
 from server.engine import RUNS, simulate
 
 FIXTURE = Path(__file__).parents[1]/'models/examples/datacenter.json'
+RACK_C, ROOM_C = 20e6, 10e6  # J/K, as built by scripts/build-datacenter-example.ts
 
 
 def example():
@@ -18,8 +19,17 @@ def example():
 
 
 def parameter(project, block, name, value):
-    next(p for b in project.blocks if b.id == block
+    """Set a parameter of block `block` anywhere in the model (IDs are unique across sheets)."""
+    sheets = [project, *(project.subsystems or [])]
+    next(p for s in sheets for b in s.blocks if b.id == block
          for p in b.definition.parameters if p.id == name).value = value
+
+
+def test_example_uses_library_blocks_in_three_subsystems():
+    project = example()
+    assert {b.id for b in project.blocks if b.definition.subsystem} == {'it', 'cooling', 'control'}
+    blocks = [b for s in [project, *project.subsystems] for b in s.blocks]
+    assert not any(b.definition.generated for b in blocks)
 
 
 def test_long_manual_runs_remain_bounded():
@@ -35,13 +45,11 @@ def test_cooling_conserves_energy_and_pi_recovers_better_than_proportional():
     async def run():
         controlled = example()
         proportional = example()
-        # Freeze the integral at the same baseline bias: a P-only comparison.
-        parameter(proportional, 'controller', 'integralTime', 1e12)
+        parameter(proportional, 'pi', 'ki', 1e-12)  # P only, around the same 0.5 bias
         undersized = example()
-        parameter(undersized, 'cooling', 'ratedCooling', 800000)
-        parameter(undersized, 'controller', 'initialCommand', .75)
-        parameter(undersized, 'cooling', 'derateStart', 7200)
-        parameter(undersized, 'cooling', 'derateEnd', 7500)
+        parameter(undersized, 'capacity', 'k', 800)
+        parameter(undersized, 'bias', 'value', .75)
+        parameter(undersized, 'outage', 'startTime', 7200)
         results = await asyncio.gather(*[
             simulate(project, 'datacenter-test-'+uuid.uuid4().hex[:10])
             for project in (controlled, proportional, undersized)
@@ -54,32 +62,32 @@ def test_cooling_conserves_energy_and_pi_recovers_better_than_proportional():
             rows = [row for row in rows if row['time'] <= 3600+1e-8]
             records.append(rows)
             assert result['time'][-1] == pytest.approx(3600)
-            for row in rows:
-                # Integral balance includes both thermal stores, not just final power.
-                stored = row['rack.energy']+row['room.energy']
-                assert stored == pytest.approx(
-                    row['it.energy']-row['cooling.removedEnergy'], abs=50)
-                assert row['ambient.kW'] == pytest.approx(
-                    row['cooling.coolkW']+row['cooling.kW'], abs=1e-6)
+            net = 0.0
+            for a, b in zip(rows, rows[1:]):
+                net += (b['time']-a['time'])*1000*(a['it.itKW.y']+b['it.itKW.y']-a['cooling.capacity.y']-b['cooling.capacity.y'])/2
+            last = rows[-1]
+            stored = RACK_C*(last['rack.T']-303.15)+ROOM_C*(last['room.T']-297.15)
+            # Heat stored in rack and room is IT heat in minus heat removed.
+            assert stored == pytest.approx(net, abs=2e6)
+            for row in rows[::20]:
+                assert row['cooling.rejected.y'] == pytest.approx(row['cooling.capacity.y']+row['cooling.electric.y'], abs=1e-6)
                 electrical = -800*row['supply.p.i']/1000
-                assert electrical == pytest.approx(row['it.kW']+row['cooling.kW'], abs=1e-6)
-                assert row['cooling.coolkW'] == pytest.approx(4*row['cooling.kW'], abs=1e-6)
-                assert -.000001 <= row['controller.u'] <= 1.000001
-            peak = max(row['room.degC'] for row in rows)
-            print(f"{result['id']}: room peak={peak:.4f} C; "
-                  f"room final={rows[-1]['room.degC']:.4f} C; "
-                  f"cooling electricity={rows[-1]['cooling.kW']:.4f} kW")
+                # The load switch's 10 µΩ drops about 1.4 W that is not IT heat.
+                assert electrical == pytest.approx(row['it.itKW.y']+row['cooling.electric.y'], abs=.01)
+                assert row['cooling.capacity.y'] == pytest.approx(4*row['cooling.electric.y'], abs=1e-6)
         rows = records[0]
+        for row in rows[::20]:
+            assert -1e-6 <= row['control.command.y'] <= 1+1e-6
         initial = [r for r in rows if r['time'] < 590]
-        assert max(abs(r['room.degC']-24) for r in initial) < .001
-        assert rows[-1]['room.degC'] == pytest.approx(24, abs=.1)
-        assert rows[-1]['rack.degC'] == pytest.approx(33, abs=.1)
-        assert rows[-1]['cooling.kW'] == pytest.approx(225, abs=1)
+        assert max(abs(r['roomC.y']-24) for r in initial) < .001
+        assert rows[-1]['roomC.y'] == pytest.approx(24, abs=.1)
+        assert rows[-1]['rackC.y'] == pytest.approx(33, abs=.1)
+        assert rows[-1]['cooling.electric.y'] == pytest.approx(225, abs=1)
         before = min(rows, key=lambda r: abs(r['time']-1790))
         during = min(rows, key=lambda r: abs(r['time']-2090))
-        assert during['room.degC'] > before['room.degC']+2
-        assert during['cooling.coolkW'] == pytest.approx(600, abs=.1)
-        assert records[1][-1]['room.degC'] > rows[-1]['room.degC']+2
-        assert records[2][-1]['room.degC'] > 28
-        assert records[2][-1]['controller.u'] == pytest.approx(1)
+        assert during['roomC.y'] > before['roomC.y']+2
+        assert during['cooling.capacity.y'] == pytest.approx(600, abs=.1)
+        assert records[1][-1]['roomC.y'] > rows[-1]['roomC.y']+2
+        assert records[2][-1]['roomC.y'] > 28
+        assert records[2][-1]['cooling.limit.y'] == pytest.approx(1)
     asyncio.run(run())

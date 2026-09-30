@@ -52,6 +52,9 @@ def logged_signals(project: Project):
             if port.domain == 'boolean':
                 expression = f'(if {expression} then 1.0 else 0.0)'
             name = (net.name or f'{block.definition.name}.{port.id}') + (f' · {field}' if field else '')
-            result.append(dict(key=variable, expression=expression, netId=net.id, path=prefix.rstrip('.') or None,
-                               blockId=top or block.id, name=label + name, unit=unit))
+            entry = dict(key=variable, expression=expression, netId=net.id, path=prefix.rstrip('.') or None,
+                         blockId=top or block.id, name=label + name, unit=unit)
+            if port.width:  # a bus: one logged series per signal (server/engine.py)
+                entry |= dict(width=port.width, elements=port.elements)
+            result.append(entry)
     return result

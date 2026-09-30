@@ -1,0 +1,421 @@
+{
+  "version": 2,
+  "name": "Example: Subsystems",
+  "exampleId": "block-subsystems",
+  "description": "The Plant subsystem holds a gain of 2 and a first-order filter (τ = 0.5 s). Double-click it to open it: its In and Out ports are where the outside wires enter and leave. The output settles at 2. The empty subsystem next to it has no ports and nothing inside yet; drop wires on it or open it to start your own.",
+  "duration": 3,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "step",
+      "definition": {
+        "kind": "step",
+        "name": "Step",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 40,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "yout",
+      "definition": {
+        "kind": "gain",
+        "name": "Output",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 1,
+            "unit": ""
+          }
+        ],
+        "equations": "y = k*u;"
+      },
+      "position": {
+        "x": 744,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "blank",
+      "definition": {
+        "kind": "subsystem",
+        "name": "Empty subsystem",
+        "description": "Subsystem Subsystem 1: 0 blocks inside.",
+        "domain": "signal",
+        "symbol": "Subsystem 1",
+        "ports": [],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "subsystem": {
+          "ref": "sub_id0005"
+        }
+      },
+      "position": {
+        "x": 440,
+        "y": 216
+      },
+      "size": {
+        "width": 160,
+        "height": 96
+      }
+    },
+    {
+      "id": "b_id000a",
+      "definition": {
+        "kind": "subsystem",
+        "name": "Plant",
+        "description": "Subsystem Plant: 2 blocks inside.",
+        "domain": "signal",
+        "symbol": "Plant",
+        "ports": [
+          {
+            "id": "p_id000b",
+            "name": "in",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "p_id000d",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "subsystem": {
+          "ref": "sub_id0009"
+        }
+      },
+      "size": {
+        "width": 160,
+        "height": 96
+      },
+      "position": {
+        "x": 440,
+        "y": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "step",
+      "sourceHandle": "y",
+      "target": "b_id000a",
+      "targetHandle": "p_id000b"
+    },
+    {
+      "id": "id0003",
+      "source": "b_id000a",
+      "sourceHandle": "p_id000d",
+      "target": "yout",
+      "targetHandle": "u"
+    }
+  ],
+  "junctions": [],
+  "nets": [
+    {
+      "id": "net_id0006",
+      "anchor": "step.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id0008",
+      "anchor": "b_id000a.p_id000d",
+      "wireIds": [
+        "id0003"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Plant output",
+      "series": [
+        "yout.y"
+      ],
+      "labels": [
+        "y"
+      ]
+    }
+  ],
+  "subsystems": [
+    {
+      "id": "sub_id0005",
+      "name": "Subsystem 1",
+      "blocks": [],
+      "wires": [],
+      "junctions": [],
+      "nets": []
+    },
+    {
+      "id": "sub_id0009",
+      "name": "Plant",
+      "blocks": [
+        {
+          "id": "k",
+          "definition": {
+            "kind": "gain",
+            "name": "Gain 2",
+            "description": "Multiply an input by an adjustable gain.",
+            "domain": "signal",
+            "symbol": "K",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "k",
+                "name": "Gain",
+                "value": 2,
+                "unit": ""
+              }
+            ],
+            "equations": "y = k*u;"
+          },
+          "position": {
+            "x": 392,
+            "y": 64
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "lag",
+          "definition": {
+            "kind": "filter",
+            "name": "Lag 0.5 s",
+            "description": "First-order continuous filter.",
+            "domain": "signal",
+            "symbol": "1/(τs+1)",
+            "ports": [
+              {
+                "id": "u",
+                "name": "in",
+                "direction": "input",
+                "domain": "signal"
+              },
+              {
+                "id": "y",
+                "name": "out",
+                "direction": "output",
+                "domain": "signal"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "tau",
+                "name": "Time constant",
+                "value": 0.5,
+                "unit": "s",
+                "min": 0.00001
+              }
+            ],
+            "declarations": "Real x(start=0, fixed=true);",
+            "equations": "der(x) = (u-x)/tau;\ny = x;"
+          },
+          "position": {
+            "x": 568,
+            "y": 64
+          },
+          "size": {
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "p_id000b",
+          "definition": {
+            "kind": "inport",
+            "name": "in",
+            "description": "Subsystem input.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "y",
+                "name": "in",
+                "direction": "output",
+                "domain": "signal",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 0
+            }
+          },
+          "position": {
+            "x": 216,
+            "y": 80
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_id000d",
+          "definition": {
+            "kind": "outport",
+            "name": "out",
+            "description": "Subsystem output.",
+            "domain": "signal",
+            "symbol": "1",
+            "ports": [
+              {
+                "id": "u",
+                "name": "out",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 1
+            }
+          },
+          "position": {
+            "x": 744,
+            "y": 80
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w_id000c",
+          "source": "p_id000b",
+          "sourceHandle": "y",
+          "target": "k",
+          "targetHandle": "u"
+        },
+        {
+          "id": "id0002",
+          "source": "k",
+          "sourceHandle": "y",
+          "target": "lag",
+          "targetHandle": "u"
+        },
+        {
+          "id": "w_id000e",
+          "source": "lag",
+          "sourceHandle": "y",
+          "target": "p_id000d",
+          "targetHandle": "u"
+        }
+      ],
+      "junctions": [],
+      "nets": [
+        {
+          "id": "net_id0006",
+          "anchor": "p_id000b.y",
+          "wireIds": [
+            "w_id000c"
+          ]
+        },
+        {
+          "id": "net_id0007",
+          "anchor": "k.y",
+          "wireIds": [
+            "id0002"
+          ]
+        },
+        {
+          "id": "net_id0008",
+          "anchor": "lag.y",
+          "wireIds": [
+            "w_id000e"
+          ]
+        }
+      ]
+    }
+  ]
+}

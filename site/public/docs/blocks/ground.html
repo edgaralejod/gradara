@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/assets/site.css"/>
 <link rel="stylesheet" href="/assets/block-faces.css"/>
 <link rel="stylesheet" href="/assets/docs.css"/>
+<link rel="stylesheet" href="/assets/examples/block-rc-rl.css"/>
 <script src="/assets/site.js" defer=""></script>
 <script src="/assets/docs.js" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
@@ -36,6 +37,13 @@
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Fixes the potential of the node it connects to at 0 V. Every electrical circuit needs at least one Ground so its node voltages are defined.</p></section>
 <section class="doc-section">
+<h2 id="example"><a class="anchor" href="#example">Example</a></h2>
+<p class="example-title"><strong>RC and RL transients</strong> A 10 V step charges a capacitor through a resistor, and another builds current in an inductor through a conductor.</p>
+<figure class="example-sheet">
+<div class="example-canvas"><span class="example-scale x-d4d38dec"><span class="diagram x-7fceaeb7"><svg class="diagram-wires" viewBox="-48 112 1296 304" width="1296" height="304" aria-hidden="true"><polyline points="80,200 80,160 160,160" stroke="#b86e00"></polyline><polyline points="240,160 320,160 320,184" stroke="#b86e00"></polyline><polyline points="320,296 80,296" stroke="#b86e00"></polyline><polyline points="80,296 80,320" stroke="#b86e00"></polyline><polyline points="432,200 432,184 320,184" stroke="#b86e00"></polyline><polyline points="432,280 432,296 320,296" stroke="#b86e00"></polyline><polyline points="776,200 776,160 856,160" stroke="#b86e00"></polyline><polyline points="936,160 992,160" stroke="#b86e00"></polyline><polyline points="1072,160 1152,160 1152,200" stroke="#b86e00"></polyline><polyline points="1152,280 1152,296 776,296" stroke="#b86e00"></polyline><polyline points="776,296 776,320" stroke="#b86e00"></polyline><polyline points="320,200 320,184" stroke="#b86e00"></polyline><polyline points="320,280 320,296" stroke="#b86e00"></polyline><polyline points="80,280 80,296" stroke="#b86e00"></polyline><polyline points="776,280 776,296" stroke="#b86e00"></polyline><circle cx="320" cy="184" r="3.5" fill="#b86e00"></circle><circle cx="320" cy="296" r="3.5" fill="#b86e00"></circle><circle cx="80" cy="296" r="3.5" fill="#b86e00"></circle><circle cx="776" cy="296" r="3.5" fill="#b86e00"></circle></svg><span><span class="diagram-block x-fff4f6f6"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg class="circuit-symbol" viewBox="0 0 48 80" width="100%" height="100%"><path d="M24 0V16" class="x-663cf397"></path><path d="M24 80V64" class="x-663cf397"></path><g transform="translate(8 16)"><path d="M16 0V12M16 36V48M28 24A12 12 0 1 1 28 23.9M9 29H15V19H23"></path></g></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-36cf3bc2">Step 10 V</span></span><span><span class="diagram-block x-c79333d8"><span class="diagram-turn x-03ff9fcc"><span class="block-preview x-ea2187c3" aria-hidden="true"><span class="block-preview-body x-abca2b0b"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="none"><g><path d="M0 22H14L18 12L26 32L34 12L42 32L46 22H60"></path></g></svg></span></span><span class="preview-terminal terminal-left is-physical x-d26444a6"></span><span class="preview-terminal terminal-right is-physical x-d26444a6"></span></span></span></span></span><span class="diagram-name x-70e7b13e">R 1 kΩ</span></span><span><span class="diagram-block x-03bea1fb"><span class="diagram-turn x-b6c8f3f6" data-turn="90"><span class="block-preview x-ea2187c3" aria-hidden="true"><span class="block-preview-body x-abca2b0b"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="none"><g><path d="M0 22H24M36 22H60M24 8V36M36 8V36"></path></g></svg></span></span><span class="preview-terminal terminal-left is-physical x-d26444a6"></span><span class="preview-terminal terminal-right is-physical x-d26444a6"></span></span></span></span></span><span class="diagram-name x-78974fc6">C 100 µF</span></span><span><span class="diagram-block x-cd3080e9"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 48 80" preserveAspectRatio="none"><path d="M24 0V22M24 58V80"></path><ellipse cx="24" cy="40" rx="17" ry="18"></ellipse><path d="M18 34L24 46L30 34"></path><path d="M41 40H48" stroke="#1f5fbf"></path></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span><span class="preview-terminal terminal-right  x-0e89e25e"></span></span></span></span></span><span class="diagram-name x-d2f0dc7c">Capacitor voltage</span></span><span><span class="diagram-block x-cdcebe99"><span class="diagram-turn x-3574e156"><span class="block-preview x-6374f7a4" aria-hidden="true"><span class="block-preview-body x-b102fd91"><span class="block-face shape-ground x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="none"><g><path d="M30 0V16M9 16H51M16 24H44M24 32H36"></path></g></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-aed8b8b1">Ground</span></span><span><span class="diagram-block x-2383f1ad"><span class="diagram-turn x-7e548f43"><span class="block-preview x-c1267a90" aria-hidden="true"><span class="block-preview-body x-36a38663"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg class="circuit-symbol" viewBox="0 0 48 80" width="100%" height="100%"><path d="M24 0V16" class="x-663cf397"></path><path d="M24 80V64" class="x-663cf397"></path><g transform="translate(8 16)"><path d="M16 0V12M16 36V48M28 24A12 12 0 1 1 28 23.9M9 29H15V19H23"></path></g></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span><span class="preview-terminal terminal-bottom is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-e8cd67f5">Step 10 V (RL)</span></span><span><span class="diagram-block x-d1c05e76"><span class="diagram-turn x-03ff9fcc"><span class="block-preview x-ea2187c3" aria-hidden="true"><span class="block-preview-body x-abca2b0b"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg class="circuit-symbol" viewBox="0 0 80 48" width="100%" height="100%"><path d="M0 24H20" class="x-663cf397"></path><path d="M80 24H60" class="x-663cf397"></path><g transform="translate(20 8)"><path d="M0 16H8M32 16H40M8 10H32V22H8Z"></path></g></svg></span></span><span class="preview-terminal terminal-left is-physical x-d26444a6"></span><span class="preview-terminal terminal-right is-physical x-d26444a6"></span></span></span></span></span><span class="diagram-name x-92a7571f">G 0.1 S</span></span><span><span class="diagram-block x-cb2002f6"><span class="diagram-turn x-03ff9fcc"><span class="block-preview x-ea2187c3" aria-hidden="true"><span class="block-preview-body x-abca2b0b"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 80 48" preserveAspectRatio="none"><path d="M0 24H22M58 24H80"></path><circle cx="40" cy="24" r="18"></circle><path d="M33 32L40 16L47 32M36 26H44"></path><path d="M40 42V48" stroke="#1f5fbf"></path></svg></span></span><span class="preview-terminal terminal-left is-physical x-d26444a6"></span><span class="preview-terminal terminal-right is-physical x-d26444a6"></span><span class="preview-terminal terminal-bottom  x-df849ba5"></span></span></span></span></span><span class="diagram-name x-9c3d7bcf">Inductor current</span></span><span><span class="diagram-block x-e5a5bdee"><span class="diagram-turn x-b6c8f3f6" data-turn="90"><span class="block-preview x-ea2187c3" aria-hidden="true"><span class="block-preview-body x-abca2b0b"><span class="block-face shape-physical x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="none"><g><path d="M0 22H12C12 10 20 10 20 22C20 10 28 10 28 22C28 10 36 10 36 22C36 10 44 10 44 22H60"></path></g></svg></span></span><span class="preview-terminal terminal-left is-physical x-d26444a6"></span><span class="preview-terminal terminal-right is-physical x-d26444a6"></span></span></span></span></span><span class="diagram-name x-18e7e843">L 1 H</span></span><span><span class="diagram-block x-92f3e2d5"><span class="diagram-turn x-3574e156"><span class="block-preview x-6374f7a4" aria-hidden="true"><span class="block-preview-body x-b102fd91"><span class="block-face shape-ground x-b0c2b1f0" aria-hidden="true"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg viewBox="0 0 60 44" preserveAspectRatio="none"><g><path d="M30 0V16M9 16H51M16 24H44M24 32H36"></path></g></svg></span></span><span class="preview-terminal terminal-top is-physical x-74296371"></span></span></span></span></span><span class="diagram-name x-63cfbb49">Ground (RL)</span></span></span></span></div>
+<figcaption>In Gradara, select a Ground block and press <kbd>F1</kbd>, then choose <strong>Open example</strong>. It opens as a new model in My models, ready to run.</figcaption></figure>
+<p class="example-others"><span>Also in this example:</span><a href="/docs/blocks/voltageSensor">Voltage sensor</a><a href="/docs/blocks/currentSensor">Current sensor</a><a href="/docs/blocks/resistor">Resistor</a><a href="/docs/blocks/capacitor">Capacitor</a><a href="/docs/blocks/inductor">Inductor</a><a href="/docs/blocks/conductor">Conductor</a><a href="/docs/blocks/stepVoltage">Step voltage</a></p></section>
+<section class="doc-section">
 <h2 id="ports"><a class="anchor" href="#ports">Ports</a></h2>
 <div class="port-group">
 <h3>Conserving terminals <span class="count">1</span></h3>
@@ -57,8 +65,8 @@
 <ul>
 <li>Connect one Ground to each electrically separate circuit, for example to each side of a transformer.</li></ul></div></section>
 <section class="doc-section">
-<h2 id="examples"><a class="anchor" href="#examples">Examples</a></h2>
-<p class="muted">Used in these shipped examples. Open them from <strong>Examples</strong> in the app.</p>
+<h2 id="examples"><a class="anchor" href="#examples">Used in</a></h2>
+<p class="muted">These larger examples use it too. Open them from <strong>Examples</strong> in the app.</p>
 <ul class="example-list">
 <li>Buck converter · Ideal switches</li>
 <li>Data center cooling control</li>
@@ -74,7 +82,7 @@
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Electrical"><a class="prev" href="/docs/blocks/motor"><small>Previous</small>DC motor</a><a class="next" href="/docs/blocks/resistor"><small>Next</small>Resistor</a></nav></article></main>
 <aside class="docs-nav" aria-label="Block library">
-<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>218</span></a>
+<div class="docs-nav-inner"><label class="search"><span class="sr-only">Filter blocks</span><svg viewBox="0 0 16 16" aria-hidden="true" class="icon"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" placeholder="Filter blocks" data-filter="nav" autoComplete="off"/></label><a class="docs-nav-all" href="/docs/blocks">All blocks <span>217</span></a>
 <details data-group=""><summary>Sources <span>6</span></summary>
 <ul>
 <li data-name="constant constant"><a href="/docs/blocks/constant">Constant</a></li>
@@ -117,10 +125,12 @@
 <li data-name="dead zone deadzone"><a href="/docs/blocks/deadzone">Dead zone</a></li>
 <li data-name="relay relay"><a href="/docs/blocks/relay">Relay</a></li>
 <li data-name="rate limiter ratelimiter"><a href="/docs/blocks/rateLimiter">Rate limiter</a></li></ul></details>
-<details data-group=""><summary>Routing <span>4</span></summary>
+<details data-group=""><summary>Routing <span>6</span></summary>
 <ul>
 <li data-name="mux mux"><a href="/docs/blocks/mux">Mux</a></li>
 <li data-name="demux demux"><a href="/docs/blocks/demux">Demux</a></li>
+<li data-name="bus creator buscreator"><a href="/docs/blocks/busCreator">Bus Creator</a></li>
+<li data-name="bus selector busselector"><a href="/docs/blocks/busSelector">Bus Selector</a></li>
 <li data-name="switch switch2"><a href="/docs/blocks/switch2">Switch</a></li>
 <li data-name="manual switch manualswitch"><a href="/docs/blocks/manualSwitch">Manual switch</a></li></ul></details>
 <details data-group=""><summary>Ports &amp; subsystems <span>4</span></summary>
@@ -139,11 +149,6 @@
 <li data-name="pi controller pi"><a href="/docs/blocks/pi">PI controller</a></li>
 <li data-name="pid pid"><a href="/docs/blocks/pid">PID</a></li>
 <li data-name="discrete pid discretepid"><a href="/docs/blocks/discretePID">Discrete PID</a></li></ul></details>
-<details data-group=""><summary>Sinks <span>3</span></summary>
-<ul>
-<li data-name="terminator terminator"><a href="/docs/blocks/terminator">Terminator</a></li>
-<li data-name="scope scope"><a href="/docs/blocks/scope">Scope</a></li>
-<li data-name="display display"><a href="/docs/blocks/display">Display</a></li></ul></details>
 <details data-group=""><summary>Logic <span>21</span></summary>
 <ul>
 <li data-name="and logicand"><a href="/docs/blocks/logicAnd">AND</a></li>
@@ -336,11 +341,12 @@
 <p>On this page</p>
 <ul>
 <li><a href="#description">Description</a></li>
+<li><a href="#example">Example</a></li>
 <li><a href="#ports">Ports</a></li>
 <li><a href="#equations">Equations</a></li>
 <li><a href="#implementation">Implementation</a></li>
 <li><a href="#tips">Tips</a></li>
-<li><a href="#examples">Examples</a></li>
+<li><a href="#examples">Used in</a></li>
 <li><a href="#see-also">See also</a></li></ul></nav></div>
 <footer class="site-footer">
 <div class="wrap docs-wrap footer-inner">

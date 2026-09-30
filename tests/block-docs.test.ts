@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { library } from '../lib/gradara/model';
+import { library, RETIRED_KINDS } from '../lib/gradara/model';
 import { blockDocs } from '../lib/gradara/block-docs';
 import { readFileSync } from 'node:fs';
 import {
@@ -40,7 +40,7 @@ void test('every library block has a reference page covering all of its ports an
   }
   for (const kind of Object.keys(blockDocs))
     assert.ok(
-      kinds.has(kind),
+      kinds.has(kind) || RETIRED_KINDS.has(kind),
       `documentation for a block that is not in the library: ${kind}`,
     );
 });

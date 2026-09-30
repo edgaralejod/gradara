@@ -573,40 +573,86 @@ export const docs: Record<string, BlockDoc> = {
 
   mux: {
     description: [
-      'A drawing stand-in for bundling three signals into one line. Gradara has no vector buses yet, so this block only keeps a sheet readable.',
-      'Models containing Mux cannot run: model checks report it as a drawing-only block, and Run refuses the model until it is replaced by direct connections.',
+      'Joins several signals into one vector, in order, and carries it on one wire. The wire is drawn heavy so a bundle stands out from a single signal.',
+      'Set the number of inputs (2 to 32) under Signals in the block’s properties; the bar grows to fit. An input may itself be a vector, which is added in place, so Muxes can be chained. Split the vector again with a Demux, or pass it through subsystem ports unchanged.',
     ],
     ports: {
-      u1: 'First signal.',
-      u2: 'Second signal.',
-      u3: 'Third signal.',
-      y: 'Bundled line, drawn to a Demux.',
+      u1: 'First signal (or vector).',
+      u2: 'Second signal (or vector).',
+      u3: 'Third signal (or vector).',
+      y: 'The inputs joined in order: as wide as all of them together.',
     },
-    equations: ['y = u1 (u2 and u3 are not carried)'],
-    limitations: [
-      'No vector or bus signals: the output carries only u1, and u2 and u3 are dropped.',
-      'Always three inputs.',
+    equations: [
+      'y = {u1, u2, u3}  (a vector input contributes all its signals)',
     ],
-    seeAlso: ['demux', 'switch2'],
+    limitations: [
+      'A vector wire can go only to a Demux, a Bus Selector, a Bus Creator, another Mux, or a subsystem port. Other blocks take one signal each and report an error; element-wise math on vectors is not available yet.',
+      'Vectors are signals only, not Boolean or physical connections.',
+      'Its signals have no names: in results they are numbered, as Mux.y[1], Mux.y[2]. Use a Bus Creator to name them.',
+    ],
+    tips: [
+      'Log the vector wire to record every signal on it: Results shows one trace per signal.',
+    ],
+    seeAlso: ['demux', 'busCreator', 'busSelector'],
   },
 
   demux: {
     description: [
-      'A drawing stand-in for splitting a bundled line into three signals, the counterpart of Mux.',
-      'Models containing Demux cannot run: model checks report it as a drawing-only block, and Run refuses the model until it is replaced by direct connections.',
+      'Splits a vector into its signals, in order: the counterpart of Mux.',
+      'Set the number of outputs (2 to 32) under Signals in the block’s properties. The input is cut into that many equal parts, so with 6 signals and 2 outputs each output is itself a vector of 3. Match incoming sets the outputs to one per signal.',
     ],
     ports: {
-      u: 'Bundled line, usually from a Mux.',
-      y1: 'First output, a copy of u.',
-      y2: 'Second output, a copy of u.',
-      y3: 'Third output, a copy of u.',
+      u: 'A vector, usually from a Mux.',
+      y1: 'The first part of u.',
+      y2: 'The second part of u.',
+      y3: 'The third part of u.',
     },
-    equations: ['y1 = u', 'y2 = u', 'y3 = u'],
-    limitations: [
-      'No vector or bus signals: every output repeats the one input signal.',
-      'Always three outputs.',
+    equations: [
+      'y1 = u[1], y2 = u[2], y3 = u[3]  (with one signal per output)',
     ],
-    seeAlso: ['mux'],
+    limitations: [
+      'The number of outputs must divide the width of the input; otherwise model checks report it.',
+      'The parts are equal in size; to take signals by name, bundle them with a Bus Creator and use a Bus Selector.',
+    ],
+    seeAlso: ['mux', 'busSelector'],
+  },
+
+  busCreator: {
+    description: [
+      'Bundles signals into a bus: one wire that carries them all, each under a name. The names are the input labels on the block; edit them, and add or remove inputs, under Signals in its properties.',
+      'An input may itself be a bus. Its signals keep their names below the input’s name, so a bus named motor holding speed becomes motor.speed. Pick signals out again with a Bus Selector, anywhere downstream and through any number of subsystem ports.',
+    ],
+    ports: {
+      u1: 'The signal named by this input (signal1 by default), or a bus.',
+      u2: 'The signal named by this input (signal2 by default), or a bus.',
+      y: 'The bus: every input’s signals, in order, with their names.',
+    },
+    equations: ['bus = {u1, u2}  (a bus input contributes all its signals)'],
+    limitations: [
+      'Names are a letter, then letters, digits, or _, and must differ within one block.',
+      'A bus is a vector of signals underneath: blocks other than Demux, Bus Selector, Mux, Bus Creator, and subsystem ports take one signal and report an error.',
+    ],
+    tips: [
+      'Logging the bus wire records every signal on it under its name, such as Bus.speed.',
+    ],
+    seeAlso: ['busSelector', 'mux', 'subsystem'],
+  },
+
+  busSelector: {
+    description: [
+      'Picks signals out of a bus by name. Under Signals in its properties it lists everything on the incoming bus; each signal you tick becomes an output, labeled with its name, in the order you choose.',
+      'Selecting the name of a bus inside the bus (motor, when the bus holds motor.speed and motor.current) gives all of its signals as one vector.',
+    ],
+    ports: {
+      u: 'A bus, from a Bus Creator (or a vector from a Mux, whose signals are named signal1, signal2, …).',
+      y1: 'The selected signal named on this output.',
+    },
+    equations: ['output = u[position of its name in the bus]'],
+    limitations: [
+      'A name the incoming bus does not have is reported by model checks, for example after the Bus Creator upstream renames it.',
+      'Removing a signal from the selection removes its output and the wire on it.',
+    ],
+    seeAlso: ['busCreator', 'demux'],
   },
 
   switch2: {
@@ -656,17 +702,19 @@ export const docs: Record<string, BlockDoc> = {
 
   terminator: {
     description: [
+      'No longer in the block library. Models that already contain it still open and run. To show that an output is unused on purpose, right-click its block and choose Terminate unused outputs: a terminator mark caps each open output, with no block.',
       'Caps an output you do not use, so the sheet shows it is left open on purpose. It has no effect on the simulation.',
     ],
     ports: { u: 'Signal to discard.' },
     limitations: [
       'The signal is still recorded as the driving block’s output.',
     ],
-    seeAlso: ['scope', 'display'],
+    seeAlso: [],
   },
 
   scope: {
     description: [
+      'No longer in the block library. Models that already contain it still open and run. Results lists every block output, so no block is needed to see a signal; to record a particular wire, select it and choose Log signal.',
       'Marks a signal you intend to inspect. It does not plot on the canvas: after a run, view the signal in the Results tab, where every block output is recorded.',
     ],
     ports: { u: 'Signal to inspect.' },
@@ -676,16 +724,17 @@ export const docs: Record<string, BlockDoc> = {
     tips: [
       'To record a particular wire rather than a block output, select it and choose Log signal.',
     ],
-    seeAlso: ['display', 'terminator'],
+    seeAlso: [],
   },
 
   display: {
     description: [
+      'No longer in the block library. Models that already contain it still open and run. Results lists every block output, so no block is needed to see a signal; to record a particular wire, select it and choose Log signal.',
       'Marks a signal you intend to read as a number. The block itself shows a fixed 123 symbol, not the live value; read values in Results, where Cursor values show the signal at any time.',
     ],
     ports: { u: 'Signal to read.' },
     limitations: ['No effect on the simulation, and no settings.'],
-    seeAlso: ['scope', 'terminator'],
+    seeAlso: [],
   },
 
   // Ports & subsystems

@@ -1,4 +1,5 @@
 'use client';
+import { isBusBlock } from '@/lib/gradara/buses';
 import { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
@@ -79,9 +80,12 @@ export default function BlockDialog({
   const [tab, setTab] = useState<BlockDialogTab>(initialTab);
   const [Editor, setEditor] = useState<ComponentType<any> | null>(null);
   const firstParameter = useRef<HTMLInputElement>(null);
+  // A bus block's equations follow its Signals (buses.ts), so they are shown, not edited.
   const readonly =
     !definition.generated &&
-    (definition.domain !== 'signal' || !!definition.modelica);
+    (definition.domain !== 'signal' ||
+      !!definition.modelica ||
+      isBusBlock(definition));
   const defaults = libraryDefaults(definition);
   // Show only what this block has: code tabs for blocks defined by equations you
   // can read or edit, and a Parameters section only when there are parameters.

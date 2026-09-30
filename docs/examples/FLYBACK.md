@@ -6,6 +6,8 @@ A switching flyback power supply that turns 480 V AC into a regulated 24 V, 1 A 
 
 Open **Examples**, choose **Use example** under **480 VAC flyback**, then choose **Run**. The default run simulates 0.3 seconds.
 
+The top level has two subsystems, as a real supply is built: **Power stage** (the circuit, its sensors, and the PWM modulator) and **Controller** (soft start, feedback filter, PI, and duty limit). The controller sends the duty command to the power stage, and the measured output voltage comes back. Double-click either one to open it.
+
 ## Operating point
 
 - Input: **480 V RMS, single-phase, 60 Hz** across two conductors. This is not a three-phase rectifier.
@@ -20,7 +22,7 @@ The primary and secondary sides have separate grounds with no conductor between 
 
 ## What to look at
 
-- In Results, select **Output voltage.V**, **DC bus voltage.V**, **Primary current.A**, **Switch voltage.V**, and **0–18% duty.out**.
+- The default plots show the output voltage, the DC bus, the primary current, the switch voltage, and the duty command. In Results they are under **Power stage ›** and **Controller ›**.
 - Expect startup from zero and an output that settles near **24.00 V**.
 - Peak primary switch current is about **0.71 A**. Peak switch voltage is about **874 V**.
 - Zoom into the last 100 µs to see individual switching cycles.
@@ -34,9 +36,13 @@ See TI's [flyback transformer design seminar](https://www.ti.com/seclit/ml/slup3
 
 ## Modeling choices
 
-Diodes have a 0.7 V knee, 0.05 Ω forward resistance, and a small reverse leakage conductance of 10 nanosiemens (1e-8 S). The switch has 0.2 Ω on-resistance and 10 nanosiemens off-state conductance. These small, finite values help the solver through each switching transition. The input also has a 100 MΩ reference path, and the DC bus has a 1 MΩ bleeder resistor.
+Every part is a library block with its own Help page. The rectifier is a **Diode bridge** with 0.05 Ω on-resistance and 10 nanosiemens (1e-8 S) off conductance per diode. The secondary rectifier is an **Ideal diode** with a 0.7 V knee and the same resistances. The primary switch is a **Switch (Boolean)** with 0.2 Ω on-resistance and 10 nS off conductance, driven by the **PWM generator**'s fire output. The transformer is an **Ideal transformer** (n = 8) with the 2 mH magnetizing **Inductor** across its primary. These small, finite values help the solver through each switching transition. The input also has a 100 MΩ reference path, and the DC bus has a 1 MΩ bleeder resistor.
 
 This is a switched model, not an averaged model, and the output is not forced to 24 V. Each switching edge is an event in the simulation, so the results contain many more points than the usual 6,000.
+
+## Controller in C
+
+The **Controller** subsystem is pure signal flow, so it exports to C. Select it, choose **Export**, and generate code: its input is the measured output voltage, its output the duty command, sampled every 100 µs. **Verify** replays the last run's measured voltage through the compiled code and compares its duty command with the simulation's. The PWM modulator stays in the power stage, as it would in the microcontroller's timer peripheral.
 
 ## Limits
 
@@ -48,6 +54,6 @@ This model shows that Gradara can simulate this kind of circuit. It does not mea
 
 The template is [flyback.json](../../models/examples/flyback.json). Regenerate it with `npx tsx scripts/build-flyback-example.ts` after changing its [builder](../../scripts/build-flyback-example.ts). The builder reads only the built-in catalog, never saved personal models or AI transcripts. Regenerating does not overwrite saved copies.
 
-The layout runs left to right: bridge rectifier, DC link, primary switching stage, and isolated output, with the control chain in a separate row below. Rotated bridge diodes use the standard block rotation; shared wire runs use explicit junctions.
+The builder uses library blocks only and lays the circuit out flat (bridge rectifier, DC link, primary switching stage, isolated output), then groups it into the two subsystems with the helpers in [example-hierarchy.ts](../../scripts/example-hierarchy.ts). Inside the power stage the layout runs left to right; the modulator sits below the switch.
 
-The integration test checks regulation, overshoot, ripple, switching activity, and bus pre-charge delay against full-resolution output. The solver uses the default DASSL settings.
+The integration test checks regulation, overshoot, ripple, switching activity, and bus pre-charge delay against full-resolution output, and the C code replay test (`tests/test_codegen.py`) requires the generated controller to reproduce the simulated duty command. The solver uses the default DASSL settings.

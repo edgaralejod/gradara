@@ -3,6 +3,7 @@ import json
 import math
 from pathlib import Path
 import time
+import xml.etree.ElementTree as ET
 from . import msl
 from .hierarchy import all_blocks, instances
 from .models import Project, Definition
@@ -53,6 +54,46 @@ async def simulate(project: Project, job_id: str):
         raise
 
 
+def result_columns(folder: Path, rows: list[dict]):
+    """Look up a variable's samples. The CSV leaves out variables that equal a
+    parameter (a sensor across a DC source, a constant's output): those come from the
+    alias and start values in simulation_init.xml, as a constant series."""
+    aliases, starts = {}, {}
+    init = folder/'simulation_init.xml'
+    if init.exists():
+        for variable in ET.parse(init).getroot().iter('ScalarVariable'):
+            name = variable.get('name')
+            if variable.get('alias') in ('alias', 'negatedAlias'):
+                aliases[name] = (variable.get('aliasVariable'), variable.get('alias') == 'negatedAlias')
+            elif variable.get('variability') in ('parameter', 'constant'):
+                real = variable.find('Real')
+                # Only a parameter set directly: a bound one's start may not be its value.
+                if real is not None and real.get('start') is not None and real.get('fixed') == 'true':
+                    starts[name] = float(real.get('start'))
+
+    def column(key: str, depth: int = 0):
+        if key in rows[0]:
+            return [float(row[key]) for row in rows]
+        if key in starts:
+            return [starts[key]] * len(rows)
+        if key in aliases and depth < 8:
+            target, negated = aliases[key]
+            values = column(target, depth + 1)
+            return None if values is None else [-v for v in values] if negated else values
+        return None
+    return column
+
+
+def elements_of(port, name: str, joiner: str):
+    """(variable suffix, readable name) per signal: one for a plain port, one per element of a bus."""
+    width = (port.get('width') if isinstance(port, dict) else getattr(port, 'width', None)) or 1
+    if width == 1:
+        return [('', name)]
+    elements = (port.get('elements') if isinstance(port, dict) else port.elements) or []
+    return [(f'[{i + 1}]', f'{name}{joiner}{elements[i]}' if len(elements) == width else f'{name}[{i + 1}]')
+            for i in range(width)]
+
+
 async def run(project: Project, job_id: str, folder: Path):
     started = time.monotonic()
     (folder/'model.mo').write_text(emit_project(project), encoding='utf-8')
@@ -76,28 +117,34 @@ async def run(project: Project, job_id: str, folder: Path):
     # DASSL can emit one output-grid row just beyond stopTime. Keep the plot
     # and final values inside the requested interval; retain the raw CSV.
     rows = [row for row in rows if float(row['time']) <= project.duration + max(1e-12, project.duration * 1e-12)]
+    column = result_columns(folder, rows)
     outputs = []
     for prefix, label, block, owner in instances(project):
         definition = block.definition
         candidates = [(p.id, p.name, p.unit) for p in definition.ports if p.direction == 'output' or (definition.kind in {'scope', 'display'} and p.direction == 'input')]
         if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
         if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
+        widths = {p.id: p for p in definition.ports}
         for variable,label_,unit in candidates:
             key = f'{prefix}{block.id}.{msl.connector(definition, variable)}'
-            if key in rows[0]:
-                values = [float(row[key]) for row in rows]
-                if not all(math.isfinite(value) for value in values):
-                    raise run_failure(f'{label}{definition.name}.{label_} contains non-finite results.', owner)
-                outputs.append({'key':key,'name':f'{label}{definition.name}.{label_}', 'unit':unit,'blockId':owner,'values':values})
+            # A bus output is an array: one series per signal, named by its element.
+            for suffix, name in elements_of(widths.get(variable), f'{label}{definition.name}.{label_}', '.'):
+                values = column(key + suffix)
+                if values is not None:
+                    if not all(math.isfinite(value) for value in values):
+                        raise run_failure(f'{name} contains non-finite results.', owner)
+                    outputs.append({'key':key + suffix,'name':name, 'unit':unit,'blockId':owner,'values':values})
     from .logging_signals import logged_signals
     for log in logged_signals(project):
-        key = log['key']
-        if key not in rows[0]:
-            raise run_failure(f"Logged net {log['name']} is missing from the solver output.", log.get('blockId'))
-        values = [float(row[key]) for row in rows]
-        if not all(math.isfinite(v) for v in values):
-            raise run_failure(f"Logged net {log['name']} contains non-finite values.", log.get('blockId'))
-        outputs.append({k:v for k,v in log.items() if k != 'expression'} | {'values':values})
+        for suffix, name in elements_of(log, log['name'], ' · '):
+            key = log['key'] + suffix
+            values = column(key)
+            if values is None:
+                raise run_failure(f"Logged net {name} is missing from the solver output.", log.get('blockId'))
+            if not all(math.isfinite(v) for v in values):
+                raise run_failure(f"Logged net {name} contains non-finite values.", log.get('blockId'))
+            outputs.append({k:v for k,v in log.items() if k not in ('expression', 'width', 'elements')}
+                           | {'key': key, 'name': name, 'values': values})
     sample_indices = list(range(0,len(rows),max(1,len(rows)//1800)))
     sample_indices += [len(rows)-1]
     # Preserve switching event pairs and a dense tail for short-time ripple views.

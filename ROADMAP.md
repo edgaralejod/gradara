@@ -20,7 +20,7 @@ Gradara's priority is a polished, usable diagram-to-simulation workflow. This is
 | Result inspection | Comparisons of arbitrary saved runs (configuration overlays from Run all exist), dual cursors, frequency-domain views, independently scaled dual Y axes, and live streaming. | Remaining inspector gaps are closed without losing event pairs, linked X ranges, or browser-local plot preferences. |
 | Export cancellation cleanup | Process/container lifecycle in the AI export paths (`server/ctemplate.py`, and `server/exporter.py` until the deprecated `/exports` route is removed). | Cancellation and timeout leave no orphan compilation process or container; failure remains visible. |
 | Model folders and organization | Build on the searchable My models / Examples / Trash browser. | Users can organize models into nested folders without changing document identity, physics, or example source files. |
-| Example-driven blocks | Add one useful electrical/mechanical/control block at a time. | Shared design, valid connector contract, documented assumptions, and a meaningful real simulation. |
+| Example-driven blocks | Add one useful electrical/mechanical/control block at a time. | Shared design, valid connector contract, documented assumptions, and a block example that simulates to checked results. |
 | Reusable component libraries | Validation status, saved custom definitions, and refinement review. | A component can be reused and revised without silently changing its existing instances or connections. |
 
 Documentation improvements, synthetic bug fixtures, keyboard QA, and Linux/WSL installation reports are useful first contributions. Do not label a numerical or persistence change “easy” just because the patch is small.
@@ -35,7 +35,7 @@ These capabilities extend the current drawing engine; keep manual route intent, 
 | Crowded target selection | Preview the exact receiving port/net and provide a way to disambiguate nearby targets. Crossing lines never connect by appearance alone. |
 | Insert or remove in a connection | Insert a compatible signal block into one branch atomically, preserving other sinks and labels. Provide an explicit remove-and-heal action for unambiguous one-input/one-output cases. |
 | Lanes for parallel wires | Automatic routes already go around blocks and avoid other nets' lines where a lane exists. Assign evenly spaced lanes to parallel runs in a shared channel, and report a route that cannot avoid a body instead of drawing through it. |
-| Arrange quality on large circuits | Arranging the flyback converter twice gives the same drawing, as it already does for the other examples. Add crossing-minimizing column ordering and power/control section banding, and measure Arrange time on 100-block sheets. |
+| Arrange quality on large circuits | Arranging the flyback converter or the data center twice gives the same drawing, as it already does for the other examples. Add crossing-minimizing column ordering and power/control section banding, and measure Arrange time on 100-block sheets. |
 | Flip | Mirror selected blocks through model operations, updating ports, labels, and incident routes; clockwise 90° rotation is already implemented. |
 
 ## Workbench quality at scale
@@ -69,7 +69,7 @@ Subsystems, shared definitions, promoted parameters, variants, and configuration
 
 ## Expand modeling and export
 
-1. Define scalar/vector/bus and sample-clock semantics, including buses across subsystem ports, before enabling mux/demux as executable blocks.
+1. Buses: signal buses route and select signals today. Next: element-wise math on vectors (a Gain or Sum applied to a whole bus), Boolean buses, buses in C export, and sample-clock semantics.
 2. Close the loop in C verification: run the generated controller against the simulated plant (co-simulation) instead of replaying recorded plant signals. Add fixed-point formats and multi-rate task scheduling.
 3. Extend physical domains through tested Modelica components and examples. Translational, magnetic, thermal, and three-phase blocks now wrap MSL 4.1.0 classes; hydraulics/fluid support is not implemented.
 4. Add HDL only with explicit clock/reset, numeric, and latency contracts and toolchain validation.

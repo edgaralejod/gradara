@@ -80,6 +80,9 @@
   opacity: 0.3;
   stroke-width: 1;
 }
+.block-face .symbol-bus {
+  stroke-width: 4;
+}
 .block-face .math-op,
 .block-face .pid-symbol,
 .block-face .display-glyph,
@@ -158,6 +161,18 @@
 .block-face .port-bottom {
   bottom: 4px;
   transform: translateX(-50%);
+}
+/* A block turned half round keeps its text upright, as Simulink draws a flipped gain. */
+[data-turn='180'] .block-face .gain-value,
+[data-turn='180'] .block-face .value-symbol,
+[data-turn='180'] .block-face .math-op,
+[data-turn='180'] .block-face .pid-symbol,
+[data-turn='180'] .block-face .transfer-symbol,
+[data-turn='180'] .block-face .port-label {
+  rotate: 180deg;
+}
+.block-face.has-signal-names .port-label {
+  max-width: none;
 }
 .block-face .port-label.sum-sign {
   color: var(--block-ink);
@@ -403,7 +418,6 @@
 }
 .library-part-detail strong { font-weight: 600; }
 .library-part-detail p { color: #637987; margin: 3px 0 0; }
-.legend-availability { font-size: var(--text-ui); color: #8a653b; }
 .legend-copy > small { font-size: var(--text-ui); color: #637987; }
 
 /* Unboxed circuit symbols get lighter relief; labels and connection targets stay flat. */
@@ -558,6 +572,7 @@
 .f-2bd59754{--domain:#3f4650!important;--well-left:8px!important;--well-right:33px!important;--well-top:8px!important;--well-bottom:24px!important}
 .f-2bf6d7e2{top:66.66666666666666%!important;color:#c02a8a!important}
 .f-2bfe4253{stroke:#00897b!important}
+.f-2cedbc89{width:144px!important;height:96px!important;transform:scale(0.3888888888888889)!important;--domain:#1f5fbf!important;--preview-text:30.857142857142858px!important}
 .f-2d40491d{width:160px!important;height:96px!important;transform:scale(0.35)!important;--domain:#b86e00!important;--preview-text:34.285714285714285px!important}
 .f-2e23c92a{width:144px!important;height:96px!important}
 .f-2e2ef076{top:56.25%!important;color:#1f5fbf!important}
@@ -574,6 +589,7 @@
 .f-34aaeea8{--domain:#3f4650!important;--well-left:8px!important;--well-right:8px!important;--well-top:8px!important;--well-bottom:8px!important}
 .f-36a38663{width:48px!important;height:80px!important;transform:scale(1)!important;--domain:#b86e00!important;--preview-text:12px!important}
 .f-3702d415{--domain:#00897b!important;--well-left:8px!important;--well-right:42px!important;--well-top:8px!important;--well-bottom:8px!important}
+.f-3803d8c2{--domain:#1f5fbf!important;--well-left:33px!important;--well-right:61px!important;--well-top:8px!important;--well-bottom:8px!important}
 .f-383e4c36{--domain:#1f5fbf!important;--well-left:42px!important;--well-right:19px!important;--well-top:8px!important;--well-bottom:8px!important}
 .f-38779d6f{top:66.66666666666666%!important;color:#a064e0!important}
 .f-38a224e5{width:80px!important;height:64px!important}
@@ -588,6 +604,7 @@
 .f-3e9baafb{--domain:#d1352b!important;--well-left:8px!important;--well-right:8px!important;--well-top:8px!important;--well-bottom:24px!important}
 .f-413cb0e8{left:68.75%!important;--port-color:#00897b!important}
 .f-428b3dd9{stroke:#3f4650!important}
+.f-43bfb1d0{width:144px!important;height:96px!important;transform:scale(1)!important;--domain:#1f5fbf!important;--preview-text:12px!important}
 .f-4414ad8e{left:50%!important;color:#1f5fbf!important}
 .f-45523cf3{--domain:#a064e0!important;--well-left:19px!important;--well-right:19px!important;--well-top:8px!important;--well-bottom:8px!important}
 .f-45a0fbea{width:128px!important;height:96px!important}
@@ -754,6 +771,7 @@
 .f-d755340f{top:50%!important;--port-color:#00897b!important}
 .f-d79b3c33{--domain:#3f4650!important;--well-left:33px!important;--well-right:42px!important;--well-top:8px!important;--well-bottom:24px!important}
 .f-d7f1a1f0{left:31.25%!important;color:#b86e00!important}
+.f-d7f3848d{--domain:#1f5fbf!important;--well-left:61px!important;--well-right:33px!important;--well-top:8px!important;--well-bottom:8px!important}
 .f-d8665bd3{width:224px!important;height:96px!important}
 .f-d8835d6d{width:80px!important;height:64px!important;transform:scale(0.65625)!important;--domain:#a064e0!important;--preview-text:18.285714285714285px!important}
 .f-d8be8b97{left:50%!important;--port-color:#c02a8a!important}

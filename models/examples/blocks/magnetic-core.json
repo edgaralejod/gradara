@@ -1,0 +1,1763 @@
+{
+  "version": 1,
+  "name": "Example: Magnetic circuits",
+  "exampleId": "block-magnetic-core",
+  "description": "The winding carries 1 A from 1 V through 1 Ω, so it drives 100 A of magnetomotive force round a gap of 10⁶ A/Wb and a core of 10⁵ A/Wb: 90.9 µWb, with 90.9 A of it across the gap. Its inductance N² / R_m = 9.1 mH sets the 9.1 ms rise. Beside it, a constant 100 A drives a reluctance that swings between 1 and 3 · 10⁶ A/Wb, a signal source drives 50 A through a permeance of 1 µWb/A, and a flux source forces 1 mWb through 10⁶ A/Wb, which takes 1000 A.",
+  "duration": 0.1,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "v",
+      "definition": {
+        "kind": "dcSource",
+        "name": "1 V",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "description": "An ideal constant DC voltage source.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 1,
+            "unit": "V"
+          }
+        ],
+        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ]
+      },
+      "position": {
+        "x": 96,
+        "y": 192
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -44,
+        "y": -54
+      }
+    },
+    {
+      "id": "vg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 96,
+        "y": 312
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "r",
+      "definition": {
+        "kind": "resistor",
+        "name": "R 1 Ω",
+        "symbol": "R",
+        "domain": "electrical",
+        "description": "An ideal resistor between two electrical pins.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 1,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "v = R*i;",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ]
+      },
+      "position": {
+        "x": 224,
+        "y": 144
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "coil",
+      "definition": {
+        "kind": "winding",
+        "name": "Winding 100 turns",
+        "description": "Couples an electrical winding of N turns to a magnetic circuit.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "N",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "port_p",
+            "name": "m+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          },
+          {
+            "id": "port_n",
+            "name": "m−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "N",
+            "name": "Turns",
+            "value": 100,
+            "unit": "",
+            "min": 1
+          }
+        ],
+        "equations": "// Magnetic.FluxTubes.Basic.ElectroMagneticConverter from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "coil",
+          "solenoid",
+          "electromagnet"
+        ],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverter",
+          "modifiers": {
+            "N": "N"
+          }
+        }
+      },
+      "position": {
+        "x": 376,
+        "y": 136
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "phi",
+      "definition": {
+        "kind": "fluxSensor",
+        "name": "Core flux",
+        "description": "Magnetic flux through the sensor.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Φ",
+        "ports": [
+          {
+            "id": "Phi",
+            "name": "Phi",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Sensors.MagneticFluxSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Sensors.MagneticFluxSensor"
+        }
+      },
+      "position": {
+        "x": 608,
+        "y": 136
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "gap",
+      "definition": {
+        "kind": "reluctance",
+        "name": "Air gap",
+        "description": "Constant magnetic reluctance: V_m = R_m·Φ.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Rm",
+        "ports": [
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R_m",
+            "name": "Reluctance",
+            "value": 1000000,
+            "unit": "A/Wb",
+            "min": 0
+          }
+        ],
+        "equations": "// Magnetic.FluxTubes.Basic.ConstantReluctance from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "air gap",
+          "core"
+        ],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.ConstantReluctance",
+          "modifiers": {
+            "R_m": "R_m"
+          }
+        }
+      },
+      "position": {
+        "x": 768,
+        "y": 136
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "core",
+      "definition": {
+        "kind": "permeance",
+        "name": "Core",
+        "description": "Constant magnetic permeance: Φ = G_m·V_m.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Gm",
+        "ports": [
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "G_m",
+            "name": "Permeance",
+            "value": 0.00001,
+            "unit": "Wb/A",
+            "min": 0
+          }
+        ],
+        "equations": "// Magnetic.FluxTubes.Basic.ConstantPermeance from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.ConstantPermeance",
+          "modifiers": {
+            "G_m": "G_m"
+          }
+        }
+      },
+      "position": {
+        "x": 936,
+        "y": 224
+      },
+      "size": {
+        "width": 64,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 56,
+        "y": -54
+      }
+    },
+    {
+      "id": "mg",
+      "definition": {
+        "kind": "magneticGround",
+        "name": "Magnetic ground",
+        "description": "Zero magnetic potential reference.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "port",
+            "name": "0",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 496,
+        "y": 456
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "umm",
+      "definition": {
+        "kind": "mmfSensor",
+        "name": "Gap mmf",
+        "description": "Magnetic potential difference between its ports.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Vm",
+        "ports": [
+          {
+            "id": "V_m",
+            "name": "V_m",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Sensors.MagneticPotentialDifferenceSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Sensors.MagneticPotentialDifferenceSensor"
+        }
+      },
+      "position": {
+        "x": 768,
+        "y": 16
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "src",
+      "definition": {
+        "kind": "mmfSource",
+        "name": "mmf 100 A",
+        "description": "A constant magnetomotive force (for example a permanent magnet model).",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Vm",
+        "ports": [
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V_m",
+            "name": "Magnetomotive force",
+            "value": 100,
+            "unit": "A"
+          }
+        ],
+        "equations": "// Magnetic.FluxTubes.Sources.ConstantMagneticPotentialDifference from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "permanent magnet",
+          "mmf"
+        ],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Sources.ConstantMagneticPotentialDifference",
+          "modifiers": {
+            "V_m": "V_m"
+          }
+        }
+      },
+      "position": {
+        "x": 224,
+        "y": 568
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "rotation": 180
+    },
+    {
+      "id": "mg2a",
+      "definition": {
+        "kind": "magneticGround",
+        "name": "Ground (mmf)",
+        "description": "Zero magnetic potential reference.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "port",
+            "name": "0",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 96,
+        "y": 672
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "rm",
+      "definition": {
+        "kind": "sine",
+        "name": "R_m signal",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1000000,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 5,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 2000000,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 264,
+        "y": 448
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "vr",
+      "definition": {
+        "kind": "variableReluctance",
+        "name": "Variable reluctance",
+        "description": "Reluctance set by the input signal.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Rm(u)",
+        "ports": [
+          {
+            "id": "R_m",
+            "name": "Rm",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Basic.VariableReluctance from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.VariableReluctance"
+        }
+      },
+      "position": {
+        "x": 424,
+        "y": 568
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "phi2",
+      "definition": {
+        "kind": "fluxSensor",
+        "name": "Flux (variable)",
+        "description": "Magnetic flux through the sensor.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Φ",
+        "ports": [
+          {
+            "id": "Phi",
+            "name": "Phi",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Sensors.MagneticFluxSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Sensors.MagneticFluxSensor"
+        }
+      },
+      "position": {
+        "x": 592,
+        "y": 568
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "mg2",
+      "definition": {
+        "kind": "magneticGround",
+        "name": "Ground (variable)",
+        "description": "Zero magnetic potential reference.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "port",
+            "name": "0",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 752,
+        "y": 672
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "u",
+      "definition": {
+        "kind": "step",
+        "name": "50 A",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 50,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 96,
+        "y": 768
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "smmf",
+      "definition": {
+        "kind": "signalMmfSource",
+        "name": "Signal mmf",
+        "description": "Magnetomotive force set by the input signal.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Vm(u)",
+        "ports": [
+          {
+            "id": "V_m",
+            "name": "Vm",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Sources.SignalMagneticPotentialDifference from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Sources.SignalMagneticPotentialDifference"
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 864
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "rotation": 180
+    },
+    {
+      "id": "mg3a",
+      "definition": {
+        "kind": "magneticGround",
+        "name": "Ground (signal)",
+        "description": "Zero magnetic potential reference.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "port",
+            "name": "0",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 112,
+        "y": 968
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "perm",
+      "definition": {
+        "kind": "permeance",
+        "name": "Permeance 1 µWb/A",
+        "description": "Constant magnetic permeance: Φ = G_m·V_m.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Gm",
+        "ports": [
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "G_m",
+            "name": "Permeance",
+            "value": 0.000001,
+            "unit": "Wb/A",
+            "min": 0
+          }
+        ],
+        "equations": "// Magnetic.FluxTubes.Basic.ConstantPermeance from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.ConstantPermeance",
+          "modifiers": {
+            "G_m": "G_m"
+          }
+        }
+      },
+      "position": {
+        "x": 416,
+        "y": 864
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "phi3",
+      "definition": {
+        "kind": "fluxSensor",
+        "name": "Flux (permeance)",
+        "description": "Magnetic flux through the sensor.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Φ",
+        "ports": [
+          {
+            "id": "Phi",
+            "name": "Phi",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Sensors.MagneticFluxSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Sensors.MagneticFluxSensor"
+        }
+      },
+      "position": {
+        "x": 592,
+        "y": 864
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "mg3",
+      "definition": {
+        "kind": "magneticGround",
+        "name": "Ground (permeance)",
+        "description": "Zero magnetic potential reference.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "port",
+            "name": "0",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 752,
+        "y": 968
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "fsrc",
+      "definition": {
+        "kind": "fluxSource",
+        "name": "Flux 1 mWb",
+        "description": "A constant magnetic flux.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Φ",
+        "ports": [
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Phi",
+            "name": "Flux",
+            "value": 0.001,
+            "unit": "Wb"
+          }
+        ],
+        "equations": "// Magnetic.FluxTubes.Sources.ConstantMagneticFlux from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Sources.ConstantMagneticFlux",
+          "modifiers": {
+            "Phi": "Phi"
+          }
+        }
+      },
+      "position": {
+        "x": 1008,
+        "y": 568
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "mg4a",
+      "definition": {
+        "kind": "magneticGround",
+        "name": "Ground (flux)",
+        "description": "Zero magnetic potential reference.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "port",
+            "name": "0",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 896,
+        "y": 672
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "rr",
+      "definition": {
+        "kind": "reluctance",
+        "name": "Reluctance 10⁶",
+        "description": "Constant magnetic reluctance: V_m = R_m·Φ.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Rm",
+        "ports": [
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R_m",
+            "name": "Reluctance",
+            "value": 1000000,
+            "unit": "A/Wb",
+            "min": 0
+          }
+        ],
+        "equations": "// Magnetic.FluxTubes.Basic.ConstantReluctance from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "air gap",
+          "core"
+        ],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.ConstantReluctance",
+          "modifiers": {
+            "R_m": "R_m"
+          }
+        }
+      },
+      "position": {
+        "x": 1184,
+        "y": 568
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "umm2",
+      "definition": {
+        "kind": "mmfSensor",
+        "name": "mmf across",
+        "description": "Magnetic potential difference between its ports.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "Vm",
+        "ports": [
+          {
+            "id": "V_m",
+            "name": "V_m",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "port_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "left"
+          },
+          {
+            "id": "port_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Sensors.MagneticPotentialDifferenceSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Sensors.MagneticPotentialDifferenceSensor"
+        }
+      },
+      "position": {
+        "x": 1184,
+        "y": 448
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "mg4",
+      "definition": {
+        "kind": "magneticGround",
+        "name": "Ground (reluctance)",
+        "description": "Zero magnetic potential reference.",
+        "domain": "magnetic",
+        "category": "magnetic",
+        "symbol": "⏚",
+        "ports": [
+          {
+            "id": "port",
+            "name": "0",
+            "direction": "physical",
+            "domain": "magnetic",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Magnetic.FluxTubes.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Magnetic.FluxTubes.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 1344,
+        "y": 672
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "j_id000s",
+      "sourceHandle": "node",
+      "target": "vg",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0002",
+      "source": "v",
+      "sourceHandle": "p",
+      "target": "r",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0003",
+      "source": "r",
+      "sourceHandle": "n",
+      "target": "coil",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0004",
+      "source": "coil",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 360,
+          "y": 200
+        },
+        {
+          "x": 360,
+          "y": 288
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "coil",
+      "sourceHandle": "port_p",
+      "target": "phi",
+      "targetHandle": "port_p"
+    },
+    {
+      "id": "id0006",
+      "source": "phi",
+      "sourceHandle": "port_n",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id0007",
+      "source": "j_id000w",
+      "sourceHandle": "node",
+      "target": "core",
+      "targetHandle": "port_p",
+      "waypoints": [
+        {
+          "x": 968,
+          "y": 168
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "core",
+      "sourceHandle": "port_n",
+      "target": "j_id000y",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 968,
+          "y": 320
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "j_id000y",
+      "sourceHandle": "node",
+      "target": "mg",
+      "targetHandle": "port",
+      "waypoints": []
+    },
+    {
+      "id": "id000a",
+      "source": "umm",
+      "sourceHandle": "port_p",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 752,
+          "y": 48
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "umm",
+      "sourceHandle": "port_n",
+      "target": "j_id000w",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 864,
+          "y": 48
+        }
+      ]
+    },
+    {
+      "id": "id000c",
+      "source": "src",
+      "sourceHandle": "port_n",
+      "target": "mg2a",
+      "targetHandle": "port"
+    },
+    {
+      "id": "id000d",
+      "source": "src",
+      "sourceHandle": "port_p",
+      "target": "vr",
+      "targetHandle": "port_p"
+    },
+    {
+      "id": "id000e",
+      "source": "rm",
+      "sourceHandle": "y",
+      "target": "vr",
+      "targetHandle": "R_m"
+    },
+    {
+      "id": "id000f",
+      "source": "vr",
+      "sourceHandle": "port_n",
+      "target": "phi2",
+      "targetHandle": "port_p"
+    },
+    {
+      "id": "id000g",
+      "source": "phi2",
+      "sourceHandle": "port_n",
+      "target": "mg2",
+      "targetHandle": "port"
+    },
+    {
+      "id": "id000h",
+      "source": "u",
+      "sourceHandle": "y",
+      "target": "smmf",
+      "targetHandle": "V_m"
+    },
+    {
+      "id": "id000i",
+      "source": "smmf",
+      "sourceHandle": "port_n",
+      "target": "mg3a",
+      "targetHandle": "port"
+    },
+    {
+      "id": "id000j",
+      "source": "smmf",
+      "sourceHandle": "port_p",
+      "target": "perm",
+      "targetHandle": "port_p"
+    },
+    {
+      "id": "id000k",
+      "source": "perm",
+      "sourceHandle": "port_n",
+      "target": "phi3",
+      "targetHandle": "port_p"
+    },
+    {
+      "id": "id000l",
+      "source": "phi3",
+      "sourceHandle": "port_n",
+      "target": "mg3",
+      "targetHandle": "port"
+    },
+    {
+      "id": "id000m",
+      "source": "fsrc",
+      "sourceHandle": "port_p",
+      "target": "mg4a",
+      "targetHandle": "port"
+    },
+    {
+      "id": "id000n",
+      "source": "fsrc",
+      "sourceHandle": "port_n",
+      "target": "j_id0010",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000o",
+      "source": "j_id0012",
+      "sourceHandle": "node",
+      "target": "mg4",
+      "targetHandle": "port",
+      "waypoints": [
+        {
+          "x": 1368,
+          "y": 600
+        }
+      ]
+    },
+    {
+      "id": "id000p",
+      "source": "umm2",
+      "sourceHandle": "port_p",
+      "target": "j_id0010",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1168,
+          "y": 480
+        }
+      ]
+    },
+    {
+      "id": "id000q",
+      "source": "umm2",
+      "sourceHandle": "port_n",
+      "target": "j_id0012",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1280,
+          "y": 480
+        }
+      ]
+    },
+    {
+      "id": "w_id000t",
+      "source": "v",
+      "sourceHandle": "n",
+      "target": "j_id000s",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000v",
+      "source": "gap",
+      "sourceHandle": "port_p",
+      "target": "j_id000u",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000x",
+      "source": "gap",
+      "sourceHandle": "port_n",
+      "target": "j_id000w",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000z",
+      "source": "coil",
+      "sourceHandle": "port_n",
+      "target": "j_id000y",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 520,
+          "y": 200
+        }
+      ]
+    },
+    {
+      "id": "w_id0011",
+      "source": "rr",
+      "sourceHandle": "port_p",
+      "target": "j_id0010",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0013",
+      "source": "rr",
+      "sourceHandle": "port_n",
+      "target": "j_id0012",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000s",
+      "domain": "electrical",
+      "position": {
+        "x": 120,
+        "y": 288
+      }
+    },
+    {
+      "id": "j_id000u",
+      "domain": "magnetic",
+      "position": {
+        "x": 752,
+        "y": 168
+      }
+    },
+    {
+      "id": "j_id000w",
+      "domain": "magnetic",
+      "position": {
+        "x": 864,
+        "y": 168
+      }
+    },
+    {
+      "id": "j_id000y",
+      "domain": "magnetic",
+      "position": {
+        "x": 520,
+        "y": 320
+      }
+    },
+    {
+      "id": "j_id0010",
+      "domain": "magnetic",
+      "position": {
+        "x": 1168,
+        "y": 600
+      }
+    },
+    {
+      "id": "j_id0012",
+      "domain": "magnetic",
+      "position": {
+        "x": 1280,
+        "y": 600
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id0014",
+      "anchor": "coil.n",
+      "wireIds": [
+        "id0001",
+        "id0004",
+        "w_id000t"
+      ]
+    },
+    {
+      "id": "net_id0015",
+      "anchor": "r.p",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id0016",
+      "anchor": "coil.p",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id0017",
+      "anchor": "coil.port_p",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id0018",
+      "anchor": "gap.port_p",
+      "wireIds": [
+        "id0006",
+        "id000a",
+        "w_id000v"
+      ]
+    },
+    {
+      "id": "net_id0019",
+      "anchor": "core.port_p",
+      "wireIds": [
+        "id0007",
+        "id000b",
+        "w_id000x"
+      ]
+    },
+    {
+      "id": "net_id001a",
+      "anchor": "coil.port_n",
+      "wireIds": [
+        "id0008",
+        "id0009",
+        "w_id000z"
+      ]
+    },
+    {
+      "id": "net_id001b",
+      "anchor": "mg2a.port",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id001c",
+      "anchor": "src.port_p",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id001d",
+      "anchor": "rm.y",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id001e",
+      "anchor": "phi2.port_p",
+      "wireIds": [
+        "id000f"
+      ]
+    },
+    {
+      "id": "net_id001f",
+      "anchor": "mg2.port",
+      "wireIds": [
+        "id000g"
+      ]
+    },
+    {
+      "id": "net_id001g",
+      "anchor": "u.y",
+      "wireIds": [
+        "id000h"
+      ]
+    },
+    {
+      "id": "net_id001h",
+      "anchor": "mg3a.port",
+      "wireIds": [
+        "id000i"
+      ]
+    },
+    {
+      "id": "net_id001i",
+      "anchor": "perm.port_p",
+      "wireIds": [
+        "id000j"
+      ]
+    },
+    {
+      "id": "net_id001j",
+      "anchor": "perm.port_n",
+      "wireIds": [
+        "id000k"
+      ]
+    },
+    {
+      "id": "net_id001k",
+      "anchor": "mg3.port",
+      "wireIds": [
+        "id000l"
+      ]
+    },
+    {
+      "id": "net_id001l",
+      "anchor": "fsrc.port_p",
+      "wireIds": [
+        "id000m"
+      ]
+    },
+    {
+      "id": "net_id001m",
+      "anchor": "fsrc.port_n",
+      "wireIds": [
+        "id000n",
+        "id000p",
+        "w_id0011"
+      ]
+    },
+    {
+      "id": "net_id001n",
+      "anchor": "mg4.port",
+      "wireIds": [
+        "id000o",
+        "id000q",
+        "w_id0013"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Winding flux and gap mmf",
+      "series": [
+        "phi.Phi",
+        "umm.V_m"
+      ],
+      "labels": [
+        "Φ (Wb)",
+        "V_m gap (A)"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Source circuits",
+      "series": [
+        "phi2.Phi",
+        "phi3.Phi"
+      ],
+      "labels": [
+        "Variable reluctance",
+        "Permeance"
+      ]
+    }
+  ]
+}

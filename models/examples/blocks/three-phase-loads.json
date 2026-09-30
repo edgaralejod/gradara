@@ -1,0 +1,1820 @@
+{
+  "version": 1,
+  "name": "Example: Three-phase loads",
+  "exampleId": "block-three-phase-loads",
+  "description": "The resistive load takes a 1 A peak current per phase and a constant 15 W in total: 3 · (10 V)² / (2 · 10 Ω). The R–L load has 10 Ω of resistance and 10 Ω of reactance, so its 0.71 A current lags the voltage by 45°. The delta bank puts each 100 µF capacitor between two lines, at 17.3 V peak, so each line carries √3 times the capacitor current. Phase taps pick single phases out of the plug for single-phase meters.",
+  "duration": 0.1,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "s",
+      "definition": {
+        "kind": "threePhaseSource",
+        "name": "10 V 50 Hz",
+        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3~ AC",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "plug_n",
+            "name": "abc−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Phase amplitude",
+            "value": 10,
+            "unit": "V"
+          },
+          {
+            "id": "f",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "grid",
+          "mains",
+          "three phase"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sources.SineVoltage",
+          "modifiers": {
+            "V": "fill(V, 3)",
+            "f": "fill(f, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 104,
+        "y": 128
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": -112,
+        "y": -62
+      }
+    },
+    {
+      "id": "snstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star supply",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 144,
+        "y": 272
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 76,
+        "y": -46
+      }
+    },
+    {
+      "id": "sng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground supply",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 144,
+        "y": 368
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "rnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star (R)",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 1072,
+        "y": 208
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 64,
+        "y": -46
+      }
+    },
+    {
+      "id": "rng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (R)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1072,
+        "y": 304
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "lnstar",
+      "definition": {
+        "kind": "star",
+        "name": "Star (R–L)",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 1072,
+        "y": 480
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": 72,
+        "y": -46
+      }
+    },
+    {
+      "id": "lng",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (R–L)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1072,
+        "y": 576
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "p3",
+      "definition": {
+        "kind": "threePhasePowerSensor",
+        "name": "Power",
+        "description": "Total instantaneous power of the three phases.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "P3~",
+        "ports": [
+          {
+            "id": "pc",
+            "name": "i+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "nc",
+            "name": "i−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "pv",
+            "name": "v+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "top"
+          },
+          {
+            "id": "nv",
+            "name": "v−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          },
+          {
+            "id": "power",
+            "name": "P",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sensors.PowerSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sensors.PowerSensor"
+        }
+      },
+      "position": {
+        "x": 360,
+        "y": 128
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 80,
+        "y": 0
+      }
+    },
+    {
+      "id": "i3",
+      "definition": {
+        "kind": "threePhaseCurrentSensor",
+        "name": "Currents (R)",
+        "description": "Phase currents from plug + to plug −.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "iabc",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "ia",
+            "name": "ia",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "ib",
+            "name": "ib",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "ic",
+            "name": "ic",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sensors.CurrentSensor",
+          "ports": {
+            "ia": "i[1]",
+            "ib": "i[2]",
+            "ic": "i[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 616,
+        "y": 112
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "r3",
+      "definition": {
+        "kind": "threePhaseResistor",
+        "name": "R 10 Ω",
+        "description": "Resistor in each phase.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3R",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance per phase",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Basic.Resistor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Resistor",
+          "modifiers": {
+            "R": "fill(R, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 880,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "rl_r",
+      "definition": {
+        "kind": "threePhaseResistor",
+        "name": "R 10 Ω (R–L)",
+        "description": "Resistor in each phase.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3R",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance per phase",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Basic.Resistor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Resistor",
+          "modifiers": {
+            "R": "fill(R, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 480,
+        "y": 400
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "il",
+      "definition": {
+        "kind": "threePhaseCurrentSensor",
+        "name": "Currents (R–L)",
+        "description": "Phase currents from plug + to plug −.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "iabc",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "ia",
+            "name": "ia",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "ib",
+            "name": "ib",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "ic",
+            "name": "ic",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sensors.CurrentSensor",
+          "ports": {
+            "ia": "i[1]",
+            "ib": "i[2]",
+            "ic": "i[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 656,
+        "y": 384
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "rl_l",
+      "definition": {
+        "kind": "threePhaseInductor",
+        "name": "L 31.8 mH",
+        "description": "Inductor in each phase.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3L",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "L",
+            "name": "Inductance per phase",
+            "value": 0.031831,
+            "unit": "H",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Basic.Inductor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "choke",
+          "filter"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Inductor",
+          "modifiers": {
+            "L": "fill(L, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 880,
+        "y": 400
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "ic",
+      "definition": {
+        "kind": "threePhaseCurrentSensor",
+        "name": "Currents (C)",
+        "description": "Phase currents from plug + to plug −.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "iabc",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "ia",
+            "name": "ia",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "ib",
+            "name": "ib",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          },
+          {
+            "id": "ic",
+            "name": "ic",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sensors.CurrentSensor",
+          "ports": {
+            "ia": "i[1]",
+            "ib": "i[2]",
+            "ic": "i[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 456,
+        "y": 656
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "cb",
+      "definition": {
+        "kind": "threePhaseCapacitor",
+        "name": "C 100 µF",
+        "description": "Capacitor in each phase.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3C",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Capacitance per phase",
+            "value": 0.0001,
+            "unit": "F",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Basic.Capacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Capacitor",
+          "modifiers": {
+            "C": "fill(C, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 720,
+        "y": 672
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "dl",
+      "definition": {
+        "kind": "delta",
+        "name": "Delta",
+        "description": "Connects the phases in delta (a–b, b–c, c–a).",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Δ",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "bca",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Delta from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mesh"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Delta"
+        }
+      },
+      "position": {
+        "x": 888,
+        "y": 680
+      },
+      "size": {
+        "width": 64,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "pa",
+      "definition": {
+        "kind": "phaseA",
+        "name": "Phase a",
+        "description": "Connects phase a of a 3-phase plug to a single-phase pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "a",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_p",
+            "name": "a",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.PlugToPin_p from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "splitter",
+          "pin"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.PlugToPin_p",
+          "modifiers": {
+            "k": "1"
+          }
+        }
+      },
+      "position": {
+        "x": 456,
+        "y": 864
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "pb",
+      "definition": {
+        "kind": "phaseB",
+        "name": "Phase b",
+        "description": "Connects phase b of a 3-phase plug to a single-phase pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "b",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_p",
+            "name": "b",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.PlugToPin_p from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "splitter",
+          "pin"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.PlugToPin_p",
+          "modifiers": {
+            "k": "2"
+          }
+        }
+      },
+      "position": {
+        "x": 728,
+        "y": 864
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "pc",
+      "definition": {
+        "kind": "phaseC",
+        "name": "Phase c",
+        "description": "Connects phase c of a 3-phase plug to a single-phase pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "c",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_p",
+            "name": "c",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.PlugToPin_p from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "splitter",
+          "pin"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.PlugToPin_p",
+          "modifiers": {
+            "k": "3"
+          }
+        }
+      },
+      "position": {
+        "x": 1000,
+        "y": 864
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "va",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v a",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 576,
+        "y": 1000
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "vb",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v b",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 848,
+        "y": 1000
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "vc",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "v c",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "domain": "electrical",
+            "direction": "physical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "side": "right",
+            "domain": "signal",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ]
+      },
+      "position": {
+        "x": 1120,
+        "y": 1000
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 44,
+        "y": -54
+      }
+    },
+    {
+      "id": "vag",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground a",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 576,
+        "y": 1112
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "vbg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground b",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 848,
+        "y": 1112
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "vcg",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground c",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "domain": "electrical",
+            "side": "top",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [],
+        "equations": "p.v = 0;"
+      },
+      "position": {
+        "x": 1120,
+        "y": 1112
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "s",
+      "sourceHandle": "plug_n",
+      "target": "snstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id0002",
+      "source": "snstar",
+      "sourceHandle": "pin_n",
+      "target": "sng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000t",
+      "sourceHandle": "node",
+      "target": "rnstar",
+      "targetHandle": "plug_p",
+      "waypoints": [
+        {
+          "x": 1096,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "id": "id0004",
+      "source": "rnstar",
+      "sourceHandle": "pin_n",
+      "target": "rng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0005",
+      "source": "rl_l",
+      "sourceHandle": "plug_n",
+      "target": "lnstar",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id0006",
+      "source": "lnstar",
+      "sourceHandle": "pin_n",
+      "target": "lng",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0007",
+      "source": "j_id000v",
+      "sourceHandle": "node",
+      "target": "p3",
+      "targetHandle": "pc",
+      "waypoints": []
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000v",
+      "sourceHandle": "node",
+      "target": "p3",
+      "targetHandle": "pv",
+      "waypoints": [
+        {
+          "x": 344,
+          "y": 112
+        },
+        {
+          "x": 424,
+          "y": 112
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "p3",
+      "sourceHandle": "nv",
+      "target": "j_id000t",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 424,
+          "y": 248
+        },
+        {
+          "x": 976,
+          "y": 248
+        }
+      ]
+    },
+    {
+      "id": "id000a",
+      "source": "p3",
+      "sourceHandle": "nc",
+      "target": "i3",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000b",
+      "source": "i3",
+      "sourceHandle": "plug_n",
+      "target": "r3",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000c",
+      "source": "j_id000v",
+      "sourceHandle": "node",
+      "target": "rl_r",
+      "targetHandle": "plug_p",
+      "waypoints": [
+        {
+          "x": 360,
+          "y": 176
+        },
+        {
+          "x": 360,
+          "y": 432
+        }
+      ]
+    },
+    {
+      "id": "id000d",
+      "source": "rl_r",
+      "sourceHandle": "plug_n",
+      "target": "il",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000e",
+      "source": "il",
+      "sourceHandle": "plug_n",
+      "target": "rl_l",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000f",
+      "source": "j_id0011",
+      "sourceHandle": "node",
+      "target": "ic",
+      "targetHandle": "plug_p",
+      "waypoints": []
+    },
+    {
+      "id": "id000g",
+      "source": "ic",
+      "sourceHandle": "plug_n",
+      "target": "j_id000x",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "id000h",
+      "source": "cb",
+      "sourceHandle": "plug_n",
+      "target": "dl",
+      "targetHandle": "plug_n"
+    },
+    {
+      "id": "id000i",
+      "source": "dl",
+      "sourceHandle": "plug_p",
+      "target": "j_id000x",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 872,
+          "y": 704
+        },
+        {
+          "x": 872,
+          "y": 664
+        },
+        {
+          "x": 704,
+          "y": 664
+        }
+      ]
+    },
+    {
+      "id": "id000j",
+      "source": "j_id000z",
+      "sourceHandle": "node",
+      "target": "pa",
+      "targetHandle": "plug_p",
+      "waypoints": [
+        {
+          "x": 344,
+          "y": 912
+        }
+      ]
+    },
+    {
+      "id": "id000k",
+      "source": "j_id0013",
+      "sourceHandle": "node",
+      "target": "pb",
+      "targetHandle": "plug_p",
+      "waypoints": [
+        {
+          "x": 712,
+          "y": 912
+        }
+      ]
+    },
+    {
+      "id": "id000l",
+      "source": "j_id0013",
+      "sourceHandle": "node",
+      "target": "pc",
+      "targetHandle": "plug_p",
+      "waypoints": [
+        {
+          "x": 984,
+          "y": 824
+        },
+        {
+          "x": 984,
+          "y": 912
+        }
+      ]
+    },
+    {
+      "id": "id000m",
+      "source": "pa",
+      "sourceHandle": "pin_p",
+      "target": "va",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000n",
+      "source": "pb",
+      "sourceHandle": "pin_p",
+      "target": "vb",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000o",
+      "source": "pc",
+      "sourceHandle": "pin_p",
+      "target": "vc",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000p",
+      "source": "va",
+      "sourceHandle": "n",
+      "target": "vag",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000q",
+      "source": "vb",
+      "sourceHandle": "n",
+      "target": "vbg",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id000r",
+      "source": "vc",
+      "sourceHandle": "n",
+      "target": "vcg",
+      "targetHandle": "p"
+    },
+    {
+      "id": "w_id000u",
+      "source": "r3",
+      "sourceHandle": "plug_n",
+      "target": "j_id000t",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000w",
+      "source": "s",
+      "sourceHandle": "plug_p",
+      "target": "j_id000v",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000y",
+      "source": "cb",
+      "sourceHandle": "plug_p",
+      "target": "j_id000x",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0010",
+      "source": "j_id0011",
+      "sourceHandle": "node",
+      "target": "j_id000z",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0012",
+      "source": "j_id000v",
+      "sourceHandle": "node",
+      "target": "j_id0011",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0014",
+      "source": "j_id000z",
+      "sourceHandle": "node",
+      "target": "j_id0013",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000t",
+      "domain": "threePhase",
+      "position": {
+        "x": 976,
+        "y": 160
+      }
+    },
+    {
+      "id": "j_id000v",
+      "domain": "threePhase",
+      "position": {
+        "x": 344,
+        "y": 176
+      }
+    },
+    {
+      "id": "j_id000x",
+      "domain": "threePhase",
+      "position": {
+        "x": 704,
+        "y": 704
+      }
+    },
+    {
+      "id": "j_id000z",
+      "domain": "threePhase",
+      "position": {
+        "x": 344,
+        "y": 824
+      }
+    },
+    {
+      "id": "j_id0011",
+      "domain": "threePhase",
+      "position": {
+        "x": 344,
+        "y": 704
+      }
+    },
+    {
+      "id": "j_id0013",
+      "domain": "threePhase",
+      "position": {
+        "x": 712,
+        "y": 824
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id0015",
+      "anchor": "s.plug_n",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id0016",
+      "anchor": "sng.p",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id0017",
+      "anchor": "p3.nv",
+      "wireIds": [
+        "id0003",
+        "id0009",
+        "w_id000u"
+      ]
+    },
+    {
+      "id": "net_id0018",
+      "anchor": "rng.p",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id0019",
+      "anchor": "lnstar.plug_p",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id001a",
+      "anchor": "lng.p",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id001b",
+      "anchor": "ic.plug_p",
+      "wireIds": [
+        "id0007",
+        "id0008",
+        "id000c",
+        "id000f",
+        "id000j",
+        "id000k",
+        "id000l",
+        "w_id000w",
+        "w_id0010",
+        "w_id0012",
+        "w_id0014"
+      ]
+    },
+    {
+      "id": "net_id001c",
+      "anchor": "i3.plug_p",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id001d",
+      "anchor": "i3.plug_n",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id001e",
+      "anchor": "il.plug_p",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id001f",
+      "anchor": "il.plug_n",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id001g",
+      "anchor": "cb.plug_p",
+      "wireIds": [
+        "id000g",
+        "id000i",
+        "w_id000y"
+      ]
+    },
+    {
+      "id": "net_id001h",
+      "anchor": "cb.plug_n",
+      "wireIds": [
+        "id000h"
+      ]
+    },
+    {
+      "id": "net_id001i",
+      "anchor": "pa.pin_p",
+      "wireIds": [
+        "id000m"
+      ]
+    },
+    {
+      "id": "net_id001j",
+      "anchor": "pb.pin_p",
+      "wireIds": [
+        "id000n"
+      ]
+    },
+    {
+      "id": "net_id001k",
+      "anchor": "pc.pin_p",
+      "wireIds": [
+        "id000o"
+      ]
+    },
+    {
+      "id": "net_id001l",
+      "anchor": "va.n",
+      "wireIds": [
+        "id000p"
+      ]
+    },
+    {
+      "id": "net_id001m",
+      "anchor": "vb.n",
+      "wireIds": [
+        "id000q"
+      ]
+    },
+    {
+      "id": "net_id001n",
+      "anchor": "vc.n",
+      "wireIds": [
+        "id000r"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Phase voltages",
+      "series": [
+        "va.y",
+        "vb.y",
+        "vc.y"
+      ],
+      "labels": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Phase a currents",
+      "series": [
+        "i3.ia",
+        "il.ia",
+        "ic.ia"
+      ],
+      "labels": [
+        "R",
+        "R–L",
+        "C (delta)"
+      ]
+    },
+    {
+      "id": "plot3",
+      "label": "Resistive load power",
+      "series": [
+        "p3.power"
+      ],
+      "labels": [
+        "P (W)"
+      ]
+    }
+  ]
+}

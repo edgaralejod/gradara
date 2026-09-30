@@ -2,7 +2,11 @@
 import { rotateBlocks } from '@/lib/gradara/rotation';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
-import BlockHelpDialog from '@/components/gradara/block-help-dialog';
+import NoteLayer from '@/components/gradara/note-layer';
+import BlockHelpDialog, {
+  OPEN_EXAMPLE_EVENT,
+  type OpenExampleDetail,
+} from '@/components/gradara/block-help-dialog';
 import { useStored } from '@/components/gradara/use-stored';
 import {
   PaneResizer,
@@ -38,7 +42,6 @@ import {
 } from 'react';
 import {
   ReactFlowProvider,
-  ViewportPortal,
   Controls,
   ControlButton,
   SelectionMode,
@@ -71,6 +74,7 @@ import {
   Copy,
   Clipboard,
   ClipboardPaste,
+  StickyNote,
   Trash2,
   Maximize,
   LayoutGrid,
@@ -79,6 +83,7 @@ import {
   PanelsTopLeft,
   Group,
   Ungroup,
+  Unplug,
   Scissors,
   Plus,
   CopyPlus,
@@ -134,6 +139,11 @@ import {
 import NumberField from '@/components/gradara/number-field';
 import NameField from '@/components/gradara/name-field';
 import Results from '@/components/gradara/results';
+import {
+  openOutputs,
+  removeTerminators,
+  terminateOpenOutputs,
+} from '@/lib/gradara/terminators';
 import ModelBrowser, {
   type BrowserSection,
 } from '@/components/gradara/model-browser';
@@ -164,6 +174,8 @@ import BlockDialog, {
 import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import VariantPanel from '@/components/gradara/variant-panel';
+import { BusSignalsPanel } from '@/components/gradara/bus-signals-panel';
+import { isBusBlock, propagateBuses } from '@/lib/gradara/buses';
 import { useVariantChecks } from '@/components/gradara/use-variant-checks';
 import { SubsystemLookupContext } from '@/components/gradara/subsystem-preview';
 import ExplorerWorkspace, {
@@ -492,6 +504,7 @@ function Workbench() {
     () => writeGridSetting(showGridRef.current ? '0' : '1'),
     [writeGridSetting],
   );
+  const [editingNote, setEditingNote] = useState<number | null>(null);
   const [canvasMenu, setCanvasMenu] = useState<{
     at: { x: number; y: number };
     point: { x: number; y: number };
@@ -890,7 +903,8 @@ function Workbench() {
         /* Ignore an unreadable browser draft; the disk document remains authoritative. */
       }
     }
-    return normalizeProject(next);
+    // Bus widths are derived: bring them up to date with the wiring on load.
+    return propagateBuses(normalizeProject(next));
   };
   useEffect(() => {
     let disposed = false;
@@ -1104,6 +1118,26 @@ function Workbench() {
       endTransition();
     }
   };
+  // Help → Open example: a copy of the example in My models, with the block selected.
+  const openExampleRef = useRef<(detail: OpenExampleDetail) => Promise<void>>(
+    async () => {},
+  );
+  openExampleRef.current = async ({ template, title, kind }) => {
+    await createModel(`Example: ${title}`, template as TemplateId);
+    const ids = projectRef.current.blocks
+      .filter((b) => b.definition.kind === kind)
+      .map((b) => b.id);
+    if (ids.length) selectBlocks(ids);
+    setLibraryOpen(false);
+  };
+  useEffect(() => {
+    const open = (event: Event) =>
+      void openExampleRef
+        .current((event as CustomEvent<OpenExampleDetail>).detail)
+        .catch((e) => notify((e as Error).message));
+    window.addEventListener(OPEN_EXAMPLE_EVENT, open);
+    return () => window.removeEventListener(OPEN_EXAMPLE_EVENT, open);
+  }, []);
   const insertGeneratedModel = async (generated: Project) => {
     if (!beginTransition())
       throw new Error('Wait for the current operation to finish.');
@@ -1369,6 +1403,16 @@ function Workbench() {
       ),
     );
     const items: CanvasMenuItem[] = [];
+    const picked = projectRef.current.blocks.filter((b) =>
+      blocks.includes(b.id),
+    );
+    const canTerminate = picked.some(
+      (b) =>
+        openOutputs(projectRef.current, b).filter(
+          (id) => !b.terminated?.includes(id),
+        ).length > 0,
+    );
+    const terminated = picked.some((b) => b.terminated?.length);
     if (anything) {
       items.push(
         {
@@ -1410,6 +1454,30 @@ function Workbench() {
           run: () =>
             commit((p) => rotateBlocks(p, selectionRef.current.blockIds)),
         },
+        {
+          id: 'terminate',
+          label: 'Terminate unused outputs',
+          icon: <Unplug size={13} />,
+          disabled: !canTerminate,
+          hint: 'No unconnected outputs in the selection',
+          run: () =>
+            commit((p) =>
+              terminateOpenOutputs(p, selectionRef.current.blockIds),
+            ),
+        },
+        ...(terminated
+          ? [
+              {
+                id: 'unterminate',
+                label: 'Remove terminators',
+                icon: <Unplug size={13} />,
+                run: () =>
+                  commit((p) =>
+                    removeTerminators(p, selectionRef.current.blockIds),
+                  ),
+              },
+            ]
+          : []),
         {
           id: 'help',
           label: 'Help',
@@ -1488,6 +1556,32 @@ function Workbench() {
         hint: 'Copy or cut blocks first',
         run: () => pasteAt(menu.point),
       },
+      // Notes belong to the top-level sheet.
+      ...(scopeRef.current.length
+        ? []
+        : [
+            {
+              id: 'note',
+              label: 'Add note here',
+              icon: <StickyNote size={13} />,
+              run: () => {
+                const index = projectRef.current.annotations?.length ?? 0;
+                commit((p) => ({
+                  ...p,
+                  annotations: [
+                    ...(p.annotations ?? []),
+                    {
+                      x: snapGrid(menu.point.x),
+                      y: snapGrid(menu.point.y),
+                      text: 'Note',
+                      detail: '',
+                    },
+                  ],
+                }));
+                setEditingNote(index);
+              },
+            } satisfies CanvasMenuItem,
+          ]),
       // Inside a subsystem, an input or output pill can go where you clicked; its
       // Type in the inspector sets what it carries.
       ...(scopeRef.current.length
@@ -2614,8 +2708,24 @@ function Workbench() {
                 ref={canvasRef}
                 className={`canvas-wrap tool-${canvasTool}`}
                 onContextMenu={(e) => {
-                  if (!isCanvasInsertDoubleClick(e.target)) return;
+                  // Right-clicking a block acts on it: it becomes the selection unless it is already in it.
+                  const node =
+                    e.target instanceof Element
+                      ? e.target.closest<HTMLElement>(
+                          '.react-flow__node-block[data-id]',
+                        )
+                      : null;
+                  const blockId = node?.dataset.id;
+                  if (!blockId && !isCanvasInsertDoubleClick(e.target)) return;
                   e.preventDefault();
+                  if (
+                    blockId &&
+                    !selectionRef.current.blockIds.includes(blockId)
+                  ) {
+                    const only = { ...emptySelection(), blockIds: [blockId] };
+                    selectionRef.current = only;
+                    select(only);
+                  }
                   const bounds = canvasRef.current?.getBoundingClientRect();
                   setInserter(null);
                   const menu = {
@@ -2682,8 +2792,8 @@ function Workbench() {
                   !inserter && (
                     <div className="empty-subsystem" role="note">
                       This subsystem is empty. Add blocks from the library, or
-                      right-click to add input and output ports. Esc or ⌘↑
-                      goes back up.
+                      right-click to add input and output ports. Esc or ⌘↑ goes
+                      back up.
                     </div>
                   )}
                 {ready &&
@@ -2765,6 +2875,19 @@ function Workbench() {
                         onLabelSelect={(id) => {
                           select({ ...emptySelection(), blockIds: [id] });
                         }}
+                        onLabelRename={(id, name) =>
+                          commit((p) => ({
+                            ...p,
+                            blocks: p.blocks.map((b) =>
+                              b.id === id
+                                ? {
+                                    ...b,
+                                    definition: { ...b.definition, name },
+                                  }
+                                : b,
+                            ),
+                          }))
+                        }
                         edges={[]}
                         nodesConnectable={false}
                         onNodeClick={(event, node) => {
@@ -2834,20 +2957,21 @@ function Workbench() {
                         multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
                       >
                         <GridBackground visible={showGrid} />
-                        <ViewportPortal>
-                          {project.annotations?.map((a, i) => (
-                            <div
-                              key={i}
-                              className="diagram-annotation"
-                              style={{
-                                transform: `translate(${a.x}px, ${a.y}px)`,
-                              }}
-                            >
-                              <strong>{a.text}</strong>
-                              {a.detail && <span>{a.detail}</span>}
-                            </div>
-                          ))}
-                        </ViewportPortal>
+                        <NoteLayer
+                          notes={project.annotations ?? []}
+                          editable={scope.length === 0}
+                          editing={editingNote}
+                          onEditingChange={setEditingNote}
+                          onChange={(index, note) =>
+                            commit((p) => ({
+                              ...p,
+                              annotations: (p.annotations ?? []).flatMap(
+                                (a, i) =>
+                                  i !== index ? [a] : note ? [note] : [],
+                              ),
+                            }))
+                          }
+                        />
                         <NetLayer
                           project={project}
                           selected={selectedEdges}
@@ -3211,6 +3335,7 @@ function Workbench() {
                     {active.definition.domain === 'signal' &&
                       !active.definition.modelica &&
                       !active.definition.subsystem &&
+                      !isBusBlock(active.definition) &&
                       !isBoundary(active) && (
                         <Button
                           className="refine-button"
@@ -3290,6 +3415,12 @@ function Workbench() {
                       />
                     </div>
                   )}
+                  {isBusBlock(active.definition) && (
+                    <BusSignalsPanel
+                      block={active}
+                      onCommit={(change) => commit(change)}
+                    />
+                  )}
                   {isBoundary(active) && (
                     <PortPillPanel
                       view={project}
@@ -3298,7 +3429,9 @@ function Workbench() {
                     />
                   )}
                   {/* A port pill has no parameters or equations; a block with neither skips the section. */}
+                  {/* A bus block's equations follow its Signals; there is nothing else to edit. */}
                   {!isBoundary(active) &&
+                    !isBusBlock(active.definition) &&
                     (active.definition.parameters.length > 0 ||
                       !!active.definition.equations?.trim() ||
                       !!active.definition.declarations?.trim()) && (
@@ -3819,7 +3952,9 @@ function Workbench() {
                 ['Show or hide the grid', "⌘ / Ctrl + '"],
                 ['Resize a side panel', 'Drag its inner edge'],
                 ['Restore default panel sizes', 'Canvas menu → Reset layout'],
-                ['Canvas menu', 'Right-click empty space'],
+                ['Add a note', 'Canvas menu → Add note here'],
+                ['Edit or delete a note', 'Double-click it · Delete'],
+                ['Canvas menu', 'Right-click empty space or a block'],
                 [
                   'Arrange the sheet (or the selection)',
                   '⌘ / Ctrl + Shift + A',
@@ -3827,7 +3962,8 @@ function Workbench() {
                 ['Pan canvas', 'Space + drag / Trackpad'],
                 ['Resize a block', 'Drag a corner or edge'],
                 ['Move a block name', 'Drag the label'],
-                ['Reset label position', 'Double-click its label'],
+                ['Rename a block', 'Double-click its name'],
+                ['Reset name position', 'Select the name, then Home'],
                 ['Nudge selection one grid step', 'Arrow keys'],
                 ['Nudge five grid steps', 'Shift + arrows'],
                 ['Add a block at the pointer', 'Double-click empty canvas'],

@@ -1,0 +1,1331 @@
+{
+  "version": 1,
+  "name": "Example: Clutch, backlash, and rotational sources",
+  "exampleId": "block-rotational-sources",
+  "description": "The clutch closes at 0.5 s and drags its 1 kg·m² load up to the 100 rad/s the speed source reached at 0.1 s, then locks. The backlash leaves the driven inertia standing still until the sine-driven source has taken up half the 0.1 rad gap, at 0.04 s. A torque source of 0.5 N·m drives an inertia with 0.05 N·m·s of damping through a spring-damper, so it settles at 10 rad/s. A constant 0.4 N·m accelerates a shaft load until its load torque steps up at 0.45 s; then it slows down.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "w100",
+      "definition": {
+        "kind": "step",
+        "name": "100 rad/s at 0.1 s",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 100,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 32,
+        "y": 104
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "drv",
+      "definition": {
+        "kind": "speedSource",
+        "name": "Drive",
+        "description": "Forces the flange to follow the input speed, filtered by a critical frequency.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "w_ref",
+            "name": "ω",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f_crit",
+            "name": "Filter frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Sources.Speed from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "drive",
+          "prescribed"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sources.Speed",
+          "modifiers": {
+            "exact": "false",
+            "f_crit": "f_crit"
+          }
+        }
+      },
+      "position": {
+        "x": 168,
+        "y": 88
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "press",
+      "definition": {
+        "kind": "step",
+        "name": "Close at 0.5 s",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.5,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "y = if time < startTime then 0 else height;",
+        "keywords": [
+          "source",
+          "reference"
+        ]
+      },
+      "position": {
+        "x": 192,
+        "y": -16
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "cl",
+      "definition": {
+        "kind": "clutch",
+        "name": "Clutch",
+        "description": "Friction clutch; the normalized normal force f_n (0…1) engages it.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "clutch",
+        "ports": [
+          {
+            "id": "f_normalized",
+            "name": "fn",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "fn_max",
+            "name": "Maximum normal force",
+            "value": 1000,
+            "unit": "N",
+            "min": 0
+          },
+          {
+            "id": "cgeo",
+            "name": "Geometry constant",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "peak",
+            "name": "Stiction peak",
+            "value": 1.1,
+            "unit": "",
+            "min": 1
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Clutch from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "friction",
+          "engage",
+          "coupling"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Clutch",
+          "modifiers": {
+            "fn_max": "fn_max",
+            "cgeo": "cgeo",
+            "peak": "peak"
+          }
+        }
+      },
+      "position": {
+        "x": 336,
+        "y": 104
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "jc",
+      "definition": {
+        "kind": "rotInertia",
+        "name": "Driven 1 kg·m²",
+        "description": "Rotating mass with two flanges and no losses.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "J",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 1,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Inertia from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mass",
+          "flywheel",
+          "rotor"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Inertia",
+          "modifiers": {
+            "J": "J"
+          }
+        }
+      },
+      "position": {
+        "x": 496,
+        "y": 104
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "wc",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Driven speed",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 680,
+        "y": 88
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 120,
+        "y": -62
+      }
+    },
+    {
+      "id": "wref",
+      "definition": {
+        "kind": "sine",
+        "name": "ω ref 10 sin 2πt",
+        "symbol": "sine",
+        "domain": "signal",
+        "description": "A continuous sinusoid.",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 10,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 1,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "declarations": "",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ]
+      },
+      "position": {
+        "x": 80,
+        "y": 320
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ss",
+      "definition": {
+        "kind": "speedSource",
+        "name": "Speed source",
+        "description": "Forces the flange to follow the input speed, filtered by a critical frequency.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "w_ref",
+            "name": "ω",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "f_crit",
+            "name": "Filter frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Sources.Speed from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "drive",
+          "prescribed"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sources.Speed",
+          "modifiers": {
+            "exact": "false",
+            "f_crit": "f_crit"
+          }
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 304
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "bl",
+      "definition": {
+        "kind": "rotBacklash",
+        "name": "Backlash 0.1 rad",
+        "description": "Spring and damper in series with a free play of b.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "b",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "b",
+            "name": "Total backlash",
+            "value": 0.1,
+            "unit": "rad",
+            "min": 0
+          },
+          {
+            "id": "c",
+            "name": "Stiffness",
+            "value": 100000,
+            "unit": "N·m/rad",
+            "min": 0
+          },
+          {
+            "id": "d",
+            "name": "Damping",
+            "value": 10,
+            "unit": "N·m·s/rad",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.ElastoBacklash from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gap",
+          "play",
+          "gear"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.ElastoBacklash",
+          "modifiers": {
+            "b": "b",
+            "c": "c",
+            "d": "d"
+          }
+        }
+      },
+      "position": {
+        "x": 464,
+        "y": 320
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "jb",
+      "definition": {
+        "kind": "rotInertia",
+        "name": "Inertia 0.01",
+        "description": "Rotating mass with two flanges and no losses.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "J",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 0.01,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Inertia from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "mass",
+          "flywheel",
+          "rotor"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Inertia",
+          "modifiers": {
+            "J": "J"
+          }
+        }
+      },
+      "position": {
+        "x": 608,
+        "y": 320
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "wb",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed behind backlash",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 784,
+        "y": 304
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 156,
+        "y": -62
+      }
+    },
+    {
+      "id": "tref",
+      "definition": {
+        "kind": "constant",
+        "name": "0.5 N·m",
+        "symbol": "constant",
+        "domain": "signal",
+        "description": "Constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "y = value;",
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0.5,
+            "unit": ""
+          }
+        ],
+        "declarations": ""
+      },
+      "position": {
+        "x": 80,
+        "y": 536
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "tsrc",
+      "definition": {
+        "kind": "torqueSource",
+        "name": "Torque source",
+        "description": "Applies the input signal as torque to the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "τ",
+        "ports": [
+          {
+            "id": "tau",
+            "name": "τ",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sources.Torque from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "actuator",
+          "drive",
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sources.Torque"
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 520
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "cpl",
+      "definition": {
+        "kind": "springDamper",
+        "name": "Coupling",
+        "symbol": "c,d",
+        "domain": "mechanical",
+        "description": "Rotational spring and damper between two shafts.",
+        "ports": [
+          {
+            "id": "a",
+            "name": "a",
+            "domain": "mechanical",
+            "side": "left",
+            "direction": "physical"
+          },
+          {
+            "id": "b",
+            "name": "b",
+            "domain": "mechanical",
+            "side": "right",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "c",
+            "name": "Stiffness",
+            "value": 10,
+            "unit": "N·m/rad",
+            "min": 0
+          },
+          {
+            "id": "d",
+            "name": "Damping",
+            "value": 0.1,
+            "unit": "N·m·s",
+            "min": 0
+          }
+        ],
+        "equations": "tau = c*phi + d*w;",
+        "keywords": [
+          "mechanical",
+          "compliance"
+        ]
+      },
+      "position": {
+        "x": 464,
+        "y": 536
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "ji",
+      "definition": {
+        "kind": "inertia",
+        "name": "Inertia 0.02, damping 0.05",
+        "description": "A rotating load with inertia and viscous friction.",
+        "domain": "mechanical",
+        "symbol": "J",
+        "ports": [
+          {
+            "id": "a",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "top",
+            "direction": "physical"
+          },
+          {
+            "id": "b",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "left",
+            "direction": "physical"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 0.02,
+            "unit": "kg·m²",
+            "min": 0.00001
+          },
+          {
+            "id": "damping",
+            "name": "Viscous friction",
+            "value": 0.05,
+            "unit": "N·m·s",
+            "min": 0
+          }
+        ],
+        "equations": "J*der(w) = tau - damping*w;"
+      },
+      "position": {
+        "x": 632,
+        "y": 568
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 176,
+        "y": -62
+      }
+    },
+    {
+      "id": "ws",
+      "definition": {
+        "kind": "sensor",
+        "name": "Coupled speed",
+        "description": "Measures shaft speed without loading the mechanical system.",
+        "domain": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "domain": "mechanical",
+            "side": "right",
+            "direction": "physical"
+          },
+          {
+            "id": "y",
+            "name": "out",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left"
+          }
+        ],
+        "parameters": [],
+        "equations": "y = der(flange.phi);\nflange.tau = 0;"
+      },
+      "position": {
+        "x": 440,
+        "y": 408
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": -124,
+        "y": -62
+      }
+    },
+    {
+      "id": "tc",
+      "definition": {
+        "kind": "constantTorque",
+        "name": "0.4 N·m",
+        "description": "A constant torque, independent of speed.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "τ₀",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "tau_constant",
+            "name": "Torque",
+            "value": 0.4,
+            "unit": "N·m"
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Sources.ConstantTorque from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "load"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sources.ConstantTorque",
+          "modifiers": {
+            "tau_constant": "tau_constant"
+          }
+        }
+      },
+      "position": {
+        "x": 56,
+        "y": 760
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "ld",
+      "definition": {
+        "kind": "shaftLoad",
+        "name": "Shaft load",
+        "symbol": "J",
+        "domain": "mechanical",
+        "description": "Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "loadTorque",
+            "name": "TL",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "N·m"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "J",
+            "name": "Inertia",
+            "value": 0.002,
+            "unit": "kg·m²",
+            "min": 0.00001
+          },
+          {
+            "id": "damping",
+            "name": "Viscous friction",
+            "value": 0.001,
+            "unit": "N·m·s",
+            "min": 0
+          },
+          {
+            "id": "initialLoad",
+            "name": "Initial load torque",
+            "value": 0.05,
+            "unit": "N·m"
+          },
+          {
+            "id": "stepLoad",
+            "name": "Added load torque",
+            "value": 0.35,
+            "unit": "N·m"
+          },
+          {
+            "id": "loadTime",
+            "name": "Load step time",
+            "value": 0.45,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "loadTorque = initialLoad + (if time < loadTime then 0 else stepLoad);\nJ*der(w) = flange.tau - damping*w - loadTorque;"
+      },
+      "position": {
+        "x": 312,
+        "y": 760
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 112,
+        "y": -62
+      }
+    },
+    {
+      "id": "wl",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Load speed",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 312,
+        "y": 920
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 112,
+        "y": -62
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "w100",
+      "sourceHandle": "y",
+      "target": "drv",
+      "targetHandle": "w_ref"
+    },
+    {
+      "id": "id0002",
+      "source": "drv",
+      "sourceHandle": "flange",
+      "target": "cl",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0003",
+      "source": "press",
+      "sourceHandle": "y",
+      "target": "cl",
+      "targetHandle": "f_normalized"
+    },
+    {
+      "id": "id0004",
+      "source": "cl",
+      "sourceHandle": "flange_b",
+      "target": "jc",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0005",
+      "source": "jc",
+      "sourceHandle": "flange_b",
+      "target": "wc",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id0006",
+      "source": "wref",
+      "sourceHandle": "y",
+      "target": "ss",
+      "targetHandle": "w_ref"
+    },
+    {
+      "id": "id0007",
+      "source": "ss",
+      "sourceHandle": "flange",
+      "target": "bl",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0008",
+      "source": "bl",
+      "sourceHandle": "flange_b",
+      "target": "jb",
+      "targetHandle": "flange_a"
+    },
+    {
+      "id": "id0009",
+      "source": "jb",
+      "sourceHandle": "flange_b",
+      "target": "wb",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id000a",
+      "source": "tref",
+      "sourceHandle": "y",
+      "target": "tsrc",
+      "targetHandle": "tau"
+    },
+    {
+      "id": "id000b",
+      "source": "tsrc",
+      "sourceHandle": "flange",
+      "target": "cpl",
+      "targetHandle": "a"
+    },
+    {
+      "id": "id000c",
+      "source": "cpl",
+      "sourceHandle": "b",
+      "target": "ji",
+      "targetHandle": "b"
+    },
+    {
+      "id": "id000d",
+      "source": "ji",
+      "sourceHandle": "a",
+      "target": "ws",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id000e",
+      "source": "j_id000h",
+      "sourceHandle": "node",
+      "target": "ld",
+      "targetHandle": "flange",
+      "waypoints": []
+    },
+    {
+      "id": "id000f",
+      "source": "j_id000h",
+      "sourceHandle": "node",
+      "target": "wl",
+      "targetHandle": "flange",
+      "waypoints": [
+        {
+          "x": 248,
+          "y": 968
+        }
+      ]
+    },
+    {
+      "id": "w_id000i",
+      "source": "tc",
+      "sourceHandle": "flange",
+      "target": "j_id000h",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000h",
+      "domain": "mechanical",
+      "position": {
+        "x": 248,
+        "y": 808
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000j",
+      "anchor": "w100.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000k",
+      "anchor": "cl.flange_a",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000l",
+      "anchor": "press.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000m",
+      "anchor": "cl.flange_b",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000n",
+      "anchor": "jc.flange_b",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000o",
+      "anchor": "wref.y",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000p",
+      "anchor": "bl.flange_a",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000q",
+      "anchor": "bl.flange_b",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id000r",
+      "anchor": "jb.flange_b",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id000s",
+      "anchor": "tref.y",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id000t",
+      "anchor": "cpl.a",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id000u",
+      "anchor": "cpl.b",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "ji.a",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "ld.flange",
+      "wireIds": [
+        "id000e",
+        "id000f",
+        "w_id000i"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Clutch",
+      "series": [
+        "wc.w"
+      ],
+      "labels": [
+        "Driven speed"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Backlash",
+      "series": [
+        "wref.y",
+        "wb.w"
+      ],
+      "labels": [
+        "Reference",
+        "Behind the backlash"
+      ]
+    },
+    {
+      "id": "plot3",
+      "label": "Torque-driven shafts",
+      "series": [
+        "ws.y",
+        "wl.w"
+      ],
+      "labels": [
+        "Coupled inertia",
+        "Shaft load"
+      ]
+    }
+  ]
+}
