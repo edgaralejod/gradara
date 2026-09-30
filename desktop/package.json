@@ -1,7 +1,7 @@
 {
   "name": "gradara-desktop",
   "productName": "Gradara",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Graphical multidomain simulation with OpenModelica",
   "main": "main.cjs",
   "private": true,
