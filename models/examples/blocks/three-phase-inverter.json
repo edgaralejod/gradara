@@ -675,21 +675,24 @@
             "name": "ia",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "A"
           },
           {
             "id": "ib",
             "name": "ib",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "A"
           },
           {
             "id": "ic",
             "name": "ic",
             "direction": "output",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "A"
           }
         ],
         "parameters": [],

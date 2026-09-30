@@ -151,7 +151,8 @@
             "name": "P",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "W"
           }
         ],
         "parameters": [],
@@ -339,7 +340,8 @@
             "name": "T",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "K"
           }
         ],
         "parameters": [],

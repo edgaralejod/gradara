@@ -354,7 +354,8 @@
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "rad/s"
           }
         ],
         "parameters": [],
@@ -720,7 +721,8 @@
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "rad/s"
           }
         ],
         "parameters": [],
@@ -1085,7 +1087,8 @@
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "rad/s"
           }
         ],
         "parameters": [],

@@ -141,7 +141,8 @@
             "name": "R",
             "direction": "input",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "Ω"
           },
           {
             "id": "p",
@@ -394,7 +395,8 @@
             "name": "L",
             "direction": "input",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "H"
           },
           {
             "id": "p",
@@ -721,7 +723,8 @@
             "name": "C",
             "direction": "input",
             "domain": "signal",
-            "side": "left"
+            "side": "left",
+            "unit": "F"
           },
           {
             "id": "p",

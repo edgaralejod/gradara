@@ -366,7 +366,8 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "s"
           }
         ],
         "parameters": [],
