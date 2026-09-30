@@ -21,6 +21,7 @@ const ISSUES_URL = 'https://github.com/edgaralejod/gradara/issues';
 // Installer tests set this to a file path: the app checks itself once the
 // workbench loads, writes a JSON report there, and quits (no dialogs).
 const SELF_TEST_REPORT = process.env.GRADARA_SELF_TEST_REPORT || '';
+const SELF_TEST_SIMULATE = !!SELF_TEST_REPORT && process.env.GRADARA_SELF_TEST_SIMULATE === '1';
 
 let backend = null;
 let port = 0;
@@ -260,7 +261,7 @@ async function launch() {
   }
 }
 
-function serviceRequest(method, route, body) {
+function serviceRequest(method, route, body, timeout = 30000) {
   return new Promise((resolve, reject) => {
     const payload = body === undefined ? null : Buffer.from(JSON.stringify(body));
     const request = http.request({
@@ -268,7 +269,7 @@ function serviceRequest(method, route, body) {
       port,
       path: route,
       method,
-      timeout: 30000,
+      timeout,
       headers: {
         'X-Gradara-Client': 'self-test',
         ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': payload.length } : {}),
@@ -303,11 +304,14 @@ async function runSelfTest(window) {
   try {
     const ai = await serviceRequest('GET', '/api/ai');
     checks.aiProvider = ai.provider ?? null;
-    const engine = await serviceRequest('GET', '/api/engine');
+    // The first engine check can start the macOS engine VM.
+    const engine = await serviceRequest('GET', '/api/engine', undefined, 300000);
     checks.engine = engine.backend ?? null;
+    checks.engineLabel = engine.label ?? null;
     const created = await serviceRequest('POST', '/api/models', { name: 'Installer self-test', template: 'dc' });
     checks.modelBlocks = created.project?.blocks?.length ?? 0;
     if (!checks.modelBlocks) throw new Error('Creating a model from the DC template returned no blocks.');
+    if (SELF_TEST_SIMULATE) await selfTestSimulation(engine, created.project, checks);
     const deadline = Date.now() + 60000;
     let rendered = false;
     while (!rendered && Date.now() < deadline) {
@@ -329,6 +333,36 @@ async function runSelfTest(window) {
   } catch (error) {
     await finishSelfTest({ ok: false, checks, error: error.message });
   }
+}
+
+// Installer tests with GRADARA_SELF_TEST_SIMULATE=1: the built-in engine must be
+// ready without setup, simulate the DC motor, and compile and verify its controller's C.
+async function selfTestSimulation(engine, project, checks) {
+  checks.engineReady = !!engine.ready;
+  if (!engine.ready) throw new Error(`The simulation engine is not ready: ${engine.label}. ${engine.detail || ''}`.trim());
+  const started = Date.now();
+  const job = await serviceRequest('POST', '/api/runs', project);
+  let state = job;
+  while (!['complete', 'failed', 'cancelled'].includes(state.status)) {
+    if (Date.now() - started > 600000) throw new Error('The simulation did not finish within 10 minutes.');
+    await sleep(1000);
+    state = await serviceRequest('GET', `/api/jobs/${job.id}`);
+  }
+  if (state.status !== 'complete') throw new Error(`The simulation ${state.status}: ${state.error || 'no detail'}`);
+  const result = state.result;
+  const finals = Object.fromEntries((result.series || []).map((s) => [s.name, s.values[s.values.length - 1]]));
+  checks.simulation = {
+    seconds: Math.round((Date.now() - started) / 100) / 10,
+    engine: result.engine,
+    samples: result.samples,
+    series: (result.series || []).length,
+    finalValues: finals,
+  };
+  if (!result.samples || !checks.simulation.series) throw new Error('The simulation returned no results.');
+  if (!Object.values(finals).every((v) => Number.isFinite(v))) throw new Error('The simulation returned non-finite values.');
+  const verify = await serviceRequest('POST', '/api/codegen/verify', { project, blockIds: ['controller'], runId: result.id }, 300000);
+  checks.codeVerify = { ok: !!verify.ok, message: verify.message || verify.error || null };
+  if (!verify.ok) throw new Error(`Generated C did not compile or match the run: ${JSON.stringify(verify).slice(0, 800)}`);
 }
 
 async function finishSelfTest(result) {

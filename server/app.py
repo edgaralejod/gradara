@@ -53,6 +53,7 @@ async def lifespan(app):
     for task in TASKS.values():
         if not task.done(): task.cancel()
     await asyncio.gather(*TASKS.values(), return_exceptions=True)
+    await engines.shutdown()
 
 app = FastAPI(title='Gradara local workspace', lifespan=lifespan, docs_url='/api/docs', openapi_url='/api/openapi.json')
 app.add_middleware(CORSMiddleware, allow_origins=sorted(LOCAL_ORIGINS),allow_methods=['GET','POST','PUT','DELETE'],allow_headers=['Content-Type','X-Gradara-Client'])
@@ -378,7 +379,7 @@ async def check_inactive_variants(project: Project):
 # ------------------------------------------------------------------ engine
 
 class EngineChoice(BaseModel):
-    engine: str = Field(pattern='^(auto|native|docker)$')
+    engine: str = Field(pattern='^(auto|bundled|native|docker)$')
 
 @app.get('/api/engine')
 async def engine_status(refresh: bool = False):

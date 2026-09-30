@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # Installers for Windows (NSIS), macOS (DMG, per architecture), and Linux (AppImage, deb).
-# Run from desktop/ after `npm run desktop:prepare` at the repository root.
+# Run from desktop/ after `npm run desktop:prepare` at the repository root and after
+# placing this platform's simulation engine in ../build/engine
+# (`python packaging/engine/fetch_bundle.py`); every installer ships its engine.
 appId: us.virtu-services.gradara
 productName: Gradara
 copyright: Copyright 2026 Edgar Duarte and the Gradara contributors
@@ -22,6 +24,9 @@ extraResources:
     to: web
   - from: ../models/examples
     to: app-resources/models/examples
+  # The built-in simulation engine for this platform and architecture.
+  - from: ../build/engine
+    to: engine
   - from: ../server/engine_runner.py
     to: app-resources/server/engine_runner.py
   - from: ../Dockerfile.engine
@@ -69,6 +74,8 @@ mac:
   icon: build/icon.png
   hardenedRuntime: true
   gatekeeperAssess: false
+  # The engine VM uses Apple's Virtualization framework (macOS 13 or newer).
+  minimumSystemVersion: '13.0'
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
 dmg:
@@ -91,5 +98,18 @@ linux:
   maintainer: Virtu Services LLC <support@virtu-services.us>
 deb:
   packageName: gradara
-  # OpenModelica's own packages provide the native engine; Docker works as an alternative.
+  # electron-builder's defaults, plus the C compiler the built-in engine uses to
+  # build each model (apt installs it with Gradara).
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+    - libsecret-1-0
+    - gcc
+    - libc6-dev
   recommends: []

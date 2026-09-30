@@ -1,6 +1,6 @@
 # Install Gradara
 
-Gradara is a desktop app for Windows, macOS, and Linux. You install the app, then set up the simulation engine once. The engine is OpenModelica with the Modelica Standard Library 4.1.0. Gradara does not include it, so the first setup needs an internet connection.
+Gradara is a desktop app for Windows, macOS, and Linux. Each installer includes the simulation engine, OpenModelica 1.27.1 with the Modelica Standard Library 4.1.0, so there is nothing else to download or set up: install the app, open it, and run a model.
 
 After that, see [Your first 10 minutes](USER_GUIDE.md#your-first-10-minutes).
 
@@ -8,16 +8,16 @@ After that, see [Your first 10 minutes](USER_GUIDE.md#your-first-10-minutes).
 
 | | Windows | macOS | Linux |
 | --- | --- | --- | --- |
-| System | Windows 10 or 11, 64-bit (x64) | macOS 13 Ventura or newer, Apple silicon or Intel | 64-bit (x86-64). Tested on Ubuntu 22.04 and 24.04. |
+| System | Windows 10 or 11, 64-bit (x64) | macOS 13 Ventura or newer, Apple silicon or Intel | 64-bit (x86-64). Tested on Ubuntu 22.04 and 24.04 and Debian 12. |
 | Download | `Gradara-win-x64.exe` | `Gradara-mac-arm64.dmg` (Apple silicon) or `Gradara-mac-x64.dmg` (Intel) | `Gradara-linux-amd64.deb` (Debian, Ubuntu) or `Gradara-linux-x86_64.AppImage` (other distributions) |
-| Simulation engine | OpenModelica 1.27, installed on your computer | A container runtime (Colima recommended) and the Gradara engine image | OpenModelica 1.27 from its Linux packages (or Docker) |
-| Extra disk space for the engine | About 2–3 GB for OpenModelica and its library | 1–2 GB for the engine image, inside a container VM that can grow to 30 GB | About 1–2 GB for OpenModelica and its library |
+| Simulation engine | Included | Included (runs in a small built-in virtual machine) | Included. It uses the system's `gcc`, which the `.deb` installs for you. |
+| Disk space | About 1 GB installed | About 700 MB installed | About 600 MB installed |
 
 [Supported platforms](PLATFORMS.md) lists what is tested on each system.
 
-Rough guidance: 8 GB of RAM or more (16 GB is comfortable on macOS, where the engine runs in a small virtual machine), and a few hundred MB for the app itself. Large models and long simulations need more space for results.
+Rough guidance: 8 GB of RAM or more. On macOS the engine's virtual machine uses up to 3 GB while it runs. Large models and long simulations need more space for results.
 
-You need a network connection to download the app and to set up the engine the first time. After that, drawing and simulating work offline. AI features and update checks need a connection.
+You need a network connection only to download the app. Drawing and simulating work offline. AI features and update checks need a connection.
 
 ## Download
 
@@ -67,65 +67,20 @@ Then open **Gradara** from your applications menu, or run `gradara` in a termina
 
 AppImages need FUSE 2. If the AppImage does not start on Ubuntu, install it with `sudo apt install libfuse2` (Ubuntu 22.04) or `sudo apt install libfuse2t64` (Ubuntu 24.04). The AppImage updates itself.
 
-## Set up the simulation engine
+## The simulation engine
 
-Gradara opens **Settings → Engine** for you when the engine is not ready. You can open it any time with the gear button at the top right. The top line shows the status, for example "OpenModelica is not installed" or "OpenModelica 1.27.0". **Check again** refreshes it.
+There is no engine to set up. The first time you run a model, Gradara starts its built-in engine:
 
-The **Engine** menu at the bottom has three choices:
+- **Windows and Linux**: OpenModelica runs directly from the app's folder.
+- **macOS**: OpenModelica does not publish macOS builds, so Gradara runs it in a small Linux virtual machine that ships inside the app. It starts in a few seconds the first time you run a model, stays ready while Gradara is open, and stops when you quit. It uses Apple's built-in Virtualization framework; you do not need Docker or any other software. The virtual machine has no network access and sees only Gradara's data folder.
 
-- **Automatic (recommended)**: uses OpenModelica installed on this computer if it is ready, otherwise the container engine.
-- **OpenModelica installed on this computer**: the default path on Windows and Linux.
-- **Container engine (Docker)**: the default path on macOS. It also works on Windows and Linux.
+**Settings → Engine** shows the engine's status, for example **OpenModelica 1.27.1 (built in)** with a green dot. **Check again** refreshes it. If the engine reports a problem, the tab says what to do (on macOS, **Restart engine**), and **Help → Copy Diagnostic Info** collects what a bug report needs.
 
-Keep **Automatic** unless you have a reason to choose.
+**Linux AppImage**: OpenModelica turns each model into a small program with `gcc`. The `.deb` installs it for you; with the AppImage, install it once (`sudo apt install gcc` on Debian or Ubuntu). The Engine tab tells you if it is missing.
 
-![Settings → Engine with OpenModelica ready](images/settings-engine.webp)
+### Using your own OpenModelica or Docker instead
 
-### Windows
-
-1. In **Settings → Engine**, choose **Download OpenModelica**. It opens the OpenModelica download page for Windows.
-2. Download and run the OpenModelica **1.27** installer for 64-bit Windows. Keep the default options. The download is large (over 1 GB).
-3. Return to Gradara and choose **Check again**. The status changes to "Modelica Standard Library 4.1.0 is missing".
-4. Under **Install the Modelica Standard Library**, choose **Set up now**. Gradara asks OpenModelica to download the library once. This takes a few minutes.
-5. The status shows **OpenModelica 1.27.0** with a green dot. You are ready.
-
-OpenModelica on Windows includes a C compiler. Gradara uses it for **Export → C code → Verify against last run**, so nothing else is needed.
-
-### macOS
-
-OpenModelica does not publish macOS builds. On macOS, Gradara runs OpenModelica inside a small Linux container. You install a container runtime once, and Gradara downloads its engine image.
-
-**Recommended: Colima.** Colima is free and open source. Gradara starts and stops it for you.
-
-1. Install [Homebrew](https://brew.sh) if you do not have it.
-2. In Terminal, run:
-
-   ```sh
-   brew install colima docker
-   ```
-
-3. In Gradara, open **Settings → Engine** and choose **Check again**. The status shows "Docker is not running" with **Start the container runtime**.
-4. Choose **Set up now**. Gradara starts a Colima virtual machine named `gradara` (4 CPUs, 4 GB of memory, a disk that can grow to 30 GB), then downloads the OpenModelica engine image (1 to 2 GB). The first time takes several minutes. The button shows progress.
-5. The status shows **OpenModelica 1.27.0 (container)** with a green dot. You are ready.
-
-The next time you start your Mac, the Engine tab may say "Docker is not running" again. Choose **Set up now** to start Colima. It does not download the image again.
-
-**OrbStack or Docker Desktop.** If you already run one of them, start it and choose **Check again**; Gradara uses it when there is no Gradara Colima profile, then downloads the engine image with **Set up now**. Gradara cannot start them for you. Note that Docker Desktop's license requires a paid subscription for larger companies, and OrbStack is paid for commercial use. Colima is free.
-
-### Linux
-
-1. Install OpenModelica **1.27** from its Linux packages. Follow the instructions at [openmodelica.org/download/download-linux](https://openmodelica.org/download/download-linux/) (**Settings → Engine → Download OpenModelica** opens that page). You add OpenModelica's package repository, then install the `openmodelica` package with `apt`.
-2. Return to Gradara and choose **Check again**. The status changes to "Modelica Standard Library 4.1.0 is missing".
-3. Under **Install the Modelica Standard Library**, choose **Set up now**. This takes a few minutes.
-4. The status shows **OpenModelica 1.27.0** with a green dot. You are ready.
-
-OpenModelica compiles each model to C, so it needs a C compiler. Its packages normally install `gcc`. If a run or **Verify against last run** reports that no C compiler was found, install one with `sudo apt install build-essential`.
-
-If you prefer containers, install Docker Engine, start it, and choose **Container engine (Docker)** in **Settings → Engine**. **Set up now** then downloads the engine image (1 to 2 GB).
-
-### Other OpenModelica versions
-
-Gradara is validated with OpenModelica 1.27. Other versions may work, but the Engine tab shows a note, and results can differ. If Gradara cannot find OpenModelica, see [Troubleshooting](development/TROUBLESHOOTING.md#the-engine-is-not-ready).
+The **Engine** menu in **Settings → Engine** also offers **OpenModelica installed on this computer** and **Container engine (Docker)**. They are for people who already maintain their own OpenModelica installation or container setup; most people should keep **Built-in engine (recommended)**. Gradara is validated with OpenModelica 1.27; other versions may work, but results can differ. If a chosen engine is not ready, see [Troubleshooting](development/TROUBLESHOOTING.md#the-engine-is-not-ready).
 
 ## Updates
 
@@ -152,31 +107,22 @@ To move a single model to another computer, use **Export → Gradara project** a
 
 ## Uninstall
 
-Uninstalling the app keeps your data folder, so you can reinstall without losing models. Remove the data folder yourself if you want it gone.
+Uninstalling the app removes it together with its built-in engine and keeps your data folder, so you can reinstall without losing models. Remove the data folder yourself if you want it gone. (If you set up an engine of your own for Gradara in an earlier version, such as OpenModelica, Colima, or a Docker image, remove it the way you installed it; the app no longer needs it.)
 
 ### Windows
 
 1. **Settings → Apps → Installed apps → Gradara → Uninstall** (or **Add or remove programs**).
 2. Optional: delete `%APPDATA%\Gradara` to remove your models, results, and settings.
-3. Optional: uninstall OpenModelica from **Installed apps**. Its downloaded libraries are in `%APPDATA%\.openmodelica`.
 
 ### macOS
 
 1. Quit Gradara and drag it from **Applications** to the Trash.
 2. Optional: delete `~/Library/Application Support/Gradara` to remove your models, results, and settings.
-3. Optional: remove the engine. In Terminal:
-
-   ```sh
-   colima delete --profile gradara
-   ```
-
-   This deletes Gradara's Colima virtual machine and the engine image inside it. Then `brew uninstall colima docker` if you no longer need them. If you used another container runtime, remove the `gradara-engine` and `ghcr.io/edgaralejod/gradara-engine` images there.
 
 ### Linux
 
 1. `.deb`: run `sudo apt remove gradara`. AppImage: delete the `.AppImage` file.
 2. Optional: delete `~/.config/Gradara` to remove your models, results, and settings.
-3. Optional: remove OpenModelica with `sudo apt remove openmodelica` (and its repository entry), and its downloaded libraries in `~/.openmodelica`. If you used Docker, remove the images with `docker image rm gradara-engine:1.27.0 ghcr.io/edgaralejod/gradara-engine:1.27.0`.
 
 ## Next steps
 

@@ -4,9 +4,12 @@ import { useEffect, useState } from 'react';
 import { api } from './api';
 
 export type EngineStatus = {
-  backend: 'native' | 'docker';
-  preference: 'auto' | 'native' | 'docker';
-  recommended: 'native' | 'docker';
+  /** bundled: the engine shipped inside the desktop installers. */
+  backend: 'bundled' | 'native' | 'docker';
+  preference: 'auto' | 'bundled' | 'native' | 'docker';
+  recommended: 'bundled' | 'native' | 'docker';
+  /** Whether this build carries a built-in engine. */
+  bundled: boolean;
   platform: string;
   ready: boolean;
   label: string;

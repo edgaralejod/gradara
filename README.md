@@ -18,12 +18,7 @@ Source: **[edgaralejod/gradara on GitHub](https://github.com/edgaralejod/gradara
 
 Download the installer for your computer from **[gradara.app](https://gradara.app/)** or the [latest GitHub release](https://github.com/edgaralejod/gradara/releases/latest): Windows (`.exe`), macOS (`.dmg`, Apple silicon or Intel), or Linux (`.AppImage` or `.deb`). The [install guide](docs/INSTALL.md) walks through each system.
 
-On first launch, **Settings → Engine** walks through the one-time simulation engine setup:
-
-- **Windows and Linux:** install [OpenModelica](https://openmodelica.org/download/) 1.27, then let Gradara install the Modelica Standard Library.
-- **macOS:** install Colima (`brew install colima docker`), then let Gradara start it and download the engine image.
-
-Then follow [your first 10 minutes](docs/USER_GUIDE.md#your-first-10-minutes).
+Each installer includes the simulation engine (OpenModelica 1.27.1 with the Modelica Standard Library 4.1.0), so there is nothing else to install: no OpenModelica download, no Docker. On macOS the engine runs in a small virtual machine built into the app. Then follow [your first 10 minutes](docs/USER_GUIDE.md#your-first-10-minutes).
 
 AI features are optional. Choose **Gradara AI** (sign in, 20 free credits, then prepaid packs), your own OpenAI or Anthropic API key, or turn AI off in **Settings → AI**. See [AI features](docs/AGENT_SETUP.md) and [privacy](docs/PRIVACY.md).
 
@@ -71,7 +66,7 @@ Your models, results, and settings stay in your data folder on your computer (**
 - Agent-created signal, electrical, rotational and translational mechanical, magnetic, thermal, and multidomain blocks, with an explicit type selector and real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.
 - An Assistant that proposes checked edits to the open model and explains or fixes failed runs; every proposal is reviewed and applied as one undo step.
 - Modelica source export, portable project export, and C11 code for a controller: a subsystem, the selected signal blocks, or the controller Gradara detects on the sheet. Choose Tustin, backward, or forward Euler for continuous blocks, then check the compiled code against the last run's recorded inputs and outputs.
-- Desktop installers with first-run engine setup, a native OpenModelica or container engine, automatic updates, and a choice of Gradara AI (20 free credits, then prepaid packs), your own OpenAI or Anthropic key, or no AI.
+- Desktop installers with a built-in simulation engine (no setup; a small built-in VM on macOS), automatic updates, and a choice of Gradara AI (20 free credits, then prepaid packs), your own OpenAI or Anthropic key, or no AI.
 
 Drawing, dragging, and routing stay in the workbench. The local FastAPI service saves project documents and supervises OpenModelica jobs, using a native OpenModelica install or the pinned container image. Models are stored as **Gradara JSON**; Modelica is generated from it. Editing an exported `.mo` file does not update the canvas.
 
