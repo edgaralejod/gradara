@@ -118,7 +118,12 @@ function Results({
             <span className={`result-status ${stale ? 'stale' : ''}`}>
               <span />
               {stale ? 'Model changed · Run again' : 'Completed'}
-              <span className="run-time">{result.elapsed}s</span>
+              <span
+                className="run-time"
+                title={`Simulated ${result.duration} s of model time in ${result.elapsed} s`}
+              >
+                {result.duration}s simulated · {result.elapsed}s
+              </span>
             </span>
           ) : (
             <span className="subtle">No run yet</span>

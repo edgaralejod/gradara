@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, type Ref } from 'react';
 import { Input } from '@/components/ui/input';
+import { parseInRange, rangeMessage } from '@/lib/gradara/number-input';
 export default function NumberField({
   value,
   onChange,
@@ -11,6 +12,7 @@ export default function NumberField({
   inputRef,
   live = false,
   onEnter,
+  onValidity,
   disabled = false,
 }: {
   value: number;
@@ -24,25 +26,38 @@ export default function NumberField({
   live?: boolean;
   /** Called after Enter commits a valid value. */
   onEnter?: () => void;
+  /**
+   * Reports whether the text in the field is a value that could be committed.
+   * A parent that acts on `value` (Run, say) should hold off while it is false:
+   * the field then shows something other than the value it last reported.
+   */
+  onValidity?: (valid: boolean) => void;
   disabled?: boolean;
 }) {
   const [text, setText] = useState(String(value));
   const [invalid, setInvalid] = useState(false);
   const skipBlur = useRef(false);
+  const validity = useRef<boolean | null>(null);
   useEffect(() => {
     // Keep in-progress text such as "1." when it already parses to the value.
     setText((t) => (t.trim() !== '' && Number(t) === value ? t : String(value)));
     setInvalid(false);
   }, [value]);
-  const parse = (raw: string) => {
-    const next = Number(raw);
-    return raw.trim() === '' ||
-      !Number.isFinite(next) ||
-      (min !== undefined && next < min) ||
-      (max !== undefined && next > max)
-      ? null
-      : next;
-  };
+  const valid = parse(text) !== null;
+  const report = useRef(onValidity);
+  useEffect(() => {
+    report.current = onValidity;
+  });
+  useEffect(() => {
+    if (validity.current === valid) return;
+    validity.current = valid;
+    report.current?.(valid);
+  }, [valid]);
+  // Leaving the page with an invalid draft must not leave the parent blocked.
+  useEffect(() => () => report.current?.(true), []);
+  function parse(raw: string) {
+    return parseInRange(raw, min, max);
+  }
   const commit = () => {
     const next = parse(text);
     if (next === null) {
@@ -65,7 +80,7 @@ export default function NumberField({
       aria-label={ariaLabel}
       aria-invalid={invalid}
       title={
-        invalid ? 'Enter a valid value within the allowed range.' : undefined
+        invalid || !valid ? rangeMessage(min, max) : undefined
       }
       onChange={(e) => {
         setText(e.target.value);

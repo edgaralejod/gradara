@@ -137,6 +137,7 @@ import {
   type BlockLayout,
 } from '@/lib/gradara/canvas';
 import NumberField from '@/components/gradara/number-field';
+import { STOP_TIME, rangeText } from '@/lib/gradara/number-input';
 import NameField from '@/components/gradara/name-field';
 import Results from '@/components/gradara/results';
 import {
@@ -513,6 +514,12 @@ function Workbench() {
     items: CanvasMenuItem[];
   } | null>(null);
   const [running, setRunning] = useState(false);
+  // Stop-time fields whose text is not a usable value (B01): the toolbar's and
+  // the model inspector's. While any is set, Run is held and the field explains.
+  const [badStopTime, setBadStopTime] = useState<{ toolbar?: boolean; inspector?: boolean }>({});
+  const stopTimeInvalid = !!(badStopTime.toolbar || badStopTime.inspector);
+  const stopTimeRefs = useRef<{ toolbar: HTMLInputElement | null; inspector: HTMLInputElement | null }>({ toolbar: null, inspector: null });
+  const STOP_TIME_MESSAGE = `Stop time must be a number ${rangeText(STOP_TIME.min, STOP_TIME.max)} seconds.`;
   const [runError, setRunError] = useState('');
   const [runFailure, setRunFailure] = useState<RunFailure | null>(null);
   const [result, setResult] = useState<SimulationResult | null>(null);
@@ -1813,6 +1820,11 @@ function Workbench() {
   );
   async function runSimulation() {
     if (runController.current || switching || !ready) return;
+    if (stopTimeInvalid) {
+      notify(STOP_TIME_MESSAGE);
+      (badStopTime.toolbar ? stopTimeRefs.current.toolbar : stopTimeRefs.current.inspector)?.focus();
+      return;
+    }
     if (!docRef.current.blocks.length) {
       notify('Add a block from the library or ask the agent to create one.');
       return;
@@ -1882,6 +1894,11 @@ function Workbench() {
       configurations.length < 2
     )
       return;
+    if (stopTimeInvalid) {
+      notify(STOP_TIME_MESSAGE);
+      (badStopTime.toolbar ? stopTimeRefs.current.toolbar : stopTimeRefs.current.inspector)?.focus();
+      return;
+    }
     const controller = new AbortController();
     runController.current = controller;
     setRunning(true);
@@ -2648,11 +2665,22 @@ function Workbench() {
                 <NumberField
                   value={project.duration}
                   onChange={(duration) => commit((p) => ({ ...p, duration }))}
-                  min={0.000001}
-                  max={86400}
+                  min={STOP_TIME.min}
+                  max={STOP_TIME.max}
                   ariaLabel="Simulation stop time"
+                  inputRef={(el) => {
+                    stopTimeRefs.current.toolbar = el;
+                  }}
+                  onValidity={(valid) =>
+                    setBadStopTime((b) => (b.toolbar === !valid ? b : { ...b, toolbar: !valid }))
+                  }
                 />
                 <span>s</span>
+                {badStopTime.toolbar && (
+                  <span role="alert" className="field-error">
+                    {STOP_TIME.min} to {STOP_TIME.max}
+                  </span>
+                )}
               </label>
               <ConfigurationMenu
                 doc={doc}
@@ -2667,10 +2695,12 @@ function Workbench() {
               <Button
                 className={`run-button ${running ? 'running' : ''}`}
                 onClick={() => void (running ? cancelRun() : runSimulation())}
+                title={stopTimeInvalid && !running ? STOP_TIME_MESSAGE : undefined}
                 disabled={
                   (!health.engineReady ||
                     !ready ||
                     switching ||
+                    stopTimeInvalid ||
                     !project.blocks.length) &&
                   !running
                 }
@@ -3672,13 +3702,24 @@ function Workbench() {
                     <NumberField
                       ariaLabel="Model stop time"
                       value={project.duration}
-                      min={0.000001}
-                      max={86400}
+                      min={STOP_TIME.min}
+                      max={STOP_TIME.max}
                       onChange={(duration) =>
                         commit((p) => ({ ...p, duration }))
                       }
+                      inputRef={(el) => {
+                        stopTimeRefs.current.inspector = el;
+                      }}
+                      onValidity={(valid) =>
+                        setBadStopTime((b) => (b.inspector === !valid ? b : { ...b, inspector: !valid }))
+                      }
                     />
                   </label>
+                  {badStopTime.inspector && (
+                    <p role="alert" className="field-error">
+                      {STOP_TIME_MESSAGE}
+                    </p>
+                  )}
                   {project.description && (
                     <details className="property-description">
                       <summary>Description</summary>
