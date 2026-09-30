@@ -99,6 +99,8 @@ const dateLabel = (date: string) => {
     : 'Earlier model';
 };
 
+export type ImportError = { file: string; message: string; detail?: string };
+
 export default function ModelBrowser({
   section: initialSection,
   activeId,
@@ -106,6 +108,8 @@ export default function ModelBrowser({
   onOpen,
   onCreate,
   onImport,
+  importError,
+  onDismissImportError,
   onCopy,
 }: {
   section: BrowserSection;
@@ -114,6 +118,9 @@ export default function ModelBrowser({
   onOpen: (id: string) => Promise<void>;
   onCreate: (name: string, template: TemplateId) => Promise<void>;
   onImport: () => void;
+  /** Why the last Import file failed; shown here, where the user is, until dismissed. */
+  importError?: ImportError | null;
+  onDismissImportError?: () => void;
   onCopy: () => void;
 }) {
   const [section, setSection] = useState(initialSection);
@@ -306,6 +313,22 @@ export default function ModelBrowser({
                 New model
               </Button>
             </div>
+            {importError && (
+              <div className="model-browser-error import-error" role="alert">
+                <strong>{importError.file}</strong> was not imported: {importError.message}{' '}
+                Your models are unchanged.
+                {importError.detail && (
+                  <details>
+                    <summary>Technical details</summary>
+                    <pre>{importError.detail}</pre>
+                  </details>
+                )}
+                <span className="import-error-actions">
+                  <button onClick={onImport}>Try another file</button>
+                  <button onClick={onDismissImportError}>Dismiss</button>
+                </span>
+              </div>
+            )}
             {error && (
               <div className="model-browser-error" role="alert">
                 {error}

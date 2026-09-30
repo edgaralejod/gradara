@@ -147,6 +147,7 @@ import {
 } from '@/lib/gradara/terminators';
 import ModelBrowser, {
   type BrowserSection,
+  type ImportError,
 } from '@/components/gradara/model-browser';
 import ModelComposer from '@/components/gradara/model-composer';
 import SaveCopyDialog from '@/components/gradara/save-copy-dialog';
@@ -562,6 +563,7 @@ function Workbench() {
     [store],
   );
   const importRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState<ImportError | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const flow = useReactFlow();
   const notify = useCallback((message: string) => {
@@ -2303,9 +2305,15 @@ function Workbench() {
   };
   async function importProject(file: File) {
     if (!beginTransition()) return;
+    setImportError(null);
+    let stage = 'read';
     try {
-      const imported = JSON.parse(await file.text()) as Project;
+      const text = await file.text();
+      stage = 'parse';
+      const imported = JSON.parse(text) as Project;
+      stage = 'check';
       await api('/source', { method: 'POST', body: JSON.stringify(imported) });
+      stage = 'save';
       await saveCurrent();
       const copied = await api<SavedDocument>('/models/copy', {
         method: 'POST',
@@ -2315,7 +2323,21 @@ function Workbench() {
       setBrowserSection(null);
       notify(`${copied.project.name} imported as a separate model.`);
     } catch (e) {
-      notify('Could not import this model. ' + (e as Error).message);
+      // The browser stays open, so the explanation goes there (QA B04), not into a toast.
+      const detail = (e as Error).message;
+      setImportError({
+        file: file.name,
+        message:
+          stage === 'parse'
+            ? 'the file is not valid JSON. A Gradara model is the .gradara.json file that Export writes.'
+            : stage === 'check'
+              ? 'it is not a Gradara model, or was made by a newer version.'
+              : stage === 'read'
+                ? 'the file could not be read.'
+                : 'it could not be saved as a new model.',
+        detail,
+      });
+      setBrowserSection((s) => s ?? 'models');
     } finally {
       endTransition();
     }
@@ -3894,10 +3916,15 @@ function Workbench() {
           <ModelBrowser
             section={browserSection}
             activeId={project.modelId}
-            onClose={() => setBrowserSection(null)}
+            onClose={() => {
+              setBrowserSection(null);
+              setImportError(null);
+            }}
             onOpen={openModel}
             onCreate={createModel}
             onImport={() => importRef.current?.click()}
+            importError={importError}
+            onDismissImportError={() => setImportError(null)}
             onCopy={() => {
               setBrowserSection(null);
               setCopyOpen(true);
