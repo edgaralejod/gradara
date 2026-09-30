@@ -3,8 +3,10 @@
 
 Downloads the official OpenModelica installer, checks it against the published
 MD5, installs it silently, copies the parts Gradara needs (trim_windows.py),
-and installs the Modelica Standard Library into the bundle with the bundle's
-own omc, so the result needs nothing else.
+installs the Modelica Standard Library into the bundle, provides the MSL C
+library omc loads while building models (compiled from the MSL sources when
+the installation has no DLL of it), and checks that the trimmed omc can
+evaluate it, so the result needs nothing else.
 
     python packaging/engine/build_windows.py --out build\\engine [--install C:\\OM] [--keep-install]
 """
@@ -31,6 +33,53 @@ def download(url: str, target: Path) -> None:
     print('Downloading', url, flush=True)
     with urllib.request.urlopen(url, timeout=120) as response, open(target, 'wb') as out:
         shutil.copyfileobj(response, out, 1 << 22)
+
+
+def bundle_env(out: Path, home: Path) -> dict:
+    env = dict(os.environ, OPENMODELICAHOME=str(out), OPENMODELICALIBRARY=str(out/'lib'/'omlibrary'),
+               HOME=str(home), APPDATA=str(home), USERPROFILE=str(home))
+    env['PATH'] = os.pathsep.join([str(out/'bin'), str(out/'tools'/'msys'/'ucrt64'/'bin'), env.get('PATH', '')])
+    env.pop('OMDEV', None)
+    return env
+
+
+def ensure_external_c(out: Path) -> None:
+    """omc evaluates MSL functions such as Modelica.Utilities.Strings.substring while
+    it builds a model, by loading ModelicaExternalC.dll from bin/. When the
+    installation has none, compile it from the MSL's own C sources with the bundle's
+    gcc, against the runtime DLL that provides ModelicaError and friends."""
+    target = out/'bin'/'libModelicaExternalC.dll'
+    if target.exists() or (out/'bin'/'ModelicaExternalC.dll').exists():
+        return
+    sources = next(iter(sorted((out/'lib'/'omlibrary').glob('Modelica */Resources/C-Sources'))), None)
+    if sources is None:
+        raise SystemExit('The MSL C sources are missing; cannot build ModelicaExternalC.dll.')
+    files = [str(sources/f) for f in ('ModelicaFFT.c', 'ModelicaInternal.c', 'ModelicaRandom.c',
+                                      'ModelicaStrings.c', 'win32_dirent.c')]
+    gcc = out/'tools'/'msys'/'ucrt64'/'bin'/'gcc.exe'
+    home = Path(tempfile.mkdtemp(prefix='gradara-ffi-'))
+    result = subprocess.run([str(gcc), '-shared', '-O2', '-o', str(target), *files, f'-I{sources}',
+                             str(out/'bin'/'libOpenModelicaRuntimeC.dll')], env=bundle_env(out, home),
+                            capture_output=True, text=True, encoding='utf-8', errors='replace')
+    print('Compiled ModelicaExternalC.dll from the MSL sources', result.stdout, result.stderr, flush=True)
+    if result.returncode or not target.exists():
+        raise SystemExit('ModelicaExternalC.dll could not be compiled.')
+
+
+def check_external_c(out: Path) -> None:
+    """The trimmed omc must evaluate an MSL external function while flattening."""
+    home = Path(tempfile.mkdtemp(prefix='gradara-check-'))
+    (home/'check.mos').write_text(
+        'loadModel(Modelica); getErrorString();\n'
+        'loadString("model C parameter Integer n = Modelica.Utilities.Strings.length('
+        'Modelica.Utilities.Strings.substring(\\"hello\\", 1, 2)); Real x[n] = fill(1, n); end C;"); getErrorString();\n'
+        'instantiateModel(C); getErrorString();\n', encoding='utf-8')
+    result = subprocess.run([str(out/'bin'/'omc.exe'), 'check.mos'], cwd=home, env=bundle_env(out, home),
+                            capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=600)
+    print(result.stdout[-3000:], result.stderr[-2000:], flush=True)
+    if 'x[2]' not in result.stdout:
+        raise SystemExit('The trimmed omc could not evaluate an MSL external function (ModelicaExternalC).')
+    print('The trimmed omc evaluates MSL external functions.', flush=True)
 
 
 def main() -> None:
@@ -85,6 +134,8 @@ def main() -> None:
         shutil.rmtree(library)
     shutil.copytree(source, library, ignore=shutil.ignore_patterns('index.json', 'index.mos'))
     print('Libraries:', sorted(p.name for p in library.iterdir()), flush=True)
+    ensure_external_c(out)
+    check_external_c(out)
 
     usage = (HERE/'OSMC-USAGE-MODE.txt').read_text(encoding='utf-8').replace('<version>', OM_VERSION)
     (out/'OSMC-USAGE-MODE.txt').write_text(usage, encoding='utf-8')

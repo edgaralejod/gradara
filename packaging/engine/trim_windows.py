@@ -10,8 +10,8 @@ the MSYS2 ucrt64 C toolchain (gcc, make, OpenBLAS) that Compile.bat drives.
 
 Selection:
 - OpenModelica's own `bin`: omc.exe, the runtime DLLs simulations link
-  against, the MSL C libraries omc loads by name (`Modelica*.dll`), and every
-  DLL they load, found by reading PE import tables.
+  against, any MSL C libraries (`Modelica*.dll`) the installation has for omc
+  to load by name, and every DLL they load, found by reading PE import tables.
 - `tools/msys`: the MSYS2 packages (from its pacman database) that provide the
   C toolchain and those DLLs, with their dependency closure, plus a minimal
   MSYS base (sh, coreutils) for the makefiles. Static archives are dropped
@@ -132,12 +132,11 @@ def main() -> None:
     # 1. DLL closure from omc.exe and the linkable runtime DLLs.
     om_bin = om/'bin'
     roots = [om_bin/name for name in RUNTIME_ROOTS if (om_bin/name).exists()]
-    # omc looks for them in bin/ (and bin/ffi); take lib/omc's copies if bin/ has none.
+    # omc looks for them in bin/ (and bin/ffi). Take any copies the installation
+    # has; build_windows.py compiles ModelicaExternalC from the MSL sources if none.
     ffi = [p for folder in (om_bin, om/'lib'/'omc') for p in sorted(folder.glob('*.dll')) if FFI_DLLS.match(p.name)]
     ffi = list({p.name.lower(): p for p in reversed(ffi)}.values())
-    if not any(p.name.lower() in ('libmodelicaexternalc.dll', 'modelicaexternalc.dll') for p in ffi):
-        raise SystemExit(f'ModelicaExternalC.dll is in neither {om_bin} nor lib/omc; omc could not evaluate '
-                         'MSL string functions.')
+    print('Modelica C libraries (DLL):', ', '.join(str(p.relative_to(om)) for p in ffi) or 'none', flush=True)
     roots += ffi
     search = [om_bin, ucrt_bin]
     found: dict[str, Path] = {}
