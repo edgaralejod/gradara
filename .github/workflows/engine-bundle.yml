@@ -33,6 +33,13 @@ permissions:
 env:
   OM_VERSION: '1.27.1'
   MSL_VERSION: '4.1.0'
+  # A tested engine is cached under a key made of everything it is built from:
+  # the packaging scripts, this workflow (the versions above), and the platform.
+  # A run whose key is cached uploads the cached archive and skips the build and
+  # the test suites; only pushes to main save, since a tag or branch run can read
+  # main's caches but not the other way round (the Desktop installers workflow
+  # runs on main when packaging changes, to fill it). Change any input and every
+  # engine is rebuilt and retested.
 
 jobs:
   linux:
@@ -46,14 +53,22 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
+      - name: Look for a tested engine with these inputs
+        id: cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: dist-engine
+          key: engine-linux-x64-om${{ env.OM_VERSION }}-msl${{ env.MSL_VERSION }}-${{ hashFiles('packaging/engine/**', '.github/workflows/engine-bundle.yml') }}
       - name: Build the bundle
+        if: steps.cache.outputs.cache-hit != 'true'
         run: sudo -E bash packaging/engine/build-linux.sh "$PWD/build/engine" && sudo chown -R "$USER" build
       - name: Simulate on clean systems with only gcc
+        if: steps.cache.outputs.cache-hit != 'true'
         run: packaging/engine/test_clean_linux.sh build/engine ubuntu:22.04 ubuntu:24.04 debian:12
       - run: python -m pip install -r server/requirements-dev.txt
-        if: inputs.test
+        if: steps.cache.outputs.cache-hit != 'true' && (inputs.test)
       - name: Engine test suite on the bundle
-        if: inputs.test
+        if: steps.cache.outputs.cache-hit != 'true' && (inputs.test)
         env:
           GRADARA_ENGINE: bundled
           GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
@@ -63,14 +78,21 @@ jobs:
           python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
           python -m pytest -v -m integration --durations=15 --maxfail=10
       - name: Keep the run folders of a failed engine test
-        if: failure()
+        if: steps.cache.outputs.cache-hit != 'true' && (failure())
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: engine-test-runs-linux
           path: projects/runs
           if-no-files-found: ignore
       - name: Pack
+        if: steps.cache.outputs.cache-hit != 'true'
         run: python packaging/engine/pack_bundle.py --dir build/engine --name linux-x64 --out dist-engine
+      - name: Keep this tested engine for later runs
+        if: steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: dist-engine
+          key: ${{ steps.cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: engine-linux-x64
@@ -88,9 +110,17 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
+      - name: Look for a tested engine with these inputs
+        id: cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: dist-engine
+          key: engine-windows-x64-om${{ env.OM_VERSION }}-msl${{ env.MSL_VERSION }}-${{ hashFiles('packaging/engine/**', '.github/workflows/engine-bundle.yml') }}
       - name: Build the bundle
+        if: steps.cache.outputs.cache-hit != 'true'
         run: python packaging/engine/build_windows.py --out build\engine --install C:\OpenModelicaFull
       - name: Move the full installation away
+        if: steps.cache.outputs.cache-hit != 'true'
         # The tests must pass on the trimmed copy alone. Defender scanning of every
         # compiler input and output makes the suite several times slower; the
         # installer test keeps it on, as on a user's machine.
@@ -101,9 +131,9 @@ jobs:
           [Environment]::SetEnvironmentVariable('OPENMODELICAHOME', $null, 'Machine')
           Get-ChildItem build\engine | Format-Table Name, Length
       - run: python -m pip install -r server/requirements-dev.txt
-        if: inputs.test
+        if: steps.cache.outputs.cache-hit != 'true' && (inputs.test)
       - name: Engine test suite on the bundle
-        if: inputs.test
+        if: steps.cache.outputs.cache-hit != 'true' && (inputs.test)
         env:
           GRADARA_ENGINE: bundled
           GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}\build\engine
@@ -114,14 +144,21 @@ jobs:
           python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
           python -m pytest -v -m integration --durations=15 --maxfail=10
       - name: Keep the run folders of a failed engine test
-        if: failure()
+        if: steps.cache.outputs.cache-hit != 'true' && (failure())
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: engine-test-runs-windows
           path: projects/runs
           if-no-files-found: ignore
       - name: Pack
+        if: steps.cache.outputs.cache-hit != 'true'
         run: python packaging/engine/pack_bundle.py --dir build/engine --name windows-x64 --out dist-engine
+      - name: Keep this tested engine for later runs
+        if: steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: dist-engine
+          key: ${{ steps.cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: engine-windows-x64
@@ -148,13 +185,21 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
+      - name: Look for a tested engine with these inputs
+        id: cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: dist-engine
+          key: engine-macos-${{ matrix.arch }}-om${{ env.OM_VERSION }}-msl${{ env.MSL_VERSION }}-${{ hashFiles('packaging/engine/**', '.github/workflows/engine-bundle.yml') }}
       - run: sudo apt-get install -y -qq squashfs-tools
+        if: steps.cache.outputs.cache-hit != 'true'
       - name: Build the VM image
+        if: steps.cache.outputs.cache-hit != 'true'
         run: sudo -E bash packaging/engine/build-macos-guest.sh ${{ matrix.docker || matrix.arch }} "$PWD/build/engine" && sudo chown -R "$USER" build
       - run: python -m pip install -r server/requirements-dev.txt
-        if: inputs.test
+        if: steps.cache.outputs.cache-hit != 'true' && (inputs.test)
       - name: Engine test suite through the VM backend (image under Docker)
-        if: inputs.test
+        if: steps.cache.outputs.cache-hit != 'true' && (inputs.test)
         # Same image, same agent, same /data layout as the VM; only vsock is replaced by TCP.
         env:
           GRADARA_ENGINE: bundled
@@ -170,14 +215,21 @@ jobs:
           python -m pytest -x -s -vv --tb=long -m integration tests/test_validation.py::test_rc_charging_follows_one_minus_exp
           python -m pytest -v -m integration --durations=15 --maxfail=10
       - name: Keep the run folders of a failed engine test
-        if: failure()
+        if: steps.cache.outputs.cache-hit != 'true' && (failure())
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: engine-test-runs-macos-${{ matrix.arch }}
           path: projects/runs
           if-no-files-found: ignore
       - name: Pack
+        if: steps.cache.outputs.cache-hit != 'true'
         run: python packaging/engine/pack_bundle.py --dir build/engine --name macos-${{ matrix.arch }} --out dist-engine
+      - name: Keep this tested engine for later runs
+        if: steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: dist-engine
+          key: ${{ steps.cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: engine-macos-${{ matrix.arch }}
@@ -208,18 +260,30 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
+      - name: Was this image tested before?
+        id: cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: dist-engine
+          key: engine-macos-${{ matrix.arch }}-om${{ env.OM_VERSION }}-msl${{ env.MSL_VERSION }}-${{ hashFiles('packaging/engine/**', '.github/workflows/engine-bundle.yml') }}
+          lookup-only: true
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        if: steps.cache.outputs.cache-hit != 'true'
         with:
           name: engine-macos-${{ matrix.arch }}
           path: dist-engine
       - run: python packaging/engine/fetch_bundle.py --name macos-${{ matrix.arch }} --from dist-engine
+        if: steps.cache.outputs.cache-hit != 'true'
       - name: vfkit and its entitlements
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           file build/engine/vfkit
           codesign -d --entitlements - build/engine/vfkit 2>&1 || true
           sysctl -n machdep.cpu.brand_string kern.hv_support || true
       - run: python -m pip install -r server/requirements-dev.txt
+        if: steps.cache.outputs.cache-hit != 'true'
       - name: Boot the VM and run engine tests
+        if: steps.cache.outputs.cache-hit != 'true'
         env:
           GRADARA_ENGINE: bundled
           GRADARA_ENGINE_BUNDLE: ${{ github.workspace }}/build/engine
@@ -236,7 +300,7 @@ jobs:
           EOF
           python -m pytest -v -m integration --durations=10 tests/test_validation.py tests/test_codegen.py tests/test_buck.py
       - name: VM logs
-        if: always()
+        if: always() && steps.cache.outputs.cache-hit != 'true'
         run: |
           for f in projects/logs/engine-vm*.log; do [ -f "$f" ] && { echo "--- $f"; tail -60 "$f"; }; done
           pgrep -l vfkit && echo 'vfkit still running' || true

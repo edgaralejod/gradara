@@ -1,0 +1,31 @@
+name: Engine cache
+
+# Fills the engine cache that Engine bundles reads: when a packaging change
+# reaches main, the four built-in engines are built and tested once more here
+# and kept under a key made of their inputs (packaging/engine/**, the Engine
+# bundles workflow, the OpenModelica and MSL versions). Tag builds with the same
+# inputs then reuse them instead of rebuilding. GitHub lets a tag or branch run
+# read caches saved on main, not on other branches, which is why this runs on
+# main and not in pull requests. Run workflow rebuilds the cache by hand.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packaging/engine/**'
+      - '.github/workflows/engine-bundle.yml'
+      - '.github/workflows/engine-cache.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: engine-cache-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    name: Engine
+    uses: ./.github/workflows/engine-bundle.yml
+    with:
+      test: true
