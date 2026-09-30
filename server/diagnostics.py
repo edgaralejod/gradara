@@ -209,9 +209,44 @@ def failure_diagnostics(project: Project, raw: str) -> list[Diagnostic]:
                        blockIds=mentioned(project, raw))]
 
 
+# Solver warnings said in Gradara's terms (the raw text stays in `detail`). The
+# engine's own wording points at OMEdit menus and OMNotebook commands, which do
+# not exist here; these say what happened to the results and what a user can do.
+WARNING_TRANSLATIONS: list[tuple[str, str, str | None]] = [
+    (r'initial conditions are not fully specified',
+     'The model does not fix every initial state, so the engine chose starting values (0 unless a block says otherwise). '
+     'The first moments of the run depend on that choice; the steady state does not.',
+     'Set an initial value on the integrators, inertias, capacitors, inductors or thermal masses whose start matters.'),
+    (r'Alias set with conflicting start values',
+     'Two connected quantities are given different initial values; the engine kept one of them.',
+     'Give both blocks the same initial value, or set it on one and leave the other at its default.'),
+    (r'Alias set with several free start values',
+     'Several connected quantities suggest an initial value; the engine kept one of them.',
+     'Set the initial value on the block where it matters and leave the others at their defaults.'),
+    (r'(different|conflicting) nominal values',
+     'Connected quantities carry different scale hints (nominal values); the engine kept one. This affects solver tolerances, not the equations.',
+     None),
+    (r'Assuming fixed start value',
+     'A state had no initial value, so the engine fixed it at its start value.',
+     'Set an initial value on that block if its start matters.'),
+]
+
+
+def translate_warning(message: str) -> tuple[str, str | None]:
+    """(message, hint) for a solver warning: Gradara's wording when known, the engine's otherwise."""
+    for pattern, plain, hint in WARNING_TRANSLATIONS:
+        if re.search(pattern, message, re.IGNORECASE):
+            return plain, hint
+    return message, None
+
+
 def warning_diagnostics(project: Project, text: str) -> list[Diagnostic]:
     """Warnings from a successful run, so they are visible without failing it."""
     lines = solver_lines(text, r'\bWarning:|\|\s*warning\s*\|')
-    return numbered([Diagnostic(severity='warning', source='compiler' if 'Warning:' in line else 'runtime',
-                                message=rename(project, re.split(r'Warning:|\|\s*warning\s*\|', line)[-1].strip())[:400],
-                                detail=rename(project, line), blockIds=mentioned(project, line)) for line in lines[:50]])
+    out = []
+    for line in lines[:50]:
+        raw = rename(project, re.split(r'Warning:|\|\s*warning\s*\|', line)[-1].strip())
+        message, hint = translate_warning(raw)
+        out.append(Diagnostic(severity='warning', source='compiler' if 'Warning:' in line else 'runtime',
+                              message=message[:400], detail=rename(project, line), blockIds=mentioned(project, line), hint=hint))
+    return numbered(out)

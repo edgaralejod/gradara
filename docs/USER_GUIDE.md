@@ -32,7 +32,7 @@ The engine is built in, so there is nothing to set up. **Settings → Engine** s
 6. In **Results**, check the Second-order output in the signal list. You see a step response that overshoots slightly and settles at 1. Results lists every block output, so you never need a block just to see a signal.
 7. Double-click the Second-order block and lower **Damping ratio** to 0.2. Run again and compare.
 
-You can also use the block library on the left. It opens with a new blank model; the first button in the toolbar (**Show components** / **Hide components**) toggles it. Press **/** to search it, then click or drag a block onto the sheet.
+You can also use the block library on the left. It opens with a new blank model; the first button in the toolbar (**Show components** / **Hide components**) toggles it. Press **/** to search it, then click or drag a block onto the sheet. A search looks through every category, whatever the category menu shows: blocks whose name or description contains what you typed come first as **Matches**, and blocks that only share scattered letters with it are listed apart as **Approximate matches**.
 
 Next, read [Build a diagram](#build-a-diagram) and [Simulate and read results](#simulate-and-read-results), or open other examples from [Built-in examples](#built-in-examples).
 

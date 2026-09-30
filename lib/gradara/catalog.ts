@@ -160,7 +160,15 @@ function haystack(definition: Definition) {
   ].join(' ');
 }
 
-export type LibraryHit = { definition: Definition; score: number };
+/**
+ * How a hit matched: the query is in the block's name (`name`), in its
+ * description, keywords or kind (`text`), or only as scattered letters
+ * (`approximate`, as "step" in "PMOS transistor"). The navigator lists the
+ * first two as matches and the last apart, so a plain word finds its block.
+ */
+export type MatchTier = 'name' | 'text' | 'approximate';
+export type LibraryHit = { definition: Definition; score: number; tier: MatchTier };
+const TIER_ORDER: Record<MatchTier, number> = { name: 0, text: 1, approximate: 2 };
 
 export function searchLibrary(
   query: string,
@@ -181,22 +189,31 @@ export function searchLibrary(
   });
   const trimmed = query.trim();
   if (!trimmed) {
-    return pool.map((definition) => ({ definition, score: 0 }));
+    return pool.map((definition) => ({ definition, score: 0, tier: 'name' as const }));
   }
+  const needle = trimmed.toLowerCase();
   return pool
     .map((definition) => {
       const nameScore = fuzzyScore(trimmed, definition.name);
       const allScore = fuzzyScore(trimmed, haystack(definition));
       if (nameScore === null && allScore === null) return null;
+      const tier: MatchTier = definition.name.toLowerCase().includes(needle)
+        ? 'name'
+        : haystack(definition).toLowerCase().includes(needle)
+          ? 'text'
+          : 'approximate';
       return {
         definition,
         score: Math.max((nameScore ?? 0) * 3, allScore ?? 0),
+        tier,
       };
     })
     .filter((hit): hit is LibraryHit => hit !== null)
     .sort(
       (a, b) =>
-        b.score - a.score || a.definition.name.localeCompare(b.definition.name),
+        TIER_ORDER[a.tier] - TIER_ORDER[b.tier] ||
+        b.score - a.score ||
+        a.definition.name.localeCompare(b.definition.name),
     );
 }
 

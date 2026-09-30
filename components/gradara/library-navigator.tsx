@@ -78,8 +78,18 @@ export default function LibraryNavigator({
   const grouped = useMemo(() => {
     if (source === 'ai')
       return [{ id: 'ai' as const, label: 'Your AI blocks', items: hits }];
-    if (query.trim())
-      return [{ id: 'results' as const, label: 'Matches', items: hits }];
+    if (query.trim()) {
+      // Search looks through every category; say so when one is selected.
+      const scope = category === 'all' ? '' : ' in all categories';
+      const close = hits.filter((h) => h.tier !== 'approximate');
+      const far = hits.filter((h) => h.tier === 'approximate');
+      return [
+        { id: 'results' as const, label: `Matches${scope}`, items: close },
+        ...(far.length
+          ? [{ id: 'approximate' as const, label: 'Approximate matches', items: far }]
+          : []),
+      ].filter((g) => g.items.length || g.id === 'results');
+    }
     return libraryCategories
       .filter((c) => category === 'all' || c.id === category)
       .map((c) => ({

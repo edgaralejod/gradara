@@ -647,3 +647,16 @@ void test('asymmetric ports rotate around the same center as the symbol', async 
     assert.equal(b.y, cy + (a.x - cx));
   }
 });
+
+test('a plain word finds its block first; scattered-letter matches are set apart', () => {
+  const hits = searchLibrary('step');
+  assert.equal(hits[0].definition.name, 'Step');
+  assert.equal(hits[0].tier, 'name');
+  const approximate = hits.filter((h) => h.tier === 'approximate');
+  const close = hits.filter((h) => h.tier !== 'approximate');
+  assert.ok(approximate.some((h) => /PMOS/i.test(h.definition.name)), 'PMOS only matches as scattered letters');
+  assert.ok(close.every((h) => /step/i.test(h.definition.name) || h.tier === 'text'));
+  // Tiers come in order: every close match before every approximate one.
+  const firstFar = hits.findIndex((h) => h.tier === 'approximate');
+  assert.ok(hits.slice(0, firstFar).every((h) => h.tier !== 'approximate'));
+});
