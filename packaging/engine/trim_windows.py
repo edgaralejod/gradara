@@ -16,7 +16,7 @@ Selection:
   C toolchain and those DLLs, with their dependency closure, plus a minimal
   MSYS base (sh, coreutils) for the makefiles. Static archives are dropped
   where an import library exists, except those the simulation makefile links
-  statically (HDF5, zlib, szip, libstdc++).
+  statically (`STATIC_LINKED`).
 - `include/omc`, `lib/omc`, `share/omc` in full, less the C++ and FMI-export
   runtimes Gradara does not use.
 """
@@ -33,10 +33,14 @@ from pathlib import Path
 # MSYS2 packages the C toolchain needs (dependencies are added from the database).
 TOOLCHAIN = ['mingw-w64-ucrt-x86_64-gcc', 'mingw-w64-ucrt-x86_64-make', 'mingw-w64-ucrt-x86_64-openblas',
              'mingw-w64-ucrt-x86_64-gcc-libgfortran', 'mingw-w64-ucrt-x86_64-expat', 'mingw-w64-ucrt-x86_64-hdf5',
-             'mingw-w64-ucrt-x86_64-zlib', 'mingw-w64-ucrt-x86_64-libaec']
-# Libraries OpenModelica's simulation makefile links statically (-Wl,-Bstatic), so
-# their .a archives stay even where an import library exists.
-STATIC_LINKED = {'libhdf5.a', 'libz.a', 'libsz.a', 'libstdc++.a'}
+             'mingw-w64-ucrt-x86_64-zlib', 'mingw-w64-ucrt-x86_64-libaec', 'mingw-w64-ucrt-x86_64-libiconv',
+             'mingw-w64-ucrt-x86_64-winpthreads', 'mingw-w64-ucrt-x86_64-libsystre', 'mingw-w64-ucrt-x86_64-libtre',
+             'mingw-w64-ucrt-x86_64-gettext-runtime']
+# Libraries OpenModelica's simulation makefile links statically (-Wl,-Bstatic):
+# their .a archives stay even beside an import library, and the build fails if
+# any is missing.
+STATIC_LINKED = {'libhdf5.a', 'libz.a', 'libsz.a', 'libstdc++.a', 'libiconv.a', 'libpthread.a', 'libregex.a', 'libtre.a',
+                 'libintl.a'}
 MSYS_BASE = ['bash', 'coreutils', 'msys2-runtime', 'sed', 'grep']
 # Parts of OpenModelica Gradara never uses: the C++/OMSI targets, the GUI tools'
 # static libraries (OMEdit, OMPlot/Qwt, OMOptim, OMSimulator), dynamic
@@ -182,7 +186,7 @@ def main() -> None:
             src = msys/f
             if not src.is_file() or SKIP_MSYS.search(f):
                 continue
-            # Static archives beside an import library: simulations link dynamically.
+            # Other static archives beside an import library: those link dynamically.
             if (f.endswith('.a') and not f.endswith('.dll.a') and f[:-2].lower() + '.dll.a' in all_files
                     and Path(f).name.lower() not in STATIC_LINKED):
                 continue
@@ -197,7 +201,7 @@ def main() -> None:
         if (om/extra).exists():
             copy(om/extra, extra)
 
-    have = {p.name.lower() for p in (out/'tools'/'msys').rglob('*.a')}
+    have = {p.name.lower() for p in out.rglob('*.a')}
     lacking = sorted(STATIC_LINKED - have)
     if lacking:
         raise SystemExit(f'Static libraries simulations link are missing from the trimmed toolchain: {", ".join(lacking)}')
