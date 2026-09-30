@@ -230,3 +230,17 @@ def test_vm_errors_leave_out_vfkit_usage(tmp_path, monkeypatch):
     tail = engines.EngineVM(tmp_path, {})._log_tail()
     assert 'Virtualization is not available on this hardware' in tail
     assert '--cpus' not in tail and 'Usage' not in tail
+
+
+def test_vm_socket_avoids_paths_vfkit_mangles(tmp_path, monkeypatch):
+    # vfkit percent-encodes a space in socketURL and then binds to the encoded
+    # path, so the usual macOS data folder ("Application Support") is unusable.
+    monkeypatch.setattr(engines, 'DATA', tmp_path/'Application Support'/'Gradara')
+    monkeypatch.setattr(engines.tempfile, 'gettempdir', lambda: str(tmp_path/'tmp'))
+    socket_path = engines.EngineVM(tmp_path, {}).socket_path
+    assert socket_path.parent == tmp_path/'tmp'/f'gradara-{os.getuid()}'
+    assert ' ' not in str(socket_path) and socket_path.parent.is_dir()
+
+    monkeypatch.chdir(tmp_path)  # a relative path stays short enough for a Unix socket
+    monkeypatch.setattr(engines, 'DATA', Path('plain'))
+    assert engines.EngineVM(tmp_path, {}).socket_path == Path('plain')/'engine-vm'/'agent.sock'

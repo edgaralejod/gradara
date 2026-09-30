@@ -647,10 +647,17 @@ class EngineVM:
         self.boot_seconds: float | None = None
         self.shared = DATA.resolve()
 
+    # Characters vfkit passes through unchanged in a socketURL. The data folder
+    # normally fails this ("~/Library/Application Support/..."): vfkit
+    # percent-encodes the space and then binds to the encoded path, which does
+    # not exist, so the app never reaches the agent.
+    SAFE_SOCKET_PATH = re.compile(r'^[A-Za-z0-9_./-]+$')
+
     def runtime_dir(self) -> Path:
         folder = DATA/'engine-vm'
+        socket = str(folder/'agent.sock')
         # macOS limits Unix socket paths to 104 bytes.
-        if len(str(folder/'agent.sock')) > 100:
+        if len(socket) > 100 or not self.SAFE_SOCKET_PATH.match(socket):
             folder = Path(tempfile.gettempdir())/f'gradara-{os.getuid()}'
         folder.mkdir(parents=True, exist_ok=True)
         return folder
