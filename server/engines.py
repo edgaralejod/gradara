@@ -321,6 +321,7 @@ class NativeBackend:
         self._library_ready: dict[str, bool] = {}
         self._versions: dict[str, str] = {}
         self._library_checked: dict[str, float] = {}
+        self._library_locks: dict[str, tuple[asyncio.AbstractEventLoop, asyncio.Lock]] = {}
 
     def omc(self) -> Path | None:
         candidates = _om_candidates()
@@ -362,25 +363,39 @@ class NativeBackend:
         script.write_text(body, encoding='utf-8')
         return await self.command([str(omc), script.name], timeout, cwd=folder)
 
+    def _library_lock(self, key: str) -> asyncio.Lock:
+        # One lock per event loop (a lock is bound to the loop that first waits on it).
+        loop = asyncio.get_running_loop()
+        held = self._library_locks.get(key)
+        if held is None or held[0] is not loop:
+            held = self._library_locks[key] = (loop, asyncio.Lock())
+        return held[1]
+
     async def library_ready(self, omc: Path) -> bool:
         key = str(omc)
         if self._library_ready.get(key):
             return True
-        # Loading MSL takes seconds; do not repeat a failed check on every health poll.
-        checked = self._library_checked.get(key)
-        if checked is not None and time.monotonic() - checked < 60:
-            return False
-        self._library_checked[key] = time.monotonic()
-        from .paths import DATA
-        folder = DATA/'engine-check'
-        folder.mkdir(parents=True, exist_ok=True)
-        try:
-            _, output = await self.script(omc, folder, f'loadModel(Modelica, {{"{MSL_VERSION}"}});\ngetErrorString();\n', 90)
-        except asyncio.TimeoutError:
-            return False
-        ready = output.lstrip().startswith('true')
-        self._library_ready[key] = ready
-        return ready
+        # Loading MSL takes seconds. Callers that arrive while a check runs (the
+        # app's engine poll and a run request after the macOS VM boots, say) wait
+        # for its answer instead of reading the check as failed; a check that did
+        # fail is not repeated on every health poll for a minute.
+        async with self._library_lock(key):
+            if self._library_ready.get(key):
+                return True
+            checked = self._library_checked.get(key)
+            if checked is not None and time.monotonic() - checked < 60:
+                return False
+            self._library_checked[key] = time.monotonic()
+            from .paths import DATA
+            folder = DATA/'engine-check'
+            folder.mkdir(parents=True, exist_ok=True)
+            try:
+                _, output = await self.script(omc, folder, f'loadModel(Modelica, {{"{MSL_VERSION}"}});\ngetErrorString();\n', 90)
+            except asyncio.TimeoutError:
+                return False
+            ready = output.lstrip().startswith('true')
+            self._library_ready[key] = ready
+            return ready
 
     async def available(self) -> bool:
         omc = self.omc()
