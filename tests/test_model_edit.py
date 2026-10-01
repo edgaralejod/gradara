@@ -201,6 +201,28 @@ def test_pipeline_returns_a_verified_proposal(monkeypatch, tmp_path):
     simulation.assert_awaited_once()
 
 
+def test_a_proposal_carries_its_operations_and_can_be_revised(monkeypatch, tmp_path):
+    provider, _ = setup(monkeypatch, tmp_path, [ADD_SCOPE, ADD_SCOPE])
+    first = asyncio.run(editing.edit_model(request(), 'job1'))
+    assert first['operations'] == [{k: v for k, v in o.items() if v is not None} for o in ADD_SCOPE['operations']]
+    assert 'revising a proposal' not in provider.call_args.args[0]
+    # Refine sends the earlier request and operations back with the revision.
+    previous = {'prompt': 'Add a scope on the speed', 'summary': first['summary'], 'operations': first['operations']}
+    revision = editing.ModelEditRequest(prompt='Name it Shaft speed instead', project=motor(),
+                                        catalog=list(catalog().values()), previous=previous)
+    asyncio.run(editing.edit_model(revision, 'job2'))
+    prompt = provider.call_args.args[0]
+    assert 'revising a proposal' in prompt and 'User request:' not in prompt
+    assert prompt.index('Add a scope on the speed') < prompt.index('"libraryId": "builtin:scope"') \
+        < prompt.index('Name it Shaft speed instead') < prompt.index('Current model')
+
+
+def test_a_revision_needs_well_formed_earlier_operations():
+    for operations in ([], [{'op': 'format_disk'}], [{'op': 'connect', 'surprise': 1}]):
+        with pytest.raises(ValueError):
+            request(previous={'prompt': 'Earlier', 'summary': 'Earlier', 'operations': operations})
+
+
 def test_pipeline_repairs_an_unappliable_plan(monkeypatch, tmp_path):
     bad = {**ADD_SCOPE, 'operations': [op('remove_block', blockId='ghost')]}
     provider, _ = setup(monkeypatch, tmp_path, [bad, ADD_SCOPE])

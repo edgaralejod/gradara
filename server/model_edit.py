@@ -18,16 +18,6 @@ OPS = ('add_block', 'create_block', 'revise_definition', 'remove_block', 'rename
 LAYOUT = ('position', 'size', 'rotation', 'labelOffset')
 
 
-class ModelEditRequest(Strict):
-    prompt: str = Field(min_length=3, max_length=4000)
-    project: Project
-    # Snapshot of the actual UI catalog, as for full-model generation.
-    catalog: list[Definition] = Field(min_length=1, max_length=300)
-    selection: list[str] = Field(default_factory=list, max_length=200)
-    verify: bool = True
-    context: str | None = Field(default=None, max_length=6000)
-
-
 class Operation(Strict):
     op: Literal[OPS]
     blockId: str | None = None
@@ -46,6 +36,25 @@ class Operation(Strict):
     targetPort: str | None = None
     wireId: str | None = None
     duration: float | None = Field(default=None, allow_inf_nan=False)
+
+
+class PreviousProposal(Strict):
+    """An unapplied proposal the user asks to revise: what they asked and what was proposed."""
+    prompt: str = Field(max_length=4000)
+    summary: str = Field(max_length=600)
+    operations: list[Operation] = Field(min_length=1, max_length=40)
+
+
+class ModelEditRequest(Strict):
+    prompt: str = Field(min_length=3, max_length=4000)
+    project: Project
+    # Snapshot of the actual UI catalog, as for full-model generation.
+    catalog: list[Definition] = Field(min_length=1, max_length=300)
+    selection: list[str] = Field(default_factory=list, max_length=200)
+    verify: bool = True
+    context: str | None = Field(default=None, max_length=6000)
+    # Set by Refine: the request then revises this proposal instead of starting over.
+    previous: PreviousProposal | None = None
 
 
 class EditPlan(Strict):
@@ -315,7 +324,19 @@ summary is one or two sentences for the user. assumptions are short and explicit
 def edit_prompt(request: ModelEditRequest, catalog: dict[str, Definition]) -> str:
     names = {b.id: b.definition.name for b in request.project.blocks}
     selection = [f'{names[i]} ({i})' for i in request.selection if i in names]
-    parts = [INSTRUCTIONS, '\nUser request:\n' + request.prompt]
+    parts = [INSTRUCTIONS]
+    if request.previous:
+        earlier = request.previous
+        parts.append('\nYou are revising a proposal you made earlier. The user has not applied it, so the current model below '
+                     'does not contain it. Return one complete plan against the current model that carries out the earlier '
+                     'request with the revision applied. Keep the parts of the earlier plan that the revision does not concern.'
+                     '\nEarlier request:\n' + earlier.prompt
+                     + '\nEarlier proposal:\n' + earlier.summary
+                     + '\nEarlier operations:\n'
+                     + json.dumps([o.model_dump(exclude_none=True) for o in earlier.operations])
+                     + '\nRevision the user asks for:\n' + request.prompt)
+    else:
+        parts.append('\nUser request:\n' + request.prompt)
     if selection:
         parts.append('\nSelected blocks (the request most likely concerns these):\n' + ', '.join(selection))
     if request.context:
@@ -363,6 +384,7 @@ def proposal(project: Project, original: Project, plan: EditPlan, changes: list[
             wire.pop('junctions', None)
     return dict(project=document, summary=plan.summary, assumptions=plan.assumptions,
                 changes=[c.model_dump() for c in changes],
+                operations=[o.model_dump(exclude_none=True) for o in plan.operations],
                 generated=[dict(alias=alias, name=d.name) for alias, d in generated.items()],
                 verified=verified, diagnostics=[d.model_dump() for d in diagnostics], samples=samples,
                 provider=agent.provider_label(),
