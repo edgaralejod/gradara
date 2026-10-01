@@ -258,6 +258,35 @@ async def latest(model: str | None = None):
             return {'result':result}
     return {'result':None}
 
+@app.get('/api/results')
+async def stored_runs(model: str, limit: int = 20):
+    """Stored successful runs of one model, newest first, for run comparison.
+
+    Only what a run picker needs: no samples and no model snapshot. Unlike the
+    latest result, earlier revisions of the model are included.
+    """
+    limit = max(1, min(limit, 50))
+    def read():
+        runs = []
+        for path in sorted(RUNS.glob('*/result.json'), key=lambda p: p.stat().st_mtime, reverse=True):
+            if not (path.parent/'simulation_res.csv').exists():
+                continue  # the full data a comparison reads is gone
+            try:
+                result = json.loads(path.read_text(encoding='utf-8'))
+                snapshot = result.get('snapshot', {})
+                if (snapshot.get('modelId') or f"legacy-{snapshot.get('exampleId') or 'workspace'}") != model:
+                    continue
+                runs.append({'id': result['id'], 'finished': round(path.stat().st_mtime * 1000),
+                             'duration': result['duration'], 'samples': result['samples'],
+                             'signals': len(result['series']), 'projectRevision': result['projectRevision'],
+                             'modelHash': result['modelHash'], 'engine': result['engine']})
+            except (OSError, ValueError, KeyError, AttributeError):
+                continue
+            if len(runs) == limit:
+                break
+        return {'runs': runs}
+    return await asyncio.to_thread(read)
+
 @app.get('/api/runs/{run_id}/diagnostics')
 async def run_diagnostics(run_id: str):
     if not run_id.isalnum(): raise HTTPException(400, 'Invalid run ID.')

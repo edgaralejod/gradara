@@ -12,6 +12,7 @@ import {
   Minimize2,
   X,
   LayoutGrid,
+  GitCompareArrows,
 } from 'lucide-react';
 import { api, type SimulationResult } from '@/lib/gradara/api';
 import { plotOptions } from '@/lib/gradara/results';
@@ -25,6 +26,7 @@ import {
 import PlotViewport from './plot-viewport';
 import { PaneResizer, useColumns } from './resizable-columns';
 import InspectorPlot, { traceColors } from './inspector-plot';
+import RunCompareView from './run-compare-view';
 
 type Plot = { signals: string[]; view?: PlotView };
 type Config = {
@@ -142,6 +144,9 @@ function InspectorSession({
   const [axes, setAxes] = useState<Axes>('x'),
     [mode, setMode] = useState<'pan' | 'zoom' | 'cursor'>('pan');
   const [maximized, setMaximized] = useState<number | null>(null);
+  // Compare two stored runs signal by signal, in place of the plot grid.
+  const [comparing, setComparing] = useState(false);
+  const compareModel = modelId ?? result.snapshot?.modelId;
   const signalPane = useColumns('signals', [244], 150);
   const signalStart = useRef(0);
   const [storageError, setStorageError] = useState('');
@@ -309,7 +314,7 @@ function InspectorSession({
                     ? `Comparing ${result.comparison.map((c) => c.name).join(' · ')}`
                     : 'Completed'}
         </span>
-        {kept && (
+        {kept && !comparing && (
           <span className="di-kept">
             {kept.runs.map((run, i) => (
               <span key={run.name} className="di-kept-run" title={run.differences.length ? `Latest run differs: ${run.differences.join('; ')}` : 'Same parameters as the latest run'}>
@@ -346,6 +351,17 @@ function InspectorSession({
             )}
           </span>
         )}
+        {compareModel && !result.comparison && (
+          <button
+            type="button"
+            className="di-compare"
+            aria-pressed={comparing}
+            title="Compare two runs of this model signal by signal"
+            onClick={() => setComparing((on) => !on)}
+          >
+            <GitCompareArrows size={13} aria-hidden="true" /> Compare runs
+          </button>
+        )}
         {result && !result.comparison && (
           <a href={`/api/results/${result.id}/csv`} download>
             <Download size={13} aria-hidden="true" /> Export CSV
@@ -372,7 +388,9 @@ function InspectorSession({
         </div>
       )}
       {storageError && <output>{storageError}</output>}
-      {!data || !config ? (
+      {comparing && compareModel && !result.comparison ? (
+        <RunCompareView modelId={compareModel} latestId={result.id} />
+      ) : !data || !config ? (
         <div className="di-empty">
           Select a signal wire → Log to Data Inspector, then run the model.
           Sensor outputs can be logged; physical connections require a sensor.

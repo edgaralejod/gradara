@@ -4,7 +4,7 @@ import type { Project } from './model';
 export type ComparisonRun = { name: string; result: SimulationResult };
 
 /** Linear interpolation of `values` sampled at `time`, read at `t` (held at the ends). */
-function sample(time: number[], values: number[], t: number, from: number) {
+export function sample(time: number[], values: number[], t: number, from: number) {
   let j = from;
   while (j + 1 < time.length && time[j + 1] <= t) j++;
   if (j + 1 >= time.length || time[j + 1] === time[j] || t <= time[j])
