@@ -232,6 +232,7 @@ import ProblemsPanel, {
 } from '@/components/gradara/problems-panel';
 import AssistantPanel, {
   useAssistant,
+  type Revision,
 } from '@/components/gradara/assistant-panel';
 import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
 import {
@@ -844,7 +845,11 @@ function Workbench() {
   };
   const getProject = useCallback(() => projectRef.current, []);
   const assistant = useAssistant(project.modelId, getProject);
-  const requestEdit = (prompt: string, blockIds: string[]) => {
+  const requestEdit = (
+    prompt: string,
+    blockIds: string[],
+    revision?: Revision,
+  ) => {
     if (scopeRef.current.length) {
       notify(
         'The assistant edits the top level for now. Press ⌘↑ to go up, then ask again.',
@@ -855,10 +860,14 @@ function Workbench() {
     const names = blockIds
       .map((id) => current.blocks.find((b) => b.id === id)?.definition.name)
       .filter(Boolean);
+    const scope = names.length
+      ? `Selection · ${names.join(', ')}`
+      : 'Whole model';
     void assistant.edit(
       prompt,
       { project: current, catalog: library, selection: blockIds },
-      names.length ? `Selection · ${names.join(', ')}` : 'Whole model',
+      revision ? `Revision · ${scope}` : scope,
+      revision,
     );
   };
   const explainLabel = useAiLabel('diagnose');

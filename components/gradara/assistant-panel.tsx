@@ -8,11 +8,12 @@ import {
   Sparkles,
   Square,
   Stethoscope,
+  X,
 } from 'lucide-react';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
 import { notifyAiChanged, useAiLabel, type AiOperation } from '@/lib/gradara/ai';
 import { domainColors, type Project } from '@/lib/gradara/model';
-import type { EditProposal } from '@/lib/gradara/proposal';
+import type { EditProposal, PreviousProposal } from '@/lib/gradara/proposal';
 import ProposalCard, { type ProposalStatus } from './proposal-card';
 
 export type Diagnosis = {
@@ -37,6 +38,8 @@ type Entry =
   | {
       id: string;
       kind: 'proposal';
+      /** What the user asked for; Refine sends it back with the proposal. */
+      request: string;
       proposal: EditProposal;
       baseRevision: number;
       status: ProposalStatus;
@@ -45,7 +48,14 @@ type Entry =
 let counter = 0;
 const nextId = () => `e${++counter}`;
 
-/** The Assistant thread for the open model: local, cleared on model switch, never saved. */
+/** A Refine request: the proposal being revised and what to send back about it. */
+export type Revision = { entryId: string; previous: PreviousProposal };
+
+/**
+ * The Assistant threads, one per model: local to this window and never saved.
+ * A thread stays while other models are open, so a proposal is still there
+ * when you come back; its base revision decides whether it can still be applied.
+ */
 export function useAssistant(
   modelId: string | undefined,
   getProject: () => Project,
@@ -60,12 +70,13 @@ export function useAssistant(
   const entries = threads[key] ?? [];
   const add = useCallback(
     (...items: Entry[]) =>
-      setThreads((all) => ({ [key]: [...(all[key] ?? []), ...items] })),
+      setThreads((all) => ({ ...all, [key]: [...(all[key] ?? []), ...items] })),
     [key],
   );
   const setStatus = useCallback(
     (id: string, status: ProposalStatus) =>
       setThreads((all) => ({
+        ...all,
         [key]: (all[key] ?? []).map((e) =>
           e.id === id && e.kind === 'proposal' ? { ...e, status } : e,
         ),
@@ -117,23 +128,36 @@ export function useAssistant(
   }, []);
 
   const edit = useCallback(
-    (prompt: string, body: Record<string, unknown>, scope: string) =>
+    (
+      prompt: string,
+      body: Record<string, unknown>,
+      scope: string,
+      revision?: Revision,
+    ) =>
       run<EditProposal>(
         '/models/edit',
-        { prompt, ...body },
-        'Editing the model',
+        { prompt, ...body, previous: revision?.previous },
+        revision ? 'Revising the proposal' : 'Editing the model',
         { text: prompt, scope },
-        (proposal, baseRevision) => [
-          {
-            id: nextId(),
-            kind: 'proposal',
-            proposal,
-            baseRevision,
-            status: 'pending',
-          },
-        ],
+        (proposal, baseRevision) => {
+          // The revision replaces the proposal it was made from.
+          if (revision) setStatus(revision.entryId, 'superseded');
+          return [
+            {
+              id: nextId(),
+              kind: 'proposal',
+              // A later Refine restates the whole intent, not only the last revision.
+              request: revision
+                ? `${revision.previous.prompt}\nRevised: ${prompt}`.slice(0, 4000)
+                : prompt,
+              proposal,
+              baseRevision,
+              status: 'pending',
+            },
+          ];
+        },
       ),
-    [run],
+    [run, setStatus],
   );
 
   const diagnose = useCallback(
@@ -150,6 +174,7 @@ export function useAssistant(
                 {
                   id: nextId(),
                   kind: 'proposal' as const,
+                  request: text,
                   proposal: result.proposal,
                   baseRevision,
                   status: 'pending' as const,
@@ -184,13 +209,18 @@ export default function AssistantPanel({
   assistant: Assistant;
   project: Project;
   selectedIds: string[];
-  onEdit: (prompt: string, selection: string[]) => void;
+  onEdit: (prompt: string, selection: string[], revision?: Revision) => void;
   onApply: (proposal: EditProposal, baseRevision: number) => boolean;
   onSelect: (blockIds: string[]) => void;
   onOpenSettings: () => void;
 }) {
   const [prompt, setPrompt] = useState('');
   const [useSelection, setUseSelection] = useState(true);
+  // The proposal being revised, remembered with its model so it never carries over to another one.
+  const [revisingIn, setRevisingIn] = useState({ model: '', id: '' });
+  const revisingId = revisingIn.model === (project.modelId ?? '') ? revisingIn.id : '';
+  const setRevisingId = (id: string) =>
+    setRevisingIn({ model: project.modelId ?? '', id });
   const input = useRef<HTMLTextAreaElement>(null);
   const thread = useRef<HTMLDivElement>(null);
   const latest = assistant.entries.length + (assistant.busy ? 1 : 0);
@@ -207,11 +237,29 @@ export default function AssistantPanel({
   const busyLabel = useAiLabel(busyOperation);
   const selection = useSelection ? selectedIds : [];
   const blocks = new Map(project.blocks.map((b) => [b.id, b]));
+  // Only a proposal that is still waiting in this model's thread can be revised.
+  const revising = assistant.entries.find(
+    (e) => e.id === revisingId && e.kind === 'proposal' && e.status === 'pending',
+  );
   const submit = () => {
     const text = prompt.trim();
     if (text.length < 3 || assistant.busy) return;
-    onEdit(text, selection);
+    onEdit(
+      text,
+      selection,
+      revising?.kind === 'proposal'
+        ? {
+            entryId: revising.id,
+            previous: {
+              prompt: revising.request,
+              summary: revising.proposal.summary,
+              operations: revising.proposal.operations,
+            },
+          }
+        : undefined,
+    );
     setPrompt('');
+    setRevisingId('');
   };
 
   return (
@@ -281,13 +329,14 @@ export default function AssistantPanel({
               current={project}
               status={entry.status}
               stale={project.revision !== entry.baseRevision}
+              revising={revising?.id === entry.id}
               onApply={() => {
                 if (onApply(entry.proposal, entry.baseRevision))
                   assistant.setStatus(entry.id, 'applied');
               }}
               onDiscard={() => assistant.setStatus(entry.id, 'discarded')}
               onRefine={() => {
-                setPrompt(`Revise the proposal: `);
+                setRevisingId(revising?.id === entry.id ? '' : entry.id);
                 input.current?.focus();
               }}
               onSelect={onSelect}
@@ -331,27 +380,58 @@ export default function AssistantPanel({
             </button>
           )}
         </div>
+        {revising?.kind === 'proposal' && (
+          <div className="assistant-revising">
+            <span title={revising.proposal.summary}>
+              Revising: {revising.proposal.summary}
+            </span>
+            <button
+              type="button"
+              aria-label="Stop revising and ask for a new change"
+              title="Stop revising"
+              onClick={() => {
+                setRevisingId('');
+                input.current?.focus();
+              }}
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
         <div className="assistant-input">
           <textarea
             ref={input}
-            aria-label="Describe a change to this model"
-            placeholder="Describe a change to this model…"
+            aria-label={
+              revising
+                ? 'Describe what to change in the proposal'
+                : 'Describe a change to this model'
+            }
+            placeholder={
+              revising
+                ? 'Describe what to change in the proposal…'
+                : 'Describe a change to this model…'
+            }
             value={prompt}
             maxLength={4000}
             rows={2}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+              // Enter sends, as in the block composer; Shift+Enter adds a line.
+              // Enter that confirms an input-method composition is left alone.
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
                 submit();
+              } else if (e.key === 'Escape' && revising) {
+                e.preventDefault();
+                setRevisingId('');
               }
             }}
           />
           <button
             type="button"
             className="assistant-send"
-            aria-label="Send · ⌘Enter"
-            title="Send · ⌘Enter"
+            aria-label="Send · Enter"
+            title="Send · Enter (Shift+Enter adds a line)"
             disabled={prompt.trim().length < 3 || !!assistant.busy}
             onClick={submit}
           >

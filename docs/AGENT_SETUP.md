@@ -64,7 +64,7 @@ Gradara AI is provided by Virtu Services LLC under the [Terms](https://gradara.a
 Only when you use an AI feature, Gradara sends the request and the relevant part of your model to the provider you chose:
 
 - **Blocks**: your description and, when refining or repairing, the current definition and compiler messages.
-- **Assistant edits and diagnosis**: your request, the open model without its layout, the names of selected blocks, and the block library. A diagnosis of a failed run also sends that run's Modelica source and solver messages.
+- **Assistant edits and diagnosis**: your request, the open model without its layout, the names of selected blocks, and the block library. Refining a proposal also sends your earlier request and the changes it proposed. A diagnosis of a failed run also sends that run's Modelica source and solver messages.
 - **C templates**: the custom block's definition.
 
 Ordinary simulation never calls a provider. With your own API key, requests go directly to OpenAI or Anthropic under your account's terms. The Gradara AI service keeps your email, credit balance and purchases, and per-request counts (task, model, token counts, time). It does not store or log your prompts, models, equations, or AI responses; its AI provider, Anthropic, may keep them briefly for abuse and safety monitoring. See [privacy](PRIVACY.md) for the full details.

@@ -2683,6 +2683,17 @@
 .assistant-composer { flex: none; display: grid; gap: 5px; padding: 7px 12px 8px; border-top: 1px solid #e3e9ed; background: #f7f9fa; }
 .assistant-context { display: flex; gap: 5px; }
 .assistant-context button.is-active { border-color: var(--primary); background: #e8f0f6; color: #1d4d73; }
+.assistant-revising {
+  display: flex; align-items: center; gap: 6px; min-width: 0; padding: 3px 4px 3px 8px;
+  border: 1px solid var(--primary); border-radius: 3px; background: #e8f0f6; color: #1d4d73; font-size: var(--text-micro);
+}
+.assistant-revising span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.assistant-revising button {
+  display: grid; place-items: center; flex: none; width: 18px; height: 18px; border: 0; border-radius: 2px;
+  background: transparent; color: inherit; cursor: pointer;
+}
+.assistant-revising button:hover { background: #d3e3ef; }
+.assistant-revising button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 .assistant-input { display: flex; align-items: flex-end; gap: 6px; }
 .assistant-input textarea {
   flex: 1; min-height: 36px; max-height: 96px; resize: vertical; padding: 6px 8px;
@@ -2738,7 +2749,7 @@
 .proposal-stale { color: #8a6414; font-size: var(--text-micro); }
 .proposal-status { display: inline-flex; align-items: center; gap: 5px; color: #526979; font-size: var(--text-micro); }
 .proposal-provider { margin-left: auto; color: #8193a0; font-size: var(--text-micro); }
-.proposal-card.is-applied, .proposal-card.is-discarded { opacity: .78; }
+.proposal-card.is-applied, .proposal-card.is-discarded, .proposal-card.is-superseded { opacity: .78; }
 .proposal-card.is-applied { border-color: #b9d6c4; }
 .diagnosis-note { margin: 0 10px 8px; color: #637987; font-size: var(--text-micro); }
 .diagnosis-note.is-error { color: #7d3a3c; }

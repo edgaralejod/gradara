@@ -322,11 +322,11 @@ Every generated block that passes its checks is saved in **Library → AI blocks
 
 ### Edit the open model with the Assistant
 
-Open the **Assistant** tab in the dock and describe a change, for example "Add a speed sensor on the load shaft" or "Increase the controller gain by 20%". ⌘/Ctrl+Enter sends. With blocks selected, choose **Selection** to point the Assistant at them, or **Whole model**.
+Open the **Assistant** tab in the dock and describe a change, for example "Add a speed sensor on the load shaft" or "Increase the controller gain by 20%". Enter sends; Shift+Enter starts a new line. With blocks selected, choose **Selection** to point the Assistant at them, or **Whole model**.
 
 The Assistant can add library blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, and connect or disconnect ports. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model passed a trial simulation in OpenModelica. If it still fails after one automatic revision, the proposal is marked **Not verified** and shows the messages.
 
-Nothing changes until you choose **Apply**. The whole proposal is one undo step, and your wire routes, labels, and net names are kept. New blocks are placed near related blocks; you may want to move them. If you edit the model while a request runs, Apply is disabled and you are asked to try again. **Refine** asks a follow-up. **Discard** dismisses the proposal. The conversation belongs to the open model, clears when you switch models, and is not saved.
+Nothing changes until you choose **Apply**. The whole proposal is one undo step, and your wire routes, labels, and net names are kept. New blocks are placed near related blocks; you may want to move them. If you edit the model while a request runs, Apply is disabled and you are asked to try again. **Refine** revises a proposal you have not applied: the composer shows which proposal you are revising, and what you type is sent with your earlier request and the proposed changes, so you only describe what to change ("use a 10 ms time constant instead"). The revision replaces the earlier proposal, which is marked **Revised below**, and is priced as a new edit. Press Escape or the × to go back to asking for a new change. **Discard** dismisses the proposal. Each model has its own conversation. It stays while you work in other models, so a proposal is still there when you come back, and it is cleared when you close or reload Gradara.
 
 ### Ask for a complete model
 

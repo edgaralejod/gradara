@@ -13,7 +13,7 @@ import {
 import { domainColors, type Project } from '@/lib/gradara/model';
 import type { EditChange, EditProposal } from '@/lib/gradara/proposal';
 
-export type ProposalStatus = 'pending' | 'applied' | 'discarded';
+export type ProposalStatus = 'pending' | 'applied' | 'discarded' | 'superseded';
 
 const GROUPS: { id: string; title: string; ops: string[]; icon: typeof Plus }[] = [
   { id: 'added', title: 'Added', ops: ['add_block', 'create_block'], icon: Plus },
@@ -32,6 +32,7 @@ export default function ProposalCard({
   current,
   status,
   stale,
+  revising,
   onApply,
   onDiscard,
   onRefine,
@@ -41,6 +42,8 @@ export default function ProposalCard({
   current: Project;
   status: ProposalStatus;
   stale: boolean;
+  /** True while the composer is set to revise this proposal. */
+  revising: boolean;
   onApply: () => void;
   onDiscard: () => void;
   onRefine: () => void;
@@ -135,7 +138,7 @@ export default function ProposalCard({
                 Model changed since this proposal — ask again
               </span>
             )}
-            <button type="button" onClick={onRefine}>
+            <button type="button" aria-pressed={revising} onClick={onRefine}>
               <RefreshCw size={12} />
               Refine
             </button>
@@ -154,6 +157,8 @@ export default function ProposalCard({
               <>
                 <Undo2 size={12} /> Applied as one undo step
               </>
+            ) : status === 'superseded' ? (
+              'Revised below'
             ) : (
               'Discarded'
             )}

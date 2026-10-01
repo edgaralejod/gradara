@@ -16,12 +16,21 @@ export type EditProposal = {
   summary: string;
   assumptions: string[];
   changes: EditChange[];
+  /** The plan behind the proposal; sent back when the user asks to refine it. */
+  operations: Record<string, unknown>[];
   generated: { alias: string; name: string }[];
   verified: boolean;
   diagnostics: Diagnostic[];
   samples: number | null;
   provider: string;
   credits?: number;
+};
+
+/** What POST /api/models/edit needs to revise an unapplied proposal. */
+export type PreviousProposal = {
+  prompt: string;
+  summary: string;
+  operations: Record<string, unknown>[];
 };
 
 const same = (a: unknown, b: unknown) =>
