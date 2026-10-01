@@ -37,13 +37,13 @@ function run(
   };
 }
 
-test('unionTime merges both grids in order, without repeats, up to the end', () => {
+void test('unionTime merges both grids in order, without repeats, up to the end', () => {
   // Event pairs repeat a time inside one run; the grid keeps one instant.
   assert.deepEqual(unionTime([0, 1, 1, 2, 3], [0, 0.5, 1, 2.5, 4], 3), [0, 0.5, 1, 2, 2.5, 3]);
   assert.deepEqual(unionTime([], [0, 1], 5), [0, 1]);
 });
 
-test('identical runs are within an exact tolerance', () => {
+void test('identical runs are within an exact tolerance', () => {
   const a = run('a', [0, 1, 2], { x: [0, 1, 4], y: [5, 5, 5] });
   const result = compareRuns(a, run('b', [0, 1, 2], { x: [0, 1, 4], y: [5, 5, 5] }), exactTolerance);
   assert.equal(result.out, 0);
@@ -51,7 +51,7 @@ test('identical runs are within an exact tolerance', () => {
   assert.ok(result.signals.every((s) => s.status === 'within' && s.maxDifference === 0));
 });
 
-test('a different signal is out, with its largest difference and when it happens', () => {
+void test('a different signal is out, with its largest difference and when it happens', () => {
   const base = run('a', [0, 1, 2, 3], { x: [0, 1, 2, 3], y: [1, 1, 1, 1] });
   const next = run('b', [0, 1, 2, 3], { x: [0, 1, 2.5, 3], y: [1, 1, 1, 1] });
   const result = compareRuns(base, next, exactTolerance);
@@ -68,7 +68,7 @@ test('a different signal is out, with its largest difference and when it happens
   assert.deepEqual(detail.regions, [[2, 2]]);
 });
 
-test('absolute and relative tolerances use the larger margin', () => {
+void test('absolute and relative tolerances use the larger margin', () => {
   const base = run('a', [0, 1, 2], { x: [0, 10, 100] });
   const next = run('b', [0, 1, 2], { x: [0.4, 10.4, 104] });
   // absolute 0.5 covers the first two samples; the third needs relative 5 % of 100.
@@ -79,7 +79,7 @@ test('absolute and relative tolerances use the larger margin', () => {
   assert.deepEqual(detail.lower, [-0.5, -0.5, -5]);
 });
 
-test('a time tolerance forgives a shifted edge', () => {
+void test('a time tolerance forgives a shifted edge', () => {
   const time = [0, 1, 2, 3, 4, 5];
   const base = run('a', time, { x: [0, 0, 0, 1, 1, 1] });
   const late = run('b', time, { x: [0, 0, 0, 0, 1, 1] }); // the step arrives one sample later
@@ -90,7 +90,7 @@ test('a time tolerance forgives a shifted edge', () => {
   assert.deepEqual(bounds.upper, [0, 0, 1, 1, 1, 1]);
 });
 
-test('runs sampled at different times are compared on the merged grid by interpolation', () => {
+void test('runs sampled at different times are compared on the merged grid by interpolation', () => {
   const base = run('a', [0, 2], { x: [0, 2] });
   const next = run('b', [0, 1, 2], { x: [0, 1, 2] });
   const result = compareRuns(base, next, exactTolerance);
@@ -98,7 +98,7 @@ test('runs sampled at different times are compared on the merged grid by interpo
   assert.equal(result.signals[0].status, 'within');
 });
 
-test('only the shared time span is compared, and unmatched signals are listed last', () => {
+void test('only the shared time span is compared, and unmatched signals are listed last', () => {
   const base = run('a', [0, 1, 2, 3], { x: [0, 0, 0, 9], old: [1, 1, 1, 1] });
   const next = run('b', [0, 1, 2], { x: [0, 0, 0], added: [2, 2, 2] });
   const result = compareRuns(base, next, exactTolerance);
@@ -113,7 +113,7 @@ test('only the shared time span is compared, and unmatched signals are listed la
   assert.equal(signalDetail(result, base, next, 'old', exactTolerance), null);
 });
 
-test('several separate stretches outside the tolerance are counted', () => {
+void test('several separate stretches outside the tolerance are counted', () => {
   const time = [0, 1, 2, 3, 4, 5];
   const base = run('a', time, { x: [0, 0, 0, 0, 0, 0] });
   const next = run('b', time, { x: [1, 0, 0, 2, 2, 0] });
@@ -123,7 +123,7 @@ test('several separate stretches outside the tolerance are counted', () => {
   assert.equal(result.signals[0].maxAt, 3);
 });
 
-test('typed tolerances fall back to zero unless they are positive numbers', () => {
+void test('typed tolerances fall back to zero unless they are positive numbers', () => {
   assert.equal(toleranceValue('0.5'), 0.5);
   assert.equal(toleranceValue('1e-3'), 0.001);
   for (const text of ['', ' ', '-1', 'abc', 'Infinity', 'NaN']) assert.equal(toleranceValue(text), 0);
