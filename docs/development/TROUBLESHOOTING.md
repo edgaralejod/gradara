@@ -22,7 +22,8 @@ Open **Settings → Engine**. The top line says what is wrong; choose **Check ag
 **Built-in engine (the default)**
 
 - **"The built-in engine is incomplete"** or **"could not load its library."** Part of the app's `engine` folder is missing, often removed by antivirus software. Reinstall Gradara; your models are kept.
-- **"A C compiler is needed"** (Linux AppImage). OpenModelica builds each model with `gcc`. Install it (`sudo apt install gcc` on Debian or Ubuntu), then choose **Check again**. The `.deb` installs it automatically.
+- **"A C compiler is needed"** (Linux AppImage). OpenModelica builds each model with `gcc`. Install it (`sudo apt install gcc` on Debian or Ubuntu, `sudo pacman -S gcc` on Arch), then choose **Check again**. The `.deb` installs it automatically.
+- **"Error building simulator … /bin/sh: symbol lookup error … undefined symbol: rl_…"** (Linux, Gradara 0.6.3 and earlier, on Arch and other rolling distributions). The app handed its own copy of `readline` to your system's shell. Update Gradara. Until then, choose **OpenModelica installed on this computer** in the **Engine** menu if you have one.
 - **"The built-in engine could not start"** (macOS). Choose **Restart engine**. The message includes the end of the engine's logs; the full logs are `engine-vm.log` and `engine-vm-console.log` in the logs folder (**Help → Open Logs Folder**). The engine needs macOS 13 or newer and about 3 GB of free memory. If another virtualization tool is using most of your memory, quit it and restart the engine.
 - **"macOS 13 or newer is required."** Update macOS. On older versions, choose **OpenModelica installed on this computer** or **Container engine (Docker)** in the **Engine** menu if you maintain one of those yourself.
 

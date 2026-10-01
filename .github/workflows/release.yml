@@ -123,6 +123,14 @@ jobs:
         # On Windows and Linux this also simulates with the built-in engine.
         shell: bash
         run: python packaging/smoke_backend.py
+      - name: Smoke-test the bundled service on Arch Linux
+        # A rolling distribution's /bin/sh, make, and gcc are newer than the build
+        # machine's libraries; the service must not hand those to them.
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src archlinux:latest bash -c \
+            'pacman -Sy --noconfirm --needed gcc python >/dev/null && python packaging/smoke_backend.py'
       - name: Build installer
         shell: bash
         working-directory: desktop

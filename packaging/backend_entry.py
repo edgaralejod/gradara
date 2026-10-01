@@ -17,6 +17,8 @@ def main() -> None:
     parser.add_argument('--port', type=int, default=int(os.environ.get('GRADARA_PORT', '8765')))
     args = parser.parse_args()
     os.environ['GRADARA_PORT'] = str(args.port)
+    from server.paths import restore_library_path
+    restore_library_path()  # before anything starts a program (OpenModelica, gcc, Codex)
     import uvicorn
     from server.app import app
     # Loopback only. Access logs are off: they add noise and nothing useful locally.

@@ -15,6 +15,25 @@ from pathlib import Path
 FROZEN = bool(getattr(sys, 'frozen', False))
 
 
+def restore_library_path() -> None:
+    """Give programs the service starts the library path the user had.
+
+    PyInstaller's Linux bootloader points LD_LIBRARY_PATH at the app's bundled
+    libraries (readline, zlib, … from the build machine) and keeps the original in
+    LD_LIBRARY_PATH_ORIG. Every child inherits it, so on a newer distribution the
+    system's /bin/sh, make, or gcc load those older copies and fail ("symbol lookup
+    error" on Arch). This process no longer needs it: the loader reads the variable
+    once, at start-up.
+    """
+    if not FROZEN or not sys.platform.startswith('linux'):
+        return
+    original = os.environ.pop('LD_LIBRARY_PATH_ORIG', None)
+    if original:
+        os.environ['LD_LIBRARY_PATH'] = original
+    else:
+        os.environ.pop('LD_LIBRARY_PATH', None)
+
+
 def _source_root() -> Path:
     if FROZEN and hasattr(sys, '_MEIPASS'):
         return Path(sys._MEIPASS)  # type: ignore[attr-defined]

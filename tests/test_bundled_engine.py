@@ -244,3 +244,18 @@ def test_vm_socket_avoids_paths_vfkit_mangles(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)  # a relative path stays short enough for a Unix socket
     monkeypatch.setattr(engines, 'DATA', Path('plain'))
     assert engines.EngineVM(tmp_path, {}).socket_path == Path('plain')/'engine-vm'/'agent.sock'
+
+
+def test_frozen_service_gives_children_the_users_library_path(monkeypatch):
+    # PyInstaller's bootloader points LD_LIBRARY_PATH at the app's own libraries; on
+    # Arch, /bin/sh then loaded the bundled readline and every simulation build failed.
+    from server import paths
+    monkeypatch.setattr(paths, 'FROZEN', True)
+    monkeypatch.setattr(paths.sys, 'platform', 'linux')
+    monkeypatch.setenv('LD_LIBRARY_PATH', '/opt/Gradara/resources/backend/_internal')
+    monkeypatch.setenv('LD_LIBRARY_PATH_ORIG', '/home/me/lib')
+    paths.restore_library_path()
+    assert os.environ['LD_LIBRARY_PATH'] == '/home/me/lib' and 'LD_LIBRARY_PATH_ORIG' not in os.environ
+    monkeypatch.setenv('LD_LIBRARY_PATH', '/opt/Gradara/resources/backend/_internal')
+    paths.restore_library_path()
+    assert 'LD_LIBRARY_PATH' not in os.environ
