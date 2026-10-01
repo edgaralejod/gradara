@@ -23,6 +23,7 @@ from .. import credentials, settings
 from ..paths import AGENT_DIR
 from .codex import codex_available
 from .providers import DEFAULT_MODELS, Generation, ProviderError, make_provider
+from .schema import describe_limits
 
 current_job: contextvars.ContextVar[dict | None] = contextvars.ContextVar('gradara_job', default=None)
 
@@ -62,6 +63,8 @@ def _keep_transcript(attempt_id: str, prompt: str, generation: Generation) -> No
 
 
 async def generate(prompt: str, schema: dict, attempt_id: str, *, task: str) -> dict:
+    # Every provider path (including an older Gradara AI service) sees the limits in words.
+    schema = describe_limits(schema)
     provider = settings.ai_provider()
     if provider == 'off':
         raise ProviderError('AI features are turned off. Choose a provider in Settings → AI.', 400)

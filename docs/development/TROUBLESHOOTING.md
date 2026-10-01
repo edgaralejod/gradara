@@ -69,6 +69,10 @@ Results belong to the model exactly as it ran. Changing parameters, connections,
 | "rejected the API key" | Your OpenAI or Anthropic key is wrong or revoked. Paste a new one in **Settings → AI**. |
 | "does not recognize the model" | Clear the **Model** field to use the default, or enter a model your account can use. |
 | Rate limit, or service temporarily unavailable | Wait a minute and try again. Gradara AI does not charge for requests that fail before producing output. |
+| "Could not reach …: the secure connection failed (certificate check)" | Something between you and the service inspects HTTPS traffic (a company proxy or security software). Allow `api.gradara.app`, `api.openai.com`, or `api.anthropic.com` in it, or try another network. |
+| "Could not reach …: the server name could not be resolved", "the connection was refused", "the HTTP proxy refused the connection" | Check your internet connection, firewall, or `HTTPS_PROXY`. Requests that never reached the service are repeated twice automatically before this appears. |
+| "did not answer within 300 seconds" | The request reached the provider but the answer took too long. It is not repeated automatically, so you are not charged twice. Try again, or ask for a smaller change. |
+| "The AI answer did not match the expected format, even after a retry" | The model returned data Gradara could not use twice in a row. Try again, or choose another model in **Settings → AI**. Text that only runs long is shortened, not rejected. |
 | The service is older than the app | Gradara AI has not caught up with your app version yet. Try again later. |
 | A generated block fails its checks | Check **Settings → Engine**. Gradara tries one automatic repair, then shows the compiler message. |
 

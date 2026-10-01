@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Plan dependencies, await checked components, then assemble and simulate a draft."""
 import json
+from typing import ClassVar
 from pydantic import BaseModel, ConfigDict, Field
 from . import agent
+from .llm import structured
 from .component_library import list_components
 from .engine import simulate
 from .paths import DATA
@@ -20,12 +22,14 @@ class ModelGenerateRequest(Strict):
 
 
 class MissingBlock(Strict):
+    prose: ClassVar = {'prompt'}
     id: str = Field(pattern=r'^[A-Za-z][A-Za-z0-9_]*$', max_length=60)
     blockType: BlockType
     prompt: str = Field(min_length=3, max_length=4000)
 
 
 class Plan(Strict):
+    prose: ClassVar = {'name', 'description', 'assumptions', 'unsupported'}
     name: str = Field(min_length=1, max_length=120)
     description: str = Field(max_length=1200)
     assumptions: list[str] = Field(max_length=12)
@@ -40,6 +44,7 @@ class ParameterValue(Strict):
 
 
 class Instance(Strict):
+    prose: ClassVar = {'name'}
     id: str = Field(pattern=r'^[A-Za-z][A-Za-z0-9_]*$', max_length=60)
     libraryId: str
     name: str = Field(min_length=1, max_length=90)
@@ -124,7 +129,7 @@ async def generate_model(request: ModelGenerateRequest, job_id: str, progress=la
     instructions = '''You plan complete runnable models for Gradara. Return only schema JSON; do not use tools.
 Reuse catalog components whenever their behavior fits, including parameter variations. Never recreate a resistor, gain, source, sensor, etc. already available. Missing blocks are only genuinely absent behaviors; at most four. Give each missing block an alias id and a self-contained request for the existing typed component creator. No whole-circuit mega-block to bypass assembly. Supported physics: electrical (including 3-phase), rotational and translational mechanical, thermal, magnetic, scalar Real and Boolean signals, and couplings. Unsupported domains (including hydraulic and fluid connectors, vector signals, 3D multibody) must be explained in unsupported, not silently approximated. Otherwise unsupported is empty. Plan a self-contained simulation with sources, loads, references/grounds, and sensors for quantities requested. Assumptions must be concise and explicit. reuse lists exact library IDs. Missing definitions will be generated and checked BEFORE assembly.
 User request:\n'''+request.prompt+'\nAvailable catalog:\n'+describe(catalog)
-    plan = Plan.model_validate(await agent.structured_generation(instructions, Plan.model_json_schema(), job_id+'-plan', task='model-plan'))
+    plan = await structured.generate(instructions, Plan, job_id+'-plan', task='model-plan')
     if plan.unsupported:
         raise ValueError(plan.unsupported)
     if any(key not in catalog for key in plan.reuse):
@@ -143,7 +148,7 @@ User request:\n'''+request.prompt+'\nAvailable catalog:\n'+describe(catalog)
         progress('Assembling connections and layout' if attempt == 0 else 'Repairing the model from simulation diagnostics')
         data = await agent.structured_generation(prompt, Assembly.model_json_schema(), f'{job_id}-assembly{attempt}', task='model-assembly')
         try:
-            project = assemble(plan, Assembly.model_validate(data), available)
+            project = assemble(plan, structured.parse(Assembly, data), available)
             progress('Checking the complete model in OpenModelica')
             result = await simulate(project, f'{job_id}trial{attempt}')
             document = project.model_dump(exclude_none=True)
