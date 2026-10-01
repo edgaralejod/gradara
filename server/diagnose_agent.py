@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Explain run and model problems, and optionally propose a checked fix through the edit pipeline."""
 import json
+from typing import ClassVar
 from pydantic import Field
 from . import agent
 from .diagnostics import Diagnostic
-from .llm import dispatch
+from .llm import dispatch, structured
 from .model_agent import Strict
 from .model_edit import ModelEditRequest, Unsupported, edit_model, semantic_view
 from .models import Definition, Project
@@ -21,12 +22,15 @@ class DiagnoseRequest(Strict):
 
 
 class Cause(Strict):
+    prose: ClassVar = {'explanation'}
     diagnosticIds: list[str] = Field(max_length=50)
     blockIds: list[str] = Field(max_length=50)
     explanation: str = Field(max_length=1200)
 
 
 class Diagnosis(Strict):
+    # Free text a model may overrun: cut to fit rather than fail (llm/structured.py).
+    prose: ClassVar = {'summary', 'causes', 'manualSteps', 'editPrompt'}
     summary: str = Field(max_length=800)
     causes: list[Cause] = Field(max_length=10)
     fixable: bool
@@ -96,9 +100,8 @@ def clean(diagnosis: Diagnosis, request: DiagnoseRequest) -> Diagnosis:
 async def diagnose(request: DiagnoseRequest, job_id: str, progress=lambda message: None):
     progress('Reading the problems')
     context = run_context(request)
-    data = await agent.structured_generation(diagnose_prompt(request, context), Diagnosis.model_json_schema(),
-                                             f'{job_id}-diagnose', task='diagnose')
-    diagnosis = clean(Diagnosis.model_validate(data), request)
+    diagnosis = clean(await structured.generate(diagnose_prompt(request, context), Diagnosis,
+                                                f'{job_id}-diagnose', task='diagnose'), request)
     result = {'diagnosis': diagnosis.model_dump(), 'proposal': None, 'provider': agent.provider_label()}
     if not (request.proposeFix and diagnosis.fixable and diagnosis.editPrompt):
         return with_credits(result)

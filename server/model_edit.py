@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """Edit the open model: the agent plans bounded operations, conventional code applies and checks them."""
 import json
-from typing import Literal
+from typing import ClassVar, Literal
 from pydantic import Field, ValidationError
 from . import agent
 from .diagnostics import Diagnostic, SimulationFailure, validate_simulation
 from .engine import simulate
-from .llm import dispatch
+from .llm import dispatch, structured
 from .model_agent import ParameterValue, Strict, catalog_snapshot, describe
 from .models import CAUSAL_DOMAINS, Block, BlockType, Definition, Net, Project, Wire, flatten_connects
 from .paths import DATA
@@ -49,6 +49,7 @@ class Operation(Strict):
 
 
 class EditPlan(Strict):
+    prose: ClassVar = {'summary', 'assumptions', 'unsupported'}
     summary: str = Field(max_length=600)
     assumptions: list[str] = Field(max_length=8)
     unsupported: str = Field(max_length=1000)
@@ -376,7 +377,7 @@ async def edit_model(request: ModelEditRequest, job_id: str, progress=lambda mes
         progress('Planning the edit' if attempt == 0 else 'Revising the edit from diagnostics')
         data = await agent.structured_generation(prompt, EditPlan.model_json_schema(), f'{job_id}-edit{attempt}', task='edit-plan')
         try:
-            plan = EditPlan.model_validate(data)
+            plan = structured.parse(EditPlan, data)
             if plan.unsupported:
                 raise Unsupported(plan.unsupported)
             check_limits(plan)

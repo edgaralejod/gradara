@@ -85,18 +85,46 @@ def _error_for(provider: str, response: httpx.Response) -> ProviderError:
     return ProviderError(f'{label} could not complete the request: {message}', 400)
 
 
+def network_reason(exc: BaseException) -> str:
+    """A short, specific reason for a failed request: what to fix is different for each."""
+    text = f'{exc} {exc.__cause__ or ""} {exc.__context__ or ""}'.lower()
+    if 'certificate' in text or 'ssl' in text:
+        return ('the secure connection failed (certificate check). A proxy or security software that inspects '
+                'HTTPS traffic can cause this')
+    if 'name or service' in text or 'nodename' in text or 'getaddrinfo' in text or 'name resolution' in text:
+        return 'the server name could not be resolved (DNS). Check your internet connection'
+    if 'proxy' in text:
+        return 'the HTTP proxy refused the connection. Check HTTPS_PROXY'
+    if isinstance(exc, httpx.ConnectTimeout):
+        return 'the connection timed out'
+    if isinstance(exc, httpx.ConnectError):
+        return 'the connection was refused or dropped. Check your internet connection or firewall'
+    if isinstance(exc, (httpx.RemoteProtocolError, httpx.ReadError)):
+        return 'the connection closed before the answer arrived'
+    return type(exc).__name__
+
+
+def _sent(exc: BaseException) -> bool:
+    """False when the request certainly never reached the server (safe to repeat)."""
+    return not isinstance(exc, (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout))
+
+
 async def _post(provider: str, url: str, headers: dict, body: dict, client: httpx.AsyncClient | None) -> dict:
     owned = client is None
     client = client or httpx.AsyncClient(timeout=TIMEOUT)
+    label = {'openai': 'OpenAI', 'anthropic': 'Anthropic'}.get(provider, provider)
     try:
         for attempt in range(3):
             try:
                 response = await client.post(url, headers=headers, json=body)
-            except httpx.TimeoutException as exc:
-                raise ProviderError('The AI provider did not answer in time. Try again.', 504, True) from exc
+            except httpx.ReadTimeout as exc:
+                # The request was sent and the model may still be working: repeating it
+                # would pay twice for one answer.
+                raise ProviderError(f'{label} did not answer within {int(TIMEOUT.read)} seconds. Try again, '
+                                    'or ask for a smaller change.', 504, True) from exc
             except httpx.HTTPError as exc:
-                error = ProviderError('Could not reach the AI provider. Check your internet connection.', 503, True)
-                if attempt == 2:
+                error = ProviderError(f'Could not reach {label}: {network_reason(exc)}.', 503, True)
+                if attempt == 2 or _sent(exc):
                     raise error from exc
                 await asyncio.sleep(1.5 * (attempt + 1) + random.random())
                 continue

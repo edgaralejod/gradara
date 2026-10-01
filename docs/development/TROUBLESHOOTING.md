@@ -22,7 +22,8 @@ Open **Settings → Engine**. The top line says what is wrong; choose **Check ag
 **Built-in engine (the default)**
 
 - **"The built-in engine is incomplete"** or **"could not load its library."** Part of the app's `engine` folder is missing, often removed by antivirus software. Reinstall Gradara; your models are kept.
-- **"A C compiler is needed"** (Linux AppImage). OpenModelica builds each model with `gcc`. Install it (`sudo apt install gcc` on Debian or Ubuntu), then choose **Check again**. The `.deb` installs it automatically.
+- **"A C compiler is needed"** (Linux AppImage). OpenModelica builds each model with `gcc`. Install it (`sudo apt install gcc` on Debian or Ubuntu, `sudo pacman -S gcc` on Arch), then choose **Check again**. The `.deb` installs it automatically.
+- **"Error building simulator … /bin/sh: symbol lookup error … undefined symbol: rl_…"** (Linux, Gradara 0.6.3 and earlier, on Arch and other rolling distributions). The app handed its own copy of `readline` to your system's shell. Update Gradara. Until then, choose **OpenModelica installed on this computer** in the **Engine** menu if you have one.
 - **"The built-in engine could not start"** (macOS). Choose **Restart engine**. The message includes the end of the engine's logs; the full logs are `engine-vm.log` and `engine-vm-console.log` in the logs folder (**Help → Open Logs Folder**). The engine needs macOS 13 or newer and about 3 GB of free memory. If another virtualization tool is using most of your memory, quit it and restart the engine.
 - **"macOS 13 or newer is required."** Update macOS. On older versions, choose **OpenModelica installed on this computer** or **Container engine (Docker)** in the **Engine** menu if you maintain one of those yourself.
 
@@ -69,6 +70,10 @@ Results belong to the model exactly as it ran. Changing parameters, connections,
 | "rejected the API key" | Your OpenAI or Anthropic key is wrong or revoked. Paste a new one in **Settings → AI**. |
 | "does not recognize the model" | Clear the **Model** field to use the default, or enter a model your account can use. |
 | Rate limit, or service temporarily unavailable | Wait a minute and try again. Gradara AI does not charge for requests that fail before producing output. |
+| "Could not reach …: the secure connection failed (certificate check)" | Something between you and the service inspects HTTPS traffic (a company proxy or security software). Allow `api.gradara.app`, `api.openai.com`, or `api.anthropic.com` in it, or try another network. |
+| "Could not reach …: the server name could not be resolved", "the connection was refused", "the HTTP proxy refused the connection" | Check your internet connection, firewall, or `HTTPS_PROXY`. Requests that never reached the service are repeated twice automatically before this appears. |
+| "did not answer within 300 seconds" | The request reached the provider but the answer took too long. It is not repeated automatically, so you are not charged twice. Try again, or ask for a smaller change. |
+| "The AI answer did not match the expected format, even after a retry" | The model returned data Gradara could not use twice in a row. Try again, or choose another model in **Settings → AI**. Text that only runs long is shortened, not rejected. |
 | The service is older than the app | Gradara AI has not caught up with your app version yet. Try again later. |
 | A generated block fails its checks | Check **Settings → Engine**. Gradara tries one automatic repair, then shows the compiler message. |
 

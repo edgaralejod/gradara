@@ -9,12 +9,14 @@ in their browser; no password ever passes through Gradara.
 """
 from __future__ import annotations
 
+import asyncio
 import os
+import random
 
 import httpx
 
 from .. import credentials, settings
-from .providers import Generation, ProviderError, Usage
+from .providers import Generation, ProviderError, Usage, network_reason
 
 def _version() -> str:
     if os.environ.get('GRADARA_VERSION'):
@@ -71,13 +73,25 @@ async def request(method: str, path: str, *, auth: bool = True, json: dict | Non
     token = credentials.get('gradara_token') if auth else None
     if auth and not token:
         raise NotSignedIn()
-    try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.request(method, settings.gateway_url() + path, headers=_headers(token), json=json)
-    except httpx.TimeoutException as exc:
-        raise ProviderError('Gradara AI did not answer in time. Try again.', 504, True) from exc
-    except httpx.HTTPError as exc:
-        raise ProviderError('Could not reach Gradara AI. Check your internet connection.', 503, True) from exc
+    response = None
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        for attempt in range(3):
+            try:
+                response = await client.request(method, settings.gateway_url() + path, headers=_headers(token),
+                                                json=json)
+            except httpx.ReadTimeout as exc:
+                raise ProviderError('Gradara AI did not answer in time. Try again.', 504, True) from exc
+            except httpx.HTTPError as exc:
+                # Repeat only what never reached the service, so a job is never sent twice.
+                if attempt == 2 or not isinstance(exc, (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout)):
+                    raise ProviderError(f'Could not reach Gradara AI: {network_reason(exc)}.', 503, True) from exc
+                await asyncio.sleep(1.5 * (attempt + 1) + random.random())
+                continue
+            # The service is briefly unavailable (a deploy, a cold start): wait and try again.
+            if response.status_code in (502, 503, 504) and attempt < 2:
+                await asyncio.sleep(2.0 * (attempt + 1) + random.random())
+                continue
+            break
     if response.status_code == 401 and auth:
         credentials.delete('gradara_token')
         raise ProviderError('Your Gradara AI sign-in expired or was revoked. Sign in again in Settings → AI.', 401)
