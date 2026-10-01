@@ -253,9 +253,9 @@ def test_frozen_service_gives_children_the_users_library_path(monkeypatch):
     monkeypatch.setattr(paths, 'FROZEN', True)
     monkeypatch.setattr(paths.sys, 'platform', 'linux')
     monkeypatch.setenv('LD_LIBRARY_PATH', '/opt/Gradara/resources/backend/_internal')
-    monkeypatch.setenv('LD_LIBRARY_PATH_ORIG', '/home/me/lib')
+    monkeypatch.setenv('LD_LIBRARY_PATH_ORIG', '/usr/local/lib/mine')
     paths.restore_library_path()
-    assert os.environ['LD_LIBRARY_PATH'] == '/home/me/lib' and 'LD_LIBRARY_PATH_ORIG' not in os.environ
+    assert os.environ['LD_LIBRARY_PATH'] == '/usr/local/lib/mine' and 'LD_LIBRARY_PATH_ORIG' not in os.environ
     monkeypatch.setenv('LD_LIBRARY_PATH', '/opt/Gradara/resources/backend/_internal')
     paths.restore_library_path()
     assert 'LD_LIBRARY_PATH' not in os.environ
