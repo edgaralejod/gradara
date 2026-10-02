@@ -59,6 +59,29 @@ export function fitValues(time: number[], values: number[][], x: Range): Range {
   return [lo - pad, hi + pad];
 }
 
+/** The y range that shows every line over `x`, where each line has its own sample times. */
+export function fitSeries(
+  lines: { time: number[]; values: number[] }[],
+  x: Range,
+): Range {
+  let lo = Infinity,
+    hi = -Infinity;
+  for (const { time, values } of lines) {
+    const start = Math.max(0, sampleIndex(time, x[0])),
+      end = Math.min(time.length - 1, sampleIndex(time, x[1]) + 1);
+    for (let i = start; i <= end; i++) {
+      const v = values[i];
+      if (Number.isFinite(v)) {
+        lo = Math.min(lo, v);
+        hi = Math.max(hi, v);
+      }
+    }
+  }
+  if (!Number.isFinite(lo)) return [-1, 1];
+  const pad = (hi - lo || Math.max(Math.abs(lo) * 0.1, 1)) * 0.08;
+  return [lo - pad, hi + pad];
+}
+
 export function axisTicks(range: Range, count = 5): number[] {
   const raw = (range[1] - range[0]) / count;
   const scale = 10 ** Math.floor(Math.log10(raw));

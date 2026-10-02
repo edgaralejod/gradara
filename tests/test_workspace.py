@@ -114,10 +114,25 @@ def test_stored_runs_list_one_models_runs_newest_first_without_samples(tmp_path,
     (runs/'broken'/'result.json').write_text('{', encoding='utf-8')
     listed = asyncio.run(service.stored_runs('mine'))['runs']
     assert [r['id'] for r in listed] == ['new', 'old']
-    assert listed[0] == {'id': 'new', 'finished': (1_700_000_000 - 100) * 1000, 'duration': later.duration, 'samples': 3,
+    assert listed[0] == {'id': 'new', 'name': '', 'finished': (1_700_000_000 - 100) * 1000, 'duration': later.duration, 'samples': 3,
                          'signals': 1, 'projectRevision': later.revision, 'modelHash': 'hnew', 'engine': 'OpenModelica'}
     assert [r['id'] for r in asyncio.run(service.stored_runs('mine', limit=1))['runs']] == ['new']
     assert asyncio.run(service.stored_runs('nobody')) == {'runs': []}
+    # Naming and deleting are the user's, and touch only that run's folder.
+    assert asyncio.run(service.rename_run('old', service.RunMeta(name='  Stiff   spring  '))) == {'id': 'old', 'name': 'Stiff spring'}
+    assert [(r['id'], r['name']) for r in asyncio.run(service.stored_runs('mine'))['runs']] == [('new', ''), ('old', 'Stiff spring')]
+    assert json.loads((runs/'old'/'result.json').read_text(encoding='utf-8'))['id'] == 'old'
+    asyncio.run(service.rename_run('old', service.RunMeta(name='')))
+    assert asyncio.run(service.stored_runs('mine'))['runs'][1]['name'] == ''
+    with pytest.raises(Exception) as missing:
+        asyncio.run(service.rename_run('absent', service.RunMeta(name='x')))
+    assert missing.value.status_code == 404
+    assert asyncio.run(service.delete_run('old')) == {'deleted': 'old'}
+    assert not (runs/'old').exists() and (runs/'new').exists()
+    assert [r['id'] for r in asyncio.run(service.stored_runs('mine'))['runs']] == ['new']
+    with pytest.raises(Exception) as bad:
+        asyncio.run(service.delete_run('../new'))
+    assert bad.value.status_code == 400
 
 
 def test_api_documents_omit_unset_optional_values(tmp_path, monkeypatch):

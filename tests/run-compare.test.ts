@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { SimulationResult } from '../lib/gradara/api';
 import {
+  compareMany,
   compareRuns,
   exactTolerance,
+  mergeRegions,
   signalDetail,
   toleranceBounds,
   toleranceValue,
@@ -127,4 +129,42 @@ void test('typed tolerances fall back to zero unless they are positive numbers',
   assert.equal(toleranceValue('0.5'), 0.5);
   assert.equal(toleranceValue('1e-3'), 0.001);
   for (const text of ['', ' ', '-1', 'abc', 'Infinity', 'NaN']) assert.equal(toleranceValue(text), 0);
+});
+
+void test('compareMany ranks a signal by its worst run and keeps each run\'s own numbers', () => {
+  const t = [0, 1, 2];
+  const base = run('base', t, { a: [0, 0, 0], b: [1, 1, 1] });
+  const near = run('near', t, { a: [0, 0, 0.05], b: [1, 1, 1] });
+  const far = run('far', t, { a: [0, 0, 0.5], b: [1, 1, 1], c: [9, 9, 9] });
+  const many = compareMany(
+    base,
+    [
+      { id: 'near', data: near },
+      { id: 'far', data: far },
+    ],
+    { absolute: 0.1, relative: 0, time: 0 },
+  );
+  assert.deepEqual(many.pairs.map((p) => p.id), ['near', 'far']);
+  const a = many.signals.find((s) => s.key === 'a')!;
+  assert.equal(a.status, 'out');
+  assert.equal(a.byRun.near.status, 'within');
+  assert.equal(a.byRun.far.status, 'out');
+  assert.ok(Math.abs(a.maxDifference - 0.5) < 1e-12);
+  assert.equal(many.signals[0].key, 'a');
+  assert.equal(many.signals.find((s) => s.key === 'c')!.status, 'compared-only');
+  assert.equal(many.out, 1);
+  assert.equal(many.within, 1);
+  assert.equal(many.unmatched, 1);
+  assert.equal(many.truncated, false);
+});
+
+void test('mergeRegions orders spans from several runs and joins the ones that overlap', () => {
+  assert.deepEqual(
+    mergeRegions([
+      [[5, 6], [1, 2]],
+      [[1.5, 3], [8, 9]],
+    ]),
+    [[1, 3], [5, 6], [8, 9]],
+  );
+  assert.deepEqual(mergeRegions([]), []);
 });

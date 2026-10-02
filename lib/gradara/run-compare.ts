@@ -234,3 +234,84 @@ export function toleranceValue(text: string): number {
   const value = Number(text);
   return text.trim() && Number.isFinite(value) && value > 0 ? value : 0;
 }
+
+/** One compared run's signal summaries against the baseline. */
+export type RunPair = { id: string; comparison: RunComparison };
+export type MultiSignal = {
+  key: string;
+  name: string;
+  unit: string;
+  /** Per compared run: how this signal fares against the baseline. */
+  byRun: Record<string, SignalSummary>;
+  /** The worst status across the compared runs. */
+  status: SignalStatus;
+  /** The largest difference across the compared runs. */
+  maxDifference: number;
+};
+export type MultiComparison = {
+  pairs: RunPair[];
+  signals: MultiSignal[];
+  out: number;
+  within: number;
+  unmatched: number;
+  /** Some run stops earlier than the baseline; only the shared part is compared. */
+  truncated: boolean;
+};
+
+/**
+ * Compare up to a few runs with one baseline, signal by signal. A signal's
+ * row is as bad as its worst run, so the table puts what differs first.
+ */
+export function compareMany(
+  baseline: SimulationResult,
+  others: { id: string; data: SimulationResult }[],
+  tolerance: Tolerance,
+): MultiComparison {
+  const pairs = others.map((o) => ({
+    id: o.id,
+    comparison: compareRuns(baseline, o.data, tolerance),
+  }));
+  const rows = new Map<string, MultiSignal>();
+  for (const { id, comparison } of pairs)
+    for (const s of comparison.signals) {
+      const row = rows.get(s.key) ?? {
+        key: s.key,
+        name: s.name,
+        unit: s.unit,
+        byRun: {},
+        status: s.status,
+        maxDifference: 0,
+      };
+      row.byRun[id] = s;
+      if (rank[s.status] < rank[row.status]) row.status = s.status;
+      row.maxDifference = Math.max(row.maxDifference, s.maxDifference);
+      rows.set(s.key, row);
+    }
+  const signals = [...rows.values()].sort(
+    (a, b) =>
+      rank[a.status] - rank[b.status] ||
+      b.maxDifference - a.maxDifference ||
+      a.name.localeCompare(b.name),
+  );
+  const count = (status: SignalStatus) => signals.filter((s) => s.status === status).length;
+  return {
+    pairs,
+    signals,
+    out: count('out'),
+    within: count('within'),
+    unmatched: count('compared-only') + count('baseline-only'),
+    truncated: pairs.some((p) => p.comparison.truncated),
+  };
+}
+
+/** Time spans of several runs merged into one ordered list without overlaps. */
+export function mergeRegions(lists: [number, number][][]): [number, number][] {
+  const all = lists.flat().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const out: [number, number][] = [];
+  for (const [start, end] of all) {
+    const last = out[out.length - 1];
+    if (last && start <= last[1]) last[1] = Math.max(last[1], end);
+    else out.push([start, end]);
+  }
+  return out;
+}

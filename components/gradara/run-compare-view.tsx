@@ -1,23 +1,23 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowLeftRight,
   ChevronLeft,
   ChevronRight,
   Crosshair,
   Hand,
   Scan,
 } from 'lucide-react';
-import { api, type SimulationResult } from '@/lib/gradara/api';
+import type { SimulationResult } from '@/lib/gradara/api';
 import { parameterDifferences } from '@/lib/gradara/compare';
 import {
   clampTime,
-  fitValues,
+  fitSeries,
   type PlotView,
   type Range,
 } from '@/lib/gradara/plot-navigation';
 import {
-  compareRuns,
+  compareMany,
+  mergeRegions,
   signalDetail,
   toleranceValue,
   type SignalStatus,
@@ -26,39 +26,22 @@ import {
 import InspectorPlot from './inspector-plot';
 import PlotViewport from './plot-viewport';
 
-/** One stored run of the model, as GET /api/results lists it. */
-type StoredRun = {
+/** A run on show in the inspector, with its colour and data. */
+export type CompareEntry = {
   id: string;
-  finished: number;
-  duration: number;
-  samples: number;
-  signals: number;
-  projectRevision: number;
-  modelHash: string;
-  engine: string;
+  title: string;
+  color: string;
+  data: SimulationResult;
 };
-type Loaded = { data?: SimulationResult; error?: string };
 type Fields = { absolute: string; relative: string; time: string };
 
-const colors = { baseline: '#6d7986', compared: '#237db3', difference: '#be6622' };
 const noFields: Fields = { absolute: '', relative: '', time: '' };
 const statusText: Record<SignalStatus, string> = {
   out: 'Differs',
   within: 'Within tolerance',
-  'compared-only': 'Only in the compared run',
-  'baseline-only': 'Only in the baseline',
+  'compared-only': 'Not in the baseline',
+  'baseline-only': 'Not in this run',
 };
-
-function runLabel(run: StoredRun, newest: string) {
-  const when = new Date(run.finished).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-  return `${when}${run.id === newest ? ' · latest' : ''} · ${run.duration} s`;
-}
 const amount = (value: number, unit: string) =>
   `${Number(value.toPrecision(4))}${unit ? ` ${unit}` : ''}`;
 
@@ -74,66 +57,30 @@ function storedFields(key: string): Fields {
 }
 
 /**
- * Compare two stored runs of the open model: a table of every signal with its
- * largest difference, and for the selected signal both runs overlaid above
- * their difference and the tolerance band.
+ * Compare the runs on show with one baseline, in each run's own colour: a
+ * table of every signal with its largest difference per run, and for the
+ * selected signal all runs overlaid above their differences from the baseline
+ * and the tolerance band.
  */
 export default function RunCompareView({
-  modelId,
-  latestId,
+  entries,
+  baselineId,
+  onBaseline,
+  modelKey,
 }: {
-  modelId: string;
-  /** The run the inspector shows; a new one refreshes the list. */
-  latestId: string;
+  entries: CompareEntry[];
+  baselineId: string;
+  onBaseline: (id: string) => void;
+  /** Where the tolerance is remembered. */
+  modelKey: string;
 }) {
-  const [runs, setRuns] = useState<StoredRun[] | null>(null);
-  const [listError, setListError] = useState('');
-  const [chosen, setChosen] = useState({ baseline: '', compared: '' });
-  const [loaded, setLoaded] = useState<Record<string, Loaded>>({});
-  const storageKey = `gradara-compare:${modelId}`;
+  const storageKey = `gradara-compare:${modelKey}`;
   const [fields, setFields] = useState<Fields>(() => storedFields(storageKey));
   const [selectedKey, setSelectedKey] = useState('');
   const [onlyDifferent, setOnlyDifferent] = useState(false);
   const [mode, setMode] = useState<'pan' | 'zoom' | 'cursor'>('pan');
   const [x, setX] = useState<Range | null>(null);
   const [region, setRegion] = useState(-1);
-
-  useEffect(() => {
-    const abort = new AbortController();
-    void api<{ runs: StoredRun[] }>(
-      `/results?model=${encodeURIComponent(modelId)}`,
-      { signal: abort.signal },
-    )
-      .then(({ runs: list }) => {
-        setRuns(list);
-        setListError('');
-        // Default to the newest run against the one before it; keep a baseline the user chose.
-        setChosen((c) => {
-          const compared = list[0]?.id ?? '';
-          const kept = list.some((r) => r.id === c.baseline && r.id !== compared);
-          return {
-            compared,
-            baseline: kept ? c.baseline : (list.find((r) => r.id !== compared)?.id ?? ''),
-          };
-        });
-      })
-      .catch((e) => {
-        if (e.name !== 'AbortError') setListError(e.message);
-      });
-    return () => abort.abort();
-  }, [modelId, latestId]);
-
-  // Each run's full data is fetched once and kept while the view is open.
-  const requested = useRef(new Set<string>());
-  useEffect(() => {
-    for (const id of [chosen.baseline, chosen.compared]) {
-      if (!id || requested.current.has(id)) continue;
-      requested.current.add(id);
-      void api<SimulationResult>(`/results/${id}/data`)
-        .then((data) => setLoaded((all) => ({ ...all, [id]: { data } })))
-        .catch((e) => setLoaded((all) => ({ ...all, [id]: { error: e.message } })));
-    }
-  }, [chosen.baseline, chosen.compared]);
 
   useEffect(() => {
     try {
@@ -152,87 +99,106 @@ export default function RunCompareView({
     [fields],
   );
   const exact = !tolerance.absolute && !tolerance.relative && !tolerance.time;
-  const baseline = loaded[chosen.baseline]?.data,
-    compared = loaded[chosen.compared]?.data;
+  const base = entries.find((e) => e.id === baselineId) ?? entries[0];
+  const others = useMemo(
+    () => entries.filter((e) => e.id !== base?.id),
+    [entries, base],
+  );
   const comparison = useMemo(
-    () => (baseline && compared ? compareRuns(baseline, compared, tolerance) : null),
-    [baseline, compared, tolerance],
+    () =>
+      base
+        ? compareMany(
+            base.data,
+            others.map((o) => ({ id: o.id, data: o.data })),
+            tolerance,
+          )
+        : null,
+    [base, others, tolerance],
   );
   const selected =
     comparison?.signals.find((s) => s.key === selectedKey) ?? comparison?.signals[0];
-  const detail = useMemo(
+  const details = useMemo(
     () =>
-      comparison && baseline && compared && selected
-        ? signalDetail(comparison, baseline, compared, selected.key, tolerance)
-        : null,
-    [comparison, baseline, compared, selected, tolerance],
+      comparison && base && selected
+        ? others.flatMap((o) => {
+            const pair = comparison.pairs.find((p) => p.id === o.id);
+            const detail = pair
+              ? signalDetail(pair.comparison, base.data, o.data, selected.key, tolerance)
+              : null;
+            return pair && detail ? [{ entry: o, time: pair.comparison.time, detail }] : [];
+          })
+        : [],
+    [comparison, base, others, selected, tolerance],
   );
   const changes = useMemo(
     () =>
-      baseline?.snapshot && compared?.snapshot
-        ? parameterDifferences(baseline.snapshot, compared.snapshot)
+      base?.data.snapshot
+        ? others.map((o) => ({
+            entry: o,
+            list: o.data.snapshot
+              ? parameterDifferences(base.data.snapshot!, o.data.snapshot)
+              : [],
+            same: !!o.data.snapshot && base.data.modelHash === o.data.modelHash,
+          }))
         : [],
-    [baseline, compared],
+    [base, others],
   );
+  if (!base || !comparison)
+    return <div className="di-empty">Comparing needs two runs shown.</div>;
 
-  if (listError)
-    return (
-      <div role="alert" className="di-error">
-        The stored runs could not be listed. {listError}
-      </div>
-    );
-  if (!runs) return <div className="di-empty">Loading runs…</div>;
-  if (runs.length < 2)
-    return (
-      <div className="di-empty">
-        Comparing needs two runs of this model. Change a parameter and run
-        again, then compare the two runs here.
-      </div>
-    );
-
-  const newest = runs[0].id;
-  const duration = comparison?.duration ?? 1;
+  const duration = Math.max(1e-9, ...entries.map((e) => e.data.duration));
   const view = clampTime(x ?? [0, duration], duration);
-  const loadError = loaded[chosen.baseline]?.error || loaded[chosen.compared]?.error;
-  const rows = (comparison?.signals ?? []).filter(
+  const rows = comparison.signals.filter(
     (s) => !onlyDifferent || s.status !== 'within',
   );
-  const choose = (side: 'baseline' | 'compared', id: string) => {
-    setChosen((c) =>
-      // Picking the run that is on the other side swaps the two.
-      id === (side === 'baseline' ? c.compared : c.baseline)
-        ? { baseline: c.compared, compared: c.baseline }
-        : { ...c, [side]: id },
-    );
-    setRegion(-1);
+  // With no tolerance every difference is outside it, so marking the stretches would shade the whole plot.
+  const stretches = exact ? [] : mergeRegions(details.map((d) => d.detail.regions));
+  const unit = selected?.unit ?? '';
+  const trace = (e: CompareEntry, key: string) => {
+    const s = e.data.series.find((v) => v.key === key);
+    return s ? [{ ...s, key: `${e.id}::${key}`, name: e.title, color: e.color, time: e.data.time }] : [];
   };
+  const overlay = selected ? entries.flatMap((e) => trace(e, selected.key)) : [];
+  const difference = details.map(({ entry, time, detail }) => ({
+    key: entry.id,
+    name: entry.title,
+    unit,
+    blockId: '',
+    values: detail.difference,
+    color: entry.color,
+    time,
+  }));
+  const bands = exact
+    ? undefined
+    : details.map(({ time, detail }) => ({ time, lower: detail.lower, upper: detail.upper }));
+  const plotTime = overlay[0]?.time ?? base.data.time;
   const showRegion = (index: number) => {
-    const all = exact ? [] : (detail?.regions ?? []);
-    if (!all.length) return;
-    const n = all.length;
+    if (!stretches.length) return;
+    const n = stretches.length;
     const at = ((index % n) + n) % n;
-    const [start, end] = all[at];
+    const [start, end] = stretches[at];
     // Show the stretch with some of what surrounds it.
     const pad = Math.max((end - start) * 0.5, duration * 0.02);
     setRegion(at);
     setX(clampTime([start - pad, end + pad], duration));
   };
-  const overlay = detail
-    ? [
-        { key: 'baseline', name: 'Baseline', unit: selected!.unit, blockId: '', values: detail.baseline, color: colors.baseline },
-        { key: 'compared', name: 'Compared', unit: selected!.unit, blockId: '', values: detail.compared, color: colors.compared },
-      ]
-    : [];
-  const difference = detail
-    ? [{ key: 'difference', name: 'Difference', unit: selected!.unit, blockId: '', values: detail.difference, color: colors.difference }]
-    : [];
-  const time = comparison?.time ?? [];
-  // With no tolerance every difference is outside it, so marking the stretches would shade the whole plot.
-  const stretches = exact ? [] : (detail?.regions ?? []);
-  const plot = (traces: typeof overlay, extra: number[][] = []): PlotView => ({
+  const overlayView: PlotView = {
     x: view,
-    y: fitValues(time, [...traces.map((t) => t.values), ...extra], view),
-  });
+    y: fitSeries(overlay, view),
+  };
+  const differenceView: PlotView = {
+    x: view,
+    y: fitSeries(
+      [
+        ...difference,
+        ...(bands ?? []).flatMap((b) => [
+          { time: b.time, values: b.lower },
+          { time: b.time, values: b.upper },
+        ]),
+      ],
+      view,
+    ),
+  };
 
   return (
     <div className="dc">
@@ -241,48 +207,38 @@ export default function RunCompareView({
           Baseline
           <select
             aria-label="Baseline run"
-            value={chosen.baseline}
-            onChange={(e) => choose('baseline', e.target.value)}
+            value={base.id}
+            onChange={(e) => {
+              onBaseline(e.target.value);
+              setRegion(-1);
+            }}
           >
-            {runs.map((r) => (
-              <option key={r.id} value={r.id}>
-                {runLabel(r, newest)}
+            {entries.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.title}
               </option>
             ))}
           </select>
         </label>
-        <button
-          type="button"
-          aria-label="Swap baseline and compared run"
-          title="Swap the two runs"
-          onClick={() => choose('baseline', chosen.compared)}
-        >
-          <ArrowLeftRight size={13} aria-hidden="true" />
-        </button>
-        <label>
-          Compare
-          <select
-            aria-label="Compared run"
-            value={chosen.compared}
-            onChange={(e) => choose('compared', e.target.value)}
-          >
-            {runs.map((r) => (
-              <option key={r.id} value={r.id}>
-                {runLabel(r, newest)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <span className="dc-runs">
+          Compared
+          {others.map((o) => (
+            <span key={o.id} className="dc-run">
+              <i style={{ background: o.color }} aria-hidden="true" />
+              {o.title}
+            </span>
+          ))}
+        </span>
         <span className="di-divider" />
         <span className="dc-tolerance">
           Tolerance
           {(
             [
-              ['absolute', 'Absolute', selected?.unit ?? ''],
+              ['absolute', 'Absolute', unit],
               ['relative', 'Relative', '%'],
               ['time', 'Time', 's'],
             ] as const
-          ).map(([field, label, unit]) => (
+          ).map(([field, label, u]) => (
             <label key={field} title={
               field === 'absolute'
                 ? 'Allowed difference in the signal’s own unit'
@@ -293,12 +249,12 @@ export default function RunCompareView({
               {label}
               <input
                 inputMode="decimal"
-                aria-label={`${label} tolerance${unit ? ` in ${unit}` : ''}`}
+                aria-label={`${label} tolerance${u ? ` in ${u}` : ''}`}
                 placeholder="0"
                 value={fields[field]}
                 onChange={(e) => setFields((f) => ({ ...f, [field]: e.target.value }))}
               />
-              {field !== 'absolute' && <small>{unit}</small>}
+              {field !== 'absolute' && <small>{u}</small>}
             </label>
           ))}
         </span>
@@ -320,196 +276,191 @@ export default function RunCompareView({
         </button>
       </div>
       <div className="dc-changes">
-        {!comparison ? (
-          loadError ? (
-            <span role="alert">A run’s data could not be loaded. {loadError}</span>
-          ) : (
-            'Loading both runs…'
-          )
-        ) : (
-          <>
-            <strong>
-              {comparison.out
-                ? `${comparison.out} of ${comparison.out + comparison.within} signals differ`
-                : exact
-                  ? `All ${comparison.within} signals are identical`
-                  : `All ${comparison.within} signals are within tolerance`}
-              {comparison.unmatched ? ` · ${comparison.unmatched} in one run only` : ''}
-            </strong>
-            <span title={changes.join('\n')}>
-              {changes.length
-                ? `Changed from the baseline: ${changes.slice(0, 3).join('; ')}${changes.length > 3 ? `; and ${changes.length - 3} more` : ''}`
-                : !baseline!.snapshot || !compared!.snapshot
-                  ? ''
-                  : baseline!.modelHash === compared!.modelHash
-                  ? 'Same model and parameters in both runs'
-                  : 'No top-level parameter changed; the models differ inside a subsystem or in their structure'}
-            </span>
-            {comparison.truncated && (
-              <span>
-                The runs have different stop times; the first {comparison.duration} s are compared.
-              </span>
-            )}
-          </>
+        <strong>
+          {comparison.out
+            ? `${comparison.out} of ${comparison.out + comparison.within} signals differ`
+            : exact
+              ? `All ${comparison.within} signals are identical`
+              : `All ${comparison.within} signals are within tolerance`}
+          {comparison.unmatched ? ` · ${comparison.unmatched} in some runs only` : ''}
+        </strong>
+        {changes.map(({ entry, list, same }) => (
+          <span key={entry.id} title={list.join('\n')}>
+            <i className="dc-dot" style={{ background: entry.color }} aria-hidden="true" />
+            {list.length
+              ? `${entry.title} changed from the baseline: ${list.slice(0, 3).join('; ')}${list.length > 3 ? `; and ${list.length - 3} more` : ''}`
+              : same
+                ? `${entry.title}: same model and parameters`
+                : `${entry.title}: no top-level parameter changed; the models differ inside a subsystem or in their structure`}
+          </span>
+        ))}
+        {comparison.truncated && (
+          <span>Runs of different lengths are compared over their shared part.</span>
         )}
       </div>
-      {comparison && (
-        <div className="dc-body">
-          <aside className="dc-signals" aria-label="Compared signals">
-            <label className="di-logged-filter">
-              <input
-                type="checkbox"
-                checked={onlyDifferent}
-                onChange={(e) => setOnlyDifferent(e.target.checked)}
-              />
-              Differences only
-            </label>
-            <table>
-              <colgroup>
-                <col />
-                <col className="dc-col-difference" />
-                <col className="dc-col-at" />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th scope="col">Signal</th>
-                  <th scope="col">Max difference</th>
-                  <th scope="col">At</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((s) => (
-                  <tr
-                    key={s.key}
-                    className={`is-${s.status}${selected?.key === s.key ? ' is-selected' : ''}`}
-                    onClick={() => {
-                      setSelectedKey(s.key);
-                      setRegion(-1);
-                    }}
-                  >
-                    <td className="dc-name">
-                      <button type="button" aria-pressed={selected?.key === s.key} aria-label={`${s.name}: ${statusText[s.status]}`} title={`${s.name} · ${statusText[s.status]}`}>
-                        <i aria-hidden="true" />
-                        <span>{s.name}</span>
-                        <small>
-                          {s.status === 'within' && exact ? 'Identical' : statusText[s.status]}
-                        </small>
-                      </button>
-                    </td>
-                    <td>
-                      {s.status === 'out' || s.status === 'within'
-                        ? amount(s.maxDifference, s.unit)
-                        : '—'}
-                    </td>
-                    <td>
-                      {(s.status === 'out' || s.status === 'within') && s.maxDifference > 0
-                        ? `${Number(s.maxAt.toPrecision(4))} s`
-                        : '—'}
-                    </td>
-                  </tr>
+      <div className="dc-body">
+        <aside className="dc-signals" aria-label="Compared signals">
+          <label className="di-logged-filter">
+            <input
+              type="checkbox"
+              checked={onlyDifferent}
+              onChange={(e) => setOnlyDifferent(e.target.checked)}
+            />
+            Differences only
+          </label>
+          <table>
+            <colgroup>
+              <col />
+              {others.map((o) => (
+                <col key={o.id} className="dc-col-difference" />
+              ))}
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Signal</th>
+                {others.map((o) => (
+                  <th key={o.id} scope="col" title={`Largest difference of ${o.title} from the baseline`}>
+                    <i className="dc-dot" style={{ background: o.color }} aria-hidden="true" />
+                    {o.title}
+                  </th>
                 ))}
-              </tbody>
-            </table>
-            {!rows.length && <p>No signal differs.</p>}
-          </aside>
-          <div className="dc-plots">
-            {!selected ? (
-              <div className="di-empty">These runs recorded no signals.</div>
-            ) : !detail ? (
-              <div className="di-empty">
-                {selected.name} was recorded{' '}
-                {selected.status === 'baseline-only'
-                  ? 'only in the baseline run'
-                  : 'only in the compared run'}
-                , so there is nothing to compare it with.
-              </div>
-            ) : (
-              <>
-                <div className="di-tile">
-                  <header>
-                    <strong>{selected.name}</strong>
-                    <span>{selected.unit || 'unitless'}</span>
-                  </header>
-                  <div className="di-chart">
-                    <PlotViewport>
-                      {({ width, height }) => (
-                        <InspectorPlot
-                          width={width}
-                          height={height}
-                          time={time}
-                          traces={overlay}
-                          view={plot(overlay)}
-                          axes="x"
-                          mode={mode}
-                          duration={duration}
-                          onActivate={() => {}}
-                          onView={(next) => setX(next.x)}
-                          onFit={() => setX(null)}
-                        />
-                      )}
-                    </PlotViewport>
-                  </div>
-                  <div className="di-legend dc-legend">
-                    <span><i style={{ background: colors.baseline }} /> Baseline</span>
-                    <span><i style={{ background: colors.compared }} /> Compared</span>
-                  </div>
-                </div>
-                <div className="di-tile">
-                  <header>
-                    <strong>Difference</strong>
-                    <span>compared − baseline · {selected.unit || 'unitless'}</span>
-                    {stretches.length > 0 && (
-                      <>
-                        <small>
-                          {region >= 0 ? `${region + 1} of ` : ''}
-                          {stretches.length} {stretches.length === 1 ? 'stretch' : 'stretches'} outside
-                          tolerance
-                        </small>
-                        <button type="button" aria-label="Previous stretch outside tolerance" onClick={() => showRegion(region < 0 ? -1 : region - 1)}>
-                          <ChevronLeft size={13} aria-hidden="true" />
-                        </button>
-                        <button type="button" aria-label="Next stretch outside tolerance" onClick={() => showRegion(region + 1)}>
-                          <ChevronRight size={13} aria-hidden="true" />
-                        </button>
-                      </>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((s) => (
+                <tr
+                  key={s.key}
+                  className={`is-${s.status}${selected?.key === s.key ? ' is-selected' : ''}`}
+                  onClick={() => {
+                    setSelectedKey(s.key);
+                    setRegion(-1);
+                  }}
+                >
+                  <td className="dc-name">
+                    <button type="button" aria-pressed={selected?.key === s.key} aria-label={`${s.name}: ${statusText[s.status]}`} title={`${s.name} · ${statusText[s.status]}`}>
+                      <i aria-hidden="true" />
+                      <span>{s.name}</span>
+                      <small>
+                        {s.status === 'within' && exact ? 'Identical' : statusText[s.status]}
+                      </small>
+                    </button>
+                  </td>
+                  {others.map((o) => {
+                    const r = s.byRun[o.id];
+                    return (
+                      <td key={o.id} className={r ? `is-${r.status}` : undefined}>
+                        {r && (r.status === 'out' || r.status === 'within')
+                          ? amount(r.maxDifference, r.unit)
+                          : '—'}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!rows.length && <p>No signal differs.</p>}
+        </aside>
+        <div className="dc-plots">
+          {!selected ? (
+            <div className="di-empty">These runs recorded no signals.</div>
+          ) : !details.length ? (
+            <div className="di-empty">
+              {selected.name} was not recorded in both the baseline and another
+              run, so there is nothing to compare it with.
+            </div>
+          ) : (
+            <>
+              <div className="di-tile">
+                <header>
+                  <strong>{selected.name}</strong>
+                  <span>{unit || 'unitless'}</span>
+                </header>
+                <div className="di-chart">
+                  <PlotViewport>
+                    {({ width, height }) => (
+                      <InspectorPlot
+                        width={width}
+                        height={height}
+                        time={plotTime}
+                        traces={overlay}
+                        view={overlayView}
+                        axes="x"
+                        mode={mode}
+                        duration={duration}
+                        onActivate={() => {}}
+                        onView={(next) => setX(next.x)}
+                        onFit={() => setX(null)}
+                      />
                     )}
-                  </header>
-                  <div className="di-chart">
-                    <PlotViewport>
-                      {({ width, height }) => (
-                        <InspectorPlot
-                          width={width}
-                          height={height}
-                          time={time}
-                          traces={difference}
-                          view={plot(difference, exact ? [] : [detail.lower, detail.upper])}
-                          axes="x"
-                          mode={mode}
-                          duration={duration}
-                          band={exact ? undefined : detail}
-                          regions={stretches}
-                          onActivate={() => {}}
-                          onView={(next) => setX(next.x)}
-                          onFit={() => setX(null)}
-                        />
-                      )}
-                    </PlotViewport>
-                  </div>
-                  <div className="di-legend dc-legend">
-                    <span><i style={{ background: colors.difference }} /> Difference</span>
-                    {!exact && <span><i className="dc-band" /> Tolerance</span>}
-                    {stretches.length > 0 && <span><i className="dc-outside" /> Outside tolerance</span>}
-                    <span>
-                      Largest {amount(detail.maxDifference, selected.unit)}
+                  </PlotViewport>
+                </div>
+                <div className="di-legend dc-legend">
+                  {entries.map((e) => (
+                    <span key={e.id}>
+                      <i style={{ background: e.color }} /> {e.title}
+                      {e.id === base.id ? ' (baseline)' : ''}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="di-tile">
+                <header>
+                  <strong>Difference</strong>
+                  <span>run − baseline · {unit || 'unitless'}</span>
+                  {stretches.length > 0 && (
+                    <>
+                      <small>
+                        {region >= 0 ? `${region + 1} of ` : ''}
+                        {stretches.length} {stretches.length === 1 ? 'stretch' : 'stretches'} outside
+                        tolerance
+                      </small>
+                      <button type="button" aria-label="Previous stretch outside tolerance" onClick={() => showRegion(region < 0 ? -1 : region - 1)}>
+                        <ChevronLeft size={13} aria-hidden="true" />
+                      </button>
+                      <button type="button" aria-label="Next stretch outside tolerance" onClick={() => showRegion(region + 1)}>
+                        <ChevronRight size={13} aria-hidden="true" />
+                      </button>
+                    </>
+                  )}
+                </header>
+                <div className="di-chart">
+                  <PlotViewport>
+                    {({ width, height }) => (
+                      <InspectorPlot
+                        width={width}
+                        height={height}
+                        time={details[0].time}
+                        traces={difference}
+                        view={differenceView}
+                        axes="x"
+                        mode={mode}
+                        duration={duration}
+                        band={bands}
+                        regions={stretches}
+                        onActivate={() => {}}
+                        onView={(next) => setX(next.x)}
+                        onFit={() => setX(null)}
+                      />
+                    )}
+                  </PlotViewport>
+                </div>
+                <div className="di-legend dc-legend">
+                  {details.map(({ entry, detail }) => (
+                    <span key={entry.id}>
+                      <i style={{ background: entry.color }} /> {entry.title}: largest{' '}
+                      {amount(detail.maxDifference, unit)}
                       {detail.maxDifference > 0 ? ` at ${Number(detail.maxAt.toPrecision(4))} s` : ''}
                     </span>
-                  </div>
+                  ))}
+                  {!exact && <span><i className="dc-band" /> Tolerance</span>}
+                  {stretches.length > 0 && <span><i className="dc-outside" /> Outside tolerance</span>}
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
