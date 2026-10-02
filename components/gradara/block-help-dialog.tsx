@@ -105,7 +105,7 @@ export default function BlockHelpDialog({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="source-dialog block-help-dialog">
+      <DialogContent className="source-dialog block-help-dialog" resizeKey="block-help">
         <DialogTitle>{page.title}</DialogTitle>
         <DialogDescription>
           {page.category} ·{' '}

@@ -13,6 +13,7 @@ import {
   RESET_LAYOUT_EVENT,
   resetLayout,
   useColumns,
+  useSize,
 } from '@/components/gradara/resizable-columns';
 import CanvasMenu, {
   type CanvasMenuItem,
@@ -452,6 +453,7 @@ function Workbench() {
   }, [libraryOpen, inspectorOpen]);
   // Side panel widths, remembered per browser; the canvas takes the rest.
   const sidePanes = useColumns('workbench', [272, 270], 180);
+  const { attach: attachTree, ...treePane } = useSize('inspector-tree', 200, 80);
   const sideStart = useRef<number[]>([]);
   const [widePanes, setWidePanes] = useState(true);
   useEffect(() => {
@@ -3307,6 +3309,13 @@ function Workbench() {
               onBlock={inspectBlock}
               onNet={inspectNet}
               onModel={() => select(emptySelection())}
+              explorerRef={attachTree}
+              style={treePane.stored ? { height: treePane.size } : undefined}
+            />
+            <PaneResizer
+              axis="y"
+              label="Resize the model tree"
+              {...treePane.resizer(1)}
             />
             <div className="properties-heading">
               {active
@@ -3997,7 +4006,7 @@ function Workbench() {
           />
         )}
         <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
-          <DialogContent className="shortcuts-dialog">
+          <DialogContent className="shortcuts-dialog" resizeKey="shortcuts">
             <DialogTitle>Make yourself at home</DialogTitle>
             <DialogDescription>
               A few shortcuts for moving quickly through your model.

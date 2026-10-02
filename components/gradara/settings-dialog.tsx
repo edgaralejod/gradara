@@ -62,7 +62,7 @@ export default function SettingsDialog({
   const [tab, setTab] = useState<SettingsTab>(initialTab);
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="settings-dialog">
+      <DialogContent className="settings-dialog" resizeKey="settings">
         <DialogTitle>Settings</DialogTitle>
         <DialogDescription>
           Simulation engine, AI features, and how your data is handled.

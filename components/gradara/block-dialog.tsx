@@ -173,6 +173,7 @@ export default function BlockDialog({
     >
       <DialogContent
         className="source-dialog block-dialog"
+        resizeKey="block"
         initialFocus={
           initialTab === 'properties' && definition.parameters.length
             ? firstParameter

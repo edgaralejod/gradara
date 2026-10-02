@@ -34,7 +34,7 @@ import {
   type RunTrace,
 } from '@/lib/gradara/run-set';
 import PlotViewport from './plot-viewport';
-import { PaneResizer, useColumns } from './resizable-columns';
+import { PaneResizer, useColumns, useFractions, useSize } from './resizable-columns';
 import InspectorPlot, { traceColors } from './inspector-plot';
 import RunCompareView from './run-compare-view';
 import RunList from './run-list';
@@ -156,8 +156,9 @@ function InspectorSession({
   // Compare the open runs signal by signal, in place of the plot grid.
   const [comparing, setComparing] = useState(false);
   const [baselineId, setBaselineId] = useState('');
-  const signalPane = useColumns('signals', [244], 150);
+  const signalPane = useColumns('inspector-signals', [244], 150);
   const signalStart = useRef(0);
+  const { attach: attachRuns, ...runsPane } = useSize('inspector-runs', 190, 70);
   const [storageError, setStorageError] = useState('');
   useEffect(() => {
     // Debounce synchronous browser storage writes while panning.
@@ -282,6 +283,9 @@ function InspectorSession({
   const active = config?.active ?? 0;
   const visible = Array.from({ length: rows * cols }, (_, i) => i);
   const displayed = maximized === null ? visible : [maximized];
+  const layoutKey = config?.layout ?? '1';
+  const { attach: attachCols, ...colSplit } = useFractions(`di-grid-${layoutKey}-cols`, cols);
+  const { attach: attachRows, ...rowSplit } = useFractions(`di-grid-${layoutKey}-rows`, rows);
   const matching = (entry: (typeof entries)[number]) =>
     entry.data.series.filter(
       (s) =>
@@ -488,6 +492,13 @@ function InspectorSession({
             >
               {!overlay && (
                 <>
+                  <div
+                    className={`di-runs-pane${runsPane.stored ? ' is-sized' : ''}`}
+                    ref={attachRuns}
+                    style={
+                      runsPane.stored ? { height: runsPane.size } : undefined
+                    }
+                  >
                   <div className="di-pane-title">
                     <strong>Runs</strong>
                     <span>{library.runs?.length ?? 0}</span>
@@ -504,8 +515,15 @@ function InspectorSession({
                     onRemove={library.remove}
                   />
                   <p>Tick up to three runs to show them together.</p>
+                  </div>
+                  <PaneResizer
+                    axis="y"
+                    label="Resize the run list"
+                    {...runsPane.resizer(1)}
+                  />
                 </>
               )}
+              <div className="di-signals-pane">
               <div className="di-pane-title">
                 <strong>Signals</strong>
                 <span>{signalCount}</span>
@@ -634,13 +652,30 @@ function InspectorSession({
                       .map((e) => `${e.title}: ${sampleText(e.id, e.data.time.length)}`)
                       .join(' · ')}
               </p>
+              </div>
             </aside>
             <div
               className="di-grid"
-              style={{
-                gridTemplateColumns: `repeat(${maximized === null ? cols : 1},minmax(0,1fr))`,
-                gridTemplateRows: `repeat(${maximized === null ? rows : 1},minmax(180px,1fr))`,
+              ref={(node) => {
+                attachCols(node);
+                attachRows(node);
               }}
+              style={
+                maximized === null
+                  ? {
+                      gridTemplateColumns: colSplit.fractions
+                        .map((f) => `minmax(0,${f * 100}fr)`)
+                        .join(' 1px '),
+                      gridTemplateRows: rowSplit.fractions
+                        .map((f) => `minmax(180px,${f * 100}fr)`)
+                        .join(' 1px '),
+                      gap: 0,
+                    }
+                  : {
+                      gridTemplateColumns: 'minmax(0,1fr)',
+                      gridTemplateRows: 'minmax(180px,1fr)',
+                    }
+              }
             >
               {displayed.map((index) => {
                 const p = config.plots[index],
@@ -654,6 +689,14 @@ function InspectorSession({
                     role="presentation"
                     key={index}
                     className={`di-tile ${active === index ? 'is-active' : ''}`}
+                    style={
+                      maximized === null
+                        ? {
+                            gridColumn: (index % cols) * 2 + 1,
+                            gridRow: Math.floor(index / cols) * 2 + 1,
+                          }
+                        : undefined
+                    }
                     onDragOver={(e) => {
                       if (
                         e.dataTransfer.types.includes(
@@ -779,6 +822,27 @@ function InspectorSession({
                   </div>
                 );
               })}
+              {maximized === null &&
+                Array.from({ length: cols - 1 }, (_, i) => (
+                  <PaneResizer
+                    key={`col-${i}`}
+                    className="in-grid"
+                    style={{ gridColumn: i * 2 + 2, gridRow: '1 / -1' }}
+                    label={`Resize plot columns ${i + 1} and ${i + 2}`}
+                    {...colSplit.divider(i, 'x')}
+                  />
+                ))}
+              {maximized === null &&
+                Array.from({ length: rows - 1 }, (_, i) => (
+                  <PaneResizer
+                    key={`row-${i}`}
+                    axis="y"
+                    className="in-grid"
+                    style={{ gridRow: i * 2 + 2, gridColumn: '1 / -1' }}
+                    label={`Resize plot rows ${i + 1} and ${i + 2}`}
+                    {...rowSplit.divider(i, 'y')}
+                  />
+                ))}
             </div>
           </div>
           <footer className="di-footer">

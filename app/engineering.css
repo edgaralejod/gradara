@@ -2553,8 +2553,8 @@
 .di-signals { width:244px; min-width:170px; background:#f6f7f9; padding:0; border-right:1px solid #b8c2cc; }
 .di-pane-title { height:31px; display:flex; align-items:center; justify-content:space-between; padding:0 11px; border-bottom:1px solid #cbd2d9; background:#e8ecef; }
 .di-pane-title strong { font-size:var(--text-meta); font-weight:600; }.di-pane-title > span { color:#75818b; font-size:var(--text-micro); font-variant-numeric:tabular-nums; }
-.di-signals > p { margin:8px 11px; font-size:var(--text-ui); line-height:1.5; }
-.di-signals > input { margin:0 9px; width:calc(100% - 18px); height:27px; border-radius:2px; border-color:#c4ccd4; background:#fff; font-size:var(--text-meta); padding:4px 7px; }
+.di-runs-pane > p, .di-signals-pane > p { margin:8px 11px; font-size:var(--text-ui); line-height:1.5; }
+.di-signals-pane > input { margin:0 9px; width:calc(100% - 18px); height:27px; border-radius:2px; border-color:#c4ccd4; background:#fff; font-size:var(--text-meta); padding:4px 7px; }
 .di-logged-filter { margin:8px 11px; align-items:center; font-size:var(--text-ui); }
 .di-signal { min-height:29px; align-items:center; padding:5px 10px; gap:7px; border-bottom:1px solid #e2e6eb; }
 .di-signal:hover { background:#e8edf2; }.di-signal.is-assigned { background:#e4edf5; }
@@ -2740,7 +2740,7 @@
 .assistant-revising button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 .assistant-input { display: flex; align-items: flex-end; gap: 6px; }
 .assistant-input textarea {
-  flex: 1; min-height: 36px; max-height: 96px; resize: vertical; padding: 6px 8px;
+  flex: 1; min-height: 36px; max-height: 240px; resize: vertical; padding: 6px 8px;
   border: 1px solid #cfd9e0; border-radius: 3px; background: white; color: #27333d;
   font: var(--text-ui)/1.45 var(--font-ui);
 }
@@ -3268,3 +3268,46 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .dc-signals { width:min(460px, 46%); }
 .di-run-section .di-group-title { padding-left:10px; padding-right:10px; }
 .dc-plots .di-legend { max-height:none; }
+
+/* Resizable panes and windows (0.6.7). */
+.pane-splitter { position: relative; flex: none; display: block; width: 100%; height: 5px; margin: -2px 0; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: row-resize; touch-action: none; z-index: 5; }
+.pane-splitter::after { content: ''; position: absolute; left: 0; right: 0; top: 2px; height: 1px; background: #c3ccd4; }
+.pane-splitter:hover, .pane-splitter:active, .pane-splitter:focus-visible { background: #2477b533; outline: none; }
+.data-inspector .pane-splitter { width: 100%; min-width: 0; height: 5px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.data-inspector .pane-splitter:hover, .data-inspector .pane-splitter:active, .data-inspector .pane-splitter:focus-visible { background: #2477b533; }
+/* Dividers that sit in their own grid track between tiles. */
+.pane-resizer.in-grid, .data-inspector .pane-resizer.in-grid { position: relative; top: auto; bottom: auto; width: auto; height: auto; }
+.pane-splitter.in-grid, .data-inspector .pane-splitter.in-grid { margin: 0; width: auto; height: auto; }
+.in-grid::after { display: none; }
+.in-grid::before { content: ''; position: absolute; inset: -3px; }
+.dialog-sized { overflow: auto; }
+.dialog-sized.dialog-sized { max-width: calc(100vw - 32px) !important; max-height: calc(100vh - 32px) !important; }
+.dialog-resizer { position: absolute; z-index: 6; padding: 0; border: 0; background: transparent; touch-action: none; }
+.dialog-resizer:focus-visible { outline: 2px solid #2477b5; outline-offset: -2px; }
+.dialog-resizer.is-right { top: 12px; bottom: 12px; right: -3px; width: 7px; cursor: ew-resize; }
+.dialog-resizer.is-left { top: 12px; bottom: 12px; left: -3px; width: 7px; cursor: ew-resize; }
+.dialog-resizer.is-top { left: 12px; right: 12px; top: -3px; height: 7px; cursor: ns-resize; }
+.dialog-resizer.is-bottom { left: 12px; right: 12px; bottom: -3px; height: 7px; cursor: ns-resize; }
+.dialog-resizer.is-bottom-right { right: -3px; bottom: -3px; width: 16px; height: 16px; cursor: nwse-resize; }
+.dialog-resizer.is-top-left { left: -3px; top: -3px; width: 16px; height: 16px; cursor: nwse-resize; }
+.dialog-resizer.is-bottom-left { left: -3px; bottom: -3px; width: 16px; height: 16px; cursor: nesw-resize; }
+.dialog-resizer.is-top-right { right: -3px; top: -3px; width: 16px; height: 16px; cursor: nesw-resize; }
+.dialog-resizer:hover { background: #2477b533; }
+.dialog-resizer.is-bottom-right::after { content: ''; position: absolute; right: 5px; bottom: 5px; width: 8px; height: 8px; border-right: 2px solid #9aa8b4; border-bottom: 2px solid #9aa8b4; }
+
+/* Runs and signals: the run list takes the height the user sets, the signal list the rest. */
+.di-signals { display: flex; flex-direction: column; overflow: hidden; }
+.di-runs-pane { flex: none; display: flex; flex-direction: column; min-height: 0; max-height: 70%; }
+.di-runs-pane:not(.is-sized) .di-runs { max-height: 196px; }
+.di-runs-pane.is-sized { max-height: calc(100% - 120px); }
+.di-runs-pane.is-sized .di-runs { flex: 1; min-height: 0; max-height: none; }
+.di-signals-pane { flex: 1; min-height: 0; overflow: auto; padding-bottom: 6px; }
+.pane-resizer.in-grid, .pane-splitter.in-grid { z-index: 5; }
+.dc-body { position: relative; }
+.dc-plots { background: #aeb9c3; padding: 0; }
+.dc-plots > .di-empty { background: #f6f8fa; }
+.data-inspector .pane-resizer.compare-resizer { z-index: 6; }
+@media (max-width: 800px) { .dc-signals { min-width: 240px; } }
+.dc-signals { min-width: 240px; }
+/* The model tree in the right inspector takes the height the user sets. */
+.inspector-panel .model-explorer.is-sized { flex: none; min-height: 80px; max-height: calc(100% - 200px); }

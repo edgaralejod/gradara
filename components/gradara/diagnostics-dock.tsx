@@ -104,7 +104,7 @@ export default function DiagnosticsDock({
   const frame = useRef(0);
   const clamp = (height: number) => {
     const container = ref.current?.parentElement?.clientHeight ?? 800;
-    return Math.round(Math.min(Math.max(MIN_HEIGHT, height), Math.max(MIN_HEIGHT, container * 0.5)));
+    return Math.round(Math.min(Math.max(MIN_HEIGHT, height), Math.max(MIN_HEIGHT, container * 0.7)));
   };
   const height = Math.max(MIN_HEIGHT, preview ?? state.height);
   const openTab = (tab: DockTab) =>
@@ -114,7 +114,7 @@ export default function DiagnosticsDock({
     <section
       ref={ref}
       className={`diagnostics-dock ${state.open ? 'is-open' : ''}`}
-      style={state.open ? { height: `min(${height}px, 50%)` } : undefined}
+      style={state.open ? { height: `min(${height}px, 70%)` } : undefined}
       aria-label="Problems and assistant"
     >
       {state.open && (

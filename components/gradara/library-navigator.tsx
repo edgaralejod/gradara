@@ -17,6 +17,7 @@ import {
 } from '@/lib/gradara/catalog';
 import { fuzzyRanges } from '@/lib/gradara/fuzzy';
 import { BlockPreview } from './block-face';
+import { PaneResizer, useSize } from './resizable-columns';
 
 function Highlight({ text, query }: { text: string; query: string }) {
   const ranges = fuzzyRanges(query, text);
@@ -58,6 +59,7 @@ export default function LibraryNavigator({
   const [active, setActive] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const { attach: attachDetail, ...detailPane } = useSize('library-detail', 86, 48, 600);
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = 0;
   }, [category, query, source]);
@@ -262,7 +264,18 @@ export default function LibraryNavigator({
         )}
       </div>
       {flat[highlight] && (
-        <div className="library-part-detail">
+        <PaneResizer
+          axis="y"
+          label="Resize the part description"
+          {...detailPane.resizer(-1)}
+        />
+      )}
+      {flat[highlight] && (
+        <div
+          className="library-part-detail"
+          ref={attachDetail}
+          style={detailPane.stored ? { height: detailPane.size } : undefined}
+        >
           <strong>{flat[highlight].definition.name}</strong>
           <p>
             {flat[highlight].definition.description ===

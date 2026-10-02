@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import { Box, Check, Copy, Focus, Network, Search } from 'lucide-react';
 import { domainColors, type Project } from '@/lib/gradara/model';
 import type { NetDescription } from '@/lib/gradara/net-registry';
@@ -14,6 +14,8 @@ export function ModelExplorer({
   onBlock,
   onNet,
   onModel,
+  style,
+  explorerRef,
 }: {
   project: Project;
   nets: NetDescription[];
@@ -21,6 +23,8 @@ export function ModelExplorer({
   onBlock: (id: string) => void;
   onNet: (id: string) => void;
   onModel: () => void;
+  style?: CSSProperties;
+  explorerRef?: (node: HTMLDivElement | null) => void;
 }) {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
@@ -36,7 +40,11 @@ export function ModelExplorer({
         .includes(q),
   );
   return (
-    <div className="model-explorer">
+    <div
+      className={`model-explorer${style ? ' is-sized' : ''}`}
+      style={style}
+      ref={explorerRef}
+    >
       <button
         className="explorer-root"
         onClick={onModel}
