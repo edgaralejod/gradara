@@ -114,3 +114,9 @@ void test('fitSeries covers lines that sample at different times', () => {
   assert.ok(lo < -4 && hi > 10);
   assert.deepEqual(fitSeries([], [0, 1]), [-1, 1]);
 });
+
+void test('hiding every run leaves none shown, and any run can be brought back', () => {
+  assert.deepEqual(openRuns('new', true, [], ['new', 'old']), []);
+  assert.deepEqual(openRuns('new', true, ['old'], ['new', 'old']), ['old']);
+  assert.deepEqual(openRuns('new', false, [], ['new', 'old']), ['new']);
+});
