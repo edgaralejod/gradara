@@ -12,6 +12,7 @@ const http = require('node:http');
 const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
+const { overran, clampPercent } = require('./update-guard.cjs');
 
 const DEV = !app.isPackaged;
 const REPO = path.resolve(__dirname, '..');
@@ -492,6 +493,11 @@ const updateState = {
   error: '',
 };
 let updater = null;
+// The token of the current check, so a download can be cancelled, and whether this run has
+// already switched to whole-file downloads (see update-guard.cjs).
+let downloadToken = null;
+let wholeFileOnly = false;
+let restartWhole = false;
 
 function publishUpdate(patch) {
   Object.assign(updateState, patch);
@@ -503,7 +509,9 @@ function publishUpdate(patch) {
 function checkNow() {
   if (!updater || updateState.status === 'downloading' || updateState.status === 'ready') return Promise.resolve();
   return updater.checkForUpdates().then(
-    () => undefined,
+    (result) => {
+      downloadToken = result?.cancellationToken ?? null;
+    },
     (error) => publishUpdate({ status: 'error', error: String(error?.message || error).slice(0, 200) }),
   );
 }
@@ -523,7 +531,24 @@ function setUpUpdates() {
   updater.on('update-available', (info) =>
     publishUpdate({ status: MANUAL_UPDATES ? 'manual' : 'downloading', version: info.version, percent: 0, checkedAt: Date.now() }),
   );
-  updater.on('download-progress', (progress) => publishUpdate({ status: 'downloading', percent: progress.percent }));
+  updater.on('download-progress', (progress) => {
+    if (!wholeFileOnly && overran(progress)) {
+      // The network answers Range requests with whole files. Start over without them.
+      wholeFileOnly = true;
+      restartWhole = true;
+      updater.disableDifferentialDownload = true;
+      publishUpdate({ status: 'downloading', percent: 0 });
+      downloadToken?.cancel();
+      return;
+    }
+    if (restartWhole) return;
+    publishUpdate({ status: 'downloading', percent: clampPercent(progress.percent) });
+  });
+  updater.on('update-cancelled', () => {
+    if (!restartWhole) return;
+    restartWhole = false;
+    void updater.downloadUpdate().catch(() => undefined);
+  });
   updater.on('update-downloaded', (info) => publishUpdate({ status: 'ready', version: info.version, percent: 100 }));
   updater.on('error', (error) => publishUpdate({ status: 'error', error: String(error?.message || error).slice(0, 200) }));
   setTimeout(() => void checkNow(), 10000).unref();

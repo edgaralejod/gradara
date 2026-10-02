@@ -25,6 +25,7 @@ import {
 } from '@/lib/gradara/run-compare';
 import InspectorPlot from './inspector-plot';
 import PlotViewport from './plot-viewport';
+import { PaneResizer, useFractions, useSize } from './resizable-columns';
 
 /** A run on show in the inspector, with its colour and data. */
 export type CompareEntry = {
@@ -81,6 +82,8 @@ export default function RunCompareView({
   const [mode, setMode] = useState<'pan' | 'zoom' | 'cursor'>('pan');
   const [x, setX] = useState<Range | null>(null);
   const [region, setRegion] = useState(-1);
+  const signalPane = useSize('compare-signals', 380, 240, 700);
+  const { attach: attachPlots, ...plotSplit } = useFractions('compare-plots', 2);
 
   useEffect(() => {
     try {
@@ -299,7 +302,21 @@ export default function RunCompareView({
         )}
       </div>
       <div className="dc-body">
-        <aside className="dc-signals" aria-label="Compared signals">
+        <PaneResizer
+          className="compare-resizer"
+          style={{ left: `calc(min(${signalPane.size}px, 60%) - 3px)` }}
+          label="Resize the compared signals list"
+          {...signalPane.resizer()}
+        />
+        <aside
+          className="dc-signals"
+          aria-label="Compared signals"
+          style={
+            signalPane.stored
+              ? { width: `min(${signalPane.size}px, 60%)` }
+              : undefined
+          }
+        >
           <label className="di-logged-filter">
             <input
               type="checkbox"
@@ -361,7 +378,16 @@ export default function RunCompareView({
           </table>
           {!rows.length && <p>No signal differs.</p>}
         </aside>
-        <div className="dc-plots">
+        <div
+          className="dc-plots"
+          ref={attachPlots}
+          style={{
+            gridTemplateRows: plotSplit.fractions
+              .map((f) => `minmax(160px,${f * 100}fr)`)
+              .join(' 1px '),
+            gap: 0,
+          }}
+        >
           {!selected ? (
             <div className="di-empty">These runs recorded no signals.</div>
           ) : !details.length ? (
@@ -371,7 +397,7 @@ export default function RunCompareView({
             </div>
           ) : (
             <>
-              <div className="di-tile">
+              <div className="di-tile" style={{ gridRow: 1 }}>
                 <header>
                   <strong>{selected.name}</strong>
                   <span>{unit || 'unitless'}</span>
@@ -404,7 +430,14 @@ export default function RunCompareView({
                   ))}
                 </div>
               </div>
-              <div className="di-tile">
+              <PaneResizer
+                axis="y"
+                className="in-grid"
+                style={{ gridRow: 2 }}
+                label="Resize the overlaid and difference plots"
+                {...plotSplit.divider(0, 'y')}
+              />
+              <div className="di-tile" style={{ gridRow: 3 }}>
                 <header>
                   <strong>Difference</strong>
                   <span>run − baseline · {unit || 'unitless'}</span>

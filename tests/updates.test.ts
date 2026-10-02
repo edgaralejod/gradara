@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createRequire } from 'node:module';
 import { describeUpdate, type UpdateState } from '../lib/gradara/updates';
 
 const base: UpdateState = {
@@ -44,4 +45,35 @@ void test('disabled builds and errors never show a header button', () => {
   assert.equal(e.indicator, null);
   assert.match(e.detail, /ERR_INTERNET_DISCONNECTED/);
   assert.equal(e.canCheck, true);
+});
+
+void test('download progress never shows past 100% or below 0%', () => {
+  const over = describeUpdate({ ...base, status: 'downloading', version: '0.6.6', percent: 148242 });
+  assert.deepEqual(over.indicator, { label: 'Updating 100%', action: null });
+  assert.match(over.detail, /\(100%\)/);
+  assert.match(describeUpdate({ ...base, status: 'downloading', percent: -4 }).detail, /\(0%\)/);
+});
+
+const require = createRequire(import.meta.url);
+const guard = require('../desktop/update-guard.cjs') as {
+  overran: (p: { total?: number; transferred?: number }) => boolean;
+  clampPercent: (p: number) => number;
+};
+
+void test('a download that receives far more than planned is detected', () => {
+  const MB = 1024 * 1024;
+  // Planned: 12 MB of changed parts. A proxy that ignores Range sends a whole 250 MB file per part.
+  assert.equal(guard.overran({ total: 12 * MB, transferred: 250 * MB }), true);
+  assert.equal(guard.overran({ total: 12 * MB, transferred: 12 * MB }), false);
+  assert.equal(guard.overran({ total: 12 * MB, transferred: 13 * MB }), false);
+  assert.equal(guard.overran({ total: 0, transferred: 5 }), false);
+  assert.equal(guard.overran({}), false);
+  assert.equal(guard.overran({ total: Number.NaN, transferred: 9e9 }), false);
+});
+
+void test('clampPercent stays within 0 to 100', () => {
+  assert.equal(guard.clampPercent(148242), 100);
+  assert.equal(guard.clampPercent(-1), 0);
+  assert.equal(guard.clampPercent(42.5), 42.5);
+  assert.equal(guard.clampPercent(Number.NaN), 0);
 });

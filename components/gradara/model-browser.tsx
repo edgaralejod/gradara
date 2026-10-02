@@ -202,6 +202,7 @@ export default function ModelBrowser({
     >
       <DialogContent
         className="model-browser"
+        resizeKey="model-browser"
         initialFocus={search}
         showCloseButton={!busy}
       >

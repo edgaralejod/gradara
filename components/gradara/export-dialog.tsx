@@ -267,6 +267,7 @@ export default function ExportDialog({
     >
       <DialogContent
         className={`export-dialog ${files.length ? 'has-artifact' : ''}`}
+        resizeKey="export"
         showCloseButton={!busy}
       >
         <DialogTitle>Export model</DialogTitle>

@@ -402,6 +402,7 @@
   font-size: var(--text-ui);
   line-height: 18px;
   overflow: auto;
+  max-height: 60%;
 }
 .library-part-detail strong { font-weight: 600; }
 .library-part-detail p { color: #637987; margin: 3px 0 0; }
