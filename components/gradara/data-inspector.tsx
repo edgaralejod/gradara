@@ -301,6 +301,8 @@ function InspectorSession({
       ? parameterDifferences(entry.data.snapshot, reference.data.snapshot)
       : [];
   const canCompare = several && !overlay && !!model;
+  // The Runs list can bring a run back, so an inspector with none shown is still worth showing.
+  const listsRuns = !overlay && !!model;
   const compareOn = comparing && canCompare;
   const baseline = entries.some((e) => e.id === baselineId)
     ? baselineId
@@ -374,7 +376,7 @@ function InspectorSession({
           onBaseline={setBaselineId}
           modelKey={model ?? 'workspace'}
         />
-      ) : !entries.length || !config ? (
+      ) : !config || (!entries.length && !listsRuns) ? (
         <div className="di-empty">
           Select a signal wire → Log to Data Inspector, then run the model.
           Sensor outputs can be logged; physical connections require a sensor.
@@ -633,7 +635,13 @@ function InspectorSession({
                   </section>
                 );
               })}
-              {!shownAny && (
+              {!entries.length ? (
+                <p>
+                  {loading
+                    ? 'Loading the run…'
+                    : 'No run is shown. Tick a run above to list its signals.'}
+                </p>
+              ) : !shownAny && (
                 <p>
                   No matching signals. Mark signal nets for logging and run
                   again.
@@ -654,6 +662,26 @@ function InspectorSession({
               </p>
               </div>
             </aside>
+            {!entries.length ? (
+              <div className="di-grid di-no-runs">
+                <div className="di-empty">
+                  <strong>No run is shown.</strong>
+                  <p>
+                    {loading
+                      ? 'Loading the run…'
+                      : 'Tick a run in the Runs list to plot it again, or show the latest run.'}
+                  </p>
+                  {!loading && (
+                    <button
+                      type="button"
+                      onClick={() => library.setOpen(result.id, true)}
+                    >
+                      Show the latest run
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
             <div
               className="di-grid"
               ref={(node) => {
@@ -844,6 +872,7 @@ function InspectorSession({
                   />
                 ))}
             </div>
+            )}
           </div>
           <footer className="di-footer">
             Plot {active + 1} · Wheel zooms at pointer · Drag to{' '}

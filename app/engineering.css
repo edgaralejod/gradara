@@ -3311,3 +3311,7 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .dc-signals { min-width: 240px; }
 /* The model tree in the right inspector takes the height the user sets. */
 .inspector-panel .model-explorer.is-sized { flex: none; min-height: 80px; max-height: calc(100% - 200px); }
+/* Every run unticked: the Runs list stays, and the plot area says how to bring a run back. */
+.di-grid.di-no-runs { display: grid; place-items: center; background: #f6f8fa; }
+.di-no-runs .di-empty { max-width: 340px; padding: 24px; text-align: center; }
+.di-no-runs .di-empty p { margin: 6px 0 14px; color: #5c6975; }
