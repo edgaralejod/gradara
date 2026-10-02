@@ -21,7 +21,14 @@ export const traceColors = [
   '#5266ad',
   '#785945',
 ];
-type Trace = SimulationResult['series'][number] & { color: string };
+type Trace = SimulationResult['series'][number] & {
+  color: string;
+  /** This line's own sample times when it is not on the plot's `time` (another run). */
+  time?: number[];
+  /** A dash pattern, to tell lines of the same colour apart. */
+  dash?: number[];
+};
+type Band = { lower: number[]; upper: number[]; time?: number[] };
 const left = 62,
   right = 16,
   top = 14,
@@ -38,6 +45,8 @@ export default function InspectorPlot({
   axes,
   mode,
   duration,
+  band,
+  regions,
   onView,
   onActivate,
   onFit,
@@ -50,6 +59,10 @@ export default function InspectorPlot({
   axes: Axes;
   mode: 'pan' | 'zoom' | 'cursor';
   duration: number;
+  /** An allowed range drawn behind the traces (a run comparison's tolerance). */
+  band?: Band | Band[];
+  /** Time spans to mark behind the traces (where a comparison is out of tolerance). */
+  regions?: [number, number][];
   onView: (view: PlotView) => void;
   onActivate: () => void;
   onFit: () => void;
@@ -73,6 +86,11 @@ export default function InspectorPlot({
   const [cursorTime, setCursorTime] = useState<number | null>(null);
   const cursor =
     cursorTime === null || !time.length ? null : sampleIndex(time, cursorTime);
+  // Each line reads at the cursor on its own samples; the line itself sits at the cursor time.
+  const readout = (t: Trace) =>
+    cursorTime === null
+      ? NaN
+      : t.values[sampleIndex(t.time ?? time, cursorTime)];
   const w = Math.max(1, width - left - right),
     h = Math.max(1, height - top - bottom);
   const latest = useRef({ view, axes, onView, onActivate, duration, w, h });
@@ -160,11 +178,44 @@ export default function InspectorPlot({
     ctx.beginPath();
     ctx.rect(left, top, w, h);
     ctx.clip();
-    const from = Math.max(0, sampleIndex(time, view.x[0]) - 1),
-      to = Math.min(time.length - 1, sampleIndex(time, view.x[1]) + 1);
+    const range = (t: number[]) => ({
+      from: Math.max(0, sampleIndex(t, view.x[0]) - 1),
+      to: Math.min(t.length - 1, sampleIndex(t, view.x[1]) + 1),
+    });
+    const px = (t: number) => left + ((t - view.x[0]) / (view.x[1] - view.x[0])) * w;
+    const py = (v: number) => top + ((view.y[1] - v) / (view.y[1] - view.y[0])) * h;
+    if (regions?.length) {
+      ctx.fillStyle = 'rgba(182, 76, 100, 0.12)';
+      for (const [start, end] of regions) {
+        if (end < view.x[0] || start > view.x[1]) continue;
+        // A single-sample region still gets a visible mark.
+        const x0 = px(start),
+          x1 = Math.max(px(end), x0 + 2);
+        ctx.fillRect(x0, top, x1 - x0, h);
+      }
+    }
+    for (const b of band ? (Array.isArray(band) ? band : [band]) : []) {
+      const t = b.time ?? time,
+        { from, to } = range(t);
+      if (to <= from) continue;
+      ctx.beginPath();
+      for (let i = from; i <= to; i++)
+        if (i === from) ctx.moveTo(px(t[i]), py(b.upper[i]));
+        else ctx.lineTo(px(t[i]), py(b.upper[i]));
+      for (let i = to; i >= from; i--) ctx.lineTo(px(t[i]), py(b.lower[i]));
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(37, 134, 118, 0.16)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(37, 134, 118, 0.55)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
     for (const s of traces) {
+      const t = s.time ?? time,
+        { from, to } = range(t);
       ctx.strokeStyle = s.color;
       ctx.lineWidth = 1.5;
+      ctx.setLineDash(s.dash ?? []);
       // Dense switching samples should not produce exaggerated miter spikes.
       ctx.lineJoin = 'round';
       ctx.beginPath();
@@ -175,8 +226,8 @@ export default function InspectorPlot({
           started = false;
           continue;
         }
-        const x = left + ((time[i] - view.x[0]) / (view.x[1] - view.x[0])) * w,
-          y = top + ((view.y[1] - value) / (view.y[1] - view.y[0])) * h;
+        const x = px(t[i]),
+          y = py(value);
         if (!started) {
           ctx.moveTo(x, y);
           started = true;
@@ -184,6 +235,7 @@ export default function InspectorPlot({
       }
       ctx.stroke();
     }
+    ctx.setLineDash([]);
     if (cursor !== null) {
       const x =
         left + ((time[cursor] - view.x[0]) / (view.x[1] - view.x[0])) * w;
@@ -195,7 +247,7 @@ export default function InspectorPlot({
       ctx.stroke();
     }
     ctx.restore();
-  }, [width, height, time, traces, view, duration, w, h, cursor]);
+  }, [width, height, time, traces, view, duration, w, h, cursor, band, regions]);
   const local = (e: React.PointerEvent) => {
     const r = e.currentTarget.getBoundingClientRect();
     return {
@@ -346,7 +398,7 @@ export default function InspectorPlot({
           <>
             t = {number(time[cursor])} s ·{' '}
             {traces
-              .map((t) => `${t.name}: ${number(t.values[cursor])} ${t.unit}`)
+              .map((t) => `${t.name}: ${number(readout(t))} ${t.unit}`)
               .join(' · ')}
           </>
         )}

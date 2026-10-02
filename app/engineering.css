@@ -2497,6 +2497,50 @@
 .di-heading > span { font-size:var(--text-meta); color:#65717c; }
 .di-heading a { display:flex; align-items:center; gap:5px; height:27px; font-size:var(--text-meta); color:#425666; text-decoration:none; padding:0 6px; }
 .di-heading a:hover { background:#dae2e9; }
+/* Run comparison: two stored runs, signal by signal. */
+.di-heading .di-compare { display:flex; align-items:center; gap:5px; height:27px; margin-left:auto; border-color:transparent; background:transparent; color:#425666; }
+.di-heading .di-compare + a { margin-left:0; }
+.dc { flex:1; min-height:0; display:flex; flex-direction:column; }
+.dc-bar { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; min-height:39px; padding:4px 10px; background:#f1f3f5; border-bottom:1px solid #bcc5cd; font-size:var(--text-meta); color:#596671; }
+.dc-bar label { display:flex; align-items:center; gap:6px; }
+.dc-bar select { max-width:230px; height:26px; padding:3px 22px 3px 6px; background-color:#fff; border-color:#bdc7d0; }
+.dc-bar button { display:inline-flex; align-items:center; gap:5px; min-height:27px; padding:3px 8px; border-color:transparent; background:transparent; }
+.dc-bar button:hover { background:#e0e7ed; border-color:#c2cbd3; }
+.dc-bar button[aria-pressed=true] { background:#dce9f3; border-color:#8eaac0; color:#214e70; }
+.dc-tolerance { display:flex; align-items:center; gap:8px; }
+.dc-tolerance input { width:62px; height:26px; padding:3px 6px; border:1px solid #bdc7d0; border-radius:2px; background:#fff; font:inherit; font-variant-numeric:tabular-nums; color:#273744; }
+.dc-tolerance small { color:#75818b; margin-left:-3px; }
+.dc-changes { display:flex; flex-wrap:wrap; gap:3px 16px; align-items:baseline; padding:7px 12px; background:#fbfcfd; border-bottom:1px solid #cbd2d9; font-size:var(--text-meta); color:#596671; }
+.dc-changes strong { color:#273744; font-weight:600; }
+.dc-body { flex:1; min-height:0; display:flex; overflow-x:auto; }
+.dc-signals { width:min(380px, 42%); min-width:300px; flex-shrink:0; overflow:auto; background:#f6f7f9; border-right:1px solid #b8c2cc; }
+.dc-signals > label { margin:8px 11px; }
+.dc-signals > p { margin:10px 11px; color:#73808b; }
+.dc-signals table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:var(--text-meta); }
+.dc-signals col.dc-col-difference { width:112px; }
+.dc-signals col.dc-col-at { width:70px; }
+.dc-signals thead th { position:sticky; top:0; z-index:1; padding:6px 10px; background:#e8ecef; border-bottom:1px solid #cbd2d9; color:#596671; font-weight:600; text-align:left; white-space:nowrap; }
+.dc-signals thead th + th, .dc-signals td { text-align:right; }
+.dc-signals tbody tr { border-bottom:1px solid #e2e6eb; cursor:pointer; }
+.dc-signals tbody tr:hover { background:#edf2f6; }
+.dc-signals tbody tr.is-selected { background:#dce9f3; }
+.dc-signals td { padding:5px 10px; color:#3d4a55; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.dc-signals td.dc-name { padding:0; text-align:left; white-space:normal; }
+.data-inspector .dc-signals tbody button { display:grid; grid-template-columns:8px minmax(0,1fr); gap:1px 7px; align-items:center; width:100%; padding:5px 10px; border:0; background:transparent; text-align:left; }
+.dc-signals tbody button i { width:8px; height:8px; border-radius:50%; background:#258676; }
+.dc-signals tr.is-out button i { background:#b64c64; }
+.dc-signals tr.is-compared-only button i, .dc-signals tr.is-baseline-only button i { background:transparent; box-shadow:inset 0 0 0 1.5px #8a96a1; }
+.dc-signals tbody button span { min-width:0; overflow-wrap:break-word; color:#273744; }
+.dc-signals tbody button small { grid-column:2; color:#7b8792; font-size:var(--text-micro); }
+.dc-signals tr.is-out button small { color:#9a3f55; }
+.dc-plots { flex:1; min-width:260px; display:grid; grid-template-rows:minmax(160px,1fr) minmax(160px,1fr); gap:8px; padding:8px; overflow:auto; }
+.dc-plots > .di-empty { grid-row:1 / -1; }
+.dc-plots .di-tile header strong { font-weight:600; color:#273744; }
+.dc-plots .di-tile header small { color:#9a3f55; white-space:nowrap; }
+.dc-legend span { display:inline-flex; align-items:center; gap:5px; color:#596671; }
+.dc-legend span:last-child { margin-left:auto; font-variant-numeric:tabular-nums; }
+.dc-legend i.dc-band { background:rgba(37,134,118,.28); box-shadow:inset 0 0 0 1px rgba(37,134,118,.6); }
+.dc-legend i.dc-outside { background:rgba(182,76,100,.3); }
 .di-toolbar { min-height:39px; padding:4px 8px; gap:3px; background:#f1f3f5; border-bottom:1px solid #bcc5cd; }
 .data-inspector button,.data-inspector select { border-radius:2px; box-shadow:none; font-size:var(--text-meta); }
 .di-toolbar button { display:inline-flex; align-items:center; justify-content:center; gap:5px; min-height:27px; padding:3px 8px; border-color:transparent; background:transparent; }
@@ -3029,8 +3073,11 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
    a column border to fit its longest entry, a pane border to reset), and tables scroll
    sideways when the columns are wider than the panel. */
 .explorer-body { position: relative; grid-template-columns: var(--tree-width, 240px) minmax(0, 1fr) var(--details-width, 260px); }
-.pane-resizer { position: absolute; top: 0; bottom: 0; z-index: 5; width: 6px; cursor: col-resize; touch-action: none; }
+.pane-resizer { position: absolute; top: 0; bottom: 0; z-index: 5; width: 6px; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: col-resize; touch-action: none; }
 .pane-resizer:hover, .pane-resizer:active { background: #2477b533; }
+/* The Data Inspector styles its buttons as controls; the drag handle between its panes is a thin strip, not a button. */
+.data-inspector .pane-resizer { width: 6px; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.data-inspector .pane-resizer:hover, .data-inspector .pane-resizer:active { background: #2477b533; }
 .table-scroll { display: flex; flex: 1; min-height: 0; overflow-x: auto; overflow-y: hidden; }
 .table-inner { display: flex; flex: 1; flex-direction: column; min-height: 0; }
 .column-head { position: relative; display: flex; align-items: center; min-width: 0; height: 100%; }
@@ -3186,9 +3233,38 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .model-browser-error.import-error pre { margin: 4px 0 0; white-space: pre-wrap; word-break: break-word; font-family: var(--font-code); }
 .model-browser-error.import-error .import-error-actions button { margin: 0 12px 0 0; }
 /* Kept runs in the Data Inspector heading (QA Q03). */
-.di-kept { display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap; }
-.di-kept + a { margin-left:0; }
-.di-kept-run { display:inline-flex; align-items:center; gap:4px; padding:2px 4px 2px 8px; border:1px solid #c6cdd4; border-radius:2px; background:#fff; font-size:var(--text-meta); color:#354b5b; }
-.di-kept-run small { color:#65717c; }
-.di-kept-run button { padding:0 5px; border:0; background:none; color:#65717c; font-size:14px; line-height:1; }
-.di-kept-run button:hover { color:#b42318; background:none; }
+
+/* Run library: stored runs, one colour per shown run, signals listed per run. */
+.di-runs { list-style:none; margin:0; padding:0; max-height:196px; overflow:auto; border-bottom:1px solid #cbd2d9; background:#fff; }
+.di-run { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; align-items:center; gap:0 7px; padding:5px 8px 5px 10px; border-bottom:1px solid #e9edf1; }
+.di-run.is-open { background:#eaf1f7; }
+.di-run > input[type=checkbox] { margin:0; }
+.di-run-text { min-width:0; display:flex; flex-direction:column; gap:1px; }
+.di-run-text strong { font-size:var(--text-meta); font-weight:600; color:#273744; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.di-run-text small { color:#75818b; font-size:var(--text-micro); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.data-inspector .di-run-name { width:100%; height:24px; padding:2px 5px; border:1px solid #8eaac0; border-radius:2px; background:#fff; font:inherit; }
+.di-run-actions { display:flex; align-items:center; gap:1px; }
+.data-inspector .di-run-actions button, .di-run-actions a { display:inline-flex; align-items:center; justify-content:center; gap:3px; min-width:22px; height:22px; padding:0 4px; border:0; background:transparent; color:#65717c; border-radius:2px; font-size:var(--text-micro); }
+.data-inspector .di-run-actions button:hover:not(:disabled), .di-run-actions a:hover { background:#dde6ee; color:#273744; }
+.data-inspector .di-run-actions button:disabled { opacity:.35; cursor:not-allowed; }
+.data-inspector .di-run-actions .is-danger { color:#b42318; font-weight:600; }
+.di-runs-note { margin:8px 11px; }
+.di-run-color-space { width:0; }
+.data-inspector input.di-run-color { width:20px; height:20px; padding:0; border:1px solid #b8c2cc; border-radius:3px; background:none; cursor:pointer; }
+.di-run-color::-webkit-color-swatch-wrapper { padding:1px; }
+.di-run-color::-webkit-color-swatch { border:0; border-radius:2px; }
+.di-run-section { border-top:1px solid #cbd2d9; }
+.di-run-head { display:flex; align-items:center; gap:7px; padding:6px 10px; background:#e8ecef; border-bottom:1px solid #cbd2d9; position:sticky; top:0; z-index:1; }
+.di-run-head strong { min-width:0; flex:1; font-size:var(--text-meta); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.di-run-head small { color:#75818b; font-size:var(--text-micro); white-space:nowrap; }
+.dc-runs { display:inline-flex; align-items:center; gap:6px 10px; flex-wrap:wrap; }
+.dc-run, .dc-dot { display:inline-flex; align-items:center; gap:5px; }
+.dc-dot { width:8px; height:8px; border-radius:50%; margin-right:5px; flex-shrink:0; }
+.dc-run i { width:8px; height:8px; border-radius:50%; }
+.dc-signals thead th .dc-dot { margin-right:5px; }
+.dc-signals thead th { overflow:hidden; text-overflow:ellipsis; }
+.dc-signals td.is-out { color:#9a3f55; font-weight:600; }
+.dc-signals col.dc-col-difference { width:104px; }
+.dc-signals { width:min(460px, 46%); }
+.di-run-section .di-group-title { padding-left:10px; padding-right:10px; }
+.dc-plots .di-legend { max-height:none; }
