@@ -59,6 +59,8 @@ export function describeUpdate(state: UpdateState | null): UpdateSummary {
     };
   }
   const next = state.version ? `Gradara ${state.version}` : 'A new version';
+  // Never show more than 100%, whatever the shell reports.
+  const shown = Math.round(Math.min(100, Math.max(0, state.percent)));
   switch (state.status) {
     case 'disabled':
       return { detail: 'Automatic updates are turned off for this build.', indicator: null, canCheck: false };
@@ -68,8 +70,8 @@ export function describeUpdate(state: UpdateState | null): UpdateSummary {
       return { detail: 'Gradara is up to date.', indicator: null, canCheck: true };
     case 'downloading':
       return {
-        detail: `Downloading ${next} (${Math.round(state.percent)}%). You can keep working.`,
-        indicator: { label: `Updating ${Math.round(state.percent)}%`, action: null },
+        detail: `Downloading ${next} (${shown}%). You can keep working.`,
+        indicator: { label: `Updating ${shown}%`, action: null },
         canCheck: false,
       };
     case 'ready':

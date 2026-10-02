@@ -84,6 +84,7 @@ AI needs an internet connection. With **Off** selected, AI buttons stay visible 
 - **Settings → Updates** shows your version and the last check. **Check for updates** checks now.
 - **Linux .deb** does not update itself. Choose **Download from gradara.app** and install the new `.deb`.
 - **The update never finishes downloading.** Check your connection, then quit and reopen Gradara. The update check needs access to `github.com`; some company networks block it. You can always download the latest installer from [gradara.app](https://gradara.app/) and install it over the old version. Your models are kept.
+- **The percentage went past 100% and kept growing** (Gradara 0.6.6 and earlier, on some company networks). A proxy ignored the partial downloads the updater asks for and sent whole files. Gradara 0.6.7 and later detect this and download the installer in one piece, and never show more than 100%. For an older version, download the latest installer from [gradara.app](https://gradara.app/) and install it over the old one.
 - An update that is ready installs when you choose **Restart to update**, or the next time you quit.
 
 ### Where the logs are
