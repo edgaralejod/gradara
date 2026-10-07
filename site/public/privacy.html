@@ -29,25 +29,31 @@
 </header>
 <main id="main" class="wrap doc">
 <h1>Privacy notice</h1>
-<p class="meta">Last updated 2026-10-01</p>
+<p class="meta">Last updated 2026-10-07</p>
 <p class="lead-in">This notice covers the Gradara desktop app, the Gradara AI service, and its sign-in page, operated by Virtu Services LLC, Wisconsin, USA ("we"). Questions or requests: <a href="mailto:support@virtu-services.us">support@virtu-services.us</a>.</p>
 
 <h2>The short version</h2>
 <ul>
 <li>Your models, simulations, and results stay on your computer.</li>
-<li>Apart from update checks, nothing is sent anywhere unless you use an AI feature. The simulation engine is built into the app and works offline.</li>
+<li>Apart from update checks, nothing is sent anywhere unless you use an AI feature or personal features. The simulation engine is built into the app and works offline.</li>
+<li>Personal features and Improve Gradara use GitHub, and what you request there is public.</li>
 <li>The Gradara AI service does not store or log your prompts, models, equations, or AI responses. Our AI provider, Anthropic, may keep them briefly for abuse and safety monitoring under its terms.</li>
 <li>We keep what accounts and billing need: your email, credit balance, purchases, and request counts.</li>
 <li>No analytics, advertising, or tracking, in the app or on this website. We do not sell or share your personal information.</li>
 </ul>
 
 <h2>The desktop app</h2>
-<p>Models, simulation runs, results, exports, and your AI block library are saved in a data folder on your computer (Settings shows its location). Simulations run locally. Your own API keys and your Gradara AI sign-in are stored in the operating system keychain.</p>
-<p>The app connects to the internet only to check GitHub for updates (at launch and every few hours; GitHub sees your IP address and the app version), to download an optional engine of your own if you choose one in Settings, to send AI requests when you ask for them, and to open links you click.</p>
+<p>Models, simulation runs, results, exports, your AI block library, and your AI proposals and results discussions (a discussion is deleted with its run) are saved in a data folder on your computer (Settings shows its location). Simulations run locally. Your own API keys, your Gradara AI sign-in, and a GitHub token for personal features, if you save one, are stored in the operating system keychain.</p>
+<p>The app connects to the internet only to check GitHub for updates (at launch and every few hours; GitHub sees your IP address and the app version), to download an optional engine of your own if you choose one in Settings, to send AI requests when you ask for them, to use GitHub for personal features if you set them up (see below), and to open links you click.</p>
 
 <h2>AI requests</h2>
 <p>An AI request contains your description and the model context the task needs, for example the component you are refining, the block catalog for a model build, or a controller's equations for C export. Editing or diagnosing the open model sends that model's blocks, parameters, equations, and connections without its layout, the names of selected blocks, and the block catalog; refining a proposal also sends your earlier request and the changes that proposal listed; diagnosing a failed run also sends the problems you ask about, that run's generated Modelica source, and the solver's messages. It does not include unrelated models or files.</p>
+<p>Explaining results sends your question, a summary of the runs on show that the app computes on your computer (statistics, events, a short outline of each signal, the differences between runs and their parameters, solver warnings, and signal names), the model without its layout, and the earlier questions and answers of that discussion. Your recorded samples and CSV files are never sent.</p>
 <p>With your own OpenAI or Anthropic key, the request goes directly from your computer to that provider under your account and their terms. With Gradara AI, the request goes to our service, which forwards it to Anthropic and returns the result. Our service processes the content in memory only and does not write it to disk, logs, or its database. Anthropic processes it under its commercial API terms, which do not allow training on it, and may keep it for a limited period for abuse and safety monitoring.</p>
+
+<h2>Personal features</h2>
+<p>Personal features are optional. If you save a GitHub token, it stays in your keychain and is sent only to GitHub's API. Your feature requests run in the GitHub repository you choose, and that repository's own Anthropic account pays for them; no Gradara AI credits are used and our service is not involved. Requests, the generated code, build reports, and a draft pull request are public on GitHub. The app downloads finished features from that repository's releases and installs them only if their signature matches a key you trust.</p>
+<p>Improve Gradara opens a public GitHub issue form in your browser, filled in with your request, the reason the app gave, the app version, and your platform. GitHub receives these when the page opens. It never includes your model or files.</p>
 
 <h2>Signing in</h2>
 <p>The sign-in page at api.gradara.app loads Google's Firebase Authentication scripts from Google servers, which handle sign-in with Google or an email link. Google receives your IP address, browser details, and email under its own policies. We never see passwords.</p>
@@ -57,11 +63,11 @@
 <table>
 <thead><tr><th>Record</th><th>Contents</th><th>Kept</th></tr></thead>
 <tbody>
-<tr><td>Account</td><td>Email, sign-in provider user id, credit balance, and the version of the Terms you accepted and when</td><td>Until you delete your account</td></tr>
+<tr><td>Account</td><td>Email, sign-in provider user id, credit balance, and the version of the Terms you accepted and when</td><td>Until you delete your account; after deletion only an internal number, dates, and the accepted Terms version remain</td></tr>
 <tr><td>Purchases and credit ledger</td><td>Credits added, used, refunded, or reversed, with dates and payment references (Stripe checkout and payment ids)</td><td>Kept for accounting. After deletion they stay under an internal account number, without your email or sign-in id</td></tr>
 <tr><td>Usage</td><td>Task type, AI model name, token counts, latency, success, a short error code, the operation id, and the time</td><td>About 13 months</td></tr>
 <tr><td>Operation counters</td><td>Operation id, kind, number of calls, credits charged, and for edits and fixes which priced parts were charged (for example "block:1")</td><td>7 days</td></tr>
-<tr><td>Sign-ins</td><td>A one-way hash of each computer's token, and the day it was last used</td><td>Until revoked, then 30 days</td></tr>
+<tr><td>Sign-ins</td><td>A one-way hash of each computer's token, the computer's label, when it was created, the day it was last used, and when it was revoked</td><td>Until revoked, then 30 days</td></tr>
 <tr><td>Sign-in codes</td><td>A one-way hash of the device code, the short code you approve, the computer's label, and its status</td><td>One day after they expire</td></tr>
 <tr><td>Deleted accounts</td><td>Keyed one-way hashes of the sign-in id and email of a deleted account, so welcome credits are granted once per person. They cannot be turned back into the email</td><td>Kept while the service runs</td></tr>
 <tr><td>Payment events</td><td>Stripe event ids, so a payment or refund is never applied twice</td><td>90 days</td></tr>
@@ -75,7 +81,7 @@
 <li><b>Firebase Authentication</b> (Google) handles sign-in with Google or an email link.</li>
 <li><b>Stripe</b> processes payments, tax, and receipts. We never receive card details.</li>
 <li><b>Anthropic</b> is our AI model provider. It processes request content to produce a result, does not use it for training under its commercial API terms, and may keep it for a limited period for abuse and safety monitoring.</li>
-<li><b>GitHub</b> hosts downloads and answers update checks.</li>
+<li><b>GitHub</b> hosts downloads, answers update checks, and, if you use personal features or Improve Gradara, runs the workshop and hosts the public requests, code, issues, and features.</li>
 <li><b>Firebase Hosting</b> serves this website. We add no cookies or analytics to it.</li>
 </ul>
 

@@ -22,7 +22,7 @@ The primary and secondary sides have separate grounds with no conductor between 
 
 ## What to look at
 
-- The default plots show the output voltage, the DC bus, the primary current, the switch voltage, and the duty command. In Results they are under **Power stage ›** and **Controller ›**.
+- Results opens with the output voltage and the DC bus. Choose the 3×2 layout to also see the primary current, the switch voltage, and the duty command. In Results they are under **Power stage ›** and **Controller ›**.
 - Expect startup from zero and an output that settles near **24.00 V**.
 - Peak primary switch current is about **0.71 A**. Peak switch voltage is about **874 V**.
 - Zoom into the last 100 µs to see individual switching cycles.

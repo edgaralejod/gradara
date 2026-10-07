@@ -17,8 +17,10 @@ Gradara is operated by Virtu Services LLC. Contact: support@virtu-services.us.
 | Data | Where it lives | Leaves the computer? |
 | --- | --- | --- |
 | Models, Trash, AI block library, simulation runs and CSV results, C exports | The data folder (Settings → Privacy & data shows the path) | No |
-| Settings (engine and AI provider choice) | `settings.json` in the data folder | No |
-| API keys and the Gradara AI sign-in token | The OS keychain (macOS Keychain, Windows Credential Manager, Linux Secret Service); a private file in the data folder only when no keychain exists | Only to the matching provider, as request authentication |
+| Proposals: requests, AI answers, block and model drafts, diagnoses, and Explain results discussions | `proposals/<modelId>.json` in the data folder (newest 60 entries, at most 6 MB per model). A results discussion is deleted when a run it involves is deleted; moving a model to Trash keeps its file | No |
+| Settings (engine and AI provider choice, workshop repository) | `settings.json` in the data folder | No |
+| API keys, the Gradara AI sign-in token, and the GitHub token for personal features | The OS keychain (macOS Keychain, Windows Credential Manager, Linux Secret Service); a private file in the data folder only when no keychain exists | Only to the matching provider, as request authentication; the GitHub token only to api.github.com |
+| Personal-feature layers and the workshop keys you chose to trust | `layers/` beside the data folder | Downloaded from the workshop repository's GitHub releases; never uploaded |
 | Service logs | `logs/` beside the data folder; operational messages only | No |
 
 The local service listens only on the loopback interface. It rejects requests from other hostnames (DNS rebinding) and other websites (a required client header on every state-changing request), so a web page cannot read models or trigger paid AI calls.
@@ -28,13 +30,17 @@ Network requests the app makes:
 - **Update checks** to GitHub Releases at launch and every few hours (disable with `GRADARA_DISABLE_UPDATES=1`). GitHub sees the IP address and app version.
 - **Engine setup** for an optional engine of your own (native OpenModelica or Docker), only when the user starts it: the OpenModelica library download or the engine container image. The built-in engine needs no download and no network; on macOS its virtual machine has no network device.
 - **AI requests**, only when the user asks for an AI feature, to the provider selected in Settings.
+- **Personal features**, only after the user saves a GitHub token in Settings → Personal features: requests to api.github.com, authenticated with that token, to start the chosen repository's workshop workflow, follow its runs, read its reports, and list its layer releases. Layer manifests, archives, and signatures are downloaded without the token from that repository's release assets on github.com. The request text is sent as a workflow input, and the request, its generated code, the run's reports, and a draft pull request are public on GitHub. The workshop repository's own `ANTHROPIC_API_KEY` pays for building; Gradara AI is not involved and no credits are used.
+- **Improve Gradara** opens GitHub's new-issue page in the browser with the request, Gradara's reason, the app version, and the platform filled into the page address. GitHub receives them when the page opens, and the issue is public once submitted. No model or file is attached.
 - **Links the user clicks** open in the system browser.
 
 Debug copies of AI prompts and responses are written locally only when `GRADARA_KEEP_AI_TRANSCRIPTS=1` is set, or when the developer Codex CLI option is used.
 
 ## AI requests
 
-An AI request contains Gradara's instructions, the user's description, and the model context the task needs. That context might be the component being refined, the block catalog for a model build, or a custom block's equations when you ask the AI to write it in C (C code for library blocks is generated locally). Editing or diagnosing the open model from the Assistant sends that model's blocks, parameters, equations, and connections without its layout, the names of selected blocks, and the block catalog. Refining a proposal also sends your earlier request and the changes that proposal listed. Diagnosis also sends the problems you ask about and, for a failed run of the same model, the emitted Modelica source and the solver's messages. It does not include unrelated models or files.
+An AI request contains Gradara's instructions, the user's description, and the model context the task needs. That context might be the component being refined, the block catalog for a model build, or a custom block's equations when you ask the AI to write it in C (C code for library blocks is generated locally). Editing or diagnosing the open model from the Ask bar sends that model's blocks, parameters, equations, and connections without its layout, the names of selected blocks, and the block catalog. Refining a proposal also sends your earlier request and the changes that proposal listed. Diagnosis also sends the problems you ask about and, for a failed run of the same model, the emitted Modelica source and the solver's messages. It does not include unrelated models or files.
+
+**Explain results** sends the question; a digest Gradara computes on this computer from the runs on show (run names, per-signal statistics and events, an envelope of at most 900 `[time, min, max]` points across all signals, the differences between the runs and their parameters, the solver's warnings for the first run, and the names and units of up to 60 recorded signals); the first run's model without layout; and up to four earlier questions and answers of that discussion. When the AI asks for up to four extra measurements, Gradara computes them locally and sends the results in a second request. Recorded samples and CSV files are never sent.
 
 - **Own API key (OpenAI or Anthropic).** Requests go directly from the computer to the provider under the user's own account and terms. OpenAI requests set `store: false`.
 - **Gradara AI.** Requests go to the Gradara AI service, which forwards them to its model provider and returns the result. Production uses Anthropic (`LLM_PROVIDER=anthropic` in `cloud/deploy.env`); switching providers requires updating the public notice first. See below.
@@ -69,7 +75,7 @@ Automated tests enforce this: `cloud/tests/test_gateway.py` sends a confidential
 | Firebase Authentication (Google) | Sign-in with Google or email link; the sign-in page loads its scripts from `www.gstatic.com` and `apis.google.com` | Email and identity, plus the browser's IP address and details; Gradara never sees passwords |
 | Stripe | Payments, receipts, tax | Email and payment details; Gradara never receives card data |
 | Anthropic | Running AI requests | Request content; may be retained briefly for abuse and safety monitoring |
-| GitHub | Downloads and desktop update checks | IP address and app version |
+| GitHub | Downloads and desktop update checks; if you use them, the personal-features workshop (runs in the repository you choose) and Improve Gradara issues | IP address and app version; for personal features, your GitHub account, the request text, and the generated code, which are public; for Improve Gradara, what you submit in the issue |
 
 Records are stored in Google Cloud `us-central1` (United States); the public notice discloses this international transfer.
 

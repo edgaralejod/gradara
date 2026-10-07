@@ -98,7 +98,7 @@ export function priceText(
   return price === undefined ? '' : `${price} credits`;
 }
 
-/** Short footer text for AI composers, e.g. "Gradara AI · 2 credits · 38 left". */
+/** Short price text for the Ask bar, e.g. "Gradara AI · 2 credits · 38 left". */
 /** The AI status for one operation: a short label, and whether a request can be made now. */
 export function useAi(kind: AiOperation) {
   const [label, setLabel] = useState('');

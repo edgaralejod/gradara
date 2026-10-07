@@ -25,8 +25,8 @@ Both switches are the Modelica Standard Library's ideal closing switch with zero
 
 ## What to look at
 
-- In Results, select **Output voltage**, **Inductor current**, or **Switch gates**.
-- **Last 1 ms** fits the vertical axis to show the switching ripple. **Full run** shows startup.
+- Results opens with **Output voltage** and **Inductor current**. Choose the 2×2 layout to see **Switch gates** too.
+- Box-zoom the last millisecond to see the switching ripple, then **Fit both** to see startup again.
 - Startup overshoots to about **19.3 V** before settling near 12 V. This is expected: the circuit starts with no stored energy, has no soft start, and runs at a fixed duty cycle. It is not a regulated supply.
 - Double-click **Gate drive**, change **Duty cycle** to 0.25, and run again. The output settles near 6 V.
 

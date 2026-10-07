@@ -8,7 +8,9 @@ For a bug, provide a minimal reproduction and the expected behavior before chang
 
 Small fixes and documentation improvements can go directly to a pull request. Discuss substantial schema, dependency, engine, or interaction redesigns in an issue first so contributors do not build incompatible approaches. There is no blanket approval requirement for routine local fixes.
 
-The repository is hosted at [edgaralejod/gradara on GitHub](https://github.com/edgaralejod/gradara). Fork it, create a branch in your fork, and open a pull request against `main`. Keep one coherent change per PR. Use [issues](https://github.com/edgaralejod/gradara/issues) for reproducible bugs, feature proposals, and substantial design discussions.
+The repository is hosted at [edgaralejod/gradara on GitHub](https://github.com/edgaralejod/gradara). Fork it, create a branch in your fork, and open a pull request against `main`. Keep one coherent change per PR. Use [issues](https://github.com/edgaralejod/gradara/issues) for reproducible bugs, feature proposals, and substantial design discussions. Feature requests from the app's **Improve Gradara…** arrive through the Improve Gradara issue form (`.github/ISSUE_TEMPLATE/improve-gradara.yml`); draft pull requests labelled `community-feature` come from the workshop pipeline and need a maintainer's review like any other change.
+
+Forks inherit the workshop workflow (`.github/workflows/workshop.yml`). It does nothing until the fork adds its own `ANTHROPIC_API_KEY` and `LAYER_SIGNING_KEY` secrets; see [personal features](docs/architecture/LAYERS.md#setting-up-a-fork).
 
 ## Development workflow
 

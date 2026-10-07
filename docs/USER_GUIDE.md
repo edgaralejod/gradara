@@ -46,7 +46,8 @@ Press **?** on the canvas to see this list in the app. On Windows and Linux, use
 | Add a block at the pointer | Double-click empty canvas |
 | Open a block's properties | Double-click the block |
 | Open a subsystem | Double-click it |
-| Ask agent (new block or model) | A |
+| Ask AI (edit, new block, model, or about the results on show) | A |
+| In the Ask bar: send / new line / next action / close | Enter / Shift + Enter / Tab / Escape |
 | Run simulation | ⌘/Ctrl + Enter |
 | Save now (edits also save automatically) | ⌘/Ctrl + S |
 | Undo / redo | ⌘/Ctrl + Z / ⌘/Ctrl + Shift + Z |
@@ -89,10 +90,11 @@ Shortcuts do not fire while you type in a text field or an equation editor.
 
 ## Settings
 
-The gear button at the top right opens **Settings**. It has four tabs:
+The gear button at the top right opens **Settings**. It has five tabs:
 
 - **Engine** shows whether the built-in engine is ready, can restart it, and lets you choose your own OpenModelica installation or Docker instead. See [The simulation engine](INSTALL.md#the-simulation-engine).
 - **AI** chooses the provider for AI features: Gradara AI (sign in and use prepaid credits), your own OpenAI or Anthropic API key, or **Off**. When you are signed in, it shows your credit balance, prices, and credit packs. See [AI features](AGENT_SETUP.md).
+- **Personal features** (installed app only) asks the workshop for features built just for you and installs them. See [Personal features](#personal-features).
 - **Privacy & data** summarizes what stays on your computer and what AI requests send. See [privacy](PRIVACY.md).
 - **Updates** shows your installed version and has **Check for updates**. See [Updates](INSTALL.md#updates).
 
@@ -122,7 +124,7 @@ Models, results, and settings live in your data folder. **Help → Open Data Fol
 
 ## Build a diagram
 
-Add blocks from the library: click a block to place it, or drag it onto the sheet. Double-click empty canvas to open the block picker at the pointer. You can also ask the agent to build something at a selected spot or from an unconnected wire (see [AI features](#ai-features)).
+Add blocks from the library: click a block to place it, or drag it onto the sheet. Double-click empty canvas to open the block picker at the pointer. If the library lacks a part, ask AI for one: press **A**, choose **Ask AI for a block here…** in the canvas menu, or **Missing a part** in the library or the block picker (see [AI features](#ai-features)).
 
 Select a block to edit its parameters in the inspector on the right. Double-click a block to open its properties dialog. There you can rename it and change every parameter, for example a gain's `k` or a resistor's `R`. **Reset** restores a built-in block's default value. Changes apply when you choose **Apply** or press Enter, as one undo step. **Cancel** or Escape discards them. The dialog only shows sections a block has.
 
@@ -189,9 +191,9 @@ Wires route around blocks, stay clear of other wires and block names, and never 
 
 **Fit to view**: tap **Space** or **F**, or use the fit button in the canvas controls. Fit shows everything on the sheet and keeps it clear of the canvas buttons. Holding Space and dragging pans instead. A fitted view stays fitted when you open or close panels or resize the window.
 
-**Canvas menu**: right-click empty canvas, or a block (which selects it unless it is already part of the selection). With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, terminate unused outputs, help, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, ask the agent to build there, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
+**Canvas menu**: right-click empty canvas, or a block (which selects it unless it is already part of the selection). With a selection, it starts with commands for the selection (cut, copy, duplicate, rotate, terminate unused outputs, help, make or ungroup a subsystem, arrange, delete). Then come commands for the spot you clicked (add a block, **Ask AI for a block here…**, paste), for the sheet (select all, arrange, fit, show or hide the grid, reset layout, leave a subsystem), and for the model (run, export, keyboard shortcuts). Arrow keys move through the menu, Enter runs a command, and Escape closes it. Inside a subsystem it also has **Add input port here** and **Add output port here**.
 
-**Panels.** Almost every pane has a draggable border. Drag the inner edge of the component library or the inspector to resize it, and the top edge of the Problems dock (up to 70% of the window) to change its height. Inside the library, drag the border above the part description; inside the inspector, drag the border between the model tree and the properties. In Results, drag the edge of the Runs and Signals list, the border between **Runs** and **Signals**, and the borders between plots; in **Compare runs**, drag the edge of the signal table and the border between the overlaid and difference plots. The assistant's message box grows as you type, and you can drag its corner to make it taller. Windows such as Block properties, Block reference, Settings, Examples, Export, and Keyboard shortcuts can be resized by any edge or corner (they stay centred, so the opposite edge moves too); double-click a corner to restore a window's own size. Sizes are remembered in this browser, and arrow keys move a focused border (Shift for bigger steps). Double-click a border to restore that pane, or choose **Reset layout** from the canvas menu (or **View → Reset Layout** in the desktop app) to restore every panel, column width, plot split, dialog size, and the dock at once.
+**Panels.** Almost every pane has a draggable border. Drag the inner edge of the component library or the inspector to resize it, and the top edge of the Problems dock (up to 70% of the window) to change its height. Inside the library, drag the border above the part description; inside the inspector, drag the border between the model tree and the properties. In Results, drag the edge of the Runs and Signals list, the border between **Runs** and **Signals**, and the borders between plots; in **Compare runs**, drag the edge of the signal table and the border between the overlaid and difference plots. Drag the corner of the Ask bar's text box to make it taller. Windows such as Block properties, Block reference, Settings, Examples, Export, and Keyboard shortcuts can be resized by any edge or corner (they stay centred, so the opposite edge moves too); double-click a corner to restore a window's own size. Sizes are remembered in this browser, and arrow keys move a focused border (Shift for bigger steps). Double-click a border to restore that pane, or choose **Reset layout** from the canvas menu (or **View → Reset Layout** in the desktop app) to restore every panel, column width, plot split, dialog size, and the dock at once.
 
 ![The canvas menu on empty space](images/canvas-menu.webp)
 
@@ -268,7 +270,7 @@ After a successful run, Gradara switches to the **Results** tab. The panel insid
 
 ### Results
 
-Choose a preset plot or a signal, optionally add a second signal, and choose a time window. **Fit Y** fits the vertical range. **Export CSV** downloads every output row, one column per signal named as in the list with its unit (`Speed sensor.out [rad/s]`), as `<model name>-<run>.csv`; its first line, starting with `#`, records the model, its revision, the engine, the simulated duration and the run. The on-screen plot is thinned out to stay responsive.
+Tick signals under **Signals** to draw them on the selected plot, or drag a signal onto any plot. **Export CSV** downloads every output row, one column per signal named as in the list with its unit (`Speed sensor.out [rad/s]`), as `<model name>-<run>.csv`; its first line, starting with `#`, records the model, its revision, the engine, the simulated duration and the run. The on-screen plot is thinned out to stay responsive.
 
 - **Runs.** Gradara keeps every successful run on this computer, so the **Runs** list at the top of the signal pane is the same after you restart it. The newest run is first and is shown by default. Tick up to three runs to show them together on the same plots. Each shown run has its own colour, set with the colour box beside it (the colour is remembered on this computer), and its own list of all its signals under **Signals**. Tick a signal once and it is drawn for every shown run that has it; untick it under one run to hide it only there. With several runs shown, colour tells the runs apart and the line style (solid, dashed, dotted) tells the signals in a plot apart, and the legend names both. A run's heading says how many parameters differ from the first shown run; hover it for the list, such as `Speed reference · Final value: 100 → 60`. The pencil names a run, the arrow exports it as CSV, and the bin deletes it from the disk after a second click on **Delete**. The latest run cannot be deleted while it is shown. **Run all configurations** shows its own overlay and does not use the list. If you untick every run, the plots give way to a short message and a **Show the latest run** button, and the Runs list stays so you can tick any run again.
 - **Compare runs.** With two or three runs shown, **Compare runs** in the heading compares them signal by signal, in place of the plots; choose it again to go back. The **Baseline** list picks which shown run the others are compared with; it starts with the oldest.
@@ -281,12 +283,14 @@ Choose a preset plot or a signal, optionally add a second signal, and choose a t
 - **Navigate.** Use **Pan**, **Box zoom**, or **Cursor**, on **X only**, **Y only**, or **X + Y**. The mouse wheel zooms around the pointer. Link the X axes to keep plots in step. **Fit X**, **Fit Y**, and **Fit both** reset the view; double-click or Home fits both. Arrow keys pan a focused plot. Maximize a plot to see it alone.
 - **Cursor values** show the stored sample at or just before the cursor time, so jumps at events stay sharp.
 - **Units.** Signals with different units on one plot share one axis. Use separate plots when their scales differ.
+- **Summary.** **Summary** in the toolbar opens the **Run summary** under the plots: for each plotted signal of each shown run, its minimum, maximum, mean, final value, steady value and ripple, when it settles, and its overshoot, plus events such as an unsettled signal, a step, switching, or a clipped stretch. With several runs shown it lists the differences from the baseline run, the parameters that differ, and the solver warnings of the first run. Gradara computes it on this computer from the full stored runs, over the zoomed time window when you have zoomed in. Click a time to show it on the plot. No AI is involved.
+- **Ask about this run.** Opens the Ask bar on **Explain results** for the shown runs and plotted signals. See [Explain results](#explain-results).
 
 Plot layouts and axis ranges are remembered on this computer for each model. They are not part of the model file.
 
 ### Log a signal
 
-Gradara records every block output. To record a particular wire, select it and choose **Log signal** in the wire toolbar, or check **Log to Data Inspector** in its net properties. A dot beside the net name shows it is logged. Run again to capture it. **Logged nets only** in Results filters the list. Only signal wires can be logged. To see a physical quantity such as a voltage or a speed, add a sensor and log its output.
+Gradara records every block output. To record a particular wire, select it and choose **Log signal** in the wire toolbar, or check **Log to Data Inspector** in its net properties. A dot beside the net name shows it is logged. Run again to capture it. **Logged nets only** in Results filters the list. Only signal wires can be logged. An AI edit can also propose logging a signal. To see a physical quantity such as a voltage or a speed, add a sensor and log its output.
 
 ### When results go stale
 
@@ -300,7 +304,7 @@ The **Problems** tab sits in the dock under the canvas. Open or close it from th
 - **Last run** appears when a run fails. The dock opens by itself. Each row names where the problem came from (Validation, Safety, Compiler, Runtime, Engine) and has chips for the blocks it concerns. Click a row or chip to select those blocks and center them. Expand a row (▸) for a hint and the full solver message. After you edit the model, this section is marked out of date.
 - **Run warnings** lists solver warnings from a successful run.
 
-**Copy** copies every problem as text. With an AI provider set up, **Explain** asks what is wrong, and **Fix with AI** also proposes a fix. The ✦ button on a row asks about that problem only. A failed run never calls an AI provider on its own. Answers appear in the **Assistant** tab: likely causes with block chips and steps to take, and for a fix, a proposed edit you review and apply. Linking solver messages to blocks is best effort; the expanded text is always the complete message.
+**Copy** copies every problem as text. With an AI provider set up, **Explain** and **Fix with AI** open the Ask bar on the current problems (**Explain problems** and **Fix problems**), and the ✦ button on a row opens it on that problem only. Add a question if you like, check the price, and press Enter. A failed run never calls an AI provider on its own. Answers appear in the **Proposals** tab: likely causes with block chips and steps to take, and for a fix, a proposed edit you review and apply. Linking solver messages to blocks is best effort; the expanded text is always the complete message.
 
 ## Export
 
@@ -328,31 +332,90 @@ AI is optional. Drawing, simulating, and exporting Modelica or C code for librar
 
 Before you send proprietary equations or model details to an AI provider, read [privacy](PRIVACY.md).
 
-### Ask for a new block
+### The Ask bar
 
-Press **A** or choose **Ask agent**, and describe the block: its inputs, outputs, state, and timing. For example: "A first-order low-pass filter with a 50 ms time constant."
+Every AI request starts in the Ask bar. Open it by pressing **A**, with **Ask AI** (in the canvas corner, and on an empty sheet), from the canvas menu (**Ask AI for a block here…**), with **Missing a part** in the library or block picker, from Problems (**Explain**, **Fix with AI**, ✦), with **Refine with AI** in a selected AI block's inspector, or with **Ask about this run** in Results. A bar is also docked at the bottom of the **Proposals** tab.
 
-First choose the block type: Signal / control, Electrical, Mechanical · rotational, Mechanical · translational, Magnetic, Thermal, or Multiple physical domains. The type decides which terminals the block gets. For example, choose Electrical and ask for an ideal transformer to get real winding terminals instead of signal inputs and outputs. Generated blocks cannot have Boolean or 3-phase ports. The preview shows each terminal. Gradara checks the block with OpenModelica before inserting it, so the engine must be ready. For signal blocks defined by equations, **Refine with agent** in the block's dialog asks for a changed version. Refining keeps the block's type and terminals.
+Where you open it decides what it offers, and the first choice is already selected:
+
+| Opened from | Actions |
+| --- | --- |
+| The canvas | **Edit model**, **Create block**, **Build model** |
+| An empty sheet | **Build model**, **Create block** |
+| An unconnected port or wire | **Create block** |
+| An AI block's **Refine with AI** | **Refine block** |
+| Problems | **Explain problems**, **Fix problems** |
+| Results | **Explain results**, **Edit model** |
+
+Tab in the text box switches to the next action. The chips above the text show what will be sent, such as the selected blocks, the problems, or the runs and signals; remove a chip with its ×. The bar shows the price before you send. Enter sends, Shift+Enter adds a line, and Escape closes it. Inside a subsystem, edits and explanations still work on the top level of the model (the **Top level only** chip).
+
+### The Proposals tab
+
+Answers arrive as cards in the **Proposals** tab of the dock, next to Problems. Nothing changes in your model until you choose an action on a card.
+
+| Card | What you can do |
+| --- | --- |
+| Proposed edit | **Apply**, **Refine**, **Discard** |
+| New block or refined block | **Add to model** or **Apply changes**, **Discard** |
+| New model | **Open as new model**, **Discard** |
+| Diagnosis | Read the likely causes and steps; select the blocks they name |
+| Explain results | Show the evidence on the plot, ask a follow-up, **Propose this change** |
+| Gradara cannot do this yet | **Improve Gradara…**, or **Build it as a personal feature…** |
+
+Each model keeps its own list. It is saved on this computer with the model's data (the newest 60 cards), so it is still there after you switch models or restart Gradara. **Clear this model's proposals** empties it. Deleting a run removes the results discussions about it.
+
+### Create a block
+
+Choose **Create block** and describe the block: its inputs, outputs, state, and timing. For example: "A first-order low-pass filter with a 50 ms time constant."
+
+Gradara guesses the block type from your words, or from the port you started at: Signal / control, Electrical, Mechanical · rotational, Mechanical · translational, Magnetic, Thermal, or Multiple physical domains. Change it in the **Type** menu before sending. The type decides which terminals the block gets. For example, choose Electrical and ask for an ideal transformer to get real winding terminals instead of signal inputs and outputs. Generated blocks cannot have Boolean or 3-phase ports. Gradara checks the block with OpenModelica, so the engine must be ready. The **New block** card shows each terminal and the equations; **Add to model** places it, connected to the port you started from if any.
+
+To change an AI block, select it and choose **Refine with AI** in the inspector. Refining keeps the block's type and terminals; **Apply changes** updates the block in this model.
 
 ### Reuse AI blocks
 
 Every generated block that passes its checks is saved in **Library → AI blocks**, even before you place it. Search, click, or drag it into any model. The picker that opens from an unconnected wire also offers matching AI blocks. Each insertion is an independent copy. A refined block is saved as a new entry and does not change other models. Blocks found in models you already had are added once and labeled **From saved model**. This library is stored on your computer.
 
-### Edit the open model with the Assistant
+### Edit the open model
 
-Open the **Assistant** tab in the dock and describe a change, for example "Add a speed sensor on the load shaft" or "Increase the controller gain by 20%". Enter sends; Shift+Enter starts a new line. With blocks selected, choose **Selection** to point the Assistant at them, or **Whole model**.
+Choose **Edit model** and describe a change, for example "Add a speed sensor on the load shaft" or "Increase the controller gain by 20%". With blocks selected, a **Selection** chip points the AI at them; remove it to ask about the whole model.
 
-The Assistant can add library blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, and connect or disconnect ports. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model passed a trial simulation in OpenModelica. If it still fails after one automatic revision, the proposal is marked **Not verified** and shows the messages.
+The AI can add library blocks, create up to two new blocks, rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, connect or disconnect ports, and log a signal. It returns a proposal instead of changing the model. The proposal lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model passed a trial simulation in OpenModelica. If it still fails after one automatic revision, the proposal is marked **Not verified** and shows the messages.
 
-Nothing changes until you choose **Apply**. The whole proposal is one undo step, and your wire routes, labels, and net names are kept. New blocks are placed near related blocks; you may want to move them. If you edit the model while a request runs, Apply is disabled and you are asked to try again. **Refine** revises a proposal you have not applied: the composer shows which proposal you are revising, and what you type is sent with your earlier request and the proposed changes, so you only describe what to change ("use a 10 ms time constant instead"). The revision replaces the earlier proposal, which is marked **Revised below**, and is priced as a new edit. Press Escape or the × to go back to asking for a new change. **Discard** dismisses the proposal. Each model has its own conversation. It stays while you work in other models, so a proposal is still there when you come back, and it is cleared when you close or reload Gradara.
+Nothing changes until you choose **Apply**. The whole proposal is one undo step, and your wire routes, labels, and net names are kept. New blocks are placed near related blocks; you may want to move them. If you edit the model while a request runs, Apply is disabled and you are asked to try again. **Refine** revises a proposal you have not applied: the Ask bar shows a **Revising** chip, and what you type is sent with your earlier request and the proposed changes, so you only describe what to change ("use a 10 ms time constant instead"). The revision replaces the earlier proposal, which is marked **Revised below**, and is priced as a new edit. The × on the Revising chip goes back to asking for a new change. **Discard** dismisses the proposal.
 
-### Ask for a complete model
+When a request is beyond what Gradara can do, such as a domain it does not have, the card says **Gradara cannot do this yet** and why, and your model is not changed. **Improve Gradara…** opens a public GitHub issue form filled in with your request and that reason (no model or file is attached, and you can edit it before submitting). **Build it as a personal feature…** opens [Personal features](#personal-features).
 
-Choose **Ask agent**, then **Full model / circuit**, and describe the system: inputs, component values, what to measure, and how long to simulate. This creates a new model; it does not change the open one.
+### Build a model
 
-The agent looks at the built-in library and your AI blocks, reuses what fits, creates missing blocks, and assembles the circuit. The complete draft must finish a simulation before it is offered. Progress shows the current stage. Close the window to cancel. Review the diagram and assumptions, then choose **Open as new model**. Your current model is saved first. Choose **Run** to see results for the new model.
+Choose **Build model** and describe the system: inputs, component values, what to measure, and how long to simulate. This creates a new model; it does not change the open one.
 
-Limits: flat models (no subsystems) with up to 80 blocks and up to four new block types per request. Supported domains match the block creator. A failed trial simulation gets one automatic repair. New blocks that were created successfully stay in your AI library even if assembly fails. A request cannot be resumed after you close the window or restart the app.
+The AI looks at the built-in library and your AI blocks, reuses what fits, creates missing blocks, and assembles the circuit. The complete draft must finish a simulation before it is offered. Proposals shows the current stage and a **Cancel** button. Review the diagram and assumptions on the **New model** card, then choose **Open as new model**. Your current model is saved first. Choose **Run** to see results for the new model.
+
+Limits: flat models (no subsystems) with up to 80 blocks and up to four new block types per request. Supported domains match the block creator. A failed trial simulation gets one automatic repair. New blocks that were created successfully stay in your AI library even if assembly fails. A request cannot be resumed after you restart the app.
+
+### Explain results
+
+Ask why a run looks the way it does: "Why does the current overshoot?", "Why did run B settle faster?". Choose **Ask about this run** in Results, or press **A** on the Results tab. The question is about the first shown run (A); up to two more shown runs (B, C) are compared with it, and up to 12 plotted signals are included. When you have zoomed in, the zoomed time window is sent as a chip you can remove.
+
+Gradara does not send your recorded samples. It sends your question, a summary it computes on this computer (the same statistics and events as the Run summary, a short outline of each signal, the differences between the runs and their parameters, and the solver's warnings), and the model without its layout. **Show what will be sent** shows exactly that before you send. The AI may ask Gradara to measure up to four more things from the stored data, such as a value at a time, once per question.
+
+The answer explains what happened. Each number it quotes comes with a ✓ chip: Gradara recomputed it from the stored run, and clicking it shows the place on the plot. Claims whose numbers do not match the data are removed, and the card says how many. Likely causes are marked **Measured** when the data shows them and **Hypothesis** when it does not. The card also lists what was not recorded and next steps. **Ask a follow-up…** continues the same discussion. When the answer suggests a change, **Propose this change** asks for an ordinary checked model edit; after you apply it and run, Results opens the new run next to the one you discussed.
+
+Each question costs 2 credits with Gradara AI, including any extra measurements. Explanations can be wrong, even with checked numbers; do not use them alone for safety-critical decisions.
+
+## Personal features
+
+Personal features are changes to Gradara that an AI agent builds just for you, outside a release. They work in the installed app only and run on the workshop repository's own AI key, not on Gradara AI credits. Today that is the maintainer's repository, or your own fork with its own key ([how it works](architecture/LAYERS.md)).
+
+1. In **Settings → Personal features**, set the workshop **Repository** and save a fine-grained GitHub **token** for it (Actions: read and write; Contents: read). The token stays in the system keychain. For a fork, also paste its public key into **Trust this key**.
+2. Describe what Gradara should do and choose **Check what would be built**. A small model reads the code (a few cents) and says what it will and will not build, its size and risk, and whether it can ship as a personal feature or needs a Gradara release.
+3. Choose a cost cap ($2, $5, $10, or $20) and **Build it**. The cap is charged whether or not the build passes its checks. The request, its code, and a draft pull request are public on GitHub.
+4. The workshop builds the feature, runs Gradara's tests, has a second AI review it, loads it into this version of the app, and signs it. When it is published, choose **Install**, then **Restart to use**.
+
+Features are built for one exact version of Gradara. After an update they are switched off until the workshop rebuilds them for the new version, which it does by itself when a release is published. **Remove** next to a feature rebuilds without it. **Switch all off and restart** returns to the shipped app at once, and if personal features ever fail to start, Gradara starts without them and says why.
+
+To ask for something in a future release instead, use **Help → Improve Gradara…** (or **Improve Gradara…** on a card). It opens a public GitHub issue form with your request.
 
 ## Built-in examples
 

@@ -28,7 +28,7 @@ Every part is a library block with its own Help page. The top level shows the ph
 
 ## What to look at
 
-- The default plots show room and rack temperatures; the powers (IT electricity, heat removed, cooling electricity, and heat rejected outdoors); and the controller's command.
+- Results opens with room and rack temperatures, and the powers (IT electricity, heat removed, cooling electricity, and heat rejected outdoors). Choose the 2×2 layout to also see the controller's command.
 - At a steady 900 kW load with a coefficient of performance (COP) of 4, expect 900 kW of heat removed, 225 kW of cooling electricity, and 1,125 kW of heat rejected outdoors. The supply delivers 1,125 kW.
 - The room recovers close to 24 °C. The rack settles 9 K warmer than the room, because the rack-to-room conductance is 100 kW/K.
 - While cooling is short, the room warms even at full command.

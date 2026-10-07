@@ -48,7 +48,7 @@ Gradara cannot import Modelica files. See [Export](USER_GUIDE.md#export).
 
 ### Can I use it offline?
 
-Yes. Once the app is installed, drawing, simulating, and exporting work offline; the engine is part of the app. AI features and update checks need a connection.
+Yes. Once the app is installed, drawing, simulating, and exporting work offline; the engine is part of the app. AI features, personal features, Improve Gradara, and update checks need a connection.
 
 ### Where are my files?
 
@@ -58,6 +58,10 @@ In your data folder. **Help → Open Data Folder** opens it. On Windows it is `%
 
 Every generated block passes checks and the OpenModelica compiler before it appears, and its equations are visible and editable. Compiling is not the same as being physically correct, so review AI blocks the way you would review any model.
 
+### Can I trust AI explanations of my results?
+
+More than a plain chat answer, but not blindly. Gradara recomputes every number the explanation quotes from your stored run and removes claims that do not match; numbers marked ✓ were checked, and clicking one shows it on the plot. Causes are marked **Measured** when the data shows them and **Hypothesis** when it does not. The reasoning between the numbers can still be wrong. See [Explain results](USER_GUIDE.md#explain-results).
+
 ## Trust and support
 
 ### Is Gradara validated or certified?
@@ -66,7 +70,7 @@ No. Gradara is not certified for safety-critical use. OpenModelica and the Model
 
 ### Does my model leave my computer?
 
-Only when you use an AI feature, and only what that request needs. Simulation always runs on your computer. Gradara has no analytics or tracking. See [privacy](PRIVACY.md).
+Only when you use an AI feature, and only what that request needs. Explain results sends a summary of your runs computed on your computer, never the recorded samples. Personal-feature requests go to GitHub, where they are public, and Improve Gradara opens a public GitHub issue with your request but never your model. Simulation always runs on your computer. Gradara has no analytics or tracking. See [privacy](PRIVACY.md).
 
 ### Who makes Gradara?
 
@@ -74,7 +78,7 @@ Gradara is created by Edgar Duarte and published by Virtu Services LLC, with con
 
 ### How do I report a bug or ask for help?
 
-Choose **Help → Report an Issue** in the app, or open an issue on [GitHub](https://github.com/edgaralejod/gradara/issues). [Troubleshooting](development/TROUBLESHOOTING.md#report-a-bug) lists what to include. For account and billing questions, email support@virtu-services.us.
+Choose **Help → Report an Issue** in the app, or open an issue on [GitHub](https://github.com/edgaralejod/gradara/issues). [Troubleshooting](development/TROUBLESHOOTING.md#report-a-bug) lists what to include. To ask for a feature, choose **Help → Improve Gradara…**, or **Improve Gradara…** when the Ask bar says Gradara cannot do something yet. For account and billing questions, email support@virtu-services.us.
 
 ## Glossary
 

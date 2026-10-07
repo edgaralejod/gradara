@@ -43,7 +43,7 @@ export default function ProposalCard({
   current: Project;
   status: ProposalStatus;
   stale: boolean;
-  /** True while the composer is set to revise this proposal. */
+  /** True while the Ask bar is set to revise this proposal. */
   revising: boolean;
   onApply: () => void;
   onDiscard: () => void;

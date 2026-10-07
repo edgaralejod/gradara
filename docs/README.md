@@ -4,11 +4,11 @@
 
 - [Install Gradara](INSTALL.md): download, install, the built-in simulation engine, update, and uninstall.
 - [Your first 10 minutes](USER_GUIDE.md#your-first-10-minutes): run an example, then build a model from scratch.
-- [User guide](USER_GUIDE.md): diagrams, subsystems, variants, the Explorer, results, export, and [keyboard shortcuts](USER_GUIDE.md#keyboard-shortcuts).
+- [User guide](USER_GUIDE.md): diagrams, subsystems, variants, the Explorer, results and the run summary, export, the [Ask bar and Proposals](USER_GUIDE.md#ai-features), [personal features](USER_GUIDE.md#personal-features), and [keyboard shortcuts](USER_GUIDE.md#keyboard-shortcuts).
 - [Simulation settings](SOLVER.md): the four solvers, what each setting does, and what to change when a run looks wrong. The same guide is in the app.
 - [FAQ](FAQ.md) and glossary.
 - [Validation](VALIDATION.md): Gradara's results next to closed-form answers, checked by automated tests.
-- [AI features](AGENT_SETUP.md): Gradara AI credits, your own API key, and what each task costs.
+- [AI features](AGENT_SETUP.md): Gradara AI credits, your own API key, what each task costs, and what it sends.
 - [Troubleshooting](development/TROUBLESHOOTING.md): the engine not being ready, failed runs, AI sign-in, updates, logs, and bug reports.
 - [Supported platforms](PLATFORMS.md).
 - [Privacy and data handling](PRIVACY.md) and [security](../SECURITY.md).
@@ -37,7 +37,8 @@
 - [Architecture and decisions](../ARCHITECTURE.md)
 - [Desktop distribution, AI providers, and the Gradara AI service](architecture/DISTRIBUTION.md) ([gateway operations](../cloud/README.md))
 - [Document format, identity, and persistence](architecture/MODEL_FORMAT.md)
-- [Simulation, agents, and exports](architecture/EXECUTION.md)
+- [Simulation, AI features, and exports](architecture/EXECUTION.md)
+- [Personal features: layers and the workshop pipeline](architecture/LAYERS.md)
 - [Local API](API.md)
 - [Block design](blocks/DESIGN.md) and [block authoring](blocks/AGENT_BLOCK_GUIDE.md)
 - [Wiring and interaction contract](architecture/WIRING.md)

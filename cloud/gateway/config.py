@@ -28,7 +28,7 @@ DEFAULT_PRICES = {'component': 2, 'model': 20, 'export': 2, 'edit': 4, 'diagnose
 # Version of the Terms and Privacy notice shown on the sign-in page. Signing in
 # records it on the account; change it whenever site/public/terms.html or
 # site/public/privacy.html changes materially.
-TERMS_VERSION = '2026-09-28'
+TERMS_VERSION = '2026-10-07'
 
 # Stripe webhook event ids are kept this long for de-duplication, then purged.
 STRIPE_EVENT_RETENTION_DAYS = 90
