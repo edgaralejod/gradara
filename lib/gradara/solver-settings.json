@@ -1,0 +1,12 @@
+{
+  "comment": "Simulation settings shared by the workbench (lib/gradara/solver.ts) and the service (server/solver.py). Absent document fields mean these defaults.",
+  "defaults": { "solver": "dassl", "tolerance": 1e-6, "points": 6000 },
+  "tolerance": { "min": 1e-10, "max": 0.01 },
+  "maxPoints": 200000,
+  "solvers": {
+    "dassl": { "fixed": false },
+    "esdirk": { "fixed": false },
+    "backwardEuler": { "fixed": true },
+    "rk4": { "fixed": true }
+  }
+}

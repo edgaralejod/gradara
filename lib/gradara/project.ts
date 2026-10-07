@@ -5,6 +5,7 @@ import { compatible, portOf } from './model';
 import { connectionError, endpointPort, flattenWires, isTap } from './net';
 import { emptySelection, extractSelection, pasteSelection } from './selection';
 import { adoptBoundaryDomain } from './boundary-adopt';
+import { signature as settingsSignature } from './solver';
 function sheetSemantics(
   p: Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>,
 ) {
@@ -41,8 +42,10 @@ function sheetSemantics(
 
 export function semanticSignature(p: Project) {
   const { loggedNets, blocks, wires } = sheetSemantics(p);
+  const solver = settingsSignature(p.duration, p.simulation);
   return JSON.stringify({
     duration: p.duration,
+    ...(solver ? { solver } : {}),
     loggedNets,
     blocks,
     wires,

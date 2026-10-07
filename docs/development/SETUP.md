@@ -164,7 +164,7 @@ It prints the block count on stderr and fails on any class, parameter, or connec
 
 ## Desktop app
 
-The desktop app is an Electron shell around a frozen copy of the local service and a static build of the workbench. See [distribution](../architecture/DISTRIBUTION.md).
+The desktop app is an Electron shell around a frozen copy of the local service and a static build of the workbench. See [distribution](../architecture/DISTRIBUTION.md). The frozen service carries the data files it reads at run time: `server/msl_index.json`, `lib/gradara/port-units.json`, and `lib/gradara/solver-settings.json` (`packaging/build_backend.py` fails when one is missing).
 
 ```sh
 cd desktop && npm ci && cd ..       # once: Electron and electron-builder
@@ -178,7 +178,7 @@ python3 -m pip install -r server/requirements.txt pyinstaller==6.22.3   # in .ve
 npm run desktop:dist                # workbench + PyInstaller service + installers for this OS
 ```
 
-Every installer includes a simulation engine: put this platform's engine in `build/engine` first (see below), or the installer has none. Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service (and, with a Windows or Linux engine in `build/engine`, runs a simulation on it; the Linux release build also runs it in an Arch Linux container), and `python packaging/installer_selftest.py --exe <path to the built app> --simulate` checks a built or installed app end to end, including a simulation and a generated-C verification on its built-in engine. The **Desktop installers** workflow builds and install-tests every platform in [supported platforms](../PLATFORMS.md) on pull requests that change packaging, and drafts a release on `v*` tags. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
+Every installer includes a simulation engine: put this platform's engine in `build/engine` first (see below), or the installer has none. Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service (and, with a Windows or Linux engine in `build/engine`, runs the DC motor on it, once with non-default simulation settings and once with the defaults; the Linux release build also runs it in an Arch Linux container), and `python packaging/installer_selftest.py --exe <path to the built app> --simulate` checks a built or installed app end to end, including a simulation and a generated-C verification on its built-in engine. The **Desktop installers** workflow builds and install-tests every platform in [supported platforms](../PLATFORMS.md) on pull requests that change packaging, and drafts a release on `v*` tags. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
 
 The repository retains optional Sites/Cloudflare build scaffolding with no database or bucket bindings. You do not need to register or publish a site to run Gradara locally. `npm run build` verifies the web bundle; it does not package the Python service or engine.
 

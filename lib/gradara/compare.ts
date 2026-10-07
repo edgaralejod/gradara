@@ -1,5 +1,7 @@
 import type { SimulationResult } from './api';
 import type { Project } from './model';
+import { effective } from './solver';
+import { describeRun } from './solver-docs';
 
 export type ComparisonRun = { name: string; result: SimulationResult };
 
@@ -75,5 +77,8 @@ export function parameterDifferences(from: Project, to: Project): string[] {
   }
   for (const [id, a] of before) if (!after.has(id)) out.push(`${a.definition.name}: removed`);
   if (from.duration !== to.duration) out.push(`Stop time: ${from.duration} → ${to.duration} s`);
+  const solverBefore = describeRun(effective(from.duration, from.simulation), from.duration);
+  const solverAfter = describeRun(effective(to.duration, to.simulation), to.duration);
+  if (solverBefore !== solverAfter) out.push(`Solver: ${solverBefore} → ${solverAfter}`);
   return out;
 }

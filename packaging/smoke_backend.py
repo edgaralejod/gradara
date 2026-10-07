@@ -78,9 +78,7 @@ def main() -> None:
         shutil.rmtree(work, ignore_errors=True)
 
 
-def simulate_and_verify(port: int, engine: dict, project: dict) -> None:
-    if engine['backend'] != 'bundled' or not engine['ready']:
-        raise SystemExit(f"The bundled engine is not ready: {engine['label']}. {engine.get('detail', '')}")
+def run(port: int, project: dict) -> dict:
     started = time.monotonic()
     job = call(port, '/runs', project)
     while job['status'] not in {'complete', 'failed', 'cancelled'}:
@@ -91,8 +89,19 @@ def simulate_and_verify(port: int, engine: dict, project: dict) -> None:
     if job['status'] != 'complete':
         raise SystemExit(f"Simulation {job['status']}: {job.get('error')}")
     result = job['result']
-    print(f"simulated in {time.monotonic() - started:.1f}s on {result['engine']}: {result['samples']} samples, "
-          f"{len(result['series'])} signals")
+    print(f"simulated in {time.monotonic() - started:.1f}s on {result['engine']} ({result['simulation']['solver']}): "
+          f"{result['samples']} samples, {len(result['series'])} signals")
+    return result
+
+
+def simulate_and_verify(port: int, engine: dict, project: dict) -> None:
+    if engine['backend'] != 'bundled' or not engine['ready']:
+        raise SystemExit(f"The bundled engine is not ready: {engine['label']}. {engine.get('detail', '')}")
+    # Simulation settings reach the bundled engine (and their limits file is in the frozen service).
+    tuned = run(port, dict(project, simulation={'solver': 'esdirk', 'maxStep': 0.01}))
+    if tuned['simulation'] != {'solver': 'esdirk', 'tolerance': 1e-6, 'points': 6000, 'maxStep': 0.01}:
+        raise SystemExit(f"The run did not use its simulation settings: {tuned['simulation']}")
+    result = run(port, project)
     report = call(port, '/codegen/verify', {'project': project, 'blockIds': ['controller'], 'runId': result['id']}, timeout=300)
     if not report.get('ok'):
         raise SystemExit(f'Generated C did not verify: {json.dumps(report)[:1500]}')

@@ -5,6 +5,7 @@ import json
 from . import msl
 from .buses import array_suffix, bus_equations, is_bus_block
 from .models import BOUNDARY_KINDS, Definition, Project, flatten_connects
+from .solver import experiment_annotation
 
 PHYSICAL = {
  'voltage': '''model {name}
@@ -370,7 +371,7 @@ def emit_project(project: Project) -> str:
     for log in logs:
         parts.append(f"  {log['key']} = {log['expression']};")
     parts.extend(_connects(project))
-    parts.append(f'  annotation(experiment(StartTime=0, StopTime={project.duration}, Tolerance=1e-6));')
+    parts.append(f'  annotation({experiment_annotation(project.duration, project.simulation)});')
     parts.append('end System;\nend Gradara;\n')
     return '\n'.join(parts)
 

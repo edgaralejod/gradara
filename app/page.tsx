@@ -3,6 +3,8 @@ import { rotateBlocks } from '@/lib/gradara/rotation';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
 import NoteLayer from '@/components/gradara/note-layer';
+import SimulationSettingsPanel from '@/components/gradara/simulation-settings';
+import SolverHelpDialog from '@/components/gradara/solver-help-dialog';
 import BlockHelpDialog, {
   OPEN_EXAMPLE_EVENT,
   type OpenExampleDetail,
@@ -524,6 +526,11 @@ function Workbench() {
   const stopTimeInvalid = !!(badStopTime.toolbar || badStopTime.inspector);
   const stopTimeRefs = useRef<{ toolbar: HTMLInputElement | null; inspector: HTMLInputElement | null }>({ toolbar: null, inspector: null });
   const STOP_TIME_MESSAGE = `Stop time must be a number ${rangeText(STOP_TIME.min, STOP_TIME.max)} seconds.`;
+  // The Simulation settings in the inspector: a field holds text that is not a value, or the values cannot run.
+  const [settingsInvalid, setSettingsInvalid] = useState(false);
+  const SETTINGS_MESSAGE = 'Fix the simulation settings in the model inspector before running.';
+  // The simulation settings guide, open at a symptom when a problem points there.
+  const [solverHelp, setSolverHelp] = useState<{ topic?: string } | null>(null);
   const [runError, setRunError] = useState('');
   const [runFailure, setRunFailure] = useState<RunFailure | null>(null);
   const [result, setResult] = useState<SimulationResult | null>(null);
@@ -1703,6 +1710,12 @@ function Workbench() {
         run: () => setExportOpen(true),
       },
       {
+        id: 'solver-help',
+        label: 'Simulation settings guide',
+        icon: <CircleHelp size={13} />,
+        run: () => setSolverHelp({}),
+      },
+      {
         id: 'shortcuts',
         label: 'Keyboard shortcuts',
         icon: <Keyboard size={13} />,
@@ -1846,6 +1859,10 @@ function Workbench() {
       (badStopTime.toolbar ? stopTimeRefs.current.toolbar : stopTimeRefs.current.inspector)?.focus();
       return;
     }
+    if (settingsInvalid) {
+      notify(SETTINGS_MESSAGE);
+      return;
+    }
     if (!docRef.current.blocks.length) {
       notify('Add a block from the library or ask the agent to create one.');
       return;
@@ -1918,6 +1935,10 @@ function Workbench() {
     if (stopTimeInvalid) {
       notify(STOP_TIME_MESSAGE);
       (badStopTime.toolbar ? stopTimeRefs.current.toolbar : stopTimeRefs.current.inspector)?.focus();
+      return;
+    }
+    if (settingsInvalid) {
+      notify(SETTINGS_MESSAGE);
       return;
     }
     const controller = new AbortController();
@@ -2741,12 +2762,21 @@ function Workbench() {
               <Button
                 className={`run-button ${running ? 'running' : ''}`}
                 onClick={() => void (running ? cancelRun() : runSimulation())}
-                title={stopTimeInvalid && !running ? STOP_TIME_MESSAGE : undefined}
+                title={
+                  running
+                    ? undefined
+                    : stopTimeInvalid
+                      ? STOP_TIME_MESSAGE
+                      : settingsInvalid
+                        ? SETTINGS_MESSAGE
+                        : undefined
+                }
                 disabled={
                   (!health.engineReady ||
                     !ready ||
                     switching ||
                     stopTimeInvalid ||
+                    settingsInvalid ||
                     !project.blocks.length) &&
                   !running
                 }
@@ -3260,6 +3290,7 @@ function Workbench() {
                   sections={problemSections}
                   onSelect={selectProblem}
                   onAsk={(d) => askAi([d], false)}
+                  onSettingsHelp={(topic) => setSolverHelp({ topic })}
                   empty={
                     project.blocks.length
                       ? 'No problems. Run the model to check it in OpenModelica.'
@@ -3773,6 +3804,18 @@ function Workbench() {
                       {STOP_TIME_MESSAGE}
                     </p>
                   )}
+                  <SimulationSettingsPanel
+                    duration={project.duration}
+                    settings={project.simulation}
+                    onChange={(simulation) =>
+                      commit((p) => {
+                        const { simulation: _old, ...rest } = p;
+                        return simulation ? { ...rest, simulation } : rest;
+                      })
+                    }
+                    onValidity={(valid) => setSettingsInvalid(!valid)}
+                    onGuide={(topic) => setSolverHelp({ topic })}
+                  />
                   {project.description && (
                     <details className="property-description">
                       <summary>Description</summary>
@@ -3998,6 +4041,9 @@ function Workbench() {
             }}
             onEngineChange={refreshHealth}
           />
+        )}
+        {solverHelp && (
+          <SolverHelpDialog topic={solverHelp.topic} onClose={() => setSolverHelp(null)} />
         )}
         {helpDefinition && (
           <BlockHelpDialog

@@ -417,10 +417,13 @@ export function writeScope(
         }
       : s,
   );
+  // Model-wide fields edited while a subsystem is open (the inspector shows them there too).
+  const { simulation: _simulation, ...rest } = project;
   return syncInstances({
-    ...project,
+    ...rest,
     name: view.name,
     duration: view.duration,
+    ...(view.simulation ? { simulation: view.simulation } : {}),
     description: view.description,
     revision: view.revision,
     subsystems,

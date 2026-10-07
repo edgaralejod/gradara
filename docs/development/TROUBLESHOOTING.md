@@ -50,14 +50,16 @@ Open **Settings → Engine**. The top line says what is wrong; choose **Check ag
    - A subsystem variant that lacks one of the block's ports. Add the port inside the active variant, or mark it **not used here** in the inspector's **Variants** section.
    - An algebraic loop: a feedback path of signal blocks with no state, delay, or integrator. Problems lists the blocks it found on the loop (a best-effort hint).
    - Parameter values out of range, wrong feedback sign, a floating circuit with no ground, or a switch network that has no valid solution in some state.
-   - A run that takes longer than 120 seconds of real time. Shorten the stop time or simplify the model.
+   - A run that takes longer than 120 seconds of real time, or whose results pass 1 GB. Such a problem has a **Simulation settings** chip that opens the [settings guide](../SOLVER.md) at what to change: often Implicit Runge-Kutta or a maximum step for a model that switches, a larger fixed step, or going back to the default tolerance. A shorter stop time also helps.
+   - A fixed-step run whose step is too large: values blow up or the run stops early. Use a smaller step, Backward Euler, or a variable-step solver.
+   - Simulation settings that cannot run, such as more than 200,000 output points. The model inspector marks the field and Run stays unavailable until it is fixed.
 3. With an AI provider set up, **Explain** or **Fix with AI** in Problems can suggest a cause and a fix.
 
 A failed run never shows partial results as if they were complete.
 
 ### Results disappear after an edit
 
-Results belong to the model exactly as it ran. Changing parameters, connections, equations, or the stop time needs another run. Moving or resizing blocks does not. If moving a block alone clears your results, please report it with the model.
+Results belong to the model exactly as it ran. Changing parameters, connections, equations, the stop time, or the simulation settings needs another run. Moving or resizing blocks does not. If moving a block alone clears your results, please report it with the model.
 
 ### AI sign-in and credits
 

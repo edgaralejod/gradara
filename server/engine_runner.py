@@ -38,7 +38,8 @@ try:
             raise RuntimeError(error or 'The component did not pass compilation checks.')
         (root/'engine.json').write_text(json.dumps({'checked': True, 'message': value}), encoding='utf-8')
     else:
-        result = omc.sendExpression('simulate(Gradara.System, startTime=0, stopTime='+str(config['duration'])+', numberOfIntervals=6000, tolerance=1e-6, method="dassl", outputFormat="csv", fileNamePrefix="simulation")')
+        # The service builds the call from the model's simulation settings (server/solver.py).
+        result = omc.sendExpression(config.get('simulate') or 'simulate(Gradara.System, startTime=0, stopTime='+str(config['duration'])+', numberOfIntervals=6000, tolerance=1e-6, method="dassl", outputFormat="csv", fileNamePrefix="simulation")')
         error = diagnostic_text(omc.sendExpression('getErrorString()'))
         if not isinstance(result, dict) or not result.get('resultFile'):
             raise RuntimeError(failure_detail(result, error))

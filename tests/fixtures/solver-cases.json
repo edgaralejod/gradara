@@ -1,0 +1,22 @@
+[
+  { "about": "no settings: the defaults Gradara always used", "duration": 1, "settings": null,
+    "effective": { "solver": "dassl", "tolerance": 1e-6, "points": 6000 } },
+  { "about": "variable step with every field set", "duration": 0.02,
+    "settings": { "solver": "esdirk", "tolerance": 1e-8, "maxStep": 1e-5, "outputInterval": 1e-6 },
+    "effective": { "solver": "esdirk", "tolerance": 1e-8, "points": 20000, "maxStep": 1e-5 } },
+  { "about": "a fixed step that does not divide the stop time is shortened", "duration": 2,
+    "settings": { "solver": "rk4", "step": 0.003 },
+    "effective": { "solver": "rk4", "tolerance": 1e-6, "points": 667, "step": 0.0029985007496251873 } },
+  { "about": "a fixed-step solver ignores the variable-step fields", "duration": 1,
+    "settings": { "solver": "backwardEuler", "tolerance": 1e-9, "maxStep": 0.1, "outputInterval": 0.5 },
+    "effective": { "solver": "backwardEuler", "tolerance": 1e-6, "points": 6000, "step": 0.00016666666666666666 } },
+  { "about": "a variable-step solver ignores the fixed step", "duration": 10,
+    "settings": { "tolerance": 1e-6, "step": 0.1 },
+    "effective": { "solver": "dassl", "tolerance": 1e-6, "points": 6000 } },
+  { "about": "an output interval sets the number of points", "duration": 3600,
+    "settings": { "outputInterval": 10 },
+    "effective": { "solver": "dassl", "tolerance": 1e-6, "points": 360 } },
+  { "about": "a step that divides the stop time exactly", "duration": 0.02,
+    "settings": { "solver": "backwardEuler", "step": 1e-6 },
+    "effective": { "solver": "backwardEuler", "tolerance": 1e-6, "points": 20000, "step": 1e-6 } }
+]

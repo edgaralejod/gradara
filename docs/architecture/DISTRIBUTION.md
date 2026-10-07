@@ -24,7 +24,7 @@ server/                      Local service (FastAPI)
   safety.py                  Screens definitions before any compiler sees them
 desktop/                     Electron shell and electron-builder config
   web/                       Static entry for the desktop workbench build
-packaging/                   PyInstaller entry, build, and smoke test for the service
+packaging/                   PyInstaller entry, build (with the service's data files), and smoke test
   engine/                    Built-in engine builds (Windows, Linux, macOS VM image and agent)
 cloud/                       Gradara AI gateway, sign-in pages, Dockerfile, deploy.sh, tests
 site/                        gradara.app (static files for Firebase Hosting)

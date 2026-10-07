@@ -375,6 +375,21 @@ class Configuration(BaseModel):
     choices: dict[str, str] = Field(default_factory=dict, max_length=300)
 
 
+SolverId = Literal['dassl', 'esdirk', 'backwardEuler', 'rk4']
+
+
+class SimulationSettings(BaseModel):
+    """How a model is simulated (server/solver.py). Absent fields use the defaults; fields of the
+    other solver type are kept, so switching back restores them, but do not affect a run."""
+    solver: SolverId | None = None
+    # Variable step: accuracy, the longest step, and how often results are recorded.
+    tolerance: float | None = Field(default=None, ge=1e-10, le=0.01, allow_inf_nan=False)
+    maxStep: float | None = Field(default=None, gt=0, le=86400, allow_inf_nan=False)
+    outputInterval: float | None = Field(default=None, gt=0, le=86400, allow_inf_nan=False)
+    # Fixed step: the step, which is also the output interval.
+    step: float | None = Field(default=None, gt=0, le=86400, allow_inf_nan=False)
+
+
 class Project(Diagram):
     modelId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
     exampleId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$", max_length=80)
@@ -384,6 +399,7 @@ class Project(Diagram):
     version: Literal[1, 2] = 1
     name: str = Field(min_length=1, max_length=120)
     duration: float = Field(gt=0, le=86400, allow_inf_nan=False)
+    simulation: SimulationSettings | None = None
     revision: int = Field(ge=0)
     subsystems: list[Subsystem] | None = Field(default=None, max_length=500)
     configurations: list['Configuration'] | None = Field(default=None, max_length=30)

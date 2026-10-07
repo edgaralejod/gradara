@@ -37,6 +37,7 @@ from . import settings
 from .paths import DATA, LOGS, RESOURCES, ROOT
 from .processes import spawn_options, terminate_tree
 from .runtime import IMAGE, LEGACY_IMAGE, colima_profile, docker_argv, docker_context
+from .solver import simulate_expression
 
 MSL_VERSION = '4.1.0'
 # The version the bundled engine ships and the one results are validated with.
@@ -50,6 +51,10 @@ TIMEOUT = 120
 
 class EngineError(RuntimeError):
     pass
+
+
+class EngineTimeout(EngineError):
+    """A run that exceeded the execution limit: the model's or its settings' problem, not the engine's."""
 
 
 def _no_error_dialogs() -> None:
@@ -236,7 +241,7 @@ class DockerBackend:
                 process.kill()
             await process.wait()
             if isinstance(exc, asyncio.TimeoutError):
-                raise EngineError(timeout_message()) from exc
+                raise EngineTimeout(timeout_message()) from exc
             raise
         (folder/'engine.log').write_bytes(output)
         report = folder/'engine.json'
@@ -261,8 +266,7 @@ class DockerBackend:
 
 
 def timeout_message() -> str:
-    return ('OpenModelica exceeded the 120-second execution limit. Try a shorter duration or check '
-            'stiff equations and initial conditions.')
+    return f'The simulation did not finish within the {TIMEOUT}-second limit.'
 
 
 # --------------------------------------------------------------------- native
@@ -446,9 +450,7 @@ class NativeBackend:
                       'writeFile("om_check.txt", gCheck);',
                       'writeFile("om_check_errors.txt", getErrorString());']
         else:
-            lines += [f'gRes := simulate(Gradara.System, startTime=0, stopTime={float(config["duration"])!r}, '
-                      'numberOfIntervals=6000, tolerance=1e-6, method="dassl", outputFormat="csv", '
-                      'fileNamePrefix="simulation");',
+            lines += [f'gRes := {config.get("simulate") or simulate_expression(float(config["duration"]), None)};',
                       # Read the compiler's errors first: later calls can clear them.
                       'gErrors := getErrorString();',
                       'gRes;',
@@ -465,7 +467,7 @@ class NativeBackend:
         try:
             code, output = await self.script(omc, folder, self._script_for(folder, config), TIMEOUT)
         except asyncio.TimeoutError as exc:
-            raise EngineError(timeout_message()) from exc
+            raise EngineTimeout(timeout_message()) from exc
         (folder/'engine.log').write_text(output, encoding='utf-8')
         report = parse_native(folder, config, output)
         report['engine'] = f'OpenModelica {await self.version(omc) or "(native)"}'

@@ -13,6 +13,7 @@ The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation li
 | `wires`, `junctions` | Connectivity and drawn route geometry. |
 | `nets` | Optional legacy field; current documents reconcile stable logical nets. |
 | `duration` | Simulation stop time, in seconds. Server accepts greater than 0 and at most 86,400. Full-model agent planning retains its separate 60-second bound. |
+| `simulation` | Optional solver settings; absent means the defaults. See [simulation settings](#simulation-settings). |
 | `revision` | Edit/undo revision. Save concurrency instead uses a separate content-hash `saveVersion` token. |
 | `exampleId` | Optional template origin, not document identity. |
 | `annotations`, `plots` | Diagram notes (`x`, `y`, a heading `text`, and an optional `detail`) and named result-series groups. Notes live on the top-level sheet; users add, edit, and move them on the canvas. |
@@ -32,6 +33,24 @@ An empty document is valid to save, but cannot be simulated:
   "duration": 1,
   "revision": 0
 }
+```
+
+### Simulation settings
+
+`simulation` holds the solver settings of the whole model (`SimulationSettings` in `server/models.py`, `SimulationSettings` in `lib/gradara/solver.ts`). Every field is optional; an absent field, or an absent object, means the default.
+
+| Field | Meaning |
+| --- | --- |
+| `solver` | `dassl` (default), `esdirk` (Implicit Runge-Kutta), `backwardEuler`, or `rk4`. The first two are variable-step, the last two fixed-step. |
+| `tolerance` | Variable step: relative (and absolute) error per step, from `1e-10` to `1e-2`. Default `1e-6`. |
+| `maxStep` | Variable step: longest step in seconds, above 0 and at most 86,400. Absent lets the solver decide. |
+| `outputInterval` | Variable step: spacing of recorded points in seconds, above 0 and at most 86,400. Absent means stop time / 6,000. |
+| `step` | Fixed step: the step, and output interval, in seconds, above 0 and at most 86,400. Absent means stop time / 6,000. |
+
+Fields of the other solver type stay in the document, so switching solvers back restores them, but they do not affect a run, its staleness, or its hash. A run may request at most 200,000 output intervals or fixed steps (`lib/gradara/solver-settings.json`); more, or an interval or step longer than the stop time, fails validation. The workbench edits the object as one undoable change and removes it when every field is back to its default. See the [guide](../SOLVER.md) for what each setting does and the [execution guide](EXECUTION.md#engine-supervision) for how it reaches OpenModelica.
+
+```json
+"simulation": { "solver": "esdirk", "tolerance": 1e-8, "maxStep": 1e-5 }
 ```
 
 Saving assigns a document identity. For realistic fixtures, start with a checked-in template under [models/examples](../../models/examples/) (`dc`, `servo`, `foc`, `buck`, `flyback`, `datacenter`, or `ev`, or `block-<id>` for a block example in `models/examples/blocks/`; the template IDs `POST /api/models` accepts) and create an independent model through the UI or API.
@@ -174,7 +193,7 @@ Moving an inactive model to Trash preserves a recoverable JSON copy and hides le
 
 `semantic_hash(project)` hashes emitted Modelica source. Presentation geometry and human names do not change that source. Latest results additionally require the same `modelId`, preventing another document with identical equations from donating its result accidentally.
 
-`project_key(project)` removes geometry and some metadata but is not identical to the source hash. Do not use these interchangeably. Current hashes do not include a separately versioned solver configuration or library manifest; a future compiled cache must include those inputs and define invalidation explicitly.
+`project_key(project)` removes geometry and some metadata but is not identical to the source hash. Do not use these interchangeably. Simulation settings that differ from the defaults are emitted in the model's `experiment` annotation, so they are part of the source hash; settings that do not apply to the chosen solver are not emitted. The workbench's staleness signature (`semanticSignature` in `lib/gradara/project.ts`) follows the same rule. Current hashes do not include a library manifest; a future compiled cache must include it and define invalidation explicitly.
 
 When adding fields, decide whether they affect physics, presentation, provenance, or identity. Update both contracts, serializer behavior, migrations, and a round-trip or behavioral test. Keep a small old-format fixture when changing compatibility rules.
 

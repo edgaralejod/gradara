@@ -19,6 +19,7 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | Wiring / selection / routing | `lib/gradara/net-*.ts`, `routing.ts`, `selection.ts`, `grid.ts`, canvas/net components | `docs/architecture/WIRING.md`, model format, browser acceptance checks. |
 | Definitions and physical blocks | `lib/gradara/*blocks.ts`, `model.ts`, `server/modelica.py` | Block guide and simulation execution guide. |
 | Save/load and API | `server/workspace.py`, `server/app.py`, `lib/gradara/api.ts` | Model format and API guide. |
+| Simulation settings | `server/solver.py`, `lib/gradara/solver.ts`, `lib/gradara/solver-docs.ts` (all in-app and guide text), `components/gradara/simulation-settings.tsx`, `components/gradara/solver-help-dialog.tsx` | `docs/SOLVER.md` (generated; `npm run docs:solver`), execution guide. |
 | Simulation engines | `server/engine.py`, `server/engines.py` (bundled, native, and Docker backends), `packaging/engine/` (built-in engine builds and the macOS VM agent), `safety.py`, `processes.py` | `server/AGENTS.md`, execution guide, `SECURITY.md`. |
 | AI features and export | `agent.py`, `model_agent.py`, `model_edit.py`, `diagnose_agent.py`, `diagnostics.py`, `exporter.py`, `server/llm/` (dispatch and providers), `lib/gradara/proposal.ts` | Execution guide, distribution guide, `docs/PRIVACY.md`. |
 | Desktop app and installers | `desktop/`, `packaging/`, `vite.desktop.config.ts`, `.github/workflows/release.yml` | Distribution guide, release checklist. |
@@ -57,6 +58,8 @@ Pull requests get an advisory warning (`scripts/check-doc-drift.py`) when they c
 | `server/app.py`, `lib/gradara/api.ts` | `docs/API.md` |
 | `server/models.py`, `lib/gradara/model.ts`, `server/workspace.py` | `docs/architecture/MODEL_FORMAT.md`, `docs/API.md` |
 | `server/engine.py`, `server/engines.py`, `server/engine_runner.py`, `server/safety.py`, `Dockerfile.engine` | `docs/architecture/EXECUTION.md`, `docs/development/TROUBLESHOOTING.md`, `SECURITY.md` |
+| `server/solver.py`, `lib/gradara/solver.ts`, `lib/gradara/solver-settings.json` | `docs/architecture/EXECUTION.md`, `docs/architecture/MODEL_FORMAT.md`, `docs/SOLVER.md` |
+| `lib/gradara/solver-docs.ts`, `components/gradara/simulation-settings.tsx` | `docs/SOLVER.md` (run `npm run docs:solver`), `docs/USER_GUIDE.md` |
 | `server/llm/`, `server/agent.py`, `server/model_agent.py`, `server/exporter.py` | `docs/architecture/EXECUTION.md`, `docs/architecture/DISTRIBUTION.md`, `docs/AGENT_SETUP.md`, `docs/PRIVACY.md` |
 | `server/model_edit.py`, `server/diagnose_agent.py`, `server/diagnostics.py` | `docs/architecture/EXECUTION.md`, `docs/API.md`, `docs/AGENT_SETUP.md`, `docs/PRIVACY.md`, `SECURITY.md` |
 | `components/gradara/problems-panel.tsx`, `components/gradara/assistant-panel.tsx`, `components/gradara/diagnostics-dock.tsx` | `docs/USER_GUIDE.md` |

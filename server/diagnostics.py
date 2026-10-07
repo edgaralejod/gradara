@@ -29,6 +29,8 @@ class Diagnostic(BaseModel):
     netIds: list[str] = []
     wireIds: list[str] = []
     hint: str | None = None
+    # A topic of the simulation settings help (lib/gradara/solver-docs.ts) that explains this problem.
+    help: str | None = None
 
 
 class SimulationFailure(RuntimeError):
@@ -54,6 +56,11 @@ def nets_of(project: Project, wire_ids: list[str]) -> list[str]:
 
 def validate_simulation(project: Project):
     from .hierarchy import active_diagrams
+    from .solver import problems as settings_problems
+    issues = settings_problems(project.duration, project.simulation)
+    if issues:
+        raise SimulationFailure('Fix the simulation settings before running:\n' + '\n'.join(f'• {m}' for _, m, _ in issues),
+                                [Diagnostic(source='validation', message=m, hint=h) for _, m, h in issues])
     missing = []
     for _, diagram in active_diagrams(project):
         connections = flatten_connects(diagram)
@@ -189,9 +196,38 @@ def solver_lines(text: str, pattern: str) -> list[str]:
     return list(dict.fromkeys(line for line in lines if re.search(pattern, line)))
 
 
+# The integrator gave up: usually a matter of the simulation settings, not of the equations.
+INTEGRATOR_FAILURE = re.compile(r'fixed step size and step calculation has failed|Integrator failed|'
+                                r'step size (is )?too small|Desired step to small|error test failed repeatedly', re.IGNORECASE)
+
+
+# Values that overflowed: under a fixed step, the step blowing up.
+BLOW_UP = re.compile(r'leads to inf or nan|is (?:not finite|nan)', re.IGNORECASE)
+
+
 def failure_diagnostics(project: Project, raw: str) -> list[Diagnostic]:
     """Split a solver failure into readable, block-mapped diagnostics; `detail` keeps everything."""
+    diagnostics = _failure_diagnostics(project, raw)
+    if INTEGRATOR_FAILURE.search(raw):
+        diagnostics = [d.model_copy(update={'help': 'stopped-early'}) for d in diagnostics]
+    return diagnostics
+
+
+def _failure_diagnostics(project: Project, raw: str) -> list[Diagnostic]:
     detail = rename(project, raw)
+    from .solver import effective, is_fixed
+    fixed = is_fixed(effective(project.duration, project.simulation)['solver'])
+    if fixed and BLOW_UP.search(raw):
+        when = re.search(r'at time\s*:?\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)', raw)
+        message = 'Values grew without bound' + (f' by {float(when.group(1)):g} s' if when else '') + ': the fixed step is too large for this model.'
+        return [Diagnostic(source='runtime', message=message, detail=detail, help='fixed-blows-up',
+                           hint='Use a smaller step, Backward Euler, or a variable-step solver.')]
+    if fixed and INTEGRATOR_FAILURE.search(raw):
+        # A failed Newton step under a fixed step reads like an algebraic loop, but the step is the cause.
+        when = re.search(r'at time\s*=?\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)', raw)
+        message = 'The fixed-step solver could not complete a step' + (f' at {float(when.group(1)):g} s.' if when else '.')
+        return [Diagnostic(source='runtime', message=message, detail=detail,
+                           hint='The step is probably too large for this model. Use a smaller step, Backward Euler, or a variable-step solver.')]
     if is_algebraic_loop(raw):
         blocks, wires = signal_loops(project)
         first = next((line for line in solver_lines(detail, r'(?i)linear system|singular') if 'failed' in line.lower()), '')
@@ -240,9 +276,13 @@ def translate_warning(message: str) -> tuple[str, str | None]:
     return message, None
 
 
+# Engine notes about its own internals that say nothing about the model or its results.
+IGNORED_WARNINGS = re.compile(r'Numerical Jacobians without coloring are currently not supported by GBODE', re.IGNORECASE)
+
+
 def warning_diagnostics(project: Project, text: str) -> list[Diagnostic]:
     """Warnings from a successful run, so they are visible without failing it."""
-    lines = solver_lines(text, r'\bWarning:|\|\s*warning\s*\|')
+    lines = [line for line in solver_lines(text, r'\bWarning:|\|\s*warning\s*\|') if not IGNORED_WARNINGS.search(line)]
     out = []
     for line in lines[:50]:
         raw = rename(project, re.split(r'Warning:|\|\s*warning\s*\|', line)[-1].strip())

@@ -250,7 +250,19 @@ Drag the borders between panes to widen them, and drag a column heading's edge t
 
 Set **Stop time** and choose **Run**. The stop time must be more than 0 and at most 86,400 seconds (one day). You can cancel a run from the same button. Gradara checks the model before it simulates. Unconnected signal inputs, bus mistakes, the empty subsystem placeholder, and missing variant ports are reported as problems. A failed or incomplete simulation never shows as a successful plot.
 
-Each run saves 6,000 evenly spaced output points plus every event, and stops if it takes longer than 120 seconds of real time. For long simulations with fast events, shorten the stop time to see the details.
+Each run saves 6,000 evenly spaced output points plus every event, unless the model's simulation settings say otherwise, and stops if it takes longer than 120 seconds of real time or if its results pass 1 GB.
+
+### Simulation settings
+
+With nothing selected, the inspector shows **Simulation** under **Stop time**: the solver and its settings for this model. The defaults (DASSL, tolerance 1e-6, 6,000 output intervals) suit most models, so change them only when something looks wrong.
+
+- **Solver.** Two variable-step solvers, **DASSL** (the default) and **Implicit Runge-Kutta**, choose each step to meet the tolerance. Two fixed-step solvers, **Backward Euler** and **Runge-Kutta 4**, use one step throughout.
+- **Tolerance**, **Maximum step**, and **Output interval** apply to the variable-step solvers; **Step size** to the fixed-step ones. Leave a seconds field blank for the automatic value, shown in grey.
+- Each field has a one-line explanation under it, and its **?** button explains more. The line at the bottom says what the values mean for the run, such as "Records 6,001 points, one every 667 µs, plus events", and warns when a run would be slow, coarse, or too large to start.
+- The **?** next to **Simulation** opens the full guide, also in [Simulation settings](SOLVER.md). It starts with a table of symptoms (a jagged curve, a missed pulse, a slow run, a run that stops early) and what to change for each.
+- **Defaults** restores the default settings. Every change is one undo step and marks the last result as out of date.
+
+Settings are saved with the model and recorded with every run. The Runs list shows a run's settings when they are not the defaults, and comparing two runs lists a settings change alongside parameter changes. A failed run whose cause the settings can fix, such as a timeout or a fixed step that is too large, has a **Simulation settings** chip in Problems that opens the guide at the matching symptom.
 
 After a successful run, Gradara switches to the **Results** tab. The panel inside it is titled **Data Inspector**; this guide calls it Results. Use the **Diagram** and **Results** tabs, or ⌘/Ctrl+1 and ⌘/Ctrl+2, to switch.
 
