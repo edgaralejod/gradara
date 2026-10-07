@@ -105,6 +105,31 @@ def test_new_wires_join_nets_so_models_with_nets_stay_valid():
     assert sorted(owners) == sorted(w.id for w in edited.wires)
 
 
+def test_log_signal_marks_the_net_for_the_data_inspector():
+    before = servo()
+    edited, changes = apply(before, op('log_signal', blockId='sensor', sourcePort='y'))
+    net = next(n for n in edited.nets if 'wire7' in n.wireIds)
+    assert net.logged and changes[0].op == 'log_signal' and changes[0].wireIds == ['wire7']
+    assert 'Data Inspector' in changes[0].description
+    # A sensor added in the same edit can be connected and logged at once.
+    edited, _ = apply(before, op('add_block', libraryId='builtin:step', alias='probe'),
+                      op('add_block', libraryId='builtin:scope', alias='view'),
+                      op('connect', source='probe', sourcePort='y', target='view', targetPort='u'),
+                      op('log_signal', blockId='probe', sourcePort='y'))
+    assert next(n for n in edited.nets if 'w_ai_1' in n.wireIds).logged
+
+
+@pytest.mark.parametrize('operation, message', [
+    (op('log_signal', blockId='motor', sourcePort='p'), 'not a signal output'),
+    (op('log_signal', blockId='controller', sourcePort='nope'), 'does not exist'),
+])
+def test_log_signal_refuses_what_cannot_be_logged(operation, message):
+    with pytest.raises(ValueError, match=message):
+        apply(servo(), operation)
+    with pytest.raises(ValueError, match='not connected'):
+        apply(servo(), op('add_block', libraryId='builtin:step', alias='loose'), op('log_signal', blockId='b_loose', sourcePort='y'))
+
+
 def test_revise_and_create_use_generated_definitions():
     revised = next(b for b in motor().blocks if b.id == 'controller').definition.model_copy(deep=True)
     revised.equations += '\n'

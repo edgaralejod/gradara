@@ -12,8 +12,9 @@ import {
 } from 'lucide-react';
 import { domainColors, type Project } from '@/lib/gradara/model';
 import type { EditChange, EditProposal } from '@/lib/gradara/proposal';
+import type { ProposalStatus } from '@/lib/gradara/proposals-thread';
 
-export type ProposalStatus = 'pending' | 'applied' | 'discarded' | 'superseded';
+export type { ProposalStatus };
 
 const GROUPS: { id: string; title: string; ops: string[]; icon: typeof Plus }[] = [
   { id: 'added', title: 'Added', ops: ['add_block', 'create_block'], icon: Plus },
@@ -21,7 +22,7 @@ const GROUPS: { id: string; title: string; ops: string[]; icon: typeof Plus }[] 
   {
     id: 'changed',
     title: 'Changed',
-    ops: ['set_parameter', 'rename_block', 'revise_definition', 'set_duration'],
+    ops: ['set_parameter', 'rename_block', 'revise_definition', 'set_duration', 'log_signal'],
     icon: PencilLine,
   },
   { id: 'rewired', title: 'Rewired', ops: ['connect', 'disconnect'], icon: Waypoints },

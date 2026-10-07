@@ -18,8 +18,13 @@ from .engine import RUNS, engine_available, simulate
 from .diagnostics import SimulationFailure
 from .agent import generate_component
 from .model_agent import ModelGenerateRequest, generate_model
-from .model_edit import ModelEditRequest, edit_model
+from .model_edit import ModelEditRequest, Unsupported, edit_model
+from . import proposals
 from .diagnose_agent import DiagnoseRequest, diagnose
+from . import run_store
+from .run_store import run_name
+from .run_digest import DigestRequest, digest
+from .results_agent import ExplainRequest, explain as explain_results, preview as preview_explain
 from .paths import DATA, EXAMPLES, STATIC
 from .llm import dispatch, gradara as gradara_ai
 from .llm.providers import ProviderError, verify_key
@@ -258,14 +263,6 @@ async def latest(model: str | None = None):
             return {'result':result}
     return {'result':None}
 
-def run_name(folder) -> str:
-    """The name the user gave a stored run; empty when it has none."""
-    try:
-        name = json.loads((folder/'meta.json').read_text(encoding='utf-8')).get('name', '')
-    except (OSError, ValueError, AttributeError):
-        return ''
-    return name if isinstance(name, str) else ''
-
 class RunMeta(BaseModel):
     name: str = Field(max_length=80)
 
@@ -289,7 +286,24 @@ async def delete_run(run_id: str):
     if not (folder/'result.json').exists(): raise HTTPException(404, 'Results are unavailable.')
     import shutil
     await asyncio.to_thread(shutil.rmtree, folder)
+    # A discussion of the run is kept with it, so it goes too.
+    await asyncio.to_thread(proposals.forget_run, run_id)
     return {'deleted': run_id}
+
+class ProposalEntries(BaseModel):
+    entries: list[dict] = Field(max_length=200)
+
+@app.get('/api/proposals/{model_id}')
+async def model_proposals(model_id: str):
+    """The Proposals tab of one model, as the workbench last saved it."""
+    if not proposals.MODEL_ID.fullmatch(model_id): raise HTTPException(400, 'Invalid model ID.')
+    return {'entries': await asyncio.to_thread(proposals.load, model_id)}
+
+@app.put('/api/proposals/{model_id}')
+async def save_model_proposals(model_id: str, body: ProposalEntries):
+    if not proposals.MODEL_ID.fullmatch(model_id): raise HTTPException(400, 'Invalid model ID.')
+    kept = await asyncio.to_thread(proposals.save, model_id, body.entries)
+    return {'saved': len(kept)}
 
 @app.get('/api/results')
 async def stored_runs(model: str, limit: int = 20):
@@ -331,26 +345,20 @@ async def run_diagnostics(run_id: str):
 @app.get('/api/results/{run_id}/data')
 async def full_result_data(run_id: str):
     if not run_id.isalnum(): raise HTTPException(400, 'Invalid run ID.')
-    folder = RUNS/run_id
-    if not (folder/'result.json').exists() or not (folder/'simulation_res.csv').exists():
-        raise HTTPException(404, 'Results are unavailable.')
-    def read():
-        import csv, math
-        result = json.loads((folder/'result.json').read_text(encoding='utf-8'))
-        with (folder/'simulation_res.csv').open(encoding='utf-8') as stream:
-            rows = [row for row in csv.DictReader(stream) if float(row['time']) <= result['duration'] + max(1e-12, result['duration']*1e-12)]
-        result['time'] = [float(row['time']) for row in rows]
-        from .engine import result_columns
-        column = result_columns(folder, rows)  # constants and aliases are not CSV columns
-        for series in result['series']:
-            values = column(series['key'])
-            if values is None:
-                raise ValueError(f"Stored results lack {series['key']}.")
-            series['values'] = values
-        if not all(math.isfinite(v) for v in result['time']) or not all(math.isfinite(v) for s in result['series'] for v in s['values']):
-            raise ValueError('Non-finite samples in stored results.')
-        return result
-    return await asyncio.to_thread(read)
+    try:
+        return await asyncio.to_thread(run_store.load_full, run_id, RUNS)
+    except run_store.RunUnavailable as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+@app.post('/api/results/digest')
+async def run_digest_view(request: DigestRequest):
+    """The Run summary: statistics, events and differences of the shown runs, computed here."""
+    try:
+        return await asyncio.to_thread(digest, request, lambda i: run_store.load_full(i, RUNS))
+    except run_store.RunUnavailable as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 def file_slug(name: str, fallback: str = 'model') -> str:
     """A model name as a file name part: letters, digits, dots and dashes."""
@@ -402,11 +410,38 @@ async def generate_full_model(request: ModelGenerateRequest):
 
 @app.post('/api/models/edit')
 async def edit_open_model(request: ModelEditRequest):
-    return await start_job('edit', lambda i: edit_model(request, i, lambda message: JOBS[i].update(progress=message)))
+    async def edit(job_id):
+        try:
+            return await edit_model(request, job_id, lambda message: JOBS[job_id].update(progress=message))
+        except Unsupported as exc:
+            # Beyond what Gradara can do: the Proposals tab offers Improve Gradara instead of an error.
+            return {'unsupported': str(exc)}
+    return await start_job('edit', edit)
 
 @app.post('/api/diagnose')
 async def diagnose_problems(request: DiagnoseRequest):
     return await start_job('diagnose', lambda i: diagnose(request, i, lambda message: JOBS[i].update(progress=message)))
+
+@app.post('/api/results/explain')
+async def explain_run_results(request: ExplainRequest):
+    loader = lambda i: run_store.load_full(i, RUNS)
+    try:
+        await asyncio.to_thread(digest, request, loader)  # refuse unreadable runs before the job is charged
+    except run_store.RunUnavailable as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return await start_job('results', lambda i: explain_results(request, i, lambda message: JOBS[i].update(progress=message), loader))
+
+@app.post('/api/results/explain/preview')
+async def preview_run_explanation(request: ExplainRequest):
+    """Exactly what Explain results would send first: the question, the digest and the model description."""
+    try:
+        return await asyncio.to_thread(preview_explain, request, lambda i: run_store.load_full(i, RUNS))
+    except run_store.RunUnavailable as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 @app.post('/api/components/generate')
 async def generate(request:GenerateRequest):

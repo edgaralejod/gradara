@@ -100,6 +100,17 @@ def test_explain_and_fix_prices(tmp_path):
     assert fix[-1]['jobCharged'] == 8 and balance(client, token) == 40
 
 
+def test_explain_results_is_one_flat_price_with_its_measurement_round(tmp_path):
+    client, *_ = make(tmp_path, free_credits=10)
+    token = sign_in(client)
+    rounds = [generate(client, token, job='res-0001', kind='results', task='results').json() for _ in range(4)]
+    assert [r['charged'] for r in rounds] == [2, 0, 0, 0] and rounds[-1]['jobCharged'] == 2
+    assert generate(client, token, job='res-0001', kind='results', task='results').status_code == 429
+    assert balance(client, token) == 8
+    assert generate(client, token, job='res-0002', kind='results', task='diagnose').status_code == 422
+    assert generate(client, token, job='res-0003', kind='results', task='results', part='edit').status_code == 422
+
+
 def test_a_part_whose_first_call_fails_is_refunded(tmp_path):
     calls = {'n': 0}
     def flaky(prompt, schema):
@@ -149,7 +160,7 @@ def test_pricing_lists_edit_and_diagnose(tmp_path):
     client, *_ = make(tmp_path)
     token = sign_in(client)
     account = client.get('/v1/account', headers=auth(token)).json()
-    assert account['prices']['edit'] == 4 and account['prices']['diagnose'] == 2
+    assert account['prices']['edit'] == 4 and account['prices']['diagnose'] == 2 and account['prices']['results'] == 2
     assert account['surcharges'] == {'edit': {'block': 2}}
 
 
@@ -323,4 +334,4 @@ def test_health_reports_revision_and_tasks(tmp_path, monkeypatch):
     client = make(tmp_path)[0]
     body = client.get('/health').json()
     assert body['ok'] and body['revision'] == 'abc1234'
-    assert {'edit-plan', 'diagnose', 'component'} <= set(body['tasks'])
+    assert {'edit-plan', 'diagnose', 'component', 'results'} <= set(body['tasks'])

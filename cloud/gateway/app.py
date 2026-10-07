@@ -41,7 +41,7 @@ from server.llm.providers import Generation, ProviderError, Usage, make_provider
 PAGES = Path(__file__).parent/'pages'
 TASK_KINDS = {'component': {'component', 'model', 'edit', 'diagnose'}, 'model-plan': {'model'},
               'model-assembly': {'model'}, 'export': {'export'}, 'edit-plan': {'edit', 'diagnose'},
-              'diagnose': {'diagnose'}}
+              'diagnose': {'diagnose'}, 'results': {'results'}}
 # Priced parts a job kind may carry: generated blocks, and the edit stage of a fix.
 PART_KINDS = {'edit': {'block'}, 'diagnose': {'edit', 'block'}}
 MAX_BODY = 1_500_000
@@ -82,11 +82,11 @@ class Approve(BaseModel):
 
 class JobRef(BaseModel):
     id: str = Field(max_length=80)
-    kind: str = Field(pattern='^(component|model|export|edit|diagnose)$')
+    kind: str = Field(pattern='^(component|model|export|edit|diagnose|results)$')
     part: str | None = Field(default=None, max_length=40, pattern=r'^(edit|block:[1-9][0-9]?)$')
 
 class GenerateBody(BaseModel):
-    task: str = Field(pattern='^(component|model-plan|model-assembly|export|edit-plan|diagnose)$')
+    task: str = Field(pattern='^(component|model-plan|model-assembly|export|edit-plan|diagnose|results)$')
     job: JobRef
     prompt: str = Field(min_length=10, max_length=MAX_PROMPT)
     schema_: dict[str, Any] = Field(alias='schema')

@@ -14,7 +14,7 @@ from .paths import DATA
 MAX_CREATED = 2
 MAX_GENERATED = 3
 OPS = ('add_block', 'create_block', 'revise_definition', 'remove_block', 'rename_block', 'set_parameter',
-       'connect', 'disconnect', 'set_duration')
+       'connect', 'disconnect', 'set_duration', 'log_signal')
 LAYOUT = ('position', 'size', 'rotation', 'labelOffset')
 
 
@@ -155,6 +155,7 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
     aliases: dict[str, str] = {}
     changes: list[Change] = []
     new_wires: list[str] = []
+    logs: list[str] = []   # a wire on each signal net to log
     counter = 0
 
     def resolve(ref: str | None, what: str = 'block') -> str:
@@ -288,6 +289,21 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
             touched = [i for w in matches for i in (w.source, w.target) if i in blocks]
             changes.append(Change(op=op.op, blockIds=list(dict.fromkeys(touched)), wireIds=ids,
                                   description='Disconnect ' + ' and '.join(name_of(i) for i in dict.fromkeys(touched)) if touched else 'Remove a connection'))
+        elif op.op == 'log_signal':
+            ident = resolve(op.blockId)
+            port = next((p for p in blocks[ident].definition.ports if p.id == op.sourcePort), None)
+            if port is None:
+                raise ValueError(f'Port {name_of(ident)}.{op.sourcePort} does not exist.')
+            if port.domain not in CAUSAL_DOMAINS or port.direction != 'output':
+                raise ValueError(f'{name_of(ident)}.{port.name} is not a signal output. Measure a physical quantity with a '
+                                 'sensor block and log the sensor output.')
+            attached = [w.id for w in edited.wires if (ident, port.id) in ((w.source, w.sourceHandle), (w.target, w.targetHandle))]
+            if not attached:
+                raise ValueError(f'{name_of(ident)}.{port.name} is not connected. Connect it (for example to a Scope) '
+                                 'before logging it.')
+            logs.append(attached[0])
+            changes.append(Change(op=op.op, blockIds=[ident], wireIds=attached,
+                                  description=f'Log {name_of(ident)}.{port.name} in the Data Inspector'))
         elif op.op == 'set_duration':
             if op.duration is None or not 0 < op.duration <= 86400:
                 raise ValueError('The stop time must be greater than 0 and at most 86,400 s.')
@@ -300,6 +316,13 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
             net.wireIds = [i for i in net.wireIds if i in wire_ids]
         edited.nets = [n for n in edited.nets if n.wireIds]
         assign_nets(edited, new_wires)
+        for wire_id in logs:
+            net = next((n for n in edited.nets if wire_id in n.wireIds), None)
+            if net is None:
+                raise ValueError('The signal to log is not on a net.')
+            net.logged = True
+    elif logs:
+        raise ValueError('This model has no nets yet. Save it once in this version of Gradara, then ask again.')
     try:
         result = Project.model_validate(edited.model_dump())
     except ValidationError as exc:
@@ -316,6 +339,7 @@ Operations run in order:
 - remove_block, rename_block (blockId, name), set_parameter (blockId, parameterId, value), set_duration (duration in s).
 - connect (source, sourcePort, target, targetPort): signal connections run from an output port to an input port, and an input has one source; physical terminals connect only to the same domain. Block references may be existing IDs or aliases added earlier in this edit.
 - disconnect: wireId, or the four endpoint fields.
+- log_signal (blockId, sourcePort): record a connected signal output in the Data Inspector on the next run. To record a physical quantity (a current, a speed), add the matching sensor block, connect its measured side and its output (for example to a Scope), then log the sensor output.
 Prefer catalog blocks and parameter changes over new definitions. Gradara places new blocks and draws new wires in its house style, so never describe positions; give new blocks short names of 1-3 words. Keep physical references (ground) and connect every signal input you add. Set unused fields to null.
 If the request cannot be done with these operations or the supported physics (electrical including 3-phase, rotational and translational mechanical, thermal, magnetic, scalar Real and Boolean signals), explain why in unsupported and return one set_duration operation with the current stop time. Otherwise unsupported is empty.
 summary is one or two sentences for the user. assumptions are short and explicit.'''

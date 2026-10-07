@@ -53,6 +53,8 @@ export type Account =
         export: number;
         edit?: number;
         diagnose?: number;
+        /** One Explain results question; absent from services older than 0.7. */
+        results?: number;
       };
       /** Extra credits per priced part of a job, e.g. each generated block of an edit. */
       surcharges?: { edit?: { block?: number } };
@@ -75,7 +77,7 @@ export function formatPrice(pack: CreditPack) {
 }
 
 export type AiOperation =
-  'component' | 'model' | 'export' | 'edit' | 'diagnose' | 'fix';
+  'component' | 'model' | 'export' | 'edit' | 'diagnose' | 'fix' | 'results';
 
 /** The price part of an AI label, or '' when the service did not report one. */
 export function priceText(

@@ -18,7 +18,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 
-export type DockTab = 'problems' | 'assistant';
+export type DockTab = 'problems' | 'proposals';
 export type DockState = { open: boolean; tab: DockTab; height: number };
 
 const STORAGE_KEY = 'gradara.dock';
@@ -30,7 +30,8 @@ function parse(raw: string): DockState {
     const stored = JSON.parse(raw || '{}') as Partial<DockState>;
     return {
       open: typeof stored.open === 'boolean' ? stored.open : DEFAULT.open,
-      tab: stored.tab === 'assistant' ? 'assistant' : 'problems',
+      // 'assistant' is what the Proposals tab was called before 0.7.
+      tab: stored.tab === 'proposals' || (stored.tab as string) === 'assistant' ? 'proposals' : 'problems',
       height:
         typeof stored.height === 'number' && Number.isFinite(stored.height)
           ? Math.max(MIN_HEIGHT, stored.height)
@@ -86,18 +87,18 @@ export default function DiagnosticsDock({
   state,
   onChange,
   counts,
-  assistantActive,
+  proposalsActive,
   actions,
   problems,
-  assistant,
+  proposals,
 }: {
   state: DockState;
   onChange: (change: Partial<DockState>) => void;
   counts: { error: number; warning: number; info: number };
-  assistantActive?: boolean;
+  proposalsActive?: boolean;
   actions?: ReactNode;
   problems: ReactNode;
-  assistant: ReactNode;
+  proposals: ReactNode;
 }) {
   const ref = useRef<HTMLElement>(null);
   const [preview, setPreview] = useState<number | null>(null);
@@ -115,7 +116,7 @@ export default function DiagnosticsDock({
       ref={ref}
       className={`diagnostics-dock ${state.open ? 'is-open' : ''}`}
       style={state.open ? { height: `min(${height}px, 70%)` } : undefined}
-      aria-label="Problems and assistant"
+      aria-label="Problems and proposals"
     >
       {state.open && (
         <button
@@ -181,13 +182,13 @@ export default function DiagnosticsDock({
           <button
             type="button"
             role="tab"
-            aria-selected={state.open && state.tab === 'assistant'}
-            className={state.open && state.tab === 'assistant' ? 'is-active' : ''}
-            onClick={() => openTab('assistant')}
+            aria-selected={state.open && state.tab === 'proposals'}
+            className={state.open && state.tab === 'proposals' ? 'is-active' : ''}
+            onClick={() => openTab('proposals')}
           >
             <Sparkles size={13} />
-            Assistant
-            {assistantActive && <span className="dock-activity" aria-label="Working" />}
+            Proposals
+            {proposalsActive && <span className="dock-activity" aria-label="Working" />}
           </button>
         </div>
         <div className="dock-actions">
@@ -205,7 +206,7 @@ export default function DiagnosticsDock({
       </header>
       {state.open && (
         <div className="dock-body" role="tabpanel">
-          {state.tab === 'problems' ? problems : assistant}
+          {state.tab === 'problems' ? problems : proposals}
         </div>
       )}
     </section>
