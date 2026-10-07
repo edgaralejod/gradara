@@ -21,13 +21,14 @@ def _bool(name: str, default: bool = False) -> bool:
 
 # Credits per operation, charged once per job with repairs included. An edit
 # also pays surcharges['edit']['block'] per generated block; a fix pays
-# diagnose plus the edit price.
-DEFAULT_PRICES = {'component': 2, 'model': 20, 'export': 2, 'edit': 4, 'diagnose': 2}
+# diagnose plus the edit price. 'results' is one Explain results question,
+# including the follow-up round when the AI asks for extra measurements.
+DEFAULT_PRICES = {'component': 2, 'model': 20, 'export': 2, 'edit': 4, 'diagnose': 2, 'results': 2}
 
 # Version of the Terms and Privacy notice shown on the sign-in page. Signing in
 # records it on the account; change it whenever site/public/terms.html or
 # site/public/privacy.html changes materially.
-TERMS_VERSION = '2026-09-28'
+TERMS_VERSION = '2026-10-07'
 
 # Stripe webhook event ids are kept this long for de-duplication, then purged.
 STRIPE_EVENT_RETENTION_DAYS = 90
@@ -57,7 +58,8 @@ class Config:
     prices: dict = field(default_factory=lambda: dict(DEFAULT_PRICES))
     # Extra credits for priced parts of a job; the edit stage of a fix costs prices['edit'].
     surcharges: dict = field(default_factory=lambda: {'edit': {'block': 2}})
-    max_calls: dict = field(default_factory=lambda: {'component': 4, 'model': 24, 'export': 3, 'edit': 12, 'diagnose': 14})
+    max_calls: dict = field(default_factory=lambda: {'component': 4, 'model': 24, 'export': 3, 'edit': 12, 'diagnose': 14,
+                                                     'results': 4})
     max_parts: dict = field(default_factory=lambda: {'block': 3})
     free_credits: int = 20
     rate_per_minute: int = 20

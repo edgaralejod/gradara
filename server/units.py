@@ -18,7 +18,7 @@ from functools import lru_cache
 
 from .hierarchy import BOUNDARY_KINDS
 from .models import Block, Definition, Diagram, Port, Project
-from .paths import ROOT
+from .paths import shipped
 
 # Every signal port of the block carries the same quantity.
 SAME_UNIT_KINDS = frozenset({'sum', 'subtract', 'saturation', 'filter', 'secondOrder', 'rateLimiter', 'unitDelay',
@@ -32,7 +32,7 @@ SAME_UNIT_PORTS = {'switch2': ('u1', 'u3', 'y'), 'manualSwitch': ('u1', 'u2', 'y
 @lru_cache(maxsize=1)
 def port_units() -> dict[str, dict[str, str]]:
     try:
-        table = json.loads((ROOT/'lib'/'gradara'/'port-units.json').read_text(encoding='utf-8'))
+        table = json.loads(shipped('lib', 'gradara', 'port-units.json').read_text(encoding='utf-8'))
     except OSError:
         return {}
     return {kind: ports for kind, ports in table.items() if isinstance(ports, dict)}

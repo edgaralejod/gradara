@@ -177,9 +177,13 @@ Policy:
 | `workspace.mo` | Generated executable source projection. |
 | `examples/` | Legacy saved work, preserved by migration. Not the checked-in templates in repository `models/examples/`. |
 | `trash/{modelId}.json` | Recoverable removed documents. Presence hides any legacy copy of the same identity. |
-| `runs/{jobId}/` | Immutable input snapshots, source, diagnostics, CSV, and result preview. |
+| `runs/{jobId}/` | Immutable input snapshots, source, diagnostics, CSV, and result preview. `meta.json` holds the name the user gave the run. |
+| `proposals/{modelId}.json` | The model's Proposals thread: requests, AI answers, drafts, diagnoses, and results discussions (newest 60 entries, at most 6 MB). Moving a model to Trash keeps it; deleting a run removes the discussions about it. |
+| `components/` | The AI block library: checked generated definitions, content-addressed. |
 | `agent/` | Generation prompts, responses, schema, and logs. |
 | `exports/` | Generated controller packages. |
+| `settings.json` | Preferences: engine choice, AI provider and models, workshop repository. |
+| `.credentials.json` | Secrets, only when no OS keychain is available or `GRADARA_CREDENTIAL_STORE=file` is set. |
 
 The server uses per-file atomic replacement, not a transactional multi-file database. `PUT /models/{id}` writes one document without activating it. It requires the `expectedVersion` from the last load/save response for an existing document; a content hash checks all persisted fields, including geometry and names. A stale save fails with 409. Retrying a body already stored is idempotent, even when its acknowledgment was lost. The single-process service performs the check/write without an intervening await; multiple workers are not supported by this protocol.
 
@@ -199,7 +203,7 @@ When adding fields, decide whether they affect physics, presentation, provenance
 
 ## Signal logging
 
-`Net.logged?: boolean` records a signal/control net in the next simulation. Physical nets cannot be logged directly; select the physical quantity with a sensor and log its signal output. Reconciliation retains logging with the net identity on split and enables it on a merged net if any contributing net was logged. Logging is undoable and changes observation/result identity; geometry and label edits do not. Modelica emits an output observation per logged net, while the solver continues to determine execution order. Nets inside a subsystem definition can be logged too; each instance of that definition records its own copy, keyed by the instance path (see [results](EXECUTION.md#results)).
+`Net.logged?: boolean` records a signal/control net in the next simulation. Physical nets cannot be logged directly; select the physical quantity with a sensor and log its signal output. Reconciliation retains logging with the net identity on split and enables it on a merged net if any contributing net was logged. An AI model edit can set it through its `log_signal` operation. Logging is undoable and changes observation/result identity; geometry and label edits do not. Modelica emits an output observation per logged net, while the solver continues to determine execution order. Nets inside a subsystem definition can be logged too; each instance of that definition records its own copy, keyed by the instance path (see [results](EXECUTION.md#results)).
 
 ### Block rotation
 

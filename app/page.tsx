@@ -42,6 +42,7 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
+  useSyncExternalStore,
 } from 'react';
 import {
   ReactFlowProvider,
@@ -152,7 +153,6 @@ import ModelBrowser, {
   type BrowserSection,
   type ImportError,
 } from '@/components/gradara/model-browser';
-import ModelComposer from '@/components/gradara/model-composer';
 import SaveCopyDialog from '@/components/gradara/save-copy-dialog';
 import AboutDialog from '@/components/gradara/about-dialog';
 import {
@@ -170,9 +170,30 @@ import {
   clampPopoverPosition,
   isCanvasInsertDoubleClick,
 } from '@/lib/gradara/inserter';
-import AgentComposer, {
-  type ComposerContext,
-} from '@/components/gradara/agent-composer';
+import AskBar, { type AskSubmit } from '@/components/gradara/ask-bar';
+import ProposalsPanel from '@/components/gradara/proposals-panel';
+import {
+  useProposals,
+  type Revision,
+} from '@/components/gradara/use-proposals';
+import {
+  scopeText,
+  type AskAction,
+  type AskContext,
+} from '@/lib/gradara/ask';
+import {
+  inspectorContext,
+  onAskAboutRuns,
+  onInspectorContext,
+  sendInspectorCommand,
+} from '@/lib/gradara/inspector-bus';
+import type { Entry, ProposalOrigin } from '@/lib/gradara/proposals-thread';
+import {
+  evidenceTarget,
+  type Evidence,
+  type ExplainResult,
+} from '@/lib/gradara/results-discussion';
+import { improveIssueUrl } from '@/lib/gradara/improve';
 import BlockDialog, {
   type BlockDialogTab,
 } from '@/components/gradara/block-dialog';
@@ -232,11 +253,7 @@ import DiagnosticsDock, {
 import ProblemsPanel, {
   type ProblemSection,
 } from '@/components/gradara/problems-panel';
-import AssistantPanel, {
-  useAssistant,
-  type Revision,
-} from '@/components/gradara/assistant-panel';
-import { mergeProposal, type EditProposal } from '@/lib/gradara/proposal';
+import { mergeProposal } from '@/lib/gradara/proposal';
 import {
   findSubsystem,
   groupIntoSubsystem,
@@ -256,7 +273,7 @@ import {
   demoteParameter,
   promotedTargets,
 } from '@/lib/gradara/hierarchy';
-import { useAiLabel } from '@/lib/gradara/ai';
+import { openExternal } from '@/lib/gradara/ai';
 import UpdateIndicator from '@/components/gradara/update-indicator';
 import {
   semanticSignature,
@@ -419,11 +436,18 @@ function Workbench() {
     engine: 'OpenModelica 1.27.0',
   });
   const [settingsTab, setSettingsTab] = useState<SettingsTab | null>(null);
+  /** A request carried from a "cannot do this yet" card into Settings → Personal features. */
+  const [featureRequest, setFeatureRequest] = useState('');
   const [healthChecked, setHealthChecked] = useState(false);
   const [history, setHistory] = useState<Project[]>([]);
   const [future, setFuture] = useState<Project[]>([]);
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
-  const [composer, setComposer] = useState<ComposerContext | null>(null);
+  /** The floating Ask bar: what it was opened on, and the action chosen in it. */
+  const [ask, setAsk] = useState<{
+    context: AskContext;
+    action?: AskAction;
+    portDomain?: string;
+  } | null>(null);
   const [inserter, setInserter] = useState<InsertContext | null>(null);
   /** The subsystem port whose properties dialog is open. */
   const [portDialog, setPortDialog] = useState<string | null>(null);
@@ -824,71 +848,135 @@ function Workbench() {
       .then(() => notify('Problems copied.'));
   };
   const getProject = useCallback(() => projectRef.current, []);
-  const assistant = useAssistant(project.modelId, getProject);
-  const requestEdit = (
-    prompt: string,
-    blockIds: string[],
-    revision?: Revision,
-  ) => {
-    if (scopeRef.current.length) {
-      notify(
-        'The assistant edits the top level for now. Press ⌘↑ to go up, then ask again.',
-      );
-      return;
-    }
-    const current = projectRef.current;
-    const names = blockIds
-      .map((id) => current.blocks.find((b) => b.id === id)?.definition.name)
-      .filter(Boolean);
-    const scope = names.length
-      ? `Selection · ${names.join(', ')}`
-      : 'Whole model';
-    void assistant.edit(
-      prompt,
-      { project: current, catalog: library, selection: blockIds },
-      revision ? `Revision · ${scope}` : scope,
-      revision,
+  const proposals = useProposals(project.modelId, getProject);
+  const blockName = (id: string) =>
+    projectRef.current.blocks.find((b) => b.id === id)?.definition.name;
+  /** A results discussion's proposal, applied and waiting for the next run to compare with. */
+  const [pendingCompare, setPendingCompare] = useState<
+    (ProposalOrigin & { modelId: string }) | null
+  >(null);
+  // Answers need room: opening Proposals for one makes the dock at least a comfortable height.
+  const openProposals = () =>
+    updateDock({ open: true, tab: 'proposals', height: Math.max(dock.height, 360) });
+  const topLevelOnly = () => {
+    if (!scopeRef.current.length) return false;
+    notify(
+      'The AI edits and explains the top level for now. Press ⌘↑ to go up, then ask again.',
     );
+    return true;
   };
-  const explainLabel = useAiLabel('diagnose');
-  const fixLabel = useAiLabel('fix');
+  /** Send what the Ask bar asked for; the answer arrives as a card in Proposals. */
+  const submitAsk = (request: AskSubmit, revision?: Revision) => {
+    if (proposals.busy) return;
+    const { action, text, context, blockType } = request;
+    const current = projectRef.current;
+    const scope = revision
+      ? `Revision · ${scopeText('edit', context, blockName)}`
+      : scopeText(action, context, blockName);
+    if (action === 'edit') {
+      if (topLevelOnly()) return;
+      void proposals.edit(
+        text,
+        { project: current, catalog: library, selection: context.selection },
+        scope,
+        revision,
+      );
+    } else if (action === 'block' || action === 'refine-block') {
+      void proposals.createBlock(
+        text,
+        blockType,
+        scope,
+        action === 'refine-block' ? context.existing : undefined,
+        action === 'block'
+          ? {
+              position: context.position ?? newPosition(),
+              ...(context.connection ? { connection: context.connection } : {}),
+              sheet: scopeRef.current,
+            }
+          : undefined,
+      );
+    } else if (action === 'model') {
+      void proposals.buildModel(text);
+    } else if (action === 'explain' || action === 'fix') {
+      const diagnostics = (context.problems ?? []).slice(0, 50);
+      if (!diagnostics.length || topLevelOnly()) return;
+      const runId =
+        runFailure &&
+        runFailure.modelId === current.modelId &&
+        runFailure.signature === semanticSignature(current)
+          ? runFailure.runId
+          : undefined;
+      void proposals.diagnose(
+        {
+          project: current,
+          diagnostics,
+          runId,
+          catalog: library,
+          proposeFix: action === 'fix',
+          ...(text ? { question: text } : {}),
+        },
+        text ||
+          (diagnostics.length === 1
+            ? `${action === 'fix' ? 'Fix' : 'Explain'}: ${diagnostics[0].message}`
+            : `${action === 'fix' ? 'Fix' : 'Explain'} ${diagnostics.length} problems`),
+        scope,
+      );
+    } else if (action === 'results' && context.runs) {
+      void proposals.explainResults(context.runs, text);
+    }
+    setAsk(null);
+    openProposals();
+  };
+  const askAboutProblems = (diagnostics: Diagnostic[], fix: boolean) => {
+    if (!diagnostics.length) return;
+    setAsk({
+      context: {
+        selection: [],
+        problems: diagnostics,
+        inSubsystem: scopeRef.current.length > 0,
+      },
+      action: fix ? 'fix' : 'explain',
+    });
+  };
   const askableProblems = problemSections
     .filter((s) => !s.stale)
     .flatMap((s) => s.items)
     .filter((d) => d.severity !== 'info');
-  const askAi = (diagnostics: Diagnostic[], proposeFix: boolean) => {
-    if (!diagnostics.length || assistant.busy) return;
-    if (scopeRef.current.length) {
-      notify(
-        'The assistant works on the top level for now. Press ⌘↑ to go up, then ask again.',
-      );
-      return;
-    }
-    const current = projectRef.current;
-    const runId =
-      runFailure &&
-      runFailure.modelId === current.modelId &&
-      runFailure.signature === semanticSignature(current)
-        ? runFailure.runId
-        : undefined;
-    updateDock({ open: true, tab: 'assistant' });
-    void assistant.diagnose(
-      {
-        project: current,
-        diagnostics: diagnostics.slice(0, 50),
-        runId,
-        catalog: library,
-        proposeFix,
-      },
-      diagnostics.length === 1
-        ? `${proposeFix ? 'Fix' : 'Explain'}: ${diagnostics[0].message}`
-        : proposeFix
-          ? `Fix ${diagnostics.length} problems`
-          : `Explain ${diagnostics.length} problems`,
-      proposeFix ? 'Fix with AI' : 'Explain',
-    );
+  // "Ask about this run" in the Data Inspector opens the bar on the runs on show.
+  useEffect(
+    () => onAskAboutRuns((runs) => setAsk({ context: { selection: [], runs } })),
+    [],
+  );
+  // The docked bar offers the runs on show while Results is open.
+  const shownRuns = useSyncExternalStore(
+    onInspectorContext,
+    inspectorContext,
+    () => null,
+  );
+  const dockContext: AskContext = {
+    selection: selectedIds,
+    inSubsystem: scope.length > 0,
+    emptySheet: !project.blocks.length && !scope.length,
+    ...(workspaceMode === 'results' && shownRuns ? { runs: shownRuns } : {}),
   };
-  const applyProposal = (proposal: EditProposal, baseRevision: number) => {
+  const previewExplanation = async (context: AskContext, question: string) => {
+    const runs = context.runs;
+    if (!runs) return '';
+    const data = await api<{ prompt: string }>('/results/explain/preview', {
+      method: 'POST',
+      body: JSON.stringify({
+        modelId: runs.modelId,
+        runIds: runs.runIds,
+        baseline: runs.baseline ?? null,
+        signals: runs.signals,
+        window: runs.window ?? null,
+        question: question.length >= 3 ? question : 'Your question',
+      }),
+    });
+    return data.prompt;
+  };
+  const applyProposal = (entry: Extract<Entry, { kind: 'proposal' }>) => {
+    const { proposal, baseRevision } = entry;
     const current = projectRef.current;
     if (current.revision !== baseRevision) {
       notify('The model changed since this proposal. Ask again.');
@@ -904,11 +992,79 @@ function Workbench() {
       projectRef.current.blocks.some((b) => b.id === id),
     );
     if (touched.length) select({ ...emptySelection(), blockIds: touched });
-    notify(
-      `Applied ${proposal.changes.length} ${proposal.changes.length === 1 ? 'change' : 'changes'}. Undo with ⌘Z.`,
-    );
+    if (entry.origin && current.modelId) {
+      setPendingCompare({ ...entry.origin, modelId: current.modelId });
+      notify(
+        `Applied ${proposal.changes.length} ${proposal.changes.length === 1 ? 'change' : 'changes'}. Run the model: the new run opens next to the one you discussed.`,
+      );
+    } else
+      notify(
+        `Applied ${proposal.changes.length} ${proposal.changes.length === 1 ? 'change' : 'changes'}. Undo with ⌘Z.`,
+      );
     return true;
   };
+  /** Propose the change a results answer suggested, as an ordinary checked edit. */
+  const proposeFromResults = (
+    entry: Extract<Entry, { kind: 'results' }>,
+    changePrompt: string,
+    turn: ExplainResult,
+  ) => {
+    if (proposals.busy || topLevelOnly()) return;
+    const question = entry.turns.find((t) => t.result === turn)?.question ?? '';
+    void proposals.edit(
+      changePrompt,
+      {
+        project: projectRef.current,
+        catalog: library,
+        selection: [],
+        context: `Results discussion.\nQuestion: ${question}\nAnswer: ${turn.answer.explanation}`.slice(0, 6000),
+      },
+      'From Explain results',
+      undefined,
+      { runId: entry.runIds[0], signals: entry.context.signals },
+    );
+    openProposals();
+  };
+  const showEvidence = (
+    runId: string,
+    evidence: Evidence,
+    window: [number, number],
+  ) => {
+    const modelId = projectRef.current.modelId;
+    if (!modelId) return;
+    const target = evidenceTarget(evidence, window);
+    setWorkspaceMode('results');
+    sendInspectorCommand({
+      type: 'focus',
+      modelId,
+      runId,
+      key: evidence.signal,
+      ...target,
+    });
+  };
+  const [openingModel, setOpeningModel] = useState('');
+  const openModelDraft = async (entry: Extract<Entry, { kind: 'model' }>) => {
+    if (openingModel) return;
+    const setStatus = proposals.setStatus;
+    setOpeningModel(entry.id);
+    try {
+      await insertGeneratedModel(entry.draft.project);
+      setStatus(entry.id, 'applied');
+    } catch (e) {
+      notify((e as Error).message);
+    } finally {
+      setOpeningModel('');
+    }
+  };
+  const improveGradara = (entry: Extract<Entry, { kind: 'unsupported' }>) =>
+    openExternal(
+      improveIssueUrl({
+        request: entry.request,
+        reason: entry.reason,
+        version: health.version ?? '',
+        platform: navigator.platform,
+      }),
+    );
   const restoreDocument = (loaded: SavedDocument, recover = true) => {
     store.remember(loaded);
     let next = loaded.project;
@@ -1105,7 +1261,7 @@ function Workbench() {
     setHistory([]);
     setFuture([]);
     select(emptySelection());
-    setComposer(null);
+    setAsk(null);
     setInserter(null);
     setEquationBlock(null);
     setInspectorOpen(false);
@@ -1577,10 +1733,18 @@ function Workbench() {
       },
       {
         id: 'agent',
-        label: 'Ask the agent to build here…',
+        label: 'Ask AI for a block here…',
         icon: <Sparkles size={13} />,
         shortcut: 'A',
-        run: () => setComposer({ position: menu.point }),
+        run: () =>
+          setAsk({
+            context: {
+              selection: [],
+              position: menu.point,
+              inSubsystem: scopeRef.current.length > 0,
+            },
+            action: 'block',
+          }),
       },
       {
         id: 'paste',
@@ -1848,10 +2012,25 @@ function Workbench() {
     },
     [commit, select, notify],
   );
-  const startComposer = useCallback(
-    () => setComposer({ position: newPosition() }),
-    [newPosition],
-  );
+  /** Open the Ask bar where the user is: on the runs on show in Results, else on the sheet. */
+  const startAsk = useCallback((action?: AskAction) => {
+    const runs = workspaceMode === 'results' ? inspectorContext() : null;
+    if (runs && !action) {
+      setAsk({ context: { selection: [], runs } });
+      return;
+    }
+    if (workspaceMode !== 'diagram') setWorkspaceMode('diagram');
+    const current = projectRef.current;
+    setAsk({
+      context: {
+        selection: selectionRef.current.blockIds,
+        position: newPosition(),
+        emptySheet: !current.blocks.length && !scopeRef.current.length,
+        inSubsystem: scopeRef.current.length > 0,
+      },
+      action,
+    });
+  }, [newPosition, workspaceMode]);
   async function runSimulation() {
     if (runController.current || switching || !ready) return;
     if (stopTimeInvalid) {
@@ -1864,7 +2043,7 @@ function Workbench() {
       return;
     }
     if (!docRef.current.blocks.length) {
-      notify('Add a block from the library or ask the agent to create one.');
+      notify('Add a block from the library, or press A to ask AI for one.');
       return;
     }
     const controller = new AbortController();
@@ -1897,6 +2076,17 @@ function Workbench() {
       setResult(r);
       setResultSignature(currentSignature);
       setWorkspaceMode('results');
+      // A change proposed from a results discussion: show the new run against the one discussed.
+      if (pendingCompare && pendingCompare.modelId === snapshot.modelId && r.id !== pendingCompare.runId) {
+        sendInspectorCommand({
+          type: 'compare',
+          modelId: pendingCompare.modelId,
+          runIds: [r.id, pendingCompare.runId],
+          baseline: pendingCompare.runId,
+          signals: pendingCompare.signals,
+        });
+        setPendingCompare(null);
+      }
     } catch (e) {
       if (
         runController.current === controller &&
@@ -2051,7 +2241,7 @@ function Workbench() {
         event.metaKey ||
         event.altKey ||
         workspaceMode !== 'diagram' ||
-        composer ||
+        ask ||
         inserter ||
         pointerDown ||
         editing ||
@@ -2117,7 +2307,7 @@ function Workbench() {
       window.removeEventListener('pointercancel', up, true);
       window.removeEventListener('blur', blur);
     };
-  }, [commit, workspaceMode, composer, inserter]);
+  }, [commit, workspaceMode, ask, inserter]);
   const runRef = useRef(runSimulation);
   runRef.current = runSimulation;
   const toggleDockRef = useRef(() => {});
@@ -2208,9 +2398,9 @@ function Workbench() {
         e.preventDefault();
         if (!e.repeat)
           commit((p) => rotateBlocks(p, selectionRef.current.blockIds));
-      } else if (e.key.toLowerCase() === 'a' && !command && !composer) {
+      } else if (e.key.toLowerCase() === 'a' && !command && !ask) {
         e.preventDefault();
-        startComposer();
+        startAsk();
       } else if (e.key.toLowerCase() === 'v' && !command) {
         setCanvasTool('select');
       } else if (e.key.toLowerCase() === 'h' && !command) {
@@ -2242,9 +2432,9 @@ function Workbench() {
           !selectionRef.current.blockIds.length &&
           !selectionRef.current.wireIds.length &&
           !selectionRef.current.junctionIds.length;
-        setComposer(null);
+        setAsk(null);
         setInserter(null);
-        if (!(nothingSelected && !composer && !inserter && leaveSubsystem()))
+        if (!(nothingSelected && !ask && !inserter && leaveSubsystem()))
           select(emptySelection());
       } else if (e.key === '1' && command) {
         e.preventDefault();
@@ -2277,8 +2467,8 @@ function Workbench() {
     deleteSelected,
     select,
     notify,
-    composer,
-    startComposer,
+    ask,
+    startAsk,
     flow,
     selectedEdges,
     commit,
@@ -2291,18 +2481,27 @@ function Workbench() {
     toggleGrid,
     openBlockHelp,
   ]);
-  const insertGenerated = (definition: Definition) => {
-    if (!composer) return;
-    const ctx = composer;
+  /** Add a created block where it was asked for, or replace the refined block's definition. */
+  const canApplyBlock = (entry: Extract<Entry, { kind: 'block' }>) =>
+    !entry.refines ||
+    projectRef.current.blocks.some((b) => b.id === entry.refines);
+  const applyBlockEntry = (entry: Extract<Entry, { kind: 'block' }>) => {
+    const { definition, placement } = entry;
+    const refines = entry.refines;
+    if (refines && !canApplyBlock(entry)) {
+      notify('That block is no longer on this sheet.');
+      return false;
+    }
     let dropped = 0;
-    let id = ctx.existing?.id;
+    let id = refines;
     commit((p) => {
-      if (ctx.existing) {
-        const next = replaceDefinition(p, ctx.existing.id, definition);
+      if (refines) {
+        const next = replaceDefinition(p, refines, definition);
         dropped = p.wires.length - next.wires.length;
         return next;
       }
       id = `b_${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`;
+      const position = placement?.position ?? newPosition();
       let next = {
         ...p,
         blocks: [
@@ -2310,38 +2509,38 @@ function Workbench() {
           {
             id,
             definition,
-            position: snapBlockPosition(
-              ctx.position,
-              defaultBlockSize(definition),
-            ),
+            position: snapBlockPosition(position, defaultBlockSize(definition)),
             size: defaultBlockSize(definition),
           },
         ],
       };
-      if (ctx.connection) {
-        const from = portOf(p, ctx.connection.blockId, ctx.connection.portId);
+      // The open port it was asked on, if that block is still on this sheet.
+      const connection = placement?.connection;
+      if (connection && p.blocks.some((b) => b.id === connection.blockId)) {
+        const from = portOf(p, connection.blockId, connection.portId);
         const to = definition.ports.find((port) => compatible(from, port));
         if (to)
           next = addWire(next, {
             id: crypto.randomUUID(),
-            source: ctx.connection.blockId,
-            sourceHandle: ctx.connection.portId,
+            source: connection.blockId,
+            sourceHandle: connection.portId,
             target: id,
             targetHandle: to.id,
           });
       }
       return next;
     });
+    if (workspaceMode !== 'diagram') setWorkspaceMode('diagram');
     if (id) setSelectedIds([id]);
     setInspectorOpen(true);
-    setComposer(null);
     notify(
       dropped
         ? `Component updated. ${dropped} incompatible connection(s) removed; undo is available.`
-        : ctx.existing
+        : refines
           ? 'Component updated. Connections preserved.'
           : `${definition.name} added to the model.`,
     );
+    return true;
   };
   async function importProject(file: File) {
     if (!beginTransition()) return;
@@ -2804,7 +3003,7 @@ function Workbench() {
           <aside className="library-panel">
             <LibraryNavigator
               onAdd={(definition) => addComponent(definition)}
-              onAskAgent={startComposer}
+              onAskAgent={() => startAsk('block')}
               onHelp={setHelpDefinition}
             />
           </aside>
@@ -2854,7 +3053,7 @@ function Workbench() {
                   if (e.defaultPrevented) return;
                   if (!isCanvasInsertDoubleClick(e.target)) return;
                   const bounds = canvasRef.current?.getBoundingClientRect();
-                  setComposer(null);
+                  setAsk(null);
                   setInserter({
                     position: flow.screenToFlowPosition({
                       x: e.clientX,
@@ -2894,7 +3093,7 @@ function Workbench() {
                 {ready &&
                   project.blocks.length === 0 &&
                   scope.length > 0 &&
-                  !composer &&
+                  !ask &&
                   !inserter && (
                     <div className="empty-subsystem" role="note">
                       This subsystem is empty. Add blocks from the library, or
@@ -2905,7 +3104,7 @@ function Workbench() {
                 {ready &&
                   project.blocks.length === 0 &&
                   scope.length === 0 &&
-                  !composer &&
+                  !ask &&
                   !inserter && (
                     <div
                       className="empty-model"
@@ -2936,9 +3135,9 @@ function Workbench() {
                           <FolderOpen size={15} />
                           Browse blocks
                         </Button>
-                        <Button variant="outline" onClick={startComposer}>
+                        <Button variant="outline" onClick={() => startAsk()}>
                           <Sparkles size={15} />
-                          Ask agent
+                          Ask AI
                         </Button>
                       </div>
                       <button
@@ -3144,9 +3343,9 @@ function Workbench() {
                   onNavigate={(path) => navigate(path)}
                 />
                 <div className="canvas-agent-shortcut">
-                  <Button variant="outline" onClick={startComposer}>
+                  <Button variant="outline" onClick={() => startAsk()}>
                     <Sparkles size={14} />
-                    Ask agent<kbd>A</kbd>
+                    Ask AI<kbd>A</kbd>
                   </Button>
                 </div>
                 {canvasMenu && (
@@ -3173,9 +3372,21 @@ function Workbench() {
                     onAskAgent={() => {
                       const ctx = inserter;
                       setInserter(null);
-                      setComposer({
-                        position: ctx.position,
-                        connection: ctx.connection,
+                      setAsk({
+                        context: {
+                          selection: [],
+                          position: ctx.position,
+                          ...(ctx.connection ? { connection: ctx.connection } : {}),
+                          inSubsystem: scopeRef.current.length > 0,
+                        },
+                        action: 'block',
+                        portDomain: ctx.connection
+                          ? portOf(
+                              projectRef.current,
+                              ctx.connection.blockId,
+                              ctx.connection.portId,
+                            )?.domain
+                          : undefined,
                       });
                     }}
                     onAdd={(definition) => {
@@ -3187,30 +3398,6 @@ function Workbench() {
                       setInserter(null);
                     }}
                   />
-                )}
-                {composer?.mode === 'model' ? (
-                  <ModelComposer
-                    onClose={() => setComposer(null)}
-                    onBlockMode={() =>
-                      setComposer({ ...composer, mode: 'block' })
-                    }
-                    onInsert={insertGeneratedModel}
-                  />
-                ) : (
-                  composer && (
-                    <AgentComposer
-                      key={
-                        composer.existing?.id ??
-                        JSON.stringify(composer.position)
-                      }
-                      context={composer}
-                      onClose={() => setComposer(null)}
-                      onInsert={insertGenerated}
-                      onModelMode={() =>
-                        setComposer({ ...composer, mode: 'model' })
-                      }
-                    />
-                  )
                 )}
               </div>
             ) : workspaceMode === 'explorer' ? (
@@ -3247,6 +3434,24 @@ function Workbench() {
                 />
               </div>
             )}
+            {ask && (
+              <div className="ask-layer">
+                <AskBar
+                  variant="floating"
+                  context={ask.context}
+                  onContextChange={(context) => setAsk({ ...ask, context })}
+                  action={ask.action}
+                  onAction={(action) => setAsk({ ...ask, action })}
+                  busy={!!proposals.busy}
+                  portDomain={ask.portDomain}
+                  names={blockName}
+                  onSubmit={submitAsk}
+                  onClose={() => setAsk(null)}
+                  onPreview={previewExplanation}
+                  focusOnOpen
+                />
+              </div>
+            )}
             <DiagnosticsDock
               state={dock}
               onChange={updateDock}
@@ -3258,9 +3463,9 @@ function Workbench() {
                       <>
                         <button
                           type="button"
-                          disabled={!!assistant.busy}
-                          title={explainLabel || 'Explain these problems'}
-                          onClick={() => askAi(askableProblems, false)}
+                          disabled={!!proposals.busy}
+                          title="Explain these problems with AI (you see the price before sending)"
+                          onClick={() => askAboutProblems(askableProblems, false)}
                         >
                           <Stethoscope size={12} />
                           Explain
@@ -3268,9 +3473,9 @@ function Workbench() {
                         <button
                           type="button"
                           className="is-primary"
-                          disabled={!!assistant.busy}
-                          title={fixLabel || 'Propose a checked fix'}
-                          onClick={() => askAi(askableProblems, true)}
+                          disabled={!!proposals.busy}
+                          title="Propose a checked fix with AI (you see the price before sending)"
+                          onClick={() => askAboutProblems(askableProblems, true)}
                         >
                           <Sparkles size={12} />
                           Fix with AI
@@ -3289,7 +3494,7 @@ function Workbench() {
                   project={project}
                   sections={problemSections}
                   onSelect={selectProblem}
-                  onAsk={(d) => askAi([d], false)}
+                  onAsk={(d) => askAboutProblems([d], false)}
                   onSettingsHelp={(topic) => setSolverHelp({ topic })}
                   empty={
                     project.blocks.length
@@ -3298,16 +3503,30 @@ function Workbench() {
                   }
                 />
               }
-              assistantActive={!!assistant.busy}
-              assistant={
-                <AssistantPanel
-                  assistant={assistant}
+              proposalsActive={!!proposals.busy}
+              proposals={
+                <ProposalsPanel
+                  proposals={proposals}
                   project={project}
-                  selectedIds={selectedIds}
-                  onEdit={requestEdit}
+                  context={dockContext}
+                  names={blockName}
+                  opening={openingModel}
+                  onAsk={submitAsk}
                   onApply={applyProposal}
+                  onApplyBlock={applyBlockEntry}
+                  canApplyBlock={canApplyBlock}
+                  onOpenModel={(entry) => void openModelDraft(entry)}
                   onSelect={(blockIds) => selectBlocks(blockIds)}
                   onOpenSettings={() => setSettingsTab('ai')}
+                  onImprove={improveGradara}
+                  onBuildFeature={(entry) => {
+                    setFeatureRequest(`${entry.request}\n\nGradara said: ${entry.reason}`);
+                    setSettingsTab('features');
+                  }}
+                  onEvidence={showEvidence}
+                  onPropose={proposeFromResults}
+                  runAvailable={() => true}
+                  onPreview={previewExplanation}
                 />
               }
             />
@@ -3455,17 +3674,20 @@ function Workbench() {
                           className="refine-button"
                           variant="outline"
                           onClick={() =>
-                            setComposer({
-                              position: active.position,
-                              existing: {
-                                id: active.id,
-                                definition: active.definition,
+                            setAsk({
+                              context: {
+                                selection: [],
+                                existing: {
+                                  id: active.id,
+                                  definition: active.definition,
+                                },
                               },
+                              action: 'refine-block',
                             })
                           }
                         >
                           <Sparkles size={13} />
-                          Refine with agent
+                          Refine with AI
                         </Button>
                       )}
                   </div>
@@ -4034,9 +4256,11 @@ function Workbench() {
         {settingsTab && (
           <SettingsDialog
             initialTab={settingsTab}
+            initialRequest={featureRequest}
             dataDirectory={health.projectDirectory}
             onClose={() => {
               setSettingsTab(null);
+              setFeatureRequest('');
               refreshHealth();
             }}
             onEngineChange={refreshHealth}
@@ -4071,7 +4295,7 @@ function Workbench() {
                 ['Restore auto route (wires only)', 'R'],
                 ['Name a signal / net', 'Double-click wire / F2'],
                 ['Move a signal label', 'Drag along its net'],
-                ['Ask agent (new block or model)', 'A'],
+                ['Ask AI (edit, new block, model, or about the results on show)', 'A'],
                 ['Run simulation', '⌘ / Ctrl + Enter'],
                 ['Save now (edits also save automatically)', '⌘ / Ctrl + S'],
                 ['Undo', '⌘ / Ctrl + Z'],

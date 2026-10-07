@@ -53,6 +53,8 @@ export type Account =
         export: number;
         edit?: number;
         diagnose?: number;
+        /** One Explain results question; absent from services older than 0.7. */
+        results?: number;
       };
       /** Extra credits per priced part of a job, e.g. each generated block of an edit. */
       surcharges?: { edit?: { block?: number } };
@@ -75,7 +77,7 @@ export function formatPrice(pack: CreditPack) {
 }
 
 export type AiOperation =
-  'component' | 'model' | 'export' | 'edit' | 'diagnose' | 'fix';
+  'component' | 'model' | 'export' | 'edit' | 'diagnose' | 'fix' | 'results';
 
 /** The price part of an AI label, or '' when the service did not report one. */
 export function priceText(
@@ -96,7 +98,7 @@ export function priceText(
   return price === undefined ? '' : `${price} credits`;
 }
 
-/** Short footer text for AI composers, e.g. "Gradara AI · 2 credits · 38 left". */
+/** Short price text for the Ask bar, e.g. "Gradara AI · 2 credits · 38 left". */
 /** The AI status for one operation: a short label, and whether a request can be made now. */
 export function useAi(kind: AiOperation) {
   const [label, setLabel] = useState('');

@@ -54,7 +54,7 @@ type ViewState = {
 };
 
 /**
- * Screen space kept clear when fitting: the zoom controls on the left, the Ask agent
+ * Screen space kept clear when fitting: the zoom controls on the left, the Ask AI
  * button above, the hint line below, plus a margin so nothing touches an edge.
  */
 const FIT_INSET = { left: 56, right: 56, top: 60, bottom: 44 };

@@ -1,6 +1,6 @@
 /** Targets that already own double-click (equations, labels, wires, chrome). */
 export const CANVAS_INSERT_BLOCKERS =
-  '.react-flow__node,.react-flow__handle,.react-flow__resize-control,.react-flow__controls,.react-flow__minimap,.react-flow__panel,.block-label-anchor,.block-name,.engineering-block,.net-toolbar,.net-label,[data-wire-id],[data-junction-id],[data-port-id],.block-inserter,.agent-composer,.empty-model';
+  '.react-flow__node,.react-flow__handle,.react-flow__resize-control,.react-flow__controls,.react-flow__minimap,.react-flow__panel,.block-label-anchor,.block-name,.engineering-block,.net-toolbar,.net-label,[data-wire-id],[data-junction-id],[data-port-id],.block-inserter,.ask-bar,.empty-model';
 
 export const INSERTER_WIDTH = 300;
 export const INSERTER_MAX_HEIGHT = 520;

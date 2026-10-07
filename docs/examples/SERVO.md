@@ -4,7 +4,7 @@ A DC motor position loop with a 1 kHz sampled PID controller. It is built to sho
 
 ## Try it
 
-Open **Examples**, choose **Use example** under **Servo position**, then choose **Run**. This saves your own copy. The default plots compare the position request with the measured shaft angle, and show the controller's voltage command and the motor current.
+Open **Examples**, choose **Use example** under **Servo position**, then choose **Run**. This saves your own copy. Results opens with the position request against the measured shaft angle, and the controller's voltage command. Choose the 2×2 layout to also see the motor current.
 
 ## What the model contains
 

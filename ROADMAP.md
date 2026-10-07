@@ -2,7 +2,7 @@
 
 Gradara's priority is a polished, usable diagram-to-simulation workflow. This is an ordered backlog, not a delivery schedule or claim of implemented capability. The [architecture](ARCHITECTURE.md), [wiring contract](docs/architecture/WIRING.md), and [testing guide](docs/development/TESTING.md) describe the current boundaries and acceptance process.
 
-## Before the first public release
+## Release hardening (before 1.0)
 
 - Run the complete new-model/run/reopen/export workflow by hand from each installer (CI install tests already simulate and verify generated C on Windows, macOS Intel, and Ubuntu; only the Apple silicon simulation is manual); record actual platform results.
 - Deploy the Gradara AI service in live mode and verify sign-in, one real purchase, a refund, and the webhook. Have the privacy notice and terms of service reviewed by counsel.
@@ -13,7 +13,7 @@ Gradara's priority is a polished, usable diagram-to-simulation workflow. This is
 
 | Task | Scope | Done when |
 | --- | --- | --- |
-| AI onboarding | Settings → AI already covers provider choice, per-provider model selection, key verification, and Gradara AI sign-in, and the composers point to Settings when setup or sign-in is missing. Remaining: in-context messages for rejected keys, exhausted credits, and vendor outages, and hiding AI controls when AI is off. | A first-time user can distinguish missing setup, sign-in, credit, and vendor failures from the composer itself. Status probes never trigger paid generations. |
+| AI onboarding | Settings → AI already covers provider choice, per-provider model selection, key verification, and Gradara AI sign-in, and error cards in the Proposals tab offer **Open Settings** when setup or sign-in is missing. Remaining: in-context messages for rejected keys, exhausted credits, and vendor outages, and hiding AI controls when AI is off. | A first-time user can distinguish missing setup, sign-in, credit, and vendor failures from the Ask bar and Proposals tab. Status probes never trigger paid generations. |
 | Keyboard and screen-reader access | Focus, discoverable actions, model dialogs, and canvas navigation. | A new user can create/open/run a model using the keyboard; assistive-technology sessions verify accessible names, focus return, and error recovery. |
 | Lint cleanup | Small groups of existing workspace, editor, and UI primitive findings. | The strict lint command passes without blanket rule suppression; interaction regressions are checked. |
 | Simulation settings | Initialization options and parameter sweeps (the solver, tolerance, maximum step, output interval, and fixed step are per-model settings with in-app help). | Settings have useful defaults, are validated and recorded with each immutable run, and expose failures clearly. |
@@ -58,6 +58,15 @@ Every installer now includes its engine (a Linux VM on macOS). Remaining:
 - Add streaming progress for long model builds, and a usage view (credits per operation) in Settings.
 - Consider subscriptions with included credits once usage patterns are known; keep prepaid packs.
 - Add local-model support (for example an OpenAI-compatible local endpoint) as another provider behind the same interface.
+- AI edits and explanations inside subsystems. Today edits, diagnosis, and fixes work on the top level of the model (the **Top level only** chip in the Ask bar).
+
+## Personal features
+
+Today the workshop pipeline builds personal features on the owning repository's own `ANTHROPIC_API_KEY`: the maintainer's, or a fork owner's ([design](docs/architecture/LAYERS.md)). Remaining:
+
+- **Personal features for every user, paid through Gradara AI.** Only after a cost report from real builds (tokens and dollars per build, failure rate, the cost of porting layers at each release) sets the price, caps, and limits, and after every cost control (a metered gateway endpoint, per-job tokens, credit reservation, receipts, rebuilds on release) has a test.
+- **A gallery of listed features** that users can install, after human review.
+- **Documents that declare the personal features they need**, so a shared model can say what it requires.
 
 ## Hierarchy and variants
 

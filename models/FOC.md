@@ -17,8 +17,8 @@ Open **Examples**, choose **Use example** under **AC motor · FOC**, then choose
 
 ## What to look at
 
-- Results opens with plots of speed, d/q currents, phase currents, torque, and d/q voltages.
-- Phase currents first show the last 50 ms. Choose **Full run** to see startup.
+- Results opens with speed and the d/q currents. Choose the 3×2 layout to also see phase currents, torque, and the d/q voltages.
+- Box-zoom the phase currents to see individual cycles; **Fit X** shows the whole run again.
 - Watch the speed dip and recover when the load steps up at 0.45 s.
 - **Export CSV** in Results downloads every output point.
 

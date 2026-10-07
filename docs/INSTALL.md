@@ -93,7 +93,7 @@ Gradara checks for a new version shortly after it starts and every four hours.
 
 ## Where your models are stored
 
-Gradara keeps your models, simulation results, AI block library, and settings in a data folder. **Help → Open Data Folder** opens it.
+Gradara keeps your models, simulation results, AI proposals, AI block library, and settings in a data folder. **Help → Open Data Folder** opens it.
 
 | System | Data folder | Logs folder |
 | --- | --- | --- |
@@ -101,7 +101,7 @@ Gradara keeps your models, simulation results, AI block library, and settings in
 | macOS | `~/Library/Application Support/Gradara/data` | `~/Library/Application Support/Gradara/logs` |
 | Linux | `~/.config/Gradara/data` | `~/.config/Gradara/logs` |
 
-Inside the data folder, `models` holds your models and `trash` holds models you removed. Back up the whole data folder to keep your models and results. API keys you enter for OpenAI or Anthropic are stored in your system's keychain, not in this folder.
+Inside the data folder, `models` holds your models, `trash` holds models you removed, and `proposals` holds each model's Proposals tab. Back up the whole data folder to keep your models and results. API keys you enter for OpenAI or Anthropic, your Gradara AI sign-in, and a GitHub token for personal features are stored in your system's keychain, not in this folder. [Personal features](USER_GUIDE.md#personal-features) you install live in a `layers` folder next to `data` and `logs`.
 
 To move a single model to another computer, use **Export → Gradara project** and **Models → Import file** instead of copying folders.
 

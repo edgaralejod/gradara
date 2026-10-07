@@ -15,6 +15,8 @@ files:
   - main.cjs
   - preload.cjs
   - update-guard.cjs
+  - layers.cjs
+  - layer-keys.json
   - package.json
   - "!**/*.map"
 asar: true

@@ -21,9 +21,9 @@ Agents author inspectable, saved component definitions and export artifacts. Ord
 | Local service | Python 3.12, FastAPI, Pydantic | Persistence, validation, source emission, asynchronous jobs, agent and export adapters. Loopback only; refuses cross-site requests. |
 | Simulation | OpenModelica 1.27.1 and MSL 4.1.0: the engine built into each installer (a Linux VM on macOS), or a native install or Docker image from a source checkout (`server/engines.py`, `packaging/engine/`) | Equation processing, initialization, integration, and events. |
 | AI providers | `server/llm/`: Gradara AI, OpenAI, Anthropic, Codex CLI | One schema-constrained generation interface; provider chosen in Settings. |
-| Desktop app | Electron shell, PyInstaller-frozen service, static workbench build | Installers per OS; see [distribution](docs/architecture/DISTRIBUTION.md). |
+| Desktop app | Electron shell, PyInstaller-frozen service, static workbench build | Installers per OS; see [distribution](docs/architecture/DISTRIBUTION.md). Can start from one signed personal-feature layer (a workbench build and `server` package) instead of the shipped code, falling back to the shipped code if it fails; see [personal features](docs/architecture/LAYERS.md). |
 | Gradara AI service | `cloud/`: FastAPI, PostgreSQL, Firebase Auth, Stripe | Accounts and prepaid credits; never stores prompts or responses. |
-| Storage | JSON documents and per-job filesystem directories | Single-user local persistence; no database or collaboration server. |
+| Storage | JSON documents, per-run folders, and per-model Proposals threads in the data folder; personal-feature layers beside it | Single-user local persistence; no database or collaboration server. |
 
 The Vite configuration retains Sites/Cloudflare build scaffolding. Its optional D1/R2 bindings are unset; application persistence and simulation use FastAPI and the local filesystem. A successful web build is not a deployable hosted simulation service.
 
@@ -85,6 +85,10 @@ This export is separate from OpenModelica's generated simulation C. It works fro
 Full-model creation uses `server/model_agent.py` to plan against a catalog snapshot, await checked missing components through the existing creator, assemble catalog references into a validated document, and require a successful trial simulation. The browser previews the result and saves it as a separate model on acceptance. See [execution](docs/architecture/EXECUTION.md#full-model-generation) for limits and ownership.
 
 Editing the open model (`server/model_edit.py`) and diagnosis (`server/diagnose_agent.py`) keep the same boundary: the agent returns bounded operations or an explanation, conventional code applies the operations all-or-nothing and runs the trial simulation, and the browser merges an accepted proposal into the document as one undo step. See [model editing](docs/architecture/EXECUTION.md#model-editing) and [diagnosis](docs/architecture/EXECUTION.md#diagnosis).
+
+Explaining results keeps the samples on the machine. `server/run_digest.py` computes a digest of up to three stored runs (statistics, settling, events, a short envelope, differences, parameters) from the full data; `server/results_agent.py` sends that digest and the model without layout, allows one round of locally computed measurements, and rechecks every number the answer quotes against the stored runs, removing claims that do not match. See [results explanation](docs/architecture/EXECUTION.md#results-explanation).
+
+Personal features are built outside the app. `.github/workflows/workshop.yml` has an agent implement a request on a branch, gates it (allowed paths, tests, docs, a second-agent review, a load test in the released service), signs the result with `LAYER_SIGNING_KEY`, and publishes it as a prerelease. `server/workshop.py` drives that pipeline through the GitHub API; the desktop shell alone verifies and installs layers. See [personal features](docs/architecture/LAYERS.md).
 
 ### Local generated-block library
 

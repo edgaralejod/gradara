@@ -55,3 +55,6 @@ __pycache__/
 /dist-engine/
 *.spec.bak
 /site/.firebase/
+/dist-layer/
+# The gateway's local development databases (cloud/README.md)
+/cloud/*.db

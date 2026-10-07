@@ -127,10 +127,10 @@
   <section class="section wrap" id="ai" aria-labelledby="ai-title">
     <div class="section-head">
       <div><div class="kicker">Optional AI</div><h2 id="ai-title">Describe the missing part.<br>Get a checked block.</h2></div>
-      <p>When the library does not have what you need, describe it. Gradara writes the equations, checks them with the compiler, and places a block you can inspect and edit. It can also build a complete first model from a description, propose checked edits to the model you have open, and explain why a run failed. Nothing changes until you review and apply it.</p>
+      <p>When the library does not have what you need, describe it. Gradara writes the equations, checks them with the compiler, and places a block you can inspect and edit. It can also build a complete first model from a description, propose checked edits to the model you have open, explain why a run failed, and discuss your results with every number checked against the data. Nothing changes until you review and apply it.</p>
     </div>
     <ol class="flow">
-      <li><h3>Describe</h3><p>Choose signal, electrical, mechanical, thermal, or multidomain, and say what it should do.</p></li>
+      <li><h3>Describe</h3><p>Say what it should do. Gradara picks signal, electrical, mechanical, thermal, or multidomain, and you can change it.</p></li>
       <li><h3>Generate</h3><p>The AI returns a structured definition with real ports and parameters, never free-form code.</p></li>
       <li><h3>Check</h3><p>Schema validation and the OpenModelica compiler run before anything reaches your diagram. One automatic repair if needed.</p></li>
       <li><h3>Own it</h3><p>The block is saved in your model and your local library. Reuse and simulate it without calling AI again.</p></li>
@@ -175,8 +175,9 @@
       <div><b>2</b><span>credits per generated block</span></div>
       <div><b>20</b><span>credits per complete model build</span></div>
       <div><b>2</b><span>credits per C template written for a custom block</span></div>
-      <div><b>4</b><span>credits per assistant edit, +2 per new or rewritten block</span></div>
+      <div><b>4</b><span>credits per model edit, +2 per new or rewritten block</span></div>
       <div><b>2</b><span>credits to explain a problem; a fix adds the edit</span></div>
+      <div><b>2</b><span>credits per question about your results, follow-up measurements included</span></div>
     </div>
     <p class="costs-note">Drawing, simulating, and exporting Modelica or C code for library blocks never use credits or an account. Only the AI features above do, and the app shows the price before you send.</p>
   </section>
@@ -184,12 +185,12 @@
   <section class="section wrap" aria-labelledby="privacy-title">
     <div class="section-head">
       <div><div class="kicker">Privacy</div><h2 id="privacy-title">Your models stay<br>on your computer.</h2></div>
-      <p>Gradara is local first. Nothing leaves your computer unless you ask for an AI feature. <a href="privacy.html">Read the privacy notice</a>.</p>
+      <p>Gradara is local first. Apart from update checks, nothing leaves your computer unless you use an AI feature or personal features. <a href="privacy.html">Read the privacy notice</a>.</p>
     </div>
     <div class="points">
       <div class="point"><h3>No content retention</h3><p>Gradara AI processes requests in memory and does not store or log prompts, models, equations, or responses. Our AI provider, Anthropic, may keep requests briefly for abuse monitoring.</p></div>
-      <div class="point"><h3>Minimal records</h3><p>Only your email, credit balance, purchases, and per-request usage (task, model, token counts, time), with usage records deleted after about 13 months.</p></div>
-      <div class="point"><h3>Keys in your keychain</h3><p>Your own API keys and your sign-in live in the operating system keychain and go only to their provider.</p></div>
+      <div class="point"><h3>Minimal records</h3><p>Only your email, the Terms version you accepted, credit balance, purchases, sign-in records, and per-request usage (task, model, token counts, time), with usage records deleted after about 13 months.</p></div>
+      <div class="point"><h3>Keys in your keychain</h3><p>Your own API keys, your sign-in, and your GitHub token live in the operating system keychain and go only to their provider.</p></div>
       <div class="point"><h3>Delete any time</h3><p>Delete your Gradara AI account from Settings. Your local models are never affected.</p></div>
     </div>
   </section>
@@ -229,7 +230,7 @@
       <details><summary>Do I need Docker or OpenModelica?</summary><p>No. Every installer includes the simulation engine. On macOS, where OpenModelica publishes no native builds, Gradara runs it in a small virtual machine that ships inside the app and uses Apple's built-in Virtualization framework. The virtual machine has no network access and only sees Gradara's data folder.</p></details>
       <details><summary>How do I know the results are right?</summary><p>The physics comes from OpenModelica and the Modelica Standard Library. Automated tests compare Gradara's results with closed-form answers, from an RC circuit's time constant to a buck converter's ripple; the <a href="https://github.com/edgaralejod/gradara/blob/main/docs/VALIDATION.md">validation page</a> lists them with measured values. Gradara is not certified for safety-critical use.</p></details>
       <details><summary>Can it open Simulink models?</summary><p>No. Gradara is an independent tool with its own model format and exports standard Modelica source. MATLAB and Simulink files are not supported.</p></details>
-      <details><summary>Does my model leave my computer?</summary><p>Only when you use an AI feature, and only the context that request needs. Gradara AI does not store it; Anthropic, which runs the model, may keep it briefly for abuse monitoring. Simulation always runs locally.</p></details>
+      <details><summary>Does my model leave my computer?</summary><p>Only when you use an AI feature, and only the context that request needs; explaining results sends a summary of your runs computed on your computer, never the samples. Gradara AI does not store it; Anthropic, which runs the model, may keep it briefly for abuse monitoring. Simulation always runs locally.</p></details>
       <details><summary>Can I trust AI-generated blocks?</summary><p>Every block passes schema checks and the OpenModelica compiler before it appears, and its equations are visible and editable. Compiling is not the same as being physically correct, so review blocks the way you would review any model.</p></details>
       <details><summary>Who makes Gradara?</summary><p>Gradara is developed by Virtu Services LLC, with contributions from the open-source community.</p></details>
     </div>

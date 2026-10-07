@@ -52,6 +52,30 @@ def default_user_data_dir(app: str = 'Gradara') -> Path:
 
 
 ROOT = _source_root()
+# A personal-feature layer this service was loaded from (see packaging/backend_entry.py), or None.
+LAYER = Path(os.environ['GRADARA_LAYER_DIR']) if os.environ.get('GRADARA_LAYER_DIR') else None
+
+
+def shipped(*parts: str) -> Path:
+    """A data file shipped with the code: the layer's copy when this service runs from a layer."""
+    if LAYER is not None and (LAYER.joinpath(*parts)).is_file():
+        return LAYER.joinpath(*parts)
+    return ROOT.joinpath(*parts)
+
+
+def layer_info() -> dict | None:
+    """The layer's ID, base version and features, for /api/health."""
+    if LAYER is None:
+        return None
+    import json
+    try:
+        manifest = json.loads((LAYER/'manifest.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return {'id': 'unknown', 'base': '', 'features': []}
+    return {'id': manifest.get('id', ''), 'base': manifest.get('base', ''),
+            'features': [f.get('title', '') for f in manifest.get('features', []) if isinstance(f, dict)]}
+
+
 RESOURCES = Path(os.environ.get('GRADARA_RESOURCES') or ROOT)
 if os.environ.get('GRADARA_DATA_DIR'):
     DATA = Path(os.environ['GRADARA_DATA_DIR'])

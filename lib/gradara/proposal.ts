@@ -49,7 +49,8 @@ function sameEnds(a: Wire, b: Wire) {
  * Combine the proposal with the model the user has now. The server never
  * moves existing blocks or reroutes existing wires, so untouched objects are
  * kept exactly (routes, labels, sizes, nets); only definitions, new blocks,
- * new wires, removals, the name, and the stop time come from the proposal.
+ * new wires and their nets, removals, logged nets, the name, and the stop time
+ * come from the proposal.
  * New blocks are placed by `layoutNewBlocks`, ignoring the server's rough position.
  */
 export function mergeProposal(current: Project, proposed: Project) {
@@ -74,9 +75,22 @@ export function mergeProposal(current: Project, proposed: Project) {
     return rest;
   });
   const kept = new Set(nextWires.map((w) => w.id));
-  const nets = current.nets
-    ?.map((n) => ({ ...n, wireIds: n.wireIds.filter((id) => kept.has(id)) }))
-    .filter((n) => n.wireIds.length);
+  // Nets keep their names and labels; a net the proposal logs (log_signal) is logged,
+  // and nets the proposal made for its new wires come along for the reconciler to adopt.
+  const proposedNets = new Map((proposed.nets ?? []).map((n) => [n.id, n]));
+  const currentIds = new Set((current.nets ?? []).map((n) => n.id));
+  const nets =
+    current.nets || proposed.nets
+      ? [
+          ...(current.nets ?? []).map((n) => ({
+            ...n,
+            ...(proposedNets.get(n.id)?.logged && !n.logged ? { logged: true } : {}),
+          })),
+          ...(proposed.nets ?? []).filter((n) => !currentIds.has(n.id)),
+        ]
+          .map((n) => ({ ...n, wireIds: n.wireIds.filter((id) => kept.has(id)) }))
+          .filter((n) => n.wireIds.length)
+      : undefined;
   const merged: Project = {
     ...current,
     name: proposed.name,

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import {
   Activity,
   Download,
@@ -13,7 +13,19 @@ import {
   X,
   LayoutGrid,
   GitCompareArrows,
+  ListChecks,
+  Sparkles,
 } from 'lucide-react';
+import type { RunContext } from '@/lib/gradara/ask';
+import {
+  askAboutRuns,
+  onInspectorCommand,
+  padWindow,
+  publishInspectorContext,
+  takeInspectorCommand,
+  windowAround,
+  type InspectorCommand,
+} from '@/lib/gradara/inspector-bus';
 import { type SimulationResult } from '@/lib/gradara/api';
 import { parameterDifferences } from '@/lib/gradara/compare';
 import { plotOptions } from '@/lib/gradara/results';
@@ -38,6 +50,7 @@ import { PaneResizer, useColumns, useFractions, useSize } from './resizable-colu
 import InspectorPlot, { traceColors } from './inspector-plot';
 import RunCompareView from './run-compare-view';
 import RunList from './run-list';
+import RunSummary from './run-summary';
 import { useRunLibrary } from './run-library';
 
 type Plot = { signals: Assignment[]; view?: PlotView };
@@ -155,7 +168,11 @@ function InspectorSession({
   const [maximized, setMaximized] = useState<number | null>(null);
   // Compare the open runs signal by signal, in place of the plot grid.
   const [comparing, setComparing] = useState(false);
+  // The Run summary (statistics of the shown runs), in place of the plot grid.
+  const [summarizing, setSummarizing] = useState(false);
   const [baselineId, setBaselineId] = useState('');
+  /** Evidence to show once its run's data has arrived. */
+  const [pendingFocus, setPendingFocus] = useState<Extract<InspectorCommand, { type: 'focus' }> | null>(null);
   const signalPane = useColumns('inspector-signals', [244], 150);
   const signalStart = useRef(0);
   const { attach: attachRuns, ...runsPane } = useSize('inspector-runs', 190, 70);
@@ -313,6 +330,100 @@ function InspectorSession({
     library.isFull(id) || overlay
       ? `${samples.toLocaleString()} samples`
       : `${samples.toLocaleString()} samples · preview`;
+  const summaryOn = summarizing && !overlay && !!model && entries.length > 0 && !compareOn;
+
+  // What is on show, for the Ask bar: the shown runs, the active plot's signals, and its zoom.
+  const activeView = entries.length ? plotView(config.plots[active]) : null;
+  const zoomed =
+    !!activeView && (activeView.x[0] > duration * 1e-9 || activeView.x[1] < duration * (1 - 1e-9));
+  const plotted = [...new Set(activeSignals.map((a) => a.key))].slice(0, 12);
+  const runContext: RunContext | null =
+    !overlay && model && entries.length
+      ? {
+          modelId: model,
+          runIds: openIds,
+          ...(compareOn ? { baseline } : {}),
+          signals: plotted,
+          ...(zoomed && activeView ? { window: activeView.x } : {}),
+          titles: Object.fromEntries(entries.map((e) => [e.id, e.title])),
+          signalNames: Object.fromEntries(
+            plotted.map((key) => [
+              key,
+              entries.flatMap((e) => e.data.series).find((s) => s.key === key)?.name ?? key,
+            ]),
+          ),
+        }
+      : null;
+  const contextKey = JSON.stringify(runContext);
+  useEffect(() => {
+    publishInspectorContext(contextKey === 'null' ? null : (JSON.parse(contextKey) as RunContext));
+  }, [contextKey]);
+  useEffect(() => () => publishInspectorContext(null), []);
+
+  // Commands from elsewhere: show an answer's evidence, or compare a new run with the one discussed.
+  const handleCommand = useEffectEvent(() => {
+    if (!model) return;
+    const command = takeInspectorCommand(model);
+    if (!command) return;
+    setMaximized(null);
+    if (command.type === 'compare') {
+      for (const id of command.runIds) library.setOpen(id, true);
+      setBaselineId(command.baseline);
+      setSummarizing(false);
+      setComparing(true);
+      return;
+    }
+    setComparing(false);
+    setSummarizing(false);
+    if (!library.open.includes(command.runId)) library.setOpen(command.runId, true);
+    setPendingFocus(command);
+  });
+  useEffect(() => {
+    // A command sent before this inspector opened is taken right after it mounts.
+    const first = setTimeout(handleCommand, 0);
+    const stop = onInspectorCommand(handleCommand);
+    return () => {
+      clearTimeout(first);
+      stop();
+    };
+  }, []);
+  const applyFocus = useEffectEvent(() => {
+    const focus = pendingFocus;
+    if (!focus) return;
+    const entry = entries.find((e) => e.id === focus.runId);
+    if (!entry) return; // wait for the run's data
+    setPendingFocus(null);
+    const x = focus.window ? padWindow(focus.window, duration) : windowAround(focus.at ?? 0, duration);
+    edit((c) => {
+      const signals = toggleAssignment(c.plots[c.active].signals, focus.key, focus.runId, true, openIds);
+      return {
+        ...c,
+        plots: c.plots.map((p, i) =>
+          i === c.active
+            ? {
+                ...p,
+                signals,
+                view: {
+                  x,
+                  y: fitSeries(
+                    tracesOf(signals).map((t) => ({ time: t.time, values: t.values })),
+                    x,
+                  ),
+                },
+              }
+            : c.linked
+              ? { ...p, view: { ...plotView(p), x } }
+              : p,
+        ),
+      };
+    });
+  });
+  useEffect(() => {
+    if (!pendingFocus) return;
+    // Applied once the run's data is there; a frame later, so the plot sees the new run.
+    const timer = setTimeout(applyFocus, 0);
+    return () => clearTimeout(timer);
+  }, [pendingFocus, entries.length, library.open]);
   return (
     <section className="data-inspector" aria-label="Data Inspector">
       <header className="di-heading">
@@ -345,9 +456,37 @@ function InspectorSession({
                 ? 'Compare the shown runs signal by signal, against a baseline'
                 : 'Tick a second run in the Runs list to compare it with this one'
             }
-            onClick={() => setComparing((on) => !on)}
+            onClick={() => {
+              setSummarizing(false);
+              setComparing((on) => !on);
+            }}
           >
             <GitCompareArrows size={13} aria-hidden="true" /> Compare runs
+          </button>
+        )}
+        {!overlay && !!model && (
+          <button
+            type="button"
+            className="di-compare"
+            aria-pressed={summaryOn}
+            disabled={!entries.length}
+            title="Statistics, events and differences of the shown runs, computed on this computer"
+            onClick={() => {
+              setComparing(false);
+              setSummarizing((on) => !on);
+            }}
+          >
+            <ListChecks size={13} aria-hidden="true" /> Summary
+          </button>
+        )}
+        {runContext && (
+          <button
+            type="button"
+            className="di-compare di-ask"
+            title="Ask AI about the shown runs (A). You see what is sent and the price first."
+            onClick={() => askAboutRuns(runContext)}
+          >
+            <Sparkles size={13} aria-hidden="true" /> Ask about this run
           </button>
         )}
         {result && !result.comparison && (
@@ -369,7 +508,22 @@ function InspectorSession({
         </div>
       )}
       {storageError && <output>{storageError}</output>}
-      {compareOn ? (
+      {summaryOn && model ? (
+        <RunSummary
+          modelId={model}
+          runIds={openIds}
+          baseline={compareOn ? baseline : undefined}
+          signals={plotted}
+          window={runContext?.window}
+          titles={Object.fromEntries(entries.map((e) => [e.id, e.title]))}
+          colors={Object.fromEntries(entries.map((e) => [e.id, e.color]))}
+          onFocus={(runId, key, target) => {
+            setSummarizing(false);
+            if (!library.open.includes(runId)) library.setOpen(runId, true);
+            setPendingFocus({ type: 'focus', modelId: model, runId, key, ...target });
+          }}
+        />
+      ) : compareOn ? (
         <RunCompareView
           entries={entries}
           baselineId={baseline}

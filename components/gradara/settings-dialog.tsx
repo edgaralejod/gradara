@@ -19,9 +19,11 @@ import {
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  Wrench,
   Trash2,
 } from 'lucide-react';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
+import PersonalFeatures from './personal-features';
 import { describeUpdate, updateBridge, useDesktopUpdates } from '@/lib/gradara/updates';
 import {
   formatPrice,
@@ -33,7 +35,7 @@ import {
   type EngineStatus,
 } from '@/lib/gradara/ai';
 
-export type SettingsTab = 'engine' | 'ai' | 'privacy' | 'updates';
+export type SettingsTab = 'engine' | 'ai' | 'features' | 'privacy' | 'updates';
 
 const OM_DOWNLOAD: Record<string, string> = {
   win32: 'https://openmodelica.org/download/download-windows/',
@@ -50,11 +52,14 @@ const ENGINE_NAMES: Record<EngineStatus['backend'], string> = {
 
 export default function SettingsDialog({
   initialTab = 'engine',
+  initialRequest,
   dataDirectory,
   onClose,
   onEngineChange,
 }: {
   initialTab?: SettingsTab;
+  /** A feature request to start from in Personal features. */
+  initialRequest?: string;
   dataDirectory?: string;
   onClose: () => void;
   onEngineChange?: () => void;
@@ -65,13 +70,14 @@ export default function SettingsDialog({
       <DialogContent className="settings-dialog" resizeKey="settings">
         <DialogTitle>Settings</DialogTitle>
         <DialogDescription>
-          Simulation engine, AI features, and how your data is handled.
+          Simulation engine, AI features, personal features, and how your data is handled.
         </DialogDescription>
         <div className="settings-tabs" role="tablist">
           {(
             [
               ['engine', 'Engine', Cpu],
               ['ai', 'AI', Sparkles],
+              ['features', 'Personal features', Wrench],
               ['privacy', 'Privacy & data', ShieldCheck],
               ['updates', 'Updates', Download],
             ] as const
@@ -90,6 +96,7 @@ export default function SettingsDialog({
         </div>
         {tab === 'engine' && <EngineSettings onChange={onEngineChange} />}
         {tab === 'ai' && <AiSettings />}
+        {tab === 'features' && <PersonalFeatures initialRequest={initialRequest} />}
         {tab === 'privacy' && <PrivacySettings dataDirectory={dataDirectory} />}
         {tab === 'updates' && <UpdateSettings />}
       </DialogContent>
@@ -692,7 +699,7 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
         {account.prices.edit !== undefined && (
           <>
             {' '}
-            An assistant edit costs {account.prices.edit}
+            A model edit costs {account.prices.edit}
             {account.surcharges?.edit?.block
               ? `, plus ${account.surcharges.edit.block} per new or rewritten block`
               : ''}
@@ -702,8 +709,15 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
         {account.prices.diagnose !== undefined && (
           <>
             {' '}
-            Explaining problems costs {account.prices.diagnose}; Fix with AI
+            Explaining problems costs {account.prices.diagnose}; fixing them
             costs that plus the edit.
+          </>
+        )}
+        {account.prices.results !== undefined && (
+          <>
+            {' '}
+            Explaining results costs {account.prices.results} per question,
+            including any follow-up measurements.
           </>
         )}{' '}
         Automatic repair attempts are included. If the AI service fails before
@@ -848,8 +862,9 @@ function PrivacySettings({ dataDirectory }: { dataDirectory?: string }) {
       <div>
         <strong>Stays on this computer</strong>
         <p>
-          Models, simulation runs, results, and your AI block library are saved
-          only in your data folder
+          Models, simulation runs, results, AI proposals and results
+          discussions, and your AI block library are saved only in your data
+          folder
           {dataDirectory ? (
             <>
               : <code>{dataDirectory}</code>
@@ -864,18 +879,36 @@ function PrivacySettings({ dataDirectory }: { dataDirectory?: string }) {
         <strong>Sent when you use AI</strong>
         <p>
           Only when you ask for AI help, the request and the relevant model data
-          are sent to the AI provider you chose. Assistant edits and diagnoses
+          are sent to the AI provider you chose. Model edits and diagnoses
           send the open model without its layout; a diagnosis of a failed run
-          also sends that run&apos;s Modelica source and solver messages. With
-          your own API key they go directly to OpenAI or Anthropic under your
-          account terms.
+          also sends that run&apos;s Modelica source and solver messages.
+          Explain results sends your question, a summary of the shown runs
+          computed on this computer (statistics, events, a short outline of
+          each signal, differences between runs and their parameters, solver
+          warnings, signal names), the model without its layout, and the
+          earlier questions and answers of that discussion, never the recorded
+          samples. With your own API key they go directly to OpenAI or
+          Anthropic under your account terms.
+        </p>
+      </div>
+      <div>
+        <strong>Personal features and GitHub</strong>
+        <p>
+          Only if you use them. Your GitHub token stays in the system keychain
+          and is sent only to GitHub. Feature requests, their code, and a draft
+          pull request are public on GitHub, and the workshop repository&apos;s
+          own AI key pays for them. Features install only from that
+          repository&apos;s releases with a trusted signature. Improve Gradara
+          opens a public GitHub issue form with your request; your model is
+          never attached.
         </p>
       </div>
       <div>
         <strong>What Gradara AI keeps</strong>
         <p>
-          Your email, credit balance and purchases, and per-request counts (task
-          type, model, token counts, time). The Gradara AI service does not
+          Your email, the Terms version you accepted, credit balance and
+          purchases, and per-request counts (task type, model, token counts,
+          time). The Gradara AI service does not
           store or log your prompts, models, equations, or AI responses; its AI
           provider, Anthropic, may keep them briefly for abuse and safety
           monitoring. Usage records are deleted after about 13 months, and you

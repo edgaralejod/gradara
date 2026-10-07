@@ -77,3 +77,28 @@ void test('definition changes, removals, name, and stop time come from the propo
   assert.equal(project.name, 'Edited');
   assert.equal(project.modelId, current.modelId);
 });
+
+void test('a net the proposal logs is logged, and the nets of new wires come along', () => {
+  const current = initialProject();
+  current.nets = [
+    { id: 'n1', anchor: 'sensor.y', wireIds: [current.wires[0].id], name: 'speed' },
+  ];
+  const proposed = proposalFrom(current);
+  proposed.nets = [
+    { id: 'n1', anchor: 'sensor.y', wireIds: [current.wires[0].id], logged: true },
+    { id: 'net_ai_1', anchor: 'sensor.y', wireIds: ['w_ai_1'], hidden: true },
+  ];
+  proposed.wires.push({
+    id: 'w_ai_1',
+    source: current.wires[1].source,
+    sourceHandle: current.wires[1].sourceHandle,
+    target: current.wires[1].target,
+    targetHandle: current.wires[1].targetHandle,
+    waypoints: [],
+  });
+  const { project } = mergeProposal(current, proposed);
+  const net = project.nets!.find((n) => n.id === 'n1')!;
+  assert.equal(net.logged, true);
+  assert.equal(net.name, 'speed'); // the user's name is kept
+  assert.ok(project.nets!.some((n) => n.id === 'net_ai_1'));
+});

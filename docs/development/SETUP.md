@@ -11,7 +11,7 @@ Run commands from the repository root. This guide is for working on Gradara from
 | Node.js / npm | Node 22.13 or newer. CI uses the Node 22 line. Use the committed npm lockfile. |
 | Python | Python 3.12 is the development and CI baseline. Use a repository-local virtual environment. |
 | Simulation engine | For a source checkout: either native OpenModelica 1.27 with the Modelica Standard Library 4.1.0 (Windows, Linux), or a running Docker-compatible engine for the `gradara-engine` image (macOS default, optional elsewhere). Settings → Engine in the app sets up either one. Installed desktop apps carry their own engine instead ([built-in engine bundles](#built-in-engine-bundles)). |
-| AI provider | Optional, for block generation, model building, and C export: Gradara AI (sign in), your own OpenAI or Anthropic key, or the Codex CLI. See [agent setup](../AGENT_SETUP.md). |
+| AI provider | Optional, for block generation, model building and editing, diagnosis, explaining results, and C templates: Gradara AI (sign in), your own OpenAI or Anthropic key, or the Codex CLI. See [agent setup](../AGENT_SETUP.md). |
 
 Supported operating systems, default engines, and CI coverage are listed in [supported platforms](../PLATFORMS.md).
 
@@ -160,7 +160,7 @@ It prints the block count on stderr and fails on any class, parameter, or connec
 
 ## Files you own
 
-`projects/models/` holds documents; `projects/workspace.json` is the active model; run snapshots, CSVs, prompts, and exports also live under `projects/`. These files and `.runtime/`, `.venv/`, build outputs, and local environment files are ignored by Git. Back them up separately. Contributors should use synthetic examples and never force-add a personal workspace to a PR.
+`projects/models/` holds documents; `projects/workspace.json` is the active model; run snapshots, CSVs, the Proposals threads (`projects/proposals/`, which hold your requests and AI answers), prompts, and exports also live under `projects/`. These files and `.runtime/`, `.venv/`, build outputs, and local environment files are ignored by Git. Back them up separately. Contributors should use synthetic examples and never force-add a personal workspace to a PR.
 
 ## Desktop app
 
@@ -171,6 +171,8 @@ cd desktop && npm ci && cd ..       # once: Electron and electron-builder
 npm run desktop:start               # static workbench build + dev shell; uses .venv and the repo code
 ```
 
+Personal features (layers) are off in development and self-test runs: in a source checkout, your branch is the feature. To try the layer loader, build a layer with `scripts/build-layer.cjs` and run `python packaging/smoke_backend.py --layer <unpacked folder>` against a frozen service; see [personal features](../architecture/LAYERS.md).
+
 Build installers for the current OS:
 
 ```sh
@@ -178,7 +180,7 @@ python3 -m pip install -r server/requirements.txt pyinstaller==6.22.3   # in .ve
 npm run desktop:dist                # workbench + PyInstaller service + installers for this OS
 ```
 
-Every installer includes a simulation engine: put this platform's engine in `build/engine` first (see below), or the installer has none. Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service (and, with a Windows or Linux engine in `build/engine`, runs the DC motor on it, once with non-default simulation settings and once with the defaults; the Linux release build also runs it in an Arch Linux container), and `python packaging/installer_selftest.py --exe <path to the built app> --simulate` checks a built or installed app end to end, including a simulation and a generated-C verification on its built-in engine. The **Desktop installers** workflow builds and install-tests every platform in [supported platforms](../PLATFORMS.md) on pull requests that change packaging, and drafts a release on `v*` tags. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
+Every installer includes a simulation engine: put this platform's engine in `build/engine` first (see below), or the installer has none. Outputs land in `desktop/dist/`. `python packaging/smoke_backend.py` checks the frozen service (and, with a Windows or Linux engine in `build/engine`, runs the DC motor on it, once with non-default simulation settings and once with the defaults; the Linux release build also runs it in an Arch Linux container; `--backend DIR` tests another frozen build, `--layer DIR` starts it from an unpacked personal-feature layer and checks that the service and workbench come from the layer, and `--probe` also expects the endpoint `packaging/layer_probe.py` adds), and `python packaging/installer_selftest.py --exe <path to the built app> --simulate` checks a built or installed app end to end, including a simulation and a generated-C verification on its built-in engine. The **Desktop installers** workflow builds and install-tests every platform in [supported platforms](../PLATFORMS.md) on pull requests that change packaging, and drafts a release on `v*` tags. In the installed app, data lives in the OS application-data folder under `Gradara/data`, and logs under `Gradara/logs` (Help menu shortcuts open both).
 
 The repository retains optional Sites/Cloudflare build scaffolding with no database or bucket bindings. You do not need to register or publish a site to run Gradara locally. `npm run build` verifies the web bundle; it does not package the Python service or engine.
 

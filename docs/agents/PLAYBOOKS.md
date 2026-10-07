@@ -45,6 +45,12 @@ Keep structured generation separate from model mutations. Preserve compatible po
 
 C export must retain the exact input contract, generated source, timing assumptions, and build evidence. Compilation and behavioral comparison are different checks. A whole-controller or HDL feature needs an explicit boundary/clock design before adding another prompt string.
 
+## Personal feature or layer change
+
+Read [personal features](../architecture/LAYERS.md). A workshop build may change only the paths `scripts/workshop_paths.py` allows (the workbench, `server/` apart from credentials, safety, paths, the workshop client, and `server/llm/`, examples, docs, and tests); anything in the shell, packaging, CI, dependencies, or the legal and privacy documents ships only in a release. A layer carries no Python or npm dependencies, so build on what the release already has, and read data files beside the code through `paths.shipped()`.
+
+When changing the loader, signing, or the pipeline itself, keep the shipped code the fallback: a layer that does not start must leave the app running without it. Run `tests/layers.test.ts`, `tests/test_workshop.py`, and `tests/test_workshop_client.py`, and the frozen-service loading test (`packaging/layer_probe.py` with `packaging/smoke_backend.py --layer --probe`) when the service entry or `server/paths.py` changes. Never put a request's text into a workflow `run:` script; pass it through `env`.
+
 ## Example or documentation contribution
 
 Use `models/examples/` and the existing builders; never copy a personal `projects/workspace.json` directly into a public PR. Keep all blocks on shared size rules, labels readable, routes intentional, and plots selected to explain behavior. Document physical assumptions and demonstrate the model with a real run.

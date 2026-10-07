@@ -19,16 +19,22 @@ server/                      Local service (FastAPI)
   engines.py                 OpenModelica backends: built-in (bundled), native install, or Docker image
   llm/                       AI providers: gradara (hosted), openai, anthropic, codex
     providers.py, schema.py  Dependency-light; also used by cloud/
-  paths.py, settings.py,     Data folder, preferences, keychain secrets
+  paths.py, settings.py,     Data folder, preferences, keychain secrets, the active layer
   credentials.py
   safety.py                  Screens definitions before any compiler sees them
+  workshop.py                Personal features: the workshop pipeline through the GitHub API
 desktop/                     Electron shell and electron-builder config
   web/                       Static entry for the desktop workbench build
-packaging/                   PyInstaller entry, build (with the service's data files), and smoke test
+  layers.cjs,                Personal-feature layers: archive, signature, install, launch plan;
+  layer-keys.json            the built-in workshop signing keys
+packaging/                   PyInstaller entry, build (with the service's data files), smoke and layer loading tests
   engine/                    Built-in engine builds (Windows, Linux, macOS VM image and agent)
 cloud/                       Gradara AI gateway, sign-in pages, Dockerfile, deploy.sh, tests
 site/                        gradara.app (static files for Firebase Hosting)
-.github/workflows/           ci, engine, native-engine, engine-bundle, cloud, release, site
+scripts/build-layer.cjs,     Build, sign, verify, and unpack layers; the workshop's path gate, plan, and reports
+  scripts/workshop_*.py
+.github/workflows/           ci, engine, engine-cache, native-engine, engine-bundle, cloud, release, site, workshop
+.github/workshop/            The workshop agents' instructions (scope, build, review)
 ```
 
 ## Desktop app
@@ -48,10 +54,14 @@ flowchart LR
   S -->|AI, own key| P[OpenAI / Anthropic]
 ```
 
-- The shell picks a free loopback port, starts the service with `GRADARA_PORT`, `GRADARA_DATA_DIR`, `GRADARA_LOG_DIR`, `GRADARA_STATIC_DIR`, `GRADARA_RESOURCES`, and `GRADARA_VERSION`, waits for it, then loads the workbench. Quitting stops the service and its process tree.
-- The data folder is `<OS app data>/Gradara/data`. Logs are in `<OS app data>/Gradara/logs`. Help menu entries open both. **Help → Copy Diagnostic Info** copies versions, the engine status, and the end of `service.log`; **Help → Third-Party Licenses** opens `legal/THIRD_PARTY_LICENSES.txt`. The About panel carries the not-for-safety-critical-use note. **View → Reset Layout** restores the workbench's panel sizes and dock.
+- The shell picks a free loopback port, starts the service with `GRADARA_PORT`, `GRADARA_DATA_DIR`, `GRADARA_LOG_DIR`, `GRADARA_STATIC_DIR`, `GRADARA_RESOURCES`, and `GRADARA_VERSION`, waits for it, then loads the workbench. With a personal-feature layer active it also sets `GRADARA_LAYER_DIR` and points `GRADARA_STATIC_DIR` at the layer's `web/`; see [Personal features](#personal-features). Quitting stops the service and its process tree.
+- The data folder is `<OS app data>/Gradara/data`. Logs are in `<OS app data>/Gradara/logs`. Help menu entries open both. **Help → Copy Diagnostic Info** copies versions, the engine status, and the end of `service.log`; **Help → Third-Party Licenses** opens `legal/THIRD_PARTY_LICENSES.txt`; **Help → Improve Gradara…** opens the public Improve Gradara issue form. The About panel carries the not-for-safety-critical-use note. **View → Reset Layout** restores the workbench's panel sizes and dock.
 - The workbench is the same React app built without server rendering (`vite.desktop.config.ts`, mode `desktop`).
-- Installers: NSIS on Windows, DMG and ZIP per architecture on macOS, AppImage and deb on Linux. Updates use electron-updater against published GitHub Releases (drafts are never offered). The shell checks 10 seconds after launch and every four hours, downloads in the background, and installs on **Restart to update** or on the next quit. It publishes its state to the workbench through `desktop/preload.cjs`, the only bridge between page and shell (update status, check, install), and accepts those calls only from the local workbench. Windows first downloads only the changed parts of the installer with HTTP Range requests; `desktop/update-guard.cjs` notices when a network (a proxy that ignores Range) sends far more than the plan, cancels, and restarts as one whole-file download, and progress is capped at 100%. Windows, macOS (signed builds) and the Linux AppImage update in place; the .deb only reports a new version and links to the download page. `GRADARA_DISABLE_UPDATES=1`, development runs, and self-test runs turn update checks off, and the installer self-test verifies that the bridge reports `disabled`.
+- Installers: NSIS on Windows, DMG and ZIP per architecture on macOS, AppImage and deb on Linux. Updates use electron-updater against published GitHub Releases (drafts are never offered). The shell checks 10 seconds after launch and every four hours, downloads in the background, and installs on **Restart to update** or on the next quit. It publishes its state to the workbench through `desktop/preload.cjs`, the only bridge between page and shell (update status, check, install, and the personal-feature calls under `gradaraDesktop.layers`), and accepts those calls only from the local workbench. Windows first downloads only the changed parts of the installer with HTTP Range requests; `desktop/update-guard.cjs` notices when a network (a proxy that ignores Range) sends far more than the plan, cancels, and restarts as one whole-file download, and progress is capped at 100%. Windows, macOS (signed builds) and the Linux AppImage update in place; the .deb only reports a new version and links to the download page. `GRADARA_DISABLE_UPDATES=1`, development runs, and self-test runs turn update checks off, and the installer self-test verifies that the bridge reports `disabled`.
+
+### Personal features
+
+The shell can start the service and workbench from one signed personal-feature layer instead of the shipped code. A layer is a complete workbench build and `server` package for this exact version, built and signed by the workshop pipeline (`.github/workflows/workshop.yml`) and installed from that repository's GitHub releases after its Ed25519 signature and every file hash are checked. If the layered service does not report the layer or the workbench does not render, the shell marks the layer faulty, starts the shipped code, and says why. After an update a layer is switched off until it is rebuilt for the new version. Layers are off in development and self-test runs. The full design, the pipeline, and fork setup are in [personal features](LAYERS.md).
 
 ### Simulation engine per platform
 
@@ -84,7 +94,7 @@ Every AI feature calls `server/llm/dispatch.generate(prompt, schema, …)`. Each
 | Codex CLI | Installed and signed in | The user's Codex plan | App → Codex CLI |
 | Off | None | None | None |
 
-A top-level operation (one block, one model build, one C export, one assistant edit, one diagnosis) sets `current_job`. Gradara AI charges an operation on its first call, so repair attempts and the blocks created inside a model build are included. Assistant edits and fixes also have priced parts (`dispatch.job_part`): each new or rewritten block in an edit, and the edit stage of a fix, is charged when it starts, and refunded if its first call fails before producing output.
+A top-level operation (one block, one model build, one C export, one model edit, one diagnosis, one results question) sets `current_job`. Gradara AI charges an operation on its first call, so repair attempts and the blocks created inside a model build are included. Model edits and fixes also have priced parts (`dispatch.job_part`): each new or rewritten block in an edit, and the edit stage of a fix, is charged when it starts, and refunded if its first call fails before producing output.
 
 ## Gradara AI service
 
@@ -121,4 +131,4 @@ Design decisions:
 - **Device-code sign-in.** No custom URL schemes or localhost callbacks, and no passwords in the app.
 - **One provider layer.** `server/llm/providers.py` serves both bring-your-own-key calls and the gateway, so structured-output handling is maintained once.
 
-Current defaults, all configurable on the server: block 2 credits, model build 20, C export 2, assistant edit 4 plus 2 per new or rewritten block (at most three), explaining problems 2 (a fix pays the explanation plus the edit); packs of 100 credits for USD 10 and 550 credits for USD 50; 20 welcome credits per verified identity. See `cloud/README.md` for deployment and [privacy](../PRIVACY.md) for data handling.
+Current defaults, all configurable on the server: block 2 credits, model build 20, C export 2, model edit 4 plus 2 per new or rewritten block (at most three), explaining problems 2 (a fix pays the explanation plus the edit), explaining results 2 per question (the measurement round included); packs of 100 credits for USD 10 and 550 credits for USD 50; 20 welcome credits per verified identity. See `cloud/README.md` for deployment and [privacy](../PRIVACY.md) for data handling.

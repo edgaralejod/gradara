@@ -1,0 +1,30 @@
+name: Improve Gradara
+description: Something Gradara told you it cannot do yet. Opened from the app's "Gradara cannot do this yet" card.
+title: "Improve Gradara: "
+labels: ["improve-gradara"]
+body:
+  - type: markdown
+    attributes:
+      value: "This issue is public. Describe the capability, not your project: no model files, credentials, or private data. The maintainer may build it with the workshop pipeline as a personal feature or a release."
+  - type: textarea
+    id: request
+    attributes:
+      label: What you asked for
+      description: The request you gave the Ask bar, in your words.
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: What Gradara said it cannot do
+      description: Filled in from the app.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Why it matters
+      description: What you would do with it, and how you would know it works.
+  - type: input
+    id: environment
+    attributes:
+      label: Gradara version and platform
+      description: Filled in from the app.

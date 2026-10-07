@@ -53,7 +53,7 @@ Open **Settings → Engine**. The top line says what is wrong; choose **Check ag
    - A run that takes longer than 120 seconds of real time, or whose results pass 1 GB. Such a problem has a **Simulation settings** chip that opens the [settings guide](../SOLVER.md) at what to change: often Implicit Runge-Kutta or a maximum step for a model that switches, a larger fixed step, or going back to the default tolerance. A shorter stop time also helps.
    - A fixed-step run whose step is too large: values blow up or the run stops early. Use a smaller step, Backward Euler, or a variable-step solver.
    - Simulation settings that cannot run, such as more than 200,000 output points. The model inspector marks the field and Run stays unavailable until it is fixed.
-3. With an AI provider set up, **Explain** or **Fix with AI** in Problems can suggest a cause and a fix.
+3. With an AI provider set up, **Explain** or **Fix with AI** in Problems opens the Ask bar to suggest a cause and a fix; the answer appears in the **Proposals** tab.
 
 A failed run never shows partial results as if they were complete.
 
@@ -78,8 +78,26 @@ Results belong to the model exactly as it ran. Changing parameters, connections,
 | "The AI answer did not match the expected format, even after a retry" | The model returned data Gradara could not use twice in a row. Try again, or choose another model in **Settings → AI**. Text that only runs long is shortened, not rejected. |
 | The service is older than the app | Gradara AI has not caught up with your app version yet. Try again later. |
 | A generated block fails its checks | Check **Settings → Engine**. Gradara tries one automatic repair, then shows the compiler message. |
+| "Gradara cannot do this yet" | The request needs something Gradara does not have, such as a domain or a kind of block. Your model is unchanged. **Improve Gradara…** asks for it in a future release; **Build it as a personal feature…** asks your workshop to build it. |
+| An Explain results answer says it removed claims | Gradara rechecked every number the AI quoted against your stored run and dropped the ones that did not match. The rest is still shown. Ask a follow-up, or zoom into the part you care about and ask again. |
+| "Not recorded in this run" in an Explain results answer | The answer needs a signal the run did not record. Log that net (or add a sensor and log its output) and run again. |
 
 AI needs an internet connection. With **Off** selected, AI buttons stay visible and say that AI is off. See [AI features](../AGENT_SETUP.md).
+
+### Personal features
+
+| Message | What to do |
+| --- | --- |
+| "Personal features load only in the installed Gradara app" | They are not available when you run Gradara from source. |
+| "…built for Gradara X and are switched off in Y until they are rebuilt" | Gradara was updated. The workshop rebuilds published features for each release; when the rebuilt feature appears under **Published for this version**, install it. A feature that no longer applies cleanly needs a new build. |
+| "…switched off because they did not start" | The feature failed to start, so Gradara started without it. **Switch on and restart** tries again; **Remove** rebuilds the layer without the feature that broke it. |
+| "Your personal features are missing from disk" | The layer folder was deleted. Install the feature again. |
+| "Add a GitHub token in Settings → Personal features" or "GitHub refused the token" | Create a fine-grained token for the workshop repository with **Actions: read and write** and **Contents: read**, and save it. |
+| "GitHub answered 403/404 for owner/name" | The repository name is wrong, its workshop workflow is missing, or the token lacks Actions or Contents access to it. |
+| "GitHub's rate limit was reached" | Wait a few minutes. |
+| "This repository has no ANTHROPIC_API_KEY (or LAYER_SIGNING_KEY) secret" | The workshop repository is not set up; see [setting up a fork](../architecture/LAYERS.md#setting-up-a-fork). |
+| "The layer is not signed by a key this app trusts for that repository" | For a fork, paste its public key into **Trust this key** first. |
+| A build stopped at "implement", "check", or "review" | The agent ran out of budget, a check failed, or the review rejected the change. **Run on GitHub** shows why. A build that ran out of budget continues from its earlier work when you build it again. |
 
 ### Updates
 
@@ -119,7 +137,7 @@ These notes apply when you run Gradara from a source checkout with `scripts/star
 
 Check [service health](http://127.0.0.1:8765/api/health). If it does not answer, read `.runtime/service.log` and the launcher terminal. Read `.runtime/workbench.log` for frontend startup errors. Do not start a second launcher while the first is running. Ports 4317 and 8765 must be free or used by the intended Gradara processes.
 
-The service only accepts requests from `localhost` or `127.0.0.1` at the documented ports. Another hostname or port gets a 403. Keep the service bound to loopback; changing CORS is not a substitute for authentication.
+The service only accepts requests whose Host is `localhost` or `127.0.0.1`, and browser requests from the workbench's own origin. Another hostname, or a page on another origin, gets a 403. Keep the service bound to loopback; changing CORS is not a substitute for authentication.
 
 ### Engine setup from source
 

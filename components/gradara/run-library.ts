@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { notifyRunDeleted } from '@/lib/gradara/inspector-bus';
 import { api, type SimulationResult } from '@/lib/gradara/api';
 import {
   freeColor,
@@ -167,6 +168,7 @@ export function useRunLibrary({
     },
     remove: async (id: string) => {
       await api(`/results/${id}`, { method: 'DELETE' });
+      notifyRunDeleted(id);
       requested.current.delete(id);
       setSaved((s) => ({ ...s, chosen: s.chosen.filter((x) => x !== id) }));
       setLoaded((all) =>

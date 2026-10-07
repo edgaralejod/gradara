@@ -59,7 +59,8 @@
   "overrides": [
     {
       "files": [
-        "desktop/*.cjs"
+        "desktop/*.cjs",
+        "scripts/*.cjs"
       ],
       "rules": {
         "typescript/no-require-imports": "off"
