@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* Transient workbench surfaces share tool-window chrome, not marketing cards. */
 :is(
-  .new-model-dialog,
   .model-browser,
   .save-copy-dialog,
   .export-dialog,
@@ -18,7 +17,6 @@
   font: var(--text-ui)/1.5 var(--font-ui);
 }
 :is(
-  .new-model-dialog,
   .save-copy-dialog,
   .export-dialog,
   .source-dialog,
@@ -32,7 +30,6 @@
   overflow-y: auto;
 }
 :is(
-    .new-model-dialog,
     .model-browser,
     .save-copy-dialog,
     .export-dialog,
@@ -47,7 +44,6 @@
   letter-spacing: normal;
 }
 :is(
-    .new-model-dialog,
     .model-browser,
     .save-copy-dialog,
     .export-dialog,
@@ -63,7 +59,6 @@
   margin-top: 4px;
 }
 :is(
-    .new-model-dialog,
     .model-browser,
     .save-copy-dialog,
     .export-dialog,
@@ -78,7 +73,6 @@
   box-shadow: none;
 }
 :is(
-    .new-model-dialog,
     .model-browser,
     .save-copy-dialog,
     .export-dialog,
@@ -90,7 +84,6 @@
   flex-shrink: 0;
 }
 :is(
-    .new-model-dialog,
     .save-copy-dialog,
     .export-dialog,
     .source-dialog,
@@ -127,63 +120,11 @@
   padding: 8px 12px;
   background: #eef2f5;
 }
-.model-browser .example-file-list {
-  gap: 0;
-  border-top: 1px solid #d4dde4;
-}
-.model-browser .example-file {
-  border: 0;
-  border-bottom: 1px solid #d4dde4;
-  border-radius: 0;
-  padding: 12px 4px;
-  gap: 10px;
-  background: transparent;
-}
-.model-browser .example-file h3 {
-  font-size: var(--text-ui);
-}
-.model-browser .example-file > div > small {
-  font-size: var(--text-ui);
-  text-transform: none;
-  letter-spacing: normal;
-}
-.model-browser .example-file p {
-  margin: 4px 0 8px;
-}
-:is(.model-browser, .new-model-dialog) .template-icon {
+.model-browser .template-icon {
   width: 24px;
   height: 28px;
   border-radius: 0;
   background: transparent;
-}
-.new-model-dialog .model-template-grid {
-  grid-template-columns: 1fr;
-  gap: 0;
-  border: 1px solid #d4dde4;
-}
-.new-model-dialog .model-template {
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: 4px 10px;
-  padding: 9px 12px;
-  border: 0;
-  border-bottom: 1px solid #e1e7eb;
-  border-radius: 0;
-  box-shadow: none;
-  background: white;
-}
-.new-model-dialog .model-template.is-selected {
-  background: #e5eff7;
-  box-shadow: inset 3px 0 #226b9d;
-}
-.new-model-dialog .model-template :is(p, small) {
-  grid-column: 2;
-  margin: 0;
-}
-.new-model-dialog .new-model-name {
-  gap: 5px;
-}
-.new-model-dialog .new-model-name input {
-  height: 30px;
 }
 .export-dialog .export-option {
   padding: 10px;
@@ -232,7 +173,7 @@
 .export-dialog .component-category { letter-spacing: normal; text-transform: none; }
 .export-dialog .controller-export { padding: 12px; border-color: #d4dde4; }
 .export-dialog .controller-export h3 { font-size: var(--text-ui); }
-.export-dialog :is(.export-option p,.controller-export p,.export-note) { color: #637987; }
+.export-dialog :is(.export-option p,.controller-export p) { color: #637987; }
 .export-dialog.has-artifact { max-width: 760px !important; }
 .export-dialog .controller-picker { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; margin: 4px 0 2px; }
 .export-dialog .controller-picker > span { font-weight: 600; color: #354b5b; }
@@ -253,8 +194,6 @@
   margin: 0; max-height: 300px; overflow: auto; padding: 10px 12px;
   font: 12px/1.55 var(--font-code); color: #27333d; white-space: pre; tab-size: 2;
 }
-.export-dialog .export-success code { font-family: var(--font-code); font-size: var(--text-micro); }
-.export-dialog .download-artifact { border-radius: 2px; background: var(--primary); }
 
 /* Settings: engine setup, AI provider, account and credits, privacy. */
 .settings-dialog { width: min(560px, calc(100vw - 32px)); max-width: none; }

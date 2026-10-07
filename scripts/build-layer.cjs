@@ -5,7 +5,7 @@
 //   node scripts/build-layer.cjs build --id <id> --base <version> --features <file.json>
 //        [--repository owner/name] [--commit sha] [--out dist-layer]
 //        Packs dist-desktop/web (run `npm run desktop:web` first), the whole
-//        server/ package and lib/gradara/port-units.json with a manifest.
+//        server/ package and the lib/gradara data files the service reads, with a manifest.
 //   node scripts/build-layer.cjs sign <archive>        signature from LAYER_SIGNING_KEY (PEM)
 //   node scripts/build-layer.cjs verify <archive> [--repository owner/name] [--version x.y.z]
 //        checks the signature against desktop/layer-keys.json, then the files
@@ -17,6 +17,8 @@ const path = require('node:path');
 const layers = require('../desktop/layers.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
+// The lib/gradara files packaging/build_backend.py bundles for the service; a layer carries its own copies.
+const SERVICE_DATA = ['port-units.json', 'solver-settings.json'];
 
 function option(args, name, fallback) {
   const at = args.indexOf(`--${name}`);
@@ -46,7 +48,8 @@ function build(args) {
   const files = [
     ...walk(web, 'web', skip),
     ...walk(path.join(ROOT, 'server'), 'server', skip),
-    { name: 'lib/gradara/port-units.json', data: fs.readFileSync(path.join(ROOT, 'lib', 'gradara', 'port-units.json')) },
+    // Data files the service reads beside the code (server/paths.py shipped()).
+    ...SERVICE_DATA.map((name) => ({ name: `lib/gradara/${name}`, data: fs.readFileSync(path.join(ROOT, 'lib', 'gradara', name)) })),
   ];
   const manifest = {
     format: layers.FORMAT,

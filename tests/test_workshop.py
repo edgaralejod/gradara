@@ -105,7 +105,7 @@ def agent_file(tmp_path, result, cost=0.42, subtype='success'):
     path = tmp_path/'agent.json'
     path.write_text(json.dumps({'type': 'result', 'subtype': subtype, 'result': result, 'total_cost_usd': cost,
                                 'num_turns': 7, 'usage': {'input_tokens': 1000, 'output_tokens': 200,
-                                                          'cache_read_input_tokens': 5000}}))
+                                                          'cache_read_input_tokens': 5000}}), encoding='utf-8')
     return str(path)
 
 
@@ -113,7 +113,7 @@ def test_scope_answer_is_parsed_and_bounded(tmp_path):
     agent = agent_file(tmp_path, 'Here you go:\n```json\n{"buildable": true, "personal": true, "summary": "Adds a plot.",'
                                  ' "will": ["A plot"], "wont": ["Hydraulics"], "risk": "low", "estimate": "small", "reason": ""}\n```')
     report.scope(agent, str(tmp_path/'scope.json'))
-    scope = json.loads((tmp_path/'scope.json').read_text())
+    scope = json.loads((tmp_path/'scope.json').read_text(encoding='utf-8'))
     assert scope['buildable'] and scope['personal'] and scope['will'] == ['A plot'] and scope['cost']['usd'] == 0.42
     with pytest.raises(SystemExit):
         report.scope(agent_file(tmp_path, 'no json here'), str(tmp_path/'bad.json'))
@@ -123,19 +123,19 @@ def test_costs_add_up_and_a_rejected_review_fails(tmp_path):
     out = str(tmp_path/'cost.json')
     report.cost(agent_file(tmp_path, '', cost=3.1), out, 'build')
     report.cost(agent_file(tmp_path, '', cost=0.4), out, 'review')
-    totals = json.loads(Path(out).read_text())
+    totals = json.loads(Path(out).read_text(encoding='utf-8'))
     assert totals['totalUsd'] == 3.5 and totals['runs']['build']['turns'] == 7
     approved = agent_file(tmp_path, '{"approve": true, "summary": "Fine.", "findings": []}')
     report.review(approved, str(tmp_path/'verdict.json'))
     rejected = agent_file(tmp_path, '{"approve": false, "summary": "Adds a network call.", "findings": [{"file": "x"}]}')
     with pytest.raises(SystemExit):
         report.review(rejected, str(tmp_path/'verdict.json'))
-    assert 'network call' in json.loads((tmp_path/'report.json').read_text())['message']
+    assert 'network call' in json.loads((tmp_path/'report.json').read_text(encoding='utf-8'))['message']
 
 
 def test_features_follow_the_branch(tmp_path, monkeypatch, capsys):
     def git(*args):
-        return subprocess.run(['git', *args], cwd=tmp_path, check=True, capture_output=True, text=True).stdout.strip()
+        return subprocess.run(['git', *args], cwd=tmp_path, check=True, capture_output=True, text=True, encoding='utf-8').stdout.strip()
     git('init', '-q')
     git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'base')
     base = git('rev-parse', 'HEAD')
@@ -156,9 +156,9 @@ def test_features_follow_the_branch(tmp_path, monkeypatch, capsys):
 
 def test_notes_and_summary(tmp_path, capsys):
     (tmp_path/'layer.json').write_text(json.dumps({'id': 'f-new', 'base': '0.7.0', 'features': [
-        {'id': 'f-new', 'title': 'New', 'commit': COMMIT, 'request': 'Do the thing'}]}))
-    (tmp_path/'cost.json').write_text(json.dumps({'runs': {'build': report.spend({'total_cost_usd': 2})}, 'totalUsd': 2}))
-    (tmp_path/'report.json').write_text(json.dumps({'stage': 'published', 'message': 'layer-f-new-v0.7.0'}))
+        {'id': 'f-new', 'title': 'New', 'commit': COMMIT, 'request': 'Do the thing'}]}), encoding='utf-8')
+    (tmp_path/'cost.json').write_text(json.dumps({'runs': {'build': report.spend({'total_cost_usd': 2})}, 'totalUsd': 2}), encoding='utf-8')
+    (tmp_path/'report.json').write_text(json.dumps({'stage': 'published', 'message': 'layer-f-new-v0.7.0'}), encoding='utf-8')
     report.notes(str(tmp_path))
     notes = capsys.readouterr().out
     assert 'f-new' in notes and 'Do the thing' in notes and '$2.00' in notes and 'Personal features' in notes
@@ -181,10 +181,10 @@ def test_layer_build_script_round_trip(tmp_path):
     if not (ROOT/'dist-desktop'/'web'/'index.html').exists():
         pytest.skip('needs `npm run desktop:web`')
     features = tmp_path/'features.json'
-    features.write_text(json.dumps([{'id': 'f-test', 'title': 'Test', 'commit': COMMIT}]))
+    features.write_text(json.dumps([{'id': 'f-test', 'title': 'Test', 'commit': COMMIT}]), encoding='utf-8')
     subprocess.run(['node', 'scripts/build-layer.cjs', 'build', '--id', 'f-test', '--base', '9.9.9', '--features', str(features),
                     '--out', str(tmp_path)], cwd=ROOT, check=True, capture_output=True)
-    layer = json.loads((tmp_path/'layer.json').read_text())
+    layer = json.loads((tmp_path/'layer.json').read_text(encoding='utf-8'))
     assert layer['id'] == 'f-test' and layer['base'] == '9.9.9' and 'files' not in layer
     subprocess.run(['node', 'scripts/build-layer.cjs', 'unpack', str(tmp_path/'gradara-layer-9.9.9-f-test.tar.gz'),
                     str(tmp_path/'unpacked')], cwd=ROOT, check=True, capture_output=True)

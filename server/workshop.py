@@ -6,7 +6,8 @@ maintainer, or the user's own fork) and holds a GitHub token in the keychain.
 This module starts the `.github/workflows/workshop.yml` pipeline there, follows
 its runs, reads their reports, and lists the layers it published for this
 version of Gradara. It never installs anything: the desktop shell downloads a
-layer and checks its signature itself. Requests go only to api.github.com.
+layer and checks its signature itself. The token is sent only to api.github.com;
+layer manifests come from the repository's public release assets on github.com.
 """
 from __future__ import annotations
 

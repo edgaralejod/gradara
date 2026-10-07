@@ -22,7 +22,7 @@ COMMIT = re.compile(r'^[0-9a-f]{40}$')
 
 
 def gh(*args: str) -> str:
-    return subprocess.run(['gh', *args], check=True, capture_output=True, text=True).stdout
+    return subprocess.run(['gh', *args], check=True, capture_output=True, text=True, encoding='utf-8').stdout
 
 
 def fail(message: str) -> None:

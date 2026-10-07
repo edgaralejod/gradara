@@ -16,7 +16,7 @@ const FORMAT = 1;
 const MAX_FILES = 20000;
 const MAX_BYTES = 400 * 1024 * 1024; // unpacked
 // A layer replaces only these platform-independent parts; everything else stays the app's own.
-const ALLOWED = [/^web\//, /^server\//, /^lib\/gradara\/port-units\.json$/, /^manifest\.json$/];
+const ALLOWED = [/^web\//, /^server\//, /^lib\/gradara\/[\w-]+\.json$/, /^manifest\.json$/];
 
 // ------------------------------------------------------------------ tar (ustar)
 

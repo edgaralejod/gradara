@@ -232,11 +232,6 @@
 .library-titleblock strong {
   color: #273f50;
 }
-.library-titleblock .tb-kicker {
-  color: #637987;
-  font-size: var(--text-meta);
-  letter-spacing: normal;
-}
 .library-titleblock .tb-count {
   font-size: var(--text-meta);
   color: #637987;
@@ -301,13 +296,6 @@
   font-weight: var(--weight-medium);
   color: #273f50;
   font-size: var(--text-ui);
-}
-.legend-kind {
-  color: #637987;
-  font: var(--weight-regular) var(--text-meta)/16px var(--font-ui);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .legend-name mark {
   background: #cee4f2;

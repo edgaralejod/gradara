@@ -16,7 +16,7 @@ import json
 import subprocess
 import sys
 
-ALLOWED = ['app/*', 'components/*', 'lib/*', 'hooks/*', 'server/*', 'models/examples/*', 'docs/*', 'tests/*',
+ALLOWED = ['app/*', 'components/*', 'lib/*', 'server/*', 'models/examples/*', 'docs/*', 'tests/*',
            'scripts/*', 'public/*', 'ROADMAP.md', 'README.md']
 # Checked first: these win over ALLOWED.
 FORBIDDEN = [
@@ -24,8 +24,7 @@ FORBIDDEN = [
     'server/credentials.py', 'server/workshop.py', 'server/safety.py', 'server/processes.py', 'server/paths.py',
     'server/llm/*', 'server/requirements*.txt',
     # The pipeline's own rules and tools: the branch never runs a changed copy of them.
-    'scripts/workshop_*', 'scripts/build-layer.cjs', 'scripts/check-docs.py', 'scripts/check-repo.py',
-    'scripts/check-doc-drift.py',
+    'scripts/workshop_*', 'scripts/build-layer.cjs', 'scripts/check-*',
     # Shell, packaging, CI, cloud, website, build configuration and dependencies.
     'desktop/*', 'packaging/*', '.github/*', 'cloud/*', 'site/*', 'patches/*', 'vite*.ts', 'tsconfig.json',
     'package.json', 'package-lock.json',
@@ -44,7 +43,7 @@ def verdict(path: str) -> str:
 
 def changed(base: str, head: str) -> list[str]:
     out = subprocess.run(['git', 'diff', '--name-only', '--no-renames', f'{base}..{head}'], check=True,
-                         capture_output=True, text=True).stdout
+                         capture_output=True, text=True, encoding='utf-8').stdout
     return [line for line in out.splitlines() if line]
 
 

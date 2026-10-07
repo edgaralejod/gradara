@@ -4,7 +4,7 @@ Read AGENTS.md and the AGENTS.md of every folder you change, and follow them: ke
 
 The result ships as a personal layer on top of the signed Gradara app, so these rules are hard limits. A change that breaks one is thrown away by the pipeline and the requester still pays for the attempt:
 
-- Change only `app/`, `components/`, `lib/`, `hooks/`, `server/` (not `server/credentials.py`, `server/workshop.py`, `server/safety.py`, `server/processes.py`, `server/paths.py`, `server/llm/`, `server/requirements*.txt`), `models/examples/`, `docs/`, `tests/`, `scripts/` (not `scripts/workshop_*`, `scripts/build-layer.cjs` or the `check-*` scripts), `public/`, `ROADMAP.md`, `README.md`.
+- Change only `app/`, `components/`, `lib/`, `server/` (not `server/credentials.py`, `server/workshop.py`, `server/safety.py`, `server/processes.py`, `server/paths.py`, `server/llm/`, `server/requirements*.txt`), `models/examples/`, `docs/`, `tests/`, `scripts/` (not `scripts/workshop_*`, `scripts/build-layer.cjs` or the `check-*` scripts), `public/`, `ROADMAP.md`, `README.md`.
 - Never change `desktop/`, `packaging/`, `.github/`, `cloud/`, `site/`, `package.json`, `package-lock.json`, any dependency manifest, `LICENSE`, `NOTICE`, `docs/PRIVACY.md` or `SECURITY.md`. Add no dependency: only what is already installed exists in the app.
 - Do not change what a saved model file contains: every file must still open in stock Gradara.
 - Keep every existing test passing. Run `npm run typecheck`, `npm test`, `python -m pytest -q -m "not integration"` and `python scripts/check-docs.py` before you finish.

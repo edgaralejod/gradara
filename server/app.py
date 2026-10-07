@@ -61,7 +61,7 @@ async def lifespan(app):
     await engines.shutdown()
 
 app = FastAPI(title='Gradara local workspace', lifespan=lifespan, docs_url='/api/docs', openapi_url='/api/openapi.json')
-app.add_middleware(CORSMiddleware, allow_origins=sorted(LOCAL_ORIGINS),allow_methods=['GET','POST','PUT','DELETE'],allow_headers=['Content-Type','X-Gradara-Client'])
+app.add_middleware(CORSMiddleware, allow_origins=sorted(LOCAL_ORIGINS),allow_methods=['GET','POST','PUT','PATCH','DELETE'],allow_headers=['Content-Type','X-Gradara-Client'])
 
 def _hostname(host: str) -> str:
     if host.startswith('['):
@@ -350,6 +350,8 @@ async def full_result_data(run_id: str):
         return await asyncio.to_thread(run_store.load_full, run_id, RUNS)
     except run_store.RunUnavailable as exc:
         raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:  # the stored files disagree with each other
+        raise HTTPException(500, f'The stored run cannot be read: {exc}') from exc
 
 @app.post('/api/results/digest')
 async def run_digest_view(request: DigestRequest):

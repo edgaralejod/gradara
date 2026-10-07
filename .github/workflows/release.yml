@@ -25,6 +25,8 @@ on:
       - '!desktop/package.json'
       - '!desktop/package-lock.json'
       - 'packaging/**'
+      - 'scripts/build-layer.cjs'
+      - 'server/paths.py'
       - 'server/requirements.txt'
       - 'server/engines.py'
       - 'vite.desktop.config.ts'

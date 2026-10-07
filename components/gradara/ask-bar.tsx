@@ -324,8 +324,9 @@ export default function AskBar({
           ) : (
             <>
               <p>
-                The question, a digest of the runs computed on this computer, and the model without layout.
-                The samples themselves are not sent. {preview.text.length.toLocaleString()} characters.
+                The question, a digest of the runs computed on this computer, the model without layout, and
+                the earlier questions and answers of this discussion. The samples themselves are not sent.{' '}
+                {preview.text.length.toLocaleString()} characters.
               </p>
               <pre>{preview.text}</pre>
             </>

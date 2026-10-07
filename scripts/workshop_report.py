@@ -95,12 +95,12 @@ def features(stack_sha: str) -> None:
     env = os.environ
     stack = json.loads(env.get('STACK') or '[]')
     picked = subprocess.run(['git', 'rev-list', '--reverse', f"{env['BASE_SHA']}..{stack_sha}"], check=True,
-                            capture_output=True, text=True).stdout.split()
+                            capture_output=True, text=True, encoding='utf-8').stdout.split()
     if len(picked) != len(stack):
         raise SystemExit(f'Expected {len(stack)} feature commits on the branch, found {len(picked)}.')
     out = [dict(item, commit=commit) for item, commit in zip(stack, picked)]
     if env.get('AGENT') == 'true':
-        head = subprocess.run(['git', 'rev-parse', 'HEAD'], check=True, capture_output=True, text=True).stdout.strip()
+        head = subprocess.run(['git', 'rev-parse', 'HEAD'], check=True, capture_output=True, text=True, encoding='utf-8').stdout.strip()
         out.append({'id': env['ID'], 'title': env.get('TITLE') or env['ID'], 'commit': head,
                     'request': env.get('REQUEST', '')[:4000]})
     print(json.dumps(out, indent=2))

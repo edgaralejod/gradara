@@ -9,7 +9,7 @@ import math
 import re
 from functools import lru_cache
 
-from .paths import ROOT
+from .paths import shipped
 
 # Engine-specific realization of each solver. OpenModelica 1.27 deprecates the old
 # fixed-step `rungekutta` method in favor of GBODE with constant step control, and a
@@ -24,7 +24,7 @@ METHODS: dict[str, tuple[str, tuple[str, ...]]] = {
 
 @lru_cache(maxsize=1)
 def limits() -> dict:
-    return json.loads((ROOT/'lib'/'gradara'/'solver-settings.json').read_text(encoding='utf-8'))
+    return json.loads(shipped('lib', 'gradara', 'solver-settings.json').read_text(encoding='utf-8'))
 
 
 def solver_ids() -> tuple[str, ...]:
