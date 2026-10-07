@@ -1,3 +1,4 @@
+import type { EffectiveSettings } from './solver';
 import type { SimulationResult } from './api';
 
 /** One stored run of the model, as `GET /api/results` lists it. */
@@ -12,6 +13,8 @@ export type StoredRun = {
   projectRevision: number;
   modelHash: string;
   engine: string;
+  /** The solver settings the run used; absent on runs from before 0.6.9 (the defaults). */
+  simulation?: EffectiveSettings;
 };
 
 /** Runs shown together: enough to compare, few enough to read. */

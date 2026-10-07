@@ -55,6 +55,8 @@ export type Diagnostic = {
   netIds: string[];
   wireIds: string[];
   hint?: string | null;
+  /** A topic of the simulation settings help (solver-docs.ts SYMPTOMS) that explains this problem. */
+  help?: string | null;
 };
 export type Job<T> = {
   id: string;
@@ -125,6 +127,8 @@ export type SimulationResult = {
   modelHash: string;
   projectRevision: number;
   duration: number;
+  /** The solver settings the run used; absent on runs from before 0.6.9 (the defaults). */
+  simulation?: import('./solver').EffectiveSettings;
   elapsed: number;
   time: number[];
   samples: number;

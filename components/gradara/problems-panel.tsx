@@ -4,6 +4,7 @@ import {
   ChevronRight,
   CircleAlert,
   CircleCheck,
+  CircleHelp,
   Info,
   Sparkles,
   TriangleAlert,
@@ -40,12 +41,15 @@ export default function ProblemsPanel({
   sections,
   onSelect,
   onAsk,
+  onSettingsHelp,
   empty,
 }: {
   project: Project;
   sections: ProblemSection[];
   onSelect: (diagnostic: Diagnostic, blockIds?: string[]) => void;
   onAsk?: (diagnostic: Diagnostic) => void;
+  /** Open the simulation settings guide at a symptom (a diagnostic's `help`). */
+  onSettingsHelp?: (topic: string) => void;
   empty?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -163,6 +167,17 @@ export default function ProblemsPanel({
                               </button>
                             );
                           })}
+                      {d.help && onSettingsHelp && (
+                        <button
+                          type="button"
+                          className="problem-chip is-help"
+                          title="What the simulation settings can do about this"
+                          onClick={() => onSettingsHelp(d.help!)}
+                        >
+                          <CircleHelp size={11} />
+                          Simulation settings
+                        </button>
+                      )}
                     </span>
                     {onAsk && d.severity !== 'info' && (
                       <button

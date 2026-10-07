@@ -38,7 +38,7 @@ See TI's [flyback transformer design seminar](https://www.ti.com/seclit/ml/slup3
 
 Every part is a library block with its own Help page. The rectifier is a **Diode bridge** with 0.05 Ω on-resistance and 10 nanosiemens (1e-8 S) off conductance per diode. The secondary rectifier is an **Ideal diode** with a 0.7 V knee and the same resistances. The primary switch is a **Switch (Boolean)** with 0.2 Ω on-resistance and 10 nS off conductance, driven by the **PWM generator**'s fire output. The transformer is an **Ideal transformer** (n = 8) with the 2 mH magnetizing **Inductor** across its primary. These small, finite values help the solver through each switching transition. The input also has a 100 MΩ reference path, and the DC bus has a 1 MΩ bleeder resistor.
 
-This is a switched model, not an averaged model, and the output is not forced to 24 V. Each switching edge is an event in the simulation, so the results contain many more points than the usual 6,000.
+This is a switched model, not an averaged model, and the output is not forced to 24 V. Each switching edge is an event in the simulation, so the results contain many more points than the usual 6,000. It is also a useful model for the [simulation settings](../SOLVER.md): Implicit Runge-Kutta, or DASSL with a maximum step of 10 µs (half the switching period), finishes sooner than the default, while loosening DASSL's tolerance makes it far slower.
 
 ## Controller in C
 

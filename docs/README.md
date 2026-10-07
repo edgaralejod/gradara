@@ -5,6 +5,7 @@
 - [Install Gradara](INSTALL.md): download, install, the built-in simulation engine, update, and uninstall.
 - [Your first 10 minutes](USER_GUIDE.md#your-first-10-minutes): run an example, then build a model from scratch.
 - [User guide](USER_GUIDE.md): diagrams, subsystems, variants, the Explorer, results, export, and [keyboard shortcuts](USER_GUIDE.md#keyboard-shortcuts).
+- [Simulation settings](SOLVER.md): the four solvers, what each setting does, and what to change when a run looks wrong. The same guide is in the app.
 - [FAQ](FAQ.md) and glossary.
 - [Validation](VALIDATION.md): Gradara's results next to closed-form answers, checked by automated tests.
 - [AI features](AGENT_SETUP.md): Gradara AI credits, your own API key, and what each task costs.

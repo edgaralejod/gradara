@@ -223,3 +223,190 @@
 .parameter-promote:hover {
   color: #1f3a4d;
 }
+
+/* Simulation settings (components/gradara/simulation-settings.tsx): label and field side by side,
+   a one-line explanation under each, a help button with more. */
+.sim-settings {
+  margin: 4px 0 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e0e7ec;
+  font-size: var(--text-ui);
+}
+.sim-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.sim-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5d6b77;
+}
+.sim-head .sim-help {
+  margin-left: auto;
+}
+.sim-reset {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: #2477b5;
+  font-size: var(--text-micro);
+  cursor: pointer;
+}
+.sim-reset + .sim-help {
+  margin-left: 0;
+}
+.sim-reset:hover,
+.sim-reset:focus-visible {
+  background: #e3eef7;
+}
+.sim-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 2px 6px;
+  margin-bottom: 8px;
+}
+.sim-label {
+  color: #526979;
+}
+/* The solver menu takes the whole width under its label. */
+.sim-row.is-wide {
+  grid-template-columns: minmax(0, 1fr) 22px;
+}
+.sim-row.is-wide .sim-select {
+  grid-column: 1 / -1;
+}
+.sim-label small {
+  margin-left: 4px;
+  color: #718693;
+  font: inherit;
+}
+.sim-control {
+  min-width: 0;
+}
+.inspector-properties .sim-row input,
+.inspector-properties .sim-select {
+  width: 100%;
+  height: 28px;
+  padding: 3px 6px;
+  border: 1px solid #c9d5de;
+  border-radius: 2px;
+  background: white;
+  color: #24313b;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.inspector-properties .sim-select {
+  padding-right: 2px;
+}
+.inspector-properties .sim-row input[aria-invalid='true'] {
+  border-color: #b42318;
+}
+.inspector-properties .sim-row input::placeholder {
+  color: #8a99a5;
+}
+.sim-help {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: #73808b;
+  cursor: pointer;
+}
+.sim-help:hover,
+.sim-help:focus-visible,
+.sim-help[data-popup-open] {
+  background: #e3eef7;
+  color: #2477b5;
+}
+.sim-line {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #6b7d8a;
+  font-size: var(--text-micro);
+  line-height: 1.4;
+}
+.sim-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.sim-consequence {
+  margin: 4px 0 0;
+  padding: 6px 8px;
+  border-radius: 2px;
+  background: #eef3f7;
+  color: #34495a;
+  font-size: var(--text-micro);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.sim-warning {
+  margin: 4px 0 0;
+  padding: 5px 8px;
+  border-left: 2px solid #c58a00;
+  background: #fdf6e6;
+  color: #6d4c00;
+  font-size: var(--text-micro);
+  line-height: 1.4;
+}
+.sim-popover {
+  width: 300px;
+  gap: 6px;
+  font-size: var(--text-ui);
+  line-height: 1.5;
+  color: #27333d;
+}
+.sim-popover p {
+  margin: 0;
+}
+.sim-guide-link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #2477b5;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.problem-chip.is-help {
+  color: #2477b5;
+}
+.problem-chip.is-help svg {
+  margin-right: 3px;
+}
+.solver-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.solver-table th,
+.solver-table td {
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid #e6ecf0;
+  text-align: left;
+  vertical-align: top;
+}
+.solver-table th {
+  font-weight: 600;
+  color: #5d6b77;
+}
+.solver-table td:first-child {
+  width: 38%;
+}
+.solver-table tr.is-marked td {
+  background: #fff4d6;
+}

@@ -312,7 +312,8 @@ async def stored_runs(model: str, limit: int = 20):
                 runs.append({'id': result['id'], 'name': run_name(path.parent), 'finished': round(path.stat().st_mtime * 1000),
                              'duration': result['duration'], 'samples': result['samples'],
                              'signals': len(result['series']), 'projectRevision': result['projectRevision'],
-                             'modelHash': result['modelHash'], 'engine': result['engine']})
+                             'modelHash': result['modelHash'], 'engine': result['engine']}
+                            | ({'simulation': result['simulation']} if result.get('simulation') else {}))
             except (OSError, ValueError, KeyError, AttributeError):
                 continue
             if len(runs) == limit:

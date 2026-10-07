@@ -2,6 +2,16 @@
 import { useRef, useState } from 'react';
 import { Check, Download, Pencil, Trash2, X } from 'lucide-react';
 import { maxOpenRuns, runTitle, type StoredRun } from '@/lib/gradara/run-set';
+import { DEFAULTS } from '@/lib/gradara/solver';
+import { describeRun } from '@/lib/gradara/solver-docs';
+
+/** The run's solver settings when they are not the defaults. */
+function settingsLabel(run: StoredRun): string {
+  const s = run.simulation;
+  if (!s || (s.solver === DEFAULTS.solver && s.tolerance === DEFAULTS.tolerance && s.points === DEFAULTS.points && !s.maxStep))
+    return '';
+  return describeRun(s, run.duration);
+}
 
 /**
  * The stored runs of the open model, newest first. Tick up to three to show
@@ -120,6 +130,11 @@ export default function RunList({
                   {run.id === latestId ? 'Latest · ' : ''}
                   {run.duration} s · {run.signals} signals · rev{' '}
                   {run.projectRevision}
+                  {settingsLabel(run) && (
+                    <span className="di-run-solver" title={settingsLabel(run)}>
+                      {settingsLabel(run)}
+                    </span>
+                  )}
                 </small>
               </div>
               <span className="di-run-actions">

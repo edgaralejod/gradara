@@ -1,4 +1,5 @@
 import portUnits from './port-units.json';
+import type { SimulationSettings } from './solver';
 import { controlBlocks } from './control-blocks';
 import { extraBlocks } from './extra-blocks';
 import { mslBlocks } from './msl-blocks';
@@ -212,6 +213,8 @@ export type Project = {
   /** Absent only in legacy documents; populated when the document is opened. */
   nets?: Net[];
   duration: number;
+  /** Solver settings (lib/gradara/solver.ts); absent means the defaults. */
+  simulation?: SimulationSettings;
   revision: number;
   /** Stable saved-document identity; separate from its optional template origin. */
   modelId?: string;

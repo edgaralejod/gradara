@@ -28,6 +28,8 @@ def main() -> None:
         '--add-data', f'{ROOT/"server"/"msl_index.json"}{os.pathsep}server',
         # Physical port units, shared with the workbench library (server/units.py).
         '--add-data', f'{ROOT/"lib"/"gradara"/"port-units.json"}{os.pathsep}lib/gradara',
+        # Simulation settings limits, shared with the workbench (server/solver.py).
+        '--add-data', f'{ROOT/"lib"/"gradara"/"solver-settings.json"}{os.pathsep}lib/gradara',
         '--exclude-module', 'tkinter',
         '--exclude-module', 'pytest',
     ]
@@ -37,8 +39,9 @@ def main() -> None:
     exe = out/'backend'/'gradara-backend'/('gradara-backend.exe' if sys.platform == 'win32' else 'gradara-backend')
     if not exe.exists():
         raise SystemExit(f'PyInstaller did not produce {exe}')
-    if not list((out/'backend'/'gradara-backend').rglob('msl_index.json')):
-        raise SystemExit('The frozen backend is missing server/msl_index.json')
+    for name in ('msl_index.json', 'solver-settings.json'):
+        if not list((out/'backend'/'gradara-backend').rglob(name)):
+            raise SystemExit(f'The frozen backend is missing {name}')
     print(f'Built {exe}')
 
 
