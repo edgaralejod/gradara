@@ -123,6 +123,19 @@ jobs:
         # On Windows and Linux this also simulates with the built-in engine.
         shell: bash
         run: python packaging/smoke_backend.py
+      - name: Load a personal-feature layer into the bundled service
+        # The loader must work on every platform: the frozen service has to run a
+        # layer's complete server package (including a module the base lacks) and
+        # serve its workbench. See docs/architecture/LAYERS.md.
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo '[{"id":"loading-test","title":"Loading test"}]' > "$RUNNER_TEMP/features.json"
+          node scripts/build-layer.cjs build --id loading-test --base "$version" \
+            --features "$RUNNER_TEMP/features.json" --out "$RUNNER_TEMP/layer"
+          node scripts/build-layer.cjs unpack "$RUNNER_TEMP/layer/gradara-layer-$version-loading-test.tar.gz" "$RUNNER_TEMP/layer/unpacked"
+          python packaging/layer_probe.py "$RUNNER_TEMP/layer/unpacked"
+          python packaging/smoke_backend.py --layer "$RUNNER_TEMP/layer/unpacked" --probe
       - name: Smoke-test the bundled service on Arch Linux
         # A rolling distribution's /bin/sh, make, and gcc are newer than the build
         # machine's libraries; the service must not hand those to them.

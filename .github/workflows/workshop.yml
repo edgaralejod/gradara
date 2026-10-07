@@ -1,0 +1,343 @@
+name: Workshop
+
+# Builds personal features ("layers") on request: an AI agent implements the
+# request on a branch, automated gates check it, and the result is published as a
+# signed layer for one exact Gradara version plus a draft pull request. Design and
+# setup: docs/architecture/LAYERS.md. Forks inherit this workflow; each fork's
+# owner pays for its own model use through its own secrets:
+#
+#   ANTHROPIC_API_KEY   the key the agent uses (builds and scopes)
+#   LAYER_SIGNING_KEY   Ed25519 private key (PEM) that signs layers; its public half
+#                       must be trusted by the app (desktop/layer-keys.json for the
+#                       main repository, Settings → Personal features for a fork)
+#
+# Modes (Run workflow, or the app through the GitHub API):
+#   scope    a small model reads the code and says what would be built, before paying for a build
+#   build    the agent implements the request on top of the layer's earlier features
+#   rebuild  no agent: the listed features are applied again on a base (switching one
+#            off, or porting to a new release; a published release does this for every layer)
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: scope, build or rebuild
+        type: choice
+        options: [scope, build, rebuild]
+        required: true
+      request_id:
+        description: Correlation ID; for build and rebuild, the new layer's ID (f-…)
+        type: string
+        required: true
+      request:
+        description: The feature request, in the requester's words
+        type: string
+        default: ''
+      title:
+        description: Short title of the feature
+        type: string
+        default: ''
+      base:
+        description: Release tag to build on (default the latest release)
+        type: string
+        default: ''
+      stack:
+        description: JSON list of the earlier features the layer keeps [{"id","title","commit"}]
+        type: string
+        default: '[]'
+      budget:
+        description: Most the build agent may spend, in USD
+        type: string
+        default: '5'
+  release:
+    types: [published]
+
+run-name: "Workshop ${{ inputs.mode || 'rebuild' }} · ${{ inputs.request_id || github.event.release.tag_name }}"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: workshop-${{ inputs.request_id || github.ref }}
+  cancel-in-progress: false
+
+env:
+  CLAUDE_CODE: '@anthropic-ai/claude-code@2.1.292'
+  BUILD_MODEL: sonnet
+  SCOPE_MODEL: haiku
+
+jobs:
+  scope:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'scope'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+      - name: Workshop is set up
+        env:
+          HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          if [ "$HAS_KEY" != "true" ]; then
+            echo '{"stage":"setup","message":"This repository has no ANTHROPIC_API_KEY secret. See docs/architecture/LAYERS.md."}' > report.json
+            echo "::error::ANTHROPIC_API_KEY is not set."
+            exit 1
+          fi
+      - name: Scope the request
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REQUEST: ${{ inputs.request }}
+        run: |
+          { cat .github/workshop/scope.md; printf '\n%s\n' "$REQUEST"; } > "$RUNNER_TEMP/prompt.md"
+          npx -y "$CLAUDE_CODE" -p "$(cat "$RUNNER_TEMP/prompt.md")" --model "$SCOPE_MODEL" \
+            --max-budget-usd 0.30 --max-turns 25 --output-format json \
+            --allowedTools Read Glob Grep --disallowedTools WebFetch WebSearch Bash Edit Write \
+            > "$RUNNER_TEMP/agent.json"
+          python3 scripts/workshop_report.py scope "$RUNNER_TEMP/agent.json" scope.json
+      - name: Report
+        if: always()
+        run: |
+          [ -f report.json ] || echo '{"stage":"scope","message":"done"}' > report.json
+          [ -f scope.json ] && cat scope.json >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: workshop-${{ inputs.request_id }}
+          path: |
+            scope.json
+            report.json
+          if-no-files-found: ignore
+
+  plan:
+    if: github.event_name == 'release' || inputs.mode != 'scope'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      builds: ${{ steps.plan.outputs.builds }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          MODE: ${{ inputs.mode }}
+          REQUEST_ID: ${{ inputs.request_id }}
+          REQUEST: ${{ inputs.request }}
+          TITLE: ${{ inputs.title }}
+          BASE: ${{ inputs.base }}
+          STACK: ${{ inputs.stack }}
+          BUDGET: ${{ inputs.budget }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          PRERELEASE: ${{ github.event.release.prerelease }}
+        run: python3 scripts/workshop_plan.py >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.builds != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        item: ${{ fromJSON(needs.plan.outputs.builds) }}
+    env:
+      ID: ${{ matrix.item.id }}
+      BASE_TAG: ${{ matrix.item.base }}
+      AGENT: ${{ matrix.item.agent }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # No stored credentials: the agent cannot push. Publishing uses the token explicitly.
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ matrix.item.base }}
+      - name: Workshop is set up
+        env:
+          HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          HAS_SIGNING: ${{ secrets.LAYER_SIGNING_KEY != '' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          report() { printf '{"stage":"%s","message":"%s"}' "$1" "$2" > "$RUNNER_TEMP/out/report.json"; echo "::error::$2"; exit 1; }
+          [ "$HAS_SIGNING" = "true" ] || report setup "This repository has no LAYER_SIGNING_KEY secret. See docs/architecture/LAYERS.md."
+          if [ "$AGENT" = "true" ] && [ "$HAS_KEY" != "true" ]; then report setup "This repository has no ANTHROPIC_API_KEY secret."; fi
+          echo '{"stage":"started","message":""}' > "$RUNNER_TEMP/out/report.json"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: server/requirements*.txt
+      - name: Install dependencies
+        run: |
+          npm ci
+          python -m pip install -r server/requirements-dev.txt
+      - name: Start the branch from the base and the layer's earlier features
+        env:
+          STACK: ${{ toJSON(matrix.item.stack) }}
+        run: |
+          git config user.name "Gradara workshop"
+          git config user.email "workshop@users.noreply.github.com"
+          echo "BASE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git switch -c "workshop/$ID/$BASE_TAG"
+          python3 scripts/workshop_report.py stage "$RUNNER_TEMP/out/report.json" stack
+          for commit in $(echo "$STACK" | python3 -c "import json,sys; print(' '.join(f['commit'] for f in json.load(sys.stdin)))"); do
+            git fetch --quiet origin "$commit" || true
+            if ! git cherry-pick -x "$commit"; then
+              git cherry-pick --abort || true
+              printf '{"stage":"stack","message":"Feature commit %s does not apply cleanly to %s; it needs porting by the agent."}' "$commit" "$BASE_TAG" > "$RUNNER_TEMP/out/report.json"
+              echo "::error::$commit does not apply to $BASE_TAG."
+              exit 1
+            fi
+          done
+          echo "STACK_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          # Resume: an earlier attempt that ran out of budget left its work on a branch.
+          if [ "$AGENT" = "true" ] && git fetch --quiet origin "workshop/$ID/$BASE_TAG-attempt" 2>/dev/null; then
+            if git cherry-pick -n FETCH_HEAD; then echo "RESUMED=1" >> "$GITHUB_ENV"; else git cherry-pick --abort || git reset --hard; fi
+          fi
+      - name: Implement the request
+        if: matrix.item.agent
+        timeout-minutes: 60
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REQUEST: ${{ matrix.item.request }}
+          TITLE: ${{ matrix.item.title }}
+          BUDGET: ${{ matrix.item.budget }}
+        run: |
+          python3 scripts/workshop_report.py stage "$RUNNER_TEMP/out/report.json" implement
+          { cat .github/workshop/build.md; printf '\n%s\n' "$REQUEST";
+            [ "${RESUMED:-}" = "1" ] && printf '\nAn earlier attempt at this request stopped before finishing. Its unfinished changes are in the working tree: continue from them.\n'; } > "$RUNNER_TEMP/prompt.md"
+          set +e
+          npx -y "$CLAUDE_CODE" -p "$(cat "$RUNNER_TEMP/prompt.md")" --model "$BUILD_MODEL" \
+            --max-budget-usd "$BUDGET" --max-turns 120 --output-format json \
+            --permission-mode acceptEdits \
+            --allowedTools Read Glob Grep Edit Write "Bash(npm test:*)" "Bash(npm run typecheck:*)" \
+              "Bash(python -m pytest:*)" "Bash(python scripts/check-docs.py:*)" "Bash(git diff:*)" "Bash(git status:*)" \
+            --disallowedTools WebFetch WebSearch \
+            > "$RUNNER_TEMP/out/agent.json"
+          status=$?
+          set -e
+          python3 scripts/workshop_report.py cost "$RUNNER_TEMP/out/agent.json" "$RUNNER_TEMP/out/cost.json" build
+          [ $status -eq 0 ] || { printf '{"stage":"implement","message":"The agent stopped before finishing (budget, turns or an error)."}' > "$RUNNER_TEMP/out/report.json"; exit 1; }
+          git add -A
+          git diff --cached --quiet && { printf '{"stage":"implement","message":"The agent made no change."}' > "$RUNNER_TEMP/out/report.json"; exit 1; }
+          git commit -q -m "Workshop: ${TITLE:-$ID}" -m "Request: $REQUEST"
+      - name: Gate · paths a layer may change
+        # Run the base's copy of the rule, never the branch's: once it passes, every
+        # file the pipeline itself runs (scripts, packaging, workflows) is the base's.
+        run: |
+          git show "$BASE_SHA:scripts/workshop_paths.py" > "$RUNNER_TEMP/workshop_paths.py"
+          python3 "$RUNNER_TEMP/workshop_paths.py" "$BASE_SHA" HEAD
+          python3 scripts/workshop_report.py stage "$RUNNER_TEMP/out/report.json" check
+      - name: Gate · Core CI
+        run: |
+          npm run typecheck
+          npm test
+          python -m pytest -q -m "not integration"
+      - name: Gate · documentation
+        run: python3 scripts/check-docs.py
+      - name: Gate · security review by a second agent
+        if: matrix.item.agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REQUEST: ${{ matrix.item.request }}
+        run: |
+          python3 scripts/workshop_report.py stage "$RUNNER_TEMP/out/report.json" review
+          { cat .github/workshop/review.md; printf '\nBASE is %s. The request was:\n%s\n' "$STACK_SHA" "$REQUEST"; } > "$RUNNER_TEMP/review.md"
+          npx -y "$CLAUDE_CODE" -p "$(cat "$RUNNER_TEMP/review.md")" --model "$BUILD_MODEL" \
+            --max-budget-usd 1.00 --max-turns 40 --output-format json \
+            --allowedTools Read Glob Grep "Bash(git diff:*)" "Bash(git show:*)" --disallowedTools WebFetch WebSearch Edit Write \
+            > "$RUNNER_TEMP/out/review.json"
+          python3 scripts/workshop_report.py cost "$RUNNER_TEMP/out/review.json" "$RUNNER_TEMP/out/cost.json" review
+          python3 scripts/workshop_report.py review "$RUNNER_TEMP/out/review.json" "$RUNNER_TEMP/out/review-verdict.json"
+      - name: Build the layer
+        env:
+          STACK: ${{ toJSON(matrix.item.stack) }}
+          TITLE: ${{ matrix.item.title }}
+          REQUEST: ${{ matrix.item.request }}
+        run: |
+          python3 scripts/workshop_report.py stage "$RUNNER_TEMP/out/report.json" layer
+          version="${BASE_TAG#v}"
+          python3 scripts/workshop_report.py features "$STACK_SHA" > "$RUNNER_TEMP/features.json"
+          npm run desktop:web
+          node scripts/build-layer.cjs build --id "$ID" --base "$version" --features "$RUNNER_TEMP/features.json" \
+            --repository "$GITHUB_REPOSITORY" --commit "$(git rev-parse HEAD)" --out "$RUNNER_TEMP/out"
+      - name: Download the released app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$BASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'Gradara-linux-amd64.deb' --dir "$RUNNER_TEMP/base"
+          dpkg-deb -x "$RUNNER_TEMP/base/Gradara-linux-amd64.deb" "$RUNNER_TEMP/base/root"
+      - name: Gate · load the layer into the released app's service
+        # No token in this step: it runs the new code.
+        run: |
+          version="${BASE_TAG#v}"
+          backend=$(dirname "$(find "$RUNNER_TEMP/base/root" -type f -name gradara-backend | head -1)")
+          node scripts/build-layer.cjs unpack "$RUNNER_TEMP/out/gradara-layer-$version-$ID.tar.gz" "$RUNNER_TEMP/unpacked"
+          python packaging/smoke_backend.py --backend "$backend" --layer "$RUNNER_TEMP/unpacked"
+      - name: Sign
+        env:
+          LAYER_SIGNING_KEY: ${{ secrets.LAYER_SIGNING_KEY }}
+        run: |
+          version="${BASE_TAG#v}"
+          node scripts/build-layer.cjs sign "$RUNNER_TEMP/out/gradara-layer-$version-$ID.tar.gz"
+      - name: Publish the layer and the draft pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ matrix.item.title }}
+          REQUEST: ${{ matrix.item.request }}
+        run: |
+          python3 scripts/workshop_report.py stage "$RUNNER_TEMP/out/report.json" publish
+          version="${BASE_TAG#v}"
+          branch="workshop/$ID/$BASE_TAG"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/$branch"
+          python3 scripts/workshop_report.py notes "$RUNNER_TEMP/out" > "$RUNNER_TEMP/notes.md"
+          tag="layer-$ID-$BASE_TAG"
+          gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --prerelease --latest=false \
+            --target "$(git rev-parse HEAD)" --title "Personal feature: ${TITLE:-$ID} (Gradara $version)" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            "$RUNNER_TEMP/out/gradara-layer-$version-$ID.tar.gz" "$RUNNER_TEMP/out/gradara-layer-$version-$ID.tar.gz.sig" \
+            "$RUNNER_TEMP/out/layer.json" $( [ -f "$RUNNER_TEMP/out/cost.json" ] && echo "$RUNNER_TEMP/out/cost.json" )
+          if [ "$AGENT" = "true" ]; then
+            gh label create community-feature --repo "$GITHUB_REPOSITORY" --color 5319e7 \
+              --description "Built by the workshop pipeline; not yet reviewed for main" 2>/dev/null || true
+            gh pr create --repo "$GITHUB_REPOSITORY" --draft --base main --head "$branch" \
+              --title "Workshop: ${TITLE:-$ID}" --body-file "$RUNNER_TEMP/notes.md" --label community-feature || true
+          fi
+          git push --quiet "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ":refs/heads/$branch-attempt" 2>/dev/null || true
+          printf '{"stage":"published","message":"%s"}' "$tag" > "$RUNNER_TEMP/out/report.json"
+      - name: Cost report
+        if: always()
+        run: python3 scripts/workshop_report.py summary "$RUNNER_TEMP/out" >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep a failed attempt's branch so it can be resumed
+        if: failure() && matrix.item.agent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -n "${STACK_SHA:-}" ] || exit 0
+          git add -A
+          git diff --cached --quiet || git commit -q -m "Workshop attempt (unfinished)"
+          if [ "$(git rev-parse HEAD)" != "$STACK_SHA" ]; then
+            git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/workshop/$ID/$BASE_TAG-attempt"
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: workshop-${{ matrix.item.id }}
+          path: |
+            ${{ runner.temp }}/out/report.json
+            ${{ runner.temp }}/out/cost.json
+            ${{ runner.temp }}/out/review-verdict.json
+            ${{ runner.temp }}/out/layer.json
+          if-no-files-found: ignore

@@ -4,9 +4,17 @@
 When build/engine holds a Windows or Linux engine bundle, the service is pointed
 at it and must simulate the DC motor and verify its controller's generated C.
 (The macOS bundle is a VM image; the installed-app test covers it.)
+
+    python packaging/smoke_backend.py [--backend DIR] [--layer DIR] [--probe]
+
+--backend runs another frozen build (for example one unpacked from a release).
+--layer starts it with an unpacked personal-feature layer, as the desktop shell
+does, and checks that the service and the workbench come from the layer;
+--probe also expects the endpoint packaging/layer_probe.py adds.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import shutil
@@ -37,6 +45,12 @@ def call(port: int, path: str, body: dict | None = None, timeout: float = 10) ->
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--backend', type=Path)
+    parser.add_argument('--layer', type=Path)
+    parser.add_argument('--probe', action='store_true')
+    args = parser.parse_args()
+    exe = EXE if args.backend is None else args.backend/EXE.name
     work = Path(tempfile.mkdtemp(prefix='gradara-smoke-'))
     resources = work/'resources'
     (resources/'models').mkdir(parents=True)
@@ -44,12 +58,15 @@ def main() -> None:
     port = free_port()
     env = dict(os.environ, GRADARA_DATA_DIR=str(work/'data'), GRADARA_RESOURCES=str(resources),
                GRADARA_STATIC_DIR=str(ROOT/'dist-desktop'/'web'), GRADARA_CREDENTIAL_STORE='file')
+    if args.layer:
+        env['GRADARA_LAYER_DIR'] = str(args.layer.resolve())
+        env['GRADARA_STATIC_DIR'] = str((args.layer/'web').resolve())
     bundle = ROOT/'build'/'engine'
     manifest = json.loads((bundle/'manifest.json').read_text(encoding='utf-8')) if (bundle/'manifest.json').exists() else {}
-    simulate = manifest.get('platform') in {'windows', 'linux'}
+    simulate = manifest.get('platform') in {'windows', 'linux'} and not args.layer
     if simulate:
         env['GRADARA_ENGINE_BUNDLE'] = str(bundle)
-    process = subprocess.Popen([str(EXE), '--port', str(port)], env=env)
+    process = subprocess.Popen([str(exe), '--port', str(port)], env=env)
     try:
         deadline = time.monotonic() + 60
         while True:
@@ -67,7 +84,10 @@ def main() -> None:
         if simulate:
             simulate_and_verify(port, engine, created['project'])
         with urllib.request.urlopen(f'http://127.0.0.1:{port}/', timeout=10) as page:
-            assert b'<div id="root">' in page.read(), 'workbench is served'
+            served = page.read()
+            assert b'<div id="root">' in served, 'workbench is served'
+        if args.layer:
+            check_layer(port, args.layer, served, args.probe)
         print('Bundled service smoke test passed.')
     finally:
         process.terminate()
@@ -76,6 +96,22 @@ def main() -> None:
         except subprocess.TimeoutExpired:
             process.kill()
         shutil.rmtree(work, ignore_errors=True)
+
+
+def check_layer(port: int, layer: Path, served: bytes, probe: bool) -> None:
+    """The service and the workbench come from the layer, not from the frozen base."""
+    manifest = json.loads((layer/'manifest.json').read_text(encoding='utf-8'))
+    health = call(port, '/health', timeout=60)
+    reported = (health.get('layer') or {}).get('id')
+    if reported != manifest['id']:
+        raise SystemExit(f"The service did not load the layer: health reports {reported!r}, expected {manifest['id']!r}.")
+    if served != (layer/'web'/'index.html').read_bytes():
+        raise SystemExit("The workbench served is not the layer's.")
+    if probe:
+        answer = call(port, '/layer-probe')
+        if answer.get('probe') != 'loaded from the layer':
+            raise SystemExit(f'The layer probe did not answer: {answer}')
+    print(f"layer {manifest['id']} for {manifest['base']}: service and workbench loaded from the layer")
 
 
 def run(port: int, project: dict) -> dict:

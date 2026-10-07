@@ -31,8 +31,12 @@ export type UpdateBridge = {
 };
 
 declare global {
+  /** What desktop/preload.cjs exposes; other modules add their part (lib/gradara/layers.ts). */
+  interface GradaraDesktopBridge {
+    updates?: UpdateBridge;
+  }
   interface Window {
-    gradaraDesktop?: { updates?: UpdateBridge };
+    gradaraDesktop?: GradaraDesktopBridge;
   }
 }
 

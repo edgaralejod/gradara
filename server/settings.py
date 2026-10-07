@@ -22,6 +22,7 @@ DEFAULTS: dict[str, Any] = {
         'anthropicModel': '',
     },
     'gatewayUrl': '',              # empty: GRADARA_GATEWAY_URL or DEFAULT_GATEWAY
+    'workshop': {'repository': ''},  # empty: the main repository (server/workshop.py)
     'setupDismissed': False,
 }
 

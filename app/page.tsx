@@ -436,6 +436,8 @@ function Workbench() {
     engine: 'OpenModelica 1.27.0',
   });
   const [settingsTab, setSettingsTab] = useState<SettingsTab | null>(null);
+  /** A request carried from a "cannot do this yet" card into Settings → Personal features. */
+  const [featureRequest, setFeatureRequest] = useState('');
   const [healthChecked, setHealthChecked] = useState(false);
   const [history, setHistory] = useState<Project[]>([]);
   const [future, setFuture] = useState<Project[]>([]);
@@ -3517,6 +3519,10 @@ function Workbench() {
                   onSelect={(blockIds) => selectBlocks(blockIds)}
                   onOpenSettings={() => setSettingsTab('ai')}
                   onImprove={improveGradara}
+                  onBuildFeature={(entry) => {
+                    setFeatureRequest(`${entry.request}\n\nGradara said: ${entry.reason}`);
+                    setSettingsTab('features');
+                  }}
                   onEvidence={showEvidence}
                   onPropose={proposeFromResults}
                   runAvailable={() => true}
@@ -4250,9 +4256,11 @@ function Workbench() {
         {settingsTab && (
           <SettingsDialog
             initialTab={settingsTab}
+            initialRequest={featureRequest}
             dataDirectory={health.projectDirectory}
             onClose={() => {
               setSettingsTab(null);
+              setFeatureRequest('');
               refreshHealth();
             }}
             onEngineChange={refreshHealth}

@@ -5,7 +5,7 @@
 // checks against GitHub Releases (disable with GRADARA_DISABLE_UPDATES=1).
 'use strict';
 
-const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, shell, session } = require('electron');
+const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, net: electronNet, shell, session } = require('electron');
 const { spawn, execFile } = require('node:child_process');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -13,12 +13,14 @@ const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
 const { overran, clampPercent } = require('./update-guard.cjs');
+const layers = require('./layers.cjs');
 
 const DEV = !app.isPackaged;
 const REPO = path.resolve(__dirname, '..');
 const RESOURCES = DEV ? REPO : process.resourcesPath;
 const PRIVACY_URL = 'https://gradara.app/privacy';
 const ISSUES_URL = 'https://github.com/edgaralejod/gradara/issues';
+const IMPROVE_URL = 'https://github.com/edgaralejod/gradara/issues/new?template=improve-gradara.yml';
 // Installer tests set this to a file path: the app checks itself once the
 // workbench loads, writes a JSON report there, and quits (no dialogs).
 const SELF_TEST_REPORT = process.env.GRADARA_SELF_TEST_REPORT || '';
@@ -30,6 +32,11 @@ let mainWindow = null;
 let quitting = false;
 // True once the workbench has loaded; startup failures are reported by launch().
 let serviceReady = false;
+// The personal-feature layer the running service and workbench come from, if any,
+// and why layers were switched off at this launch (shown in Settings).
+let runningLayer = null;
+let layerNotice = '';
+let layerNoticeShown = false;
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -85,9 +92,14 @@ function backendCommand() {
   return { command: path.join(dir, exe), args: ['--port', String(port)], cwd: dir };
 }
 
-function startBackend() {
+function layerRoot() {
+  return layers.rootOf(app.getPath('userData'));
+}
+
+function startBackend(layer = null) {
   const { command, args, cwd } = backendCommand();
   const log = openLog();
+  runningLayer = layer;
   const env = {
     ...process.env,
     GRADARA_DATA_DIR: dataDir(),
@@ -98,6 +110,13 @@ function startBackend() {
     GRADARA_RESOURCES: DEV ? REPO : path.join(RESOURCES, 'app-resources'),
     PYTHONUNBUFFERED: '1',
   };
+  if (layer) {
+    // The layer's complete service package and workbench replace the shipped ones (see layers.cjs).
+    env.GRADARA_LAYER_DIR = layer.dir;
+    env.GRADARA_STATIC_DIR = path.join(layer.dir, 'web');
+  } else {
+    delete env.GRADARA_LAYER_DIR;
+  }
   backend = spawn(command, args, {
     cwd,
     env,
@@ -236,19 +255,66 @@ function createWindow() {
   return mainWindow;
 }
 
-async function launch() {
+/** The layer to start with this launch, or null; records why layers are off when they are. */
+function chooseLayer() {
+  if (DEV || SELF_TEST_REPORT) return null;
+  const plan = layers.launchPlan(layers.readState(layerRoot()), app.getVersion());
+  if (plan.notice) layerNotice = plan.notice;
+  return plan.layer;
+}
+
+/**
+ * A layer must never leave the app worse than it found it: when the layered
+ * service does not start, does not report the layer, or the layered workbench
+ * does not render, the layer is marked faulty and the shipped code starts instead.
+ */
+async function checkLayer(window, layer) {
+  const health = await serviceRequest('GET', '/api/health', undefined, 30000);
+  if (health?.layer?.id !== layer.id) throw new Error('The service did not report the layer it was started with.');
+  const deadline = Date.now() + 30000;
+  while (Date.now() < deadline) {
+    const rendered = await window.webContents
+      .executeJavaScript("(() => { const r = document.getElementById('root'); return !!r && r.childElementCount > 0; })()")
+      .catch(() => false);
+    if (rendered) return;
+    await sleep(500);
+  }
+  throw new Error('The workbench did not appear within 30 seconds.');
+}
+
+function markFaulty(layer, reason) {
+  const root = layerRoot();
+  const state = layers.readState(root);
+  layers.writeState(root, { ...state, faulty: { id: layer.id, reason: String(reason).slice(0, 300), at: new Date().toISOString() } });
+  layerNotice = `Your personal features were switched off because they did not start: ${String(reason).slice(0, 200)} Gradara is running without them.`;
+}
+
+async function launch(useLayers = true) {
   const window = mainWindow || createWindow();
   window.loadURL(SPLASH);
   window.show();
   serviceReady = false;
   port = await freePort();
-  startBackend();
+  const layer = useLayers ? chooseLayer() : null;
+  startBackend(layer);
   try {
-    await waitForService();
+    await waitForService(layer ? 60000 : 90000);
     await window.loadURL(`http://127.0.0.1:${port}/`);
+    if (layer) await checkLayer(window, layer);
     serviceReady = true;
+    if (layerNotice && !layerNoticeShown && !SELF_TEST_REPORT) {
+      layerNoticeShown = true;
+      void dialog.showMessageBox(window, { type: 'warning', message: 'Personal features are switched off', detail: layerNotice });
+    }
     if (SELF_TEST_REPORT) void runSelfTest(window);
   } catch (error) {
+    if (layer && !quitting) {
+      // Fall back to the shipped code; the base is always on disk.
+      markFaulty(layer, error.message);
+      await stopBackend();
+      await sleep(500);
+      return launch(false);
+    }
     if (quitting) return;
     if (SELF_TEST_REPORT) return void finishSelfTest({ ok: false, error: error.message });
     const choice = dialog.showMessageBoxSync(window, {
@@ -395,6 +461,99 @@ function restart() {
   setTimeout(() => void launch(), 500);
 }
 
+// ------------------------------------------------------------------ personal features
+
+const BUILT_IN_KEYS = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, 'layer-keys.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+})();
+
+/** Keys the user chose to trust for another workshop repository (Settings → Personal features). */
+function userKeys() {
+  try {
+    const keys = JSON.parse(fs.readFileSync(path.join(layerRoot(), 'keys.json'), 'utf8'));
+    return Array.isArray(keys) ? keys : [];
+  } catch {
+    return [];
+  }
+}
+
+function layerSnapshot() {
+  const state = layers.readState(layerRoot());
+  return {
+    available: !DEV,
+    version: app.getVersion(),
+    running: runningLayer ? { id: runningLayer.id, features: runningLayer.features } : null,
+    state,
+    notice: layerNotice,
+    trusted: [...BUILT_IN_KEYS, ...userKeys()].map((k) => ({ id: k.id, repository: k.repository })),
+  };
+}
+
+const RELEASE_ASSET = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/releases\/download\/[\w.%+-]+\/[\w.%+-]+$/;
+
+async function download(url, limit) {
+  const response = await electronNet.fetch(url, { redirect: 'follow' });
+  if (!response.ok) throw new Error(`Download failed (${response.status}).`);
+  const data = Buffer.from(await response.arrayBuffer());
+  if (data.length > limit) throw new Error('The download is too large.');
+  return data;
+}
+
+async function installLayer({ repository, archiveUrl, signatureUrl }) {
+  for (const url of [archiveUrl, signatureUrl]) {
+    const match = RELEASE_ASSET.exec(String(url || ''));
+    if (!match || match[1].toLowerCase() !== String(repository || '').toLowerCase()) {
+      throw new Error('Layers install only from release assets of the chosen workshop repository.');
+    }
+  }
+  const archive = await download(archiveUrl, 300 * 1024 * 1024);
+  const signature = (await download(signatureUrl, 4096)).toString('utf8');
+  const root = layerRoot();
+  const active = layers.install({
+    archive,
+    signature,
+    keys: [...BUILT_IN_KEYS, ...userKeys()],
+    repository,
+    version: app.getVersion(),
+    root,
+  });
+  layers.prune(root, layers.readState(root));
+  layerNotice = '';
+  return active;
+}
+
+async function trustKey({ repository, publicKey }) {
+  const crypto = require('node:crypto');
+  let key;
+  try {
+    key = crypto.createPublicKey(String(publicKey));
+  } catch {
+    throw new Error('That is not a public key in PEM format.');
+  }
+  if (key.asymmetricKeyType !== 'ed25519') throw new Error('Workshop keys are Ed25519 public keys.');
+  if (!/^[\w.-]+\/[\w.-]+$/.test(String(repository || ''))) throw new Error('Name the repository as owner/name.');
+  const { response } = await dialog.showMessageBox(mainWindow ?? undefined, {
+    type: 'warning',
+    buttons: ['Trust this key', 'Cancel'],
+    defaultId: 1,
+    cancelId: 1,
+    message: `Run personal features signed for ${repository}?`,
+    detail:
+      'Code signed with this key will run on this computer with your permissions, like Gradara itself. Trust it only if you control that repository or trust whoever does.',
+  });
+  if (response !== 0) return false;
+  const pem = key.export({ type: 'spki', format: 'pem' });
+  const keys = userKeys().filter((k) => k.repository !== repository);
+  keys.push({ id: `user-${repository}`, repository, publicKey: pem });
+  fs.mkdirSync(layerRoot(), { recursive: true });
+  fs.writeFileSync(path.join(layerRoot(), 'keys.json'), JSON.stringify(keys, null, 2));
+  return true;
+}
+
 /**
  * Help → Copy Diagnostic Info: what a useful bug report needs (versions, OS, engine
  * status, the end of the service log), with the home folder replaced by "~". No
@@ -467,6 +626,7 @@ function buildMenu() {
         { type: 'separator' },
         { label: 'Privacy', click: () => void shell.openExternal(PRIVACY_URL) },
         { label: 'Report an Issue', click: () => void shell.openExternal(ISSUES_URL) },
+        { label: 'Improve Gradara…', click: () => void shell.openExternal(IMPROVE_URL) },
         { label: 'Copy Diagnostic Info', click: () => void copyDiagnostics() },
         { label: 'Third-Party Licenses', click: () => void shell.openPath(path.join(RESOURCES, DEV ? 'THIRD_PARTY_NOTICES.md' : path.join('legal', 'THIRD_PARTY_LICENSES.txt'))) },
         ...(isMac ? [] : [{ role: 'about' }]),
@@ -573,6 +733,44 @@ ipcMain.handle('gradara:update:install', async (event) => {
   quitting = true;
   await stopBackend();
   setImmediate(() => updater.quitAndInstall(false, true));
+  return true;
+});
+
+ipcMain.handle('gradara:layers:state', (event) => (trusted(event) ? layerSnapshot() : null));
+ipcMain.handle('gradara:layers:install', async (event, request) => {
+  if (!trusted(event) || DEV) return { ok: false, error: 'Personal features are available in the installed app.' };
+  try {
+    return { ok: true, active: await installLayer(request || {}) };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+});
+ipcMain.handle('gradara:layers:switch', (event, on) => {
+  if (!trusted(event)) return null;
+  const root = layerRoot();
+  const state = layers.readState(root);
+  // Switching back on also clears a faulty mark, so the layer gets another chance.
+  layers.writeState(root, { ...state, off: !on, faulty: on ? null : state.faulty });
+  return layerSnapshot();
+});
+ipcMain.handle('gradara:layers:remove', (event) => {
+  if (!trusted(event)) return null;
+  const root = layerRoot();
+  layers.writeState(root, { active: null, off: false, faulty: null });
+  layers.prune(root, { active: null });
+  return layerSnapshot();
+});
+ipcMain.handle('gradara:layers:trust', async (event, request) => {
+  if (!trusted(event)) return { ok: false };
+  try {
+    return { ok: await trustKey(request || {}) };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+});
+ipcMain.handle('gradara:layers:restart', (event) => {
+  if (!trusted(event)) return false;
+  restart();
   return true;
 });
 

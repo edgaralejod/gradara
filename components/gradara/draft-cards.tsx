@@ -1,6 +1,6 @@
 'use client';
 // SPDX-License-Identifier: Apache-2.0
-import { Check, FolderOpen, Lightbulb, Plus, X } from 'lucide-react';
+import { Check, FolderOpen, Hammer, Lightbulb, Plus, X } from 'lucide-react';
 import { domainColors, type Project } from '@/lib/gradara/model';
 import { portPoint, sideToPosition } from '@/lib/gradara/ports';
 import { pointsToPath, routeBetween } from '@/lib/gradara/routing';
@@ -197,9 +197,12 @@ export function ModelDraftCard({
 export function UnsupportedCard({
   entry,
   onImprove,
+  onBuild,
 }: {
   entry: UnsupportedEntry;
   onImprove: () => void;
+  /** Open Settings → Personal features with this request. */
+  onBuild: () => void;
 }) {
   return (
     <article className="proposal-card unsupported-card">
@@ -213,6 +216,10 @@ export function UnsupportedCard({
         no model or file is attached, and you can edit it before submitting.
       </p>
       <footer>
+        <button type="button" onClick={onBuild} title="Build it with your workshop as a personal feature">
+          <Hammer size={12} />
+          Build it as a personal feature…
+        </button>
         <button type="button" className="is-primary" onClick={onImprove}>
           <Lightbulb size={12} />
           Improve Gradara…

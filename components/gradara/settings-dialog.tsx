@@ -19,9 +19,11 @@ import {
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  Wrench,
   Trash2,
 } from 'lucide-react';
 import { api, waitForJob, type Job } from '@/lib/gradara/api';
+import PersonalFeatures from './personal-features';
 import { describeUpdate, updateBridge, useDesktopUpdates } from '@/lib/gradara/updates';
 import {
   formatPrice,
@@ -33,7 +35,7 @@ import {
   type EngineStatus,
 } from '@/lib/gradara/ai';
 
-export type SettingsTab = 'engine' | 'ai' | 'privacy' | 'updates';
+export type SettingsTab = 'engine' | 'ai' | 'features' | 'privacy' | 'updates';
 
 const OM_DOWNLOAD: Record<string, string> = {
   win32: 'https://openmodelica.org/download/download-windows/',
@@ -50,11 +52,14 @@ const ENGINE_NAMES: Record<EngineStatus['backend'], string> = {
 
 export default function SettingsDialog({
   initialTab = 'engine',
+  initialRequest,
   dataDirectory,
   onClose,
   onEngineChange,
 }: {
   initialTab?: SettingsTab;
+  /** A feature request to start from in Personal features. */
+  initialRequest?: string;
   dataDirectory?: string;
   onClose: () => void;
   onEngineChange?: () => void;
@@ -65,13 +70,14 @@ export default function SettingsDialog({
       <DialogContent className="settings-dialog" resizeKey="settings">
         <DialogTitle>Settings</DialogTitle>
         <DialogDescription>
-          Simulation engine, AI features, and how your data is handled.
+          Simulation engine, AI features, personal features, and how your data is handled.
         </DialogDescription>
         <div className="settings-tabs" role="tablist">
           {(
             [
               ['engine', 'Engine', Cpu],
               ['ai', 'AI', Sparkles],
+              ['features', 'Personal features', Wrench],
               ['privacy', 'Privacy & data', ShieldCheck],
               ['updates', 'Updates', Download],
             ] as const
@@ -90,6 +96,7 @@ export default function SettingsDialog({
         </div>
         {tab === 'engine' && <EngineSettings onChange={onEngineChange} />}
         {tab === 'ai' && <AiSettings />}
+        {tab === 'features' && <PersonalFeatures initialRequest={initialRequest} />}
         {tab === 'privacy' && <PrivacySettings dataDirectory={dataDirectory} />}
         {tab === 'updates' && <UpdateSettings />}
       </DialogContent>

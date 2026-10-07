@@ -19,13 +19,13 @@ from .diagnostics import SimulationFailure
 from .agent import generate_component
 from .model_agent import ModelGenerateRequest, generate_model
 from .model_edit import ModelEditRequest, Unsupported, edit_model
-from . import proposals
+from . import proposals, workshop
 from .diagnose_agent import DiagnoseRequest, diagnose
 from . import run_store
 from .run_store import run_name
 from .run_digest import DigestRequest, digest
 from .results_agent import ExplainRequest, explain as explain_results, preview as preview_explain
-from .paths import DATA, EXAMPLES, STATIC
+from .paths import DATA, EXAMPLES, STATIC, layer_info
 from .llm import dispatch, gradara as gradara_ai
 from .llm.providers import ProviderError, verify_key
 
@@ -97,7 +97,8 @@ async def health():
     ready = await engine_available()
     ai = dispatch.status()
     return {'engine': 'OpenModelica','engineReady':ready,'agentReady':ai['ready'],'provider':ai['label'],
-            'aiProvider':ai['provider'],'version':VERSION,'projectDirectory':str(PROJECT_DIR)}
+            'aiProvider':ai['provider'],'version':VERSION,'projectDirectory':str(PROJECT_DIR),
+            'layer': layer_info()}
 
 def document_response(project):
     return {'project': project.model_dump(exclude_none=True) if project else None,
@@ -605,6 +606,66 @@ async def sign_out():
 @app.delete('/api/account')
 async def delete_account():
     return await gradara_ai.delete_account()
+
+# ------------------------------------------------------ workshop (personal features)
+
+class WorkshopRepository(BaseModel):
+    repository: str = Field(max_length=210)
+
+class WorkshopToken(BaseModel):
+    token: str = Field(min_length=20, max_length=255)
+
+class WorkshopFeature(BaseModel):
+    id: str = Field(pattern=r'^f-[a-z0-9][a-z0-9-]{2,60}$')
+    title: str = Field(default='', max_length=120)
+    commit: str = Field(pattern=r'^[0-9a-f]{40}$')
+
+class WorkshopRequest(BaseModel):
+    mode: str = Field(pattern='^(scope|build|rebuild)$')
+    request: str = Field(default='', max_length=8000)
+    title: str = Field(default='', max_length=120)
+    budget: float = Field(default=5.0, ge=0.5, le=50)
+    stack: list[WorkshopFeature] = Field(default_factory=list, max_length=20)
+
+@app.get('/api/workshop')
+async def workshop_status():
+    return await workshop.status()
+
+@app.put('/api/workshop')
+async def workshop_repository(body: WorkshopRepository):
+    workshop.set_repository(body.repository)
+    return await workshop.status()
+
+@app.put('/api/workshop/token')
+async def workshop_token(body: WorkshopToken):
+    return await workshop.save_token(body.token)
+
+@app.delete('/api/workshop/token')
+async def workshop_forget_token():
+    workshop.forget_token()
+    return await workshop.status()
+
+@app.post('/api/workshop/requests')
+async def workshop_request(body: WorkshopRequest):
+    """Start the repository's workshop pipeline: scope a request, build it, or rebuild a layer."""
+    if body.mode in ('scope', 'build') and len(body.request.strip()) < 10:
+        raise HTTPException(422, 'Describe the feature in a sentence or two.')
+    if body.mode == 'rebuild' and not body.stack:
+        raise HTTPException(422, 'A rebuild needs the features to keep.')
+    request_id = workshop.new_id('s' if body.mode == 'scope' else 'f', body.title or body.request)
+    stack = [f.model_dump() for f in body.stack]
+    await workshop.dispatch(body.mode, request_id, request=body.request, title=body.title,
+                            base=f'v{VERSION}' if body.mode != 'scope' else '', stack=stack, budget=body.budget)
+    return {'requestId': request_id}
+
+@app.get('/api/workshop/requests/{request_id}')
+async def workshop_progress(request_id: str):
+    return await workshop.progress(request_id)
+
+@app.get('/api/workshop/layers')
+async def workshop_layers():
+    """Layers the workshop repository published for this version of Gradara."""
+    return {'version': VERSION, 'layers': await workshop.layers(VERSION)}
 
 # ------------------------------------------------------ installed workbench
 

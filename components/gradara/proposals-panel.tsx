@@ -37,6 +37,7 @@ export default function ProposalsPanel({
   onSelect,
   onOpenSettings,
   onImprove,
+  onBuildFeature,
   onEvidence,
   onPropose,
   runAvailable,
@@ -57,6 +58,7 @@ export default function ProposalsPanel({
   onSelect: (blockIds: string[]) => void;
   onOpenSettings: () => void;
   onImprove: (entry: Extract<Entry, { kind: 'unsupported' }>) => void;
+  onBuildFeature: (entry: Extract<Entry, { kind: 'unsupported' }>) => void;
   onEvidence: (runId: string, evidence: Evidence, window: [number, number]) => void;
   onPropose: (entry: Extract<Entry, { kind: 'results' }>, changePrompt: string, turn: ExplainResult) => void;
   runAvailable: (runId: string) => boolean;
@@ -160,7 +162,14 @@ export default function ProposalsPanel({
                 />
               );
             case 'unsupported':
-              return <UnsupportedCard key={entry.id} entry={entry} onImprove={() => onImprove(entry)} />;
+              return (
+                <UnsupportedCard
+                  key={entry.id}
+                  entry={entry}
+                  onImprove={() => onImprove(entry)}
+                  onBuild={() => onBuildFeature(entry)}
+                />
+              );
             case 'results':
               return (
                 <ResultsCard

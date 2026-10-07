@@ -560,3 +560,30 @@
   color: #273f50;
   white-space: nowrap;
 }
+
+/* Settings → Personal features */
+.settings-dialog .personal-features .settings-card { display: grid; gap: 8px; }
+.settings-dialog .settings-field > .settings-inline > button { flex: none; }
+.settings-dialog .personal-features textarea {
+  width: 100%; padding: 6px 8px; border: 1px solid #bfcbd5; border-radius: 2px; background: #fff;
+  color: #27333d; font: var(--text-ui)/1.45 var(--font-ui); resize: vertical;
+}
+.settings-dialog .personal-features .feature-title { width: 100%; }
+.settings-dialog .settings-warning { display: flex; align-items: flex-start; gap: 6px; color: #8a6414; }
+.settings-dialog .settings-warning > svg { flex: none; margin-top: 2px; }
+.settings-dialog .feature-list, .settings-dialog .workshop-requests { margin: 0; padding: 0; list-style: none; }
+.settings-dialog .feature-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid #edf1f4; }
+.settings-dialog .feature-list li:last-child { border-bottom: 0; }
+.settings-dialog .feature-list button { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border: 1px solid #c9d6df; border-radius: 2px; background: #fff; color: #354b5b; font: 500 var(--text-micro)/1 var(--font-ui); cursor: pointer; }
+.settings-dialog .feature-list button:disabled { opacity: .5; cursor: default; }
+.settings-dialog .workshop-requests > li { display: grid; gap: 6px; padding: 8px 0; border-bottom: 1px solid #edf1f4; }
+.settings-dialog .workshop-request-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.settings-dialog .workshop-request-head > span { color: #637987; font-size: 12px; }
+.settings-dialog .workshop-state { color: #2c4a60 !important; font-weight: 600; }
+.settings-dialog .workshop-state.is-error { color: #7d3a3c !important; }
+.settings-dialog .scope-card { display: grid; gap: 4px; padding: 8px 10px; border: 1px solid #d4dde4; border-radius: 3px; background: #f7f9fa; }
+.settings-dialog .scope-card p { margin: 0; }
+.settings-dialog .scope-card select { height: 26px; }
+.settings-dialog .settings-field > .settings-inline { font-weight: 400; }
+.settings-dialog .settings-tabs { flex-wrap: wrap; }
+.settings-dialog .settings-lead a { color: var(--primary); text-decoration: underline; }

@@ -16,7 +16,8 @@ from .paths import DATA
 
 SERVICE = 'Gradara'
 FALLBACK = DATA/'.credentials.json'
-NAMES = {'openai_api_key', 'anthropic_api_key', 'gradara_token'}
+# github_token: the workshop's GitHub token (Settings → Personal features), never sent anywhere but api.github.com.
+NAMES = {'openai_api_key', 'anthropic_api_key', 'gradara_token', 'github_token'}
 
 
 def _keyring():
