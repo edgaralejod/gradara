@@ -20,7 +20,7 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r server/requirements-dev.txt
 npm run typecheck
 npm test
-npm audit --audit-level=high
+python3 scripts/check-audit.py
 .venv/bin/python -m pytest -q -m "not integration"
 python3 scripts/check-docs.py
 python3 scripts/check-repo.py --history

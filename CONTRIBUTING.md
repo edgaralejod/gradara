@@ -19,7 +19,7 @@ The repository is hosted at [edgaralejod/gradara on GitHub](https://github.com/e
 5. Update the docs your change owns in the same pull request; the [doc map](AGENTS.md#keep-documentation-current) lists them, and CI warns when mapped code changes without them. Generate a local catalog report when reviewing block changes; do not commit generated reports or local logs.
 6. Review your diff for unrelated formatting, generated files, private models, and license notices. Keep LF line endings; `.gitattributes` is the shared contract across Windows, macOS, and Linux. Fill in the PR template on GitHub with what changed and how it was checked. Keep the git commit and merge messages short; the template is not the commit.
 
-The core checks are TypeScript typecheck/tests/build, npm audit, the block-example and block-reference freshness checks, Python tests without the integration marker, documentation checks, and repository hygiene. Real-engine tests run separately when relevant. Whole-repository lint has an existing backlog and is currently advisory; keep new code clean and report pre-existing failures honestly.
+The core checks are TypeScript typecheck/tests/build, npm audit (`scripts/check-audit.py`), the block-example and block-reference freshness checks, Python tests without the integration marker, documentation checks, and repository hygiene. Real-engine tests run separately when relevant. Whole-repository lint has an existing backlog and is currently advisory; keep new code clean and report pre-existing failures honestly.
 
 ## Design standards
 

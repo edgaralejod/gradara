@@ -87,7 +87,7 @@ Signal buses (Mux, Demux, Bus Creator, Bus Selector) carry and route several sig
 ```sh
 npm run typecheck
 npm test
-npm audit --audit-level=high
+python3 scripts/check-audit.py
 .venv/bin/python -m pytest -q -m "not integration"
 (cd cloud && ../.venv/bin/python -m pytest -q)   # AI gateway; needs cloud/requirements.txt
 python3 scripts/check-docs.py
