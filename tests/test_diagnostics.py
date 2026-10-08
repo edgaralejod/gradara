@@ -106,7 +106,7 @@ def test_failed_jobs_record_diagnostics(monkeypatch, tmp_path):
     monkeypatch.setattr(service, 'RUNS', tmp_path)
     model = feedback()
     model.wires = []
-    async def fail(project, job_id):
+    async def fail(project, job_id, on_stage=None):
         validate_simulation(project)
     monkeypatch.setattr(service, 'simulate', fail)
     with TestClient(service.app, headers={'X-Gradara-Client': 'test'}) as client:

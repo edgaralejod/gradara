@@ -344,6 +344,8 @@
 }
 .run-button.running {
   background: #986e29 !important;
+  border-color: #876020 !important;
+  color: #fff !important;
 }
 .run-shortcut {
   display: none;
@@ -3316,3 +3318,38 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .di-grid.di-no-runs { display: grid; place-items: center; background: #f6f8fa; }
 .di-no-runs .di-empty { max-width: 340px; padding: 24px; text-align: center; }
 .di-no-runs .di-empty p { margin: 6px 0 14px; color: #5c6975; }
+
+/* Simulation progress (components/gradara/run-progress.tsx). */
+.run-progress { display: grid; gap: 7px; width: min(380px, calc(100% - 32px)); padding: 11px 13px 10px; border: 1px solid #d5dee5; border-radius: 4px; background: #fff; color: #27333d; font: var(--text-ui)/1.4 var(--font-ui); box-shadow: 0 6px 18px #1d2a3514, 0 1px 3px #1d2a3512; }
+.run-progress.is-floating { position: absolute; left: 50%; bottom: 14px; z-index: 6; transform: translateX(-50%); animation: rp-in 160ms ease-out both; animation-delay: 250ms; }
+.run-progress.is-panel { margin: 14vh auto 0; }
+@keyframes rp-in { from { opacity: 0; transform: translate(-50%, 6px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.rp-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rp-head strong { display: flex; align-items: baseline; gap: 6px; min-width: 0; flex: 1; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rp-label { color: #5d6b77; font-weight: 500; }
+.rp-label::after { content: '·'; margin-left: 6px; color: #a2adb6; }
+.rp-percent { font-variant-numeric: tabular-nums; font-weight: 600; color: #1f5fbf; }
+.rp-stop { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 7px; border: 1px solid #d5dee5; border-radius: 3px; background: #fff; color: #4d5b66; font: inherit; font-size: var(--text-micro); cursor: pointer; }
+.rp-stop:hover, .rp-stop:focus-visible { border-color: #c5a06a; background: #fbf5ea; color: #7a5520; }
+.rp-bar { position: relative; height: 5px; overflow: hidden; border-radius: 3px; background: #e7edf2; }
+.rp-bar > i { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #2f6fc4, #3d8ad6); transform-origin: left center; transition: transform 450ms linear; }
+.rp-bar.is-indeterminate > i { right: auto; width: 34%; animation: rp-slide 1.25s ease-in-out infinite; }
+@keyframes rp-slide { from { left: -34%; } to { left: 100%; } }
+.rp-meta { min-height: 1.4em; color: #5f6f7b; font-size: var(--text-micro); font-variant-numeric: tabular-nums; }
+.rp-steps { display: flex; gap: 14px; margin: 0; padding: 7px 0 0; border-top: 1px solid #edf1f4; list-style: none; color: #8a97a1; font-size: var(--text-micro); }
+.rp-steps li { display: inline-flex; align-items: center; gap: 5px; }
+.rp-dot { display: inline-grid; place-items: center; width: 11px; height: 11px; border: 1.5px solid #c3ccd3; border-radius: 50%; background: #fff; color: #fff; }
+.rp-steps li.is-done { color: #4d5b66; }
+.rp-steps li.is-done .rp-dot { border-color: #318254; background: #318254; }
+.rp-steps li.is-active { color: #1f5fbf; font-weight: 600; }
+.rp-steps li.is-active .rp-dot { border-color: #2f6fc4; box-shadow: inset 0 0 0 2px #fff; background: #2f6fc4; animation: rp-pulse 1.4s ease-in-out infinite; }
+@keyframes rp-pulse { 50% { box-shadow: inset 0 0 0 2px #fff, 0 0 0 3px #2f6fc433; } }
+.canvas-wrap:has(.run-progress) .canvas-hint { display: none; }
+/* The Stop button fills as the run advances. */
+.run-button.running[style*='--run-progress'] { background: linear-gradient(90deg, #7d5a21 var(--run-progress), #986e29 var(--run-progress)) !important; }
+@media (prefers-reduced-motion: reduce) {
+  .run-progress.is-floating { animation: none; }
+  .rp-bar > i { transition: none; }
+  .rp-bar.is-indeterminate > i { left: 0; width: 100%; opacity: 0.45; animation: none; }
+  .rp-steps li.is-active .rp-dot { animation: none; }
+}

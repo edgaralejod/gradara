@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { plotOptions, plotStart, formatPlotTime } from '@/lib/gradara/results';
 import type { SimulationResult } from '@/lib/gradara/api';
+import type { RunTrack } from '@/lib/gradara/run-progress';
 import PlotViewport from './plot-viewport';
 function Results({
   result,
@@ -29,9 +30,14 @@ function Results({
   empty = false,
   dedicated = false,
   modelId,
+  progress = null,
+  onStop,
 }: {
   result: SimulationResult | null;
   running: boolean;
+  /** The running simulation's progress, shown while there is no result. */
+  progress?: RunTrack | null;
+  onStop?: () => void;
   error: string;
   stale: boolean;
   empty?: boolean;
@@ -92,7 +98,18 @@ function Results({
   }, [points, series, hidden, fitAmplitude]);
   const colors = ['#237db3', '#c77e22', '#379b87', '#945f9f'];
   const last = series[0]?.values.at(-1);
-  if (dedicated) return <DataInspector result={result} running={running} error={error} stale={stale} modelId={modelId}/>;
+  if (dedicated)
+    return (
+      <DataInspector
+        result={result}
+        running={running}
+        progress={progress}
+        onStop={onStop}
+        error={error}
+        stale={stale}
+        modelId={modelId}
+      />
+    );
   return (
     <section
       className={`results-panel ${isCollapsed ? 'is-collapsed' : ''}`}
