@@ -35,7 +35,7 @@ The desktop app picks a free loopback port at each start and serves both the wor
 | `POST /models/{modelId}/restore` | None | Restores a trashed model with its original identity, without activating it; returns `{project, saveVersion}`. |
 | `GET /examples/{template}` | Any template except `blank` | Legacy template route. Returns a fresh document identity without saving it. Prefer `POST /models`. |
 | `POST /source` | Project | `{source}` containing emitted Modelica. Does not run a solver. |
-| `POST /runs` | Project | Queues a simulation and returns a job. |
+| `POST /runs` | Project | Queues a simulation and returns a job (kind `simulation`) that reports its `stage` while it runs; see the [job contract](#job-contract). |
 | `GET /jobs/{jobId}` | Job ID | Current job, with result or error once finished. |
 | `DELETE /jobs/{jobId}` | Job ID | Requests cancellation, returns `{cancelled: true}`; poll for terminal status. |
 | `GET /results/latest?model={modelId}` | Optional document ID | `{result: Result \| null}` matching the saved document and source hash. Omitting the ID uses the active model. |
@@ -87,7 +87,7 @@ Normal responses currently use HTTP 200, including accepted jobs. Save conflicts
 {"id":"opaque-job-id","kind":"simulation","status":"queued"}
 ```
 
-`kind` is `simulation`, `component`, `model`, `edit`, `diagnose`, `results`, `export`, `variants`, or `engine`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
+`kind` is `simulation`, `component`, `model`, `edit`, `diagnose`, `results`, `export`, `variants`, or `engine`. Status progresses to `running`, then `complete`, `failed`, or `cancelled`. Some jobs carry `progress`, a human-readable stage. A simulation job also carries `stage`, `{phase, time?, fraction?}`: `phase` moves through `preparing`, `translating`, `compiling`, `starting`, `simulating`, and `reading`, and while simulating `time` is the simulated time reached in seconds and `fraction` that time over the stop time (see [progress](architecture/EXECUTION.md#engine-supervision)). Complete jobs have `result`; failed jobs have `error`, the readable message. A failed simulation also has `diagnostics`, a list of structured problems:
 
 ```json
 {"id":"d1","severity":"error","source":"runtime","message":"The model has an algebraic loop the solver cannot resolve.",

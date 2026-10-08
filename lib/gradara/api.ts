@@ -66,6 +66,8 @@ export type Job<T> = {
   error?: string;
   diagnostics?: Diagnostic[];
   progress?: string;
+  /** Simulation jobs: the stage the run has reached (lib/gradara/run-progress.ts). */
+  stage?: import('./run-progress').RunStage;
 };
 /** The last failed run of the open model, kept until the next run or model switch. */
 export type RunFailure = {
@@ -89,11 +91,13 @@ export class JobFailure extends Error {
 export async function waitForJob<T>(
   id: string,
   signal?: AbortSignal,
-  onProgress?: (message: string) => void,
+  onProgress?: (message: string, job: Job<T>) => void,
+  /** Milliseconds between status checks; simulations ask more often for a smooth progress bar. */
+  interval = 900,
 ): Promise<T> {
   while (!signal?.aborted) {
     const job = await api<Job<T>>(`/jobs/${id}`, { signal });
-    if (job.progress) onProgress?.(job.progress);
+    if (job.progress) onProgress?.(job.progress, job);
     if (job.status === 'complete') return job.result!;
     if (job.status === 'failed')
       throw new JobFailure(
@@ -108,7 +112,7 @@ export async function waitForJob<T>(
         signal?.removeEventListener('abort', abort);
         resolve();
       };
-      const timeout = setTimeout(done, 900);
+      const timeout = setTimeout(done, interval);
       const abort = () => {
         clearTimeout(timeout);
         reject(new DOMException('Cancelled', 'AbortError'));
