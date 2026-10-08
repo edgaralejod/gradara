@@ -4,6 +4,8 @@ import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
 import NoteLayer from '@/components/gradara/note-layer';
 import SimulationSettingsPanel from '@/components/gradara/simulation-settings';
+import RunProgress from '@/components/gradara/run-progress';
+import { advance, startTrack, statusText, type RunTrack } from '@/lib/gradara/run-progress';
 import SolverHelpDialog from '@/components/gradara/solver-help-dialog';
 import BlockHelpDialog, {
   OPEN_EXAMPLE_EVENT,
@@ -544,6 +546,15 @@ function Workbench() {
     items: CanvasMenuItem[];
   } | null>(null);
   const [running, setRunning] = useState(false);
+  // How far the running simulation has got (components/gradara/run-progress.tsx).
+  const [runTrack, setRunTrack] = useState<RunTrack | null>(null);
+  const followRun = useCallback(
+    (_message: string, job: Job<SimulationResult>) => {
+      const stage = job.stage;
+      if (stage) setRunTrack((t) => (t ? advance(t, stage) : t));
+    },
+    [],
+  );
   // Stop-time fields whose text is not a usable value (B01): the toolbar's and
   // the model inspector's. While any is set, Run is held and the field explains.
   const [badStopTime, setBadStopTime] = useState<{ toolbar?: boolean; inspector?: boolean }>({});
@@ -2055,6 +2066,7 @@ function Workbench() {
     setResultSignature('');
     const snapshot = structuredClone(docRef.current);
     const currentSignature = semanticSignature(snapshot);
+    setRunTrack(startTrack(snapshot.duration));
     try {
       // Always receive the job ID, so cancellation during submission can stop the engine too.
       const job = await api<Job<SimulationResult>>('/runs', {
@@ -2066,7 +2078,7 @@ function Workbench() {
         return;
       }
       runId.current = job.id;
-      const r = await waitForJob<SimulationResult>(job.id, controller.signal);
+      const r = await waitForJob<SimulationResult>(job.id, controller.signal, followRun, 400);
       if (
         runController.current !== controller ||
         controller.signal.aborted ||
@@ -2108,6 +2120,7 @@ function Workbench() {
       if (runController.current === controller) {
         runController.current = null;
         setRunning(false);
+        setRunTrack(null);
         runId.current = '';
       }
     }
@@ -2147,6 +2160,7 @@ function Workbench() {
         label = configuration.name;
         notify(`Running ${label} (${i + 1} of ${configurations.length})…`);
         const snapshot = applyConfiguration(base, configuration);
+        setRunTrack(startTrack(snapshot.duration, `${label} · ${i + 1} of ${configurations.length}`));
         const job = await api<Job<SimulationResult>>('/runs', {
           method: 'POST',
           body: JSON.stringify(snapshot),
@@ -2156,7 +2170,7 @@ function Workbench() {
           return;
         }
         runId.current = job.id;
-        await waitForJob<SimulationResult>(job.id, controller.signal);
+        await waitForJob<SimulationResult>(job.id, controller.signal, followRun, 400);
         const full = await api<SimulationResult>(`/results/${job.id}/data`, {
           signal: controller.signal,
         });
@@ -2192,6 +2206,7 @@ function Workbench() {
       if (runController.current === controller) {
         runController.current = null;
         setRunning(false);
+        setRunTrack(null);
         runId.current = '';
       }
     }
@@ -2202,6 +2217,7 @@ function Workbench() {
     const id = runId.current;
     runId.current = '';
     setRunning(false);
+    setRunTrack(null);
     if (id) {
       try {
         await api(`/jobs/${id}`, { method: 'DELETE' });
@@ -2961,9 +2977,18 @@ function Workbench() {
               <Button
                 className={`run-button ${running ? 'running' : ''}`}
                 onClick={() => void (running ? cancelRun() : runSimulation())}
+                style={
+                  running && runTrack?.stage.phase === 'simulating'
+                    ? ({
+                        '--run-progress': `${Math.floor((runTrack.stage.fraction ?? 0) * 100)}%`,
+                      } as React.CSSProperties)
+                    : undefined
+                }
                 title={
                   running
-                    ? undefined
+                    ? runTrack
+                      ? `${statusText(runTrack)} · click to stop`
+                      : undefined
                     : stopTimeInvalid
                       ? STOP_TIME_MESSAGE
                       : settingsInvalid
@@ -3325,6 +3350,9 @@ function Workbench() {
                     </VariantSwitchContext.Provider>
                   </SubsystemLookupContext.Provider>
                 )}
+                {runTrack && (
+                  <RunProgress track={runTrack} variant="floating" onStop={() => void cancelRun()} />
+                )}
                 {selectedIds.length === 0 && (
                   <div className="canvas-hint">
                     <MousePointer2 size={11} />
@@ -3427,6 +3455,8 @@ function Workbench() {
                   modelId={project.modelId}
                   result={result}
                   running={running}
+                  progress={runTrack}
+                  onStop={() => void cancelRun()}
                   error={runError}
                   stale={!!result && signature !== resultSignature}
                   empty={!project.blocks.length}
@@ -4063,9 +4093,11 @@ function Workbench() {
             <span
               className={`status-dot ${health.engineReady ? '' : 'offline'}`}
             />
-            {health.engineReady
-              ? `${health.engine} ready`
-              : 'Simulation engine not set up'}
+            {runTrack
+              ? `${health.engine} · ${statusText(runTrack)}`
+              : health.engineReady
+                ? `${health.engine} ready`
+                : 'Simulation engine not set up'}
             {!health.engineReady && (
               <button
                 className="engine-setup-link"

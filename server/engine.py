@@ -11,7 +11,7 @@ from .hierarchy import all_blocks, instances
 from .units import signal_units
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
-from . import solver
+from . import run_progress, solver
 from .runtime import IMAGE, LEGACY_IMAGE
 from .diagnostics import (Diagnostic, EngineUnavailable, SimulationFailure, explain_failure, failure_diagnostics,
                           validate_simulation, warning_diagnostics)
@@ -39,12 +39,20 @@ class RunTimeout(RuntimeError):
     pass
 
 
-async def execute(folder: Path, config: dict, name: str):
+async def execute(folder: Path, config: dict, name: str, on_stage=None):
+    """Run one engine job. While it runs, watch its folder: stop it when the result file grows past
+    RESULT_LIMIT, and pass each new stage (run_progress.stage) to `on_stage` when given."""
     task = asyncio.ensure_future(engines.execute(folder, config, name))
     output = folder/'simulation_res.csv'
+    last = None
     try:
         while not task.done():
-            await asyncio.wait({task}, timeout=1)
+            await asyncio.wait({task}, timeout=0.5)
+            if on_stage is not None and not task.done() and 'duration' in config:
+                now = run_progress.stage(folder, float(config['duration']))
+                if now != last:
+                    last = now
+                    on_stage(now)
             try:
                 size = output.stat().st_size
             except OSError:
@@ -105,7 +113,10 @@ def nonfinite_failure(project: Project, message: str, block_id: str | None) -> S
                                                   hint=hint, help='fixed-blows-up')])
 
 
-async def simulate(project: Project, job_id: str):
+async def simulate(project: Project, job_id: str, on_stage=None):
+    """Run a model. `on_stage`, when given, receives each stage of the run (server/run_progress.py)."""
+    if on_stage:
+        on_stage({'phase': 'preparing'})
     validate_simulation(project)
     for block in all_blocks(project):
         try:
@@ -116,7 +127,7 @@ async def simulate(project: Project, job_id: str):
     folder = RUNS/job_id
     folder.mkdir(parents=True, exist_ok=True)
     try:
-        return await run(project, job_id, folder)
+        return await run(project, job_id, folder, on_stage)
     except SimulationFailure as exc:
         # Kept beside model.mo so a later diagnosis request can cite this exact run.
         (folder/'diagnostics.json').write_text(json.dumps({'error': str(exc), 'diagnostics': [d.model_dump() for d in exc.diagnostics]}), encoding='utf-8')
@@ -163,13 +174,13 @@ def elements_of(port, name: str, joiner: str):
             for i in range(width)]
 
 
-async def run(project: Project, job_id: str, folder: Path):
+async def run(project: Project, job_id: str, folder: Path, on_stage=None):
     started = time.monotonic()
     (folder/'model.mo').write_text(emit_project(project), encoding='utf-8')
     (folder/'project.json').write_text(project.model_dump_json(indent=2), encoding='utf-8')
     try:
         config = {'duration': project.duration, 'simulate': solver.simulate_expression(project.duration, project.simulation)}
-        report = await execute(folder, config, f'gradara-run-{job_id}')
+        report = await execute(folder, config, f'gradara-run-{job_id}', on_stage)
     except RunTimeout as exc:
         raise settings_failure(project, str(exc), timeout_hint(project), 'slow') from exc
     except ResultTooLarge as exc:
@@ -181,6 +192,14 @@ async def run(project: Project, job_id: str, folder: Path):
                                                       detail=str(exc), hint='Open Settings → Engine to check the simulation engine.')]) from exc
     except RuntimeError as exc:
         raise SimulationFailure(explain_failure(project, str(exc)), failure_diagnostics(project, str(exc))) from exc
+    if on_stage:
+        on_stage({'phase': 'reading'})
+    # Reading a large result takes seconds; keep the service answering (job status, cancel) meanwhile.
+    return await asyncio.to_thread(collect, project, job_id, folder, report, started)
+
+
+def collect(project: Project, job_id: str, folder: Path, report: dict, started: float) -> dict:
+    """Turn a finished run's CSV into result.json (and the result returned to the workbench)."""
     csv_file = folder/'simulation_res.csv'
     with csv_file.open(encoding='utf-8') as file:
         reader = csv.DictReader(file)
