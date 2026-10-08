@@ -248,7 +248,9 @@ Drag the borders between panes to widen them, and drag a column heading's edge t
 
 ## Simulate and read results
 
-Set **Stop time** and choose **Run**. The stop time must be more than 0 and at most 86,400 seconds (one day). You can cancel a run from the same button. Gradara checks the model before it simulates. Unconnected signal inputs, bus mistakes, the empty subsystem placeholder, and missing variant ports are reported as problems. A failed or incomplete simulation never shows as a successful plot.
+Set **Stop time** and choose **Run**. The stop time must be more than 0 and at most 86,400 seconds (one day). You can cancel a run from the same button. Gradara checks the model before it simulates.
+
+While a run is going, a progress card floats at the bottom of the diagram (and fills the empty Results view if you are there). It shows the step the run is on (**Translate**, **Compile**, **Simulate**, **Results**), a bar that fills with simulated time once the simulation starts, how much model time has been simulated ("84.8 ms of 300 ms"), the time elapsed, and an estimate of the time left once there is enough to go on. The Stop button fills as the run advances, and the status bar says the same in words. Translating and compiling take a few seconds whatever the stop time; the bar moves only while simulating. **Run all configurations** shows which configuration is running. Unconnected signal inputs, bus mistakes, the empty subsystem placeholder, and missing variant ports are reported as problems. A failed or incomplete simulation never shows as a successful plot.
 
 Each run saves 6,000 evenly spaced output points plus every event, unless the model's simulation settings say otherwise, and stops if it takes longer than 120 seconds of real time or if its results pass 1 GB.
 

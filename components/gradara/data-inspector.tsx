@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import RunProgress from './run-progress';
+import type { RunTrack } from '@/lib/gradara/run-progress';
 import {
   Activity,
   Download,
@@ -892,6 +894,8 @@ function InspectorSession({
 export default function DataInspector(props: {
   result: SimulationResult | null;
   running: boolean;
+  progress?: RunTrack | null;
+  onStop?: () => void;
   error: string;
   stale: boolean;
   modelId?: string;
@@ -910,10 +914,14 @@ export default function DataInspector(props: {
             {props.error}
           </div>
         )}
-        <div className="di-empty">
-          Select a signal wire → Log to Data Inspector, then run the model. Use
-          sensors to measure physical quantities.
-        </div>
+        {props.running && props.progress ? (
+          <RunProgress track={props.progress} variant="panel" onStop={props.onStop} />
+        ) : (
+          <div className="di-empty">
+            Select a signal wire → Log to Data Inspector, then run the model. Use
+            sensors to measure physical quantities.
+          </div>
+        )}
       </section>
     );
   return (

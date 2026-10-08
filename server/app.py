@@ -12,7 +12,7 @@ from .platform_env import extend_path
 extend_path()
 
 from .models import Definition, Project, GenerateRequest, NewModelRequest, SaveModelRequest, CopyModelRequest
-from . import workspace, settings, engines, credentials
+from . import workspace, settings, engines, credentials, run_progress
 from .modelica import emit_project, project_key, semantic_hash
 from .engine import RUNS, engine_available, simulate
 from .diagnostics import SimulationFailure
@@ -228,7 +228,9 @@ async def start_job(kind, operation_factory):
 @app.post('/api/runs')
 async def run(project:Project):
     if not project.blocks: raise HTTPException(422,'Add a component before running the model.')
-    return await start_job('simulation',lambda i:simulate(project,i))
+    def stage(job_id: str):
+        return lambda now: JOBS[job_id].update(stage=now, progress=run_progress.message(now))
+    return await start_job('simulation', lambda i: simulate(project, i, stage(i)))
 
 @app.get('/api/jobs/{job_id}')
 async def job(job_id:str):
