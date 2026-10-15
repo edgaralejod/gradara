@@ -129,18 +129,27 @@
         "name": "Ground IM supply",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -207,18 +216,27 @@
         "name": "Ground IM",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 432,
@@ -284,6 +302,27 @@
             "min": 0
           },
           {
+            "id": "Lssigma",
+            "name": "Stator stray inductance",
+            "value": 0.000324,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lm",
+            "name": "Main inductance",
+            "value": 0.0095493,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lrsigma",
+            "name": "Rotor stray inductance",
+            "value": 0.000324,
+            "unit": "H",
+            "min": 0
+          },
+          {
             "id": "Rr",
             "name": "Rotor resistance",
             "value": 0.04,
@@ -314,6 +353,9 @@
             "p": "p",
             "fsNominal": "fsNominal",
             "Rs": "Rs",
+            "Lssigma": "Lssigma",
+            "Lm": "Lm",
+            "Lrsigma": "Lrsigma",
             "Rr": "Rr",
             "Jr": "Jr"
           }
@@ -504,18 +546,27 @@
         "name": "Ground PMSM supply",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -582,18 +633,27 @@
         "name": "Ground PMSM",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 432,
@@ -609,7 +669,7 @@
       "definition": {
         "kind": "pmSyncMachine",
         "name": "PM synchronous",
-        "description": "Three-phase permanent-magnet synchronous machine with damper cage.",
+        "description": "Three-phase permanent-magnet synchronous machine with a damper cage on the rotor.",
         "domain": "threePhase",
         "category": "machines",
         "symbol": "PMSM",
@@ -652,10 +712,38 @@
             "min": 0
           },
           {
+            "id": "VsOpenCircuit",
+            "name": "Open-circuit voltage at fsNominal",
+            "value": 112.3,
+            "unit": "V",
+            "min": 0
+          },
+          {
             "id": "Rs",
             "name": "Stator resistance",
             "value": 0.03,
             "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Lssigma",
+            "name": "Stator stray inductance",
+            "value": 0.0003183,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lmd",
+            "name": "d-axis main inductance",
+            "value": 0.0009549,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lmq",
+            "name": "q-axis main inductance",
+            "value": 0.0009549,
+            "unit": "H",
             "min": 0
           },
           {
@@ -681,7 +769,11 @@
             "TrRef": "293.15",
             "p": "p",
             "fsNominal": "fsNominal",
+            "VsOpenCircuit": "VsOpenCircuit",
             "Rs": "Rs",
+            "Lssigma": "Lssigma",
+            "Lmd": "Lmd",
+            "Lmq": "Lmq",
             "Jr": "Jr"
           }
         }
@@ -871,18 +963,27 @@
         "name": "Ground SynRM supply",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -949,18 +1050,27 @@
         "name": "Ground SynRM",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 432,
@@ -976,7 +1086,7 @@
       "definition": {
         "kind": "reluctanceMachine",
         "name": "Reluctance",
-        "description": "Three-phase synchronous reluctance machine.",
+        "description": "Three-phase synchronous reluctance machine with a damper cage.",
         "domain": "threePhase",
         "category": "machines",
         "symbol": "SynRM",
@@ -1026,6 +1136,27 @@
             "min": 0
           },
           {
+            "id": "Lssigma",
+            "name": "Stator stray inductance",
+            "value": 0.0003183,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lmd",
+            "name": "d-axis main inductance",
+            "value": 0.009231,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lmq",
+            "name": "q-axis main inductance",
+            "value": 0.0028648,
+            "unit": "H",
+            "min": 0
+          },
+          {
             "id": "Jr",
             "name": "Rotor inertia",
             "value": 0.29,
@@ -1048,6 +1179,9 @@
             "p": "p",
             "fsNominal": "fsNominal",
             "Rs": "Rs",
+            "Lssigma": "Lssigma",
+            "Lmd": "Lmd",
+            "Lmq": "Lmq",
             "Jr": "Jr"
           }
         }

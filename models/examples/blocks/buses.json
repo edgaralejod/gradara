@@ -11,26 +11,32 @@
       "definition": {
         "kind": "ramp",
         "name": "Speed",
-        "symbol": "ramp",
+        "description": "Rises linearly from 0 to Height over Duration after the start time, then holds.",
         "domain": "signal",
-        "description": "A linearly increasing signal after a start time.",
+        "category": "sources",
+        "symbol": "ramp",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
         "parameters": [
           {
-            "id": "slope",
-            "name": "Slope",
+            "id": "height",
+            "name": "Height",
+            "value": 4,
+            "unit": ""
+          },
+          {
+            "id": "duration",
+            "name": "Duration",
             "value": 2,
-            "unit": "1/s"
+            "unit": "s",
+            "min": 0
           },
           {
             "id": "startTime",
@@ -40,11 +46,20 @@
             "min": 0
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Ramp from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
-          "reference"
-        ]
+          "reference",
+          "slope"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Ramp",
+          "modifiers": {
+            "height": "height",
+            "duration": "duration",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -60,20 +75,19 @@
       "definition": {
         "kind": "constant",
         "name": "Torque",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -82,7 +96,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -98,20 +123,19 @@
       "definition": {
         "kind": "sine",
         "name": "Current",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -139,12 +163,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -284,19 +317,22 @@
         "name": "Scale",
         "description": "Multiply an input by an adjustable gain.",
         "domain": "signal",
+        "category": "math",
         "symbol": "K",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -307,7 +343,18 @@
             "unit": ""
           }
         ],
-        "equations": "y = k*u;"
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
       },
       "position": {
         "x": 776,

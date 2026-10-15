@@ -2,7 +2,7 @@
   "version": 1,
   "name": "Example: Switches and a breaker",
   "exampleId": "block-switches",
-  "description": "Each circuit is 10 V into a 10 Ω load, 1 A when closed. The ideal switch follows a 5 Hz pulse on its gate. The closing switch closes at 0.1 s and the opening switch opens then. The two-way switch moves the current from a 10 Ω load (1 A) to a 20 Ω load (0.5 A). The breaker opens a 10 Ω, 10 mH circuit at 0.1 s: its arc voltage rises from 30 V until it forces the current to zero.",
+  "description": "Each circuit is 10 V into a 10 Ω load, 1 A when closed. The pulsed switch follows a 5 Hz Boolean pulse on its control input. The closing switch closes at 0.1 s and the opening switch opens then. The two-way switch moves the current from a 10 Ω load (1 A) to a 20 Ω load (0.5 A). The breaker opens a 10 Ω, 10 mH circuit at 0.1 s: its arc voltage rises from 30 V until it forces the current to zero.",
   "duration": 0.3,
   "revision": 0,
   "blocks": [
@@ -11,23 +11,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "10 V A",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -39,13 +39,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 144,
@@ -65,41 +71,47 @@
       "definition": {
         "kind": "currentSensor",
         "name": "i A",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "A",
-        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "left"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "right"
           },
           {
             "id": "y",
             "name": "A",
             "direction": "output",
-            "side": "bottom",
             "domain": "signal",
+            "side": "bottom",
             "unit": "A"
           }
         ],
         "parameters": [],
-        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "ammeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
       },
       "position": {
         "x": 256,
@@ -111,27 +123,164 @@
       }
     },
     {
-      "id": "aload",
+      "id": "asw",
       "definition": {
-        "kind": "resistor",
-        "name": "Load A",
-        "symbol": "R",
+        "kind": "closingSwitch",
+        "name": "Pulsed switch",
+        "description": "Ideal switch that closes while its control input is true.",
         "domain": "electrical",
-        "description": "An ideal resistor between two electrical pins.",
+        "category": "semiconductors",
+        "symbol": "S",
         "ports": [
+          {
+            "id": "control",
+            "name": "on",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "On resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Goff",
+            "name": "Off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealClosingSwitch from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "relay",
+          "contactor",
+          "breaker"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealClosingSwitch",
+          "modifiers": {
+            "Ron": "Ron",
+            "Goff": "Goff"
+          }
+        }
+      },
+      "position": {
+        "x": 400,
+        "y": 128
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      }
+    },
+    {
+      "id": "actl",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "Gate 5 Hz",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 50,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 0.2,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 16
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "aload",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load A",
+        "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -143,67 +292,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
-      },
-      "position": {
-        "x": 400,
-        "y": 128
-      },
-      "size": {
-        "width": 80,
-        "height": 48
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -80
-      }
-    },
-    {
-      "id": "asw",
-      "definition": {
-        "kind": "idealSwitch",
-        "name": "Ideal switch",
-        "domain": "electrical",
-        "category": "electrical",
-        "symbol": "switch",
-        "description": "Ideal bidirectional power switch. Gate above 0.5 closes the switch; zero on-resistance and zero off-conductance.",
-        "ports": [
-          {
-            "id": "p",
-            "name": "+",
-            "domain": "electrical",
-            "direction": "physical",
-            "side": "top"
-          },
-          {
-            "id": "n",
-            "name": "−",
-            "domain": "electrical",
-            "direction": "physical",
-            "side": "bottom"
-          },
-          {
-            "id": "gate",
-            "name": "g",
-            "direction": "input",
-            "side": "left",
-            "domain": "signal",
-            "unit": ""
-          }
         ],
-        "parameters": [],
-        "equations": "p.i + n.i = 0;\nif gate > 0.5 then\n  p.v = n.v;\nelse\n  p.i = 0;\nend if;",
-        "keywords": [
-          "mosfet",
-          "transistor",
-          "switching",
-          "buck",
-          "power"
-        ]
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 568,
@@ -213,73 +312,10 @@
         "width": 48,
         "height": 80
       },
+      "rotation": 90,
       "labelOffset": {
-        "x": 80,
+        "x": 56,
         "y": -54
-      }
-    },
-    {
-      "id": "actl",
-      "definition": {
-        "kind": "pulse",
-        "name": "Gate 5 Hz",
-        "symbol": "pulse",
-        "domain": "signal",
-        "description": "A periodic rectangular pulse.",
-        "ports": [
-          {
-            "id": "y",
-            "name": "y",
-            "direction": "output",
-            "domain": "signal",
-            "side": "right",
-            "unit": ""
-          }
-        ],
-        "equations": "y = if mod(time - startTime + period, period) < width*period then amplitude else 0;",
-        "parameters": [
-          {
-            "id": "amplitude",
-            "name": "Amplitude",
-            "value": 1,
-            "unit": ""
-          },
-          {
-            "id": "period",
-            "name": "Period",
-            "value": 0.2,
-            "unit": "s",
-            "min": 0.0001
-          },
-          {
-            "id": "width",
-            "name": "Duty cycle",
-            "value": 0.5,
-            "unit": "",
-            "min": 0
-          },
-          {
-            "id": "startTime",
-            "name": "Start time",
-            "value": 0,
-            "unit": "s",
-            "min": 0
-          }
-        ],
-        "declarations": "",
-        "keywords": [
-          "source",
-          "square",
-          "pwm"
-        ]
-      },
-      "position": {
-        "x": 400,
-        "y": 200
-      },
-      "size": {
-        "width": 80,
-        "height": 64
       }
     },
     {
@@ -289,18 +325,27 @@
         "name": "Ground A",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -316,23 +361,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "10 V B",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -344,13 +389,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 848,
@@ -370,41 +421,47 @@
       "definition": {
         "kind": "currentSensor",
         "name": "i B",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "A",
-        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "left"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "right"
           },
           {
             "id": "y",
             "name": "A",
             "direction": "output",
-            "side": "bottom",
             "domain": "signal",
+            "side": "bottom",
             "unit": "A"
           }
         ],
         "parameters": [],
-        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "ammeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
       },
       "position": {
         "x": 960,
@@ -540,23 +597,24 @@
       "definition": {
         "kind": "resistor",
         "name": "Load B",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -568,11 +626,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 1272,
@@ -595,18 +659,27 @@
         "name": "Ground B",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 848,
@@ -622,23 +695,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "10 V C",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -650,13 +723,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 144,
@@ -676,41 +755,47 @@
       "definition": {
         "kind": "currentSensor",
         "name": "i C",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "A",
-        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "left"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "right"
           },
           {
             "id": "y",
             "name": "A",
             "direction": "output",
-            "side": "bottom",
             "domain": "signal",
+            "side": "bottom",
             "unit": "A"
           }
         ],
         "parameters": [],
-        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "ammeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
       },
       "position": {
         "x": 256,
@@ -845,23 +930,24 @@
       "definition": {
         "kind": "resistor",
         "name": "Load C",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -873,11 +959,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 568,
@@ -900,18 +992,27 @@
         "name": "Ground C",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -927,23 +1028,24 @@
       "definition": {
         "kind": "inductor",
         "name": "L 10 mH",
-        "symbol": "L",
-        "domain": "electrical",
         "description": "An ideal inductor.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "L",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -955,10 +1057,18 @@
             "min": 1e-12
           }
         ],
-        "equations": "v = L*der(i);",
+        "equations": "// Electrical.Analog.Basic.Inductor from the Modelica Standard Library 4.1.0",
         "keywords": [
-          "electrical"
-        ]
+          "electrical",
+          "coil",
+          "choke"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Inductor",
+          "modifiers": {
+            "L": "L"
+          }
+        }
       },
       "position": {
         "x": 1240,
@@ -978,23 +1088,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "10 V D",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -1006,13 +1116,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 848,
@@ -1032,41 +1148,47 @@
       "definition": {
         "kind": "currentSensor",
         "name": "i D",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "A",
-        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "left"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "right"
           },
           {
             "id": "y",
             "name": "A",
             "direction": "output",
-            "side": "bottom",
             "domain": "signal",
+            "side": "bottom",
             "unit": "A"
           }
         ],
         "parameters": [],
-        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "ammeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
       },
       "position": {
         "x": 960,
@@ -1226,23 +1348,24 @@
       "definition": {
         "kind": "resistor",
         "name": "Load D",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -1254,11 +1377,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 1400,
@@ -1281,18 +1410,27 @@
         "name": "Ground D",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 848,
@@ -1308,23 +1446,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "10 V E",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -1336,13 +1474,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 144,
@@ -1362,41 +1506,47 @@
       "definition": {
         "kind": "currentSensor",
         "name": "i E",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "A",
-        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "left"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "right"
           },
           {
             "id": "y",
             "name": "A",
             "direction": "output",
-            "side": "bottom",
             "domain": "signal",
+            "side": "bottom",
             "unit": "A"
           }
         ],
         "parameters": [],
-        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "ammeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
       },
       "position": {
         "x": 256,
@@ -1538,23 +1688,24 @@
       "definition": {
         "kind": "resistor",
         "name": "Load 10 Ω",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -1566,11 +1717,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 568,
@@ -1591,23 +1748,24 @@
       "definition": {
         "kind": "resistor",
         "name": "Load 20 Ω",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -1619,11 +1777,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 728,
@@ -1646,18 +1810,27 @@
         "name": "Ground E",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -1681,19 +1854,26 @@
       "id": "id0002",
       "source": "ai",
       "sourceHandle": "n",
-      "target": "aload",
-      "targetHandle": "p"
-    },
-    {
-      "id": "id0003",
-      "source": "aload",
-      "sourceHandle": "n",
       "target": "asw",
       "targetHandle": "p"
     },
     {
+      "id": "id0003",
+      "source": "actl",
+      "sourceHandle": "y",
+      "target": "asw",
+      "targetHandle": "control"
+    },
+    {
       "id": "id0004",
       "source": "asw",
+      "sourceHandle": "n",
+      "target": "aload",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0005",
+      "source": "aload",
       "sourceHandle": "n",
       "target": "j_id000z",
       "targetHandle": "node",
@@ -1705,19 +1885,12 @@
       ]
     },
     {
-      "id": "id0005",
+      "id": "id0006",
       "source": "j_id000z",
       "sourceHandle": "node",
       "target": "agnd",
       "targetHandle": "p",
       "waypoints": []
-    },
-    {
-      "id": "id0006",
-      "source": "actl",
-      "sourceHandle": "y",
-      "target": "asw",
-      "targetHandle": "gate"
     },
     {
       "id": "id0007",
@@ -2053,25 +2226,25 @@
     },
     {
       "id": "net_id001d",
-      "anchor": "aload.n",
+      "anchor": "actl.y",
       "wireIds": [
         "id0003"
       ]
     },
     {
       "id": "net_id001e",
-      "anchor": "agnd.p",
+      "anchor": "aload.p",
       "wireIds": [
-        "id0004",
-        "id0005",
-        "w_id0010"
+        "id0004"
       ]
     },
     {
       "id": "net_id001f",
-      "anchor": "actl.y",
+      "anchor": "agnd.p",
       "wireIds": [
-        "id0006"
+        "id0005",
+        "id0006",
+        "w_id0010"
       ]
     },
     {
@@ -2250,7 +2423,7 @@
         "ci.y"
       ],
       "labels": [
-        "Ideal switch",
+        "Pulsed switch",
         "Closing switch",
         "Opening switch"
       ]

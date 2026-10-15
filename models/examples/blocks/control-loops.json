@@ -2,7 +2,7 @@
   "version": 1,
   "name": "Example: PI and PID loops",
   "exampleId": "block-control-loops",
-  "description": "Each plant is a lag with τ = 0.5 s and each loop follows a unit step at 0.1 s. The PI and sampled PID blocks take the reference and the measurement and form the error themselves; the continuous PID takes the error from a subtract block. All three reach the set point with no steady error, because each has integral action. Change a gain and run again to compare.",
+  "description": "Each plant is a lag with τ = 0.5 s and each loop follows a unit step at 0.1 s. Every controller takes the reference and the measurement and forms the error itself. The continuous PI and PID are the Modelica library controllers: gain 1, integral time 0.5 s (so the integral gain is 2), and for the PID a derivative time of 0.05 s filtered at a tenth of it; the sampled ones run at 1 kHz with the same gains and reproduce exactly in exported C. All four reach the set point with no steady error, because each has integral action. Change a gain and run again to compare.",
   "duration": 4,
   "revision": 0,
   "blocks": [
@@ -13,13 +13,15 @@
         "name": "Set point (PI)",
         "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -37,11 +39,18 @@
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;",
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "reference"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -53,64 +62,86 @@
       }
     },
     {
-      "id": "pi",
+      "id": "c1",
       "definition": {
-        "kind": "pi",
-        "name": "PI (sampled)",
-        "description": "Sampled PI control with output saturation and a bounded integral state.",
+        "kind": "piController",
+        "name": "PI",
+        "description": "Continuous PI controller with output limits and anti-windup: y = k·(e + ∫e/Ti), clamped, where e = reference − measured.",
         "domain": "signal",
+        "category": "control",
         "symbol": "PI",
-        "controller": true,
         "ports": [
           {
             "id": "reference",
             "name": "ref",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "measured",
             "name": "meas",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
           {
-            "id": "kp",
-            "name": "Proportional gain",
+            "id": "k",
+            "name": "Gain",
             "value": 1,
             "unit": ""
           },
           {
-            "id": "ki",
-            "name": "Integral gain",
-            "value": 2,
+            "id": "Ti",
+            "name": "Integral time",
+            "value": 0.5,
+            "unit": "s",
+            "min": 0.000001
+          },
+          {
+            "id": "yMax",
+            "name": "Upper limit",
+            "value": 10,
             "unit": ""
           },
           {
-            "id": "limit",
-            "name": "Voltage limit",
-            "value": 10,
-            "unit": "V",
-            "min": 0.1
-          },
-          {
-            "id": "samplePeriod",
-            "name": "Sample period",
-            "value": 0.001,
-            "unit": "s",
-            "min": 0.0001
+            "id": "yMin",
+            "name": "Lower limit",
+            "value": -10,
+            "unit": ""
           }
         ],
-        "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
-        "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+        "equations": "// Blocks.Continuous.LimPID from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "control",
+          "regulator",
+          "anti-windup",
+          "limited"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.LimPID",
+          "modifiers": {
+            "controllerType": "Modelica.Blocks.Types.SimpleController.PI",
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "k": "k",
+            "Ti": "Ti",
+            "yMax": "yMax",
+            "yMin": "yMin"
+          },
+          "ports": {
+            "reference": "u_s",
+            "measured": "u_m"
+          }
+        }
       },
       "position": {
         "x": 256,
@@ -128,19 +159,22 @@
         "name": "Plant (PI)",
         "description": "First-order continuous filter.",
         "domain": "signal",
+        "category": "continuous",
         "symbol": "1/(τs+1)",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -152,8 +186,19 @@
             "min": 0.00001
           }
         ],
-        "declarations": "Real x(start=0, fixed=true);",
-        "equations": "der(x) = (u-x)/tau;\ny = x;"
+        "equations": "// Blocks.Continuous.FirstOrder from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "continuous",
+          "lag",
+          "pt1"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.FirstOrder",
+          "modifiers": {
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "T": "tau"
+          }
+        }
       },
       "position": {
         "x": 520,
@@ -175,19 +220,22 @@
         "name": "y (PI)",
         "description": "Multiply an input by an adjustable gain.",
         "domain": "signal",
+        "category": "math",
         "symbol": "K",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -198,7 +246,18 @@
             "unit": ""
           }
         ],
-        "equations": "y = k*u;"
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
       },
       "position": {
         "x": 720,
@@ -216,13 +275,15 @@
         "name": "Set point (PID)",
         "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -240,15 +301,22 @@
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;",
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "reference"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,
-        "y": 368
+        "y": 304
       },
       "size": {
         "width": 80,
@@ -256,66 +324,25 @@
       }
     },
     {
-      "id": "err",
+      "id": "c2",
       "definition": {
-        "kind": "subtract",
-        "name": "Error",
-        "symbol": "sum",
-        "domain": "signal",
-        "description": "Subtract",
-        "ports": [
-          {
-            "id": "a",
-            "name": "+",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "b",
-            "name": "−",
-            "direction": "input",
-            "domain": "signal",
-            "side": "bottom"
-          },
-          {
-            "id": "y",
-            "name": "y",
-            "direction": "output",
-            "domain": "signal",
-            "side": "right",
-            "unit": ""
-          }
-        ],
-        "equations": "y = a - b;",
-        "parameters": [],
-        "declarations": ""
-      },
-      "position": {
-        "x": 240,
-        "y": 376
-      },
-      "size": {
-        "width": 48,
-        "height": 48
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -80
-      }
-    },
-    {
-      "id": "pid",
-      "definition": {
-        "kind": "pid",
+        "kind": "pidController",
         "name": "PID",
-        "symbol": "PID",
+        "description": "Continuous PID controller with a filtered derivative, output limits, and anti-windup: y = k·(e + ∫e/Ti + Td·de/dt), clamped.",
         "domain": "signal",
-        "description": "Parallel PID with a filtered derivative term.",
+        "category": "control",
+        "symbol": "PID",
         "ports": [
           {
-            "id": "u",
-            "name": "e",
+            "id": "reference",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "measured",
+            "name": "meas",
             "direction": "input",
             "domain": "signal",
             "side": "left"
@@ -325,52 +352,82 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "der(xi) = u;\nder(xf) = (u - xf)/tf;\ny = kp*u + ki*xi + kd*(u - xf)/tf;",
         "parameters": [
           {
-            "id": "kp",
-            "name": "Proportional gain",
+            "id": "k",
+            "name": "Gain",
             "value": 1,
             "unit": ""
           },
           {
-            "id": "ki",
-            "name": "Integral gain",
-            "value": 2,
-            "unit": ""
-          },
-          {
-            "id": "kd",
-            "name": "Derivative gain",
-            "value": 0.05,
-            "unit": ""
-          },
-          {
-            "id": "tf",
-            "name": "Derivative filter",
-            "value": 0.01,
+            "id": "Ti",
+            "name": "Integral time",
+            "value": 0.5,
             "unit": "s",
-            "min": 0.0001
+            "min": 0.000001
+          },
+          {
+            "id": "Td",
+            "name": "Derivative time",
+            "value": 0.05,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "Nd",
+            "name": "Derivative filter ratio",
+            "value": 5,
+            "unit": "",
+            "min": 1
+          },
+          {
+            "id": "yMax",
+            "name": "Upper limit",
+            "value": 10,
+            "unit": ""
+          },
+          {
+            "id": "yMin",
+            "name": "Lower limit",
+            "value": -10,
+            "unit": ""
           }
         ],
-        "declarations": "Real xi(start=0, fixed=true);\nReal xf(start=0, fixed=true);",
+        "equations": "// Blocks.Continuous.LimPID from the Modelica Standard Library 4.1.0",
         "keywords": [
           "control",
-          "regulator"
+          "regulator",
+          "anti-windup",
+          "limited"
         ],
-        "controller": true
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.LimPID",
+          "modifiers": {
+            "controllerType": "Modelica.Blocks.Types.SimpleController.PID",
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "k": "k",
+            "Ti": "Ti",
+            "Td": "Td",
+            "Nd": "Nd",
+            "yMax": "yMax",
+            "yMin": "yMin"
+          },
+          "ports": {
+            "reference": "u_s",
+            "measured": "u_m"
+          }
+        }
       },
       "position": {
-        "x": 392,
-        "y": 368
+        "x": 256,
+        "y": 304
       },
       "size": {
-        "width": 80,
-        "height": 64
+        "width": 128,
+        "height": 96
       }
     },
     {
@@ -380,19 +437,22 @@
         "name": "Plant (PID)",
         "description": "First-order continuous filter.",
         "domain": "signal",
+        "category": "continuous",
         "symbol": "1/(τs+1)",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -404,12 +464,23 @@
             "min": 0.00001
           }
         ],
-        "declarations": "Real x(start=0, fixed=true);",
-        "equations": "der(x) = (u-x)/tau;\ny = x;"
+        "equations": "// Blocks.Continuous.FirstOrder from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "continuous",
+          "lag",
+          "pt1"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.FirstOrder",
+          "modifiers": {
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "T": "tau"
+          }
+        }
       },
       "position": {
-        "x": 568,
-        "y": 368
+        "x": 520,
+        "y": 320
       },
       "size": {
         "width": 80,
@@ -427,19 +498,22 @@
         "name": "y (PID)",
         "description": "Multiply an input by an adjustable gain.",
         "domain": "signal",
+        "category": "math",
         "symbol": "K",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -450,11 +524,22 @@
             "unit": ""
           }
         ],
-        "equations": "y = k*u;"
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
       },
       "position": {
-        "x": 744,
-        "y": 368
+        "x": 720,
+        "y": 320
       },
       "size": {
         "width": 80,
@@ -465,16 +550,18 @@
       "id": "ref3",
       "definition": {
         "kind": "step",
-        "name": "Set point (sampled PID)",
+        "name": "Set point (PI (sampled))",
         "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -492,15 +579,22 @@
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;",
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "reference"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,
-        "y": 592
+        "y": 496
       },
       "size": {
         "width": 80,
@@ -508,7 +602,259 @@
       }
     },
     {
-      "id": "dpid",
+      "id": "c3",
+      "definition": {
+        "kind": "pi",
+        "name": "PI (sampled)",
+        "symbol": "PI",
+        "domain": "signal",
+        "description": "Sampled PI with output saturation and a bounded integral state. Every state updates at the sample instant, so exported C reproduces it exactly.",
+        "ports": [
+          {
+            "id": "reference",
+            "name": "ref",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "measured",
+            "name": "meas",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": ""
+          }
+        ],
+        "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;",
+        "parameters": [
+          {
+            "id": "kp",
+            "name": "Proportional gain",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "ki",
+            "name": "Integral gain",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "limit",
+            "name": "Output limit",
+            "value": 10,
+            "unit": "",
+            "min": 0.001
+          },
+          {
+            "id": "samplePeriod",
+            "name": "Sample period",
+            "value": 0.001,
+            "unit": "s",
+            "min": 0.0001
+          }
+        ],
+        "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
+        "keywords": [
+          "control",
+          "regulator",
+          "discrete",
+          "sampled",
+          "export",
+          "c"
+        ],
+        "controller": true
+      },
+      "position": {
+        "x": 256,
+        "y": 496
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "plant3",
+      "definition": {
+        "kind": "filter",
+        "name": "Plant (PI (sampled))",
+        "description": "First-order continuous filter.",
+        "domain": "signal",
+        "category": "continuous",
+        "symbol": "1/(τs+1)",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "tau",
+            "name": "Time constant",
+            "value": 0.5,
+            "unit": "s",
+            "min": 0.00001
+          }
+        ],
+        "equations": "// Blocks.Continuous.FirstOrder from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "continuous",
+          "lag",
+          "pt1"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.FirstOrder",
+          "modifiers": {
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "T": "tau"
+          }
+        }
+      },
+      "position": {
+        "x": 520,
+        "y": 512
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "y3",
+      "definition": {
+        "kind": "gain",
+        "name": "y (PI (sampled))",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 1,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
+      },
+      "position": {
+        "x": 720,
+        "y": 512
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ref4",
+      "definition": {
+        "kind": "step",
+        "name": "Set point (PID (sampled))",
+        "description": "A step change from zero to a final value.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "step",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "height",
+            "name": "Height",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.1,
+            "unit": "s",
+            "min": 0
+          }
+        ],
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 688
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "c4",
       "definition": {
         "kind": "discretePID",
         "name": "PID (sampled)",
@@ -594,7 +940,7 @@
       },
       "position": {
         "x": 256,
-        "y": 592
+        "y": 688
       },
       "size": {
         "width": 128,
@@ -602,25 +948,28 @@
       }
     },
     {
-      "id": "plant3",
+      "id": "plant4",
       "definition": {
         "kind": "filter",
-        "name": "Plant (sampled PID)",
+        "name": "Plant (PID (sampled))",
         "description": "First-order continuous filter.",
         "domain": "signal",
+        "category": "continuous",
         "symbol": "1/(τs+1)",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -632,12 +981,23 @@
             "min": 0.00001
           }
         ],
-        "declarations": "Real x(start=0, fixed=true);",
-        "equations": "der(x) = (u-x)/tau;\ny = x;"
+        "equations": "// Blocks.Continuous.FirstOrder from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "continuous",
+          "lag",
+          "pt1"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.FirstOrder",
+          "modifiers": {
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "T": "tau"
+          }
+        }
       },
       "position": {
         "x": 520,
-        "y": 608
+        "y": 704
       },
       "size": {
         "width": 80,
@@ -649,25 +1009,28 @@
       }
     },
     {
-      "id": "y3",
+      "id": "y4",
       "definition": {
         "kind": "gain",
-        "name": "y (sampled PID)",
+        "name": "y (PID (sampled))",
         "description": "Multiply an input by an adjustable gain.",
         "domain": "signal",
+        "category": "math",
         "symbol": "K",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -678,11 +1041,22 @@
             "unit": ""
           }
         ],
-        "equations": "y = k*u;"
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
       },
       "position": {
         "x": 720,
-        "y": 608
+        "y": 704
       },
       "size": {
         "width": 80,
@@ -695,19 +1069,19 @@
       "id": "id0001",
       "source": "ref1",
       "sourceHandle": "y",
-      "target": "pi",
+      "target": "c1",
       "targetHandle": "reference"
     },
     {
       "id": "id0002",
-      "source": "pi",
+      "source": "c1",
       "sourceHandle": "y",
       "target": "plant1",
       "targetHandle": "u"
     },
     {
       "id": "id0003",
-      "source": "j_id000f",
+      "source": "j_id000i",
       "sourceHandle": "node",
       "target": "y1",
       "targetHandle": "u",
@@ -715,9 +1089,9 @@
     },
     {
       "id": "id0004",
-      "source": "j_id000f",
+      "source": "j_id000i",
       "sourceHandle": "node",
-      "target": "pi",
+      "target": "c1",
       "targetHandle": "measured",
       "waypoints": [
         {
@@ -738,119 +1112,167 @@
       "id": "id0005",
       "source": "ref2",
       "sourceHandle": "y",
-      "target": "err",
-      "targetHandle": "a"
+      "target": "c2",
+      "targetHandle": "reference"
     },
     {
       "id": "id0006",
-      "source": "err",
-      "sourceHandle": "y",
-      "target": "pid",
-      "targetHandle": "u"
-    },
-    {
-      "id": "id0007",
-      "source": "pid",
+      "source": "c2",
       "sourceHandle": "y",
       "target": "plant2",
       "targetHandle": "u"
     },
     {
-      "id": "id0008",
-      "source": "j_id000h",
+      "id": "id0007",
+      "source": "j_id000k",
       "sourceHandle": "node",
       "target": "y2",
       "targetHandle": "u",
       "waypoints": []
     },
     {
-      "id": "id0009",
-      "source": "j_id000h",
+      "id": "id0008",
+      "source": "j_id000k",
       "sourceHandle": "node",
-      "target": "err",
-      "targetHandle": "b",
+      "target": "c2",
+      "targetHandle": "measured",
       "waypoints": [
         {
-          "x": 664,
-          "y": 464
+          "x": 616,
+          "y": 400
         },
         {
-          "x": 264,
-          "y": 464
+          "x": 240,
+          "y": 400
+        },
+        {
+          "x": 240,
+          "y": 368
         }
       ]
     },
     {
-      "id": "id000a",
+      "id": "id0009",
       "source": "ref3",
       "sourceHandle": "y",
-      "target": "dpid",
+      "target": "c3",
       "targetHandle": "reference"
     },
     {
-      "id": "id000b",
-      "source": "dpid",
+      "id": "id000a",
+      "source": "c3",
       "sourceHandle": "y",
       "target": "plant3",
       "targetHandle": "u"
     },
     {
-      "id": "id000c",
-      "source": "j_id000j",
+      "id": "id000b",
+      "source": "j_id000m",
       "sourceHandle": "node",
       "target": "y3",
       "targetHandle": "u",
       "waypoints": []
     },
     {
-      "id": "id000d",
-      "source": "j_id000j",
+      "id": "id000c",
+      "source": "j_id000m",
       "sourceHandle": "node",
-      "target": "dpid",
+      "target": "c3",
       "targetHandle": "measured",
       "waypoints": [
         {
           "x": 616,
-          "y": 688
+          "y": 592
         },
         {
           "x": 240,
-          "y": 688
+          "y": 592
         },
         {
           "x": 240,
-          "y": 656
+          "y": 560
         }
       ]
     },
     {
-      "id": "w_id000g",
+      "id": "id000d",
+      "source": "ref4",
+      "sourceHandle": "y",
+      "target": "c4",
+      "targetHandle": "reference"
+    },
+    {
+      "id": "id000e",
+      "source": "c4",
+      "sourceHandle": "y",
+      "target": "plant4",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id000f",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "y4",
+      "targetHandle": "u",
+      "waypoints": []
+    },
+    {
+      "id": "id000g",
+      "source": "j_id000o",
+      "sourceHandle": "node",
+      "target": "c4",
+      "targetHandle": "measured",
+      "waypoints": [
+        {
+          "x": 616,
+          "y": 784
+        },
+        {
+          "x": 240,
+          "y": 784
+        },
+        {
+          "x": 240,
+          "y": 752
+        }
+      ]
+    },
+    {
+      "id": "w_id000j",
       "source": "plant1",
       "sourceHandle": "y",
-      "target": "j_id000f",
+      "target": "j_id000i",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "w_id000i",
+      "id": "w_id000l",
       "source": "plant2",
       "sourceHandle": "y",
-      "target": "j_id000h",
+      "target": "j_id000k",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "w_id000k",
+      "id": "w_id000n",
       "source": "plant3",
       "sourceHandle": "y",
-      "target": "j_id000j",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000p",
+      "source": "plant4",
+      "sourceHandle": "y",
+      "target": "j_id000o",
       "targetHandle": "node",
       "waypoints": []
     }
   ],
   "junctions": [
     {
-      "id": "j_id000f",
+      "id": "j_id000i",
       "domain": "signal",
       "position": {
         "x": 616,
@@ -858,97 +1280,121 @@
       }
     },
     {
-      "id": "j_id000h",
-      "domain": "signal",
-      "position": {
-        "x": 664,
-        "y": 400
-      }
-    },
-    {
-      "id": "j_id000j",
+      "id": "j_id000k",
       "domain": "signal",
       "position": {
         "x": 616,
-        "y": 640
+        "y": 352
+      }
+    },
+    {
+      "id": "j_id000m",
+      "domain": "signal",
+      "position": {
+        "x": 616,
+        "y": 544
+      }
+    },
+    {
+      "id": "j_id000o",
+      "domain": "signal",
+      "position": {
+        "x": 616,
+        "y": 736
       }
     }
   ],
   "nets": [
     {
-      "id": "net_id000l",
+      "id": "net_id000q",
       "anchor": "ref1.y",
       "wireIds": [
         "id0001"
       ]
     },
     {
-      "id": "net_id000m",
-      "anchor": "pi.y",
+      "id": "net_id000r",
+      "anchor": "c1.y",
       "wireIds": [
         "id0002"
       ]
     },
     {
-      "id": "net_id000n",
+      "id": "net_id000s",
       "anchor": "plant1.y",
       "wireIds": [
         "id0003",
         "id0004",
-        "w_id000g"
+        "w_id000j"
       ]
     },
     {
-      "id": "net_id000o",
+      "id": "net_id000t",
       "anchor": "ref2.y",
       "wireIds": [
         "id0005"
       ]
     },
     {
-      "id": "net_id000p",
-      "anchor": "err.y",
+      "id": "net_id000u",
+      "anchor": "c2.y",
       "wireIds": [
         "id0006"
       ]
     },
     {
-      "id": "net_id000q",
-      "anchor": "pid.y",
-      "wireIds": [
-        "id0007"
-      ]
-    },
-    {
-      "id": "net_id000r",
+      "id": "net_id000v",
       "anchor": "plant2.y",
       "wireIds": [
+        "id0007",
         "id0008",
-        "id0009",
-        "w_id000i"
+        "w_id000l"
       ]
     },
     {
-      "id": "net_id000s",
+      "id": "net_id000w",
       "anchor": "ref3.y",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "c3.y",
       "wireIds": [
         "id000a"
       ]
     },
     {
-      "id": "net_id000t",
-      "anchor": "dpid.y",
+      "id": "net_id000y",
+      "anchor": "plant3.y",
       "wireIds": [
-        "id000b"
+        "id000b",
+        "id000c",
+        "w_id000n"
       ]
     },
     {
-      "id": "net_id000u",
-      "anchor": "plant3.y",
+      "id": "net_id000z",
+      "anchor": "ref4.y",
       "wireIds": [
-        "id000c",
-        "id000d",
-        "w_id000k"
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id0010",
+      "anchor": "c4.y",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id0011",
+      "anchor": "plant4.y",
+      "wireIds": [
+        "id000f",
+        "id000g",
+        "w_id000p"
       ]
     }
   ],
@@ -961,12 +1407,14 @@
         "ref1.y",
         "y1.y",
         "y2.y",
-        "y3.y"
+        "y3.y",
+        "y4.y"
       ],
       "labels": [
         "Set point",
-        "PI (sampled)",
+        "PI",
         "PID",
+        "PI (sampled)",
         "PID (sampled)"
       ]
     },
@@ -974,13 +1422,15 @@
       "id": "plot2",
       "label": "Controller outputs",
       "series": [
-        "pi.y",
-        "pid.y",
-        "dpid.y"
+        "c1.y",
+        "c2.y",
+        "c3.y",
+        "c4.y"
       ],
       "labels": [
-        "PI (sampled)",
+        "PI",
         "PID",
+        "PI (sampled)",
         "PID (sampled)"
       ]
     }

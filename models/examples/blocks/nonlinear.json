@@ -11,20 +11,19 @@
       "definition": {
         "kind": "sine",
         "name": "Sine, amplitude 2",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -52,12 +51,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -75,19 +83,22 @@
         "name": "Saturation ±1",
         "description": "Clamp a signal between lower and upper limits.",
         "domain": "signal",
+        "category": "nonlinear",
         "symbol": "sat",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -104,7 +115,19 @@
             "unit": ""
           }
         ],
-        "equations": "y = max(lower, min(upper, u));"
+        "equations": "// Blocks.Nonlinear.Limiter from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "nonlinear",
+          "limit",
+          "clamp"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Nonlinear.Limiter",
+          "modifiers": {
+            "uMin": "lower",
+            "uMax": "upper"
+          }
+        }
       },
       "position": {
         "x": 392,
@@ -120,9 +143,10 @@
       "definition": {
         "kind": "deadzone",
         "name": "Dead zone ±0.5",
-        "symbol": "dead",
-        "domain": "signal",
         "description": "Zero output inside ±half-width.",
+        "domain": "signal",
+        "category": "nonlinear",
+        "symbol": "dead",
         "ports": [
           {
             "id": "u",
@@ -136,11 +160,9 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = if u > start then u - start else (if u < -start then u + start else 0);",
         "parameters": [
           {
             "id": "start",
@@ -150,10 +172,17 @@
             "min": 0
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Nonlinear.DeadZone from the Modelica Standard Library 4.1.0",
         "keywords": [
           "nonlinear"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Nonlinear.DeadZone",
+          "modifiers": {
+            "uMax": "start",
+            "uMin": "-start"
+          }
+        }
       },
       "position": {
         "x": 392,
@@ -230,9 +259,10 @@
       "definition": {
         "kind": "rateLimiter",
         "name": "Rate limit 2/s",
-        "symbol": "du/dt",
-        "domain": "signal",
         "description": "Limits how fast a signal may change.",
+        "domain": "signal",
+        "category": "nonlinear",
+        "symbol": "du/dt",
         "ports": [
           {
             "id": "u",
@@ -246,11 +276,9 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "der(x) = if u > x then min(rising, (u - x)*1000) else max(-falling, (u - x)*1000);\ny = x;",
         "parameters": [
           {
             "id": "rising",
@@ -267,11 +295,19 @@
             "min": 0
           }
         ],
-        "declarations": "Real x(start=0, fixed=true);",
+        "equations": "// Blocks.Nonlinear.SlewRateLimiter from the Modelica Standard Library 4.1.0",
         "keywords": [
           "nonlinear",
           "slew"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Nonlinear.SlewRateLimiter",
+          "modifiers": {
+            "Falling": "-falling",
+            "initType": "Modelica.Blocks.Types.Init.SteadyState",
+            "Rising": "rising"
+          }
+        }
       },
       "position": {
         "x": 392,

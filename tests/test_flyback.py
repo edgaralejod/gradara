@@ -33,15 +33,15 @@ def test_flyback_switching_startup_and_regulation():
     with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:
         rows = list(csv.DictReader(stream))
     rows = [row for row in rows if float(row['time']) <= project.duration + 1e-12]
-    assert float(rows[0]['power.vout.y']) == pytest.approx(0, abs=1e-5)
+    assert float(rows[0]['power.vout.v']) == pytest.approx(0, abs=1e-5)
     tail = [row for row in rows if .25 <= float(row['time']) <= .3]
-    volts = [float(row['power.vout.y']) for row in tail]
+    volts = [float(row['power.vout.v']) for row in tail]
     assert 23.9 < min(volts) <= max(volts) < 24.1
     assert max(volts)-min(volts) < .05
-    assert max(float(row['power.vout.y']) for row in rows) < 24.5
-    assert 660 < float(tail[-1]['power.vbus.y']) < 680
-    assert .65 < max(float(row['power.ip.y']) for row in tail) < .8
-    assert 800 < max(float(row['power.vsw.y']) for row in tail) < 920
+    assert max(float(row['power.vout.v']) for row in rows) < 24.5
+    assert 660 < float(tail[-1]['power.vbus.v']) < 680
+    assert .65 < max(float(row['power.ip.i']) for row in tail) < .8
+    assert 800 < max(float(row['power.vsw.v']) for row in tail) < 920
     gates = [float(row['power.pwm.fire']) for row in tail]
     assert min(gates) == 0 and max(gates) == 1
     assert sum(a < .5 and b > .5 for a,b in zip(gates,gates[1:])) >= 2400

@@ -11,23 +11,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "1 V",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -39,13 +39,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 96,
@@ -67,18 +73,27 @@
         "name": "Ground",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 96,
@@ -94,23 +109,24 @@
       "definition": {
         "kind": "resistor",
         "name": "R 1 Ω",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -122,11 +138,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 224,
@@ -561,20 +583,19 @@
       "definition": {
         "kind": "sine",
         "name": "R_m signal",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -602,12 +623,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 264,
@@ -757,13 +787,15 @@
         "name": "50 A",
         "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -781,11 +813,18 @@
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;",
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "reference"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 96,

@@ -11,23 +11,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "100 V (PM)",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -39,13 +39,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 144,
@@ -67,18 +73,27 @@
         "name": "Ground (100 V (PM))",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -94,23 +109,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "100 V (shunt)",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -122,13 +137,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 144,
@@ -150,18 +171,27 @@
         "name": "Ground (100 V (shunt))",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -177,23 +207,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "100 V (series)",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -205,13 +235,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 144,
@@ -233,18 +269,27 @@
         "name": "Ground (100 V (series))",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -504,6 +549,20 @@
             "min": 0
           },
           {
+            "id": "Re",
+            "name": "Field resistance",
+            "value": 100,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Le",
+            "name": "Field inductance",
+            "value": 1,
+            "unit": "H",
+            "min": 0
+          },
+          {
             "id": "Jr",
             "name": "Rotor inertia",
             "value": 0.15,
@@ -531,6 +590,8 @@
             "IeNominal": "IeNominal",
             "Ra": "Ra",
             "La": "La",
+            "Re": "Re",
+            "Le": "Le",
             "Jr": "Jr"
           }
         }
@@ -680,6 +741,20 @@
             "min": 0
           },
           {
+            "id": "Re",
+            "name": "Field resistance",
+            "value": 0.01,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Le",
+            "name": "Field inductance",
+            "value": 0.0005,
+            "unit": "H",
+            "min": 0
+          },
+          {
             "id": "Jr",
             "name": "Rotor inertia",
             "value": 0.15,
@@ -706,6 +781,8 @@
             "wNominal": "wNominal",
             "Ra": "Ra",
             "La": "La",
+            "Re": "Re",
+            "Le": "Le",
             "Jr": "Jr"
           }
         }

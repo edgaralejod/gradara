@@ -1,180 +1,174 @@
+/**
+ * The servo position-control template (models/examples/servo.json): the DC speed
+ * loop's machine under a sampled PID position controller built for C export. Run
+ * with `npx tsx scripts/build-servo-example.ts`.
+ */
 import { writeFileSync } from 'node:fs';
-import {
-  library,
-  type Block,
-  type Port,
-  type Project,
-  type Wire,
-} from '../lib/gradara/model';
-import { defaultBlockSize } from '../lib/gradara/block-design';
-import { reconcileNets } from '../lib/gradara/net-registry';
+import type { Project } from '../lib/gradara/model';
+import { assemble } from './block-examples/assemble';
+import type { ExampleSpec } from './block-examples/types';
 
-// Same topology and geometry as the DC speed example, with a position loop.
-const blocks: Block[] = [];
-function block(
-  id: string,
-  kind: string,
-  name: string,
-  x: number,
-  y: number,
-  params: Record<string, number> = {},
-  above = false,
-) {
-  const definition = structuredClone(library.find((d) => d.kind === kind)!);
-  if (!definition) throw new Error(`Missing ${kind}`);
-  definition.name = name;
-  for (const p of definition.parameters)
-    if (p.id in params) p.value = params[p.id];
-  const size = defaultBlockSize(definition);
-  const b: Block = { id, definition, position: { x, y }, size };
-  if (above) b.labelOffset = { x: 0, y: -size.height - 36 };
-  blocks.push(b);
-  return b;
-}
-function side(b: Block, port: string, s: Port['side'], offset?: number) {
-  const p = b.definition.ports.find((p) => p.id === port)!;
-  p.side = s;
-  if (offset === undefined) delete p.offset;
-  else p.offset = offset;
-}
-
-block('reference', 'step', 'Position request', 40, 192, {
-  height: 1,
-  startTime: 0.2,
-});
-const controller = block(
-  'controller',
-  'discretePID',
-  'Position controller',
-  240,
-  176,
-  { kp: 30, ki: 1, kd: 3, filterTime: 0.01, limit: 24, samplePeriod: 0.001 },
-  true,
-);
-side(controller, 'measured', 'bottom');
-block('drive', 'voltage', 'Voltage drive', 472, 176, {}, true);
-const motor = block(
-  'motor',
-  'motor',
-  'DC motor',
-  704,
-  176,
-  { R: 1.2, L: 0.02, k: 0.15 },
-  true,
-);
-// Separate the negative electrical terminal and the mechanical shaft.
-side(motor, 'n', 'bottom', 25);
-side(motor, 'flange', 'bottom', 75);
-block('load', 'inertia', 'Load inertia', 736, 416, {
-  J: 0.02,
-  damping: 0.002,
-});
-block('sensor', 'angleSensor', 'Angle sensor', 240, 416);
-block('ground', 'ground', 'Ground', 584, 336);
-
-const wires: Wire[] = [];
-function wire(
-  id: string,
-  source: string,
-  sourceHandle: string,
-  target: string,
-  targetHandle: string,
-  points: number[][] = [],
-) {
-  wires.push({
-    id,
-    source,
-    sourceHandle,
-    target,
-    targetHandle,
-    waypoints: points.map(([x, y]) => ({ x, y })),
-  });
-}
-wire('wire0', 'reference', 'y', 'controller', 'reference');
-wire('wire1', 'controller', 'y', 'drive', 'u');
-wire('wire2', 'drive', 'p', 'motor', 'p');
-wire('wire3', 'drive', 'n', 'servo_return', 'node', [[536, 320]]);
-wire('wire4', 'motor', 'n', 'servo_return', 'node', [[736, 320]]);
-wire('wire5', 'motor', 'flange', 'load', 'a');
-wire('wire6', 'load', 'b', 'sensor', 'flange');
-wire('wire7', 'sensor', 'y', 'controller', 'measured', [
-  [176, 464],
-  [176, 344],
-  [304, 344],
-]);
-wire('servo_ground', 'servo_return', 'node', 'ground', 'p');
-
-let project: Project = {
-  version: 1,
-  name: 'Servo position control',
-  exampleId: 'servo',
+const spec: ExampleSpec = {
+  id: 'servo',
+  title: 'Servo position control',
+  area: 'Machines',
+  summary: 'A DC motor position servo with a sampled PID.',
   description:
-    'DC motor position servo: a 1 rad step at 0.2 s, a sampled PID at 1 kHz with a clamped integral and a ±24 V output limit, an ideal voltage drive, and a measured shaft angle. The controller is built for C export; its exported step function reproduces the sampled equations exactly.',
+    'DC motor position servo: a 1 rad step at 0.2 s, a sampled PID at 1 kHz with a clamped integral and a ±24 V output limit, a controlled voltage source, the same permanent-magnet DC machine as the speed loop, and a measured shaft angle. The controller is built for C export; its exported step function reproduces the sampled equations exactly.',
   duration: 2,
-  revision: 0,
-  blocks,
-  wires,
-  junctions: [
-    {
-      id: 'servo_return',
-      domain: 'electrical',
-      position: { x: 604, y: 320 },
-    },
+  blocks: [
+    [
+      'reference',
+      'step',
+      'Position request',
+      [72, 216],
+      { height: 1, startTime: 0.2 },
+    ],
+    [
+      'controller',
+      'discretePID',
+      'Position controller (PID)',
+      [248, 216],
+      {
+        kp: 30,
+        ki: 1,
+        kd: 3,
+        filterTime: 0.01,
+        limit: 24,
+        samplePeriod: 0.001,
+      },
+      { ports: { measured: 'bottom' }, label: 'above' },
+    ],
+    [
+      'drive',
+      'signalVoltage',
+      'Voltage drive',
+      [416, 216],
+      {},
+      { label: [-84, 8] },
+    ],
+    [
+      'isens',
+      'currentSensor',
+      'Armature current',
+      [528, 176],
+      {},
+      { label: 'above' },
+    ],
+    [
+      'motor',
+      'dcPmMachine',
+      'DC motor',
+      [680, 192],
+      {
+        VaNominal: 24,
+        IaNominal: 2,
+        wNominal: 144,
+        Ra: 1.2,
+        La: 0.02,
+        Jr: 0.02,
+      },
+      { label: 'above' },
+    ],
+    [
+      'friction',
+      'rotDamper',
+      'Friction 0.002',
+      [856, 192],
+      { d: 0.002 },
+      { label: 'above' },
+    ],
+    ['housing', 'rotFixed', 'Housing', [920, 240]],
+    ['ground', 'ground', 'Ground', [528, 352]],
+    [
+      'sensor',
+      'angleSensor',
+      'Angle sensor',
+      [680, 376],
+      {},
+      { ports: { flange: 'right', y: 'left' } },
+    ],
   ],
-  annotations: [
-    {
-      x: 40,
-      y: 64,
-      text: '01  POSITION CONTROL',
-      detail: '1 rad step · sampled PID at 1 kHz · exportable to C',
-    },
-    {
-      x: 472,
-      y: 64,
-      text: '02  ELECTRICAL DRIVE',
-      detail: '±24 V drive · armature dynamics',
-    },
-    {
-      x: 240,
-      y: 552,
-      text: '03  MECHANICAL LOAD',
-      detail: 'Shaft inertia · damping · measured angle',
-    },
+  links: [
+    ['reference.y', 'controller.reference'],
+    ['controller.y', 'drive.v'],
+    ['drive.p', 'isens.p'],
+    ['isens.n', 'motor.pin_ap'],
+    ['motor.pin_an', 'ground.p'],
+    ['drive.n', 'ground.p'],
+    ['motor.flange', 'friction.flange_a'],
+    ['friction.flange_b', 'housing.flange'],
+    ['motor.flange', 'sensor.flange'],
+    ['sensor.y', 'controller.measured'],
   ],
   plots: [
     {
-      id: 'angle',
       label: 'Shaft angle',
       series: ['sensor.y', 'reference.y'],
       labels: ['Measured angle', 'Position request'],
     },
     {
-      id: 'voltage',
       label: 'Controller output',
       series: ['controller.y'],
       labels: ['Drive voltage command'],
     },
     {
-      id: 'current',
       label: 'Armature current',
-      series: ['motor.i'],
+      series: ['isens.y'],
       labels: ['Armature current'],
     },
   ],
+  checks: [],
+  about: [],
 };
-project = reconcileNets(project);
-for (const [i, net] of (project.nets ?? []).entries()) {
-  net.id = `net_servo_${i}`;
-  const feedback = net.wireIds.includes('wire7');
-  net.hidden = !feedback;
-  if (feedback) {
-    net.name = 'θ measured';
-    net.label = { wireId: 'wire7', fraction: 0.5729166666666666, side: -1 };
-  } else {
-    delete net.name;
-    delete net.label;
-  }
+
+let project: Project = assemble(spec);
+project = {
+  ...project,
+  version: 1,
+  exampleId: 'servo',
+  name: spec.title,
+  description: spec.description,
+  revision: 0,
+  annotations: [
+    {
+      x: 24,
+      y: 56,
+      text: '01  POSITION CONTROL',
+      detail: '1 rad step · sampled PID at 1 kHz · exportable to C',
+    },
+    {
+      x: 416,
+      y: 56,
+      text: '02  ELECTRICAL DRIVE',
+      detail: '±24 V drive · armature dynamics',
+    },
+    {
+      x: 616,
+      y: 480,
+      text: '03  MECHANICAL LOAD',
+      detail: 'Rotor inertia · friction · measured angle',
+    },
+  ],
+};
+const reference = project.blocks.find((b) => b.id === 'reference')!.definition;
+reference.parameters[0].name = 'Target angle';
+reference.parameters[0].unit = 'rad';
+reference.ports[0].unit = 'rad';
+project.blocks
+  .find((b) => b.id === 'controller')!
+  .definition.ports.find((p) => p.id === 'y')!.unit = 'V';
+const feedback = project.nets?.find((n) =>
+  n.wireIds.some((id) => {
+    const w = project.wires.find((x) => x.id === id);
+    return w?.source === 'sensor' && w.sourceHandle === 'y';
+  }),
+);
+if (feedback) {
+  feedback.name = 'θ measured';
+  feedback.hidden = false;
 }
+
 writeFileSync(
   'models/examples/servo.json',
   JSON.stringify(project, null, 2) + '\n',

@@ -81,23 +81,24 @@
       "definition": {
         "kind": "resistor",
         "name": "R 1 kΩ",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -109,11 +110,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 160,
@@ -129,23 +136,24 @@
       "definition": {
         "kind": "capacitor",
         "name": "C 100 µF",
-        "symbol": "C",
-        "domain": "electrical",
         "description": "An ideal capacitor.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "C",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -157,10 +165,16 @@
             "min": 1e-12
           }
         ],
-        "equations": "i = C*der(v);",
+        "equations": "// Electrical.Analog.Basic.Capacitor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Capacitor",
+          "modifiers": {
+            "C": "C"
+          }
+        }
       },
       "position": {
         "x": 296,
@@ -181,41 +195,47 @@
       "definition": {
         "kind": "voltageSensor",
         "name": "Capacitor voltage",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "V",
-        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           },
           {
             "id": "y",
             "name": "V",
             "direction": "output",
-            "side": "right",
             "domain": "signal",
+            "side": "right",
             "unit": "V"
           }
         ],
         "parameters": [],
-        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "voltmeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+          "ports": {
+            "y": "v"
+          }
+        }
       },
       "position": {
         "x": 408,
@@ -237,18 +257,27 @@
         "name": "Ground",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 56,
@@ -388,41 +417,47 @@
       "definition": {
         "kind": "currentSensor",
         "name": "Inductor current",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "A",
-        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "left"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "right"
           },
           {
             "id": "y",
             "name": "A",
             "direction": "output",
-            "side": "bottom",
             "domain": "signal",
+            "side": "bottom",
             "unit": "A"
           }
         ],
         "parameters": [],
-        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "ammeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
       },
       "position": {
         "x": 992,
@@ -438,23 +473,24 @@
       "definition": {
         "kind": "inductor",
         "name": "L 1 H",
-        "symbol": "L",
-        "domain": "electrical",
         "description": "An ideal inductor.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "L",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -466,10 +502,18 @@
             "min": 1e-12
           }
         ],
-        "equations": "v = L*der(i);",
+        "equations": "// Electrical.Analog.Basic.Inductor from the Modelica Standard Library 4.1.0",
         "keywords": [
-          "electrical"
-        ]
+          "electrical",
+          "coil",
+          "choke"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Inductor",
+          "modifiers": {
+            "L": "L"
+          }
+        }
       },
       "position": {
         "x": 1128,
@@ -492,18 +536,27 @@
         "name": "Ground (RL)",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 752,

@@ -25,12 +25,13 @@ void test('detects the controller between measurements and actuators', () => {
   const ids = foc?.kind === 'selection' ? foc.blockIds : [];
   // The whole cascade, but neither the reference source nor the inverter and motor models.
   for (const id of [
-    'speedError',
+    'speedPI',
     'qPI',
     'dPI',
     'park',
     'clarke',
-    'inverse',
+    'inversePark',
+    'inverseClarke',
     'dReference',
   ])
     assert.ok(ids.includes(id), id);

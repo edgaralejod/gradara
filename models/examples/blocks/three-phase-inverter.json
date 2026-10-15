@@ -11,23 +11,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "50 V upper",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -39,13 +39,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 464,
@@ -65,23 +71,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "50 V lower",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -93,13 +99,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 464,
@@ -121,18 +133,27 @@
         "name": "Midpoint",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 368,
@@ -148,20 +169,19 @@
       "definition": {
         "kind": "sine",
         "name": "Duty a",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -189,12 +209,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 128,
@@ -274,20 +303,19 @@
       "definition": {
         "kind": "sine",
         "name": "Duty b",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -315,12 +343,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 128,
@@ -400,20 +437,19 @@
       "definition": {
         "kind": "sine",
         "name": "Duty c",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -441,12 +477,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 128,
@@ -831,18 +876,27 @@
         "name": "Ground (star)",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 1480,

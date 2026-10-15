@@ -1,160 +1,164 @@
+/**
+ * The synchronous buck converter template (models/examples/buck.json): a PWM
+ * generator driving two Modelica switches, an LC filter and a load. Built from
+ * library blocks and routed by the workbench. Run with
+ * `npx tsx scripts/build-buck-example.ts`.
+ */
 import { writeFileSync } from 'node:fs';
-import {
-  library,
-  type Block,
-  type Project,
-  type Wire,
-} from '../lib/gradara/model';
-import { defaultBlockSize } from '../lib/gradara/block-design';
-import { nearestLabelAnchor } from '../lib/gradara/net-label';
-import { reconcileNets } from '../lib/gradara/net-registry';
-const blocks: Block[] = [];
-function block(
-  id: string,
-  kind: string,
-  name: string,
-  x: number,
-  y: number,
-  params: Record<string, number> = {},
-  vertical = false,
-) {
-  const definition = structuredClone(library.find((d) => d.kind === kind)!);
-  if (!definition) throw new Error(`Missing ${kind}`);
-  definition.name = name;
-  for (const p of definition.parameters)
-    if (p.id in params) p.value = params[p.id];
-  if (vertical)
-    for (const port of definition.ports)
-      if (port.direction === 'physical')
-        port.side = port.id === 'p' ? 'top' : 'bottom';
-  const b = {
-    id,
-    definition,
-    position: { x, y },
-    size: defaultBlockSize(definition),
-  };
-  blocks.push(b);
-  return b;
-}
-block('supply', 'dcSource', '24 V supply', 20, 350, { V: 24 });
-block('pwm', 'pwmPair', 'Gate drive', 160, 176);
-block('highSide', 'idealSwitch', 'High-side switch', 400, 168);
-block('lowSide', 'idealSwitch', 'Low-side switch', 400, 350);
-block('inductor', 'inductor', '1 mH inductor', 544, 266, { L: 0.001 });
-block('current', 'currentSensor', 'Inductor current', 676, 266);
-block(
-  'capacitor',
-  'capacitor',
-  '100 µF capacitor',
-  796,
-  350,
-  { C: 0.0001 },
-  true,
-);
-block('load', 'resistor', '10 Ω load', 916, 350, { R: 10 }, true);
-block('voltageProbe', 'voltageSensor', 'Output voltage', 1040, 350);
-block('ground', 'ground', 'Ground', 404, 490);
-// Keep names out of the vertical power conductors and the return rail.
-for (const b of blocks) {
-  if (['supply', 'capacitor', 'load', 'voltageProbe'].includes(b.id))
-    b.labelOffset = { x: 0, y: 72 };
-  if (['highSide', 'lowSide'].includes(b.id)) b.labelOffset = { x: 96, y: -48 };
-}
-const junctions = [
-  { id: 'sw', domain: 'electrical' as const, position: { x: 424, y: 290 } },
-  { id: 'out', domain: 'electrical' as const, position: { x: 820, y: 290 } },
-  { id: 'return', domain: 'electrical' as const, position: { x: 424, y: 490 } },
-];
-const wires: Wire[] = [];
-function wire(
-  source: string,
-  sourceHandle: string,
-  target: string,
-  targetHandle: string,
-  points: number[][] = [],
-) {
-  wires.push({
-    id: `w_${wires.length}`,
-    source,
-    sourceHandle,
-    target,
-    targetHandle,
-    waypoints: points.map(([x, y]) => ({ x, y })),
-  });
-}
-wire('supply', 'p', 'highSide', 'p', [
-  [44, 130],
-  [424, 130],
-]);
-wire('pwm', 'high', 'highSide', 'gate');
-wire('pwm', 'low', 'lowSide', 'gate', [
-  [340, 240],
-  [340, 390],
-]);
-wire('highSide', 'n', 'sw', 'node');
-wire('sw', 'node', 'lowSide', 'p');
-wire('sw', 'node', 'inductor', 'p');
-wire('inductor', 'n', 'current', 'p');
-wire('current', 'n', 'out', 'node');
-wire('out', 'node', 'capacitor', 'p');
-wire('out', 'node', 'load', 'p', [[940, 290]]);
-wire('out', 'node', 'voltageProbe', 'p', [[1064, 290]]);
-wire('supply', 'n', 'return', 'node', [[44, 490]]);
-wire('lowSide', 'n', 'return', 'node');
-wire('return', 'node', 'ground', 'p');
-wire('capacitor', 'n', 'return', 'node', [[820, 490]]);
-wire('load', 'n', 'return', 'node', [[940, 490]]);
-wire('voltageProbe', 'n', 'return', 'node', [[1064, 490]]);
-let project: Project = {
-  version: 1,
-  name: 'Buck converter · Ideal switches',
-  exampleId: 'buck',
+import type { Project } from '../lib/gradara/model';
+import { assemble } from './block-examples/assemble';
+import type { ExampleSpec } from './block-examples/types';
+
+const spec: ExampleSpec = {
+  id: 'buck',
+  title: 'Buck converter · Ideal switches',
+  area: 'Converters',
+  summary: 'A synchronous buck converter switched at 10 kHz.',
   description:
-    '24 V synchronous buck: complementary ideal switches at 10 kHz and 50% duty, 1 mH / 100 µF filter, 10 Ω load. Start from zero stored energy. Expect approximately 12 V and 1.2 A after settling. No losses, dead time, or parasitics.',
+    '24 V synchronous buck: a PWM generator at 10 kHz and 50 % duty drives two complementary ideal switches, a 1 mH / 100 µF filter and a 10 Ω load. Start from zero stored energy. Expect approximately 12 V and 1.2 A after settling. No losses, dead time, or parasitics: the switches have zero on-resistance and zero off-conductance. Change the duty cycle constant to move the output.',
   duration: 0.02,
-  revision: 0,
-  blocks,
-  wires,
-  junctions,
-  annotations: [
-    { x: 160, y: 64, text: 'GATE DRIVE', detail: '10 kHz · 50% duty' },
-    {
-      x: 400,
-      y: 64,
-      text: 'IDEAL SWITCHING STAGE',
-      detail: '24 V input · complementary gates',
-    },
-    {
-      x: 680,
-      y: 192,
-      text: 'OUTPUT FILTER & LOAD',
-      detail: '12 V nominal · 1.2 A nominal',
-    },
+  blocks: [
+    [
+      'supply',
+      'dcSource',
+      '24 V supply',
+      [72, 352],
+      { V: 24 },
+      { label: 'left' },
+    ],
+    ['duty', 'constant', 'Duty 50 %', [160, 128], { value: 0.5 }],
+    [
+      'pwm',
+      'pwmSignal',
+      '10 kHz PWM',
+      [320, 128],
+      { f: 10000 },
+      { label: 'above' },
+    ],
+    [
+      'highSide',
+      'closingSwitch',
+      'High-side switch',
+      [480, 240],
+      { Ron: 0, Goff: 0 },
+      { rotation: 90, label: 'left' },
+    ],
+    [
+      'lowSide',
+      'closingSwitch',
+      'Low-side switch',
+      [480, 464],
+      { Ron: 0, Goff: 0 },
+      { rotation: 90, label: 'left' },
+    ],
+    [
+      'inductor',
+      'inductor',
+      '1 mH inductor',
+      [640, 352],
+      { L: 0.001 },
+      { label: 'above' },
+    ],
+    [
+      'current',
+      'currentSensor',
+      'Inductor current',
+      [784, 352],
+      {},
+      { label: 'above' },
+    ],
+    [
+      'capacitor',
+      'capacitor',
+      '100 µF capacitor',
+      [912, 464],
+      { C: 0.0001 },
+      { rotation: 90, label: 'left' },
+    ],
+    [
+      'load',
+      'resistor',
+      '10 Ω load',
+      [1048, 464],
+      { R: 10 },
+      { rotation: 90, label: 'right' },
+    ],
+    [
+      'voltageProbe',
+      'voltageSensor',
+      'Output voltage',
+      [1184, 464],
+      {},
+      { label: 'right' },
+    ],
+    ['ground', 'ground', 'Ground', [480, 600]],
+  ],
+  links: [
+    ['duty.y', 'pwm.dutyCycle'],
+    ['pwm.fire', 'highSide.control'],
+    ['pwm.notFire', 'lowSide.control'],
+    ['supply.p', 'highSide.p'],
+    ['highSide.n', 'lowSide.p'],
+    ['highSide.n', 'inductor.p'],
+    ['inductor.n', 'current.p'],
+    ['current.n', 'capacitor.p'],
+    ['current.n', 'load.p'],
+    ['current.n', 'voltageProbe.p'],
+    ['lowSide.n', 'ground.p'],
+    ['supply.n', 'ground.p'],
+    ['capacitor.n', 'ground.p'],
+    ['load.n', 'ground.p'],
+    ['voltageProbe.n', 'ground.p'],
   ],
   plots: [
     {
-      id: 'voltage',
       label: 'Output voltage',
       series: ['voltageProbe.y'],
       labels: ['Output voltage'],
     },
     {
-      id: 'current',
       label: 'Inductor current',
       series: ['current.y'],
       labels: ['Inductor current'],
     },
     {
-      id: 'gates',
       label: 'Switch gates',
-      series: ['pwm.high', 'pwm.low'],
+      series: ['pwm.fire', 'pwm.notFire'],
       labels: ['High-side gate', 'Low-side gate'],
     },
   ],
+  checks: [],
+  about: [],
 };
-project = reconcileNets(project);
+
+let project: Project = assemble(spec);
+project = {
+  ...project,
+  version: 1,
+  exampleId: 'buck',
+  name: spec.title,
+  description: spec.description,
+  revision: 0,
+  annotations: [
+    {
+      x: 128,
+      y: -24,
+      text: 'GATE DRIVE',
+      detail: '10 kHz · 50 % duty · complementary gates',
+    },
+    { x: 480, y: -24, text: 'IDEAL SWITCHING STAGE', detail: '24 V input' },
+    {
+      x: 760,
+      y: 224,
+      text: 'OUTPUT FILTER & LOAD',
+      detail: '12 V nominal · 1.2 A nominal',
+    },
+  ],
+};
 for (const net of project.nets ?? []) {
-  const owned = net.wireIds.map((id) => wires.find((w) => w.id === id)!);
+  const owned = net.wireIds.map((id) =>
+    project.wires.find((w) => w.id === id)!,
+  );
   const touches = (id: string, handle: string) =>
     owned.some(
       (w) =>
@@ -171,9 +175,9 @@ for (const net of project.nets ?? []) {
           ? 'GND'
           : undefined;
   net.hidden = !net.name;
-  if (net.name === 'Vin')
-    net.label = nearestLabelAnchor(project, net, { x: 92, y: 110 });
+  if (!net.name) delete net.label;
 }
+
 writeFileSync(
   'models/examples/buck.json',
   JSON.stringify(project, null, 2) + '\n',

@@ -247,23 +247,24 @@
       "definition": {
         "kind": "torqueSensor",
         "name": "Shaft torque",
-        "symbol": "τ",
+        "description": "Torque transmitted from flange a to flange b, without adding compliance.",
         "domain": "mechanical",
-        "description": "Measures shaft torque without adding stiffness.",
+        "category": "mechanical",
+        "symbol": "τ",
         "ports": [
           {
             "id": "a",
             "name": "a",
+            "direction": "physical",
             "domain": "mechanical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "b",
             "name": "b",
+            "direction": "physical",
             "domain": "mechanical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           },
           {
             "id": "y",
@@ -275,11 +276,19 @@
           }
         ],
         "parameters": [],
-        "equations": "y = tau;",
+        "equations": "// Mechanics.Rotational.Sensors.TorqueSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
-          "mechanical",
-          "sensor"
-        ]
+          "load cell",
+          "shaft"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.TorqueSensor",
+          "ports": {
+            "a": "flange_a",
+            "b": "flange_b",
+            "y": "tau"
+          }
+        }
       },
       "position": {
         "x": 744,

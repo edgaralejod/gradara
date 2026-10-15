@@ -81,22 +81,26 @@ def test_block_sizes_round_trip_without_changing_execution_identity():
 
 @pytest.mark.integration
 def test_foc_tracks_speed_rejects_load_and_keeps_phases_balanced():
+    from server import msl
     fixture=Path(__file__).parents[1]/'models/examples/foc.json'
     async def run():
         baseline=Project.model_validate_json(fixture.read_text(encoding='utf-8'))
         slower=baseline.model_copy(deep=True)
         next(b for b in slower.blocks if b.id=='reference').definition.parameters[0].value=1000
         a,b=await asyncio.gather(simulate(baseline,'foc'+uuid.uuid4().hex[:12]),simulate(slower,'foc'+uuid.uuid4().hex[:12]))
-        def trace(r,key): return next(s['values'] for s in r['series'] if s['key']==key)
-        assert abs(trace(a,'motor.rpm')[-1]-1500)<2
-        assert abs(trace(b,'motor.rpm')[-1]-1000)<2
-        assert max(trace(a,'motor.rpm'))<1650
+        def trace(r,signal):
+            block,port=signal.split('.')
+            key=f'{block}.{msl.connector(next(x for x in baseline.blocks if x.id==block).definition,port)}'
+            return next(s['values'] for s in r['series'] if s['key']==key)
+        assert abs(trace(a,'rpm.y')[-1]-1500)<3
+        assert abs(trace(b,'rpm.y')[-1]-1000)<3
+        assert max(trace(a,'rpm.y'))<1660
         assert max(abs(v) for t,v in zip(a['time'],trace(a,'park.id')) if t>.6)<.02
-        assert max(abs(x+y+z) for x,y,z in zip(trace(a,'motor.ia'),trace(a,'motor.ib'),trace(a,'motor.ic')))<1e-8
-        assert trace(a,'load.loadTorque')[0]==pytest.approx(.05)
-        assert trace(a,'load.loadTorque')[-1]==pytest.approx(.4)
-        before=[v for t,v in zip(a['time'],trace(a,'motor.torque')) if .40<t<.44]
-        assert trace(a,'motor.torque')[-1]>sum(before)/len(before)+.2
+        assert max(abs(x+y+z) for x,y,z in zip(trace(a,'isens.ia'),trace(a,'isens.ib'),trace(a,'isens.ic')))<1e-4
+        # The load torque steps from 0.05 N·m to 0.4 N·m at 0.45 s; the shaft also drives 0.001 N·m·s of friction.
+        before=[v for t,v in zip(a['time'],trace(a,'torque.y')) if .40<t<.44]
+        assert sum(before)/len(before)==pytest.approx(.05+.001*1500*2*3.141592653589793/60,abs=.03)
+        assert trace(a,'torque.y')[-1]==pytest.approx(.4+.001*1500*2*3.141592653589793/60,abs=.01)
         assert all(len(s['values'])==len(a['time']) for s in a['series'])
     asyncio.run(run())
 

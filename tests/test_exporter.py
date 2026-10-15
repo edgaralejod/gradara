@@ -149,4 +149,4 @@ def test_reference_c_reproduces_the_simulated_controller(tmp_path):
     assert worst < 1e-6
     # The comparison covers saturation, the step, and settling, not only a quiet tail.
     assert any(abs(float(r['controller.y'])) >= 23.999 for r in samples)
-    assert float(samples[-1]['sensor.y']) == pytest.approx(1, abs=0.01)
+    assert float(samples[-1]['sensor.phi']) == pytest.approx(1, abs=0.01)

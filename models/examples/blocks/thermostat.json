@@ -11,20 +11,19 @@
       "definition": {
         "kind": "constant",
         "name": "Set point 50 °C",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -33,7 +32,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 40,

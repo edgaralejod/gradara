@@ -129,18 +129,27 @@
         "name": "Ground supply",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -207,18 +216,27 @@
         "name": "Ground load",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 912,
@@ -234,7 +252,7 @@
       "definition": {
         "kind": "threePhaseTransformer",
         "name": "Dy1 transformer",
-        "description": "Three-phase delta–star transformer with a nominal ratio.",
+        "description": "Three-phase delta–star transformer with a nominal ratio and winding resistance and stray inductance on each side.",
         "domain": "threePhase",
         "category": "threePhase",
         "symbol": "Dy",
@@ -268,6 +286,34 @@
             "value": 2,
             "unit": "",
             "min": 0
+          },
+          {
+            "id": "R1",
+            "name": "Primary resistance per phase",
+            "value": 0.01,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "L1sigma",
+            "name": "Primary stray inductance",
+            "value": 0.001,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "R2",
+            "name": "Secondary resistance per phase",
+            "value": 0.01,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "L2sigma",
+            "name": "Secondary stray inductance",
+            "value": 0.001,
+            "unit": "H",
+            "min": 0
           }
         ],
         "equations": "// Electrical.Machines.BasicMachines.Transformers.Dy.Dy01 from the Modelica Standard Library 4.1.0",
@@ -278,15 +324,15 @@
         "modelica": {
           "class": "Modelica.Electrical.Machines.BasicMachines.Transformers.Dy.Dy01",
           "modifiers": {
-            "n": "n",
-            "R1": "0.01",
-            "L1sigma": "0.001",
-            "R2": "0.01",
-            "L2sigma": "0.001",
             "T1Ref": "293.15",
             "T2Ref": "293.15",
             "T1Operational": "293.15",
-            "T2Operational": "293.15"
+            "T2Operational": "293.15",
+            "n": "n",
+            "R1": "R1",
+            "L1sigma": "L1sigma",
+            "R2": "R2",
+            "L2sigma": "L2sigma"
           }
         }
       },
@@ -310,18 +356,27 @@
         "name": "Ground (neutral)",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 400,

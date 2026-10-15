@@ -1,21 +1,28 @@
 {
   "version": 1,
   "name": "Motor speed control",
+  "exampleId": "dc",
+  "description": "A 100 rad/s speed command at 0.2 s, a sampled PI at 1 kHz with a ±24 V output limit, a controlled voltage source, and a permanent-magnet DC machine: 24 V, 2 A nominal, 1.2 Ω and 20 mH armature, 0.02 kg·m² on the shaft, so its constant is (24 V − 1.2 Ω · 2 A) / 144 rad/s = 0.15 V·s/rad. Viscous friction of 0.002 N·m·s loads the shaft, and a speed sensor closes the loop. Change the target speed or a gain and run again.",
+  "duration": 4,
+  "revision": 0,
   "blocks": [
     {
       "id": "reference",
       "definition": {
         "kind": "step",
         "name": "Speed reference",
-        "description": "A step change in the requested motor speed.",
+        "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right",
+            "unit": "rad/s"
           }
         ],
         "parameters": [
@@ -27,17 +34,28 @@
           },
           {
             "id": "startTime",
-            "name": "Step time",
+            "name": "Start time",
             "value": 0.2,
             "unit": "s",
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;"
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
-        "x": 40,
-        "y": 192
+        "x": 32,
+        "y": 184
       },
       "size": {
         "width": 80,
@@ -48,17 +66,17 @@
       "id": "controller",
       "definition": {
         "kind": "pi",
-        "name": "PI controller",
-        "description": "Sampled speed control with output saturation and a bounded integral state.",
-        "domain": "signal",
+        "name": "Speed controller (PI)",
         "symbol": "PI",
-        "controller": true,
+        "domain": "signal",
+        "description": "Sampled PI with output saturation and a bounded integral state. Every state updates at the sample instant, so exported C reproduces it exactly.",
         "ports": [
           {
             "id": "reference",
             "name": "ref",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "measured",
@@ -69,11 +87,14 @@
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
           }
         ],
+        "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;",
         "parameters": [
           {
             "id": "kp",
@@ -89,10 +110,10 @@
           },
           {
             "id": "limit",
-            "name": "Voltage limit",
+            "name": "Output limit",
             "value": 24,
-            "unit": "V",
-            "min": 0.1
+            "unit": "",
+            "min": 0.001
           },
           {
             "id": "samplePeriod",
@@ -103,11 +124,19 @@
           }
         ],
         "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
-        "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+        "keywords": [
+          "control",
+          "regulator",
+          "discrete",
+          "sampled",
+          "export",
+          "c"
+        ],
+        "controller": true
       },
       "position": {
-        "x": 240,
-        "y": 176
+        "x": 184,
+        "y": 168
       },
       "size": {
         "width": 128,
@@ -115,116 +144,225 @@
       },
       "labelOffset": {
         "x": 0,
-        "y": -132
+        "y": -128
       }
     },
     {
       "id": "drive",
       "definition": {
-        "kind": "voltage",
+        "kind": "signalVoltage",
         "name": "Voltage drive",
-        "description": "An ideal voltage source driven by a control signal.",
+        "description": "Voltage equal to the input signal.",
         "domain": "electrical",
-        "symbol": "V",
+        "category": "electrical",
+        "symbol": "v(u)",
         "ports": [
-          {
-            "id": "u",
-            "name": "in",
-            "direction": "input",
-            "domain": "signal"
-          },
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "top"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "bottom",
-            "direction": "physical"
+            "side": "bottom"
+          },
+          {
+            "id": "v",
+            "name": "v",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "unit": "V"
           }
         ],
         "parameters": [],
-        "equations": "v = u;"
+        "equations": "// Electrical.Analog.Sources.SignalVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "amplifier",
+          "programmable"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.SignalVoltage"
+        }
       },
       "position": {
-        "x": 472,
+        "x": 392,
         "y": 176
       },
       "size": {
-        "width": 128,
-        "height": 96
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -84,
+        "y": 8
+      }
+    },
+    {
+      "id": "isens",
+      "definition": {
+        "kind": "currentSensor",
+        "name": "Armature current",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "A",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "A",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "measure",
+          "ammeter",
+          "probe"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
+      },
+      "position": {
+        "x": 488,
+        "y": 152
+      },
+      "size": {
+        "width": 80,
+        "height": 48
       },
       "labelOffset": {
         "x": 0,
-        "y": -132
+        "y": -80
       }
     },
     {
       "id": "motor",
       "definition": {
-        "kind": "motor",
+        "kind": "dcPmMachine",
         "name": "DC motor",
-        "description": "Armature resistance and inductance coupled to a rotational shaft.",
+        "description": "Permanent-magnet DC machine with armature resistance and inductance.",
         "domain": "electrical",
-        "symbol": "M",
+        "category": "machines",
+        "symbol": "DC",
         "ports": [
           {
-            "id": "p",
-            "name": "+",
+            "id": "pin_ap",
+            "name": "a+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
-            "id": "n",
-            "name": "−",
-            "domain": "electrical",
-            "side": "bottom",
+            "id": "pin_an",
+            "name": "a−",
             "direction": "physical",
-            "offset": 25
+            "domain": "electrical",
+            "side": "left"
           },
           {
             "id": "flange",
             "name": "shaft",
-            "domain": "mechanical",
-            "side": "bottom",
             "direction": "physical",
-            "offset": 75
+            "domain": "mechanical",
+            "side": "right"
           }
         ],
         "parameters": [
           {
-            "id": "R",
-            "name": "Resistance",
+            "id": "VaNominal",
+            "name": "Nominal voltage",
+            "value": 24,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "IaNominal",
+            "name": "Nominal current",
+            "value": 2,
+            "unit": "A",
+            "min": 0
+          },
+          {
+            "id": "wNominal",
+            "name": "Nominal speed",
+            "value": 144,
+            "unit": "rad/s",
+            "min": 0
+          },
+          {
+            "id": "Ra",
+            "name": "Armature resistance",
             "value": 1.2,
             "unit": "Ω",
-            "min": 0.001
+            "min": 0
           },
           {
-            "id": "L",
-            "name": "Inductance",
+            "id": "La",
+            "name": "Armature inductance",
             "value": 0.02,
             "unit": "H",
-            "min": 0.00001
+            "min": 0
           },
           {
-            "id": "k",
-            "name": "Motor constant",
-            "value": 0.15,
-            "unit": "N·m/A",
-            "min": 0.0001
+            "id": "Jr",
+            "name": "Rotor inertia",
+            "value": 0.02,
+            "unit": "kg·m²",
+            "min": 0
           }
         ],
-        "equations": "L*der(i) = v - R*i - k*w;\ntau = k*i;"
+        "equations": "// Electrical.Machines.BasicMachines.DCMachines.DC_PermanentMagnet from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "motor",
+          "generator",
+          "dc motor"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.DCMachines.DC_PermanentMagnet",
+          "modifiers": {
+            "TaOperational": "293.15",
+            "TaNominal": "293.15",
+            "TaRef": "293.15",
+            "VaNominal": "VaNominal",
+            "IaNominal": "IaNominal",
+            "wNominal": "wNominal",
+            "Ra": "Ra",
+            "La": "La",
+            "Jr": "Jr"
+          }
+        }
       },
       "position": {
-        "x": 704,
-        "y": 176
+        "x": 616,
+        "y": 144
       },
       "size": {
         "width": 128,
@@ -232,94 +370,114 @@
       },
       "labelOffset": {
         "x": 0,
-        "y": -132
+        "y": -128
       }
     },
     {
-      "id": "load",
+      "id": "friction",
       "definition": {
-        "kind": "inertia",
-        "name": "Inertia & load",
-        "description": "A rotating load with inertia and viscous friction.",
+        "kind": "rotDamper",
+        "name": "Friction 0.002",
+        "description": "Linear rotational damper: τ = d·ω_rel.",
         "domain": "mechanical",
-        "symbol": "J",
+        "category": "mechanical",
+        "symbol": "d",
         "ports": [
           {
-            "id": "a",
-            "name": "shaft",
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
             "domain": "mechanical",
-            "side": "top",
-            "direction": "physical"
+            "side": "left"
           },
           {
-            "id": "b",
-            "name": "shaft",
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
             "domain": "mechanical",
-            "side": "left",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
           {
-            "id": "J",
-            "name": "Inertia",
-            "value": 0.02,
-            "unit": "kg·m²",
-            "min": 0.00001
-          },
-          {
-            "id": "damping",
-            "name": "Viscous friction",
+            "id": "d",
+            "name": "Damping",
             "value": 0.002,
-            "unit": "N·m·s",
+            "unit": "N·m·s/rad",
             "min": 0
           }
         ],
-        "equations": "J*der(w) = tau - damping*w;"
+        "equations": "// Mechanics.Rotational.Components.Damper from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "viscous",
+          "friction"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Damper",
+          "modifiers": {
+            "d": "d"
+          }
+        }
       },
       "position": {
-        "x": 736,
-        "y": 416
+        "x": 816,
+        "y": 168
       },
       "size": {
-        "width": 128,
-        "height": 96
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
       }
     },
     {
-      "id": "sensor",
+      "id": "housing",
       "definition": {
-        "kind": "sensor",
-        "name": "Speed sensor",
-        "description": "Measures shaft speed without loading the mechanical system.",
+        "kind": "rotFixed",
+        "name": "Housing",
+        "description": "A flange fixed in the housing at a constant angle.",
         "domain": "mechanical",
-        "symbol": "ω",
+        "category": "mechanical",
+        "symbol": "⏚",
         "ports": [
           {
             "id": "flange",
             "name": "shaft",
+            "direction": "physical",
             "domain": "mechanical",
-            "side": "right",
-            "direction": "physical"
-          },
-          {
-            "id": "y",
-            "name": "out",
-            "direction": "output",
-            "domain": "signal",
-            "side": "left"
+            "side": "top"
           }
         ],
-        "parameters": [],
-        "equations": "y = der(flange.phi);\nflange.tau = 0;"
+        "parameters": [
+          {
+            "id": "phi0",
+            "name": "Angle",
+            "value": 0,
+            "unit": "rad"
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Fixed from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ground",
+          "reference",
+          "housing"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Fixed",
+          "modifiers": {
+            "phi0": "phi0"
+          }
+        }
       },
       "position": {
-        "x": 240,
-        "y": 416
+        "x": 896,
+        "y": 216
       },
       "size": {
-        "width": 128,
-        "height": 96
+        "width": 48,
+        "height": 48
       }
     },
     {
@@ -329,231 +487,298 @@
         "name": "Ground",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
-        "x": 584,
-        "y": 336
+        "x": 504,
+        "y": 328
       },
       "size": {
         "width": 48,
         "height": 48
       }
+    },
+    {
+      "id": "sensor",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed sensor",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "rad/s"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 616,
+        "y": 328
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
     }
   ],
   "wires": [
     {
-      "id": "wire0",
+      "id": "id0001",
       "source": "reference",
       "sourceHandle": "y",
       "target": "controller",
-      "targetHandle": "reference",
-      "waypoints": []
+      "targetHandle": "reference"
     },
     {
-      "id": "wire1",
+      "id": "id0002",
       "source": "controller",
       "sourceHandle": "y",
       "target": "drive",
-      "targetHandle": "u",
-      "waypoints": []
+      "targetHandle": "v"
     },
     {
-      "id": "wire2",
+      "id": "id0003",
       "source": "drive",
       "sourceHandle": "p",
-      "target": "motor",
-      "targetHandle": "p",
-      "waypoints": []
+      "target": "isens",
+      "targetHandle": "p"
     },
     {
-      "id": "wire3",
+      "id": "id0004",
+      "source": "isens",
+      "sourceHandle": "n",
+      "target": "motor",
+      "targetHandle": "pin_ap"
+    },
+    {
+      "id": "id0005",
+      "source": "motor",
+      "sourceHandle": "pin_an",
+      "target": "j_id000c",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 528,
+          "y": 208
+        }
+      ]
+    },
+    {
+      "id": "id0006",
       "source": "drive",
       "sourceHandle": "n",
-      "target": "dc_return",
+      "target": "j_id000c",
       "targetHandle": "node",
       "waypoints": [
         {
-          "x": 536,
-          "y": 320
+          "x": 416,
+          "y": 296
         }
       ]
     },
     {
-      "id": "wire4",
-      "source": "motor",
-      "sourceHandle": "n",
-      "target": "dc_return",
-      "targetHandle": "node",
-      "waypoints": [
-        {
-          "x": 736,
-          "y": 320
-        }
-      ]
-    },
-    {
-      "id": "wire5",
-      "source": "motor",
-      "sourceHandle": "flange",
-      "target": "load",
-      "targetHandle": "a",
+      "id": "id0007",
+      "source": "j_id000e",
+      "sourceHandle": "node",
+      "target": "friction",
+      "targetHandle": "flange_a",
       "waypoints": []
     },
     {
-      "id": "wire6",
-      "source": "load",
-      "sourceHandle": "b",
+      "id": "id0008",
+      "source": "friction",
+      "sourceHandle": "flange_b",
+      "target": "housing",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id0009",
+      "source": "j_id000e",
+      "sourceHandle": "node",
       "target": "sensor",
       "targetHandle": "flange",
-      "waypoints": []
-    },
-    {
-      "id": "wire7",
-      "source": "sensor",
-      "sourceHandle": "y",
-      "target": "controller",
-      "targetHandle": "measured",
       "waypoints": [
         {
-          "x": 176,
-          "y": 464
-        },
-        {
-          "x": 176,
-          "y": 344
-        },
-        {
-          "x": 304,
-          "y": 344
+          "x": 760,
+          "y": 376
         }
       ]
     },
     {
-      "id": "dc_ground",
-      "source": "dc_return",
-      "sourceHandle": "node",
-      "target": "ground",
-      "targetHandle": "p",
+      "id": "id000a",
+      "source": "sensor",
+      "sourceHandle": "w",
+      "target": "controller",
+      "targetHandle": "measured"
+    },
+    {
+      "id": "w_id000d",
+      "source": "ground",
+      "sourceHandle": "p",
+      "target": "j_id000c",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000f",
+      "source": "motor",
+      "sourceHandle": "flange",
+      "target": "j_id000e",
+      "targetHandle": "node",
       "waypoints": []
     }
   ],
-  "duration": 4,
-  "revision": 1,
-  "exampleId": "dc",
   "junctions": [
     {
-      "id": "dc_return",
+      "id": "j_id000c",
       "domain": "electrical",
       "position": {
-        "x": 608,
-        "y": 320
+        "x": 528,
+        "y": 296
       }
-    }
-  ],
-  "annotations": [
-    {
-      "x": 40,
-      "y": 64,
-      "text": "01  SPEED CONTROL",
-      "detail": "100 rad/s reference · bounded PI"
     },
     {
-      "x": 472,
-      "y": 64,
-      "text": "02  ELECTRICAL DRIVE",
-      "detail": "24 V drive · armature dynamics"
-    },
-    {
-      "x": 240,
-      "y": 552,
-      "text": "03  MECHANICAL LOAD",
-      "detail": "Shaft inertia · damping · measured speed"
+      "id": "j_id000e",
+      "domain": "mechanical",
+      "position": {
+        "x": 760,
+        "y": 192
+      }
     }
   ],
   "nets": [
     {
-      "id": "net_dc_0",
+      "id": "net_id000g",
       "anchor": "reference.y",
       "wireIds": [
-        "wire0"
-      ],
-      "hidden": true
+        "id0001"
+      ]
     },
     {
-      "id": "net_dc_1",
+      "id": "net_id000h",
       "anchor": "controller.y",
       "wireIds": [
-        "wire1"
-      ],
-      "hidden": true
+        "id0002"
+      ]
     },
     {
-      "id": "net_dc_2",
+      "id": "net_id000i",
       "anchor": "drive.p",
       "wireIds": [
-        "wire2"
-      ],
-      "hidden": true
+        "id0003"
+      ]
     },
     {
-      "id": "net_dc_3",
+      "id": "net_id000j",
+      "anchor": "isens.n",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000k",
       "anchor": "drive.n",
       "wireIds": [
-        "dc_ground",
-        "wire3",
-        "wire4"
-      ],
-      "hidden": true
+        "id0005",
+        "id0006",
+        "w_id000d"
+      ]
     },
     {
-      "id": "net_dc_4",
-      "anchor": "load.a",
+      "id": "net_id000l",
+      "anchor": "friction.flange_a",
       "wireIds": [
-        "wire5"
-      ],
-      "hidden": true
+        "id0007",
+        "id0009",
+        "w_id000f"
+      ]
     },
     {
-      "id": "net_dc_5",
-      "anchor": "load.b",
+      "id": "net_id000m",
+      "anchor": "friction.flange_b",
       "wireIds": [
-        "wire6"
-      ],
-      "hidden": true
+        "id0008"
+      ]
     },
     {
-      "id": "net_dc_6",
-      "anchor": "sensor.y",
+      "id": "net_id000n",
+      "anchor": "sensor.w",
       "wireIds": [
-        "wire7"
+        "id000a"
       ],
-      "hidden": false,
       "name": "ω measured",
-      "label": {
-        "wireId": "wire7",
-        "fraction": 0.5729166666666666,
-        "side": -1
-      }
+      "hidden": false
+    }
+  ],
+  "annotations": [
+    {
+      "x": 24,
+      "y": 56,
+      "text": "01  SPEED CONTROL",
+      "detail": "100 rad/s reference · bounded PI"
+    },
+    {
+      "x": 416,
+      "y": 56,
+      "text": "02  ELECTRICAL DRIVE",
+      "detail": "24 V drive · armature dynamics"
+    },
+    {
+      "x": 616,
+      "y": 480,
+      "text": "03  MECHANICAL LOAD",
+      "detail": "Rotor inertia · friction · measured speed"
     }
   ],
   "plots": [
     {
-      "id": "speed",
+      "id": "plot1",
       "label": "Speed",
       "series": [
-        "load.w",
+        "sensor.w",
         "reference.y"
       ],
       "labels": [
@@ -562,7 +787,7 @@
       ]
     },
     {
-      "id": "voltage",
+      "id": "plot2",
       "label": "Control voltage",
       "series": [
         "controller.y"
@@ -572,10 +797,10 @@
       ]
     },
     {
-      "id": "current",
+      "id": "plot3",
       "label": "Armature current",
       "series": [
-        "motor.i"
+        "isens.y"
       ],
       "labels": [
         "Armature current"

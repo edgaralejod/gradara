@@ -53,13 +53,13 @@ def run_c(tmp_path, generated, rows, prefix='controller'):
     return parse_outputs((tmp_path/'outputs.csv').read_text(encoding='utf-8'), len(generated.outputs))
 
 
-FOC = ['units', 'speedError', 'speedKp', 'speedKi', 'speedIntegral', 'speedSum', 'iqReference', 'qError', 'qPI',
-       'dReference', 'dError', 'dPI', 'inverse', 'clarke', 'park']
+FOC = ['units', 'speedPI', 'qPI', 'dReference', 'dPI', 'inversePark', 'zero', 'inverseClarke', 'clarke', 'park', 'minus',
+       'poles']
 
 
 def test_selection_finds_its_inputs_and_outputs():
     g = generate(example('dc'), [], None, ['controller'], CodegenOptions())
-    assert sorted(i['column'] for i in g.inputs) == ['reference.y', 'sensor.y']
+    assert sorted(i['column'] for i in g.inputs) == ['reference.y', 'sensor.w']
     assert [o['column'] for o in g.outputs] == ['controller.y']
     assert g.step == 0.001  # the PI sample period
     assert set(g.files) == {'controller.h', 'controller.c', 'README.md'}
@@ -94,7 +94,7 @@ def test_sampled_pi_matches_its_equations(tmp_path):
     params = {p.id: p.value for p in next(b for b in project.blocks if b.id == 'controller').definition.parameters}
     integral, expected = 0.0, []
     for row in rows:
-        error = row[names.index('reference.y')] - row[names.index('sensor.y')]
+        error = row[names.index('reference.y')] - row[names.index('sensor.w')]
         integral = max(-params['limit'], min(params['limit'], integral + params['samplePeriod'] * params['ki'] * error))
         expected.append(max(-params['limit'], min(params['limit'], params['kp'] * error + integral)))
     assert [r[0] for r in out] == pytest.approx(expected, rel=1e-12)
@@ -141,7 +141,14 @@ def test_physical_blocks_are_refused():
 
 
 def test_blocks_without_a_template_are_named():
+    data = example('dc').model_dump(exclude_none=True)
+    data.pop('nets', None)
+    data['blocks'].append(block('odd', 'noTemplate', [('u', 'input'), ('y', 'output')]))
+    data['wires'].append(wire('odd_in', 'reference', 'y', 'odd', 'u'))
     with pytest.raises(CodegenError, match='no C template') as info:
+        generate(Project.model_validate(data), [], None, ['controller', 'odd'], CodegenOptions())
+    assert info.value.block_ids == ['odd']
+    with pytest.raises(CodegenError, match='physical') as info:
         generate(example('foc'), [], None, FOC + ['inverter'], CodegenOptions(step=1e-4))
     assert info.value.block_ids == ['inverter']
 
@@ -153,11 +160,11 @@ def test_sample_period_must_fit_the_step():
 
 def test_selection_inside_a_subsystem_uses_nested_result_names():
     project = Project.model_validate(json.loads((ROOT/'tests/fixtures/grouped-dc.json').read_text(encoding='utf-8')))
-    g = generate(project, ['b_2f80d45f5e'], None, ['controller'], CodegenOptions())
-    assert all(i['column'].startswith('b_2f80d45f5e.p_') for i in g.inputs)
-    assert [o['column'] for o in g.outputs] == ['b_2f80d45f5e.controller.y']
+    g = generate(project, ['b_grp000e'], None, ['controller'], CodegenOptions())
+    assert all(i['column'].startswith('b_grp000e.p_') for i in g.inputs)
+    assert [o['column'] for o in g.outputs] == ['b_grp000e.controller.y']
     with pytest.raises(CodegenError, match='physical'):
-        generate(project, [], 'b_2f80d45f5e', [], CodegenOptions())
+        generate(project, [], 'b_grp000e', [], CodegenOptions())
 
 
 def controller_subsystem():
@@ -245,7 +252,7 @@ def test_api_generates_and_reports_problems():
     ('dc', ['controller'], None, []),
     ('servo', ['controller'], None, []),
     ('foc', FOC, 1e-4, []),
-    ('grouped-dc', ['controller'], None, ['b_2f80d45f5e']),
+    ('grouped-dc', ['controller'], None, ['b_grp000e']),
     ('flyback', 'control', None, []),
 ])
 def test_generated_code_reproduces_the_simulation(name, ids, step, path):

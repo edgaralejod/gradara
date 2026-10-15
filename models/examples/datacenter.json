@@ -11,23 +11,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "800 V DC",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -39,13 +39,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 80,
@@ -67,18 +73,27 @@
         "name": "Ground",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 80,
@@ -281,7 +296,8 @@
             "name": "T",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "K"
           }
         ],
         "parameters": [],
@@ -325,7 +341,8 @@
             "name": "T",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "K"
           }
         ],
         "parameters": [],
@@ -352,20 +369,19 @@
       "definition": {
         "kind": "constant",
         "name": "273.15 K",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -374,7 +390,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 688,
@@ -390,9 +417,10 @@
       "definition": {
         "kind": "subtract",
         "name": "Rack °C",
-        "symbol": "sum",
+        "description": "Subtract the second signal from the first: y = a − b.",
         "domain": "signal",
-        "description": "Subtract",
+        "category": "math",
+        "symbol": "sum",
         "ports": [
           {
             "id": "a",
@@ -413,13 +441,24 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = a - b;",
         "parameters": [],
-        "declarations": ""
+        "equations": "// Blocks.Math.Feedback from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "difference",
+          "error",
+          "compare"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Feedback",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 800,
@@ -435,9 +474,10 @@
       "definition": {
         "kind": "subtract",
         "name": "Room °C",
-        "symbol": "sum",
+        "description": "Subtract the second signal from the first: y = a − b.",
         "domain": "signal",
-        "description": "Subtract",
+        "category": "math",
+        "symbol": "sum",
         "ports": [
           {
             "id": "a",
@@ -458,13 +498,24 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = a - b;",
         "parameters": [],
-        "declarations": ""
+        "equations": "// Blocks.Math.Feedback from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "difference",
+          "error",
+          "compare"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Feedback",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 1104,
@@ -1069,20 +1120,19 @@
           "definition": {
             "kind": "constant",
             "name": "24 °C setpoint",
-            "symbol": "constant",
+            "description": "A constant output value.",
             "domain": "signal",
-            "description": "Constant",
+            "category": "sources",
+            "symbol": "constant",
             "ports": [
               {
                 "id": "y",
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = value;",
             "parameters": [
               {
                 "id": "value",
@@ -1091,7 +1141,18 @@
                 "unit": ""
               }
             ],
-            "declarations": ""
+            "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "source",
+              "reference",
+              "setpoint"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Sources.Constant",
+              "modifiers": {
+                "k": "value"
+              }
+            }
           },
           "position": {
             "x": 1408,
@@ -1107,30 +1168,34 @@
           "definition": {
             "kind": "pi",
             "name": "Room temperature PI",
-            "description": "Sampled PI control with output saturation and a bounded integral state.",
-            "domain": "signal",
             "symbol": "PI",
-            "controller": true,
+            "domain": "signal",
+            "description": "Sampled PI with output saturation and a bounded integral state. Every state updates at the sample instant, so exported C reproduces it exactly.",
             "ports": [
               {
                 "id": "reference",
                 "name": "ref",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "measured",
                 "name": "meas",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
               }
             ],
+            "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;",
             "parameters": [
               {
                 "id": "kp",
@@ -1146,10 +1211,10 @@
               },
               {
                 "id": "limit",
-                "name": "Voltage limit",
+                "name": "Output limit",
                 "value": 0.5,
-                "unit": "V",
-                "min": 0.1
+                "unit": "",
+                "min": 0.001
               },
               {
                 "id": "samplePeriod",
@@ -1160,7 +1225,15 @@
               }
             ],
             "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
-            "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+            "keywords": [
+              "control",
+              "regulator",
+              "discrete",
+              "sampled",
+              "export",
+              "c"
+            ],
+            "controller": true
           },
           "position": {
             "x": 1600,
@@ -1176,20 +1249,19 @@
           "definition": {
             "kind": "constant",
             "name": "Base command 0.5",
-            "symbol": "constant",
+            "description": "A constant output value.",
             "domain": "signal",
-            "description": "Constant",
+            "category": "sources",
+            "symbol": "constant",
             "ports": [
               {
                 "id": "y",
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = value;",
             "parameters": [
               {
                 "id": "value",
@@ -1198,7 +1270,18 @@
                 "unit": ""
               }
             ],
-            "declarations": ""
+            "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "source",
+              "reference",
+              "setpoint"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Sources.Constant",
+              "modifiers": {
+                "k": "value"
+              }
+            }
           },
           "position": {
             "x": 1624,
@@ -1214,9 +1297,10 @@
           "definition": {
             "kind": "sum",
             "name": "Command",
-            "symbol": "sum",
+            "description": "Add two signals.",
             "domain": "signal",
-            "description": "Sum",
+            "category": "math",
+            "symbol": "sum",
             "ports": [
               {
                 "id": "a",
@@ -1237,13 +1321,23 @@
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = a + b;",
             "parameters": [],
-            "declarations": ""
+            "equations": "// Blocks.Math.Add from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "add",
+              "plus"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Add",
+              "ports": {
+                "a": "u1",
+                "b": "u2"
+              }
+            }
           },
           "position": {
             "x": 1832,
@@ -1710,7 +1804,8 @@
                 "name": "Q",
                 "direction": "output",
                 "domain": "signal",
-                "side": "bottom"
+                "side": "bottom",
+                "unit": "W"
               },
               {
                 "id": "port_a",
@@ -1754,19 +1849,22 @@
             "name": "IT kW",
             "description": "Multiply an input by an adjustable gain.",
             "domain": "signal",
+            "category": "math",
             "symbol": "K",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -1777,7 +1875,18 @@
                 "unit": ""
               }
             ],
-            "equations": "y = k*u;"
+            "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "multiply",
+              "scale"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Gain",
+              "modifiers": {
+                "k": "k"
+              }
+            }
           },
           "position": {
             "x": 440,
@@ -2146,7 +2255,8 @@
                 "name": "i",
                 "direction": "input",
                 "domain": "signal",
-                "side": "left"
+                "side": "left",
+                "unit": "A"
               }
             ],
             "parameters": [],
@@ -2187,7 +2297,8 @@
                 "name": "Q",
                 "direction": "input",
                 "domain": "signal",
-                "side": "left"
+                "side": "left",
+                "unit": "W"
               },
               {
                 "id": "port",
@@ -2226,20 +2337,19 @@
           "definition": {
             "kind": "pulse",
             "name": "Outage 30–35 min",
-            "symbol": "pulse",
-            "domain": "signal",
             "description": "A periodic rectangular pulse.",
+            "domain": "signal",
+            "category": "sources",
+            "symbol": "pulse",
             "ports": [
               {
                 "id": "y",
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = if mod(time - startTime + period, period) < width*period then amplitude else 0;",
             "parameters": [
               {
                 "id": "amplitude",
@@ -2259,7 +2369,8 @@
                 "name": "Duty cycle",
                 "value": 0.003,
                 "unit": "",
-                "min": 0
+                "min": 0.001,
+                "max": 1
               },
               {
                 "id": "startTime",
@@ -2269,12 +2380,21 @@
                 "min": 0
               }
             ],
-            "declarations": "",
+            "equations": "// Blocks.Sources.Pulse from the Modelica Standard Library 4.1.0",
             "keywords": [
               "source",
               "square",
               "pwm"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Sources.Pulse",
+              "modifiers": {
+                "width": "100*width",
+                "amplitude": "amplitude",
+                "period": "period",
+                "startTime": "startTime"
+              }
+            }
           },
           "position": {
             "x": 64,
@@ -2290,20 +2410,19 @@
           "definition": {
             "kind": "constant",
             "name": "Full capacity",
-            "symbol": "constant",
+            "description": "A constant output value.",
             "domain": "signal",
-            "description": "Constant",
+            "category": "sources",
+            "symbol": "constant",
             "ports": [
               {
                 "id": "y",
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = value;",
             "parameters": [
               {
                 "id": "value",
@@ -2312,7 +2431,18 @@
                 "unit": ""
               }
             ],
-            "declarations": ""
+            "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "source",
+              "reference",
+              "setpoint"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Sources.Constant",
+              "modifiers": {
+                "k": "value"
+              }
+            }
           },
           "position": {
             "x": 64,
@@ -2328,9 +2458,10 @@
           "definition": {
             "kind": "subtract",
             "name": "Available",
-            "symbol": "sum",
+            "description": "Subtract the second signal from the first: y = a − b.",
             "domain": "signal",
-            "description": "Subtract",
+            "category": "math",
+            "symbol": "sum",
             "ports": [
               {
                 "id": "a",
@@ -2351,13 +2482,24 @@
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = a - b;",
             "parameters": [],
-            "declarations": ""
+            "equations": "// Blocks.Math.Feedback from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "difference",
+              "error",
+              "compare"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Feedback",
+              "ports": {
+                "a": "u1",
+                "b": "u2"
+              }
+            }
           },
           "position": {
             "x": 224,
@@ -2377,9 +2519,10 @@
           "definition": {
             "kind": "min",
             "name": "Limit",
-            "symbol": "min",
-            "domain": "signal",
             "description": "The smaller of two signals.",
+            "domain": "signal",
+            "category": "math",
+            "symbol": "min",
             "ports": [
               {
                 "id": "a",
@@ -2400,16 +2543,21 @@
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = min(a, b);",
             "parameters": [],
-            "declarations": "",
+            "equations": "// Blocks.Math.Min from the Modelica Standard Library 4.1.0",
             "keywords": [
               "math"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Min",
+              "ports": {
+                "a": "u1",
+                "b": "u2"
+              }
+            }
           },
           "position": {
             "x": 304,
@@ -2431,19 +2579,22 @@
             "name": "Cooling kW (1200 kW rated)",
             "description": "Multiply an input by an adjustable gain.",
             "domain": "signal",
+            "category": "math",
             "symbol": "K",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -2454,7 +2605,18 @@
                 "unit": ""
               }
             ],
-            "equations": "y = k*u;"
+            "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "multiply",
+              "scale"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Gain",
+              "modifiers": {
+                "k": "k"
+              }
+            }
           },
           "position": {
             "x": 464,
@@ -2476,19 +2638,22 @@
             "name": "Heat out, W",
             "description": "Multiply an input by an adjustable gain.",
             "domain": "signal",
+            "category": "math",
             "symbol": "K",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -2499,7 +2664,18 @@
                 "unit": ""
               }
             ],
-            "equations": "y = k*u;"
+            "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "multiply",
+              "scale"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Gain",
+              "modifiers": {
+                "k": "k"
+              }
+            }
           },
           "position": {
             "x": 464,
@@ -2522,19 +2698,22 @@
             "name": "Plant current, A",
             "description": "Multiply an input by an adjustable gain.",
             "domain": "signal",
+            "category": "math",
             "symbol": "K",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -2545,7 +2724,18 @@
                 "unit": ""
               }
             ],
-            "equations": "y = k*u;"
+            "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "multiply",
+              "scale"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Gain",
+              "modifiers": {
+                "k": "k"
+              }
+            }
           },
           "position": {
             "x": 680,
@@ -2567,19 +2757,22 @@
             "name": "Cooling electricity kW",
             "description": "Multiply an input by an adjustable gain.",
             "domain": "signal",
+            "category": "math",
             "symbol": "K",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -2590,7 +2783,18 @@
                 "unit": ""
               }
             ],
-            "equations": "y = k*u;"
+            "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "multiply",
+              "scale"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Gain",
+              "modifiers": {
+                "k": "k"
+              }
+            }
           },
           "position": {
             "x": 680,
@@ -2606,9 +2810,10 @@
           "definition": {
             "kind": "sum",
             "name": "Heat rejected",
-            "symbol": "sum",
+            "description": "Add two signals.",
             "domain": "signal",
-            "description": "Sum",
+            "category": "math",
+            "symbol": "sum",
             "ports": [
               {
                 "id": "a",
@@ -2629,13 +2834,23 @@
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = a + b;",
             "parameters": [],
-            "declarations": ""
+            "equations": "// Blocks.Math.Add from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "add",
+              "plus"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Add",
+              "ports": {
+                "a": "u1",
+                "b": "u2"
+              }
+            }
           },
           "position": {
             "x": 880,

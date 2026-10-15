@@ -61,11 +61,10 @@ function add(
   blocks.push(block);
   return block;
 }
-add('line', 'sine', '480 V RMS · 60 Hz', 0, 160, {
-  amplitude: 480 * Math.SQRT2,
-  frequency: 60,
+add('ac', 'sineVoltage', '480 V RMS · 60 Hz', 160, 160, {
+  V: 480 * Math.SQRT2,
+  f: 60,
 });
-add('ac', 'voltage', 'AC source', 160, 160);
 add('rin', 'resistor', '10 Ω inrush', 320, 160, { R: 10 });
 add('bridge', 'diodeBridge', 'Bridge rectifier', 500, 160, {
   RonDiode: 0.05,
@@ -95,7 +94,11 @@ add('gsec', 'ground', 'Secondary reference', 1900, 740);
 add('vbus', 'voltageSensor', 'DC bus voltage', 740, 560);
 add('vsw', 'voltageSensor', 'Switch voltage', 1580, 560);
 add('vout', 'voltageSensor', 'Output voltage', 2100, 480);
-add('start', 'ramp', 'Soft start', 0, 1000, { slope: 20, startTime: 0.03 });
+add('start', 'ramp', 'Soft start', 0, 1000, {
+  height: 1,
+  duration: 0.05,
+  startTime: 0.03,
+});
 add('ref', 'saturation', '0–1 reference', 180, 1000, { lower: 0, upper: 1 });
 add('filt', 'filter', '1 ms feedback filter', 180, 1160, { tau: 0.001 });
 add('norm', 'gain', '1/24 feedback', 360, 1160, { k: 1 / 24 });
@@ -108,7 +111,6 @@ add('pi', 'pi', 'Voltage PI', 560, 1000, {
 add('duty', 'saturation', '0–18% duty', 800, 1000, { lower: 0, upper: 0.18 });
 add('pwm', 'pwmSignal', '50 kHz PWM', 1040, 1000, { f: 50000 });
 const pairs: string[][] = [
-  ['line.y', 'ac.u'],
   ['ac.p', 'rin.p'],
   ['rin.n', 'bridge.ac_p'],
   ['ac.n', 'bridge.ac_n'],
@@ -151,7 +153,6 @@ const pairs: string[][] = [
 // Schematic layout: rectifier columns, shared DC rails, isolated output,
 // and a separate left-to-right control chain below the power stage.
 const positions: Record<string, [number, number]> = {
-  line: [0, 320],
   ac: [160, 320],
   rin: [320, 328],
   bridge: [520, 296],

@@ -394,20 +394,19 @@
       "definition": {
         "kind": "sine",
         "name": "Sine 1 Hz",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -435,12 +434,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 696,
@@ -456,20 +464,19 @@
       "definition": {
         "kind": "constant",
         "name": "0",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -478,7 +485,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 696,
@@ -552,9 +570,10 @@
       "definition": {
         "kind": "clock",
         "name": "Clock",
-        "symbol": "clock",
-        "domain": "signal",
         "description": "Simulation time as a signal.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "clock",
         "ports": [
           {
             "id": "y",
@@ -565,13 +584,15 @@
             "unit": "s"
           }
         ],
-        "equations": "y = time;",
         "parameters": [],
-        "declarations": "",
+        "equations": "// Blocks.Sources.ContinuousClock from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "time"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.ContinuousClock"
+        }
       },
       "position": {
         "x": 696,

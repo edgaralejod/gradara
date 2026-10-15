@@ -81,7 +81,13 @@ export const logic: ExampleSpec[] = [
     duration: 2,
     blocks: [
       ['s', 'sine', 'sin(πt)', [80, 176], { amplitude: 1, frequency: 0.5 }],
-      ['r', 'ramp', 't / 4', [80, 464], { slope: 0.25, startTime: 0 }],
+      [
+        'r',
+        'ramp',
+        't / 4',
+        [80, 464],
+        { height: 0.5, duration: 2, startTime: 0 },
+      ],
       [
         'above',
         'greaterThreshold',

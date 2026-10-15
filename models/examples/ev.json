@@ -2,7 +2,7 @@
   "version": 2,
   "name": "EV drivetrain",
   "exampleId": "ev",
-  "description": "A battery electric vehicle in three levels: vehicle control and powertrain at the top; battery pack and motor drive inside the powertrain; an averaged DC-DC converter inside the motor drive. Two variant subsystems switch battery chemistry (LFP, NMC) and motor type (PM DC machine, simple DC motor); two configurations pick them together.",
+  "description": "A battery electric vehicle in three levels: vehicle control and powertrain at the top; battery pack and motor drive inside the powertrain; an averaged DC-DC converter inside the motor drive. Two variant subsystems switch battery chemistry (LFP, NMC) and motor type (PM DC machine, series DC machine); two configurations pick them together.",
   "duration": 20,
   "revision": 0,
   "blocks": [
@@ -11,26 +11,32 @@
       "definition": {
         "kind": "ramp",
         "name": "Speed request",
-        "symbol": "ramp",
+        "description": "Rises linearly from 0 to Height over Duration after the start time, then holds.",
         "domain": "signal",
-        "description": "A linearly increasing signal after a start time.",
+        "category": "sources",
+        "symbol": "ramp",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
         "parameters": [
           {
-            "id": "slope",
-            "name": "Slope",
-            "value": 0.5,
-            "unit": "1/s"
+            "id": "height",
+            "name": "Height",
+            "value": 9.5,
+            "unit": ""
+          },
+          {
+            "id": "duration",
+            "name": "Duration",
+            "value": 19,
+            "unit": "s",
+            "min": 0
           },
           {
             "id": "startTime",
@@ -40,11 +46,20 @@
             "min": 0
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Ramp from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
-          "reference"
-        ]
+          "reference",
+          "slope"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Ramp",
+          "modifiers": {
+            "height": "height",
+            "duration": "duration",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -62,19 +77,22 @@
         "name": "Cruise speed",
         "description": "Clamp a signal between lower and upper limits.",
         "domain": "signal",
+        "category": "nonlinear",
         "symbol": "sat",
         "ports": [
           {
             "id": "u",
-            "name": "in",
+            "name": "u",
             "direction": "input",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -91,7 +109,19 @@
             "unit": ""
           }
         ],
-        "equations": "y = max(lower, min(upper, u));"
+        "equations": "// Blocks.Nonlinear.Limiter from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "nonlinear",
+          "limit",
+          "clamp"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Nonlinear.Limiter",
+          "modifiers": {
+            "uMin": "lower",
+            "uMax": "upper"
+          }
+        }
       },
       "position": {
         "x": 224,
@@ -309,8 +339,8 @@
         }
       },
       "position": {
-        "x": 1336,
-        "y": 312
+        "x": 1320,
+        "y": 304
       },
       "size": {
         "width": 48,
@@ -339,7 +369,8 @@
             "name": "v",
             "direction": "output",
             "domain": "signal",
-            "side": "right"
+            "side": "right",
+            "unit": "m/s"
           }
         ],
         "parameters": [],
@@ -361,7 +392,7 @@
       }
     },
     {
-      "id": "b_3990ab050c",
+      "id": "b_fe54293e30",
       "definition": {
         "kind": "subsystem",
         "name": "Powertrain",
@@ -370,14 +401,14 @@
         "symbol": "Powertrain",
         "ports": [
           {
-            "id": "p_37fcd38f45",
+            "id": "p_c492f0f3e0",
             "name": "duty",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "p_3541d1800e",
+            "id": "p_4d8e24be79",
             "name": "shaft",
             "direction": "physical",
             "domain": "mechanical",
@@ -388,7 +419,7 @@
         "equations": "",
         "category": "routing",
         "subsystem": {
-          "ref": "sub_a09e2dc61b"
+          "ref": "sub_c907cec315"
         }
       },
       "size": {
@@ -396,35 +427,35 @@
         "height": 96
       },
       "position": {
-        "x": 656,
+        "x": 664,
         "y": 104
       }
     },
     {
-      "id": "b_ecb7fd7e3c",
+      "id": "b_15e7477be3",
       "definition": {
         "kind": "subsystem",
         "name": "Vehicle control",
-        "description": "Subsystem Vehicle control: 3 blocks inside.",
+        "description": "Subsystem Vehicle control: 2 blocks inside.",
         "domain": "signal",
         "symbol": "Vehicle control",
         "ports": [
           {
-            "id": "p_2ebb40e09c",
+            "id": "p_ec95b21cda",
             "name": "v ref",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "p_577fec0a7f",
+            "id": "p_512e0a11be",
             "name": "v",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "p_9220e535ac",
+            "id": "p_681c146f7e",
             "name": "duty",
             "direction": "output",
             "domain": "signal",
@@ -435,7 +466,7 @@
         "equations": "",
         "category": "routing",
         "subsystem": {
-          "ref": "sub_e39f8d82da"
+          "ref": "sub_7aa5f49779"
         }
       },
       "size": {
@@ -443,166 +474,166 @@
         "height": 96
       },
       "position": {
-        "x": 416,
+        "x": 424,
         "y": 104
       }
     }
   ],
   "wires": [
     {
-      "id": "b342e76a-96e4-4936-b065-f605d36f463d",
+      "id": "60b07ea6-12f0-469f-9b6e-e7cce5b5784a",
       "source": "request",
       "sourceHandle": "y",
       "target": "cruise",
       "targetHandle": "u"
     },
     {
-      "id": "a778c5cb-c660-4031-bb67-2c67a0674a46",
+      "id": "bb2abe04-8e38-428b-8f07-fb9c769f2732",
       "source": "cruise",
       "sourceHandle": "y",
-      "target": "b_ecb7fd7e3c",
-      "targetHandle": "p_2ebb40e09c"
+      "target": "b_15e7477be3",
+      "targetHandle": "p_ec95b21cda"
     },
     {
-      "id": "aea2cfd2-ec72-4c4e-a27e-83842d5e71b8",
+      "id": "1c9ed18e-c5f4-4321-b795-9c3c2ce09512",
       "source": "speed",
       "sourceHandle": "v",
-      "target": "b_ecb7fd7e3c",
-      "targetHandle": "p_577fec0a7f"
+      "target": "b_15e7477be3",
+      "targetHandle": "p_512e0a11be"
     },
     {
-      "id": "328b1434-0e96-465d-8d71-4e25f51beccf",
-      "source": "b_ecb7fd7e3c",
-      "sourceHandle": "p_9220e535ac",
-      "target": "b_3990ab050c",
-      "targetHandle": "p_37fcd38f45"
+      "id": "e1762013-48f5-47e2-b213-2648ce2a4152",
+      "source": "b_15e7477be3",
+      "sourceHandle": "p_681c146f7e",
+      "target": "b_fe54293e30",
+      "targetHandle": "p_c492f0f3e0"
     },
     {
-      "id": "b9169f83-adf1-4403-b23a-88bc0e93ba03",
-      "source": "b_3990ab050c",
-      "sourceHandle": "p_3541d1800e",
+      "id": "1312cff2-6bc9-46d2-a2e3-4d955bed5005",
+      "source": "b_fe54293e30",
+      "sourceHandle": "p_4d8e24be79",
       "target": "wheel",
       "targetHandle": "flangeR"
     },
     {
-      "id": "7baba4ec-7d55-4c53-9e9d-8041ff244f2d",
+      "id": "8eedfb69-ae10-44b3-93f7-e103aef03493",
       "source": "wheel",
       "sourceHandle": "flangeT",
-      "target": "j_178cf17feda44a24b589327fec489425",
+      "target": "j_cc83438e40dc4388bb418e28c66b9a09",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "232fead9-720c-45f3-91d3-0182321a3604",
-      "source": "j_178cf17feda44a24b589327fec489425",
+      "id": "b6048b54-e06c-4f2d-ba5b-3fd131fbcef9",
+      "source": "j_cc83438e40dc4388bb418e28c66b9a09",
       "sourceHandle": "node",
       "target": "speed",
       "targetHandle": "flange",
       "waypoints": [
         {
-          "x": 1080,
+          "x": 1088,
           "y": 352
         }
       ]
     },
     {
-      "id": "bf3239c2-b6f9-48ca-a867-ecf9f5d49ba7",
+      "id": "f7090414-10dc-49e1-b61d-e652e34d3513",
       "source": "car",
       "sourceHandle": "flange_b",
       "target": "drag",
       "targetHandle": "flange_a"
     },
     {
-      "id": "827e1000-8e7b-4fcd-b9c3-3e7996b5e2f7",
+      "id": "796785c1-4333-416f-90f0-0ac3774ae7c8",
       "source": "drag",
       "sourceHandle": "flange_b",
       "target": "road",
       "targetHandle": "flange"
     },
     {
-      "id": "w_595ed0c743ad489ea747f147c2a509ab",
+      "id": "w_8688f0d62a9242308cc2de3ac0abd62a",
       "source": "car",
       "sourceHandle": "flange_a",
-      "target": "j_178cf17feda44a24b589327fec489425",
+      "target": "j_cc83438e40dc4388bb418e28c66b9a09",
       "targetHandle": "node",
       "waypoints": []
     }
   ],
   "junctions": [
     {
-      "id": "j_178cf17feda44a24b589327fec489425",
+      "id": "j_cc83438e40dc4388bb418e28c66b9a09",
       "domain": "translational",
       "position": {
-        "x": 1080,
+        "x": 1088,
         "y": 152
       }
     }
   ],
   "nets": [
     {
-      "id": "net_011754aaa13846e48e21967243b1156f",
+      "id": "net_b9381595bd2f4bddb32dc514bc47ea96",
       "anchor": "request.y",
       "wireIds": [
-        "b342e76a-96e4-4936-b065-f605d36f463d"
+        "60b07ea6-12f0-469f-9b6e-e7cce5b5784a"
       ],
       "hidden": true
     },
     {
-      "id": "net_67b38446dae743898763c33082d7063f",
+      "id": "net_76406d59f9234522b3249dbfd60763f9",
       "anchor": "cruise.y",
       "wireIds": [
-        "a778c5cb-c660-4031-bb67-2c67a0674a46"
+        "bb2abe04-8e38-428b-8f07-fb9c769f2732"
       ],
       "hidden": true
     },
     {
-      "id": "net_ef52acb4d8354e8ab8e8700dbd99c69b",
+      "id": "net_f321708bc2384714a0e585f5dc7912d7",
       "anchor": "speed.v",
       "wireIds": [
-        "aea2cfd2-ec72-4c4e-a27e-83842d5e71b8"
+        "1c9ed18e-c5f4-4321-b795-9c3c2ce09512"
       ],
       "name": "v vehicle",
       "logged": true
     },
     {
-      "id": "net_fb56dc0a09a54cf382dba3fe9754cfd1",
-      "anchor": "b_ecb7fd7e3c.p_9220e535ac",
+      "id": "net_685e4c4630844428b9d936da6a4ec0c1",
+      "anchor": "b_15e7477be3.p_681c146f7e",
       "wireIds": [
-        "328b1434-0e96-465d-8d71-4e25f51beccf"
+        "e1762013-48f5-47e2-b213-2648ce2a4152"
       ],
       "hidden": true
     },
     {
-      "id": "net_99b9fae3be354f56a44c945ab4d6c1af",
-      "anchor": "b_3990ab050c.p_3541d1800e",
+      "id": "net_768c1f309100494497bcfb73b100d4f0",
+      "anchor": "b_fe54293e30.p_4d8e24be79",
       "wireIds": [
-        "b9169f83-adf1-4403-b23a-88bc0e93ba03"
+        "1312cff2-6bc9-46d2-a2e3-4d955bed5005"
       ],
       "hidden": true
     },
     {
-      "id": "net_ae7483f1a439490880df8a0e9fe20c1a",
+      "id": "net_67621a293372470eb4c3a5b041e497eb",
       "anchor": "car.flange_a",
       "wireIds": [
-        "232fead9-720c-45f3-91d3-0182321a3604",
-        "7baba4ec-7d55-4c53-9e9d-8041ff244f2d",
-        "w_595ed0c743ad489ea747f147c2a509ab"
+        "8eedfb69-ae10-44b3-93f7-e103aef03493",
+        "b6048b54-e06c-4f2d-ba5b-3fd131fbcef9",
+        "w_8688f0d62a9242308cc2de3ac0abd62a"
       ],
       "hidden": true
     },
     {
-      "id": "net_708424aa1c1d4708ab0babeafc05b65d",
+      "id": "net_8ca14c65a3434bd1b0514eeeb9298310",
       "anchor": "car.flange_b",
       "wireIds": [
-        "bf3239c2-b6f9-48ca-a867-ecf9f5d49ba7"
+        "f7090414-10dc-49e1-b61d-e652e34d3513"
       ],
       "hidden": true
     },
     {
-      "id": "net_5c4c99df65344f288da07b85e62b16bf",
+      "id": "net_cbc648f17d334f32bc6cc1985d65f973",
       "anchor": "drag.flange_b",
       "wireIds": [
-        "827e1000-8e7b-4fcd-b9c3-3e7996b5e2f7"
+        "796785c1-4333-416f-90f0-0ac3774ae7c8"
       ],
       "hidden": true
     }
@@ -622,10 +653,10 @@
       ]
     }
   ],
-  "modelId": "6b10691f-0674-4ef1-9164-7e3c47835e97",
+  "modelId": "7dbc1720-a8be-4341-9eb6-76b39b2915d4",
   "subsystems": [
     {
-      "id": "sub_b003e17140",
+      "id": "sub_1a63ebb5ad",
       "name": "Converter",
       "blocks": [
         {
@@ -633,41 +664,47 @@
           "definition": {
             "kind": "voltageSensor",
             "name": "DC voltage",
+            "description": "Measures voltage between two electrical nodes without loading the circuit.",
             "domain": "electrical",
             "category": "electrical",
             "symbol": "V",
-            "description": "Measures voltage between two electrical nodes without loading the circuit.",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "bottom"
               },
               {
                 "id": "y",
                 "name": "V",
                 "direction": "output",
-                "side": "right",
                 "domain": "signal",
+                "side": "right",
                 "unit": "V"
               }
             ],
             "parameters": [],
-            "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+            "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "measure",
               "voltmeter",
               "probe"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+              "ports": {
+                "y": "v"
+              }
+            }
           },
           "position": {
             "x": 216,
@@ -683,9 +720,10 @@
           "definition": {
             "kind": "product",
             "name": "d·Vdc",
-            "symbol": "×",
-            "domain": "signal",
             "description": "Multiply two signals.",
+            "domain": "signal",
+            "category": "math",
+            "symbol": "×",
             "ports": [
               {
                 "id": "a",
@@ -706,17 +744,22 @@
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = a * b;",
             "parameters": [],
-            "declarations": "",
+            "equations": "// Blocks.Math.Product from the Modelica Standard Library 4.1.0",
             "keywords": [
               "math",
               "multiply"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Product",
+              "ports": {
+                "a": "u1",
+                "b": "u2"
+              }
+            }
           },
           "position": {
             "x": 560,
@@ -756,7 +799,8 @@
                 "name": "v",
                 "direction": "input",
                 "domain": "signal",
-                "side": "left"
+                "side": "left",
+                "unit": "V"
               }
             ],
             "parameters": [],
@@ -770,8 +814,8 @@
             }
           },
           "position": {
-            "x": 776,
-            "y": 160
+            "x": 760,
+            "y": 168
           },
           "size": {
             "width": 48,
@@ -783,41 +827,47 @@
           "definition": {
             "kind": "currentSensor",
             "name": "Output current",
+            "description": "Measures branch current with zero series voltage drop; positive from + to −.",
             "domain": "electrical",
             "category": "electrical",
             "symbol": "A",
-            "description": "Measures branch current with zero series voltage drop; positive from + to −.",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "left"
               },
               {
                 "id": "n",
                 "name": "−",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "right"
               },
               {
                 "id": "y",
                 "name": "A",
                 "direction": "output",
-                "side": "bottom",
                 "domain": "signal",
+                "side": "bottom",
                 "unit": "A"
               }
             ],
             "parameters": [],
-            "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+            "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "measure",
               "ammeter",
               "probe"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+              "ports": {
+                "y": "i"
+              }
+            }
           },
           "position": {
             "x": 920,
@@ -833,9 +883,10 @@
           "definition": {
             "kind": "product",
             "name": "d·Iout",
-            "symbol": "×",
-            "domain": "signal",
             "description": "Multiply two signals.",
+            "domain": "signal",
+            "category": "math",
+            "symbol": "×",
             "ports": [
               {
                 "id": "a",
@@ -856,17 +907,22 @@
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = a * b;",
             "parameters": [],
-            "declarations": "",
+            "equations": "// Blocks.Math.Product from the Modelica Standard Library 4.1.0",
             "keywords": [
               "math",
               "multiply"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Product",
+              "ports": {
+                "a": "u1",
+                "b": "u2"
+              }
+            }
           },
           "position": {
             "x": 216,
@@ -906,7 +962,8 @@
                 "name": "i",
                 "direction": "input",
                 "domain": "signal",
-                "side": "left"
+                "side": "left",
+                "unit": "A"
               }
             ],
             "parameters": [],
@@ -920,8 +977,8 @@
             }
           },
           "position": {
-            "x": 408,
-            "y": 160
+            "x": 392,
+            "y": 168
           },
           "size": {
             "width": 48,
@@ -935,18 +992,27 @@
             "name": "Output ground",
             "description": "Electrical reference potential.",
             "domain": "electrical",
+            "category": "electrical",
             "symbol": "ground",
             "ports": [
               {
                 "id": "p",
                 "name": "0 V",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               }
             ],
             "parameters": [],
-            "equations": "p.v = 0;"
+            "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "reference",
+              "zero",
+              "earth"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Ground"
+            }
           },
           "position": {
             "x": 776,
@@ -958,7 +1024,7 @@
           }
         },
         {
-          "id": "p_5d5a2fc2d2",
+          "id": "p_22fef67d7a",
           "definition": {
             "kind": "connport",
             "name": "dc+",
@@ -991,7 +1057,7 @@
           }
         },
         {
-          "id": "p_3a9ead5b2a",
+          "id": "p_0547ca2c05",
           "definition": {
             "kind": "connport",
             "name": "dc−",
@@ -1024,7 +1090,7 @@
           }
         },
         {
-          "id": "p_d00e9deda0",
+          "id": "p_92c198b1af",
           "definition": {
             "kind": "inport",
             "name": "duty",
@@ -1057,7 +1123,7 @@
           }
         },
         {
-          "id": "p_ef2787e930",
+          "id": "p_e1a94fd39d",
           "definition": {
             "kind": "connport",
             "name": "out+",
@@ -1091,7 +1157,7 @@
           }
         },
         {
-          "id": "p_3bed75762f",
+          "id": "p_2dc9eea7b9",
           "definition": {
             "kind": "connport",
             "name": "out−",
@@ -1126,10 +1192,10 @@
       ],
       "wires": [
         {
-          "id": "81f8965f-20bc-4310-b1e5-9d5a38598a27",
-          "source": "p_5d5a2fc2d2",
+          "id": "93188bfe-7c42-4d2a-8aa4-1a9285f2d300",
+          "source": "p_22fef67d7a",
           "sourceHandle": "p",
-          "target": "j_c27ffe8af3594bd1be32b6acb482ecad",
+          "target": "j_50cbca353eb54822ae2dcaf0e0762743",
           "targetHandle": "node",
           "waypoints": [
             {
@@ -1139,23 +1205,23 @@
           ]
         },
         {
-          "id": "a47d5ce3-92a1-4838-922d-4b4a6f78033c",
-          "source": "j_c27ffe8af3594bd1be32b6acb482ecad",
+          "id": "dc10ad33-352e-46c0-b954-c114873745b8",
+          "source": "j_50cbca353eb54822ae2dcaf0e0762743",
           "sourceHandle": "node",
           "target": "sink",
           "targetHandle": "p",
           "waypoints": [
             {
-              "x": 432,
+              "x": 416,
               "y": 152
             }
           ]
         },
         {
-          "id": "2dc1a4ea-6f1f-4acb-af0e-0ecdf9c18862",
-          "source": "p_3a9ead5b2a",
+          "id": "22864907-54c8-4185-bfd6-a70f8b1cba48",
+          "source": "p_0547ca2c05",
           "sourceHandle": "p",
-          "target": "j_656e2cce5baf4bc9ba09a86d1b720e93",
+          "target": "j_b1b01f641734485ba1cd6d6d7a69e231",
           "targetHandle": "node",
           "waypoints": [
             {
@@ -1165,21 +1231,21 @@
           ]
         },
         {
-          "id": "d02e0a58-2ff7-4901-965a-df6e88ab0dbe",
-          "source": "j_656e2cce5baf4bc9ba09a86d1b720e93",
+          "id": "15648b58-694d-491e-9d5c-c14fff364121",
+          "source": "j_b1b01f641734485ba1cd6d6d7a69e231",
           "sourceHandle": "node",
           "target": "sink",
           "targetHandle": "n",
           "waypoints": [
             {
-              "x": 432,
-              "y": 280
+              "x": 416,
+              "y": 288
             }
           ]
         },
         {
-          "id": "e88027d7-dcac-47ab-a736-0189181d23a6",
-          "source": "j_0280c0c816a04bc3a1466aad69e6070b",
+          "id": "1c5d0a4f-222c-4849-a39f-1251074752ee",
+          "source": "j_870e8fe4f11544e49e490d2739985c7b",
           "sourceHandle": "node",
           "target": "draw",
           "targetHandle": "a",
@@ -1191,86 +1257,86 @@
           ]
         },
         {
-          "id": "3640eee2-7c70-41ff-b4f2-89b0d33bb73d",
-          "source": "j_0280c0c816a04bc3a1466aad69e6070b",
+          "id": "d9c2ed97-7098-46fe-8351-5cc9e415f293",
+          "source": "j_870e8fe4f11544e49e490d2739985c7b",
           "sourceHandle": "node",
           "target": "scale",
           "targetHandle": "a",
           "waypoints": [
             {
-              "x": 344,
+              "x": 352,
               "y": 472
             },
             {
-              "x": 344,
+              "x": 352,
               "y": 456
             }
           ]
         },
         {
-          "id": "fad74640-2af5-45d5-bf2c-cb240c068fed",
+          "id": "01067eed-8505-4a46-b79a-0571eed9ad4c",
           "source": "vdc",
           "sourceHandle": "y",
           "target": "scale",
           "targetHandle": "b"
         },
         {
-          "id": "8b29e478-8233-4176-83f2-7eeed937e12e",
+          "id": "e86e7233-d8ad-4eed-b8dc-df736b867068",
           "source": "scale",
           "sourceHandle": "y",
           "target": "source",
           "targetHandle": "v"
         },
         {
-          "id": "85b76eb9-5a98-4d43-990b-ae404d5cdfac",
+          "id": "e182b8b9-270a-45c5-ad98-1555990f631f",
           "source": "iout",
           "sourceHandle": "y",
           "target": "draw",
           "targetHandle": "b"
         },
         {
-          "id": "7dbe8b8c-1dfc-442e-b97b-a2d002d52560",
+          "id": "3a2290f5-accb-4b0d-b9ee-06bdee08c5e6",
           "source": "draw",
           "sourceHandle": "y",
           "target": "sink",
           "targetHandle": "i"
         },
         {
-          "id": "14df44f7-314b-4753-adca-24c3a09450b3",
+          "id": "4e275394-2f37-4381-8c21-4a2bc763b40b",
           "source": "source",
           "sourceHandle": "p",
           "target": "iout",
           "targetHandle": "p"
         },
         {
-          "id": "e01a0dc3-b160-4a57-9a59-7ea512d1d1b0",
+          "id": "a9d8716c-cd63-42f5-b9ee-32e29fe2cc1c",
           "source": "iout",
           "sourceHandle": "n",
-          "target": "p_ef2787e930",
+          "target": "p_e1a94fd39d",
           "targetHandle": "p"
         },
         {
-          "id": "916ee0b9-47fd-404e-b8d8-1974cd44ed24",
+          "id": "770d4bb4-e375-40b0-9ad1-feecd687bed5",
           "source": "source",
           "sourceHandle": "n",
-          "target": "j_7fa248e7ae75454383314216a8bd009a",
+          "target": "j_774977b15457412e8acc92242e811bef",
           "targetHandle": "node",
           "waypoints": [
             {
-              "x": 800,
-              "y": 320
+              "x": 784,
+              "y": 328
             },
             {
               "x": 800,
-              "y": 320
+              "y": 328
             }
           ]
         },
         {
-          "id": "ba190790-37ce-49ad-ade8-bd5d1faf1d82",
-          "source": "j_7fa248e7ae75454383314216a8bd009a",
+          "id": "f9c06083-8d48-4e28-8c1d-c937f6336fd6",
+          "source": "j_774977b15457412e8acc92242e811bef",
           "sourceHandle": "node",
-          "target": "p_3bed75762f",
+          "target": "p_2dc9eea7b9",
           "targetHandle": "p",
           "waypoints": [
             {
@@ -1284,41 +1350,41 @@
           ]
         },
         {
-          "id": "w_4a064c5a4d1d4df5842b55a283af1f64",
+          "id": "w_d5ef12e624e3497eabc7c0e90b53962d",
           "source": "vdc",
           "sourceHandle": "p",
-          "target": "j_c27ffe8af3594bd1be32b6acb482ecad",
+          "target": "j_50cbca353eb54822ae2dcaf0e0762743",
           "targetHandle": "node",
           "waypoints": []
         },
         {
-          "id": "w_f970105c35254c929a184e0cd248a25d",
+          "id": "w_05c1a115c1784dff976e08bda918cab5",
           "source": "vdc",
           "sourceHandle": "n",
-          "target": "j_656e2cce5baf4bc9ba09a86d1b720e93",
+          "target": "j_b1b01f641734485ba1cd6d6d7a69e231",
           "targetHandle": "node",
           "waypoints": []
         },
         {
-          "id": "w_13608f28598b4c95b1d7de79799b7853",
-          "source": "p_d00e9deda0",
+          "id": "w_db05282f2a0d4d8089fe749214e758fb",
+          "source": "p_92c198b1af",
           "sourceHandle": "y",
-          "target": "j_0280c0c816a04bc3a1466aad69e6070b",
+          "target": "j_870e8fe4f11544e49e490d2739985c7b",
           "targetHandle": "node",
           "waypoints": []
         },
         {
-          "id": "w_bef05a5ec7414b85b9a1aa3f76dc2b17",
+          "id": "w_2b2cd3c6535c47ef8f3cecfe6b210382",
           "source": "outGround",
           "sourceHandle": "p",
-          "target": "j_7fa248e7ae75454383314216a8bd009a",
+          "target": "j_774977b15457412e8acc92242e811bef",
           "targetHandle": "node",
           "waypoints": []
         }
       ],
       "junctions": [
         {
-          "id": "j_c27ffe8af3594bd1be32b6acb482ecad",
+          "id": "j_50cbca353eb54822ae2dcaf0e0762743",
           "domain": "electrical",
           "position": {
             "x": 240,
@@ -1326,15 +1392,15 @@
           }
         },
         {
-          "id": "j_656e2cce5baf4bc9ba09a86d1b720e93",
+          "id": "j_b1b01f641734485ba1cd6d6d7a69e231",
           "domain": "electrical",
           "position": {
             "x": 240,
-            "y": 280
+            "y": 288
           }
         },
         {
-          "id": "j_0280c0c816a04bc3a1466aad69e6070b",
+          "id": "j_870e8fe4f11544e49e490d2739985c7b",
           "domain": "signal",
           "position": {
             "x": 176,
@@ -1342,7 +1408,7 @@
           }
         },
         {
-          "id": "j_7fa248e7ae75454383314216a8bd009a",
+          "id": "j_774977b15457412e8acc92242e811bef",
           "domain": "electrical",
           "position": {
             "x": 800,
@@ -1352,97 +1418,97 @@
       ],
       "nets": [
         {
-          "id": "net_97d9dd8ba3d84d34908ce2f42826106a",
-          "anchor": "p_5d5a2fc2d2.p",
+          "id": "net_2af07e9b7b01463892153e23408669c0",
+          "anchor": "p_22fef67d7a.p",
           "wireIds": [
-            "81f8965f-20bc-4310-b1e5-9d5a38598a27",
-            "a47d5ce3-92a1-4838-922d-4b4a6f78033c",
-            "w_4a064c5a4d1d4df5842b55a283af1f64"
+            "93188bfe-7c42-4d2a-8aa4-1a9285f2d300",
+            "dc10ad33-352e-46c0-b954-c114873745b8",
+            "w_d5ef12e624e3497eabc7c0e90b53962d"
           ],
           "hidden": true
         },
         {
-          "id": "net_684938d49e9f46429200c4f751ef31a7",
-          "anchor": "p_3a9ead5b2a.p",
+          "id": "net_7f53848e198246d1940a6c2269d7b26f",
+          "anchor": "p_0547ca2c05.p",
           "wireIds": [
-            "2dc1a4ea-6f1f-4acb-af0e-0ecdf9c18862",
-            "d02e0a58-2ff7-4901-965a-df6e88ab0dbe",
-            "w_f970105c35254c929a184e0cd248a25d"
+            "15648b58-694d-491e-9d5c-c14fff364121",
+            "22864907-54c8-4185-bfd6-a70f8b1cba48",
+            "w_05c1a115c1784dff976e08bda918cab5"
           ],
           "hidden": true
         },
         {
-          "id": "net_c81b581be939439b88fd1a5a3ee504c9",
-          "anchor": "p_d00e9deda0.y",
+          "id": "net_d302b554451a4f938992afb3cb353075",
+          "anchor": "p_92c198b1af.y",
           "wireIds": [
-            "3640eee2-7c70-41ff-b4f2-89b0d33bb73d",
-            "e88027d7-dcac-47ab-a736-0189181d23a6",
-            "w_13608f28598b4c95b1d7de79799b7853"
+            "1c5d0a4f-222c-4849-a39f-1251074752ee",
+            "d9c2ed97-7098-46fe-8351-5cc9e415f293",
+            "w_db05282f2a0d4d8089fe749214e758fb"
           ],
           "hidden": true
         },
         {
-          "id": "net_9c958de8d05d4871952962034fb383c6",
+          "id": "net_b6fc237a43584c37a11c98ad0b312e61",
           "anchor": "vdc.y",
           "wireIds": [
-            "fad74640-2af5-45d5-bf2c-cb240c068fed"
+            "01067eed-8505-4a46-b79a-0571eed9ad4c"
           ],
           "hidden": true
         },
         {
-          "id": "net_ce9fc32cf3b343078c98840ed35ebbd9",
+          "id": "net_f9a8deb9737c48f2a84a8ec98d6a9da9",
           "anchor": "scale.y",
           "wireIds": [
-            "8b29e478-8233-4176-83f2-7eeed937e12e"
+            "e86e7233-d8ad-4eed-b8dc-df736b867068"
           ],
           "hidden": true
         },
         {
-          "id": "net_42f82788d900442499173d19da0a5758",
+          "id": "net_198e50aa8253411bbc04411b6e6d7af7",
           "anchor": "iout.y",
           "wireIds": [
-            "85b76eb9-5a98-4d43-990b-ae404d5cdfac"
+            "e182b8b9-270a-45c5-ad98-1555990f631f"
           ],
           "hidden": true
         },
         {
-          "id": "net_5dbf21b5b1304603b8ccb9fbf7c16296",
+          "id": "net_6b01df678805493c8352d4e765a2b116",
           "anchor": "draw.y",
           "wireIds": [
-            "7dbe8b8c-1dfc-442e-b97b-a2d002d52560"
+            "3a2290f5-accb-4b0d-b9ee-06bdee08c5e6"
           ],
           "hidden": true
         },
         {
-          "id": "net_8aa772544eec49c3a1e15d5a40cada62",
+          "id": "net_9b9bb7d291ee4482b5cb9bad1624fe60",
           "anchor": "iout.p",
           "wireIds": [
-            "14df44f7-314b-4753-adca-24c3a09450b3"
+            "4e275394-2f37-4381-8c21-4a2bc763b40b"
           ],
           "hidden": true
         },
         {
-          "id": "net_43be722a796943058c0506fb4a2bb567",
+          "id": "net_269231407d504c089764493b9fa51b9b",
           "anchor": "iout.n",
           "wireIds": [
-            "e01a0dc3-b160-4a57-9a59-7ea512d1d1b0"
+            "a9d8716c-cd63-42f5-b9ee-32e29fe2cc1c"
           ],
           "hidden": true
         },
         {
-          "id": "net_e1f5d252a23a4854b45c6303ddf1d037",
+          "id": "net_24268cc5416e4f9397964e16eb0ced68",
           "anchor": "outGround.p",
           "wireIds": [
-            "916ee0b9-47fd-404e-b8d8-1974cd44ed24",
-            "ba190790-37ce-49ad-ade8-bd5d1faf1d82",
-            "w_bef05a5ec7414b85b9a1aa3f76dc2b17"
+            "770d4bb4-e375-40b0-9ad1-feecd687bed5",
+            "f9c06083-8d48-4e28-8c1d-c937f6336fd6",
+            "w_2b2cd3c6535c47ef8f3cecfe6b210382"
           ],
           "hidden": true
         }
       ]
     },
     {
-      "id": "sub_784cfe6937",
+      "id": "sub_aa72d01459",
       "name": "Motor drive",
       "blocks": [
         {
@@ -1552,7 +1618,7 @@
           }
         },
         {
-          "id": "b_357e3911cb",
+          "id": "b_e282b14149",
           "definition": {
             "kind": "subsystem",
             "name": "Converter",
@@ -1561,35 +1627,35 @@
             "symbol": "Converter",
             "ports": [
               {
-                "id": "p_d00e9deda0",
+                "id": "p_92c198b1af",
                 "name": "duty",
                 "direction": "input",
                 "domain": "signal",
                 "side": "left"
               },
               {
-                "id": "p_5d5a2fc2d2",
+                "id": "p_22fef67d7a",
                 "name": "dc+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "left"
               },
               {
-                "id": "p_3a9ead5b2a",
+                "id": "p_0547ca2c05",
                 "name": "dc−",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "left"
               },
               {
-                "id": "p_ef2787e930",
+                "id": "p_e1a94fd39d",
                 "name": "out+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
               },
               {
-                "id": "p_3bed75762f",
+                "id": "p_2dc9eea7b9",
                 "name": "out−",
                 "direction": "physical",
                 "domain": "electrical",
@@ -1600,7 +1666,7 @@
             "equations": "",
             "category": "routing",
             "subsystem": {
-              "ref": "sub_b003e17140"
+              "ref": "sub_1a63ebb5ad"
             }
           },
           "size": {
@@ -1613,7 +1679,7 @@
           }
         },
         {
-          "id": "p_7be922340d",
+          "id": "p_3d8574be2e",
           "definition": {
             "kind": "connport",
             "name": "dc+",
@@ -1646,7 +1712,40 @@
           }
         },
         {
-          "id": "p_088830a758",
+          "id": "p_84189192aa",
+          "definition": {
+            "kind": "connport",
+            "name": "dc−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "2",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_f9dbfa5d90",
           "definition": {
             "kind": "inport",
             "name": "duty",
@@ -1679,13 +1778,13 @@
           }
         },
         {
-          "id": "p_e25ca9158d",
+          "id": "p_ef08897237",
           "definition": {
             "kind": "connport",
             "name": "shaft",
             "description": "Physical mechanical terminal of the subsystem.",
             "domain": "mechanical",
-            "symbol": "2",
+            "symbol": "3",
             "ports": [
               {
                 "id": "p",
@@ -1699,7 +1798,7 @@
             "equations": "",
             "category": "routing",
             "boundary": {
-              "order": 2,
+              "order": 3,
               "side": "right"
             }
           },
@@ -1711,139 +1810,106 @@
             "width": 96,
             "height": 32
           }
-        },
-        {
-          "id": "p_07595188e7",
-          "definition": {
-            "kind": "connport",
-            "name": "dc−",
-            "description": "Physical electrical terminal of the subsystem.",
-            "domain": "electrical",
-            "symbol": "3",
-            "ports": [
-              {
-                "id": "p",
-                "name": "dc−",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "right"
-              }
-            ],
-            "parameters": [],
-            "equations": "",
-            "category": "routing",
-            "boundary": {
-              "order": 3
-            }
-          },
-          "position": {
-            "x": 40,
-            "y": 168
-          },
-          "size": {
-            "width": 80,
-            "height": 32
-          }
         }
       ],
       "wires": [
         {
-          "id": "b00a9437-1459-4261-8e08-38c0c63c31c2",
-          "source": "p_7be922340d",
+          "id": "54c439f3-38a1-4b7c-a765-c51e7b4b3a83",
+          "source": "p_3d8574be2e",
           "sourceHandle": "p",
-          "target": "b_357e3911cb",
-          "targetHandle": "p_5d5a2fc2d2"
+          "target": "b_e282b14149",
+          "targetHandle": "p_22fef67d7a"
         },
         {
-          "id": "e3e82b64-1b14-4adb-9c85-268c0b6aa6f8",
-          "source": "p_088830a758",
+          "id": "bf5aa590-ca67-4d42-ba56-197b4b7b0313",
+          "source": "p_84189192aa",
+          "sourceHandle": "p",
+          "target": "b_e282b14149",
+          "targetHandle": "p_0547ca2c05"
+        },
+        {
+          "id": "52963c71-4a6a-462e-8dc8-bb94d704ad67",
+          "source": "p_f9dbfa5d90",
           "sourceHandle": "y",
-          "target": "b_357e3911cb",
-          "targetHandle": "p_d00e9deda0"
+          "target": "b_e282b14149",
+          "targetHandle": "p_92c198b1af"
         },
         {
-          "id": "4ee59417-3bf5-4419-90ce-f7cc3e7fafbb",
-          "source": "b_357e3911cb",
-          "sourceHandle": "p_ef2787e930",
+          "id": "d69f836c-7f87-484a-9df3-aca50ffe63a0",
+          "source": "b_e282b14149",
+          "sourceHandle": "p_e1a94fd39d",
           "target": "machine",
           "targetHandle": "pin_ap"
         },
         {
-          "id": "e6881d86-342e-46c5-8ccb-01bdf1f3d83e",
-          "source": "b_357e3911cb",
-          "sourceHandle": "p_3bed75762f",
+          "id": "e1e57c32-4883-4cd2-bafe-0980288e089c",
+          "source": "b_e282b14149",
+          "sourceHandle": "p_2dc9eea7b9",
           "target": "machine",
           "targetHandle": "pin_an"
         },
         {
-          "id": "150e9172-f674-46bc-862f-2a42ccf4d634",
+          "id": "e56e547b-1bc1-440c-afe3-bccd336d003d",
           "source": "machine",
           "sourceHandle": "flange",
-          "target": "p_e25ca9158d",
+          "target": "p_ef08897237",
           "targetHandle": "p"
-        },
-        {
-          "id": "d35cb9f5-9a65-4fae-bc55-92cbf33cde4f",
-          "source": "p_07595188e7",
-          "sourceHandle": "p",
-          "target": "b_357e3911cb",
-          "targetHandle": "p_3a9ead5b2a"
         }
       ],
       "junctions": [],
       "nets": [
         {
-          "id": "net_a7d5b253e20e4c9b947e79a9c0eea7b4",
-          "anchor": "b_357e3911cb.p_5d5a2fc2d2",
+          "id": "net_dc23093807b94ad6aa0bf9024cbd2145",
+          "anchor": "b_e282b14149.p_22fef67d7a",
           "wireIds": [
-            "b00a9437-1459-4261-8e08-38c0c63c31c2"
+            "54c439f3-38a1-4b7c-a765-c51e7b4b3a83"
           ],
           "hidden": true
         },
         {
-          "id": "net_942aa7ea55274ce3860cebb1d859ac90",
-          "anchor": "p_088830a758.y",
+          "id": "net_a1fc790759a7472d857c5fb77f5cdbf3",
+          "anchor": "b_e282b14149.p_0547ca2c05",
           "wireIds": [
-            "e3e82b64-1b14-4adb-9c85-268c0b6aa6f8"
+            "bf5aa590-ca67-4d42-ba56-197b4b7b0313"
           ],
           "hidden": true
         },
         {
-          "id": "net_caeb648b08914003b12e8b62814b9be5",
-          "anchor": "b_357e3911cb.p_ef2787e930",
+          "id": "net_19b499ffff824e54b717af6edf3e9240",
+          "anchor": "p_f9dbfa5d90.y",
           "wireIds": [
-            "4ee59417-3bf5-4419-90ce-f7cc3e7fafbb"
+            "52963c71-4a6a-462e-8dc8-bb94d704ad67"
           ],
           "hidden": true
         },
         {
-          "id": "net_7c578a828ae1404ca778d45a48a98cdb",
-          "anchor": "b_357e3911cb.p_3bed75762f",
+          "id": "net_bea5b45e09b94757aff33bd385878b0f",
+          "anchor": "b_e282b14149.p_e1a94fd39d",
           "wireIds": [
-            "e6881d86-342e-46c5-8ccb-01bdf1f3d83e"
+            "d69f836c-7f87-484a-9df3-aca50ffe63a0"
           ],
           "hidden": true
         },
         {
-          "id": "net_57fdaa39a4d644bd853f5337c215d840",
+          "id": "net_da318eb7daee43929107d2f31525edf1",
+          "anchor": "b_e282b14149.p_2dc9eea7b9",
+          "wireIds": [
+            "e1e57c32-4883-4cd2-bafe-0980288e089c"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_1f8d1d6c4ce246dd9e95c97d6930b8b4",
           "anchor": "machine.flange",
           "wireIds": [
-            "150e9172-f674-46bc-862f-2a42ccf4d634"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_faa1b83f4c454b1399448b0e3a03ef4f",
-          "anchor": "b_357e3911cb.p_3a9ead5b2a",
-          "wireIds": [
-            "d35cb9f5-9a65-4fae-bc55-92cbf33cde4f"
+            "e56e547b-1bc1-440c-afe3-bccd336d003d"
           ],
           "hidden": true
         }
       ]
     },
     {
-      "id": "sub_3d6d7bb65b",
+      "id": "sub_14b877f58d",
       "name": "Battery pack",
       "blocks": [
         {
@@ -1936,8 +2002,8 @@
             }
           },
           "position": {
-            "x": 136,
-            "y": 88
+            "x": 120,
+            "y": 96
           },
           "size": {
             "width": 48,
@@ -1951,18 +2017,27 @@
             "name": "Ground",
             "description": "Electrical reference potential.",
             "domain": "electrical",
+            "category": "electrical",
             "symbol": "ground",
             "ports": [
               {
                 "id": "p",
                 "name": "0 V",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               }
             ],
             "parameters": [],
-            "equations": "p.v = 0;"
+            "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "reference",
+              "zero",
+              "earth"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Ground"
+            }
           },
           "position": {
             "x": 136,
@@ -1974,7 +2049,7 @@
           }
         },
         {
-          "id": "p_e9444ef8ed",
+          "id": "p_1af08a6b24",
           "definition": {
             "kind": "connport",
             "name": "−",
@@ -2000,7 +2075,7 @@
           },
           "position": {
             "x": 320,
-            "y": 208
+            "y": 216
           },
           "size": {
             "width": 64,
@@ -2008,7 +2083,7 @@
           }
         },
         {
-          "id": "p_5113f3af0c",
+          "id": "p_1934a160ea",
           "definition": {
             "kind": "connport",
             "name": "+",
@@ -2044,72 +2119,73 @@
       ],
       "wires": [
         {
-          "id": "5d7f3e30-84ab-4cf9-9460-3df22df9c055",
+          "id": "af4ac7e0-e9d4-44b9-aefe-3b149d17715e",
           "source": "cells",
           "sourceHandle": "n",
-          "target": "j_a7af3dbd3099421c9f0338b3f4956d46",
+          "target": "j_96b30fb874d94fb68b0ef99aa2279f2a",
           "targetHandle": "node",
           "waypoints": [
             {
-              "x": 160,
-              "y": 224
-            },
-            {
-              "x": 160,
-              "y": 224
+              "x": 144,
+              "y": 232
             }
           ]
         },
         {
-          "id": "9fa3968b-32ea-4ad3-82c5-6336b150c760",
-          "source": "j_a7af3dbd3099421c9f0338b3f4956d46",
+          "id": "6397123a-1905-467f-b95d-fa20d838f99f",
+          "source": "j_96b30fb874d94fb68b0ef99aa2279f2a",
           "sourceHandle": "node",
-          "target": "p_e9444ef8ed",
+          "target": "p_1af08a6b24",
           "targetHandle": "p",
-          "waypoints": []
+          "waypoints": [
+            {
+              "x": 160,
+              "y": 232
+            }
+          ]
         },
         {
-          "id": "d62aa148-8f42-46ee-ab02-a5600db76288",
+          "id": "f2f467c1-678e-4d36-87f7-38369565a37e",
           "source": "cells",
           "sourceHandle": "p",
-          "target": "p_5113f3af0c",
+          "target": "p_1934a160ea",
           "targetHandle": "p"
         },
         {
-          "id": "w_739df9e8388440f8996fdbd9f2bc9f34",
+          "id": "w_6df6e0ca005248aba62564ee6ce95401",
           "source": "packGround",
           "sourceHandle": "p",
-          "target": "j_a7af3dbd3099421c9f0338b3f4956d46",
+          "target": "j_96b30fb874d94fb68b0ef99aa2279f2a",
           "targetHandle": "node",
           "waypoints": []
         }
       ],
       "junctions": [
         {
-          "id": "j_a7af3dbd3099421c9f0338b3f4956d46",
+          "id": "j_96b30fb874d94fb68b0ef99aa2279f2a",
           "domain": "electrical",
           "position": {
             "x": 160,
-            "y": 224
+            "y": 232
           }
         }
       ],
       "nets": [
         {
-          "id": "net_f6c218974684488ea1ee01ab359b2064",
+          "id": "net_08183cf5b2624f29a9f9a11535c8057d",
           "anchor": "cells.n",
           "wireIds": [
-            "5d7f3e30-84ab-4cf9-9460-3df22df9c055",
-            "9fa3968b-32ea-4ad3-82c5-6336b150c760",
-            "w_739df9e8388440f8996fdbd9f2bc9f34"
+            "6397123a-1905-467f-b95d-fa20d838f99f",
+            "af4ac7e0-e9d4-44b9-aefe-3b149d17715e",
+            "w_6df6e0ca005248aba62564ee6ce95401"
           ],
           "hidden": true
         },
         {
-          "id": "net_d5a9623ea1b9476c9bcc10298f0cdc43",
+          "id": "net_dff8150a2f3c43b1887bd0e56d241d87",
           "anchor": "cells.p",
           "wireIds": [
-            "d62aa148-8f42-46ee-ab02-a5600db76288"
+            "f2f467c1-678e-4d36-87f7-38369565a37e"
           ],
           "hidden": true
         }
@@ -2183,7 +2259,7 @@
       ]
     },
     {
-      "id": "sub_a09e2dc61b",
+      "id": "sub_c907cec315",
       "name": "Powertrain",
       "blocks": [
         {
@@ -2242,7 +2318,7 @@
           }
         },
         {
-          "id": "b_9be0fe2d2b",
+          "id": "b_51ced80851",
           "definition": {
             "kind": "subsystem",
             "name": "Motor drive",
@@ -2251,54 +2327,54 @@
             "symbol": "Motor drive",
             "ports": [
               {
-                "id": "p_088830a758",
+                "id": "p_f9dbfa5d90",
                 "name": "duty",
                 "direction": "input",
                 "domain": "signal",
                 "side": "left"
               },
               {
-                "id": "p_7be922340d",
+                "id": "p_3d8574be2e",
                 "name": "dc+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "left"
               },
               {
-                "id": "p_e25ca9158d",
-                "name": "shaft",
-                "direction": "physical",
-                "domain": "mechanical",
-                "side": "right"
-              },
-              {
-                "id": "p_07595188e7",
+                "id": "p_84189192aa",
                 "name": "dc−",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "left"
+              },
+              {
+                "id": "p_ef08897237",
+                "name": "shaft",
+                "direction": "physical",
+                "domain": "mechanical",
+                "side": "right"
               }
             ],
             "parameters": [],
             "equations": "",
             "category": "routing",
             "subsystem": {
-              "ref": "sub_784cfe6937",
+              "ref": "sub_aa72d01459",
               "variants": [
                 {
-                  "id": "v_4f99798303",
+                  "id": "v_9901245948",
                   "name": "PM DC machine",
-                  "ref": "sub_784cfe6937",
+                  "ref": "sub_aa72d01459",
                   "values": {}
                 },
                 {
-                  "id": "v_9a78f247e9",
-                  "name": "Simple DC motor",
-                  "ref": "sub_f38bfbe14f",
+                  "id": "v_5f61d55cf5",
+                  "name": "Series DC machine",
+                  "ref": "sub_c2c6e8f886",
                   "values": {}
                 }
               ],
-              "active": "v_4f99798303"
+              "active": "v_9901245948"
             }
           },
           "size": {
@@ -2311,7 +2387,7 @@
           }
         },
         {
-          "id": "b_51a387930e",
+          "id": "b_755e0b78e7",
           "definition": {
             "kind": "subsystem",
             "name": "Battery pack",
@@ -2320,14 +2396,14 @@
             "symbol": "Battery pack",
             "ports": [
               {
-                "id": "p_5113f3af0c",
+                "id": "p_1934a160ea",
                 "name": "+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
               },
               {
-                "id": "p_e9444ef8ed",
+                "id": "p_1af08a6b24",
                 "name": "−",
                 "direction": "physical",
                 "domain": "electrical",
@@ -2374,12 +2450,12 @@
             "equations": "",
             "category": "routing",
             "subsystem": {
-              "ref": "sub_3d6d7bb65b",
+              "ref": "sub_14b877f58d",
               "variants": [
                 {
-                  "id": "v_9fe4780976",
+                  "id": "v_a4a8eeebd3",
                   "name": "LFP",
-                  "ref": "sub_3d6d7bb65b",
+                  "ref": "sub_14b877f58d",
                   "values": {
                     "Cells_Ns": 34,
                     "Cells_Q": 40,
@@ -2389,9 +2465,9 @@
                   }
                 },
                 {
-                  "id": "v_6c778fcce1",
+                  "id": "v_ba56459c78",
                   "name": "NMC",
-                  "ref": "sub_3d6d7bb65b",
+                  "ref": "sub_14b877f58d",
                   "values": {
                     "Cells_Ns": 28,
                     "Cells_Q": 40,
@@ -2401,7 +2477,7 @@
                   }
                 }
               ],
-              "active": "v_9fe4780976"
+              "active": "v_a4a8eeebd3"
             }
           },
           "size": {
@@ -2414,7 +2490,7 @@
           }
         },
         {
-          "id": "p_37fcd38f45",
+          "id": "p_c492f0f3e0",
           "definition": {
             "kind": "inport",
             "name": "duty",
@@ -2447,7 +2523,7 @@
           }
         },
         {
-          "id": "p_3541d1800e",
+          "id": "p_4d8e24be79",
           "definition": {
             "kind": "connport",
             "name": "shaft",
@@ -2483,146 +2559,109 @@
       ],
       "wires": [
         {
-          "id": "b34004f4-9c6b-4a6e-ab8d-cd99d34e6299",
-          "source": "b_51a387930e",
-          "sourceHandle": "p_e9444ef8ed",
-          "target": "b_9be0fe2d2b",
-          "targetHandle": "p_07595188e7"
+          "id": "80c1b8aa-0e42-472c-ba4d-f2bd21c75abe",
+          "source": "b_755e0b78e7",
+          "sourceHandle": "p_1af08a6b24",
+          "target": "b_51ced80851",
+          "targetHandle": "p_84189192aa"
         },
         {
-          "id": "235f01c7-c26e-4a55-9a3a-d23d388fb85f",
-          "source": "b_51a387930e",
-          "sourceHandle": "p_5113f3af0c",
-          "target": "b_9be0fe2d2b",
-          "targetHandle": "p_7be922340d"
+          "id": "f04232d8-0360-4c05-a89b-8b6bcb4dd915",
+          "source": "b_755e0b78e7",
+          "sourceHandle": "p_1934a160ea",
+          "target": "b_51ced80851",
+          "targetHandle": "p_3d8574be2e"
         },
         {
-          "id": "a7e9e2e7-dc15-46e3-be0d-4e1cdcd5dd4a",
-          "source": "p_37fcd38f45",
+          "id": "6759ae27-7b2d-482a-b0a5-7584dd96ea64",
+          "source": "p_c492f0f3e0",
           "sourceHandle": "y",
-          "target": "b_9be0fe2d2b",
-          "targetHandle": "p_088830a758"
+          "target": "b_51ced80851",
+          "targetHandle": "p_f9dbfa5d90"
         },
         {
-          "id": "1852849a-5bf2-4447-a121-e36c6b5e407b",
-          "source": "b_9be0fe2d2b",
-          "sourceHandle": "p_e25ca9158d",
+          "id": "a156c069-2407-413e-a7e0-df60fa7eaae2",
+          "source": "b_51ced80851",
+          "sourceHandle": "p_ef08897237",
           "target": "gear",
           "targetHandle": "flange_a"
         },
         {
-          "id": "a333ee1a-6a51-4842-9c35-517c3ef0f371",
+          "id": "e07b2e64-3756-4980-8667-c16bb46a07ea",
           "source": "gear",
           "sourceHandle": "flange_b",
-          "target": "p_3541d1800e",
+          "target": "p_4d8e24be79",
           "targetHandle": "p"
         }
       ],
       "junctions": [],
       "nets": [
         {
-          "id": "net_edd0c1bf94ca40cda4755fb74ff74ac1",
-          "anchor": "b_51a387930e.p_e9444ef8ed",
+          "id": "net_85f1c1315d72409a9879f6db9fd157ba",
+          "anchor": "b_51ced80851.p_84189192aa",
           "wireIds": [
-            "b34004f4-9c6b-4a6e-ab8d-cd99d34e6299"
+            "80c1b8aa-0e42-472c-ba4d-f2bd21c75abe"
           ],
           "hidden": true
         },
         {
-          "id": "net_d2ee24166720445e8f4ff78c85bc282b",
-          "anchor": "b_51a387930e.p_5113f3af0c",
+          "id": "net_644a00c84f8c44d29e9d1df97ce9dd6a",
+          "anchor": "b_51ced80851.p_3d8574be2e",
           "wireIds": [
-            "235f01c7-c26e-4a55-9a3a-d23d388fb85f"
+            "f04232d8-0360-4c05-a89b-8b6bcb4dd915"
           ],
           "hidden": true
         },
         {
-          "id": "net_cc5c59569433481db4de571686ba26e2",
-          "anchor": "p_37fcd38f45.y",
+          "id": "net_8820b13674b24d72839cb90fbcac7c4e",
+          "anchor": "p_c492f0f3e0.y",
           "wireIds": [
-            "a7e9e2e7-dc15-46e3-be0d-4e1cdcd5dd4a"
+            "6759ae27-7b2d-482a-b0a5-7584dd96ea64"
           ],
           "hidden": true
         },
         {
-          "id": "net_c2845bc86f89476d82d2098d0edef583",
-          "anchor": "b_9be0fe2d2b.p_e25ca9158d",
+          "id": "net_05185fd8817d4de9b4b2c444280af16f",
+          "anchor": "b_51ced80851.p_ef08897237",
           "wireIds": [
-            "1852849a-5bf2-4447-a121-e36c6b5e407b"
+            "a156c069-2407-413e-a7e0-df60fa7eaae2"
           ],
           "hidden": true
         },
         {
-          "id": "net_fd51ad953fb0448382ce06d18eac01dc",
+          "id": "net_8e052ad8895449d59bb13031851b57d4",
           "anchor": "gear.flange_b",
           "wireIds": [
-            "a333ee1a-6a51-4842-9c35-517c3ef0f371"
+            "e07b2e64-3756-4980-8667-c16bb46a07ea"
           ],
           "hidden": true
         }
       ]
     },
     {
-      "id": "sub_e39f8d82da",
+      "id": "sub_7aa5f49779",
       "name": "Vehicle control",
       "blocks": [
         {
-          "id": "error",
-          "definition": {
-            "kind": "subtract",
-            "name": "Speed error",
-            "symbol": "sum",
-            "domain": "signal",
-            "description": "Subtract",
-            "ports": [
-              {
-                "id": "a",
-                "name": "+",
-                "direction": "input",
-                "domain": "signal",
-                "side": "left"
-              },
-              {
-                "id": "b",
-                "name": "−",
-                "direction": "input",
-                "domain": "signal",
-                "side": "bottom"
-              },
-              {
-                "id": "y",
-                "name": "y",
-                "direction": "output",
-                "domain": "signal",
-                "side": "right",
-                "unit": ""
-              }
-            ],
-            "equations": "y = a - b;",
-            "parameters": [],
-            "declarations": ""
-          },
-          "position": {
-            "x": 240,
-            "y": 96
-          },
-          "size": {
-            "width": 48,
-            "height": 48
-          }
-        },
-        {
           "id": "pi",
           "definition": {
-            "kind": "pid",
+            "kind": "piController",
             "name": "Speed PI",
-            "symbol": "PID",
+            "description": "Continuous PI controller with output limits and anti-windup: y = k·(e + ∫e/Ti), clamped, where e = reference − measured.",
             "domain": "signal",
-            "description": "Parallel PID with a filtered derivative term.",
+            "category": "control",
+            "symbol": "PI",
             "ports": [
               {
-                "id": "u",
-                "name": "e",
+                "id": "reference",
+                "name": "ref",
+                "direction": "input",
+                "domain": "signal",
+                "side": "left"
+              },
+              {
+                "id": "measured",
+                "name": "meas",
                 "direction": "input",
                 "domain": "signal",
                 "side": "left"
@@ -2632,52 +2671,66 @@
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "der(xi) = u;\nder(xf) = (u - xf)/tf;\ny = kp*u + ki*xi + kd*(u - xf)/tf;",
             "parameters": [
               {
-                "id": "kp",
-                "name": "Proportional gain",
+                "id": "k",
+                "name": "Gain",
                 "value": 0.4,
                 "unit": ""
               },
               {
-                "id": "ki",
-                "name": "Integral gain",
+                "id": "Ti",
+                "name": "Integral time",
+                "value": 0.4,
+                "unit": "s",
+                "min": 0.000001
+              },
+              {
+                "id": "yMax",
+                "name": "Upper limit",
                 "value": 1,
                 "unit": ""
               },
               {
-                "id": "kd",
-                "name": "Derivative gain",
-                "value": 0,
+                "id": "yMin",
+                "name": "Lower limit",
+                "value": -1,
                 "unit": ""
-              },
-              {
-                "id": "tf",
-                "name": "Derivative filter",
-                "value": 0.01,
-                "unit": "s",
-                "min": 0.0001
               }
             ],
-            "declarations": "Real xi(start=0, fixed=true);\nReal xf(start=0, fixed=true);",
+            "equations": "// Blocks.Continuous.LimPID from the Modelica Standard Library 4.1.0",
             "keywords": [
               "control",
-              "regulator"
+              "regulator",
+              "anti-windup",
+              "limited"
             ],
-            "controller": true
+            "modelica": {
+              "class": "Modelica.Blocks.Continuous.LimPID",
+              "modifiers": {
+                "controllerType": "Modelica.Blocks.Types.SimpleController.PI",
+                "initType": "Modelica.Blocks.Types.Init.InitialState",
+                "k": "k",
+                "Ti": "Ti",
+                "yMax": "yMax",
+                "yMin": "yMin"
+              },
+              "ports": {
+                "reference": "u_s",
+                "measured": "u_m"
+              }
+            }
           },
           "position": {
-            "x": 384,
-            "y": 88
+            "x": 432,
+            "y": 72
           },
           "size": {
-            "width": 80,
-            "height": 64
+            "width": 128,
+            "height": 96
           }
         },
         {
@@ -2687,19 +2740,22 @@
             "name": "Duty limit",
             "description": "Clamp a signal between lower and upper limits.",
             "domain": "signal",
+            "category": "nonlinear",
             "symbol": "sat",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -2716,10 +2772,22 @@
                 "unit": ""
               }
             ],
-            "equations": "y = max(lower, min(upper, u));"
+            "equations": "// Blocks.Nonlinear.Limiter from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "nonlinear",
+              "limit",
+              "clamp"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Nonlinear.Limiter",
+              "modifiers": {
+                "uMin": "lower",
+                "uMax": "upper"
+              }
+            }
           },
           "position": {
-            "x": 560,
+            "x": 648,
             "y": 88
           },
           "size": {
@@ -2728,7 +2796,7 @@
           }
         },
         {
-          "id": "p_2ebb40e09c",
+          "id": "p_ec95b21cda",
           "definition": {
             "kind": "inport",
             "name": "v ref",
@@ -2752,8 +2820,8 @@
             }
           },
           "position": {
-            "x": 40,
-            "y": 104
+            "x": 48,
+            "y": 88
           },
           "size": {
             "width": 96,
@@ -2761,7 +2829,7 @@
           }
         },
         {
-          "id": "p_577fec0a7f",
+          "id": "p_512e0a11be",
           "definition": {
             "kind": "inport",
             "name": "v",
@@ -2785,8 +2853,8 @@
             }
           },
           "position": {
-            "x": 104,
-            "y": 224
+            "x": 280,
+            "y": 120
           },
           "size": {
             "width": 64,
@@ -2794,7 +2862,7 @@
           }
         },
         {
-          "id": "p_9220e535ac",
+          "id": "p_681c146f7e",
           "definition": {
             "kind": "outport",
             "name": "duty",
@@ -2818,7 +2886,7 @@
             }
           },
           "position": {
-            "x": 736,
+            "x": 816,
             "y": 104
           },
           "size": {
@@ -2829,91 +2897,76 @@
       ],
       "wires": [
         {
-          "id": "w_1fd5a5295f",
-          "source": "p_2ebb40e09c",
-          "sourceHandle": "y",
-          "target": "error",
-          "targetHandle": "a"
-        },
-        {
-          "id": "w_386a128a0b",
-          "source": "p_577fec0a7f",
-          "sourceHandle": "y",
-          "target": "error",
-          "targetHandle": "b"
-        },
-        {
-          "id": "9d77d223-fe4d-4b7b-848b-6ce3bbc49ef9",
-          "source": "error",
+          "id": "w_f44f35b40e",
+          "source": "p_ec95b21cda",
           "sourceHandle": "y",
           "target": "pi",
-          "targetHandle": "u"
+          "targetHandle": "reference"
         },
         {
-          "id": "f29e2732-4275-4bef-8c58-46f7138ad78f",
+          "id": "w_75f6164cbd",
+          "source": "p_512e0a11be",
+          "sourceHandle": "y",
+          "target": "pi",
+          "targetHandle": "measured"
+        },
+        {
+          "id": "2d25fd80-3f2f-4321-aa24-2792a425e43c",
           "source": "pi",
           "sourceHandle": "y",
           "target": "duty",
           "targetHandle": "u"
         },
         {
-          "id": "w_52ad80d530",
+          "id": "w_ffcdf90796",
           "source": "duty",
           "sourceHandle": "y",
-          "target": "p_9220e535ac",
+          "target": "p_681c146f7e",
           "targetHandle": "u"
         }
       ],
       "junctions": [],
       "nets": [
         {
-          "id": "net_f1a49e1e9df64ecda77045706744ae63",
-          "anchor": "p_2ebb40e09c.y",
+          "id": "net_673f9daffa0944df9eda4b3bc6f435d9",
+          "anchor": "p_ec95b21cda.y",
           "wireIds": [
-            "w_1fd5a5295f"
+            "w_f44f35b40e"
           ],
           "hidden": true
         },
         {
-          "id": "net_9115268c045646e08369440f94d7f6e5",
-          "anchor": "p_577fec0a7f.y",
+          "id": "net_e712abd577144d8c9c6863e8266e4445",
+          "anchor": "p_512e0a11be.y",
           "wireIds": [
-            "w_386a128a0b"
+            "w_75f6164cbd"
           ],
           "hidden": true
         },
         {
-          "id": "net_4d102e2a9bb34bbcaaf9a9bc634647b3",
-          "anchor": "error.y",
-          "wireIds": [
-            "9d77d223-fe4d-4b7b-848b-6ce3bbc49ef9"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_a13544daa25f4ca1b087bd1c174835b8",
+          "id": "net_5b45e28a0c3845578a88c1e0607b6e93",
           "anchor": "pi.y",
           "wireIds": [
-            "f29e2732-4275-4bef-8c58-46f7138ad78f"
+            "2d25fd80-3f2f-4321-aa24-2792a425e43c"
           ],
           "hidden": true
         },
         {
-          "id": "net_2c1ae440d40d4db2ac3efd1218bf29e6",
+          "id": "net_cdbc6df54cdf452a8af7a9974985617f",
           "anchor": "duty.y",
           "wireIds": [
-            "w_52ad80d530"
+            "w_ffcdf90796"
           ],
           "hidden": true
         }
       ]
     },
     {
-      "id": "sub_f38bfbe14f",
-      "name": "Motor drive Simple DC motor",
+      "id": "sub_c2c6e8f886",
+      "name": "Motor drive Series DC machine",
       "blocks": [
         {
-          "id": "b_357e3911cb",
+          "id": "b_e282b14149",
           "definition": {
             "kind": "subsystem",
             "name": "Converter",
@@ -2922,35 +2975,35 @@
             "symbol": "Converter",
             "ports": [
               {
-                "id": "p_d00e9deda0",
+                "id": "p_92c198b1af",
                 "name": "duty",
                 "direction": "input",
                 "domain": "signal",
                 "side": "left"
               },
               {
-                "id": "p_5d5a2fc2d2",
+                "id": "p_22fef67d7a",
                 "name": "dc+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "left"
               },
               {
-                "id": "p_3a9ead5b2a",
+                "id": "p_0547ca2c05",
                 "name": "dc−",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "left"
               },
               {
-                "id": "p_ef2787e930",
+                "id": "p_e1a94fd39d",
                 "name": "out+",
                 "direction": "physical",
                 "domain": "electrical",
                 "side": "right"
               },
               {
-                "id": "p_3bed75762f",
+                "id": "p_2dc9eea7b9",
                 "name": "out−",
                 "direction": "physical",
                 "domain": "electrical",
@@ -2961,7 +3014,7 @@
             "equations": "",
             "category": "routing",
             "subsystem": {
-              "ref": "sub_b003e17140"
+              "ref": "sub_1a63ebb5ad"
             }
           },
           "size": {
@@ -2974,7 +3027,7 @@
           }
         },
         {
-          "id": "p_7be922340d",
+          "id": "p_3d8574be2e",
           "definition": {
             "kind": "connport",
             "name": "dc+",
@@ -3007,7 +3060,40 @@
           }
         },
         {
-          "id": "p_088830a758",
+          "id": "p_84189192aa",
+          "definition": {
+            "kind": "connport",
+            "name": "dc−",
+            "description": "Physical electrical terminal of the subsystem.",
+            "domain": "electrical",
+            "symbol": "2",
+            "ports": [
+              {
+                "id": "p",
+                "name": "dc−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "right"
+              }
+            ],
+            "parameters": [],
+            "equations": "",
+            "category": "routing",
+            "boundary": {
+              "order": 2
+            }
+          },
+          "position": {
+            "x": 40,
+            "y": 168
+          },
+          "size": {
+            "width": 80,
+            "height": 32
+          }
+        },
+        {
+          "id": "p_f9dbfa5d90",
           "definition": {
             "kind": "inport",
             "name": "duty",
@@ -3040,13 +3126,13 @@
           }
         },
         {
-          "id": "p_e25ca9158d",
+          "id": "p_ef08897237",
           "definition": {
             "kind": "connport",
             "name": "shaft",
             "description": "Physical mechanical terminal of the subsystem.",
             "domain": "mechanical",
-            "symbol": "2",
+            "symbol": "3",
             "ports": [
               {
                 "id": "p",
@@ -3060,7 +3146,7 @@
             "equations": "",
             "category": "routing",
             "boundary": {
-              "order": 2,
+              "order": 3,
               "side": "right"
             }
           },
@@ -3074,123 +3160,46 @@
           }
         },
         {
-          "id": "p_07595188e7",
-          "definition": {
-            "kind": "connport",
-            "name": "dc−",
-            "description": "Physical electrical terminal of the subsystem.",
-            "domain": "electrical",
-            "symbol": "3",
-            "ports": [
-              {
-                "id": "p",
-                "name": "dc−",
-                "direction": "physical",
-                "domain": "electrical",
-                "side": "right"
-              }
-            ],
-            "parameters": [],
-            "equations": "",
-            "category": "routing",
-            "boundary": {
-              "order": 3
-            }
-          },
-          "position": {
-            "x": 40,
-            "y": 168
-          },
-          "size": {
-            "width": 80,
-            "height": 32
-          }
-        },
-        {
           "id": "motor",
           "definition": {
-            "kind": "motor",
-            "name": "DC motor",
-            "description": "Armature resistance and inductance coupled to a rotational shaft.",
+            "kind": "dcSeriesMachine",
+            "name": "Series DC machine",
+            "description": "Series-excited DC machine (traction motor).",
             "domain": "electrical",
-            "symbol": "M",
+            "category": "machines",
+            "symbol": "DC s",
             "ports": [
               {
-                "id": "p",
-                "name": "+",
+                "id": "pin_ap",
+                "name": "a+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "left",
-                "direction": "physical"
+                "side": "left"
               },
               {
-                "id": "n",
-                "name": "−",
+                "id": "pin_an",
+                "name": "a−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "bottom",
-                "direction": "physical"
+                "side": "left"
+              },
+              {
+                "id": "pin_ep",
+                "name": "e+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "top"
+              },
+              {
+                "id": "pin_en",
+                "name": "e−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "top"
               },
               {
                 "id": "flange",
                 "name": "shaft",
-                "domain": "mechanical",
-                "side": "bottom",
-                "direction": "physical"
-              }
-            ],
-            "parameters": [
-              {
-                "id": "R",
-                "name": "Resistance",
-                "value": 0.05,
-                "unit": "Ω",
-                "min": 0.001
-              },
-              {
-                "id": "L",
-                "name": "Inductance",
-                "value": 0.0015,
-                "unit": "H",
-                "min": 0.00001
-              },
-              {
-                "id": "k",
-                "name": "Motor constant",
-                "value": 0.64,
-                "unit": "N·m/A",
-                "min": 0.0001
-              }
-            ],
-            "equations": "L*der(i) = v - R*i - k*w;\ntau = k*i;"
-          },
-          "position": {
-            "x": 480,
-            "y": 112
-          },
-          "size": {
-            "width": 128,
-            "height": 96
-          }
-        },
-        {
-          "id": "rotor",
-          "definition": {
-            "kind": "rotInertia",
-            "name": "Rotor inertia",
-            "description": "Rotating mass with two flanges and no losses.",
-            "domain": "mechanical",
-            "category": "mechanical",
-            "symbol": "J",
-            "ports": [
-              {
-                "id": "flange_a",
-                "name": "a",
-                "direction": "physical",
-                "domain": "mechanical",
-                "side": "left"
-              },
-              {
-                "id": "flange_b",
-                "name": "b",
                 "direction": "physical",
                 "domain": "mechanical",
                 "side": "right"
@@ -3198,142 +3207,203 @@
             ],
             "parameters": [
               {
-                "id": "J",
-                "name": "Inertia",
+                "id": "VaNominal",
+                "name": "Nominal voltage",
+                "value": 100,
+                "unit": "V",
+                "min": 0
+              },
+              {
+                "id": "IaNominal",
+                "name": "Nominal current",
+                "value": 100,
+                "unit": "A",
+                "min": 0
+              },
+              {
+                "id": "wNominal",
+                "name": "Nominal speed",
+                "value": 149.2,
+                "unit": "rad/s",
+                "min": 0
+              },
+              {
+                "id": "Ra",
+                "name": "Armature resistance",
+                "value": 0.05,
+                "unit": "Ω",
+                "min": 0
+              },
+              {
+                "id": "La",
+                "name": "Armature inductance",
+                "value": 0.0015,
+                "unit": "H",
+                "min": 0
+              },
+              {
+                "id": "Re",
+                "name": "Field resistance",
+                "value": 0.01,
+                "unit": "Ω",
+                "min": 0
+              },
+              {
+                "id": "Le",
+                "name": "Field inductance",
+                "value": 0.0005,
+                "unit": "H",
+                "min": 0
+              },
+              {
+                "id": "Jr",
+                "name": "Rotor inertia",
                 "value": 0.15,
                 "unit": "kg·m²",
                 "min": 0
               }
             ],
-            "equations": "// Mechanics.Rotational.Components.Inertia from the Modelica Standard Library 4.1.0",
+            "equations": "// Electrical.Machines.BasicMachines.DCMachines.DC_SeriesExcited from the Modelica Standard Library 4.1.0",
             "keywords": [
-              "mass",
-              "flywheel",
-              "rotor"
+              "traction",
+              "series",
+              "dc motor"
             ],
             "modelica": {
-              "class": "Modelica.Mechanics.Rotational.Components.Inertia",
+              "class": "Modelica.Electrical.Machines.BasicMachines.DCMachines.DC_SeriesExcited",
               "modifiers": {
-                "J": "J"
+                "TaOperational": "293.15",
+                "TaNominal": "293.15",
+                "TaRef": "293.15",
+                "TeOperational": "293.15",
+                "TeRef": "293.15",
+                "VaNominal": "VaNominal",
+                "IaNominal": "IaNominal",
+                "wNominal": "wNominal",
+                "Ra": "Ra",
+                "La": "La",
+                "Re": "Re",
+                "Le": "Le",
+                "Jr": "Jr"
               }
             }
           },
           "position": {
-            "x": 680,
+            "x": 480,
             "y": 104
           },
           "size": {
-            "width": 80,
-            "height": 64
+            "width": 128,
+            "height": 96
           }
         }
       ],
       "wires": [
         {
-          "id": "9f4c8aa9-8a69-4027-80cb-d861fdb1614f",
-          "source": "p_7be922340d",
+          "id": "202b3b0f-ffc8-44dd-a300-d51ee4a2ef4c",
+          "source": "p_3d8574be2e",
           "sourceHandle": "p",
-          "target": "b_357e3911cb",
-          "targetHandle": "p_5d5a2fc2d2"
+          "target": "b_e282b14149",
+          "targetHandle": "p_22fef67d7a"
         },
         {
-          "id": "9199f260-ceb0-4257-911b-615dd51401b8",
-          "source": "p_088830a758",
+          "id": "5772a8bc-7fde-4671-b834-a703c19b3c22",
+          "source": "p_84189192aa",
+          "sourceHandle": "p",
+          "target": "b_e282b14149",
+          "targetHandle": "p_0547ca2c05"
+        },
+        {
+          "id": "e24e2708-58e7-4541-ad96-8c24acc2cc5c",
+          "source": "p_f9dbfa5d90",
           "sourceHandle": "y",
-          "target": "b_357e3911cb",
-          "targetHandle": "p_d00e9deda0"
+          "target": "b_e282b14149",
+          "targetHandle": "p_92c198b1af"
         },
         {
-          "id": "33251efe-ff93-4b80-9a2b-cdafe071adf3",
-          "source": "b_357e3911cb",
-          "sourceHandle": "p_ef2787e930",
+          "id": "c67bbc26-3156-4aa4-8666-adc08ff1312c",
+          "source": "b_e282b14149",
+          "sourceHandle": "p_e1a94fd39d",
           "target": "motor",
-          "targetHandle": "p"
+          "targetHandle": "pin_ap"
         },
         {
-          "id": "0e9981db-1453-4097-937b-a900a1678a24",
-          "source": "b_357e3911cb",
-          "sourceHandle": "p_3bed75762f",
+          "id": "a67bd5e2-993e-4b52-84ed-cd3a1573d86e",
+          "source": "b_e282b14149",
+          "sourceHandle": "p_2dc9eea7b9",
           "target": "motor",
-          "targetHandle": "n"
+          "targetHandle": "pin_en"
         },
         {
-          "id": "a1003e2f-63fb-49ed-9b76-f1f8cc10c597",
-          "source": "rotor",
-          "sourceHandle": "flange_b",
-          "target": "p_e25ca9158d",
-          "targetHandle": "p"
-        },
-        {
-          "id": "4f4011c8-56ec-46d5-8224-e5f028c76f5a",
-          "source": "p_07595188e7",
-          "sourceHandle": "p",
-          "target": "b_357e3911cb",
-          "targetHandle": "p_3a9ead5b2a"
-        },
-        {
-          "id": "6ca7fd6e-345b-4ebb-835d-bd5af29b42eb",
+          "id": "3fca157b-7ea8-4e6f-8797-aed90b5fe1c8",
           "source": "motor",
           "sourceHandle": "flange",
-          "target": "rotor",
-          "targetHandle": "flange_a"
+          "target": "p_ef08897237",
+          "targetHandle": "p"
+        },
+        {
+          "id": "7a6ff0a8-0ce2-4eaf-88ea-af56edc01edd",
+          "source": "motor",
+          "sourceHandle": "pin_an",
+          "target": "motor",
+          "targetHandle": "pin_ep"
         }
       ],
       "junctions": [],
       "nets": [
         {
-          "id": "net_880ef360151d45dfa157bd53048c9b71",
-          "anchor": "b_357e3911cb.p_5d5a2fc2d2",
+          "id": "net_9e996766976b4307a0e3f0e9d2178707",
+          "anchor": "b_e282b14149.p_22fef67d7a",
           "wireIds": [
-            "9f4c8aa9-8a69-4027-80cb-d861fdb1614f"
+            "202b3b0f-ffc8-44dd-a300-d51ee4a2ef4c"
           ],
           "hidden": true
         },
         {
-          "id": "net_02ab1a93fc914eedb5b4a4c1bef05588",
-          "anchor": "p_088830a758.y",
+          "id": "net_1d3e03bd376f4f23a3aa121e7f5c79dd",
+          "anchor": "b_e282b14149.p_0547ca2c05",
           "wireIds": [
-            "9199f260-ceb0-4257-911b-615dd51401b8"
+            "5772a8bc-7fde-4671-b834-a703c19b3c22"
           ],
           "hidden": true
         },
         {
-          "id": "net_94e55778b6f84cc1be7ced24d88decbf",
-          "anchor": "b_357e3911cb.p_ef2787e930",
+          "id": "net_db0588ba6b52435693f44803bd886bb2",
+          "anchor": "p_f9dbfa5d90.y",
           "wireIds": [
-            "33251efe-ff93-4b80-9a2b-cdafe071adf3"
+            "e24e2708-58e7-4541-ad96-8c24acc2cc5c"
           ],
           "hidden": true
         },
         {
-          "id": "net_680fe5aede0d434f8e7d4a69460c2ce1",
-          "anchor": "b_357e3911cb.p_3bed75762f",
+          "id": "net_47c94c5152824ae2b1c4294c790fcf6d",
+          "anchor": "b_e282b14149.p_e1a94fd39d",
           "wireIds": [
-            "0e9981db-1453-4097-937b-a900a1678a24"
+            "c67bbc26-3156-4aa4-8666-adc08ff1312c"
           ],
           "hidden": true
         },
         {
-          "id": "net_69099e4c2fdb4c1f85f014c7db6d3fc9",
-          "anchor": "p_e25ca9158d.p",
+          "id": "net_e14e6428d2444c6c9833ff85c7ad8898",
+          "anchor": "b_e282b14149.p_2dc9eea7b9",
           "wireIds": [
-            "a1003e2f-63fb-49ed-9b76-f1f8cc10c597"
+            "a67bd5e2-993e-4b52-84ed-cd3a1573d86e"
           ],
           "hidden": true
         },
         {
-          "id": "net_d9ae78c8bd6449e6a110c98afe82d208",
-          "anchor": "b_357e3911cb.p_3a9ead5b2a",
-          "wireIds": [
-            "4f4011c8-56ec-46d5-8224-e5f028c76f5a"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_52f05fe39bbd4d17be4cea035a9d99a7",
+          "id": "net_e64f9745ad6242bcbb0c8912ff467050",
           "anchor": "motor.flange",
           "wireIds": [
-            "6ca7fd6e-345b-4ebb-835d-bd5af29b42eb"
+            "3fca157b-7ea8-4e6f-8797-aed90b5fe1c8"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_4512272f06764f41aff37c4ad55e43bf",
+          "anchor": "motor.pin_an",
+          "wireIds": [
+            "7a6ff0a8-0ce2-4eaf-88ea-af56edc01edd"
           ],
           "hidden": true
         }
@@ -3342,19 +3412,19 @@
   ],
   "configurations": [
     {
-      "id": "cfg_dd7a1da4c7",
+      "id": "cfg_a4618853c0",
       "name": "City · LFP",
       "choices": {
-        "sub_a09e2dc61b/b_9be0fe2d2b": "v_4f99798303",
-        "sub_a09e2dc61b/b_51a387930e": "v_9fe4780976"
+        "sub_c907cec315/b_51ced80851": "v_9901245948",
+        "sub_c907cec315/b_755e0b78e7": "v_a4a8eeebd3"
       }
     },
     {
-      "id": "cfg_2acf75c2bd",
+      "id": "cfg_3b5e6b1afb",
       "name": "Performance · NMC",
       "choices": {
-        "sub_a09e2dc61b/b_9be0fe2d2b": "v_9a78f247e9",
-        "sub_a09e2dc61b/b_51a387930e": "v_6c778fcce1"
+        "sub_c907cec315/b_51ced80851": "v_5f61d55cf5",
+        "sub_c907cec315/b_755e0b78e7": "v_ba56459c78"
       }
     }
   ]
