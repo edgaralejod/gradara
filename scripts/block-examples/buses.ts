@@ -15,7 +15,13 @@ export const buses: ExampleSpec[] = [
       'The Mux joins the ramp, the sine, and the constant into one vector, drawn as a heavy line: one wire where there would be three. The Demux splits it back in the same order, so its outputs are the three sources again. The Sum adds the first two. Set the number of inputs or outputs in each block’s properties; a Demux splits its input into equal parts, so its output count must divide the vector’s width.',
     duration: 2,
     blocks: [
-      ['ramp', 'ramp', 'Ramp', [col(0), row(0)], { slope: 1, startTime: 0 }],
+      [
+        'ramp',
+        'ramp',
+        'Ramp',
+        [col(0), row(0)],
+        { height: 2, duration: 2, startTime: 0 },
+      ],
       [
         'sine',
         'sine',
@@ -83,7 +89,13 @@ export const buses: ExampleSpec[] = [
       'The Bus Creator names each input (speed, torque, current) and carries all three on one bus wire. The Bus Selector picks speed and current by name, whatever their order in the bus, and the Gain scales the speed by 0.5. Rename a signal or choose different ones in the blocks’ properties. A bus can hold another bus: its signals get dotted names such as motor.speed, and selecting motor gives them all as a vector.',
     duration: 2,
     blocks: [
-      ['speed', 'ramp', 'Speed', [col(0), row(0)], { slope: 2, startTime: 0 }],
+      [
+        'speed',
+        'ramp',
+        'Speed',
+        [col(0), row(0)],
+        { height: 4, duration: 2, startTime: 0 },
+      ],
       ['torque', 'constant', 'Torque', [col(0), row(1)], { value: 0.5 }],
       [
         'current',

@@ -1,10 +1,9 @@
 import portUnits from './port-units.json';
 import type { SimulationSettings } from './solver';
-import { controlBlocks } from './control-blocks';
 import { extraBlocks } from './extra-blocks';
 import { mslBlocks } from './msl-blocks';
 import { portBlocks } from './port-blocks';
-import { powerBlocks } from './power-blocks';
+import { retiredBlocks as retired } from './retired-blocks';
 export type Domain =
   | 'signal'
   | 'boolean'
@@ -233,190 +232,33 @@ export const domainColors: Record<Domain, string> = {
   magnetic: '#c02a8a',
   threePhase: '#3f4650',
 };
-const p = (
-  id: string,
-  name: string,
-  value: number,
-  unit = '',
-  min?: number,
-): Parameter => ({ id, name, value, unit, min });
-const input = (id = 'u', name = 'in'): Port => ({
-  id,
-  name,
-  direction: 'input',
-  domain: 'signal',
-});
-const output = (id = 'y', name = 'out'): Port => ({
-  id,
-  name,
-  direction: 'output',
-  domain: 'signal',
-});
-const physical = (
-  id: string,
-  name: string,
-  domain: Domain,
-  side: Port['side'],
-): Port => ({ id, name, domain, side, direction: 'physical' });
 /**
  * Blocks no longer offered in the library. Models that contain them still open and
- * run (a document carries its blocks' definitions); these add no equations, and
- * Results already lists every block output and logged signal.
+ * run (a document carries its blocks' definitions). The sinks add no equations, and
+ * Results already lists every block output and logged signal; the rest were
+ * duplicates of Modelica Standard Library blocks (see retired-blocks.ts).
  */
-export const RETIRED_KINDS = new Set(['scope', 'display', 'terminator']);
+export const RETIRED_KINDS = new Set(retired.map((d) => d.kind));
 
 const allBlocks: Definition[] = [
-  ...powerBlocks,
-  ...controlBlocks,
-  {
-    kind: 'step',
-    name: 'Step',
-    description: 'A step change from zero to a final value.',
-    domain: 'signal',
-    symbol: 'step',
-    ports: [output()],
-    parameters: [
-      p('height', 'Height', 1),
-      p('startTime', 'Start time', 0.2, 's', 0),
-    ],
-    equations: 'y = if time < startTime then 0 else height;',
-    keywords: ['source', 'reference'],
-  },
-  {
-    kind: 'pi',
-    name: 'PI controller',
-    description:
-      'Sampled PI control with output saturation and a bounded integral state.',
-    domain: 'signal',
-    symbol: 'PI',
-    controller: true,
-    ports: [input('reference', 'ref'), input('measured', 'meas'), output()],
-    parameters: [
-      p('kp', 'Proportional gain', 0.6),
-      p('ki', 'Integral gain', 2),
-      p('limit', 'Voltage limit', 24, 'V', 0.1),
-      p('samplePeriod', 'Sample period', 0.001, 's', 0.0001),
-    ],
-    declarations: 'discrete Real integral(start=0, fixed=true);\nReal error;',
-    equations:
-      'error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;',
-  },
-  {
-    kind: 'voltage',
-    name: 'Voltage drive',
-    description: 'An ideal voltage source driven by a control signal.',
-    domain: 'electrical',
-    symbol: 'V',
-    ports: [
-      input(),
-      physical('p', '+', 'electrical', 'right'),
-      physical('n', '−', 'electrical', 'bottom'),
-    ],
-    parameters: [],
-    equations: 'v = u;',
-  },
-  {
-    kind: 'motor',
-    name: 'DC motor',
-    description:
-      'Armature resistance and inductance coupled to a rotational shaft.',
-    domain: 'electrical',
-    symbol: 'M',
-    ports: [
-      physical('p', '+', 'electrical', 'left'),
-      physical('n', '−', 'electrical', 'bottom'),
-      physical('flange', 'shaft', 'mechanical', 'bottom'),
-    ],
-    parameters: [
-      p('R', 'Resistance', 1.2, 'Ω', 0.001),
-      p('L', 'Inductance', 0.02, 'H', 0.00001),
-      p('k', 'Motor constant', 0.15, 'N·m/A', 0.0001),
-    ],
-    equations: 'L*der(i) = v - R*i - k*w;\ntau = k*i;',
-  },
-  {
-    kind: 'inertia',
-    name: 'Inertia & load',
-    description: 'A rotating load with inertia and viscous friction.',
-    domain: 'mechanical',
-    symbol: 'J',
-    ports: [
-      physical('a', 'shaft', 'mechanical', 'top'),
-      physical('b', 'shaft', 'mechanical', 'left'),
-    ],
-    parameters: [
-      p('J', 'Inertia', 0.02, 'kg·m²', 0.00001),
-      p('damping', 'Viscous friction', 0.002, 'N·m·s', 0),
-    ],
-    equations: 'J*der(w) = tau - damping*w;',
-  },
-  {
-    kind: 'sensor',
-    name: 'Speed sensor',
-    description: 'Measures shaft speed without loading the mechanical system.',
-    domain: 'mechanical',
-    symbol: 'ω',
-    ports: [
-      physical('flange', 'shaft', 'mechanical', 'right'),
-      { ...output(), side: 'left' },
-    ],
-    parameters: [],
-    equations: 'y = der(flange.phi);\nflange.tau = 0;',
-  },
-  {
-    kind: 'ground',
-    name: 'Ground',
-    description: 'Electrical reference potential.',
-    domain: 'electrical',
-    symbol: 'ground',
-    ports: [physical('p', '0 V', 'electrical', 'top')],
-    parameters: [],
-    equations: 'p.v = 0;',
-  },
-  {
-    kind: 'gain',
-    name: 'Gain',
-    description: 'Multiply an input by an adjustable gain.',
-    domain: 'signal',
-    symbol: 'K',
-    ports: [input(), output()],
-    parameters: [p('k', 'Gain', 1)],
-    equations: 'y = k*u;',
-  },
-  {
-    kind: 'filter',
-    name: 'Low-pass filter',
-    description: 'First-order continuous filter.',
-    domain: 'signal',
-    symbol: '1/(τs+1)',
-    ports: [input(), output()],
-    parameters: [p('tau', 'Time constant', 0.05, 's', 0.00001)],
-    declarations: 'Real x(start=0, fixed=true);',
-    equations: 'der(x) = (u-x)/tau;\ny = x;',
-  },
-  {
-    kind: 'saturation',
-    name: 'Saturation',
-    description: 'Clamp a signal between lower and upper limits.',
-    domain: 'signal',
-    symbol: 'sat',
-    ports: [input(), output()],
-    parameters: [p('lower', 'Lower limit', -24), p('upper', 'Upper limit', 24)],
-    equations: 'y = max(lower, min(upper, u));',
-  },
   ...extraBlocks,
   ...mslBlocks,
   ...portBlocks,
+  ...retired,
 ];
 // Physical units of ports whose meaning the block fixes (a speed sensor reads
 // rad/s; a controlled voltage source takes V). One table serves the library and
 // the server (lib/gradara/port-units.json), so results from documents saved
 // before a unit existed still show it.
-const PORT_UNITS = portUnits as unknown as Record<string, Record<string, string> | string>;
+const PORT_UNITS = portUnits as unknown as Record<
+  string,
+  Record<string, string> | string
+>;
 for (const d of allBlocks)
   for (const port of d.ports)
     if (!port.unit && typeof PORT_UNITS[d.kind] === 'object')
-      port.unit = (PORT_UNITS[d.kind] as Record<string, string>)[port.id] || undefined;
+      port.unit =
+        (PORT_UNITS[d.kind] as Record<string, string>)[port.id] || undefined;
 export const library: Definition[] = allBlocks.filter(
   (d) => !RETIRED_KINDS.has(d.kind),
 );
@@ -436,31 +278,47 @@ const block = (kind: string, id: string, x: number, y: number): Block => ({
 export function initialProject(): Project {
   const blocks = [
     // On the sheet grid, with each connection a straight run where one is possible.
-    // The controller is unsized, so it opens at its 128 × 96 minimum, grown about
-    // its center to (224, 48).
     block('step', 'reference', 0, 48),
     block('pi', 'controller', 240, 64),
-    block('voltage', 'drive', 472, 48),
-    block('motor', 'motor', 704, 48),
-    block('inertia', 'load', 728, 336),
-    block('sensor', 'sensor', 224, 336),
+    block('signalVoltage', 'drive', 472, 48),
+    block('dcPmMachine', 'motor', 704, 48),
+    block('rotDamper', 'friction', 952, 48),
+    block('rotFixed', 'housing', 1120, 48),
+    block('rotSpeedSensor', 'sensor', 224, 336),
     block('ground', 'ground', 512, 280),
   ];
   const pairs = [
     ['reference', 'y', 'controller', 'reference'],
-    ['controller', 'y', 'drive', 'u'],
-    ['drive', 'p', 'motor', 'p'],
+    ['controller', 'y', 'drive', 'v'],
+    ['drive', 'p', 'motor', 'pin_ap'],
     ['drive', 'n', 'ground', 'p'],
-    ['motor', 'n', 'ground', 'p'],
-    ['motor', 'flange', 'load', 'a'],
-    ['load', 'b', 'sensor', 'flange'],
-    ['sensor', 'y', 'controller', 'measured'],
+    ['motor', 'pin_an', 'ground', 'p'],
+    ['motor', 'flange', 'friction', 'flange_a'],
+    ['friction', 'flange_b', 'housing', 'flange'],
+    ['motor', 'flange', 'sensor', 'flange'],
+    ['sensor', 'w', 'controller', 'measured'],
   ];
+  const set = (id: string, values: Record<string, number>) => {
+    const definition = blocks.find((b) => b.id === id)!.definition;
+    for (const parameter of definition.parameters)
+      if (parameter.id in values) parameter.value = values[parameter.id];
+  };
   const reference = blocks[0].definition;
   reference.name = 'Speed reference';
   reference.parameters[0].name = 'Target speed';
   reference.parameters[0].unit = 'rad/s';
-  reference.parameters[0].value = 100;
+  set('reference', { height: 100, startTime: 0.2 });
+  set('controller', { kp: 0.6, ki: 2, limit: 24, samplePeriod: 0.001 });
+  // A 24 V, 2 A machine whose constant (24 V − 1.2 Ω · 2 A) / 144 rad/s is 0.15 V·s/rad.
+  set('motor', {
+    VaNominal: 24,
+    IaNominal: 2,
+    wNominal: 144,
+    Ra: 1.2,
+    La: 0.02,
+    Jr: 0.02,
+  });
+  set('friction', { d: 0.002 });
   return {
     version: 1,
     name: 'Motor speed control',

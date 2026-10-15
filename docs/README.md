@@ -40,7 +40,7 @@
 - [Simulation, AI features, and exports](architecture/EXECUTION.md)
 - [Personal features: layers and the workshop pipeline](architecture/LAYERS.md)
 - [Local API](API.md)
-- [Block design](blocks/DESIGN.md) and [block authoring](blocks/AGENT_BLOCK_GUIDE.md)
+- [Block design](blocks/DESIGN.md), [block authoring](blocks/AGENT_BLOCK_GUIDE.md), and [block examples](blocks/EXAMPLES.md)
 - [Wiring and interaction contract](architecture/WIRING.md)
 
 ## Keep documentation useful

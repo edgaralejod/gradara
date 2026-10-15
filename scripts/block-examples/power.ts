@@ -227,19 +227,18 @@ export const power: ExampleSpec[] = [
     title: 'Diodes and a Zener regulator',
     area: 'Semiconductors',
     summary:
-      'Three diode models rectifying a 10 V sine, and a Zener diode holding 5.1 V.',
+      'An ideal and an exponential diode rectifying a 10 V sine, and a Zener diode holding 5.1 V.',
     description:
-      'Each diode passes the positive half of a 10 V, 50 Hz sine into its 10 Ω load and blocks the negative half. The simple and ideal diodes pass almost the whole 10 V peak; the exponential (Shockley) diode drops some tenths of a volt. The Zener regulator feeds 12 V through 100 Ω into a reverse-biased Zener diode, which clamps near its 5.1 V breakdown voltage: at 70 mA it holds 5.03 V, because its rated knee current is 0.7 A.',
+      'Each diode passes the positive half of a 10 V, 50 Hz sine into its 10 Ω load and blocks the negative half. The ideal diode passes almost the whole 10 V peak; the exponential (Shockley) diode drops some tenths of a volt. The Zener regulator feeds 12 V through 100 Ω into a reverse-biased Zener diode, which clamps near its 5.1 V breakdown voltage: at 70 mA it holds 5.03 V, because its rated knee current is 0.7 A.',
     duration: 0.04,
     ...merge(
-      rectifier('a', [128, 32], ['diode', 'Diode', {}, { label: 'above' }]),
       rectifier(
-        'b',
-        [800, 32],
+        'a',
+        [128, 32],
         ['idealDiode', 'Ideal diode', {}, { label: 'above' }],
       ),
       rectifier(
-        'c',
+        'b',
         [128, 400],
         ['diodeShockley', 'Diode (exponential)', {}, { label: 'above' }],
       ),
@@ -285,8 +284,8 @@ export const power: ExampleSpec[] = [
     plots: [
       {
         label: 'Rectified',
-        series: ['av.y', 'bv.y', 'cv.y'],
-        labels: ['Diode', 'Ideal diode', 'Exponential diode'],
+        series: ['av.y', 'bv.y'],
+        labels: ['Ideal diode', 'Exponential diode'],
       },
       { label: 'Zener voltage', series: ['vz.y'], labels: ['v Zener'] },
     ],
@@ -296,7 +295,7 @@ export const power: ExampleSpec[] = [
         at: 0.005,
         value: 10,
         tol: 0.01,
-        why: 'forward: the 10 V peak',
+        why: 'ideal diode: the 10 V peak',
       },
       {
         signal: 'av.y',
@@ -308,26 +307,12 @@ export const power: ExampleSpec[] = [
       {
         signal: 'bv.y',
         at: 0.005,
-        value: 10,
-        tol: 0.01,
-        why: 'ideal diode: the 10 V peak',
-      },
-      {
-        signal: 'bv.y',
-        at: 0.015,
-        value: 0,
-        tol: 0.01,
-        why: 'reverse: blocked',
-      },
-      {
-        signal: 'cv.y',
-        at: 0.005,
         min: 9,
         max: 9.8,
         why: 'a Shockley diode drops some tenths of a volt',
       },
       {
-        signal: 'cv.y',
+        signal: 'bv.y',
         at: 0.015,
         value: 0,
         tol: 0.01,
@@ -340,7 +325,7 @@ export const power: ExampleSpec[] = [
         why: 'Bv + Nbv·Vt·ln(i/Ibv): about 70 mA against the 0.7 A knee current',
       },
     ],
-    about: ['diode', 'idealDiode', 'diodeShockley', 'zenerDiode'],
+    about: ['idealDiode', 'diodeShockley', 'zenerDiode'],
   },
   {
     id: 'transistors',

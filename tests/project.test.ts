@@ -29,14 +29,14 @@ import {
 void test('removing a block removes its incident wires and preserves unrelated wiring', () => {
   const p = initialProject();
   const next = removeSelection(p, ['controller']);
-  assert.equal(next.blocks.length, 6);
-  assert.equal(next.wires.length, 5);
+  assert.equal(next.blocks.length, p.blocks.length - 1);
+  assert.equal(next.wires.length, p.wires.length - 3);
   assert.ok(
     next.wires.every(
       (w) => w.source !== 'controller' && w.target !== 'controller',
     ),
   );
-  assert.equal(p.blocks.length, 7);
+  assert.equal(p.blocks.length, 8);
 });
 void test('revising a controller preserves its compatible ports and current position', () => {
   const p = initialProject();
@@ -109,12 +109,12 @@ void test('duplicates remap internal wires without connecting copies to the orig
     'reference',
     'controller',
   ]);
-  assert.equal(next.blocks.length, 9);
-  assert.equal(next.wires.length, 9);
+  assert.equal(next.blocks.length, p.blocks.length + 2);
+  assert.equal(next.wires.length, p.wires.length + 1);
   const wire = next.wires.at(-1)!;
   assert.ok(ids.includes(wire.source));
   assert.ok(ids.includes(wire.target));
-  assert.equal(new Set(next.blocks.map((b) => b.id)).size, 9);
+  assert.equal(new Set(next.blocks.map((b) => b.id)).size, p.blocks.length + 2);
 });
 void test('reject a second source on a signal input', () => {
   assert.throws(
@@ -122,7 +122,7 @@ void test('reject a second source on a signal input', () => {
       addWire(initialProject(), {
         id: 'new',
         source: 'sensor',
-        sourceHandle: 'y',
+        sourceHandle: 'w',
         target: 'controller',
         targetHandle: 'reference',
       }),
@@ -313,12 +313,12 @@ void test('library kinds are unique and cover the drawing catalog', () => {
   assert.ok(kinds.length >= 50);
   for (const needed of [
     'sine',
-    'pid',
+    'pidController',
     'mux',
     'resistor',
     'subsystem',
     'gain',
-    'pmsm',
+    'pmSyncMachine',
   ])
     assert.ok(kinds.includes(needed), needed);
 });
@@ -654,8 +654,13 @@ test('a plain word finds its block first; scattered-letter matches are set apart
   assert.equal(hits[0].tier, 'name');
   const approximate = hits.filter((h) => h.tier === 'approximate');
   const close = hits.filter((h) => h.tier !== 'approximate');
-  assert.ok(approximate.some((h) => /PMOS/i.test(h.definition.name)), 'PMOS only matches as scattered letters');
-  assert.ok(close.every((h) => /step/i.test(h.definition.name) || h.tier === 'text'));
+  assert.ok(
+    approximate.some((h) => /PMOS/i.test(h.definition.name)),
+    'PMOS only matches as scattered letters',
+  );
+  assert.ok(
+    close.every((h) => /step/i.test(h.definition.name) || h.tier === 'text'),
+  );
   // Tiers come in order: every close match before every approximate one.
   const firstFar = hits.findIndex((h) => h.tier === 'approximate');
   assert.ok(hits.slice(0, firstFar).every((h) => h.tier !== 'approximate'));

@@ -291,20 +291,19 @@
       "definition": {
         "kind": "constant",
         "name": "h·A 5 W/K",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -313,7 +312,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 808,
@@ -647,20 +657,19 @@
       "definition": {
         "kind": "constant",
         "name": "350 K",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -669,7 +678,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 64,
@@ -851,13 +871,15 @@
         "name": "20 W at 1500 s",
         "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -875,11 +897,18 @@
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;",
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "reference"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 384,

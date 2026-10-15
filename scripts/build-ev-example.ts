@@ -58,10 +58,18 @@ function block(
 // ------------------------------------------------------------ flat diagram
 // Vehicle control: speed request → PI → duty limit.
 const blocks: Block[] = [
-  block('request', 'ramp', 'Speed request', { slope: 0.5, startTime: 1 }),
+  block('request', 'ramp', 'Speed request', {
+    height: 9.5,
+    duration: 19,
+    startTime: 1,
+  }),
   block('cruise', 'saturation', 'Cruise speed', { lower: 0, upper: 5 }),
-  block('error', 'subtract', 'Speed error'),
-  block('pi', 'pid', 'Speed PI', { kp: 0.4, ki: 1, kd: 0, tf: 0.01 }),
+  block('pi', 'piController', 'Speed PI', {
+    k: 0.4,
+    Ti: 0.4,
+    yMax: 1,
+    yMin: -1,
+  }),
   block('duty', 'saturation', 'Duty limit', { lower: -1, upper: 1 }),
   // Battery pack.
   block('cells', 'batteryStack', 'Cells', {
@@ -97,7 +105,7 @@ let doc: Project = normalizeProject({
   name: 'EV drivetrain',
   exampleId: 'ev',
   description:
-    'A battery electric vehicle in three levels: vehicle control and powertrain at the top; battery pack and motor drive inside the powertrain; an averaged DC-DC converter inside the motor drive. Two variant subsystems switch battery chemistry (LFP, NMC) and motor type (PM DC machine, simple DC motor); two configurations pick them together.',
+    'A battery electric vehicle in three levels: vehicle control and powertrain at the top; battery pack and motor drive inside the powertrain; an averaged DC-DC converter inside the motor drive. Two variant subsystems switch battery chemistry (LFP, NMC) and motor type (PM DC machine, series DC machine); two configurations pick them together.',
   duration: 20,
   revision: 0,
   blocks,
@@ -116,9 +124,8 @@ const link = (a: string, ah: string, b: string, bh: string) => {
   }
 };
 link('request', 'y', 'cruise', 'u');
-link('cruise', 'y', 'error', 'a');
-link('speed', 'v', 'error', 'b');
-link('error', 'y', 'pi', 'u');
+link('cruise', 'y', 'pi', 'reference');
+link('speed', 'v', 'pi', 'measured');
 link('pi', 'y', 'duty', 'u');
 // Battery: cells + to the converter DC side, cells − to ground.
 link('cells', 'n', 'packGround', 'p');
@@ -176,7 +183,7 @@ const powertrain = group(
   'Powertrain',
 );
 doc = normalizeProject(syncInstances(powertrain.project));
-const control = group(doc, ['error', 'pi', 'duty'], 'Vehicle control');
+const control = group(doc, ['pi', 'duty'], 'Vehicle control');
 doc = normalizeProject(syncInstances(control.project));
 
 // Battery chemistry: promote the cell data, then two parameter variants.
@@ -228,33 +235,28 @@ const lfp = variantInstances(doc).find((i) => i.block.id === pack.instanceId)!
   .variants[0].id;
 onSheet(packPath, (view) => renameVariant(view, pack.instanceId, lfp, 'LFP'));
 
-// Motor type: a second inside with a simple DC motor and a rotor inertia.
+// Motor type: a second inside with a series-excited DC machine, the classic traction motor.
 let simple = '';
 onSheet(drivePath, (view) => {
-  const added = addDiagramVariant(view, drive.instanceId, 'Simple DC motor')!;
+  const added = addDiagramVariant(view, drive.instanceId, 'Series DC machine')!;
   simple = added.variantId;
   return added.project;
 });
 {
-  // Swap the PM DC machine for a simple DC motor plus a rotor inertia, keeping its wires.
+  // Swap the PM DC machine for a series machine, keeping its wires; the field winding
+  // goes in series with the armature.
   const inside = scopeView(doc, drivePath);
   const machine = inside.blocks.find((b) => b.id === 'machine')!;
-  const motor = block('motor', 'motor', 'DC motor', {
-    R: 0.05,
-    L: 0.0015,
-    k: 0.64,
-  });
+  const motor = block('motor', 'dcSeriesMachine', 'Series DC machine');
   motor.position = machine.position;
-  const rotor = block('rotor', 'rotInertia', 'Rotor inertia', { J: 0.15 });
-  rotor.position = { x: machine.position.x + 200, y: machine.position.y };
   const swap: Record<string, [string, string]> = {
-    pin_ap: ['motor', 'p'],
-    pin_an: ['motor', 'n'],
-    flange: ['rotor', 'flange_b'],
+    pin_ap: ['motor', 'pin_ap'],
+    pin_an: ['motor', 'pin_en'],
+    flange: ['motor', 'flange'],
   };
   let view: Project = {
     ...inside,
-    blocks: [...inside.blocks.filter((b) => b.id !== 'machine'), motor, rotor],
+    blocks: [...inside.blocks.filter((b) => b.id !== 'machine'), motor],
     wires: inside.wires.map((w) => {
       const next = { ...w, waypoints: undefined };
       if (w.source === 'machine')
@@ -266,8 +268,8 @@ onSheet(drivePath, (view) => {
   };
   view = linkEnds(
     view,
-    { id: 'motor', handle: 'flange' },
-    { id: 'rotor', handle: 'flange_a' },
+    { id: 'motor', handle: 'pin_an' },
+    { id: 'motor', handle: 'pin_ep' },
   );
   doc = normalizeProject(
     writeScope(doc, drivePath, normalizeProject(layoutProject(view), inside)),
@@ -295,14 +297,14 @@ const portNames: Record<string, Record<string, string>> = {
   'Motor drive': { '+': 'dc+', '−': 'dc−', a: 'duty' },
   'Battery pack': { '0 V': '−' },
   Powertrain: { a: 'duty', b: 'shaft' },
-  'Vehicle control': { '+': 'v ref', '−': 'v', out: 'duty' },
+  'Vehicle control': { ref: 'v ref', meas: 'v', out: 'duty' },
 };
 doc = syncInstances({
   ...doc,
   subsystems: doc.subsystems!.map((sub) => {
     const names =
       portNames[sub.name] ??
-      portNames[sub.name.replace(/ Simple DC motor$/, '')] ??
+      portNames[sub.name.replace(/ Series DC machine$/, '')] ??
       {};
     return {
       ...sub,

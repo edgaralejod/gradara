@@ -127,5 +127,5 @@ def test_grouped_model_simulates_like_the_flat_one():
         return await asyncio.gather(simulate(flat, 'flat' + uuid.uuid4().hex[:10]),
                                     simulate(nested, 'nest' + uuid.uuid4().hex[:10]))
     a, b = asyncio.run(both())
-    speed = lambda r: next(o for o in r['series'] if o['key'] == 'sensor.y')['values'][-1]
+    speed = lambda r: next(o for o in r['series'] if o['key'] == 'sensor.w')['values'][-1]
     assert speed(b) == pytest.approx(speed(a), rel=1e-6)

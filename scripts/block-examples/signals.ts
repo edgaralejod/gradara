@@ -25,7 +25,7 @@ export const signals: ExampleSpec[] = [
         'ramp',
         'Ramp',
         [col(2), row(0)],
-        { slope: 1.5, startTime: 0.5 },
+        { height: 2.25, duration: 1.5, startTime: 0.5 },
       ],
       [
         'sine',
@@ -102,7 +102,13 @@ export const signals: ExampleSpec[] = [
       'Input a is a ramp that equals time, input b is the constant 2. The six blocks combine them, so their traces are straight lines that cross or bend at t = 2 s, where a = b. At 4 s: a + b = 6, a − b = 2, a · b = 8, a / b = 2, min = 2, max = 4.',
     duration: 4,
     blocks: [
-      ['a', 'ramp', 'a = t', [80, 192], { slope: 1, startTime: 0 }],
+      [
+        'a',
+        'ramp',
+        'a = t',
+        [80, 192],
+        { height: 4, duration: 4, startTime: 0 },
+      ],
       ['b', 'constant', 'b = 2', [80, 416], { value: 2 }],
       [
         'sum',
@@ -263,9 +269,9 @@ export const signals: ExampleSpec[] = [
     title: 'Step responses',
     area: 'Signals',
     summary:
-      'A unit step through a first-order filter, a second-order system, an integrator, and a delay; a ramp through a derivative.',
+      'A unit step through a first-order filter, a second-order system, an integrator, a limited integrator, and a delay; a ramp through a derivative.',
     description:
-      'The step comes at 0.1 s. The filter (τ = 0.2 s) reaches 63 % at 0.3 s. The second-order block (ωn = 10 rad/s, ζ = 0.3) overshoots to 1.37 at 0.43 s and rings down. The integrator rises at 1 per second. The delay repeats the step 0.3 s late. The derivative of a ramp with slope 2 is 2.',
+      'The step comes at 0.1 s. The filter (τ = 0.2 s) reaches 63 % at 0.3 s. The second-order block (ωn = 10 rad/s, ζ = 0.3) overshoots to 1.37 at 0.43 s and rings down. The integrator rises at 1 per second; the limited integrator rises the same way until it reaches its limit of 1 at 1.1 s and stops there. The delay repeats the step 0.3 s late. The derivative of a ramp with slope 2 is 2.',
     duration: 2,
     blocks: [
       [
@@ -283,14 +289,21 @@ export const signals: ExampleSpec[] = [
         [col(2) + 40, row(1)],
         { wn: 10, zeta: 0.3 },
       ],
-      ['int', 'integrator', 'Integrator', [col(2), row(2)], { limit: 100 }],
+      ['int', 'integrator', 'Integrator', [col(2), row(2)], { y_start: 0 }],
+      [
+        'lim',
+        'limitedIntegrator',
+        'Limited to 1',
+        [col(3), row(2)],
+        { outMax: 1, outMin: -1, y_start: 0 },
+      ],
       ['delay', 'delay', 'Delay 0.3 s', [col(2), row(3)], { T: 0.3 }],
       [
         'ramp',
         'ramp',
         'Ramp, slope 2',
         [col(0), row(4.5)],
-        { slope: 2, startTime: 0 },
+        { height: 4, duration: 2, startTime: 0 },
       ],
       ['deriv', 'derivative', 'Derivative', [col(2), row(4.5)], { tau: 0.01 }],
     ],
@@ -298,6 +311,7 @@ export const signals: ExampleSpec[] = [
       ['step.y', 'filter.u'],
       ['step.y', 'second.u'],
       ['step.y', 'int.u'],
+      ['step.y', 'lim.u'],
       ['step.y', 'delay.u'],
       ['ramp.y', 'deriv.u'],
     ],
@@ -309,8 +323,8 @@ export const signals: ExampleSpec[] = [
       },
       {
         label: 'Integral and derivative',
-        series: ['int.y', 'deriv.y'],
-        labels: ['∫ step', 'd/dt ramp'],
+        series: ['int.y', 'lim.y', 'deriv.y'],
+        labels: ['∫ step', '∫ step, limited', 'd/dt ramp'],
       },
     ],
     checks: [
@@ -336,6 +350,14 @@ export const signals: ExampleSpec[] = [
       },
       { signal: 'int.y', value: 1.9, tol: 1e-3, why: '∫ from 0.1 s to 2 s' },
       {
+        signal: 'lim.y',
+        at: 0.6,
+        value: 0.5,
+        tol: 1e-3,
+        why: 'still integrating',
+      },
+      { signal: 'lim.y', value: 1, tol: 1e-6, why: 'held at its upper limit' },
+      {
         signal: 'delay.y',
         at: 0.35,
         value: 0,
@@ -351,7 +373,14 @@ export const signals: ExampleSpec[] = [
       },
       { signal: 'deriv.y', value: 2, tol: 1e-3, why: 'slope of the ramp' },
     ],
-    about: ['filter', 'secondOrder', 'integrator', 'delay', 'derivative'],
+    about: [
+      'filter',
+      'secondOrder',
+      'integrator',
+      'limitedIntegrator',
+      'delay',
+      'derivative',
+    ],
   },
   {
     id: 'sampling',
@@ -521,7 +550,13 @@ export const signals: ExampleSpec[] = [
       'The Switch passes its top input while the control input (a 1 Hz pulse) is at or above 0.5, and its bottom input otherwise: the output alternates between the ramp and −1 every half second. The Manual switch has no control input: its Position parameter (1 or 2) picks an input. Here it is set to 2, so it passes the ramp. Double-click it in the canvas to flip it.',
     duration: 2,
     blocks: [
-      ['ramp', 'ramp', 'Ramp', [col(0), row(0)], { slope: 1, startTime: 0 }],
+      [
+        'ramp',
+        'ramp',
+        'Ramp',
+        [col(0), row(0)],
+        { height: 2, duration: 2, startTime: 0 },
+      ],
       ['low', 'constant', '−1', [col(0), row(1) + 16], { value: -1 }],
       [
         'pulse',

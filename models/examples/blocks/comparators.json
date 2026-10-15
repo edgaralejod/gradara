@@ -11,20 +11,19 @@
       "definition": {
         "kind": "sine",
         "name": "sin(πt)",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -52,12 +51,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -73,26 +81,32 @@
       "definition": {
         "kind": "ramp",
         "name": "t / 4",
-        "symbol": "ramp",
+        "description": "Rises linearly from 0 to Height over Duration after the start time, then holds.",
         "domain": "signal",
-        "description": "A linearly increasing signal after a start time.",
+        "category": "sources",
+        "symbol": "ramp",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
         "parameters": [
           {
-            "id": "slope",
-            "name": "Slope",
-            "value": 0.25,
-            "unit": "1/s"
+            "id": "height",
+            "name": "Height",
+            "value": 0.5,
+            "unit": ""
+          },
+          {
+            "id": "duration",
+            "name": "Duration",
+            "value": 2,
+            "unit": "s",
+            "min": 0
           },
           {
             "id": "startTime",
@@ -102,11 +116,20 @@
             "min": 0
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Ramp from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
-          "reference"
-        ]
+          "reference",
+          "slope"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Ramp",
+          "modifiers": {
+            "height": "height",
+            "duration": "duration",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,

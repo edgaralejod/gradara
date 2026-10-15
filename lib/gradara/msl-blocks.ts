@@ -4,6 +4,1648 @@ import type { Definition } from './model';
 /** Library blocks that instantiate Modelica Standard Library 4.1.0 classes. */
 export const mslBlocks: Definition[] = [
   {
+    "kind": "constant",
+    "name": "Constant",
+    "description": "A constant output value.",
+    "domain": "signal",
+    "category": "sources",
+    "symbol": "constant",
+    "ports": [
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "value",
+        "name": "Value",
+        "value": 0,
+        "unit": ""
+      }
+    ],
+    "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "source",
+      "reference",
+      "setpoint"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Sources.Constant",
+      "modifiers": {
+        "k": "value"
+      }
+    }
+  },
+  {
+    "kind": "step",
+    "name": "Step",
+    "description": "A step change from zero to a final value.",
+    "domain": "signal",
+    "category": "sources",
+    "symbol": "step",
+    "ports": [
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "height",
+        "name": "Height",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "startTime",
+        "name": "Start time",
+        "value": 0.2,
+        "unit": "s",
+        "min": 0
+      }
+    ],
+    "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "source",
+      "reference"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Sources.Step",
+      "modifiers": {
+        "height": "height",
+        "startTime": "startTime"
+      }
+    }
+  },
+  {
+    "kind": "ramp",
+    "name": "Ramp",
+    "description": "Rises linearly from 0 to Height over Duration after the start time, then holds.",
+    "domain": "signal",
+    "category": "sources",
+    "symbol": "ramp",
+    "ports": [
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "height",
+        "name": "Height",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "duration",
+        "name": "Duration",
+        "value": 1,
+        "unit": "s",
+        "min": 0
+      },
+      {
+        "id": "startTime",
+        "name": "Start time",
+        "value": 0,
+        "unit": "s",
+        "min": 0
+      }
+    ],
+    "equations": "// Blocks.Sources.Ramp from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "source",
+      "reference",
+      "slope"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Sources.Ramp",
+      "modifiers": {
+        "height": "height",
+        "duration": "duration",
+        "startTime": "startTime"
+      }
+    }
+  },
+  {
+    "kind": "sine",
+    "name": "Sine wave",
+    "description": "A continuous sinusoid.",
+    "domain": "signal",
+    "category": "sources",
+    "symbol": "sine",
+    "ports": [
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "amplitude",
+        "name": "Amplitude",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "frequency",
+        "name": "Frequency",
+        "value": 1,
+        "unit": "Hz",
+        "min": 0
+      },
+      {
+        "id": "phase",
+        "name": "Phase",
+        "value": 0,
+        "unit": "rad"
+      },
+      {
+        "id": "offset",
+        "name": "Offset",
+        "value": 0,
+        "unit": ""
+      }
+    ],
+    "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "source",
+      "oscillator",
+      "wave"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Sources.Sine",
+      "modifiers": {
+        "amplitude": "amplitude",
+        "f": "frequency",
+        "phase": "phase",
+        "offset": "offset"
+      }
+    }
+  },
+  {
+    "kind": "pulse",
+    "name": "Pulse",
+    "description": "A periodic rectangular pulse.",
+    "domain": "signal",
+    "category": "sources",
+    "symbol": "pulse",
+    "ports": [
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "amplitude",
+        "name": "Amplitude",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "period",
+        "name": "Period",
+        "value": 1,
+        "unit": "s",
+        "min": 0.0001
+      },
+      {
+        "id": "width",
+        "name": "Duty cycle",
+        "value": 0.5,
+        "unit": "",
+        "min": 0.001,
+        "max": 1
+      },
+      {
+        "id": "startTime",
+        "name": "Start time",
+        "value": 0,
+        "unit": "s",
+        "min": 0
+      }
+    ],
+    "equations": "// Blocks.Sources.Pulse from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "source",
+      "square",
+      "pwm"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Sources.Pulse",
+      "modifiers": {
+        "width": "100*width",
+        "amplitude": "amplitude",
+        "period": "period",
+        "startTime": "startTime"
+      }
+    }
+  },
+  {
+    "kind": "clock",
+    "name": "Clock",
+    "description": "Simulation time as a signal.",
+    "domain": "signal",
+    "category": "sources",
+    "symbol": "clock",
+    "ports": [
+      {
+        "id": "y",
+        "name": "t",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Sources.ContinuousClock from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "source",
+      "time"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Sources.ContinuousClock"
+    }
+  },
+  {
+    "kind": "gain",
+    "name": "Gain",
+    "description": "Multiply an input by an adjustable gain.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "K",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "k",
+        "name": "Gain",
+        "value": 1,
+        "unit": ""
+      }
+    ],
+    "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math",
+      "multiply",
+      "scale"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Gain",
+      "modifiers": {
+        "k": "k"
+      }
+    }
+  },
+  {
+    "kind": "sum",
+    "name": "Sum",
+    "description": "Add two signals.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "sum",
+    "ports": [
+      {
+        "id": "a",
+        "name": "+",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "b",
+        "name": "+",
+        "direction": "input",
+        "domain": "signal",
+        "side": "bottom"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Add from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math",
+      "add",
+      "plus"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Add",
+      "ports": {
+        "a": "u1",
+        "b": "u2"
+      }
+    }
+  },
+  {
+    "kind": "subtract",
+    "name": "Subtract",
+    "description": "Subtract the second signal from the first: y = a − b.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "sum",
+    "ports": [
+      {
+        "id": "a",
+        "name": "+",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "b",
+        "name": "−",
+        "direction": "input",
+        "domain": "signal",
+        "side": "bottom"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Feedback from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math",
+      "difference",
+      "error",
+      "compare"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Feedback",
+      "ports": {
+        "a": "u1",
+        "b": "u2"
+      }
+    }
+  },
+  {
+    "kind": "product",
+    "name": "Product",
+    "description": "Multiply two signals.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "×",
+    "ports": [
+      {
+        "id": "a",
+        "name": "a",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "direction": "input",
+        "domain": "signal",
+        "side": "bottom"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Product from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math",
+      "multiply"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Product",
+      "ports": {
+        "a": "u1",
+        "b": "u2"
+      }
+    }
+  },
+  {
+    "kind": "divide",
+    "name": "Divide",
+    "description": "Divide two signals: y = a / b. Keep the denominator away from zero.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "÷",
+    "ports": [
+      {
+        "id": "a",
+        "name": "a",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "direction": "input",
+        "domain": "signal",
+        "side": "bottom"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Division from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Division",
+      "ports": {
+        "a": "u1",
+        "b": "u2"
+      }
+    }
+  },
+  {
+    "kind": "abs",
+    "name": "Abs",
+    "description": "Absolute value.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "|u|",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Abs from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Abs"
+    }
+  },
+  {
+    "kind": "sign",
+    "name": "Sign",
+    "description": "Sign of the input: −1, 0, or 1.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "sgn",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Sign from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Sign"
+    }
+  },
+  {
+    "kind": "sqrt",
+    "name": "Sqrt",
+    "description": "Square root of a non-negative input.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "√",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Sqrt from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Sqrt"
+    }
+  },
+  {
+    "kind": "min",
+    "name": "Min",
+    "description": "The smaller of two signals.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "min",
+    "ports": [
+      {
+        "id": "a",
+        "name": "a",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "direction": "input",
+        "domain": "signal",
+        "side": "bottom"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Min from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Min",
+      "ports": {
+        "a": "u1",
+        "b": "u2"
+      }
+    }
+  },
+  {
+    "kind": "max",
+    "name": "Max",
+    "description": "The larger of two signals.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "max",
+    "ports": [
+      {
+        "id": "a",
+        "name": "a",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "direction": "input",
+        "domain": "signal",
+        "side": "bottom"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Max from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Max",
+      "ports": {
+        "a": "u1",
+        "b": "u2"
+      }
+    }
+  },
+  {
+    "kind": "sineOp",
+    "name": "Sin",
+    "description": "Sine of the input, in radians.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "sin",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Sin from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math",
+      "trig"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Sin"
+    }
+  },
+  {
+    "kind": "cosineOp",
+    "name": "Cos",
+    "description": "Cosine of the input, in radians.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "cos",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Cos from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math",
+      "trig"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Cos"
+    }
+  },
+  {
+    "kind": "unaryMinus",
+    "name": "Unary minus",
+    "description": "Negate a signal.",
+    "domain": "signal",
+    "category": "math",
+    "symbol": "−",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "math",
+      "invert",
+      "negate"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Math.Gain",
+      "modifiers": {
+        "k": "-1"
+      }
+    }
+  },
+  {
+    "kind": "integrator",
+    "name": "Integrator",
+    "description": "Integrates the input over time.",
+    "domain": "signal",
+    "category": "continuous",
+    "symbol": "1/s",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "y_start",
+        "name": "Initial value",
+        "value": 0,
+        "unit": ""
+      }
+    ],
+    "equations": "// Blocks.Continuous.Integrator from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "continuous",
+      "accumulate"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Continuous.Integrator",
+      "modifiers": {
+        "initType": "Modelica.Blocks.Types.Init.InitialState",
+        "y_start": "y_start"
+      }
+    }
+  },
+  {
+    "kind": "limitedIntegrator",
+    "name": "Limited integrator",
+    "description": "Integrates the input and holds the output inside its limits (the state stops at a limit instead of winding up).",
+    "domain": "signal",
+    "category": "continuous",
+    "symbol": "1/s",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "outMax",
+        "name": "Upper limit",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "outMin",
+        "name": "Lower limit",
+        "value": -1,
+        "unit": ""
+      },
+      {
+        "id": "y_start",
+        "name": "Initial value",
+        "value": 0,
+        "unit": ""
+      }
+    ],
+    "equations": "// Blocks.Continuous.LimIntegrator from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "continuous",
+      "anti-windup",
+      "saturating"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Continuous.LimIntegrator",
+      "modifiers": {
+        "initType": "Modelica.Blocks.Types.Init.InitialState",
+        "outMax": "outMax",
+        "outMin": "outMin",
+        "y_start": "y_start"
+      }
+    }
+  },
+  {
+    "kind": "derivative",
+    "name": "Derivative",
+    "description": "Filtered derivative du/dt.",
+    "domain": "signal",
+    "category": "continuous",
+    "symbol": "s",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "tau",
+        "name": "Filter time",
+        "value": 0.01,
+        "unit": "s",
+        "min": 1e-05
+      }
+    ],
+    "equations": "// Blocks.Continuous.Derivative from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "continuous",
+      "diff"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Continuous.Derivative",
+      "modifiers": {
+        "initType": "Modelica.Blocks.Types.Init.SteadyState",
+        "T": "tau"
+      }
+    }
+  },
+  {
+    "kind": "filter",
+    "name": "Low-pass filter",
+    "description": "First-order continuous filter.",
+    "domain": "signal",
+    "category": "continuous",
+    "symbol": "1/(τs+1)",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "tau",
+        "name": "Time constant",
+        "value": 0.05,
+        "unit": "s",
+        "min": 1e-05
+      }
+    ],
+    "equations": "// Blocks.Continuous.FirstOrder from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "continuous",
+      "lag",
+      "pt1"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Continuous.FirstOrder",
+      "modifiers": {
+        "initType": "Modelica.Blocks.Types.Init.InitialState",
+        "T": "tau"
+      }
+    }
+  },
+  {
+    "kind": "secondOrder",
+    "name": "Second-order",
+    "description": "A second-order transfer function ωn² / (s² + 2ζωn s + ωn²).",
+    "domain": "signal",
+    "category": "continuous",
+    "symbol": "ωn,ζ",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "wn",
+        "name": "Natural frequency",
+        "value": 10,
+        "unit": "rad/s",
+        "min": 0.01
+      },
+      {
+        "id": "zeta",
+        "name": "Damping ratio",
+        "value": 0.7,
+        "unit": "",
+        "min": 0
+      }
+    ],
+    "equations": "// Blocks.Continuous.SecondOrder from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "continuous",
+      "tf",
+      "transfer"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Continuous.SecondOrder",
+      "modifiers": {
+        "initType": "Modelica.Blocks.Types.Init.InitialState",
+        "w": "wn",
+        "D": "zeta"
+      }
+    }
+  },
+  {
+    "kind": "delay",
+    "name": "Transport delay",
+    "description": "A pure time delay.",
+    "domain": "signal",
+    "category": "continuous",
+    "symbol": "e⁻sT",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "T",
+        "name": "Delay",
+        "value": 0.05,
+        "unit": "s",
+        "min": 0
+      }
+    ],
+    "equations": "// Blocks.Nonlinear.FixedDelay from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "continuous",
+      "delay",
+      "dead time"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Nonlinear.FixedDelay",
+      "modifiers": {
+        "delayTime": "T"
+      }
+    }
+  },
+  {
+    "kind": "saturation",
+    "name": "Saturation",
+    "description": "Clamp a signal between lower and upper limits.",
+    "domain": "signal",
+    "category": "nonlinear",
+    "symbol": "sat",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "lower",
+        "name": "Lower limit",
+        "value": -1,
+        "unit": ""
+      },
+      {
+        "id": "upper",
+        "name": "Upper limit",
+        "value": 1,
+        "unit": ""
+      }
+    ],
+    "equations": "// Blocks.Nonlinear.Limiter from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "nonlinear",
+      "limit",
+      "clamp"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Nonlinear.Limiter",
+      "modifiers": {
+        "uMin": "lower",
+        "uMax": "upper"
+      }
+    }
+  },
+  {
+    "kind": "deadzone",
+    "name": "Dead zone",
+    "description": "Zero output inside ±half-width.",
+    "domain": "signal",
+    "category": "nonlinear",
+    "symbol": "dead",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "start",
+        "name": "Half-width",
+        "value": 0.1,
+        "unit": "",
+        "min": 0
+      }
+    ],
+    "equations": "// Blocks.Nonlinear.DeadZone from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "nonlinear"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Nonlinear.DeadZone",
+      "modifiers": {
+        "uMax": "start",
+        "uMin": "-start"
+      }
+    }
+  },
+  {
+    "kind": "rateLimiter",
+    "name": "Rate limiter",
+    "description": "Limits how fast a signal may change.",
+    "domain": "signal",
+    "category": "nonlinear",
+    "symbol": "du/dt",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "rising",
+        "name": "Rising limit",
+        "value": 10,
+        "unit": "1/s",
+        "min": 0
+      },
+      {
+        "id": "falling",
+        "name": "Falling limit",
+        "value": 10,
+        "unit": "1/s",
+        "min": 0
+      }
+    ],
+    "equations": "// Blocks.Nonlinear.SlewRateLimiter from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "nonlinear",
+      "slew"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Nonlinear.SlewRateLimiter",
+      "modifiers": {
+        "Falling": "-falling",
+        "initType": "Modelica.Blocks.Types.Init.SteadyState",
+        "Rising": "rising"
+      }
+    }
+  },
+  {
+    "kind": "zoh",
+    "name": "Zero-order hold",
+    "description": "Sample and hold.",
+    "domain": "signal",
+    "category": "discrete",
+    "symbol": "ZOH",
+    "ports": [
+      {
+        "id": "u",
+        "name": "u",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "Ts",
+        "name": "Sample period",
+        "value": 0.001,
+        "unit": "s",
+        "min": 0.0001
+      }
+    ],
+    "equations": "// Blocks.Discrete.ZeroOrderHold from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "discrete",
+      "sample"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Discrete.ZeroOrderHold",
+      "modifiers": {
+        "samplePeriod": "Ts"
+      }
+    }
+  },
+  {
+    "kind": "piController",
+    "name": "PI (continuous)",
+    "description": "Continuous PI controller with output limits and anti-windup: y = k·(e + ∫e/Ti), clamped, where e = reference − measured.",
+    "domain": "signal",
+    "category": "control",
+    "symbol": "PI",
+    "ports": [
+      {
+        "id": "reference",
+        "name": "ref",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "measured",
+        "name": "meas",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "k",
+        "name": "Gain",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "Ti",
+        "name": "Integral time",
+        "value": 0.5,
+        "unit": "s",
+        "min": 1e-06
+      },
+      {
+        "id": "yMax",
+        "name": "Upper limit",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "yMin",
+        "name": "Lower limit",
+        "value": -1,
+        "unit": ""
+      }
+    ],
+    "equations": "// Blocks.Continuous.LimPID from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "control",
+      "regulator",
+      "anti-windup",
+      "limited"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Continuous.LimPID",
+      "modifiers": {
+        "controllerType": "Modelica.Blocks.Types.SimpleController.PI",
+        "initType": "Modelica.Blocks.Types.Init.InitialState",
+        "k": "k",
+        "Ti": "Ti",
+        "yMax": "yMax",
+        "yMin": "yMin"
+      },
+      "ports": {
+        "reference": "u_s",
+        "measured": "u_m"
+      }
+    }
+  },
+  {
+    "kind": "pidController",
+    "name": "PID (continuous)",
+    "description": "Continuous PID controller with a filtered derivative, output limits, and anti-windup: y = k·(e + ∫e/Ti + Td·de/dt), clamped.",
+    "domain": "signal",
+    "category": "control",
+    "symbol": "PID",
+    "ports": [
+      {
+        "id": "reference",
+        "name": "ref",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "measured",
+        "name": "meas",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "y",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "k",
+        "name": "Gain",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "Ti",
+        "name": "Integral time",
+        "value": 0.5,
+        "unit": "s",
+        "min": 1e-06
+      },
+      {
+        "id": "Td",
+        "name": "Derivative time",
+        "value": 0.05,
+        "unit": "s",
+        "min": 0
+      },
+      {
+        "id": "Nd",
+        "name": "Derivative filter ratio",
+        "value": 10,
+        "unit": "",
+        "min": 1
+      },
+      {
+        "id": "yMax",
+        "name": "Upper limit",
+        "value": 1,
+        "unit": ""
+      },
+      {
+        "id": "yMin",
+        "name": "Lower limit",
+        "value": -1,
+        "unit": ""
+      }
+    ],
+    "equations": "// Blocks.Continuous.LimPID from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "control",
+      "regulator",
+      "anti-windup",
+      "limited"
+    ],
+    "modelica": {
+      "class": "Modelica.Blocks.Continuous.LimPID",
+      "modifiers": {
+        "controllerType": "Modelica.Blocks.Types.SimpleController.PID",
+        "initType": "Modelica.Blocks.Types.Init.InitialState",
+        "k": "k",
+        "Ti": "Ti",
+        "Td": "Td",
+        "Nd": "Nd",
+        "yMax": "yMax",
+        "yMin": "yMin"
+      },
+      "ports": {
+        "reference": "u_s",
+        "measured": "u_m"
+      }
+    }
+  },
+  {
+    "kind": "clarke",
+    "name": "Clarke transform",
+    "description": "Amplitude-invariant three-phase to stationary-frame (α, β) transform.",
+    "domain": "signal",
+    "category": "control",
+    "symbol": "abc→αβ",
+    "ports": [
+      {
+        "id": "ia",
+        "name": "a",
+        "direction": "input",
+        "domain": "signal",
+        "side": "right"
+      },
+      {
+        "id": "ib",
+        "name": "b",
+        "direction": "input",
+        "domain": "signal",
+        "side": "right"
+      },
+      {
+        "id": "ic",
+        "name": "c",
+        "direction": "input",
+        "domain": "signal",
+        "side": "right"
+      },
+      {
+        "id": "alpha",
+        "name": "α",
+        "direction": "output",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "beta",
+        "name": "β",
+        "direction": "output",
+        "domain": "signal",
+        "side": "left"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Electrical.Machines.SpacePhasors.Blocks.ToSpacePhasor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "foc",
+      "space phasor",
+      "abc"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.ToSpacePhasor",
+      "ports": {
+        "ia": "u[1]",
+        "ib": "u[2]",
+        "ic": "u[3]",
+        "alpha": "y[1]",
+        "beta": "y[2]"
+      }
+    }
+  },
+  {
+    "kind": "park",
+    "name": "Park transform",
+    "description": "Rotates a stationary-frame (α, β) pair into a frame turning at the input angle: with the electrical rotor angle it gives d and q. Feed −θ to rotate back.",
+    "domain": "signal",
+    "category": "control",
+    "symbol": "αβ→dq",
+    "ports": [
+      {
+        "id": "alpha",
+        "name": "α",
+        "direction": "input",
+        "domain": "signal",
+        "side": "right"
+      },
+      {
+        "id": "beta",
+        "name": "β",
+        "direction": "input",
+        "domain": "signal",
+        "side": "right"
+      },
+      {
+        "id": "theta",
+        "name": "θe",
+        "direction": "input",
+        "domain": "signal",
+        "side": "bottom"
+      },
+      {
+        "id": "id",
+        "name": "d",
+        "direction": "output",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "iq",
+        "name": "q",
+        "direction": "output",
+        "domain": "signal",
+        "side": "left"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Electrical.Machines.SpacePhasors.Blocks.Rotator from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "foc",
+      "rotator",
+      "dq"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.Rotator",
+      "ports": {
+        "alpha": "u[1]",
+        "beta": "u[2]",
+        "theta": "angle",
+        "id": "y[1]",
+        "iq": "y[2]"
+      }
+    }
+  },
+  {
+    "kind": "inverseClarke",
+    "name": "Inverse Clarke transform",
+    "description": "Stationary-frame (α, β) pair back to three phases, with the zero-sequence input added to each.",
+    "domain": "signal",
+    "category": "control",
+    "symbol": "αβ→abc",
+    "ports": [
+      {
+        "id": "alpha",
+        "name": "α",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "beta",
+        "name": "β",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "zero",
+        "name": "0",
+        "direction": "input",
+        "domain": "signal",
+        "side": "bottom"
+      },
+      {
+        "id": "va",
+        "name": "a",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      },
+      {
+        "id": "vb",
+        "name": "b",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      },
+      {
+        "id": "vc",
+        "name": "c",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Electrical.Machines.SpacePhasors.Blocks.FromSpacePhasor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "foc",
+      "space phasor",
+      "abc"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.FromSpacePhasor",
+      "ports": {
+        "alpha": "u[1]",
+        "beta": "u[2]",
+        "va": "y[1]",
+        "vb": "y[2]",
+        "vc": "y[3]"
+      }
+    }
+  },
+  {
     "kind": "rotFixed",
     "name": "Fixed (rotational)",
     "description": "A flange fixed in the housing at a constant angle.",
@@ -641,7 +2283,7 @@ export const mslBlocks: Definition[] = [
   },
   {
     "kind": "rotSpeedSensor",
-    "name": "Speed sensor (ideal)",
+    "name": "Speed sensor",
     "description": "Absolute angular velocity of the flange.",
     "domain": "mechanical",
     "category": "mechanical",
@@ -670,6 +2312,88 @@ export const mslBlocks: Definition[] = [
     ],
     "modelica": {
       "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+    }
+  },
+  {
+    "kind": "angleSensor",
+    "name": "Angle sensor",
+    "description": "Absolute angle of the flange, in radians, without loading it.",
+    "domain": "mechanical",
+    "category": "mechanical",
+    "symbol": "θ",
+    "ports": [
+      {
+        "id": "flange",
+        "name": "shaft",
+        "direction": "physical",
+        "domain": "mechanical",
+        "side": "left"
+      },
+      {
+        "id": "y",
+        "name": "θ",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Mechanics.Rotational.Sensors.AngleSensor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "position",
+      "encoder",
+      "resolver"
+    ],
+    "modelica": {
+      "class": "Modelica.Mechanics.Rotational.Sensors.AngleSensor",
+      "ports": {
+        "y": "phi"
+      }
+    }
+  },
+  {
+    "kind": "torqueSensor",
+    "name": "Torque sensor",
+    "description": "Torque transmitted from flange a to flange b, without adding compliance.",
+    "domain": "mechanical",
+    "category": "mechanical",
+    "symbol": "τ",
+    "ports": [
+      {
+        "id": "a",
+        "name": "a",
+        "direction": "physical",
+        "domain": "mechanical",
+        "side": "left"
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "direction": "physical",
+        "domain": "mechanical",
+        "side": "right"
+      },
+      {
+        "id": "y",
+        "name": "τ",
+        "direction": "output",
+        "domain": "signal",
+        "side": "bottom"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Mechanics.Rotational.Sensors.TorqueSensor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "load cell",
+      "shaft"
+    ],
+    "modelica": {
+      "class": "Modelica.Mechanics.Rotational.Sensors.TorqueSensor",
+      "ports": {
+        "a": "flange_a",
+        "b": "flange_b",
+        "y": "tau"
+      }
     }
   },
   {
@@ -2397,6 +4121,165 @@ export const mslBlocks: Definition[] = [
     }
   },
   {
+    "kind": "ground",
+    "name": "Ground",
+    "description": "Electrical reference potential.",
+    "domain": "electrical",
+    "category": "electrical",
+    "symbol": "ground",
+    "ports": [
+      {
+        "id": "p",
+        "name": "0 V",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "top"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "reference",
+      "zero",
+      "earth"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Analog.Basic.Ground"
+    }
+  },
+  {
+    "kind": "resistor",
+    "name": "Resistor",
+    "description": "An ideal resistor between two electrical pins.",
+    "domain": "electrical",
+    "category": "electrical",
+    "symbol": "R",
+    "ports": [
+      {
+        "id": "p",
+        "name": "+",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "left"
+      },
+      {
+        "id": "n",
+        "name": "−",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "R",
+        "name": "Resistance",
+        "value": 1,
+        "unit": "Ω",
+        "min": 1e-06
+      }
+    ],
+    "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "electrical",
+      "ohm"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Analog.Basic.Resistor",
+      "modifiers": {
+        "R": "R"
+      }
+    }
+  },
+  {
+    "kind": "capacitor",
+    "name": "Capacitor",
+    "description": "An ideal capacitor.",
+    "domain": "electrical",
+    "category": "electrical",
+    "symbol": "C",
+    "ports": [
+      {
+        "id": "p",
+        "name": "+",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "left"
+      },
+      {
+        "id": "n",
+        "name": "−",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "C",
+        "name": "Capacitance",
+        "value": 0.001,
+        "unit": "F",
+        "min": 1e-12
+      }
+    ],
+    "equations": "// Electrical.Analog.Basic.Capacitor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "electrical"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Analog.Basic.Capacitor",
+      "modifiers": {
+        "C": "C"
+      }
+    }
+  },
+  {
+    "kind": "inductor",
+    "name": "Inductor",
+    "description": "An ideal inductor.",
+    "domain": "electrical",
+    "category": "electrical",
+    "symbol": "L",
+    "ports": [
+      {
+        "id": "p",
+        "name": "+",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "left"
+      },
+      {
+        "id": "n",
+        "name": "−",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "L",
+        "name": "Inductance",
+        "value": 0.001,
+        "unit": "H",
+        "min": 1e-12
+      }
+    ],
+    "equations": "// Electrical.Analog.Basic.Inductor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "electrical",
+      "coil",
+      "choke"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Analog.Basic.Inductor",
+      "modifiers": {
+        "L": "L"
+      }
+    }
+  },
+  {
     "kind": "conductor",
     "name": "Conductor",
     "description": "Linear conductance: i = G·v.",
@@ -3299,6 +5182,51 @@ export const mslBlocks: Definition[] = [
     }
   },
   {
+    "kind": "dcSource",
+    "name": "DC voltage",
+    "description": "An ideal constant DC voltage source.",
+    "domain": "electrical",
+    "category": "electrical",
+    "symbol": "DC",
+    "ports": [
+      {
+        "id": "p",
+        "name": "+",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "top"
+      },
+      {
+        "id": "n",
+        "name": "−",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "bottom"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "V",
+        "name": "Voltage",
+        "value": 24,
+        "unit": "V"
+      }
+    ],
+    "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "supply",
+      "battery",
+      "dc",
+      "power"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+      "modifiers": {
+        "V": "V"
+      }
+    }
+  },
+  {
     "kind": "sineVoltage",
     "name": "AC voltage",
     "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
@@ -3883,6 +5811,94 @@ export const mslBlocks: Definition[] = [
         "Rs": "Rs",
         "Vnom": "Vnom",
         "V0": "V0"
+      }
+    }
+  },
+  {
+    "kind": "voltageSensor",
+    "name": "Voltage sensor",
+    "description": "Measures voltage between two electrical nodes without loading the circuit.",
+    "domain": "electrical",
+    "category": "electrical",
+    "symbol": "V",
+    "ports": [
+      {
+        "id": "p",
+        "name": "+",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "top"
+      },
+      {
+        "id": "n",
+        "name": "−",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "bottom"
+      },
+      {
+        "id": "y",
+        "name": "V",
+        "direction": "output",
+        "domain": "signal",
+        "side": "right"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "measure",
+      "voltmeter",
+      "probe"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+      "ports": {
+        "y": "v"
+      }
+    }
+  },
+  {
+    "kind": "currentSensor",
+    "name": "Current sensor",
+    "description": "Measures branch current with zero series voltage drop; positive from + to −.",
+    "domain": "electrical",
+    "category": "electrical",
+    "symbol": "A",
+    "ports": [
+      {
+        "id": "p",
+        "name": "+",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "left"
+      },
+      {
+        "id": "n",
+        "name": "−",
+        "direction": "physical",
+        "domain": "electrical",
+        "side": "right"
+      },
+      {
+        "id": "y",
+        "name": "A",
+        "direction": "output",
+        "domain": "signal",
+        "side": "bottom"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "measure",
+      "ammeter",
+      "probe"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+      "ports": {
+        "y": "i"
       }
     }
   },
@@ -5593,6 +7609,20 @@ export const mslBlocks: Definition[] = [
         "min": 0
       },
       {
+        "id": "Re",
+        "name": "Field resistance",
+        "value": 100,
+        "unit": "Ω",
+        "min": 0
+      },
+      {
+        "id": "Le",
+        "name": "Field inductance",
+        "value": 1,
+        "unit": "H",
+        "min": 0
+      },
+      {
         "id": "Jr",
         "name": "Rotor inertia",
         "value": 0.15,
@@ -5620,6 +7650,8 @@ export const mslBlocks: Definition[] = [
         "IeNominal": "IeNominal",
         "Ra": "Ra",
         "La": "La",
+        "Re": "Re",
+        "Le": "Le",
         "Jr": "Jr"
       }
     }
@@ -5705,6 +7737,20 @@ export const mslBlocks: Definition[] = [
         "min": 0
       },
       {
+        "id": "Re",
+        "name": "Field resistance",
+        "value": 0.01,
+        "unit": "Ω",
+        "min": 0
+      },
+      {
+        "id": "Le",
+        "name": "Field inductance",
+        "value": 0.0005,
+        "unit": "H",
+        "min": 0
+      },
+      {
         "id": "Jr",
         "name": "Rotor inertia",
         "value": 0.15,
@@ -5731,6 +7777,8 @@ export const mslBlocks: Definition[] = [
         "wNominal": "wNominal",
         "Ra": "Ra",
         "La": "La",
+        "Re": "Re",
+        "Le": "Le",
         "Jr": "Jr"
       }
     }
@@ -5788,6 +7836,27 @@ export const mslBlocks: Definition[] = [
         "min": 0
       },
       {
+        "id": "Lssigma",
+        "name": "Stator stray inductance",
+        "value": 0.000324,
+        "unit": "H",
+        "min": 0
+      },
+      {
+        "id": "Lm",
+        "name": "Main inductance",
+        "value": 0.0095493,
+        "unit": "H",
+        "min": 0
+      },
+      {
+        "id": "Lrsigma",
+        "name": "Rotor stray inductance",
+        "value": 0.000324,
+        "unit": "H",
+        "min": 0
+      },
+      {
         "id": "Rr",
         "name": "Rotor resistance",
         "value": 0.04,
@@ -5818,6 +7887,9 @@ export const mslBlocks: Definition[] = [
         "p": "p",
         "fsNominal": "fsNominal",
         "Rs": "Rs",
+        "Lssigma": "Lssigma",
+        "Lm": "Lm",
+        "Lrsigma": "Lrsigma",
         "Rr": "Rr",
         "Jr": "Jr"
       }
@@ -5825,8 +7897,8 @@ export const mslBlocks: Definition[] = [
   },
   {
     "kind": "pmSyncMachine",
-    "name": "PMSM (MSL)",
-    "description": "Three-phase permanent-magnet synchronous machine with damper cage.",
+    "name": "PMSM",
+    "description": "Three-phase permanent-magnet synchronous machine with a damper cage on the rotor.",
     "domain": "threePhase",
     "category": "machines",
     "symbol": "PMSM",
@@ -5869,10 +7941,38 @@ export const mslBlocks: Definition[] = [
         "min": 0
       },
       {
+        "id": "VsOpenCircuit",
+        "name": "Open-circuit voltage at fsNominal",
+        "value": 112.3,
+        "unit": "V",
+        "min": 0
+      },
+      {
         "id": "Rs",
         "name": "Stator resistance",
         "value": 0.03,
         "unit": "Ω",
+        "min": 0
+      },
+      {
+        "id": "Lssigma",
+        "name": "Stator stray inductance",
+        "value": 0.0003183,
+        "unit": "H",
+        "min": 0
+      },
+      {
+        "id": "Lmd",
+        "name": "d-axis main inductance",
+        "value": 0.0009549,
+        "unit": "H",
+        "min": 0
+      },
+      {
+        "id": "Lmq",
+        "name": "q-axis main inductance",
+        "value": 0.0009549,
+        "unit": "H",
         "min": 0
       },
       {
@@ -5898,7 +7998,11 @@ export const mslBlocks: Definition[] = [
         "TrRef": "293.15",
         "p": "p",
         "fsNominal": "fsNominal",
+        "VsOpenCircuit": "VsOpenCircuit",
         "Rs": "Rs",
+        "Lssigma": "Lssigma",
+        "Lmd": "Lmd",
+        "Lmq": "Lmq",
         "Jr": "Jr"
       }
     }
@@ -5906,7 +8010,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "reluctanceMachine",
     "name": "Reluctance machine",
-    "description": "Three-phase synchronous reluctance machine.",
+    "description": "Three-phase synchronous reluctance machine with a damper cage.",
     "domain": "threePhase",
     "category": "machines",
     "symbol": "SynRM",
@@ -5956,6 +8060,27 @@ export const mslBlocks: Definition[] = [
         "min": 0
       },
       {
+        "id": "Lssigma",
+        "name": "Stator stray inductance",
+        "value": 0.0003183,
+        "unit": "H",
+        "min": 0
+      },
+      {
+        "id": "Lmd",
+        "name": "d-axis main inductance",
+        "value": 0.009231,
+        "unit": "H",
+        "min": 0
+      },
+      {
+        "id": "Lmq",
+        "name": "q-axis main inductance",
+        "value": 0.0028648,
+        "unit": "H",
+        "min": 0
+      },
+      {
         "id": "Jr",
         "name": "Rotor inertia",
         "value": 0.29,
@@ -5978,6 +8103,9 @@ export const mslBlocks: Definition[] = [
         "p": "p",
         "fsNominal": "fsNominal",
         "Rs": "Rs",
+        "Lssigma": "Lssigma",
+        "Lmd": "Lmd",
+        "Lmq": "Lmq",
         "Jr": "Jr"
       }
     }
@@ -6150,6 +8278,68 @@ export const mslBlocks: Definition[] = [
       "modifiers": {
         "V": "fill(V, 3)",
         "f": "fill(f, 3)"
+      }
+    }
+  },
+  {
+    "kind": "threePhaseSignalVoltage",
+    "name": "Controlled 3-phase voltage",
+    "description": "Three phase voltages equal to the three input signals, from plug − to plug +: an ideal (averaged) voltage-source inverter.",
+    "domain": "threePhase",
+    "category": "threePhase",
+    "symbol": "3~ v(u)",
+    "ports": [
+      {
+        "id": "va",
+        "name": "a",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "vb",
+        "name": "b",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "vc",
+        "name": "c",
+        "direction": "input",
+        "domain": "signal",
+        "side": "left"
+      },
+      {
+        "id": "plug_p",
+        "name": "abc",
+        "direction": "physical",
+        "domain": "threePhase",
+        "side": "right"
+      },
+      {
+        "id": "plug_n",
+        "name": "abc−",
+        "direction": "physical",
+        "domain": "threePhase",
+        "side": "bottom"
+      }
+    ],
+    "parameters": [],
+    "equations": "// Electrical.Polyphase.Sources.SignalVoltage from the Modelica Standard Library 4.1.0",
+    "keywords": [
+      "inverter",
+      "averaged",
+      "programmable",
+      "foc",
+      "drive"
+    ],
+    "modelica": {
+      "class": "Modelica.Electrical.Polyphase.Sources.SignalVoltage",
+      "ports": {
+        "va": "v[1]",
+        "vb": "v[2]",
+        "vc": "v[3]"
       }
     }
   },
@@ -6455,7 +8645,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "threePhaseTransformer",
     "name": "3-phase transformer (Dy)",
-    "description": "Three-phase delta–star transformer with a nominal ratio.",
+    "description": "Three-phase delta–star transformer with a nominal ratio and winding resistance and stray inductance on each side.",
     "domain": "threePhase",
     "category": "threePhase",
     "symbol": "Dy",
@@ -6489,6 +8679,34 @@ export const mslBlocks: Definition[] = [
         "value": 1,
         "unit": "",
         "min": 0
+      },
+      {
+        "id": "R1",
+        "name": "Primary resistance per phase",
+        "value": 0.01,
+        "unit": "Ω",
+        "min": 0
+      },
+      {
+        "id": "L1sigma",
+        "name": "Primary stray inductance",
+        "value": 0.001,
+        "unit": "H",
+        "min": 0
+      },
+      {
+        "id": "R2",
+        "name": "Secondary resistance per phase",
+        "value": 0.01,
+        "unit": "Ω",
+        "min": 0
+      },
+      {
+        "id": "L2sigma",
+        "name": "Secondary stray inductance",
+        "value": 0.001,
+        "unit": "H",
+        "min": 0
       }
     ],
     "equations": "// Electrical.Machines.BasicMachines.Transformers.Dy.Dy01 from the Modelica Standard Library 4.1.0",
@@ -6499,15 +8717,15 @@ export const mslBlocks: Definition[] = [
     "modelica": {
       "class": "Modelica.Electrical.Machines.BasicMachines.Transformers.Dy.Dy01",
       "modifiers": {
-        "n": "n",
-        "R1": "0.01",
-        "L1sigma": "0.001",
-        "R2": "0.01",
-        "L2sigma": "0.001",
         "T1Ref": "293.15",
         "T2Ref": "293.15",
         "T1Operational": "293.15",
-        "T2Operational": "293.15"
+        "T2Operational": "293.15",
+        "n": "n",
+        "R1": "R1",
+        "L1sigma": "L1sigma",
+        "R2": "R2",
+        "L2sigma": "L2sigma"
       }
     }
   },

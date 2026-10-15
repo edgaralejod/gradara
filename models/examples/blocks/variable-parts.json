@@ -11,20 +11,19 @@
       "definition": {
         "kind": "sine",
         "name": "R = 10 + 5 sin 2πt",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -52,12 +51,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 128,
@@ -77,23 +85,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "DC 10 V",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -105,13 +113,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 144,
@@ -186,41 +200,47 @@
       "definition": {
         "kind": "currentSensor",
         "name": "i R",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "A",
-        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "left"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "right"
           },
           {
             "id": "y",
             "name": "A",
             "direction": "output",
-            "side": "bottom",
             "domain": "signal",
+            "side": "bottom",
             "unit": "A"
           }
         ],
         "parameters": [],
-        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "ammeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
       },
       "position": {
         "x": 440,
@@ -238,18 +258,27 @@
         "name": "Ground R",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -265,20 +294,19 @@
       "definition": {
         "kind": "sine",
         "name": "L = 2 + sin(πt/2)",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -306,12 +334,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 704,
@@ -331,23 +368,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "DC 1 V",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -359,13 +396,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 720,
@@ -449,41 +492,47 @@
       "definition": {
         "kind": "currentSensor",
         "name": "i L",
+        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "A",
-        "description": "Measures branch current with zero series voltage drop; positive from + to −.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "left"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "right"
           },
           {
             "id": "y",
             "name": "A",
             "direction": "output",
-            "side": "bottom",
             "domain": "signal",
+            "side": "bottom",
             "unit": "A"
           }
         ],
         "parameters": [],
-        "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "ammeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+          "ports": {
+            "y": "i"
+          }
+        }
       },
       "position": {
         "x": 1016,
@@ -501,18 +550,27 @@
         "name": "Ground L",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 720,
@@ -528,20 +586,19 @@
       "definition": {
         "kind": "constant",
         "name": "C₀ = 1 mF",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -550,7 +607,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 128,
@@ -568,13 +636,15 @@
         "name": "+1 mF at 0.5 s",
         "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -592,11 +662,18 @@
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;",
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "reference"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 128,
@@ -612,9 +689,10 @@
       "definition": {
         "kind": "sum",
         "name": "C",
-        "symbol": "sum",
+        "description": "Add two signals.",
         "domain": "signal",
-        "description": "Sum",
+        "category": "math",
+        "symbol": "sum",
         "ports": [
           {
             "id": "a",
@@ -635,13 +713,23 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = a + b;",
         "parameters": [],
-        "declarations": ""
+        "equations": "// Blocks.Math.Add from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "add",
+          "plus"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Add",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 312,
@@ -778,41 +866,47 @@
       "definition": {
         "kind": "voltageSensor",
         "name": "v C",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "V",
-        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           },
           {
             "id": "y",
             "name": "V",
             "direction": "output",
-            "side": "right",
             "domain": "signal",
+            "side": "right",
             "unit": "V"
           }
         ],
         "parameters": [],
-        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "voltmeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+          "ports": {
+            "y": "v"
+          }
+        }
       },
       "position": {
         "x": 856,
@@ -834,18 +928,27 @@
         "name": "Ground C",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 472,
@@ -861,26 +964,32 @@
       "definition": {
         "kind": "ramp",
         "name": "Wiper position",
-        "symbol": "ramp",
+        "description": "Rises linearly from 0 to Height over Duration after the start time, then holds.",
         "domain": "signal",
-        "description": "A linearly increasing signal after a start time.",
+        "category": "sources",
+        "symbol": "ramp",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
         "parameters": [
           {
-            "id": "slope",
-            "name": "Slope",
+            "id": "height",
+            "name": "Height",
             "value": 1,
-            "unit": "1/s"
+            "unit": ""
+          },
+          {
+            "id": "duration",
+            "name": "Duration",
+            "value": 1,
+            "unit": "s",
+            "min": 0
           },
           {
             "id": "startTime",
@@ -890,11 +999,20 @@
             "min": 0
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Ramp from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
-          "reference"
-        ]
+          "reference",
+          "slope"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Ramp",
+          "modifiers": {
+            "height": "height",
+            "duration": "duration",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 1000,
@@ -910,23 +1028,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "DC 10 V (pot)",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -938,13 +1056,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 1136,
@@ -1038,41 +1162,47 @@
       "definition": {
         "kind": "voltageSensor",
         "name": "Wiper voltage",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "V",
-        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           },
           {
             "id": "y",
             "name": "V",
             "direction": "output",
-            "side": "right",
             "domain": "signal",
+            "side": "right",
             "unit": "V"
           }
         ],
         "parameters": [],
-        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "voltmeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+          "ports": {
+            "y": "v"
+          }
+        }
       },
       "position": {
         "x": 1472,
@@ -1094,18 +1224,27 @@
         "name": "Ground P",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 1136,

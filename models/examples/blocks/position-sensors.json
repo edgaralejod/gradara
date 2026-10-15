@@ -205,34 +205,40 @@
       "definition": {
         "kind": "angleSensor",
         "name": "Shaft angle",
-        "symbol": "θ",
+        "description": "Absolute angle of the flange, in radians, without loading it.",
         "domain": "mechanical",
-        "description": "Measures shaft angle in radians without loading the mechanical system.",
+        "category": "mechanical",
+        "symbol": "θ",
         "ports": [
           {
             "id": "flange",
             "name": "shaft",
+            "direction": "physical",
             "domain": "mechanical",
-            "side": "right",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "y",
-            "name": "y",
+            "name": "θ",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
+            "side": "right",
             "unit": "rad"
           }
         ],
         "parameters": [],
-        "equations": "y = flange.phi;\nflange.tau = 0;",
+        "equations": "// Mechanics.Rotational.Sensors.AngleSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
-          "mechanical",
-          "sensor",
           "position",
-          "encoder"
-        ]
+          "encoder",
+          "resolver"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.AngleSensor",
+          "ports": {
+            "y": "phi"
+          }
+        }
       },
       "position": {
         "x": 392,
@@ -242,7 +248,6 @@
         "width": 128,
         "height": 96
       },
-      "rotation": 180,
       "labelOffset": {
         "x": 116,
         "y": -62

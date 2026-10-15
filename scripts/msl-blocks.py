@@ -48,6 +48,118 @@ def B(kind, name, cls, symbol, category, description, params=(), *, sides=None, 
                        equations=equations))
 
 
+INIT = 'Modelica.Blocks.Types.Init'
+TWO_PI_50 = 2 * 3.141592653589793 * 50  # MSL's demo machines state inductances as reactances at 50 Hz
+
+# -------------------------------------------------------------------- sources
+B('constant', 'Constant', f'{BLK}.Sources.Constant', 'constant', 'sources', 'A constant output value.',
+  [P('value', 'Value', 0, '', modifier='k')], keywords=['source', 'reference', 'setpoint'])
+B('step', 'Step', f'{BLK}.Sources.Step', 'step', 'sources', 'A step change from zero to a final value.',
+  [P('height', 'Height', 1, ''), P('startTime', 'Start time', 0.2, 's', 0)], keywords=['source', 'reference'])
+B('ramp', 'Ramp', f'{BLK}.Sources.Ramp', 'ramp', 'sources',
+  'Rises linearly from 0 to Height over Duration after the start time, then holds.',
+  [P('height', 'Height', 1, ''), P('duration', 'Duration', 1, 's', 0), P('startTime', 'Start time', 0, 's', 0)],
+  keywords=['source', 'reference', 'slope'])
+B('sine', 'Sine wave', f'{BLK}.Sources.Sine', 'sine', 'sources', 'A continuous sinusoid.',
+  [P('amplitude', 'Amplitude', 1, ''), P('frequency', 'Frequency', 1, 'Hz', 0, modifier='f'), P('phase', 'Phase', 0, 'rad'),
+   P('offset', 'Offset', 0, '')], keywords=['source', 'oscillator', 'wave'])
+B('pulse', 'Pulse', f'{BLK}.Sources.Pulse', 'pulse', 'sources', 'A periodic rectangular pulse.',
+  [P('amplitude', 'Amplitude', 1, ''), P('period', 'Period', 1, 's', 0.0001), P('width', 'Duty cycle', 0.5, '', 0.001, modifier='', max=1),
+   P('startTime', 'Start time', 0, 's', 0)], modifiers={'width': '100*width'}, keywords=['source', 'square', 'pwm'])
+B('clock', 'Clock', f'{BLK}.Sources.ContinuousClock', 'clock', 'sources', 'Simulation time as a signal.',
+  names={'y': 't'}, keywords=['source', 'time'])
+
+# ----------------------------------------------------------------------- math
+B('gain', 'Gain', f'{BLK}.Math.Gain', 'K', 'math', 'Multiply an input by an adjustable gain.', [P('k', 'Gain', 1, '')],
+  keywords=['math', 'multiply', 'scale'])
+B('sum', 'Sum', f'{BLK}.Math.Add', 'sum', 'math', 'Add two signals.', ports={'a': 'u1', 'b': 'u2', 'y': 'y'},
+  names={'a': '+', 'b': '+'}, sides={'a': 'left', 'b': 'bottom', 'y': 'right'}, keywords=['math', 'add', 'plus'])
+B('subtract', 'Subtract', f'{BLK}.Math.Feedback', 'sum', 'math', 'Subtract the second signal from the first: y = a − b.',
+  ports={'a': 'u1', 'b': 'u2', 'y': 'y'}, names={'a': '+', 'b': '−'}, sides={'a': 'left', 'b': 'bottom', 'y': 'right'},
+  keywords=['math', 'difference', 'error', 'compare'])
+B('product', 'Product', f'{BLK}.Math.Product', '×', 'math', 'Multiply two signals.', ports={'a': 'u1', 'b': 'u2', 'y': 'y'},
+  sides={'a': 'left', 'b': 'bottom', 'y': 'right'}, keywords=['math', 'multiply'])
+B('divide', 'Divide', f'{BLK}.Math.Division', '÷', 'math', 'Divide two signals: y = a / b. Keep the denominator away from zero.',
+  ports={'a': 'u1', 'b': 'u2', 'y': 'y'}, sides={'a': 'left', 'b': 'bottom', 'y': 'right'}, keywords=['math'])
+B('abs', 'Abs', f'{BLK}.Math.Abs', '|u|', 'math', 'Absolute value.', keywords=['math'])
+B('sign', 'Sign', f'{BLK}.Math.Sign', 'sgn', 'math', 'Sign of the input: −1, 0, or 1.', keywords=['math'])
+B('sqrt', 'Sqrt', f'{BLK}.Math.Sqrt', '√', 'math', 'Square root of a non-negative input.', keywords=['math'])
+B('min', 'Min', f'{BLK}.Math.Min', 'min', 'math', 'The smaller of two signals.', ports={'a': 'u1', 'b': 'u2', 'y': 'y'},
+  sides={'a': 'left', 'b': 'bottom', 'y': 'right'}, keywords=['math'])
+B('max', 'Max', f'{BLK}.Math.Max', 'max', 'math', 'The larger of two signals.', ports={'a': 'u1', 'b': 'u2', 'y': 'y'},
+  sides={'a': 'left', 'b': 'bottom', 'y': 'right'}, keywords=['math'])
+B('sineOp', 'Sin', f'{BLK}.Math.Sin', 'sin', 'math', 'Sine of the input, in radians.', keywords=['math', 'trig'])
+B('cosineOp', 'Cos', f'{BLK}.Math.Cos', 'cos', 'math', 'Cosine of the input, in radians.', keywords=['math', 'trig'])
+B('unaryMinus', 'Unary minus', f'{BLK}.Math.Gain', '−', 'math', 'Negate a signal.', modifiers={'k': '-1'},
+  keywords=['math', 'invert', 'negate'])
+
+# ----------------------------------------------------------------- continuous
+B('integrator', 'Integrator', f'{BLK}.Continuous.Integrator', '1/s', 'continuous', 'Integrates the input over time.',
+  [P('y_start', 'Initial value', 0, '')], modifiers={'initType': f'{INIT}.InitialState'}, keywords=['continuous', 'accumulate'])
+B('limitedIntegrator', 'Limited integrator', f'{BLK}.Continuous.LimIntegrator', '1/s', 'continuous',
+  'Integrates the input and holds the output inside its limits (the state stops at a limit instead of winding up).',
+  [P('outMax', 'Upper limit', 1, ''), P('outMin', 'Lower limit', -1, ''), P('y_start', 'Initial value', 0, '')],
+  modifiers={'initType': f'{INIT}.InitialState'}, keywords=['continuous', 'anti-windup', 'saturating'])
+B('derivative', 'Derivative', f'{BLK}.Continuous.Derivative', 's', 'continuous', 'Filtered derivative du/dt.',
+  [P('tau', 'Filter time', 0.01, 's', 0.00001, modifier='T')], modifiers={'initType': f'{INIT}.SteadyState'},
+  keywords=['continuous', 'diff'])
+B('filter', 'Low-pass filter', f'{BLK}.Continuous.FirstOrder', '1/(τs+1)', 'continuous', 'First-order continuous filter.',
+  [P('tau', 'Time constant', 0.05, 's', 0.00001, modifier='T')], modifiers={'initType': f'{INIT}.InitialState'},
+  keywords=['continuous', 'lag', 'pt1'])
+B('secondOrder', 'Second-order', f'{BLK}.Continuous.SecondOrder', 'ωn,ζ', 'continuous',
+  'A second-order transfer function ωn² / (s² + 2ζωn s + ωn²).',
+  [P('wn', 'Natural frequency', 10, 'rad/s', 0.01, modifier='w'), P('zeta', 'Damping ratio', 0.7, '', 0, modifier='D')],
+  modifiers={'initType': f'{INIT}.InitialState'}, keywords=['continuous', 'tf', 'transfer'])
+B('delay', 'Transport delay', f'{BLK}.Nonlinear.FixedDelay', 'e⁻sT', 'continuous', 'A pure time delay.',
+  [P('T', 'Delay', 0.05, 's', 0, modifier='delayTime')], keywords=['continuous', 'delay', 'dead time'])
+
+# ------------------------------------------------------------------ nonlinear
+B('saturation', 'Saturation', f'{BLK}.Nonlinear.Limiter', 'sat', 'nonlinear', 'Clamp a signal between lower and upper limits.',
+  [P('lower', 'Lower limit', -1, '', modifier='uMin'), P('upper', 'Upper limit', 1, '', modifier='uMax')],
+  keywords=['nonlinear', 'limit', 'clamp'])
+B('deadzone', 'Dead zone', f'{BLK}.Nonlinear.DeadZone', 'dead', 'nonlinear', 'Zero output inside ±half-width.',
+  [P('start', 'Half-width', 0.1, '', 0, modifier='')], modifiers={'uMax': 'start', 'uMin': '-start'}, keywords=['nonlinear'])
+B('rateLimiter', 'Rate limiter', f'{BLK}.Nonlinear.SlewRateLimiter', 'du/dt', 'nonlinear', 'Limits how fast a signal may change.',
+  [P('rising', 'Rising limit', 10, '1/s', 0, modifier='Rising'), P('falling', 'Falling limit', 10, '1/s', 0, modifier='')],
+  modifiers={'Falling': '-falling', 'initType': f'{INIT}.SteadyState'}, keywords=['nonlinear', 'slew'])
+
+# ------------------------------------------------------------------- discrete
+B('zoh', 'Zero-order hold', f'{BLK}.Discrete.ZeroOrderHold', 'ZOH', 'discrete', 'Sample and hold.',
+  [P('Ts', 'Sample period', 0.001, 's', 0.0001, modifier='samplePeriod')], keywords=['discrete', 'sample'])
+
+# -------------------------------------------------------------------- control
+LIMPID = f'{BLK}.Continuous.LimPID'
+B('piController', 'PI (continuous)', LIMPID, 'PI', 'control',
+  'Continuous PI controller with output limits and anti-windup: y = k·(e + ∫e/Ti), clamped, where e = reference − measured.',
+  [P('k', 'Gain', 1, ''), P('Ti', 'Integral time', 0.5, 's', 1e-6), P('yMax', 'Upper limit', 1, ''), P('yMin', 'Lower limit', -1, '')],
+  modifiers={'controllerType': 'Modelica.Blocks.Types.SimpleController.PI', 'initType': f'{INIT}.InitialState'},
+  ports={'reference': 'u_s', 'measured': 'u_m', 'y': 'y'}, names={'reference': 'ref', 'measured': 'meas'},
+  sides={'reference': 'left', 'measured': 'left', 'y': 'right'}, keywords=['control', 'regulator', 'anti-windup', 'limited'])
+B('pidController', 'PID (continuous)', LIMPID, 'PID', 'control',
+  'Continuous PID controller with a filtered derivative, output limits, and anti-windup: y = k·(e + ∫e/Ti + Td·de/dt), clamped.',
+  [P('k', 'Gain', 1, ''), P('Ti', 'Integral time', 0.5, 's', 1e-6), P('Td', 'Derivative time', 0.05, 's', 0),
+   P('Nd', 'Derivative filter ratio', 10, '', 1), P('yMax', 'Upper limit', 1, ''), P('yMin', 'Lower limit', -1, '')],
+  modifiers={'controllerType': 'Modelica.Blocks.Types.SimpleController.PID', 'initType': f'{INIT}.InitialState'},
+  ports={'reference': 'u_s', 'measured': 'u_m', 'y': 'y'}, names={'reference': 'ref', 'measured': 'meas'},
+  sides={'reference': 'left', 'measured': 'left', 'y': 'right'}, keywords=['control', 'regulator', 'anti-windup', 'limited'])
+SPB = f'{MACH}.SpacePhasors.Blocks'
+B('clarke', 'Clarke transform', f'{SPB}.ToSpacePhasor', 'abc→αβ', 'control',
+  'Amplitude-invariant three-phase to stationary-frame (α, β) transform.',
+  ports={'ia': 'u[1]', 'ib': 'u[2]', 'ic': 'u[3]', 'alpha': 'y[1]', 'beta': 'y[2]'},
+  names={'ia': 'a', 'ib': 'b', 'ic': 'c', 'alpha': 'α', 'beta': 'β'},
+  sides={'ia': 'right', 'ib': 'right', 'ic': 'right', 'alpha': 'left', 'beta': 'left'}, keywords=['foc', 'space phasor', 'abc'])
+B('park', 'Park transform', f'{SPB}.Rotator', 'αβ→dq', 'control',
+  'Rotates a stationary-frame (α, β) pair into a frame turning at the input angle: with the electrical rotor angle it gives d and q. Feed −θ to rotate back.',
+  ports={'alpha': 'u[1]', 'beta': 'u[2]', 'theta': 'angle', 'id': 'y[1]', 'iq': 'y[2]'},
+  names={'alpha': 'α', 'beta': 'β', 'theta': 'θe', 'id': 'd', 'iq': 'q'},
+  sides={'alpha': 'right', 'beta': 'right', 'theta': 'bottom', 'id': 'left', 'iq': 'left'}, keywords=['foc', 'rotator', 'dq'])
+B('inverseClarke', 'Inverse Clarke transform', f'{SPB}.FromSpacePhasor', 'αβ→abc', 'control',
+  'Stationary-frame (α, β) pair back to three phases, with the zero-sequence input added to each.',
+  ports={'alpha': 'u[1]', 'beta': 'u[2]', 'zero': 'zero', 'va': 'y[1]', 'vb': 'y[2]', 'vc': 'y[3]'},
+  names={'alpha': 'α', 'beta': 'β', 'zero': '0', 'va': 'a', 'vb': 'b', 'vc': 'c'},
+  sides={'alpha': 'left', 'beta': 'left', 'zero': 'bottom', 'va': 'right', 'vb': 'right', 'vc': 'right'},
+  keywords=['foc', 'space phasor', 'abc'])
+
 # ----------------------------------------------------------------- rotational
 B('rotFixed', 'Fixed (rotational)', f'{ROT}.Components.Fixed', '⏚', 'mechanical',
   'A flange fixed in the housing at a constant angle.', [P('phi0', 'Angle', 0, 'rad', modifier='phi0')],
@@ -91,8 +203,14 @@ B('speedSource', 'Speed source', f'{ROT}.Sources.Speed', 'ω', 'mechanical',
   sides={'w_ref': 'left', 'flange': 'right'}, keywords=['drive', 'prescribed'])
 B('constantSpeed', 'Constant speed', f'{ROT}.Sources.ConstantSpeed', 'ω₀', 'mechanical',
   'Holds the flange at a constant speed.', [P('w_fixed', 'Speed', 100, 'rad/s')], sides={'flange': 'right'})
-B('rotSpeedSensor', 'Speed sensor (ideal)', f'{ROT}.Sensors.SpeedSensor', 'ω', 'mechanical',
+B('rotSpeedSensor', 'Speed sensor', f'{ROT}.Sensors.SpeedSensor', 'ω', 'mechanical',
   'Absolute angular velocity of the flange.', names={'w': 'ω'}, sides={'flange': 'left', 'w': 'right'}, keywords=['tachometer', 'rpm'])
+B('angleSensor', 'Angle sensor', f'{ROT}.Sensors.AngleSensor', 'θ', 'mechanical',
+  'Absolute angle of the flange, in radians, without loading it.', ports={'flange': 'flange', 'y': 'phi'}, names={'y': 'θ'},
+  sides={'flange': 'left', 'y': 'right'}, keywords=['position', 'encoder', 'resolver'])
+B('torqueSensor', 'Torque sensor', f'{ROT}.Sensors.TorqueSensor', 'τ', 'mechanical',
+  'Torque transmitted from flange a to flange b, without adding compliance.', ports={'a': 'flange_a', 'b': 'flange_b', 'y': 'tau'},
+  names={'a': 'a', 'b': 'b', 'y': 'τ'}, sides={'a': 'left', 'b': 'right', 'y': 'bottom'}, keywords=['load cell', 'shaft'])
 B('rotAccSensor', 'Acceleration sensor', f'{ROT}.Sensors.AccSensor', 'α', 'mechanical',
   'Absolute angular acceleration of the flange.', names={'a': 'α'}, sides={'flange': 'left', 'a': 'right'})
 B('rotPowerSensor', 'Power sensor (rotational)', f'{ROT}.Sensors.PowerSensor', 'P', 'mechanical',
@@ -209,6 +327,14 @@ B('mmfSensor', 'MMF sensor', f'{MAG}.Sensors.MagneticPotentialDifferenceSensor',
   'Magnetic potential difference between its ports.', sides={'V_m': 'bottom'})
 
 # --------------------------------------------------------- electrical passive
+B('ground', 'Ground', f'{ANALOG}.Basic.Ground', 'ground', 'electrical', 'Electrical reference potential.',
+  names={'p': '0 V'}, sides={'p': 'top'}, keywords=['reference', 'zero', 'earth'])
+B('resistor', 'Resistor', f'{ANALOG}.Basic.Resistor', 'R', 'electrical', 'An ideal resistor between two electrical pins.',
+  [P('R', 'Resistance', 1, 'Ω', 0.000001)], sides={'p': 'left', 'n': 'right'}, keywords=['electrical', 'ohm'])
+B('capacitor', 'Capacitor', f'{ANALOG}.Basic.Capacitor', 'C', 'electrical', 'An ideal capacitor.',
+  [P('C', 'Capacitance', 0.001, 'F', 1e-12)], sides={'p': 'left', 'n': 'right'}, keywords=['electrical'])
+B('inductor', 'Inductor', f'{ANALOG}.Basic.Inductor', 'L', 'electrical', 'An ideal inductor.',
+  [P('L', 'Inductance', 0.001, 'H', 1e-12)], sides={'p': 'left', 'n': 'right'}, keywords=['electrical', 'coil', 'choke'])
 B('conductor', 'Conductor', f'{ANALOG}.Basic.Conductor', 'G', 'electrical',
   'Linear conductance: i = G·v.', [P('G', 'Conductance', 1, 'S', 0)], keywords=['admittance'])
 B('heatingResistor', 'Resistor (thermal)', f'{ANALOG}.Basic.Resistor', 'R(T)', 'electrical',
@@ -262,6 +388,8 @@ B('opAmpLimited', 'Op-amp (limited)', f'{ANALOG}.Ideal.IdealizedOpAmpLimited', '
   sides={'in_p': 'left', 'in_n': 'left', 'out': 'right'}, keywords=['amplifier', 'saturation'])
 
 # ---------------------------------------------------------- electrical sources
+B('dcSource', 'DC voltage', f'{ANALOG}.Sources.ConstantVoltage', 'DC', 'electrical', 'An ideal constant DC voltage source.',
+  [P('V', 'Voltage', 24, 'V')], sides={'p': 'top', 'n': 'bottom'}, keywords=['supply', 'battery', 'dc', 'power'])
 B('sineVoltage', 'AC voltage', f'{ANALOG}.Sources.SineVoltage', 'AC', 'electrical',
   'Sinusoidal voltage: offset + V·sin(2πf·t + phase).',
   [P('V', 'Amplitude', 325, 'V'), P('f', 'Frequency', 50, 'Hz', 0), P('phase', 'Phase', 0, 'rad'), P('offset', 'Offset', 0, 'V')],
@@ -296,6 +424,12 @@ B('supercap', 'Supercapacitor', 'Modelica.Electrical.Batteries.BatteryStacks.Sup
   [P('C', 'Capacitance', 100, 'F', 0), P('Rs', 'Series resistance', 0.01, 'Ω', 0), P('Vnom', 'Nominal voltage', 2.7, 'V', 0),
    P('V0', 'Initial voltage', 0, 'V', 0)],
   sides={'p': 'top', 'n': 'bottom'}, keywords=['ultracapacitor', 'storage'])
+B('voltageSensor', 'Voltage sensor', f'{ANALOG}.Sensors.VoltageSensor', 'V', 'electrical',
+  'Measures voltage between two electrical nodes without loading the circuit.', ports={'p': 'p', 'n': 'n', 'y': 'v'},
+  names={'y': 'V'}, sides={'p': 'top', 'n': 'bottom', 'y': 'right'}, keywords=['measure', 'voltmeter', 'probe'])
+B('currentSensor', 'Current sensor', f'{ANALOG}.Sensors.CurrentSensor', 'A', 'electrical',
+  'Measures branch current with zero series voltage drop; positive from + to −.', ports={'p': 'p', 'n': 'n', 'y': 'i'},
+  names={'y': 'A'}, sides={'p': 'left', 'n': 'right', 'y': 'bottom'}, keywords=['measure', 'ammeter', 'probe'])
 B('powerSensor', 'Power sensor', f'{ANALOG}.Sensors.PowerSensor', 'P', 'electrical',
   'Instantaneous power: current path pc→nc, voltage across pv–nv.',
   names={'pc': 'i+', 'nc': 'i−', 'pv': 'v+', 'nv': 'v−', 'power': 'P'},
@@ -417,7 +551,8 @@ B('dcShuntMachine', 'DC machine (excited)', f'{MACH}.BasicMachines.DCMachines.DC
   'Separately excited DC machine; wire the field in parallel for shunt operation.',
   [P('VaNominal', 'Nominal voltage', 100, 'V', 0), P('IaNominal', 'Nominal current', 100, 'A', 0),
    P('wNominal', 'Nominal speed', 149.2, 'rad/s', 0), P('IeNominal', 'Nominal field current', 1, 'A', 0),
-   P('Ra', 'Armature resistance', 0.05, 'Ω', 0), P('La', 'Armature inductance', 0.0015, 'H', 0), P('Jr', 'Rotor inertia', 0.15, 'kg·m²', 0)],
+   P('Ra', 'Armature resistance', 0.05, 'Ω', 0), P('La', 'Armature inductance', 0.0015, 'H', 0),
+   P('Re', 'Field resistance', 100, 'Ω', 0), P('Le', 'Field inductance', 1, 'H', 0), P('Jr', 'Rotor inertia', 0.15, 'kg·m²', 0)],
   modifiers={'TaOperational': '293.15', 'TaNominal': '293.15', 'TaRef': '293.15', 'TeOperational': '293.15', 'TeRef': '293.15'},
   names={'pin_ap': 'a+', 'pin_an': 'a−', 'pin_ep': 'e+', 'pin_en': 'e−', 'flange': 'shaft'},
   sides={'pin_ap': 'left', 'pin_an': 'left', 'pin_ep': 'top', 'pin_en': 'top', 'flange': 'right'}, domain='electrical',
@@ -426,7 +561,8 @@ B('dcSeriesMachine', 'DC machine (series)', f'{MACH}.BasicMachines.DCMachines.DC
   'Series-excited DC machine (traction motor).',
   [P('VaNominal', 'Nominal voltage', 100, 'V', 0), P('IaNominal', 'Nominal current', 100, 'A', 0),
    P('wNominal', 'Nominal speed', 149.2, 'rad/s', 0), P('Ra', 'Armature resistance', 0.05, 'Ω', 0),
-   P('La', 'Armature inductance', 0.0015, 'H', 0), P('Jr', 'Rotor inertia', 0.15, 'kg·m²', 0)],
+   P('La', 'Armature inductance', 0.0015, 'H', 0), P('Re', 'Field resistance', 0.01, 'Ω', 0),
+   P('Le', 'Field inductance', 0.0005, 'H', 0), P('Jr', 'Rotor inertia', 0.15, 'kg·m²', 0)],
   modifiers={'TaOperational': '293.15', 'TaNominal': '293.15', 'TaRef': '293.15', 'TeOperational': '293.15', 'TeRef': '293.15'},
   names={'pin_ap': 'a+', 'pin_an': 'a−', 'pin_ep': 'e+', 'pin_en': 'e−', 'flange': 'shaft'},
   sides={'pin_ap': 'left', 'pin_an': 'left', 'pin_ep': 'top', 'pin_en': 'top', 'flange': 'right'}, domain='electrical',
@@ -434,21 +570,30 @@ B('dcSeriesMachine', 'DC machine (series)', f'{MACH}.BasicMachines.DCMachines.DC
 B('inductionMachine', 'Induction machine', f'{MACH}.BasicMachines.InductionMachines.IM_SquirrelCage', 'IM', 'machines',
   'Three-phase squirrel-cage induction machine (star-connected stator terminals).',
   [P('p', 'Pole pairs', 2, '', 1), P('fsNominal', 'Nominal frequency', 50, 'Hz', 0), P('Rs', 'Stator resistance', 0.03, 'Ω', 0),
+   P('Lssigma', 'Stator stray inductance', round(3 * (1 - (1 - 0.0667) ** 0.5) / TWO_PI_50, 7), 'H', 0),
+   P('Lm', 'Main inductance', round(3 / TWO_PI_50, 7), 'H', 0),
+   P('Lrsigma', 'Rotor stray inductance', round(3 * (1 - (1 - 0.0667) ** 0.5) / TWO_PI_50, 7), 'H', 0),
    P('Rr', 'Rotor resistance', 0.04, 'Ω', 0), P('Jr', 'Rotor inertia', 0.29, 'kg·m²', 0)],
   modifiers={'TsOperational': '293.15', 'TrOperational': '293.15', 'TsRef': '293.15', 'TrRef': '293.15'},
   names={'plug_sp': 'abc', 'plug_sn': 'n', 'flange': 'shaft'}, sides={'plug_sp': 'left', 'plug_sn': 'bottom', 'flange': 'right'},
   domain='threePhase', keywords=['asynchronous', 'motor', 'squirrel cage'])
-B('pmSyncMachine', 'PMSM (MSL)', f'{MACH}.BasicMachines.SynchronousMachines.SM_PermanentMagnet', 'PMSM', 'machines',
-  'Three-phase permanent-magnet synchronous machine with damper cage.',
-  [P('p', 'Pole pairs', 2, '', 1), P('fsNominal', 'Nominal frequency', 50, 'Hz', 0), P('Rs', 'Stator resistance', 0.03, 'Ω', 0),
+B('pmSyncMachine', 'PMSM', f'{MACH}.BasicMachines.SynchronousMachines.SM_PermanentMagnet', 'PMSM', 'machines',
+  'Three-phase permanent-magnet synchronous machine with a damper cage on the rotor.',
+  [P('p', 'Pole pairs', 2, '', 1), P('fsNominal', 'Nominal frequency', 50, 'Hz', 0),
+   P('VsOpenCircuit', 'Open-circuit voltage at fsNominal', 112.3, 'V', 0), P('Rs', 'Stator resistance', 0.03, 'Ω', 0),
+   P('Lssigma', 'Stator stray inductance', round(0.1 / TWO_PI_50, 7), 'H', 0),
+   P('Lmd', 'd-axis main inductance', round(0.3 / TWO_PI_50, 7), 'H', 0),
+   P('Lmq', 'q-axis main inductance', round(0.3 / TWO_PI_50, 7), 'H', 0),
    P('Jr', 'Rotor inertia', 0.29, 'kg·m²', 0)],
   modifiers={'TsOperational': '293.15', 'TsRef': '293.15', 'TrOperational': '293.15', 'TrRef': '293.15'},
   names={'plug_sp': 'abc', 'plug_sn': 'n', 'flange': 'shaft'}, sides={'plug_sp': 'left', 'plug_sn': 'bottom', 'flange': 'right'},
   exclude={'damperCageLossPower'}, domain='threePhase', keywords=['synchronous', 'bldc', 'motor'])
 B('reluctanceMachine', 'Reluctance machine', f'{MACH}.BasicMachines.SynchronousMachines.SM_ReluctanceRotor', 'SynRM', 'machines',
-  'Three-phase synchronous reluctance machine.',
+  'Three-phase synchronous reluctance machine with a damper cage.',
   [P('p', 'Pole pairs', 2, '', 1), P('fsNominal', 'Nominal frequency', 50, 'Hz', 0), P('Rs', 'Stator resistance', 0.03, 'Ω', 0),
-   P('Jr', 'Rotor inertia', 0.29, 'kg·m²', 0)],
+   P('Lssigma', 'Stator stray inductance', round(0.1 / TWO_PI_50, 7), 'H', 0),
+   P('Lmd', 'd-axis main inductance', round(2.9 / TWO_PI_50, 7), 'H', 0),
+   P('Lmq', 'q-axis main inductance', round(0.9 / TWO_PI_50, 7), 'H', 0), P('Jr', 'Rotor inertia', 0.29, 'kg·m²', 0)],
   modifiers={'TsOperational': '293.15', 'TsRef': '293.15', 'TrOperational': '293.15', 'TrRef': '293.15'},
   names={'plug_sp': 'abc', 'plug_sn': 'n', 'flange': 'shaft'}, sides={'plug_sp': 'left', 'plug_sn': 'bottom', 'flange': 'right'},
   exclude={'damperCageLossPower'}, domain='threePhase', keywords=['synrm', 'motor'])
@@ -470,6 +615,12 @@ B('threePhaseSource', '3-phase AC source', f'{POLY}.Sources.SineVoltage', '3~ AC
   'Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.',
   [P('V', 'Phase amplitude', 325, 'V'), P('f', 'Frequency', 50, 'Hz', 0)], modifiers={'V': 'fill(V, 3)', 'f': 'fill(f, 3)'},
   sides={'plug_p': 'right', 'plug_n': 'bottom'}, names={'plug_p': 'abc', 'plug_n': 'abc−'}, keywords=['grid', 'mains', 'three phase'])
+B('threePhaseSignalVoltage', 'Controlled 3-phase voltage', f'{POLY}.Sources.SignalVoltage', '3~ v(u)', 'threePhase',
+  'Three phase voltages equal to the three input signals, from plug − to plug +: an ideal (averaged) voltage-source inverter.',
+  ports={'va': 'v[1]', 'vb': 'v[2]', 'vc': 'v[3]', 'plug_p': 'plug_p', 'plug_n': 'plug_n'},
+  names={'va': 'a', 'vb': 'b', 'vc': 'c', 'plug_p': 'abc', 'plug_n': 'abc−'},
+  sides={'va': 'left', 'vb': 'left', 'vc': 'left', 'plug_p': 'right', 'plug_n': 'bottom'}, domain='threePhase',
+  keywords=['inverter', 'averaged', 'programmable', 'foc', 'drive'])
 B('threePhaseResistor', '3-phase resistor', f'{POLY}.Basic.Resistor', '3R', 'threePhase',
   'Resistor in each phase.', [P('R', 'Resistance per phase', 10, 'Ω', 0)], modifiers={'R': 'fill(R, 3)'})
 B('threePhaseInductor', '3-phase inductor', f'{POLY}.Basic.Inductor', '3L', 'threePhase',
@@ -487,9 +638,10 @@ for k, label in [(1, 'a'), (2, 'b'), (3, 'c')]:
       names={'plug_p': 'abc', 'pin_p': label}, sides={'plug_p': 'left', 'pin_p': 'right'}, domain='threePhase',
       keywords=['splitter', 'pin'])
 B('threePhaseTransformer', '3-phase transformer (Dy)', f'{MACH}.BasicMachines.Transformers.Dy.Dy01', 'Dy', 'threePhase',
-  'Three-phase delta–star transformer with a nominal ratio.',
-  [P('n', 'Ratio', 1, '', 0)], modifiers={'n': 'n', 'R1': '0.01', 'L1sigma': '0.001', 'R2': '0.01', 'L2sigma': '0.001', 'T1Ref': '293.15',
-                                           'T2Ref': '293.15', 'T1Operational': '293.15', 'T2Operational': '293.15'},
+  'Three-phase delta–star transformer with a nominal ratio and winding resistance and stray inductance on each side.',
+  [P('n', 'Ratio', 1, '', 0), P('R1', 'Primary resistance per phase', 0.01, 'Ω', 0), P('L1sigma', 'Primary stray inductance', 0.001, 'H', 0),
+   P('R2', 'Secondary resistance per phase', 0.01, 'Ω', 0), P('L2sigma', 'Secondary stray inductance', 0.001, 'H', 0)],
+  modifiers={'T1Ref': '293.15', 'T2Ref': '293.15', 'T1Operational': '293.15', 'T2Operational': '293.15'},
   names={'plug1': 'HV', 'plug2': 'LV', 'starpoint2': 'N'}, sides={'plug1': 'left', 'plug2': 'right', 'starpoint2': 'bottom'},
   exclude={'starpoint1'}, domain='threePhase', keywords=['delta-wye', 'distribution'])
 B('threePhaseCurrentSensor', '3-phase current sensor', f'{POLY}.Sensors.CurrentSensor', 'iabc', 'threePhase',

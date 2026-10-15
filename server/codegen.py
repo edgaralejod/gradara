@@ -292,6 +292,50 @@ class Ctx:
         text = repr(float(value))
         return text + ('f' if self.real == 'float' and 'inf' not in text and 'nan' not in text else '')
 
+    # Modelica wrappers: their templates speak the library class's language (connector and
+    # modifier names), so one template serves every block that wraps the class.
+
+    def _port(self, connector: str) -> str:
+        """The block port mapped to an MSL connector (a vector element such as u[1] included)."""
+        definition = self.node.definition
+        renamed = definition.modelica.ports if definition.modelica else {}
+        for port in definition.ports:
+            if renamed.get(port.id, port.id) == connector:
+                return port.id
+        raise CodegenError(f'{definition.name} has no terminal for {connector}.', [self.node.block_id])
+
+    def uc(self, connector: str) -> str:
+        return self.u(self._port(connector))
+
+    def yc(self, connector: str) -> str:
+        return self.y(self._port(connector))
+
+    def m(self, name: str, default: float | str) -> str:
+        """The C value of an MSL parameter: the block parameter it maps to, a literal, or the class default."""
+        definition = self.node.definition
+        expression = (definition.modelica.modifiers if definition.modelica else {}).get(name)
+        if expression is None:
+            return self.lit(default) if isinstance(default, (int, float)) else default
+        if expression.strip('()') in self.params:
+            return self.p(expression.strip('()'))
+        ids = {p.id for p in definition.parameters}
+        return '(' + re.sub(r'\b[A-Za-z_]\w*\b', lambda mt: self.p(mt.group(0)) if mt.group(0) in ids else mt.group(0),
+                            expression) + ')'
+
+    def mval(self, name: str, default: float) -> float:
+        """A modifier's numeric value, for choices made at generation time (a delay length, say)."""
+        definition = self.node.definition
+        expression = (definition.modelica.modifiers if definition.modelica else {}).get(name)
+        if expression is None:
+            return default
+        if expression in self.params:
+            return self.params[expression]
+        try:
+            return float(expression)
+        except ValueError:
+            raise CodegenError(f'{definition.name}: {name} must be a parameter or a number for C export.',
+                               [self.node.block_id]) from None
+
 
 def _clamp(lo: str, hi: str, v: str) -> str:
     return f'fmax({lo}, fmin({hi}, {v}))'
@@ -310,9 +354,15 @@ def _linear1(c: Ctx, name: str, a: str, b: str, u: str, init: str = '0') -> tupl
              f'(1 - {h} * ({a}) / 2);'], [f'{prev} = {u};'], True)
 
 
-def _state1(c: Ctx, name: str, real: str) -> list[tuple[str, str, str]]:
+def _state1(c: Ctx, name: str, real: str, init: str = '0') -> list[tuple[str, str, str]]:
     extra = [(name + '_u', real, '0')] if c.method == 'tustin' else []
-    return [(name, real, '0')] + extra
+    return [(name, real, init)] + extra
+
+
+def _init(c: Ctx, name: str) -> str:
+    """A state's initial value from an MSL start modifier, as a C literal (init() has no parameters)."""
+    value = c.mval(name, 0)
+    return '0' if value == 0 else c.lit(value)
 
 
 def _sampled(c: Ctx, period_param: str, body: list[str], state: list[tuple[str, str, str]]) -> Code:
@@ -453,6 +503,9 @@ def t_signal(kind: str, c: Ctx) -> Code | None:
 def t_msl(cls: str, c: Ctx) -> Code | None:
     y, u, p, x = c.y, c.u, c.p, c.x
     name = cls.rsplit('.', 1)[-1]
+    code = t_msl_signal(cls, c)
+    if code is not None:
+        return code
     logic = {'And': '&&', 'Or': '||', 'Xor': '!='}
     if name in logic:
         return Code(output=[f'{y("y")} = {u("u1")} {logic[name]} {u("u2")};'])
@@ -509,6 +562,145 @@ def t_msl(cls: str, c: Ctx) -> Code | None:
     if name == 'TriggeredSampler':
         return Code(output=[f'if ({u("trigger")} && !{x("t")}) {x("y")} = {u("u")};', f'{y("y")} = {x("y")};'],
                     update=[f'{x("t")} = {u("trigger")};'], state=[('y', c.real, repr(c.params.get('y_start', 0.0))), ('t', 'bool', 'false')])
+    return None
+
+
+SQRT3 = '1.7320508075688772'
+TWO_PI = '6.283185307179586'
+
+
+def t_msl_signal(cls: str, c: Ctx) -> Code | None:
+    """Modelica.Blocks sources, math, dynamics and the space-phasor transforms, in the class's own terms."""
+    yc, uc, m, x, R = c.yc, c.uc, c.m, c.x, c.real
+    pkg, name = cls.rsplit('.', 1)
+    if pkg == 'Modelica.Electrical.Machines.SpacePhasors.Blocks':
+        if name == 'ToSpacePhasor':
+            lines = [f'{yc("y[1]")} = (2 * {uc("u[1]")} - {uc("u[2]")} - {uc("u[3]")}) / 3;',
+                     f'{yc("y[2]")} = ({uc("u[2]")} - {uc("u[3]")}) / {SQRT3};']
+            if any(c.node.definition.modelica.ports.get(q.id, q.id) == 'zero' for q in c.node.definition.ports):
+                lines.append(f'{yc("zero")} = ({uc("u[1]")} + {uc("u[2]")} + {uc("u[3]")}) / 3;')
+            return Code(output=lines)
+        if name == 'FromSpacePhasor':
+            a, b, z = uc('u[1]'), uc('u[2]'), uc('zero')
+            return Code(output=[f'{yc("y[1]")} = {a} + {z};', f'{yc("y[2]")} = -{a} / 2 + {SQRT3} / 2 * {b} + {z};',
+                                f'{yc("y[3]")} = -{a} / 2 - {SQRT3} / 2 * {b} + {z};'])
+        if name == 'Rotator':
+            a = uc('angle')
+            return Code(output=[f'{yc("y[1]")} = cos({a}) * {uc("u[1]")} + sin({a}) * {uc("u[2]")};',
+                                f'{yc("y[2]")} = -sin({a}) * {uc("u[1]")} + cos({a}) * {uc("u[2]")};'])
+        return None
+    if not pkg.startswith('Modelica.Blocks.'):
+        return None
+    out = lambda line: Code(output=[line])  # noqa: E731
+    if pkg == 'Modelica.Blocks.Sources':
+        offset, start = m('offset', 0), m('startTime', 0)
+        t = 's->t'
+        sources = {
+            'Constant': lambda: f'{yc("y")} = {m("k", 1)};',
+            'Step': lambda: f'{yc("y")} = {offset} + ({t} < {start} ? 0 : {m("height", 1)});',
+            'Ramp': lambda: (f'{yc("y")} = {offset} + ({t} < {start} ? 0 : ({t} < {start} + {m("duration", 2)} ? '
+                             f'({t} - {start}) * {m("height", 1)} / {m("duration", 2)} : {m("height", 1)}));'),
+            'Sine': lambda: (f'{yc("y")} = {offset} + ({t} < {start} ? 0 : {m("amplitude", 1)} * sin({TWO_PI} * {m("f", 1)} * '
+                             f'({t} - {start}) + {m("phase", 0)}));'),
+            'Pulse': lambda: (f'{yc("y")} = {offset} + ({t} < {start} ? 0 : (fmod({t} - {start}, {m("period", 1)}) < '
+                              f'{m("width", 50)} / 100 * {m("period", 1)} ? {m("amplitude", 1)} : 0));'),
+            'ContinuousClock': lambda: f'{yc("y")} = {offset} + ({t} < {start} ? 0 : {t} - {start});',
+        }
+        if name in sources:
+            return Code(output=[sources[name]()], feedthrough=False)
+        return None
+    if pkg == 'Modelica.Blocks.Math':
+        math = {
+            'Gain': lambda: f'{yc("y")} = {m("k", 1)} * {uc("u")};',
+            'Add': lambda: f'{yc("y")} = {m("k1", 1)} * {uc("u1")} + {m("k2", 1)} * {uc("u2")};',
+            'Feedback': lambda: f'{yc("y")} = {uc("u1")} - {uc("u2")};',
+            'Product': lambda: f'{yc("y")} = {uc("u1")} * {uc("u2")};',
+            'Division': lambda: f'{yc("y")} = {uc("u1")} / {uc("u2")};',
+            'Abs': lambda: f'{yc("y")} = fabs({uc("u")});',
+            'Sign': lambda: f'{yc("y")} = ({uc("u")} > 0) ? 1 : (({uc("u")} < 0) ? -1 : 0);',
+            'Sqrt': lambda: f'{yc("y")} = sqrt({uc("u")});',
+            'Min': lambda: f'{yc("y")} = fmin({uc("u1")}, {uc("u2")});',
+            'Max': lambda: f'{yc("y")} = fmax({uc("u1")}, {uc("u2")});',
+            'Sin': lambda: f'{yc("y")} = sin({uc("u")});',
+            'Cos': lambda: f'{yc("y")} = cos({uc("u")});',
+        }
+        return out(math[name]()) if name in math else None
+    if pkg == 'Modelica.Blocks.Nonlinear':
+        if name == 'Limiter':
+            return out(f'{yc("y")} = {_clamp(m("uMin", -1), m("uMax", 1), uc("u"))};')
+        if name == 'DeadZone':
+            lo, hi, v = m('uMin', -1), m('uMax', 1), uc('u')
+            return out(f'{yc("y")} = ({v} > {hi}) ? {v} - {hi} : (({v} < {lo}) ? {v} - {lo} : 0);')
+        if name == 'SlewRateLimiter':
+            h = c.lit(c.h)
+            rate = _clamp(m('Falling', -1), m('Rising', 1), f'({uc("u")} - {x("y")}) / {m("Td", 0.001)}')
+            return Code(output=[f'if (!s->steps) {x("y")} = {uc("u")};', f'{yc("y")} = {x("y")};'],
+                        update=[f'{x("y")} += {h} * {rate};'], state=[('y', R, '0')], feedthrough=True,
+                        note='starts at the input (steady state), then slews with forward Euler')
+        if name == 'FixedDelay':
+            n = max(1, round(c.mval('delayTime', 1) / c.h))
+            buf, idx, ready = x('buf'), x('i'), x('ready')
+            return Code(output=[f'{yc("y")} = {buf}[{idx}];'],
+                        update=[f'if (!{ready}) {{ for (int k = 0; k < {n}; k++) {buf}[k] = {uc("u")}; {ready} = 1; }}',
+                                f'{buf}[{idx}] = {uc("u")};', f'{idx} = ({idx} + 1) % {n};'],
+                        state=[(f'buf[{n}]', R, '{0}'), ('i', 'int', '0'), ('ready', 'int', '0')], feedthrough=False,
+                        note=f'transport delay of {n} steps (output 0 on the first step); changing the delay needs new code')
+        return None
+    if pkg == 'Modelica.Blocks.Continuous':
+        if name == 'Integrator':
+            o, upd, ft = _linear1(c, 'x', '0', m('k', 1), uc('u'))
+            return Code(output=o + [f'{yc("y")} = {x("x")};'], update=upd, state=_state1(c, 'x', R, _init(c, 'y_start')), feedthrough=ft)
+        if name == 'LimIntegrator':
+            o, upd, ft = _linear1(c, 'x', '0', m('k', 1), uc('u'))
+            clamp = f'{x("x")} = {_clamp(m("outMin", -1), m("outMax", 1), x("x"))};'
+            return Code(output=o + [clamp, f'{yc("y")} = {x("x")};'], update=upd + ([clamp] if upd else []),
+                        state=_state1(c, 'x', R, _init(c, 'y_start')), feedthrough=ft,
+                        note='limits are applied to the state after each step')
+        if name == 'FirstOrder':
+            o, upd, ft = _linear1(c, 'x', f'-1 / {m("T", 1)}', f'{m("k", 1)} / {m("T", 1)}', uc('u'))
+            return Code(output=o + [f'{yc("y")} = {x("x")};'], update=upd, state=_state1(c, 'x', R, _init(c, 'y_start')), feedthrough=ft)
+        if name == 'Derivative':
+            T, k = m('T', 0.01), m('k', 1)
+            o, upd, _ = _linear1(c, 'x', f'-1 / {T}', f'1 / {T}', uc('u'))
+            # Steady-state start: the state begins at the input, so there is no kick at t = 0.
+            return Code(output=[f'if (!s->steps) {x("x")} = {uc("u")};', f'{yc("y")} = {k} / {T} * ({uc("u")} - {x("x")});'] + o,
+                        update=upd, state=_state1(c, 'x', R), feedthrough=True)
+        if name == 'SecondOrder':
+            h, w, D, k = c.lit(c.h), m('w', 1), m('D', 1), m('k', 1)
+            # Semi-implicit Euler keeps the oscillator stable for any method; exact methods for 2 states need matrices.
+            return Code(output=[f'{yc("y")} = {x("y")};'],
+                        update=[f'{x("yd")} += {h} * {w} * ({w} * ({k} * {uc("u")} - {x("y")}) - 2 * {D} * {x("yd")});',
+                                f'{x("y")} += {h} * {x("yd")};'],
+                        state=[('y', R, _init(c, 'y_start')), ('yd', R, _init(c, 'yd_start'))], feedthrough=False,
+                        note='two states, discretized with semi-implicit Euler')
+        if name == 'LimPID':
+            kind = c.node.definition.modelica.modifiers.get('controllerType', '').rsplit('.', 1)[-1] or 'PID'
+            if kind not in ('PI', 'PID'):
+                raise CodegenError(f'{c.node.definition.name}: only PI and PID controllers export to C.', [c.node.block_id])
+            h, k, Ti, Ni = c.lit(c.h), m('k', 1), m('Ti', 0.5), m('Ni', 0.9)
+            e, v = f'{c.node.key}_e', f'{c.node.key}_v'
+            lines = [f'{R} {e} = {m("wp", 1)} * {uc("u_s")} - {uc("u_m")};']
+            update, state, parts = [], [('xi', R, _init(c, 'xi_start'))], [e, x('xi')]
+            if kind == 'PID':
+                Td, Nd = m('Td', 0.1), m('Nd', 10)
+                Tf = f'fmax({Td} / {Nd}, 1e-14)'
+                ed = f'{c.node.key}_ed'
+                lines.append(f'{R} {ed} = {m("wd", 0)} * {uc("u_s")} - {uc("u_m")};')
+                parts.append(f'{Td} / {Tf} * ({ed} - {x("xd")})')
+                update.append(f'{x("xd")} += {h} * ({ed} - {x("xd")}) / {Tf};')
+                state.append(('xd', R, _init(c, 'xd_start')))
+            lines.append(f'{R} {v} = {k} * ({" + ".join(parts)});')
+            lines.append(f'{yc("y")} = {_clamp(m("yMin", -1), m("yMax", 1), v)};')
+            # Integrator input: the error plus back-calculation from the clamped output.
+            update.insert(0, f'{x("xi")} += {h} * ({e} + ({yc("y")} - {v}) / ({k} * {Ni})) / {Ti};')
+            return Code(output=lines, update=update, state=state, feedthrough=True,
+                        note='anti-windup by back-calculation (Ni), forward Euler')
+        return None
+    if pkg == 'Modelica.Blocks.Discrete':
+        period = c.mval('samplePeriod', 0.1)
+        if name == 'ZeroOrderHold':
+            return Code(output=[f'{x("y")} = {uc("u")};'], state=[('y', R, '0')], feedthrough=True, period=period)
+        return None
     return None
 
 

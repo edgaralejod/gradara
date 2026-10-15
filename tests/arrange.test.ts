@@ -111,21 +111,14 @@ void test('signal flow reads left to right and a ground sits under its terminal'
     at('ground').y > at('drive').y + blockSize(ground).height,
     'ground below the drive',
   );
-  // The motor's shaft drops straight to its load.
-  const shaft = polylineOfWire(
-    p,
-    p.wires.find(
-      (w) =>
-        [w.source, w.target].includes('load') &&
-        [w.source, w.target].includes('motor'),
-    )!.id,
-  );
-  assert.equal(shaft.length, 2, JSON.stringify(shaft));
+  // The shaft runs on to its friction load and its housing, in that order.
+  assert.ok(at('motor').x < at('friction').x, 'motor before friction');
+  assert.ok(at('friction').x < at('housing').x, 'friction before housing');
 });
 
 void test('arranging a selection leaves every other block where it was', () => {
   const p = example('foc');
-  const ids = ['park', 'clarke', 'inverse'];
+  const ids = ['park', 'clarke'];
   const next = arranged(p, ids);
   for (const b of p.blocks)
     if (!ids.includes(b.id))
@@ -164,7 +157,6 @@ void test('a closed loop keeps its forward path left to right and its feedback u
   const at = (id: string) => next.blocks.find((b) => b.id === id)!.position;
   const path = [
     'ref',
-    'error',
     'pi',
     'hold',
     'modulator',

@@ -11,26 +11,32 @@
       "definition": {
         "kind": "ramp",
         "name": "Ramp",
-        "symbol": "ramp",
+        "description": "Rises linearly from 0 to Height over Duration after the start time, then holds.",
         "domain": "signal",
-        "description": "A linearly increasing signal after a start time.",
+        "category": "sources",
+        "symbol": "ramp",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
         "parameters": [
           {
-            "id": "slope",
-            "name": "Slope",
-            "value": 1,
-            "unit": "1/s"
+            "id": "height",
+            "name": "Height",
+            "value": 2,
+            "unit": ""
+          },
+          {
+            "id": "duration",
+            "name": "Duration",
+            "value": 2,
+            "unit": "s",
+            "min": 0
           },
           {
             "id": "startTime",
@@ -40,11 +46,20 @@
             "min": 0
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Ramp from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
-          "reference"
-        ]
+          "reference",
+          "slope"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Ramp",
+          "modifiers": {
+            "height": "height",
+            "duration": "duration",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -60,20 +75,19 @@
       "definition": {
         "kind": "constant",
         "name": "−1",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -82,7 +96,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -98,20 +123,19 @@
       "definition": {
         "kind": "pulse",
         "name": "Control",
-        "symbol": "pulse",
-        "domain": "signal",
         "description": "A periodic rectangular pulse.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "pulse",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = if mod(time - startTime + period, period) < width*period then amplitude else 0;",
         "parameters": [
           {
             "id": "amplitude",
@@ -131,7 +155,8 @@
             "name": "Duty cycle",
             "value": 0.5,
             "unit": "",
-            "min": 0
+            "min": 0.001,
+            "max": 1
           },
           {
             "id": "startTime",
@@ -141,12 +166,21 @@
             "min": 0
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Pulse from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "square",
           "pwm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Pulse",
+          "modifiers": {
+            "width": "100*width",
+            "amplitude": "amplitude",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,

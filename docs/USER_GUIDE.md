@@ -136,13 +136,13 @@ The **Equations** and **State & declarations** tabs show a block's Modelica equa
 
 **Block examples.** Every library block has a small runnable example that shows it at work, such as an RC circuit for the capacitor or a clutch that locks for the clutch. In a block's Help, choose **Open example**: the example opens as a new model in **My models**, with that block selected, ready to run. Each example's description says what to look for in Results. The model browser lists them all under **Block examples**, grouped by area and searchable by block name, and each block's page on gradara.app shows its example's diagram.
 
-**Scope, Display, and Terminator** are no longer in the library: Results already lists every block output, and an unconnected output is allowed. Models that contain them still open and run unchanged. To show that an output is unused on purpose, right-click its block and choose **Terminate unused outputs**: each open output gets a terminator mark, as in Simulink, with no block and no effect on the simulation. Wiring the output removes its mark; **Remove terminators** removes them all.
+**Scope, Display, and Terminator** are no longer in the library: Results already lists every block output, and an unconnected output is allowed. Models that contain them still open and run unchanged. The same goes for the blocks that Modelica library blocks replaced in 0.7.1: Current PI and PID (now **PI (continuous)** and **PID (continuous)**), DC motor and Inertia & load (**DC machine (PM)**, **Inertia (ideal)**, **Torsion damper**), Speed sensor, Diode, Voltage drive, Spring-damper, Mechanical load, Ideal switch, Complementary PWM, the signal-port PMSM, the averaged inverter, and the inverse Park block (now **Park transform** fed −θe plus **Inverse Clarke transform**). A model saved with one of them still runs; its Help names the block to use instead. To show that an output is unused on purpose, right-click its block and choose **Terminate unused outputs**: each open output gets a terminator mark, as in Simulink, with no block and no effect on the simulation. Wiring the output removes its mark; **Remove terminators** removes them all.
 
 Blocks get unique names such as Step, Step1, and Step2. Renaming a block does not break its connections. Drag a block's name to move it; select it and press Home to put it back. Double-click a block's name (or select it and press Enter) to rename the block in place, subsystems included: Enter or clicking away saves, Escape cancels. Press **R** to rotate selected blocks 90° clockwise. Drag a selection handle to resize a block in 16-unit steps, type a width or height in the inspector, or choose **Use standard size**.
 
 ### The library
 
-The library has 217 built-in blocks in 18 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. Most physical, logic, and machine blocks are components of the Modelica Standard Library 4.1.0. Their parameters map directly onto the library component. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
+The library has 208 built-in blocks in 18 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. 192 of them are components of the Modelica Standard Library 4.1.0, and their parameters map directly onto the library component; a block's Help links the library class. The rest are Gradara's own: buses, subsystems and ports, the sampled controllers and unit delay that export to C exactly, the relay, the switches, and the power function. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
 
 ### Ports and connections
 
@@ -427,7 +427,7 @@ Open any of these from **Examples**. Each guide describes what the model shows, 
 | --- | --- |
 | [DC motor](../models/DC.md) | Speed control of a DC motor with a sampled PI controller. |
 | [Servo position](examples/SERVO.md) | A 1 kHz sampled PID position loop, built to export its controller to C. |
-| [AC motor · FOC](../models/FOC.md) | Field-oriented control of a permanent-magnet synchronous motor. |
+| [AC motor · FOC](../models/FOC.md) | Field-oriented control of the Modelica permanent-magnet synchronous machine. |
 | [EV drivetrain](examples/EV.md) | A battery electric vehicle in nested subsystems, with battery and motor variants and two configurations. |
 | [Buck converter](../models/BUCK.md) | A 24 V to 12 V synchronous buck converter with ideal switches. |
 | [480 VAC flyback](examples/FLYBACK.md) | A 480 V AC to 24 V DC switching flyback converter with PI regulation. |

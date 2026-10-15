@@ -19,6 +19,8 @@ INDEX_PATH = Path(__file__).with_name('msl_index.json')
 IDENT = re.compile(r'\b[A-Za-z_][A-Za-z0-9_]*\b')
 LITERALS = {'true', 'false'}
 FUNCTIONS = {'sqrt', 'sin', 'cos', 'tan', 'exp', 'log', 'abs', 'min', 'max', 'fill'}
+# `Modelica.Blocks.Types.Init.SteadyState` and the like: a value of a library enumeration.
+ENUMERATION = re.compile(r'Modelica\.Blocks\.Types\.[A-Za-z]+\.[A-Za-z_]+')
 
 
 @lru_cache(maxsize=1)
@@ -46,6 +48,8 @@ def check(definition: Definition) -> None:
         # `T.start` sets the initial value of a variable the class declares with a start.
         if not (head in info['parameters'] or (rest == 'start' and head in info.get('starts', ()))):
             raise ValueError(f'{definition.name}: {wrapper.class_} has no parameter {name}.')
+        if ENUMERATION.fullmatch(expression):
+            continue  # a library enumeration literal, such as an initialization type
         for ident in IDENT.findall(expression):
             if ident not in parameters and ident not in LITERALS and ident not in FUNCTIONS and not ident.isdigit() \
                     and not re.fullmatch(r'\d*e\d*', ident):

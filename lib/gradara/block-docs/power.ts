@@ -43,7 +43,7 @@ export const docs: Record<string, BlockDoc> = {
     tips: [
       'Set Vknee to about 0.7 V for a silicon forward drop, or use Diode (exponential) for the smooth curve.',
     ],
-    seeAlso: ['diodeShockley', 'diode', 'zenerDiode', 'diodeBridge'],
+    seeAlso: ['diodeShockley', 'zenerDiode', 'diodeBridge'],
   },
 
   diodeShockley: {
@@ -72,7 +72,7 @@ export const docs: Record<string, BlockDoc> = {
     tips: [
       'With the defaults, the forward voltage is about 0.28 V at 1 mA and 0.55 V at 1 A.',
     ],
-    seeAlso: ['idealDiode', 'zenerDiode', 'diode'],
+    seeAlso: ['idealDiode', 'zenerDiode'],
   },
 
   zenerDiode: {
@@ -287,7 +287,7 @@ export const docs: Record<string, BlockDoc> = {
     tips: [
       'For an opening switch that models the arc, use Breaker (with arc).',
     ],
-    seeAlso: ['openingSwitch', 'twoWaySwitch', 'breaker', 'idealSwitch'],
+    seeAlso: ['openingSwitch', 'twoWaySwitch', 'breaker'],
   },
 
   openingSwitch: {
@@ -518,7 +518,7 @@ export const docs: Record<string, BlockDoc> = {
     tips: [
       'Each period adds two events; keep the maximum step size well below 1 / f.',
     ],
-    seeAlso: ['buckConverter', 'hBridge', 'buckBoostConverter', 'pwmPair'],
+    seeAlso: ['buckConverter', 'hBridge', 'buckBoostConverter'],
   },
 
   diodeBridge: {
@@ -600,7 +600,12 @@ export const docs: Record<string, BlockDoc> = {
       'Drive fire_p from fire and fire_n from notFire of one PWM generator.',
       'For an AC load, return it to a DC midpoint, such as the junction of two series capacitors or two sources.',
     ],
-    seeAlso: ['threePhaseInverter', 'hBridge', 'pwmSignal', 'inverter'],
+    seeAlso: [
+      'threePhaseInverter',
+      'hBridge',
+      'pwmSignal',
+      'threePhaseSignalVoltage',
+    ],
   },
 
   threePhaseInverter: {
@@ -632,7 +637,7 @@ export const docs: Record<string, BlockDoc> = {
     ],
     seeAlso: [
       'singlePhaseInverter',
-      'inverter',
+      'threePhaseSignalVoltage',
       'pwmSignal',
       'inductionMachine',
       'pmSyncMachine',
@@ -814,7 +819,7 @@ export const docs: Record<string, BlockDoc> = {
   threePhaseTransformer: {
     description: [
       'A three-phase two-winding transformer with vector group Dy1: delta-connected high-voltage winding, star-connected low-voltage winding with an accessible neutral. The low-voltage side lags the high-voltage side by 30°.',
-      'Each winding has a fixed series resistance and leakage inductance; the core is ideal.',
+      'Each winding has a series resistance and leakage inductance; the core is ideal.',
     ],
     ports: {
       plug1:
@@ -824,19 +829,52 @@ export const docs: Record<string, BlockDoc> = {
     },
     parameters: {
       n: 'Ratio of high-voltage to low-voltage line-to-line voltage. Positive.',
+      R1: 'Resistance of each high-voltage winding, in ohms.',
+      L1sigma: 'Leakage inductance of each high-voltage winding, in henries.',
+      R2: 'Resistance of each low-voltage winding, in ohms.',
+      L2sigma: 'Leakage inductance of each low-voltage winding, in henries.',
     },
     equations: [
       'No load: line-to-line voltage of plug1 = n · line-to-line voltage of plug2',
-      'Fixed per phase: R1 = R2 = 10 mΩ, L1σ = L2σ = 1 mH, at 20 °C',
+      'Each winding: v = R · i + Lσ · di/dt plus the ideal core coupling, at 20 °C',
     ],
     limitations: [
       'Ideal core: no magnetizing current, core loss, saturation, or inrush.',
-      'The winding resistances and leakage inductances are not adjustable. At 50 Hz, 1 mH is about 0.31 Ω per winding, which is large for low-voltage, high-current use.',
     ],
     tips: [
       'Ground starpoint2 to reference the low-voltage side; the delta side has no ground path of its own.',
+      'At 50 Hz the default 1 mH leakage is about 0.31 Ω per winding, which is large for low-voltage, high-current use; scale it to the rating.',
     ],
     seeAlso: ['idealTransformer', 'threePhaseSource', 'delta', 'star'],
+  },
+
+  threePhaseSignalVoltage: {
+    description: [
+      'Three controlled voltage sources, one per phase, each equal to its input signal (the Modelica library polyphase signal voltage). Phase k acts between phase k of plug_n and phase k of plug_p.',
+      'It is the ideal model of a voltage-source inverter: the averaged output without switching ripple, dead time, or a DC-bus limit. Use it with Inverse Clarke transform in a field-oriented drive.',
+    ],
+    ports: {
+      va: 'Phase a voltage command, in volts.',
+      vb: 'Phase b voltage command, in volts.',
+      vc: 'Phase c voltage command, in volts.',
+      plug_p: 'Three-phase output plug (phases a, b, c).',
+      plug_n:
+        'Three-phase return plug: the negative terminal of each phase source. Connect a Star point to it for a neutral.',
+    },
+    equations: ['plug_p.k.v − plug_n.k.v = vk for k = a, b, c'],
+    limitations: [
+      'Ideal: no internal impedance, no switching, no limit on the voltage it can produce. Limit the commands upstream (the current controllers’ limits, or Saturation) to model a finite DC bus.',
+    ],
+    tips: [
+      'Ground the star point on plug_n; the machine’s star point on plug_sn can share it.',
+    ],
+    seeAlso: [
+      'inverseClarke',
+      'threePhaseInverter',
+      'signalVoltage',
+      'pmSyncMachine',
+      'star',
+    ],
   },
 
   threePhaseCurrentSensor: {

@@ -102,12 +102,13 @@ Repeat affected gestures at 25%, 100%, and 200% zoom, including Escape, focus lo
 
 ```sh
 npm run report:blocks
+npx tsx scripts/build-dc-example.ts
+npx tsx scripts/build-foc-example.ts
 npx tsx scripts/build-buck-example.ts
 npx tsx scripts/build-flyback-example.ts
 npx tsx scripts/build-ev-example.ts
 npx tsx scripts/build-servo-example.ts
 npx tsx scripts/build-datacenter-example.ts
-npx tsx scripts/style-examples.ts
 npx tsx scripts/grid-examples.ts
 npm run examples:blocks
 npm run docs:blocks

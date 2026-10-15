@@ -32,3 +32,7 @@ Each example is an `ExampleSpec` (`scripts/block-examples/types.ts`):
 5. Run `npm run docs:blocks` so the block pages show the new diagram.
 
 `npm run examples:blocks -- --check` fails in CI when the built files are stale. Blocks without an example, and why, are listed in `UNEXAMPLED` in `lib/gradara/block-examples.ts`.
+
+## Curated templates on the same assembler
+
+The DC speed loop, the servo, the buck converter, and the FOC drive (`scripts/build-dc-example.ts`, `build-servo-example.ts`, `build-buck-example.ts`, `build-foc-example.ts`) are specs for the same assembler, `scripts/block-examples/assemble.ts`, with their own notes, plots, and names added afterwards. They are not block examples (they are listed under **Examples**, not **Block examples**) and have no checks of their own; the engine tests in `tests/` cover them. `tests/examples.test.ts` holds every curated template to standard bodies and clear routes.

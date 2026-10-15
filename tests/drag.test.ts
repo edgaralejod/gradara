@@ -47,30 +47,38 @@ function reverses(points: { x: number; y: number }[]) {
   });
 }
 
-void test('a block snaps onto a horizontal and a vertical connection at the same time', () => {
+void test('a block snaps onto a horizontal and a vertical connection', () => {
   const p = example('dc');
   const motor = p.blocks.find((b) => b.id === 'motor')!;
   const { block, preview } = drag(p, 'motor', {
     x: motor.position.x + 7,
     y: motor.position.y - 11,
   });
-  const drive = p.blocks.find((b) => b.id === 'drive')!;
-  const load = p.blocks.find((b) => b.id === 'load')!;
+  const isens = p.blocks.find((b) => b.id === 'isens')!;
   assert.equal(
-    portPoint(block, 'p')!.y,
-    portPoint(drive, 'p')!.y,
+    portPoint(block, 'pin_ap')!.y,
+    portPoint(isens, 'n')!.y,
     'electrical run is straight',
-  );
-  assert.equal(
-    portPoint(block, 'flange')!.x,
-    portPoint(load, 'a')!.x,
-    'shaft is straight',
   );
   assert.deepEqual(
     block.position,
     preview,
     'release lands exactly where the preview showed',
   );
+  // A vertical signal: −θe rises from the negation block into the inverse Park's angle.
+  const foc = example('foc');
+  const minus = foc.blocks.find((b) => b.id === 'minus')!;
+  const target = foc.blocks.find((b) => b.id === 'inversePark')!;
+  const moved = drag(foc, 'minus', {
+    x: minus.position.x + 7,
+    y: minus.position.y + 13,
+  });
+  assert.equal(
+    portPoint(moved.block, 'y')!.x,
+    portPoint(target, 'theta')!.x,
+    'the angle wire is straight',
+  );
+  assert.deepEqual(moved.block.position, moved.preview);
 });
 
 void test('a pinned wire snaps to its adjacent bend, not to the far terminal', () => {

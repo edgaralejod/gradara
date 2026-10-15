@@ -254,11 +254,12 @@
       "id": "step-responses",
       "title": "Step responses",
       "area": "Signals",
-      "summary": "A unit step through a first-order filter, a second-order system, an integrator, and a delay; a ramp through a derivative.",
+      "summary": "A unit step through a first-order filter, a second-order system, an integrator, a limited integrator, and a delay; a ramp through a derivative.",
       "about": [
         "filter",
         "secondOrder",
         "integrator",
+        "limitedIntegrator",
         "delay",
         "derivative"
       ],
@@ -267,6 +268,7 @@
         "derivative",
         "filter",
         "integrator",
+        "limitedIntegrator",
         "ramp",
         "secondOrder",
         "step"
@@ -297,6 +299,19 @@
           "value": 1.9,
           "tol": 0.001,
           "why": "∫ from 0.1 s to 2 s"
+        },
+        {
+          "signal": "lim.y",
+          "at": 0.6,
+          "value": 0.5,
+          "tol": 0.001,
+          "why": "still integrating"
+        },
+        {
+          "signal": "lim.y",
+          "value": 1,
+          "tol": 0.000001,
+          "why": "held at its upper limit"
         },
         {
           "signal": "delay.y",
@@ -892,10 +907,11 @@
       "id": "control-loops",
       "title": "PI and PID loops",
       "area": "Control",
-      "summary": "The same first-order plant under a sampled PI, a continuous PID, and a sampled PID controller.",
+      "summary": "The same first-order plant under continuous PI and PID controllers and their sampled counterparts.",
       "about": [
+        "piController",
+        "pidController",
         "pi",
-        "pid",
         "discretePID"
       ],
       "kinds": [
@@ -903,9 +919,9 @@
         "filter",
         "gain",
         "pi",
-        "pid",
-        "step",
-        "subtract"
+        "piController",
+        "pidController",
+        "step"
       ],
       "checks": [
         {
@@ -927,11 +943,99 @@
           "why": "integral action removes the error"
         },
         {
+          "signal": "y4.y",
+          "value": 1,
+          "tol": 0.01,
+          "why": "integral action removes the error"
+        },
+        {
           "signal": "y1.y",
           "at": 0.09,
           "value": 0,
           "tol": 1e-9,
           "why": "before the step"
+        },
+        {
+          "signal": "c1.y",
+          "at": 0.11,
+          "value": 1.02,
+          "tol": 0.05,
+          "why": "just after the step, the PI output is k·e plus a little integral"
+        }
+      ]
+    },
+    {
+      "id": "space-phasors",
+      "title": "Clarke and Park transforms",
+      "area": "Control",
+      "summary": "Balanced three-phase signals become a rotating α, β pair, then constant d and q, and go back out through a controlled three-phase source.",
+      "about": [
+        "clarke",
+        "park",
+        "inverseClarke",
+        "threePhaseSignalVoltage"
+      ],
+      "kinds": [
+        "clarke",
+        "clock",
+        "constant",
+        "gain",
+        "ground",
+        "inverseClarke",
+        "park",
+        "sine",
+        "star",
+        "threePhaseCurrentSensor",
+        "threePhaseResistor",
+        "threePhaseSignalVoltage"
+      ],
+      "checks": [
+        {
+          "signal": "clarke.alpha",
+          "at": 0.02,
+          "value": 1,
+          "tol": 0.001,
+          "why": "α = cos ωt, one period in"
+        },
+        {
+          "signal": "clarke.beta",
+          "at": 0.025,
+          "value": 1,
+          "tol": 0.001,
+          "why": "β = sin ωt, a quarter period later"
+        },
+        {
+          "signal": "park.id",
+          "value": 1,
+          "tol": 0.001,
+          "why": "the vector stands still in its own frame"
+        },
+        {
+          "signal": "park.iq",
+          "value": 0,
+          "tol": 0.001,
+          "why": "no quadrature component"
+        },
+        {
+          "signal": "inv.va",
+          "at": 0.02,
+          "value": 1,
+          "tol": 0.001,
+          "why": "phase a rebuilt"
+        },
+        {
+          "signal": "sens.ia",
+          "at": 0.02,
+          "value": 0.1,
+          "tol": 0.001,
+          "why": "1 V over 10 Ω"
+        },
+        {
+          "signal": "sens.ib",
+          "at": 0.02,
+          "value": -0.05,
+          "tol": 0.001,
+          "why": "cos(−120°)/10"
         }
       ]
     },
@@ -1376,25 +1480,23 @@
       "id": "switches",
       "title": "Switches and a breaker",
       "area": "Electrical",
-      "summary": "An ideal switch, closing and opening switches, a two-way switch, and a breaker that opens an inductive circuit.",
+      "summary": "A switch pulsed at 5 Hz, closing and opening switches, a two-way switch, and a breaker that opens an inductive circuit.",
       "about": [
-        "idealSwitch",
         "closingSwitch",
         "openingSwitch",
         "twoWaySwitch",
         "breaker"
       ],
       "kinds": [
+        "booleanPulse",
         "booleanStep",
         "breaker",
         "closingSwitch",
         "currentSensor",
         "dcSource",
         "ground",
-        "idealSwitch",
         "inductor",
         "openingSwitch",
-        "pulse",
         "resistor",
         "twoWaySwitch"
       ],
@@ -1471,16 +1573,14 @@
       "id": "diodes",
       "title": "Diodes and a Zener regulator",
       "area": "Semiconductors",
-      "summary": "Three diode models rectifying a 10 V sine, and a Zener diode holding 5.1 V.",
+      "summary": "An ideal and an exponential diode rectifying a 10 V sine, and a Zener diode holding 5.1 V.",
       "about": [
-        "diode",
         "idealDiode",
         "diodeShockley",
         "zenerDiode"
       ],
       "kinds": [
         "dcSource",
-        "diode",
         "diodeShockley",
         "ground",
         "idealDiode",
@@ -1495,7 +1595,7 @@
           "at": 0.005,
           "value": 10,
           "tol": 0.01,
-          "why": "forward: the 10 V peak"
+          "why": "ideal diode: the 10 V peak"
         },
         {
           "signal": "av.y",
@@ -1507,26 +1607,12 @@
         {
           "signal": "bv.y",
           "at": 0.005,
-          "value": 10,
-          "tol": 0.01,
-          "why": "ideal diode: the 10 V peak"
-        },
-        {
-          "signal": "bv.y",
-          "at": 0.015,
-          "value": 0,
-          "tol": 0.01,
-          "why": "reverse: blocked"
-        },
-        {
-          "signal": "cv.y",
-          "at": 0.005,
           "min": 9,
           "max": 9.8,
           "why": "a Shockley diode drops some tenths of a volt"
         },
         {
-          "signal": "cv.y",
+          "signal": "bv.y",
           "at": 0.015,
           "value": 0,
           "tol": 0.01,
@@ -2186,33 +2272,29 @@
       "id": "rotational-sources",
       "title": "Clutch, backlash, and rotational sources",
       "area": "Mechanical",
-      "summary": "A clutch that locks, gear backlash, a spring-damper coupling, and a load that steps its torque.",
+      "summary": "A clutch that locks, gear backlash, a spring-and-damper coupling, and an inertia whose load torque steps.",
       "about": [
         "clutch",
         "rotBacklash",
         "speedSource",
         "torqueSource",
-        "constantTorque",
-        "springDamper",
-        "shaftLoad",
-        "inertia",
-        "sensor"
+        "constantTorque"
       ],
       "kinds": [
         "clutch",
         "constant",
         "constantTorque",
-        "inertia",
         "rotBacklash",
+        "rotDamper",
+        "rotFixed",
         "rotInertia",
         "rotSpeedSensor",
-        "sensor",
-        "shaftLoad",
+        "rotSpring",
         "sine",
         "speedSource",
-        "springDamper",
         "step",
-        "torqueSource"
+        "torqueSource",
+        "torqueStep"
       ],
       "checks": [
         {
@@ -2243,7 +2325,7 @@
           "why": "in contact: follows the source"
         },
         {
-          "signal": "ws.y",
+          "signal": "ws.w",
           "value": 10,
           "tol": 0.1,
           "why": "0.5 N·m / 0.05 N·m·s"
@@ -2591,12 +2673,13 @@
       "title": "Buck converter · Ideal switches",
       "kinds": [
         "capacitor",
+        "closingSwitch",
+        "constant",
         "currentSensor",
         "dcSource",
         "ground",
-        "idealSwitch",
         "inductor",
-        "pwmPair",
+        "pwmSignal",
         "resistor",
         "voltageSensor"
       ]
@@ -2633,13 +2716,15 @@
       "id": "dc",
       "title": "Motor speed control",
       "kinds": [
+        "currentSensor",
+        "dcPmMachine",
         "ground",
-        "inertia",
-        "motor",
         "pi",
-        "sensor",
-        "step",
-        "voltage"
+        "rotDamper",
+        "rotFixed",
+        "rotSpeedSensor",
+        "signalVoltage",
+        "step"
       ]
     },
     {
@@ -2650,22 +2735,20 @@
         "connport",
         "currentSensor",
         "dcPmMachine",
+        "dcSeriesMachine",
         "ground",
         "idealGear",
         "inport",
         "mass",
-        "motor",
         "outport",
-        "pid",
+        "piController",
         "product",
         "ramp",
         "rollingWheel",
-        "rotInertia",
         "saturation",
         "signalCurrent",
         "signalVoltage",
         "subsystem",
-        "subtract",
         "transDamper",
         "transFixed",
         "velocitySensor",
@@ -2693,9 +2776,8 @@
         "ramp",
         "resistor",
         "saturation",
-        "sine",
+        "sineVoltage",
         "subsystem",
-        "voltage",
         "voltageSensor"
       ]
     },
@@ -2703,20 +2785,25 @@
       "id": "foc",
       "title": "PMSM · Field-oriented control",
       "kinds": [
+        "angleSensor",
         "clarke",
         "constant",
-        "currentPI",
         "gain",
-        "integrator",
-        "inversePark",
-        "inverter",
+        "ground",
+        "inverseClarke",
         "park",
-        "pmsm",
-        "saturation",
-        "shaftLoad",
+        "piController",
+        "pmSyncMachine",
+        "rotDamper",
+        "rotFixed",
+        "rotSpeedSensor",
+        "star",
         "step",
-        "subtract",
-        "sum"
+        "threePhaseCurrentSensor",
+        "threePhaseSignalVoltage",
+        "torqueSensor",
+        "torqueStep",
+        "unaryMinus"
       ]
     },
     {
@@ -2724,12 +2811,14 @@
       "title": "Servo position control",
       "kinds": [
         "angleSensor",
+        "currentSensor",
+        "dcPmMachine",
         "discretePID",
         "ground",
-        "inertia",
-        "motor",
-        "step",
-        "voltage"
+        "rotDamper",
+        "rotFixed",
+        "signalVoltage",
+        "step"
       ]
     }
   ]

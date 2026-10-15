@@ -2,7 +2,7 @@
   "version": 1,
   "name": "Example: Diodes and a Zener regulator",
   "exampleId": "block-diodes",
-  "description": "Each diode passes the positive half of a 10 V, 50 Hz sine into its 10 Ω load and blocks the negative half. The simple and ideal diodes pass almost the whole 10 V peak; the exponential (Shockley) diode drops some tenths of a volt. The Zener regulator feeds 12 V through 100 Ω into a reverse-biased Zener diode, which clamps near its 5.1 V breakdown voltage: at 70 mA it holds 5.03 V, because its rated knee current is 0.7 A.",
+  "description": "Each diode passes the positive half of a 10 V, 50 Hz sine into its 10 Ω load and blocks the negative half. The ideal diode passes almost the whole 10 V peak; the exponential (Shockley) diode drops some tenths of a volt. The Zener regulator feeds 12 V through 100 Ω into a reverse-biased Zener diode, which clamps near its 5.1 V breakdown voltage: at 70 mA it holds 5.03 V, because its rated knee current is 0.7 A.",
   "duration": 0.04,
   "revision": 0,
   "blocks": [
@@ -90,33 +90,64 @@
     {
       "id": "ad",
       "definition": {
-        "kind": "diode",
-        "name": "Diode",
-        "symbol": "D",
+        "kind": "idealDiode",
+        "name": "Ideal diode",
+        "description": "Piecewise-linear diode: Ron when conducting, Goff when blocking.",
         "domain": "electrical",
-        "description": "An ideal diode. Forward conducting, reverse open.",
+        "category": "semiconductors",
+        "symbol": "▷|",
         "ports": [
           {
             "id": "p",
-            "name": "A",
+            "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
-            "name": "K",
+            "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
-        "parameters": [],
-        "equations": "i = if v > 0 then v/1e-4 else 0;",
+        "parameters": [
+          {
+            "id": "Ron",
+            "name": "On resistance",
+            "value": 0.00001,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Goff",
+            "name": "Off conductance",
+            "value": 0.00001,
+            "unit": "S",
+            "min": 0
+          },
+          {
+            "id": "Vknee",
+            "name": "Knee voltage",
+            "value": 0,
+            "unit": "V",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Analog.Ideal.IdealDiode from the Modelica Standard Library 4.1.0",
         "keywords": [
-          "electrical",
-          "semiconductor"
-        ]
+          "rectifier",
+          "freewheeling"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Ideal.IdealDiode",
+          "modifiers": {
+            "Ron": "Ron",
+            "Goff": "Goff",
+            "Vknee": "Vknee"
+          }
+        }
       },
       "position": {
         "x": 272,
@@ -136,23 +167,24 @@
       "definition": {
         "kind": "resistor",
         "name": "Load A",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -164,11 +196,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 432,
@@ -189,41 +227,47 @@
       "definition": {
         "kind": "voltageSensor",
         "name": "v A",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "V",
-        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           },
           {
             "id": "y",
             "name": "V",
             "direction": "output",
-            "side": "right",
             "domain": "signal",
+            "side": "right",
             "unit": "V"
           }
         ],
         "parameters": [],
-        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "voltmeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+          "ports": {
+            "y": "v"
+          }
+        }
       },
       "position": {
         "x": 592,
@@ -245,18 +289,27 @@
         "name": "Ground A",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -336,298 +389,6 @@
         }
       },
       "position": {
-        "x": 816,
-        "y": 192
-      },
-      "size": {
-        "width": 48,
-        "height": 80
-      },
-      "labelOffset": {
-        "x": -80,
-        "y": -54
-      }
-    },
-    {
-      "id": "bd",
-      "definition": {
-        "kind": "idealDiode",
-        "name": "Ideal diode",
-        "description": "Piecewise-linear diode: Ron when conducting, Goff when blocking.",
-        "domain": "electrical",
-        "category": "semiconductors",
-        "symbol": "▷|",
-        "ports": [
-          {
-            "id": "p",
-            "name": "+",
-            "direction": "physical",
-            "domain": "electrical",
-            "side": "left"
-          },
-          {
-            "id": "n",
-            "name": "−",
-            "direction": "physical",
-            "domain": "electrical",
-            "side": "right"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "Ron",
-            "name": "On resistance",
-            "value": 0.00001,
-            "unit": "Ω",
-            "min": 0
-          },
-          {
-            "id": "Goff",
-            "name": "Off conductance",
-            "value": 0.00001,
-            "unit": "S",
-            "min": 0
-          },
-          {
-            "id": "Vknee",
-            "name": "Knee voltage",
-            "value": 0,
-            "unit": "V",
-            "min": 0
-          }
-        ],
-        "equations": "// Electrical.Analog.Ideal.IdealDiode from the Modelica Standard Library 4.1.0",
-        "keywords": [
-          "rectifier",
-          "freewheeling"
-        ],
-        "modelica": {
-          "class": "Modelica.Electrical.Analog.Ideal.IdealDiode",
-          "modifiers": {
-            "Ron": "Ron",
-            "Goff": "Goff",
-            "Vknee": "Vknee"
-          }
-        }
-      },
-      "position": {
-        "x": 944,
-        "y": 128
-      },
-      "size": {
-        "width": 80,
-        "height": 48
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -80
-      }
-    },
-    {
-      "id": "br",
-      "definition": {
-        "kind": "resistor",
-        "name": "Load B",
-        "symbol": "R",
-        "domain": "electrical",
-        "description": "An ideal resistor between two electrical pins.",
-        "ports": [
-          {
-            "id": "p",
-            "name": "+",
-            "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
-          },
-          {
-            "id": "n",
-            "name": "−",
-            "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "R",
-            "name": "Resistance",
-            "value": 10,
-            "unit": "Ω",
-            "min": 0.000001
-          }
-        ],
-        "equations": "v = R*i;",
-        "keywords": [
-          "electrical",
-          "ohm"
-        ]
-      },
-      "position": {
-        "x": 1104,
-        "y": 192
-      },
-      "size": {
-        "width": 48,
-        "height": 80
-      },
-      "rotation": 90,
-      "labelOffset": {
-        "x": 56,
-        "y": -54
-      }
-    },
-    {
-      "id": "bv",
-      "definition": {
-        "kind": "voltageSensor",
-        "name": "v B",
-        "domain": "electrical",
-        "category": "electrical",
-        "symbol": "V",
-        "description": "Measures voltage between two electrical nodes without loading the circuit.",
-        "ports": [
-          {
-            "id": "p",
-            "name": "+",
-            "domain": "electrical",
-            "direction": "physical",
-            "side": "top"
-          },
-          {
-            "id": "n",
-            "name": "−",
-            "domain": "electrical",
-            "direction": "physical",
-            "side": "bottom"
-          },
-          {
-            "id": "y",
-            "name": "V",
-            "direction": "output",
-            "side": "right",
-            "domain": "signal",
-            "unit": "V"
-          }
-        ],
-        "parameters": [],
-        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
-        "keywords": [
-          "measure",
-          "voltmeter",
-          "probe"
-        ]
-      },
-      "position": {
-        "x": 1264,
-        "y": 192
-      },
-      "size": {
-        "width": 48,
-        "height": 80
-      },
-      "labelOffset": {
-        "x": 44,
-        "y": -54
-      }
-    },
-    {
-      "id": "bg",
-      "definition": {
-        "kind": "ground",
-        "name": "Ground B",
-        "description": "Electrical reference potential.",
-        "domain": "electrical",
-        "symbol": "ground",
-        "ports": [
-          {
-            "id": "p",
-            "name": "0 V",
-            "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
-          }
-        ],
-        "parameters": [],
-        "equations": "p.v = 0;"
-      },
-      "position": {
-        "x": 816,
-        "y": 312
-      },
-      "size": {
-        "width": 48,
-        "height": 48
-      }
-    },
-    {
-      "id": "csrc",
-      "definition": {
-        "kind": "sineVoltage",
-        "name": "10 V 50 Hz C",
-        "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
-        "domain": "electrical",
-        "category": "electrical",
-        "symbol": "AC",
-        "ports": [
-          {
-            "id": "p",
-            "name": "+",
-            "direction": "physical",
-            "domain": "electrical",
-            "side": "top"
-          },
-          {
-            "id": "n",
-            "name": "−",
-            "direction": "physical",
-            "domain": "electrical",
-            "side": "bottom"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "V",
-            "name": "Amplitude",
-            "value": 10,
-            "unit": "V"
-          },
-          {
-            "id": "f",
-            "name": "Frequency",
-            "value": 50,
-            "unit": "Hz",
-            "min": 0
-          },
-          {
-            "id": "phase",
-            "name": "Phase",
-            "value": 0,
-            "unit": "rad"
-          },
-          {
-            "id": "offset",
-            "name": "Offset",
-            "value": 0,
-            "unit": "V"
-          }
-        ],
-        "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
-        "keywords": [
-          "mains",
-          "grid",
-          "sine"
-        ],
-        "modelica": {
-          "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
-          "modifiers": {
-            "V": "V",
-            "f": "f",
-            "phase": "phase",
-            "offset": "offset"
-          }
-        }
-      },
-      "position": {
         "x": 144,
         "y": 560
       },
@@ -641,7 +402,7 @@
       }
     },
     {
-      "id": "cd",
+      "id": "bd",
       "definition": {
         "kind": "diodeShockley",
         "name": "Diode (exponential)",
@@ -713,27 +474,28 @@
       }
     },
     {
-      "id": "cr",
+      "id": "br",
       "definition": {
         "kind": "resistor",
-        "name": "Load C",
-        "symbol": "R",
-        "domain": "electrical",
+        "name": "Load B",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -745,11 +507,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 432,
@@ -766,45 +534,51 @@
       }
     },
     {
-      "id": "cv",
+      "id": "bv",
       "definition": {
         "kind": "voltageSensor",
-        "name": "v C",
+        "name": "v B",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "V",
-        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           },
           {
             "id": "y",
             "name": "V",
             "direction": "output",
-            "side": "right",
             "domain": "signal",
+            "side": "right",
             "unit": "V"
           }
         ],
         "parameters": [],
-        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "voltmeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+          "ports": {
+            "y": "v"
+          }
+        }
       },
       "position": {
         "x": 592,
@@ -820,24 +594,33 @@
       }
     },
     {
-      "id": "cg",
+      "id": "bg",
       "definition": {
         "kind": "ground",
-        "name": "Ground C",
+        "name": "Ground B",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 144,
@@ -853,23 +636,23 @@
       "definition": {
         "kind": "dcSource",
         "name": "12 V",
+        "description": "An ideal constant DC voltage source.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "DC",
-        "description": "An ideal constant DC voltage source.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           }
         ],
@@ -881,13 +664,19 @@
             "unit": "V"
           }
         ],
-        "equations": "p.v - n.v = V;\np.i + n.i = 0;",
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
         "keywords": [
           "supply",
           "battery",
           "dc",
           "power"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
       },
       "position": {
         "x": 816,
@@ -907,23 +696,24 @@
       "definition": {
         "kind": "resistor",
         "name": "R 100 Ω",
-        "symbol": "R",
-        "domain": "electrical",
         "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
         "ports": [
           {
             "id": "p",
             "name": "+",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "left",
-            "direction": "physical"
+            "side": "left"
           },
           {
             "id": "n",
             "name": "−",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "right",
-            "direction": "physical"
+            "side": "right"
           }
         ],
         "parameters": [
@@ -935,11 +725,17 @@
             "min": 0.000001
           }
         ],
-        "equations": "v = R*i;",
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "electrical",
           "ohm"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
       },
       "position": {
         "x": 944,
@@ -1019,41 +815,47 @@
       "definition": {
         "kind": "voltageSensor",
         "name": "v Zener",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "V",
-        "description": "Measures voltage between two electrical nodes without loading the circuit.",
         "ports": [
           {
             "id": "p",
             "name": "+",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "top"
           },
           {
             "id": "n",
             "name": "−",
-            "domain": "electrical",
             "direction": "physical",
+            "domain": "electrical",
             "side": "bottom"
           },
           {
             "id": "y",
             "name": "V",
             "direction": "output",
-            "side": "right",
             "domain": "signal",
+            "side": "right",
             "unit": "V"
           }
         ],
         "parameters": [],
-        "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+        "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
         "keywords": [
           "measure",
           "voltmeter",
           "probe"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+          "ports": {
+            "y": "v"
+          }
+        }
       },
       "position": {
         "x": 1264,
@@ -1075,18 +877,27 @@
         "name": "Ground (Zener)",
         "description": "Electrical reference potential.",
         "domain": "electrical",
+        "category": "electrical",
         "symbol": "ground",
         "ports": [
           {
             "id": "p",
             "name": "0 V",
+            "direction": "physical",
             "domain": "electrical",
-            "side": "top",
-            "direction": "physical"
+            "side": "top"
           }
         ],
         "parameters": [],
-        "equations": "p.v = 0;"
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
       },
       "position": {
         "x": 816,
@@ -1110,7 +921,7 @@
       "id": "id0002",
       "source": "ad",
       "sourceHandle": "n",
-      "target": "j_id000q",
+      "target": "j_id000k",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1121,15 +932,15 @@
     },
     {
       "id": "id0003",
-      "source": "j_id000s",
+      "source": "j_id000m",
       "sourceHandle": "node",
-      "target": "j_id000u",
+      "target": "j_id000o",
       "targetHandle": "node",
       "waypoints": []
     },
     {
       "id": "id0004",
-      "source": "j_id000u",
+      "source": "j_id000o",
       "sourceHandle": "node",
       "target": "ag",
       "targetHandle": "p",
@@ -1139,7 +950,7 @@
       "id": "id0005",
       "source": "av",
       "sourceHandle": "p",
-      "target": "j_id000q",
+      "target": "j_id000k",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1152,7 +963,7 @@
       "id": "id0006",
       "source": "av",
       "sourceHandle": "n",
-      "target": "j_id000s",
+      "target": "j_id000m",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1172,69 +983,7 @@
       "id": "id0008",
       "source": "bd",
       "sourceHandle": "n",
-      "target": "j_id000w",
-      "targetHandle": "node",
-      "waypoints": [
-        {
-          "x": 1128,
-          "y": 152
-        }
-      ]
-    },
-    {
-      "id": "id0009",
-      "source": "j_id000y",
-      "sourceHandle": "node",
-      "target": "j_id0010",
-      "targetHandle": "node",
-      "waypoints": []
-    },
-    {
-      "id": "id000a",
-      "source": "j_id0010",
-      "sourceHandle": "node",
-      "target": "bg",
-      "targetHandle": "p",
-      "waypoints": []
-    },
-    {
-      "id": "id000b",
-      "source": "bv",
-      "sourceHandle": "p",
-      "target": "j_id000w",
-      "targetHandle": "node",
-      "waypoints": [
-        {
-          "x": 1288,
-          "y": 176
-        }
-      ]
-    },
-    {
-      "id": "id000c",
-      "source": "bv",
-      "sourceHandle": "n",
-      "target": "j_id000y",
-      "targetHandle": "node",
-      "waypoints": [
-        {
-          "x": 1288,
-          "y": 288
-        }
-      ]
-    },
-    {
-      "id": "id000d",
-      "source": "csrc",
-      "sourceHandle": "p",
-      "target": "cd",
-      "targetHandle": "p"
-    },
-    {
-      "id": "id000e",
-      "source": "cd",
-      "sourceHandle": "n",
-      "target": "j_id0012",
+      "target": "j_id000q",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1244,26 +993,26 @@
       ]
     },
     {
-      "id": "id000f",
-      "source": "j_id0014",
+      "id": "id0009",
+      "source": "j_id000s",
       "sourceHandle": "node",
-      "target": "j_id0016",
+      "target": "j_id000u",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "id000g",
-      "source": "j_id0016",
+      "id": "id000a",
+      "source": "j_id000u",
       "sourceHandle": "node",
-      "target": "cg",
+      "target": "bg",
       "targetHandle": "p",
       "waypoints": []
     },
     {
-      "id": "id000h",
-      "source": "cv",
+      "id": "id000b",
+      "source": "bv",
       "sourceHandle": "p",
-      "target": "j_id0012",
+      "target": "j_id000q",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1273,10 +1022,10 @@
       ]
     },
     {
-      "id": "id000i",
-      "source": "cv",
+      "id": "id000c",
+      "source": "bv",
       "sourceHandle": "n",
-      "target": "j_id0014",
+      "target": "j_id000s",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1286,17 +1035,17 @@
       ]
     },
     {
-      "id": "id000j",
+      "id": "id000d",
       "source": "z12",
       "sourceHandle": "p",
       "target": "zr",
       "targetHandle": "p"
     },
     {
-      "id": "id000k",
+      "id": "id000e",
       "source": "zr",
       "sourceHandle": "n",
-      "target": "j_id0018",
+      "target": "j_id000w",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1306,26 +1055,26 @@
       ]
     },
     {
-      "id": "id000l",
-      "source": "j_id001a",
+      "id": "id000f",
+      "source": "j_id000y",
       "sourceHandle": "node",
-      "target": "j_id001c",
+      "target": "j_id0010",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "id000m",
-      "source": "j_id001c",
+      "id": "id000g",
+      "source": "j_id0010",
       "sourceHandle": "node",
       "target": "gz",
       "targetHandle": "p",
       "waypoints": []
     },
     {
-      "id": "id000n",
+      "id": "id000h",
       "source": "vz",
       "sourceHandle": "p",
-      "target": "j_id0018",
+      "target": "j_id000w",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1335,10 +1084,10 @@
       ]
     },
     {
-      "id": "id000o",
+      "id": "id000i",
       "source": "vz",
       "sourceHandle": "n",
-      "target": "j_id001a",
+      "target": "j_id000y",
       "targetHandle": "node",
       "waypoints": [
         {
@@ -1348,8 +1097,32 @@
       ]
     },
     {
-      "id": "w_id000r",
+      "id": "w_id000l",
       "source": "ar",
+      "sourceHandle": "p",
+      "target": "j_id000k",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000n",
+      "source": "ar",
+      "sourceHandle": "n",
+      "target": "j_id000m",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000p",
+      "source": "asrc",
+      "sourceHandle": "n",
+      "target": "j_id000o",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000r",
+      "source": "br",
       "sourceHandle": "p",
       "target": "j_id000q",
       "targetHandle": "node",
@@ -1357,7 +1130,7 @@
     },
     {
       "id": "w_id000t",
-      "source": "ar",
+      "source": "br",
       "sourceHandle": "n",
       "target": "j_id000s",
       "targetHandle": "node",
@@ -1365,7 +1138,7 @@
     },
     {
       "id": "w_id000v",
-      "source": "asrc",
+      "source": "bsrc",
       "sourceHandle": "n",
       "target": "j_id000u",
       "targetHandle": "node",
@@ -1373,84 +1146,60 @@
     },
     {
       "id": "w_id000x",
-      "source": "br",
-      "sourceHandle": "p",
+      "source": "z",
+      "sourceHandle": "n",
       "target": "j_id000w",
       "targetHandle": "node",
       "waypoints": []
     },
     {
       "id": "w_id000z",
-      "source": "br",
-      "sourceHandle": "n",
+      "source": "z",
+      "sourceHandle": "p",
       "target": "j_id000y",
       "targetHandle": "node",
       "waypoints": []
     },
     {
       "id": "w_id0011",
-      "source": "bsrc",
-      "sourceHandle": "n",
-      "target": "j_id0010",
-      "targetHandle": "node",
-      "waypoints": []
-    },
-    {
-      "id": "w_id0013",
-      "source": "cr",
-      "sourceHandle": "p",
-      "target": "j_id0012",
-      "targetHandle": "node",
-      "waypoints": []
-    },
-    {
-      "id": "w_id0015",
-      "source": "cr",
-      "sourceHandle": "n",
-      "target": "j_id0014",
-      "targetHandle": "node",
-      "waypoints": []
-    },
-    {
-      "id": "w_id0017",
-      "source": "csrc",
-      "sourceHandle": "n",
-      "target": "j_id0016",
-      "targetHandle": "node",
-      "waypoints": []
-    },
-    {
-      "id": "w_id0019",
-      "source": "z",
-      "sourceHandle": "n",
-      "target": "j_id0018",
-      "targetHandle": "node",
-      "waypoints": []
-    },
-    {
-      "id": "w_id001b",
-      "source": "z",
-      "sourceHandle": "p",
-      "target": "j_id001a",
-      "targetHandle": "node",
-      "waypoints": []
-    },
-    {
-      "id": "w_id001d",
       "source": "z12",
       "sourceHandle": "n",
-      "target": "j_id001c",
+      "target": "j_id0010",
       "targetHandle": "node",
       "waypoints": []
     }
   ],
   "junctions": [
     {
-      "id": "j_id000q",
+      "id": "j_id000k",
       "domain": "electrical",
       "position": {
         "x": 456,
         "y": 176
+      }
+    },
+    {
+      "id": "j_id000m",
+      "domain": "electrical",
+      "position": {
+        "x": 456,
+        "y": 288
+      }
+    },
+    {
+      "id": "j_id000o",
+      "domain": "electrical",
+      "position": {
+        "x": 168,
+        "y": 288
+      }
+    },
+    {
+      "id": "j_id000q",
+      "domain": "electrical",
+      "position": {
+        "x": 456,
+        "y": 544
       }
     },
     {
@@ -1458,7 +1207,7 @@
       "domain": "electrical",
       "position": {
         "x": 456,
-        "y": 288
+        "y": 656
       }
     },
     {
@@ -1466,7 +1215,7 @@
       "domain": "electrical",
       "position": {
         "x": 168,
-        "y": 288
+        "y": 656
       }
     },
     {
@@ -1474,7 +1223,7 @@
       "domain": "electrical",
       "position": {
         "x": 1128,
-        "y": 176
+        "y": 544
       }
     },
     {
@@ -1482,59 +1231,11 @@
       "domain": "electrical",
       "position": {
         "x": 1128,
-        "y": 288
+        "y": 656
       }
     },
     {
       "id": "j_id0010",
-      "domain": "electrical",
-      "position": {
-        "x": 840,
-        "y": 288
-      }
-    },
-    {
-      "id": "j_id0012",
-      "domain": "electrical",
-      "position": {
-        "x": 456,
-        "y": 544
-      }
-    },
-    {
-      "id": "j_id0014",
-      "domain": "electrical",
-      "position": {
-        "x": 456,
-        "y": 656
-      }
-    },
-    {
-      "id": "j_id0016",
-      "domain": "electrical",
-      "position": {
-        "x": 168,
-        "y": 656
-      }
-    },
-    {
-      "id": "j_id0018",
-      "domain": "electrical",
-      "position": {
-        "x": 1128,
-        "y": 544
-      }
-    },
-    {
-      "id": "j_id001a",
-      "domain": "electrical",
-      "position": {
-        "x": 1128,
-        "y": 656
-      }
-    },
-    {
-      "id": "j_id001c",
       "domain": "electrical",
       "position": {
         "x": 840,
@@ -1544,111 +1245,84 @@
   ],
   "nets": [
     {
-      "id": "net_id001e",
+      "id": "net_id0012",
       "anchor": "ad.p",
       "wireIds": [
         "id0001"
       ]
     },
     {
-      "id": "net_id001f",
+      "id": "net_id0013",
       "anchor": "ad.n",
       "wireIds": [
         "id0002",
         "id0005",
-        "w_id000r"
+        "w_id000l"
       ]
     },
     {
-      "id": "net_id001g",
+      "id": "net_id0014",
       "anchor": "ag.p",
       "wireIds": [
         "id0003",
         "id0004",
         "id0006",
-        "w_id000t",
-        "w_id000v"
+        "w_id000n",
+        "w_id000p"
       ]
     },
     {
-      "id": "net_id001h",
+      "id": "net_id0015",
       "anchor": "bd.p",
       "wireIds": [
         "id0007"
       ]
     },
     {
-      "id": "net_id001i",
+      "id": "net_id0016",
       "anchor": "bd.n",
       "wireIds": [
         "id0008",
         "id000b",
-        "w_id000x"
+        "w_id000r"
       ]
     },
     {
-      "id": "net_id001j",
+      "id": "net_id0017",
       "anchor": "bg.p",
       "wireIds": [
         "id0009",
         "id000a",
         "id000c",
-        "w_id000z",
-        "w_id0011"
+        "w_id000t",
+        "w_id000v"
       ]
     },
     {
-      "id": "net_id001k",
-      "anchor": "cd.p",
+      "id": "net_id0018",
+      "anchor": "z12.p",
       "wireIds": [
         "id000d"
       ]
     },
     {
-      "id": "net_id001l",
-      "anchor": "cd.n",
+      "id": "net_id0019",
+      "anchor": "vz.p",
       "wireIds": [
         "id000e",
         "id000h",
-        "w_id0013"
+        "w_id000x"
       ]
     },
     {
-      "id": "net_id001m",
-      "anchor": "cg.p",
+      "id": "net_id001a",
+      "anchor": "gz.p",
       "wireIds": [
         "id000f",
         "id000g",
         "id000i",
-        "w_id0015",
-        "w_id0017"
-      ]
-    },
-    {
-      "id": "net_id001n",
-      "anchor": "z12.p",
-      "wireIds": [
-        "id000j"
-      ]
-    },
-    {
-      "id": "net_id001o",
-      "anchor": "vz.p",
-      "wireIds": [
-        "id000k",
-        "id000n",
-        "w_id0019"
-      ]
-    },
-    {
-      "id": "net_id001p",
-      "anchor": "gz.p",
-      "wireIds": [
-        "id000l",
-        "id000m",
-        "id000o",
-        "w_id001b",
-        "w_id001d"
+        "w_id000z",
+        "w_id0011"
       ]
     }
   ],
@@ -1659,11 +1333,9 @@
       "label": "Rectified",
       "series": [
         "av.y",
-        "bv.y",
-        "cv.y"
+        "bv.y"
       ],
       "labels": [
-        "Diode",
         "Ideal diode",
         "Exponential diode"
       ]

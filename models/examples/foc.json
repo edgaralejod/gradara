@@ -1,7 +1,8 @@
 {
   "version": 1,
-  "exampleId": "foc",
   "name": "PMSM · Field-oriented control",
+  "exampleId": "foc",
+  "description": "A 1500 rpm speed command with cascaded d/q current control. The speed PI asks for q-axis current (torque); the d-axis reference is zero. Two current PIs set the d/q voltages, which turn back into three phase voltages through the inverse Park (the Park transform fed −θe) and inverse Clarke transforms and drive a controlled three-phase source, the ideal model of an inverter. The machine is the Modelica permanent-magnet synchronous machine with its inductances and magnet voltage set explicitly; its load is a damper plus a torque step that raises the load from 0.05 N·m to 0.4 N·m at 0.45 s. Measured phase currents come back through the Clarke and Park transforms; the rotor angle comes from an angle sensor scaled by the pole pairs.",
   "duration": 1.2,
   "revision": 0,
   "blocks": [
@@ -10,15 +11,17 @@
       "definition": {
         "kind": "step",
         "name": "Speed command",
-        "description": "A step change in the requested motor speed.",
+        "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
             "domain": "signal",
+            "side": "right",
             "unit": "rpm"
           }
         ],
@@ -31,17 +34,28 @@
           },
           {
             "id": "startTime",
-            "name": "Step time",
+            "name": "Start time",
             "value": 0.03,
             "unit": "s",
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;"
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
-        "x": 0,
-        "y": 128
+        "x": 32,
+        "y": 80
       },
       "size": {
         "width": 80,
@@ -55,179 +69,8 @@
         "name": "rpm → rad/s",
         "description": "Multiply an input by an adjustable gain.",
         "domain": "signal",
+        "category": "math",
         "symbol": "K",
-        "ports": [
-          {
-            "id": "u",
-            "name": "in",
-            "direction": "input",
-            "domain": "signal"
-          },
-          {
-            "id": "y",
-            "name": "out",
-            "direction": "output",
-            "domain": "signal"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "k",
-            "name": "Gain",
-            "value": 0.10471975511965977,
-            "unit": ""
-          }
-        ],
-        "equations": "y = k*u;"
-      },
-      "position": {
-        "x": 128,
-        "y": 128
-      },
-      "size": {
-        "width": 80,
-        "height": 64
-      }
-    },
-    {
-      "id": "speedError",
-      "definition": {
-        "kind": "subtract",
-        "name": "Speed error",
-        "symbol": "sum",
-        "domain": "signal",
-        "description": "Subtract",
-        "ports": [
-          {
-            "id": "a",
-            "name": "+",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "b",
-            "name": "−",
-            "direction": "input",
-            "domain": "signal",
-            "side": "bottom"
-          },
-          {
-            "id": "y",
-            "name": "y",
-            "direction": "output",
-            "domain": "signal",
-            "side": "right",
-            "unit": ""
-          }
-        ],
-        "equations": "y = a - b;",
-        "parameters": [],
-        "declarations": ""
-      },
-      "position": {
-        "x": 256,
-        "y": 136
-      },
-      "size": {
-        "width": 48,
-        "height": 48
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -76
-      }
-    },
-    {
-      "id": "speedKp",
-      "definition": {
-        "kind": "gain",
-        "name": "Kp · speed",
-        "description": "Multiply an input by an adjustable gain.",
-        "domain": "signal",
-        "symbol": "K",
-        "ports": [
-          {
-            "id": "u",
-            "name": "in",
-            "direction": "input",
-            "domain": "signal"
-          },
-          {
-            "id": "y",
-            "name": "out",
-            "direction": "output",
-            "domain": "signal"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "k",
-            "name": "Gain",
-            "value": 0.16,
-            "unit": ""
-          }
-        ],
-        "equations": "y = k*u;"
-      },
-      "position": {
-        "x": 368,
-        "y": 128
-      },
-      "size": {
-        "width": 80,
-        "height": 64
-      }
-    },
-    {
-      "id": "speedKi",
-      "definition": {
-        "kind": "gain",
-        "name": "Ki · speed",
-        "description": "Multiply an input by an adjustable gain.",
-        "domain": "signal",
-        "symbol": "K",
-        "ports": [
-          {
-            "id": "u",
-            "name": "in",
-            "direction": "input",
-            "domain": "signal"
-          },
-          {
-            "id": "y",
-            "name": "out",
-            "direction": "output",
-            "domain": "signal"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "k",
-            "name": "Gain",
-            "value": 1.2,
-            "unit": ""
-          }
-        ],
-        "equations": "y = k*u;"
-      },
-      "position": {
-        "x": 368,
-        "y": 264
-      },
-      "size": {
-        "width": 80,
-        "height": 64
-      }
-    },
-    {
-      "id": "speedIntegral",
-      "definition": {
-        "kind": "integrator",
-        "name": "Integral",
-        "symbol": "1/s",
-        "domain": "signal",
-        "description": "Limited integrator",
         "ports": [
           {
             "id": "u",
@@ -241,25 +84,33 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 0.10471975511965977,
             "unit": ""
           }
         ],
-        "equations": "der(x) = if (x >= limit and u > 0) or (x <= -limit and u < 0) then 0 else u;\ny = x;",
-        "parameters": [
-          {
-            "id": "limit",
-            "name": "Integral limit",
-            "value": 3,
-            "unit": "",
-            "min": 0.01
-          }
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
         ],
-        "declarations": "Real x(start=0, fixed=true);"
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
       },
       "position": {
-        "x": 496,
-        "y": 264
+        "x": 176,
+        "y": 80
       },
       "size": {
         "width": 80,
@@ -267,24 +118,25 @@
       }
     },
     {
-      "id": "speedSum",
+      "id": "speedPI",
       "definition": {
-        "kind": "sum",
-        "name": "PI sum",
-        "symbol": "sum",
+        "kind": "piController",
+        "name": "Speed PI",
+        "description": "Continuous PI controller with output limits and anti-windup: y = k·(e + ∫e/Ti), clamped, where e = reference − measured.",
         "domain": "signal",
-        "description": "Sum",
+        "category": "control",
+        "symbol": "PI",
         "ports": [
           {
-            "id": "a",
-            "name": "+",
+            "id": "reference",
+            "name": "ref",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "b",
-            "name": "+",
+            "id": "measured",
+            "name": "meas",
             "direction": "input",
             "domain": "signal",
             "side": "bottom"
@@ -295,93 +147,92 @@
             "direction": "output",
             "domain": "signal",
             "side": "right",
-            "unit": ""
-          }
-        ],
-        "equations": "y = a + b;",
-        "parameters": [],
-        "declarations": ""
-      },
-      "position": {
-        "x": 512,
-        "y": 136
-      },
-      "size": {
-        "width": 48,
-        "height": 48
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -76
-      }
-    },
-    {
-      "id": "iqReference",
-      "definition": {
-        "kind": "saturation",
-        "name": "Current limit",
-        "description": "Clamp a signal between lower and upper limits.",
-        "domain": "signal",
-        "symbol": "sat",
-        "ports": [
-          {
-            "id": "u",
-            "name": "in",
-            "direction": "input",
-            "domain": "signal"
-          },
-          {
-            "id": "y",
-            "name": "out",
-            "direction": "output",
-            "domain": "signal",
             "unit": "A"
           }
         ],
         "parameters": [
           {
-            "id": "lower",
-            "name": "Lower limit",
-            "value": -8,
+            "id": "k",
+            "name": "Gain",
+            "value": 0.16,
             "unit": ""
           },
           {
-            "id": "upper",
+            "id": "Ti",
+            "name": "Integral time",
+            "value": 0.2,
+            "unit": "s",
+            "min": 0.000001
+          },
+          {
+            "id": "yMax",
             "name": "Upper limit",
             "value": 8,
             "unit": ""
+          },
+          {
+            "id": "yMin",
+            "name": "Lower limit",
+            "value": -8,
+            "unit": ""
           }
         ],
-        "equations": "y = max(lower, min(upper, u));"
+        "equations": "// Blocks.Continuous.LimPID from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "control",
+          "regulator",
+          "anti-windup",
+          "limited"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.LimPID",
+          "modifiers": {
+            "controllerType": "Modelica.Blocks.Types.SimpleController.PI",
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "k": "k",
+            "Ti": "Ti",
+            "yMax": "yMax",
+            "yMin": "yMin"
+          },
+          "ports": {
+            "reference": "u_s",
+            "measured": "u_m"
+          }
+        }
       },
       "position": {
-        "x": 624,
-        "y": 128
+        "x": 328,
+        "y": 64
       },
       "size": {
-        "width": 80,
-        "height": 64
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
       }
     },
     {
-      "id": "qError",
+      "id": "qPI",
       "definition": {
-        "kind": "subtract",
-        "name": "q-axis error",
-        "symbol": "sum",
+        "kind": "piController",
+        "name": "q-axis PI",
+        "description": "Continuous PI controller with output limits and anti-windup: y = k·(e + ∫e/Ti), clamped, where e = reference − measured.",
         "domain": "signal",
-        "description": "Subtract",
+        "category": "control",
+        "symbol": "PI",
         "ports": [
           {
-            "id": "a",
-            "name": "+",
+            "id": "reference",
+            "name": "ref",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "b",
-            "name": "−",
+            "id": "measured",
+            "name": "meas",
             "direction": "input",
             "domain": "signal",
             "side": "bottom"
@@ -389,93 +240,73 @@
           {
             "id": "y",
             "name": "y",
-            "direction": "output",
-            "domain": "signal",
-            "side": "right",
-            "unit": ""
-          }
-        ],
-        "equations": "y = a - b;",
-        "parameters": [],
-        "declarations": ""
-      },
-      "position": {
-        "x": 800,
-        "y": 136
-      },
-      "size": {
-        "width": 48,
-        "height": 48
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -76
-      }
-    },
-    {
-      "id": "qPI",
-      "definition": {
-        "kind": "currentPI",
-        "name": "q-axis PI",
-        "symbol": "PI",
-        "domain": "signal",
-        "description": "Continuous PI current regulator with back-calculation anti-windup.",
-        "ports": [
-          {
-            "id": "u",
-            "name": "e",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "y",
-            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
             "unit": "V"
           }
         ],
-        "equations": "raw = kp*u + x;\ny = max(-limit, min(limit, raw));\nder(x) = ki*u + kaw*(y-raw);",
         "parameters": [
           {
-            "id": "kp",
-            "name": "Proportional gain",
+            "id": "k",
+            "name": "Gain",
             "value": 2,
             "unit": ""
           },
           {
-            "id": "ki",
-            "name": "Integral gain",
-            "value": 700,
+            "id": "Ti",
+            "name": "Integral time",
+            "value": 0.002857142857142857,
+            "unit": "s",
+            "min": 0.000001
+          },
+          {
+            "id": "yMax",
+            "name": "Upper limit",
+            "value": 27,
             "unit": ""
           },
           {
-            "id": "kaw",
-            "name": "Anti-windup gain",
-            "value": 350,
-            "unit": "1/s",
-            "min": 0
-          },
-          {
-            "id": "limit",
-            "name": "Voltage limit",
-            "value": 27,
-            "unit": "V",
-            "min": 0.1
+            "id": "yMin",
+            "name": "Lower limit",
+            "value": -27,
+            "unit": ""
           }
         ],
-        "declarations": "Real x(start=0, fixed=true);\nReal raw;",
-        "controller": true
+        "equations": "// Blocks.Continuous.LimPID from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "control",
+          "regulator",
+          "anti-windup",
+          "limited"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.LimPID",
+          "modifiers": {
+            "controllerType": "Modelica.Blocks.Types.SimpleController.PI",
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "k": "k",
+            "Ti": "Ti",
+            "yMax": "yMax",
+            "yMin": "yMin"
+          },
+          "ports": {
+            "reference": "u_s",
+            "measured": "u_m"
+          }
+        }
       },
       "position": {
-        "x": 912,
-        "y": 128
+        "x": 536,
+        "y": 64
       },
       "size": {
-        "width": 80,
-        "height": 64
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
       }
     },
     {
@@ -483,20 +314,19 @@
       "definition": {
         "kind": "constant",
         "name": "id* = 0 A",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": "A"
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -505,10 +335,21 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
-        "x": 624,
+        "x": 280,
         "y": 272
       },
       "size": {
@@ -517,24 +358,25 @@
       }
     },
     {
-      "id": "dError",
+      "id": "dPI",
       "definition": {
-        "kind": "subtract",
-        "name": "d-axis error",
-        "symbol": "sum",
+        "kind": "piController",
+        "name": "d-axis PI",
+        "description": "Continuous PI controller with output limits and anti-windup: y = k·(e + ∫e/Ti), clamped, where e = reference − measured.",
         "domain": "signal",
-        "description": "Subtract",
+        "category": "control",
+        "symbol": "PI",
         "ports": [
           {
-            "id": "a",
-            "name": "+",
+            "id": "reference",
+            "name": "ref",
             "direction": "input",
             "domain": "signal",
             "side": "left"
           },
           {
-            "id": "b",
-            "name": "−",
+            "id": "measured",
+            "name": "meas",
             "direction": "input",
             "domain": "signal",
             "side": "bottom"
@@ -545,156 +387,62 @@
             "direction": "output",
             "domain": "signal",
             "side": "right",
-            "unit": ""
-          }
-        ],
-        "equations": "y = a - b;",
-        "parameters": [],
-        "declarations": ""
-      },
-      "position": {
-        "x": 800,
-        "y": 280
-      },
-      "size": {
-        "width": 48,
-        "height": 48
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -76
-      }
-    },
-    {
-      "id": "dPI",
-      "definition": {
-        "kind": "currentPI",
-        "name": "d-axis PI",
-        "symbol": "PI",
-        "domain": "signal",
-        "description": "Continuous PI current regulator with back-calculation anti-windup.",
-        "ports": [
-          {
-            "id": "u",
-            "name": "e",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "y",
-            "name": "v",
-            "direction": "output",
-            "domain": "signal",
-            "side": "right",
             "unit": "V"
           }
         ],
-        "equations": "raw = kp*u + x;\ny = max(-limit, min(limit, raw));\nder(x) = ki*u + kaw*(y-raw);",
         "parameters": [
           {
-            "id": "kp",
-            "name": "Proportional gain",
+            "id": "k",
+            "name": "Gain",
             "value": 2,
             "unit": ""
           },
           {
-            "id": "ki",
-            "name": "Integral gain",
-            "value": 700,
+            "id": "Ti",
+            "name": "Integral time",
+            "value": 0.002857142857142857,
+            "unit": "s",
+            "min": 0.000001
+          },
+          {
+            "id": "yMax",
+            "name": "Upper limit",
+            "value": 27,
             "unit": ""
           },
           {
-            "id": "kaw",
-            "name": "Anti-windup gain",
-            "value": 350,
-            "unit": "1/s",
-            "min": 0
-          },
-          {
-            "id": "limit",
-            "name": "Voltage limit",
-            "value": 27,
-            "unit": "V",
-            "min": 0.1
+            "id": "yMin",
+            "name": "Lower limit",
+            "value": -27,
+            "unit": ""
           }
         ],
-        "declarations": "Real x(start=0, fixed=true);\nReal raw;",
-        "controller": true
-      },
-      "position": {
-        "x": 912,
-        "y": 272
-      },
-      "size": {
-        "width": 80,
-        "height": 64
-      }
-    },
-    {
-      "id": "inverse",
-      "definition": {
-        "kind": "inversePark",
-        "name": "Inverse Park / Clarke",
-        "symbol": "dq→abc",
-        "domain": "signal",
-        "description": "Inverse Park and inverse Clarke transforms produce three phase-voltage commands.",
-        "ports": [
-          {
-            "id": "vd",
-            "name": "d",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left",
-            "offset": 75
-          },
-          {
-            "id": "vq",
-            "name": "q",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left",
-            "offset": 25
-          },
-          {
-            "id": "theta",
-            "name": "θe",
-            "direction": "input",
-            "domain": "signal",
-            "side": "bottom"
-          },
-          {
-            "id": "va",
-            "name": "a",
-            "direction": "output",
-            "domain": "signal",
-            "side": "right",
-            "unit": "V"
-          },
-          {
-            "id": "vb",
-            "name": "b",
-            "direction": "output",
-            "domain": "signal",
-            "side": "right",
-            "unit": "V"
-          },
-          {
-            "id": "vc",
-            "name": "c",
-            "direction": "output",
-            "domain": "signal",
-            "side": "right",
-            "unit": "V"
-          }
+        "equations": "// Blocks.Continuous.LimPID from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "control",
+          "regulator",
+          "anti-windup",
+          "limited"
         ],
-        "equations": "alpha = vd*cos(theta)-vq*sin(theta);\nbeta = vd*sin(theta)+vq*cos(theta);\nva = alpha;\nvb = -alpha/2 + sqrt(3)*beta/2;\nvc = -alpha/2 - sqrt(3)*beta/2;",
-        "parameters": [],
-        "declarations": "Real alpha;\nReal beta;"
+        "modelica": {
+          "class": "Modelica.Blocks.Continuous.LimPID",
+          "modifiers": {
+            "controllerType": "Modelica.Blocks.Types.SimpleController.PI",
+            "initType": "Modelica.Blocks.Types.Init.InitialState",
+            "k": "k",
+            "Ti": "Ti",
+            "yMax": "yMax",
+            "yMin": "yMin"
+          },
+          "ports": {
+            "reference": "u_s",
+            "measured": "u_m"
+          }
+        }
       },
       "position": {
-        "x": 1104,
-        "y": 136
+        "x": 456,
+        "y": 256
       },
       "size": {
         "width": 128,
@@ -702,120 +450,328 @@
       },
       "labelOffset": {
         "x": 0,
-        "y": -132
+        "y": -128
+      }
+    },
+    {
+      "id": "inversePark",
+      "definition": {
+        "kind": "park",
+        "name": "Inverse Park",
+        "description": "Rotates a stationary-frame (α, β) pair into a frame turning at the input angle: with the electrical rotor angle it gives d and q. Feed −θ to rotate back.",
+        "domain": "signal",
+        "category": "control",
+        "symbol": "αβ→dq",
+        "ports": [
+          {
+            "id": "alpha",
+            "name": "d",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "beta",
+            "name": "q",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "theta",
+            "name": "−θe",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "rad"
+          },
+          {
+            "id": "id",
+            "name": "α",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "iq",
+            "name": "β",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Machines.SpacePhasors.Blocks.Rotator from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "foc",
+          "rotator",
+          "dq"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.Rotator",
+          "ports": {
+            "alpha": "u[1]",
+            "beta": "u[2]",
+            "theta": "angle",
+            "id": "y[1]",
+            "iq": "y[2]"
+          }
+        }
+      },
+      "position": {
+        "x": 744,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "zero",
+      "definition": {
+        "kind": "constant",
+        "name": "Zero sequence 0",
+        "description": "A constant output value.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
+      },
+      "position": {
+        "x": 768,
+        "y": 32
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "inverseClarke",
+      "definition": {
+        "kind": "inverseClarke",
+        "name": "Inverse Clarke",
+        "description": "Stationary-frame (α, β) pair back to three phases, with the zero-sequence input added to each.",
+        "domain": "signal",
+        "category": "control",
+        "symbol": "αβ→abc",
+        "ports": [
+          {
+            "id": "alpha",
+            "name": "α",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "offset": 33.333333333333336
+          },
+          {
+            "id": "beta",
+            "name": "β",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "offset": 66.66666666666667
+          },
+          {
+            "id": "zero",
+            "name": "0",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "offset": 91.67
+          },
+          {
+            "id": "va",
+            "name": "a",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "vb",
+            "name": "b",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "vc",
+            "name": "c",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Machines.SpacePhasors.Blocks.FromSpacePhasor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "foc",
+          "space phasor",
+          "abc"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.FromSpacePhasor",
+          "ports": {
+            "alpha": "u[1]",
+            "beta": "u[2]",
+            "va": "y[1]",
+            "vb": "y[2]",
+            "vc": "y[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 936,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
       }
     },
     {
       "id": "inverter",
       "definition": {
-        "kind": "inverter",
-        "name": "Averaged inverter",
-        "symbol": "inverter",
-        "domain": "electrical",
-        "description": "Averaged inverter with common-mode injection and DC-bus voltage clipping. No PWM switching ripple.",
+        "kind": "threePhaseSignalVoltage",
+        "name": "Inverter (ideal)",
+        "description": "Three phase voltages equal to the three input signals, from plug − to plug +: an ideal (averaged) voltage-source inverter.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3~ v(u)",
         "ports": [
-          {
-            "id": "ua",
-            "name": "a*",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "ub",
-            "name": "b*",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "uc",
-            "name": "c*",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
           {
             "id": "va",
             "name": "a",
-            "direction": "output",
+            "direction": "input",
             "domain": "signal",
-            "side": "right",
+            "side": "left",
             "unit": "V"
           },
           {
             "id": "vb",
             "name": "b",
-            "direction": "output",
+            "direction": "input",
             "domain": "signal",
-            "side": "right",
+            "side": "left",
             "unit": "V"
           },
           {
             "id": "vc",
             "name": "c",
-            "direction": "output",
+            "direction": "input",
             "domain": "signal",
-            "side": "right",
+            "side": "left",
             "unit": "V"
-          }
-        ],
-        "equations": "offset = (max(ua,max(ub,uc))+min(ua,min(ub,uc)))/2;\nva = max(-Vdc/2,min(Vdc/2,ua-offset));\nvb = max(-Vdc/2,min(Vdc/2,ub-offset));\nvc = max(-Vdc/2,min(Vdc/2,uc-offset));",
-        "parameters": [
+          },
           {
-            "id": "Vdc",
-            "name": "DC bus voltage",
-            "value": 48,
-            "unit": "V",
-            "min": 1
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "plug_n",
+            "name": "abc−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
           }
         ],
-        "declarations": "Real offset;"
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sources.SignalVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "inverter",
+          "averaged",
+          "programmable",
+          "foc",
+          "drive"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sources.SignalVoltage",
+          "ports": {
+            "va": "v[1]",
+            "vb": "v[2]",
+            "vc": "v[3]"
+          }
+        }
       },
       "position": {
-        "x": 1296,
-        "y": 136
+        "x": 1144,
+        "y": 160
       },
       "size": {
         "width": 128,
         "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
       }
     },
     {
-      "id": "motor",
+      "id": "isens",
       "definition": {
-        "kind": "pmsm",
-        "name": "PMSM",
-        "symbol": "pmsm",
-        "domain": "electrical",
-        "description": "Three-phase permanent-magnet synchronous motor. Sinusoidal flux, fixed d/q inductances, ideal rotor-angle and current measurements.",
+        "kind": "threePhaseCurrentSensor",
+        "name": "Phase currents",
+        "description": "Phase currents from plug + to plug −.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "iabc",
         "ports": [
           {
-            "id": "va",
-            "name": "a",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "vb",
-            "name": "b",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "vc",
-            "name": "c",
-            "direction": "input",
-            "domain": "signal",
-            "side": "left"
-          },
-          {
-            "id": "flange",
-            "name": "shaft",
+            "id": "plug_p",
+            "name": "+",
             "direction": "physical",
-            "domain": "mechanical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
             "side": "right"
           },
           {
@@ -841,161 +797,746 @@
             "domain": "signal",
             "side": "bottom",
             "unit": "A"
-          },
-          {
-            "id": "theta",
-            "name": "θe",
-            "direction": "output",
-            "domain": "signal",
-            "side": "bottom",
-            "unit": "rad"
-          },
-          {
-            "id": "wm",
-            "name": "ω",
-            "direction": "output",
-            "domain": "signal",
-            "side": "top",
-            "unit": "rad/s"
-          },
-          {
-            "id": "rpm",
-            "name": "rpm",
-            "direction": "output",
-            "domain": "signal",
-            "side": "top",
-            "unit": "rpm"
-          },
-          {
-            "id": "torque",
-            "name": "Te",
-            "direction": "output",
-            "domain": "signal",
-            "side": "top",
-            "unit": "N·m"
           }
         ],
-        "parameters": [
-          {
-            "id": "R",
-            "name": "Stator resistance",
-            "value": 0.35,
-            "unit": "Ω",
-            "min": 0.001
-          },
-          {
-            "id": "Ld",
-            "name": "d-axis inductance",
-            "value": 0.001,
-            "unit": "H",
-            "min": 0.000001
-          },
-          {
-            "id": "Lq",
-            "name": "q-axis inductance",
-            "value": 0.001,
-            "unit": "H",
-            "min": 0.000001
-          },
-          {
-            "id": "psi",
-            "name": "PM flux linkage",
-            "value": 0.035,
-            "unit": "Wb",
-            "min": 0.0001
-          },
-          {
-            "id": "polePairs",
-            "name": "Pole pairs",
-            "value": 4,
-            "unit": "",
-            "min": 1
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sensors.CurrentSensor",
+          "ports": {
+            "ia": "i[1]",
+            "ib": "i[2]",
+            "ic": "i[3]"
           }
-        ],
-        "equations": "Ld*der(id) = vd - R*id + we*Lq*iq;\nLq*der(iq) = vq - R*iq - we*(Ld*id + psi);\ntorque = 1.5*polePairs*(psi*iq + (Ld-Lq)*id*iq);"
+        }
       },
       "position": {
-        "x": 1504,
-        "y": 136
+        "x": 1320,
+        "y": 160
       },
       "size": {
-        "width": 160,
+        "width": 128,
         "height": 96
       },
       "labelOffset": {
         "x": 0,
-        "y": -132
+        "y": -128
       }
     },
     {
-      "id": "load",
+      "id": "motor",
       "definition": {
-        "kind": "shaftLoad",
-        "name": "Mechanical load",
-        "symbol": "J",
+        "kind": "pmSyncMachine",
+        "name": "PMSM",
+        "description": "Three-phase permanent-magnet synchronous machine with a damper cage on the rotor.",
+        "domain": "threePhase",
+        "category": "machines",
+        "symbol": "PMSM",
+        "ports": [
+          {
+            "id": "plug_sp",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_sn",
+            "name": "n",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          },
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "p",
+            "name": "Pole pairs",
+            "value": 4,
+            "unit": "",
+            "min": 1
+          },
+          {
+            "id": "fsNominal",
+            "name": "Nominal frequency",
+            "value": 100,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "VsOpenCircuit",
+            "name": "Open-circuit voltage at fsNominal",
+            "value": 15.550090283554283,
+            "unit": "V",
+            "min": 0
+          },
+          {
+            "id": "Rs",
+            "name": "Stator resistance",
+            "value": 0.35,
+            "unit": "Ω",
+            "min": 0
+          },
+          {
+            "id": "Lssigma",
+            "name": "Stator stray inductance",
+            "value": 0.0001,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lmd",
+            "name": "d-axis main inductance",
+            "value": 0.0009,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Lmq",
+            "name": "q-axis main inductance",
+            "value": 0.0009,
+            "unit": "H",
+            "min": 0
+          },
+          {
+            "id": "Jr",
+            "name": "Rotor inertia",
+            "value": 0.002,
+            "unit": "kg·m²",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Machines.BasicMachines.SynchronousMachines.SM_PermanentMagnet from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "synchronous",
+          "bldc",
+          "motor"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.BasicMachines.SynchronousMachines.SM_PermanentMagnet",
+          "modifiers": {
+            "TsOperational": "293.15",
+            "TsRef": "293.15",
+            "TrOperational": "293.15",
+            "TrRef": "293.15",
+            "p": "p",
+            "fsNominal": "fsNominal",
+            "VsOpenCircuit": "VsOpenCircuit",
+            "Rs": "Rs",
+            "Lssigma": "Lssigma",
+            "Lmd": "Lmd",
+            "Lmq": "Lmq",
+            "Jr": "Jr"
+          }
+        }
+      },
+      "position": {
+        "x": 1496,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "neutral",
+      "definition": {
+        "kind": "star",
+        "name": "Neutral",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 1536,
+        "y": 304
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": -60,
+        "y": -46
+      }
+    },
+    {
+      "id": "ground",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 1536,
+        "y": 424
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "torque",
+      "definition": {
+        "kind": "torqueSensor",
+        "name": "Shaft torque",
+        "description": "Torque transmitted from flange a to flange b, without adding compliance.",
         "domain": "mechanical",
-        "description": "Shaft inertia, viscous friction and a step in opposing load torque at 0.45 s.",
+        "category": "mechanical",
+        "symbol": "τ",
+        "ports": [
+          {
+            "id": "a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "τ",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "N·m"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.TorqueSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "load cell",
+          "shaft"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.TorqueSensor",
+          "ports": {
+            "a": "flange_a",
+            "b": "flange_b",
+            "y": "tau"
+          }
+        }
+      },
+      "position": {
+        "x": 1680,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "damper",
+      "definition": {
+        "kind": "rotDamper",
+        "name": "Friction 0.001",
+        "description": "Linear rotational damper: τ = d·ω_rel.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "d",
+        "ports": [
+          {
+            "id": "flange_a",
+            "name": "a",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "left"
+          },
+          {
+            "id": "flange_b",
+            "name": "b",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "d",
+            "name": "Damping",
+            "value": 0.001,
+            "unit": "N·m·s/rad",
+            "min": 0
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Damper from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "viscous",
+          "friction"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Damper",
+          "modifiers": {
+            "d": "d"
+          }
+        }
+      },
+      "position": {
+        "x": 1824,
+        "y": 184
+      },
+      "size": {
+        "width": 80,
+        "height": 48
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -80
+      }
+    },
+    {
+      "id": "housing",
+      "definition": {
+        "kind": "rotFixed",
+        "name": "Housing",
+        "description": "A flange fixed in the housing at a constant angle.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "⏚",
         "ports": [
           {
             "id": "flange",
             "name": "shaft",
             "direction": "physical",
             "domain": "mechanical",
-            "side": "left"
-          },
-          {
-            "id": "loadTorque",
-            "name": "TL",
-            "direction": "output",
-            "domain": "signal",
-            "side": "bottom",
-            "unit": "N·m"
+            "side": "top"
           }
         ],
         "parameters": [
           {
-            "id": "J",
-            "name": "Inertia",
-            "value": 0.002,
-            "unit": "kg·m²",
-            "min": 0.00001
-          },
+            "id": "phi0",
+            "name": "Angle",
+            "value": 0,
+            "unit": "rad"
+          }
+        ],
+        "equations": "// Mechanics.Rotational.Components.Fixed from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "ground",
+          "reference",
+          "housing"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Components.Fixed",
+          "modifiers": {
+            "phi0": "phi0"
+          }
+        }
+      },
+      "position": {
+        "x": 1952,
+        "y": 184
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "torqueStep",
+        "name": "Load −0.05, −0.4 N·m at 0.45 s",
+        "description": "A torque step at a given time.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "τ step",
+        "ports": [
           {
-            "id": "damping",
-            "name": "Viscous friction",
-            "value": 0.001,
-            "unit": "N·m·s",
-            "min": 0
-          },
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
           {
-            "id": "initialLoad",
-            "name": "Initial load torque",
-            "value": 0.05,
+            "id": "stepTorque",
+            "name": "Step",
+            "value": -0.35,
             "unit": "N·m"
           },
           {
-            "id": "stepLoad",
-            "name": "Added load torque",
-            "value": 0.35,
+            "id": "offsetTorque",
+            "name": "Offset",
+            "value": -0.05,
             "unit": "N·m"
           },
           {
-            "id": "loadTime",
-            "name": "Load step time",
+            "id": "startTime",
+            "name": "Step time",
             "value": 0.45,
             "unit": "s",
             "min": 0
           }
         ],
-        "equations": "loadTorque = initialLoad + (if time < loadTime then 0 else stepLoad);\nJ*der(w) = flange.tau - damping*w - loadTorque;"
+        "equations": "// Mechanics.Rotational.Sources.TorqueStep from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "load",
+          "disturbance"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sources.TorqueStep",
+          "modifiers": {
+            "stepTorque": "stepTorque",
+            "offsetTorque": "offsetTorque",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
-        "x": 1760,
-        "y": 136
+        "x": 1800,
+        "y": 288
       },
       "size": {
         "width": 128,
         "height": 96
+      },
+      "rotation": 180,
+      "labelOffset": {
+        "x": 192,
+        "y": -62
+      }
+    },
+    {
+      "id": "speed",
+      "definition": {
+        "kind": "rotSpeedSensor",
+        "name": "Speed",
+        "description": "Absolute angular velocity of the flange.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "ω",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          },
+          {
+            "id": "w",
+            "name": "ω",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "rad/s"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.SpeedSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "tachometer",
+          "rpm"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.SpeedSensor"
+        }
+      },
+      "position": {
+        "x": 1656,
+        "y": 528
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "rpm",
+      "definition": {
+        "kind": "gain",
+        "name": "rad/s → rpm",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "rpm"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 9.549296585513721,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
+      },
+      "position": {
+        "x": 1680,
+        "y": 656
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 92,
+        "y": -46
+      }
+    },
+    {
+      "id": "angle",
+      "definition": {
+        "kind": "angleSensor",
+        "name": "Rotor angle",
+        "description": "Absolute angle of the flange, in radians, without loading it.",
+        "domain": "mechanical",
+        "category": "mechanical",
+        "symbol": "θ",
+        "ports": [
+          {
+            "id": "flange",
+            "name": "shaft",
+            "direction": "physical",
+            "domain": "mechanical",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "θ",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "rad"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Mechanics.Rotational.Sensors.AngleSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "position",
+          "encoder",
+          "resolver"
+        ],
+        "modelica": {
+          "class": "Modelica.Mechanics.Rotational.Sensors.AngleSensor",
+          "ports": {
+            "y": "phi"
+          }
+        }
+      },
+      "position": {
+        "x": 1656,
+        "y": 768
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "poles",
+      "definition": {
+        "kind": "gain",
+        "name": "θe = p·φ",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "left",
+            "unit": "rad"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 4,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
+      },
+      "position": {
+        "x": 1520,
+        "y": 784
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "minus",
+      "definition": {
+        "kind": "unaryMinus",
+        "name": "−θe",
+        "description": "Negate a signal.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "−",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "invert",
+          "negate"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "-1"
+          }
+        }
+      },
+      "position": {
+        "x": 768,
+        "y": 560
+      },
+      "size": {
+        "width": 80,
+        "height": 64
       }
     },
     {
@@ -1003,9 +1544,10 @@
       "definition": {
         "kind": "clarke",
         "name": "Clarke",
-        "symbol": "abc→αβ",
+        "description": "Amplitude-invariant three-phase to stationary-frame (α, β) transform.",
         "domain": "signal",
-        "description": "Amplitude-invariant three-phase to stationary-frame current transform.",
+        "category": "control",
+        "symbol": "abc→αβ",
         "ports": [
           {
             "id": "ia",
@@ -1033,29 +1575,45 @@
             "name": "α",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
-            "unit": "A"
+            "side": "left"
           },
           {
             "id": "beta",
             "name": "β",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
-            "unit": "A"
+            "side": "left"
           }
         ],
-        "equations": "alpha = (2*ia-ib-ic)/3;\nbeta = (ib-ic)/sqrt(3);",
         "parameters": [],
-        "declarations": ""
+        "equations": "// Electrical.Machines.SpacePhasors.Blocks.ToSpacePhasor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "foc",
+          "space phasor",
+          "abc"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.ToSpacePhasor",
+          "ports": {
+            "ia": "u[1]",
+            "ib": "u[2]",
+            "ic": "u[3]",
+            "alpha": "y[1]",
+            "beta": "y[2]"
+          }
+        }
       },
       "position": {
-        "x": 1336,
+        "x": 1144,
         "y": 432
       },
       "size": {
         "width": 128,
         "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
       }
     },
     {
@@ -1063,9 +1621,10 @@
       "definition": {
         "kind": "park",
         "name": "Park",
-        "symbol": "αβ→dq",
+        "description": "Rotates a stationary-frame (α, β) pair into a frame turning at the input angle: with the electrical rotor angle it gives d and q. Feed −θ to rotate back.",
         "domain": "signal",
-        "description": "Rotate stationary-frame currents into the rotor d/q frame.",
+        "category": "control",
+        "symbol": "αβ→dq",
         "ports": [
           {
             "id": "alpha",
@@ -1086,31 +1645,44 @@
             "name": "θe",
             "direction": "input",
             "domain": "signal",
-            "side": "bottom"
+            "side": "bottom",
+            "unit": "rad"
           },
           {
             "id": "id",
             "name": "d",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
-            "unit": "A"
+            "side": "left"
           },
           {
             "id": "iq",
             "name": "q",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
-            "unit": "A"
+            "side": "left"
           }
         ],
-        "equations": "id = alpha*cos(theta) + beta*sin(theta);\niq = -alpha*sin(theta) + beta*cos(theta);",
         "parameters": [],
-        "declarations": ""
+        "equations": "// Electrical.Machines.SpacePhasors.Blocks.Rotator from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "foc",
+          "rotator",
+          "dq"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.Rotator",
+          "ports": {
+            "alpha": "u[1]",
+            "beta": "u[2]",
+            "theta": "angle",
+            "id": "y[1]",
+            "iq": "y[2]"
+          }
+        }
       },
       "position": {
-        "x": 1104,
+        "x": 936,
         "y": 432
       },
       "size": {
@@ -1119,405 +1691,689 @@
       },
       "labelOffset": {
         "x": 0,
-        "y": -132
+        "y": -128
       }
     }
   ],
   "wires": [
     {
-      "id": "w_0",
+      "id": "id0001",
       "source": "reference",
       "sourceHandle": "y",
       "target": "units",
-      "targetHandle": "u",
-      "waypoints": []
+      "targetHandle": "u"
     },
     {
-      "id": "w_1",
+      "id": "id0002",
       "source": "units",
       "sourceHandle": "y",
-      "target": "speedError",
-      "targetHandle": "a",
-      "waypoints": []
+      "target": "speedPI",
+      "targetHandle": "reference"
     },
     {
-      "id": "w_2",
-      "source": "speedError",
+      "id": "id0003",
+      "source": "speedPI",
       "sourceHandle": "y",
-      "target": "foc_error",
+      "target": "qPI",
+      "targetHandle": "reference"
+    },
+    {
+      "id": "id0004",
+      "source": "dReference",
+      "sourceHandle": "y",
+      "target": "dPI",
+      "targetHandle": "reference"
+    },
+    {
+      "id": "id0005",
+      "source": "dPI",
+      "sourceHandle": "y",
+      "target": "inversePark",
+      "targetHandle": "alpha"
+    },
+    {
+      "id": "id0006",
+      "source": "qPI",
+      "sourceHandle": "y",
+      "target": "inversePark",
+      "targetHandle": "beta"
+    },
+    {
+      "id": "id0007",
+      "source": "inversePark",
+      "sourceHandle": "id",
+      "target": "inverseClarke",
+      "targetHandle": "alpha"
+    },
+    {
+      "id": "id0008",
+      "source": "inversePark",
+      "sourceHandle": "iq",
+      "target": "inverseClarke",
+      "targetHandle": "beta"
+    },
+    {
+      "id": "id0009",
+      "source": "zero",
+      "sourceHandle": "y",
+      "target": "inverseClarke",
+      "targetHandle": "zero"
+    },
+    {
+      "id": "id000a",
+      "source": "inverseClarke",
+      "sourceHandle": "va",
+      "target": "inverter",
+      "targetHandle": "va"
+    },
+    {
+      "id": "id000b",
+      "source": "inverseClarke",
+      "sourceHandle": "vb",
+      "target": "inverter",
+      "targetHandle": "vb"
+    },
+    {
+      "id": "id000c",
+      "source": "inverseClarke",
+      "sourceHandle": "vc",
+      "target": "inverter",
+      "targetHandle": "vc"
+    },
+    {
+      "id": "id000d",
+      "source": "inverter",
+      "sourceHandle": "plug_p",
+      "target": "isens",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000e",
+      "source": "isens",
+      "sourceHandle": "plug_n",
+      "target": "motor",
+      "targetHandle": "plug_sp"
+    },
+    {
+      "id": "id000f",
+      "source": "motor",
+      "sourceHandle": "plug_sn",
+      "target": "j_id0012",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "w_3",
-      "source": "foc_error",
-      "sourceHandle": "node",
-      "target": "speedKi",
-      "targetHandle": "u",
+      "id": "id000g",
+      "source": "inverter",
+      "sourceHandle": "plug_n",
+      "target": "j_id0012",
+      "targetHandle": "node",
       "waypoints": [
         {
-          "x": 328,
-          "y": 296
+          "x": 1208,
+          "y": 280
         }
       ]
     },
     {
-      "id": "w_4",
-      "source": "speedKp",
-      "sourceHandle": "y",
-      "target": "speedSum",
-      "targetHandle": "a",
-      "waypoints": []
+      "id": "id000h",
+      "source": "neutral",
+      "sourceHandle": "pin_n",
+      "target": "ground",
+      "targetHandle": "p"
     },
     {
-      "id": "w_5",
-      "source": "speedKi",
-      "sourceHandle": "y",
-      "target": "speedIntegral",
-      "targetHandle": "u",
-      "waypoints": []
-    },
-    {
-      "id": "w_6",
-      "source": "speedIntegral",
-      "sourceHandle": "y",
-      "target": "speedSum",
-      "targetHandle": "b",
-      "waypoints": [
-        {
-          "x": 608,
-          "y": 296
-        },
-        {
-          "x": 608,
-          "y": 224
-        },
-        {
-          "x": 536,
-          "y": 224
-        }
-      ]
-    },
-    {
-      "id": "w_7",
-      "source": "speedSum",
-      "sourceHandle": "y",
-      "target": "iqReference",
-      "targetHandle": "u",
-      "waypoints": []
-    },
-    {
-      "id": "w_8",
-      "source": "iqReference",
-      "sourceHandle": "y",
-      "target": "qError",
-      "targetHandle": "a",
-      "waypoints": []
-    },
-    {
-      "id": "w_9",
-      "source": "qError",
-      "sourceHandle": "y",
-      "target": "qPI",
-      "targetHandle": "u",
-      "waypoints": []
-    },
-    {
-      "id": "w_10",
-      "source": "dReference",
-      "sourceHandle": "y",
-      "target": "dError",
-      "targetHandle": "a",
-      "waypoints": []
-    },
-    {
-      "id": "w_11",
-      "source": "dError",
-      "sourceHandle": "y",
-      "target": "dPI",
-      "targetHandle": "u",
-      "waypoints": []
-    },
-    {
-      "id": "w_12",
-      "source": "qPI",
-      "sourceHandle": "y",
-      "target": "inverse",
-      "targetHandle": "vq",
-      "waypoints": []
-    },
-    {
-      "id": "w_13",
-      "source": "dPI",
-      "sourceHandle": "y",
-      "target": "inverse",
-      "targetHandle": "vd",
-      "waypoints": [
-        {
-          "x": 1040,
-          "y": 304
-        },
-        {
-          "x": 1040,
-          "y": 208
-        }
-      ]
-    },
-    {
-      "id": "w_14",
-      "source": "inverse",
-      "sourceHandle": "va",
-      "target": "inverter",
-      "targetHandle": "ua",
-      "waypoints": []
-    },
-    {
-      "id": "w_15",
-      "source": "inverter",
-      "sourceHandle": "va",
-      "target": "motor",
-      "targetHandle": "va",
-      "waypoints": []
-    },
-    {
-      "id": "w_16",
-      "source": "inverse",
-      "sourceHandle": "vb",
-      "target": "inverter",
-      "targetHandle": "ub",
-      "waypoints": []
-    },
-    {
-      "id": "w_17",
-      "source": "inverter",
-      "sourceHandle": "vb",
-      "target": "motor",
-      "targetHandle": "vb",
-      "waypoints": []
-    },
-    {
-      "id": "w_18",
-      "source": "inverse",
-      "sourceHandle": "vc",
-      "target": "inverter",
-      "targetHandle": "uc",
-      "waypoints": []
-    },
-    {
-      "id": "w_19",
-      "source": "inverter",
-      "sourceHandle": "vc",
-      "target": "motor",
-      "targetHandle": "vc",
-      "waypoints": []
-    },
-    {
-      "id": "w_20",
+      "id": "id000i",
       "source": "motor",
       "sourceHandle": "flange",
+      "target": "torque",
+      "targetHandle": "a"
+    },
+    {
+      "id": "id000j",
+      "source": "j_id001c",
+      "sourceHandle": "node",
+      "target": "damper",
+      "targetHandle": "flange_a",
+      "waypoints": []
+    },
+    {
+      "id": "id000k",
+      "source": "damper",
+      "sourceHandle": "flange_b",
+      "target": "housing",
+      "targetHandle": "flange"
+    },
+    {
+      "id": "id000l",
+      "source": "j_id0014",
+      "sourceHandle": "node",
       "target": "load",
+      "targetHandle": "flange",
+      "waypoints": [
+        {
+          "x": 1784,
+          "y": 336
+        }
+      ]
+    },
+    {
+      "id": "id000m",
+      "source": "j_id0016",
+      "sourceHandle": "node",
+      "target": "speed",
       "targetHandle": "flange",
       "waypoints": []
     },
     {
-      "id": "w_21",
-      "source": "motor",
+      "id": "id000n",
+      "source": "j_id0016",
+      "sourceHandle": "node",
+      "target": "angle",
+      "targetHandle": "flange",
+      "waypoints": [
+        {
+          "x": 1800,
+          "y": 664
+        },
+        {
+          "x": 1864,
+          "y": 664
+        },
+        {
+          "x": 1864,
+          "y": 816
+        }
+      ]
+    },
+    {
+      "id": "id000o",
+      "source": "j_id0018",
+      "sourceHandle": "node",
+      "target": "rpm",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 1640,
+          "y": 640
+        },
+        {
+          "x": 1720,
+          "y": 640
+        }
+      ]
+    },
+    {
+      "id": "id000p",
+      "source": "j_id0018",
+      "sourceHandle": "node",
+      "target": "speedPI",
+      "targetHandle": "measured",
+      "waypoints": [
+        {
+          "x": 1464,
+          "y": 576
+        },
+        {
+          "x": 1464,
+          "y": 256
+        },
+        {
+          "x": 392,
+          "y": 256
+        }
+      ]
+    },
+    {
+      "id": "id000q",
+      "source": "angle",
+      "sourceHandle": "y",
+      "target": "poles",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id000r",
+      "source": "j_id001a",
+      "sourceHandle": "node",
+      "target": "park",
+      "targetHandle": "theta",
+      "waypoints": [
+        {
+          "x": 1000,
+          "y": 816
+        }
+      ]
+    },
+    {
+      "id": "id000s",
+      "source": "j_id001a",
+      "sourceHandle": "node",
+      "target": "minus",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 1184,
+          "y": 592
+        }
+      ]
+    },
+    {
+      "id": "id000t",
+      "source": "minus",
+      "sourceHandle": "y",
+      "target": "inversePark",
+      "targetHandle": "theta"
+    },
+    {
+      "id": "id000u",
+      "source": "isens",
       "sourceHandle": "ia",
       "target": "clarke",
-      "targetHandle": "ia",
-      "waypoints": [
-        {
-          "x": 1536,
-          "y": 456
-        }
-      ]
+      "targetHandle": "ia"
     },
     {
-      "id": "w_22",
-      "source": "motor",
+      "id": "id000v",
+      "source": "isens",
       "sourceHandle": "ib",
       "target": "clarke",
-      "targetHandle": "ib",
-      "waypoints": [
-        {
-          "x": 1568,
-          "y": 480
-        }
-      ]
+      "targetHandle": "ib"
     },
     {
-      "id": "w_23",
-      "source": "motor",
+      "id": "id000w",
+      "source": "isens",
       "sourceHandle": "ic",
       "target": "clarke",
-      "targetHandle": "ic",
-      "waypoints": [
-        {
-          "x": 1600,
-          "y": 504
-        }
-      ]
+      "targetHandle": "ic"
     },
     {
-      "id": "w_24",
+      "id": "id000x",
       "source": "clarke",
       "sourceHandle": "alpha",
       "target": "park",
-      "targetHandle": "alpha",
-      "waypoints": []
+      "targetHandle": "alpha"
     },
     {
-      "id": "w_25",
+      "id": "id000y",
       "source": "clarke",
       "sourceHandle": "beta",
       "target": "park",
-      "targetHandle": "beta",
-      "waypoints": []
+      "targetHandle": "beta"
     },
     {
-      "id": "w_26",
+      "id": "id000z",
       "source": "park",
       "sourceHandle": "id",
-      "target": "dError",
-      "targetHandle": "b",
-      "waypoints": [
-        {
-          "x": 824,
-          "y": 464
-        }
-      ]
+      "target": "dPI",
+      "targetHandle": "measured"
     },
     {
-      "id": "w_27",
+      "id": "id0010",
       "source": "park",
       "sourceHandle": "iq",
-      "target": "qError",
-      "targetHandle": "b",
-      "waypoints": [
-        {
-          "x": 760,
-          "y": 496
-        },
-        {
-          "x": 760,
-          "y": 224
-        },
-        {
-          "x": 824,
-          "y": 224
-        }
-      ]
+      "target": "qPI",
+      "targetHandle": "measured"
     },
     {
-      "id": "w_28",
-      "source": "motor",
-      "sourceHandle": "theta",
-      "target": "foc_angle",
+      "id": "w_id0013",
+      "source": "neutral",
+      "sourceHandle": "plug_p",
+      "target": "j_id0012",
       "targetHandle": "node",
-      "waypoints": [
-        {
-          "x": 1632,
-          "y": 568
-        }
-      ]
-    },
-    {
-      "id": "w_29",
-      "source": "foc_angle",
-      "sourceHandle": "node",
-      "target": "park",
-      "targetHandle": "theta",
-      "waypoints": [
-        {
-          "x": 1168,
-          "y": 568
-        }
-      ]
-    },
-    {
-      "id": "w_30",
-      "source": "motor",
-      "sourceHandle": "wm",
-      "target": "speedError",
-      "targetHandle": "b",
-      "waypoints": [
-        {
-          "x": 1544,
-          "y": 72
-        },
-        {
-          "x": 1960,
-          "y": 72
-        },
-        {
-          "x": 1960,
-          "y": 640
-        },
-        {
-          "x": 280,
-          "y": 640
-        }
-      ]
-    },
-    {
-      "id": "foc_kp",
-      "source": "foc_error",
-      "sourceHandle": "node",
-      "target": "speedKp",
-      "targetHandle": "u",
       "waypoints": []
     },
     {
-      "id": "foc_angle_branch",
-      "source": "foc_angle",
+      "id": "w_id0015",
+      "source": "torque",
+      "sourceHandle": "b",
+      "target": "j_id0014",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0017",
+      "source": "j_id001c",
       "sourceHandle": "node",
-      "target": "inverse",
-      "targetHandle": "theta",
-      "waypoints": [
-        {
-          "x": 1264,
-          "y": 328
-        },
-        {
-          "x": 1168,
-          "y": 328
-        }
+      "target": "j_id0016",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id0019",
+      "source": "speed",
+      "sourceHandle": "w",
+      "target": "j_id0018",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001b",
+      "source": "poles",
+      "sourceHandle": "y",
+      "target": "j_id001a",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id001d",
+      "source": "j_id0014",
+      "sourceHandle": "node",
+      "target": "j_id001c",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0012",
+      "domain": "threePhase",
+      "position": {
+        "x": 1560,
+        "y": 280
+      }
+    },
+    {
+      "id": "j_id0014",
+      "domain": "mechanical",
+      "position": {
+        "x": 1784,
+        "y": 208
+      }
+    },
+    {
+      "id": "j_id0016",
+      "domain": "mechanical",
+      "position": {
+        "x": 1800,
+        "y": 576
+      }
+    },
+    {
+      "id": "j_id0018",
+      "domain": "signal",
+      "position": {
+        "x": 1640,
+        "y": 576
+      }
+    },
+    {
+      "id": "j_id001a",
+      "domain": "signal",
+      "position": {
+        "x": 1184,
+        "y": 816
+      }
+    },
+    {
+      "id": "j_id001c",
+      "domain": "mechanical",
+      "position": {
+        "x": 1800,
+        "y": 208
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id001e",
+      "anchor": "reference.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id001f",
+      "anchor": "units.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id001g",
+      "anchor": "speedPI.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id001h",
+      "anchor": "dReference.y",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id001i",
+      "anchor": "dPI.y",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id001j",
+      "anchor": "qPI.y",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id001k",
+      "anchor": "inversePark.id",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id001l",
+      "anchor": "inversePark.iq",
+      "wireIds": [
+        "id0008"
+      ]
+    },
+    {
+      "id": "net_id001m",
+      "anchor": "zero.y",
+      "wireIds": [
+        "id0009"
+      ]
+    },
+    {
+      "id": "net_id001n",
+      "anchor": "inverseClarke.va",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id001o",
+      "anchor": "inverseClarke.vb",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id001p",
+      "anchor": "inverseClarke.vc",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id001q",
+      "anchor": "inverter.plug_p",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id001r",
+      "anchor": "isens.plug_n",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id001s",
+      "anchor": "inverter.plug_n",
+      "wireIds": [
+        "id000f",
+        "id000g",
+        "w_id0013"
+      ]
+    },
+    {
+      "id": "net_id001t",
+      "anchor": "ground.p",
+      "wireIds": [
+        "id000h"
+      ]
+    },
+    {
+      "id": "net_id001u",
+      "anchor": "motor.flange",
+      "wireIds": [
+        "id000i"
+      ]
+    },
+    {
+      "id": "net_id001v",
+      "anchor": "angle.flange",
+      "wireIds": [
+        "id000j",
+        "id000l",
+        "id000m",
+        "id000n",
+        "w_id0015",
+        "w_id0017",
+        "w_id001d"
+      ]
+    },
+    {
+      "id": "net_id001w",
+      "anchor": "damper.flange_b",
+      "wireIds": [
+        "id000k"
+      ]
+    },
+    {
+      "id": "net_id001x",
+      "anchor": "speed.w",
+      "wireIds": [
+        "id000o",
+        "id000p",
+        "w_id0019"
+      ]
+    },
+    {
+      "id": "net_id001y",
+      "anchor": "angle.y",
+      "wireIds": [
+        "id000q"
+      ]
+    },
+    {
+      "id": "net_id001z",
+      "anchor": "poles.y",
+      "wireIds": [
+        "id000r",
+        "id000s",
+        "w_id001b"
+      ]
+    },
+    {
+      "id": "net_id0020",
+      "anchor": "minus.y",
+      "wireIds": [
+        "id000t"
+      ]
+    },
+    {
+      "id": "net_id0021",
+      "anchor": "isens.ia",
+      "wireIds": [
+        "id000u"
+      ]
+    },
+    {
+      "id": "net_id0022",
+      "anchor": "isens.ib",
+      "wireIds": [
+        "id000v"
+      ]
+    },
+    {
+      "id": "net_id0023",
+      "anchor": "isens.ic",
+      "wireIds": [
+        "id000w"
+      ]
+    },
+    {
+      "id": "net_id0024",
+      "anchor": "clarke.alpha",
+      "wireIds": [
+        "id000x"
+      ]
+    },
+    {
+      "id": "net_id0025",
+      "anchor": "clarke.beta",
+      "wireIds": [
+        "id000y"
+      ]
+    },
+    {
+      "id": "net_id0026",
+      "anchor": "park.id",
+      "wireIds": [
+        "id000z"
+      ]
+    },
+    {
+      "id": "net_id0027",
+      "anchor": "park.iq",
+      "wireIds": [
+        "id0010"
       ]
     }
   ],
-  "description": "1500 rpm speed command with cascaded d/q current control. A 48 V averaged inverter drives a surface PMSM and a mechanical load that increases at 0.45 s. Ideal current and rotor-position feedback; continuous controllers; no PWM ripple or sensor noise.",
   "annotations": [
     {
-      "x": 0,
-      "y": 16,
+      "x": 24,
+      "y": -48,
       "text": "01  SPEED CONTROL",
       "detail": "Speed error → PI → torque-producing current"
     },
     {
-      "x": 800,
-      "y": 16,
+      "x": 480,
+      "y": -48,
       "text": "02  CURRENT CONTROL",
-      "detail": "Independent d / q regulators"
+      "detail": "d / q regulators · dq → abc"
     },
     {
-      "x": 1296,
-      "y": 16,
+      "x": 1120,
+      "y": -48,
       "text": "03  POWER & MECHANICS",
-      "detail": "48 V inverter · four-pole-pair PMSM"
+      "detail": "Ideal inverter · Modelica PMSM · load step"
     },
     {
-      "x": 1104,
+      "x": 920,
       "y": 336,
       "text": "CURRENT FEEDBACK",
       "detail": "abc → αβ → dq"
+    },
+    {
+      "x": 1480,
+      "y": 896,
+      "text": "θe  ·  ELECTRICAL ANGLE",
+      "detail": "p · φ from the angle sensor"
     }
   ],
   "plots": [
     {
-      "id": "speed",
+      "id": "plot1",
       "label": "Speed",
       "series": [
-        "motor.rpm",
+        "rpm.y",
         "reference.y"
       ],
       "labels": [
@@ -1526,11 +2382,11 @@
       ]
     },
     {
-      "id": "current",
+      "id": "plot2",
       "label": "d/q currents",
       "series": [
         "park.iq",
-        "iqReference.y",
+        "speedPI.y",
         "park.id"
       ],
       "labels": [
@@ -1540,12 +2396,12 @@
       ]
     },
     {
-      "id": "phases",
+      "id": "plot3",
       "label": "Phase currents",
       "series": [
-        "motor.ia",
-        "motor.ib",
-        "motor.ic"
+        "isens.ia",
+        "isens.ib",
+        "isens.ic"
       ],
       "labels": [
         "Phase a",
@@ -1554,19 +2410,17 @@
       ]
     },
     {
-      "id": "torque",
-      "label": "Torque",
+      "id": "plot4",
+      "label": "Shaft torque",
       "series": [
-        "motor.torque",
-        "load.loadTorque"
+        "torque.y"
       ],
       "labels": [
-        "Motor torque",
-        "Load torque"
+        "Torque to the load"
       ]
     },
     {
-      "id": "voltage",
+      "id": "plot5",
       "label": "d/q voltages",
       "series": [
         "qPI.y",
@@ -1576,274 +2430,6 @@
         "vq",
         "vd"
       ]
-    }
-  ],
-  "junctions": [
-    {
-      "id": "foc_error",
-      "domain": "signal",
-      "position": {
-        "x": 328,
-        "y": 160
-      }
-    },
-    {
-      "id": "foc_angle",
-      "domain": "signal",
-      "position": {
-        "x": 1264,
-        "y": 568
-      }
-    }
-  ],
-  "nets": [
-    {
-      "id": "net_foc_0",
-      "anchor": "reference.y",
-      "wireIds": [
-        "w_0"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_1",
-      "anchor": "units.y",
-      "wireIds": [
-        "w_1"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_2",
-      "anchor": "speedError.y",
-      "wireIds": [
-        "foc_kp",
-        "w_2",
-        "w_3"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_3",
-      "anchor": "speedKp.y",
-      "wireIds": [
-        "w_4"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_4",
-      "anchor": "speedKi.y",
-      "wireIds": [
-        "w_5"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_5",
-      "anchor": "speedIntegral.y",
-      "wireIds": [
-        "w_6"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_6",
-      "anchor": "speedSum.y",
-      "wireIds": [
-        "w_7"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_7",
-      "anchor": "iqReference.y",
-      "wireIds": [
-        "w_8"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_8",
-      "anchor": "qError.y",
-      "wireIds": [
-        "w_9"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_9",
-      "anchor": "dReference.y",
-      "wireIds": [
-        "w_10"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_10",
-      "anchor": "dError.y",
-      "wireIds": [
-        "w_11"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_11",
-      "anchor": "qPI.y",
-      "wireIds": [
-        "w_12"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_12",
-      "anchor": "dPI.y",
-      "wireIds": [
-        "w_13"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_13",
-      "anchor": "inverse.va",
-      "wireIds": [
-        "w_14"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_14",
-      "anchor": "inverter.va",
-      "wireIds": [
-        "w_15"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_15",
-      "anchor": "inverse.vb",
-      "wireIds": [
-        "w_16"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_16",
-      "anchor": "inverter.vb",
-      "wireIds": [
-        "w_17"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_17",
-      "anchor": "inverse.vc",
-      "wireIds": [
-        "w_18"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_18",
-      "anchor": "inverter.vc",
-      "wireIds": [
-        "w_19"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_19",
-      "anchor": "load.flange",
-      "wireIds": [
-        "w_20"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_20",
-      "anchor": "motor.ia",
-      "wireIds": [
-        "w_21"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_21",
-      "anchor": "motor.ib",
-      "wireIds": [
-        "w_22"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_22",
-      "anchor": "motor.ic",
-      "wireIds": [
-        "w_23"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_23",
-      "anchor": "clarke.alpha",
-      "wireIds": [
-        "w_24"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_24",
-      "anchor": "clarke.beta",
-      "wireIds": [
-        "w_25"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_25",
-      "anchor": "park.id",
-      "wireIds": [
-        "w_26"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_26",
-      "anchor": "park.iq",
-      "wireIds": [
-        "w_27"
-      ],
-      "hidden": true
-    },
-    {
-      "id": "net_foc_27",
-      "anchor": "motor.theta",
-      "wireIds": [
-        "foc_angle_branch",
-        "w_28",
-        "w_29"
-      ],
-      "hidden": false,
-      "name": "θe · electrical angle",
-      "label": {
-        "wireId": "w_28",
-        "fraction": 0.7386363636363636,
-        "side": 1
-      }
-    },
-    {
-      "id": "net_foc_28",
-      "anchor": "motor.wm",
-      "wireIds": [
-        "w_30"
-      ],
-      "hidden": false,
-      "name": "ωm · measured speed",
-      "label": {
-        "wireId": "w_30",
-        "fraction": 0.7468671679197995,
-        "side": -1
-      }
     }
   ]
 }

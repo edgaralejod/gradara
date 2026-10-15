@@ -47,7 +47,7 @@ A fresh workspace opens with one empty **Untitled model**. Click its title to re
 | [DC motor control](models/DC.md) | A sampled PI controller, electrical motor, rotational load, and speed feedback. |
 | [EV drivetrain](docs/examples/EV.md) | Battery, averaged converter, motor, and vehicle in three levels of subsystems, with battery-chemistry and motor-type variants and two configurations. |
 | [Servo position control](docs/examples/SERVO.md) | A 1 kHz sampled PID position loop on a DC motor, built to export its controller to C and compare it with the simulation. |
-| [AC motor · FOC](models/FOC.md) | PMSM field-oriented control, d/q transforms, current loops, and an averaged inverter. |
+| [AC motor · FOC](models/FOC.md) | Field-oriented control of the Modelica PMSM: d/q transforms, current loops, and an ideal voltage-source inverter. |
 | [Buck converter](models/BUCK.md) | A 24 V to 12 V synchronous converter with actual ideal switches; zoom into the last millisecond to see the switching ripple. |
 | [480 VAC flyback](docs/examples/FLYBACK.md) | Bridge rectification, magnetizing energy storage, and 50 kHz switching to 24 V / 1 A. |
 | [Data center cooling](docs/examples/DATACENTER.md) | A one-hour lumped electrical–thermal PI benchmark with load and cooling-capacity disturbances. |
@@ -60,7 +60,7 @@ Your models, results, and settings stay in your data folder on your computer (**
 
 - Orthogonal wires with snapping, branching onto existing wires, junctions, reconnecting, segment editing, redraw, and undo. Nets have stable IDs and readable automatic or custom names.
 - A shared block design system, searchable library, model inspector, resize handles, movable labels, selection tools, and Ctrl-drag duplication.
-- A library of 217 blocks: signal, Boolean logic, electrical, semiconductor, converter, machine, 3-phase, rotational and translational mechanical, thermal, and magnetic. Most physical blocks are Modelica Standard Library 4.1.0 components. Physical ports can cross block domains through explicit sensors and actuators.
+- A library of 208 blocks: signal, Boolean logic, electrical, semiconductor, converter, machine, 3-phase, rotational and translational mechanical, thermal, and magnetic. 192 of them are Modelica Standard Library 4.1.0 components, machines and controllers included; the rest are buses, subsystems, and sampled blocks built for exact C export. Physical ports can cross block domains through explicit sensors and actuators.
 - Hierarchical subsystems: group a selection with ⌘/Ctrl+G, open and navigate nested sheets, share one definition between instances, and promote parameters. Variants keep alternative insides behind one set of ports, and configurations switch them together or run them all for comparison.
 - Asynchronous OpenModelica simulation, cancellation, saved runs, plots, overlaying and comparing up to three runs, a run summary (statistics, settling, overshoot, events, differences between runs) computed locally, and complete CSV downloads. Each model can choose its solver (DASSL, Implicit Runge-Kutta, Backward Euler, or Runge-Kutta 4), tolerance, maximum step, and output interval, with an in-app [guide](docs/SOLVER.md) to what each one does. A Problems dock lists live model checks and block-mapped run diagnostics; click one to select the blocks involved.
 - AI-created signal, electrical, rotational and translational mechanical, magnetic, thermal, and multidomain blocks, with real Modelica terminals. A block dialog edits a block's name and parameters, and its equations in Monaco.

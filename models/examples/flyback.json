@@ -50,7 +50,7 @@
       "definition": {
         "kind": "subsystem",
         "name": "Power stage",
-        "description": "Subsystem Power stage: 22 blocks inside.",
+        "description": "Subsystem Power stage: 21 blocks inside.",
         "domain": "signal",
         "symbol": "Power stage",
         "ports": [
@@ -89,7 +89,7 @@
   "description": "Hand-authored switching example: single-phase 480 V RMS / 60 Hz, 24 V at 1 A into 24 Ω. Diode bridge, 100 µF bulk, ideal 8:1 transformer plus 2 mH magnetizing inductance, Boolean-controlled primary switch, 50 kHz PWM generator, 50 ms soft start after 30 ms of bus precharge, sampled PI regulation. Finite diode and switch resistances and off conductances regularize commutation. Separate primary/secondary references; ideal magnetic coupling. Omits leakage inductance, core saturation/loss, device capacitances, clamp/snubber, EMI filter and practical isolation/control circuitry. Simulation example, not a hardware design.",
   "wires": [
     {
-      "id": "w31",
+      "id": "w30",
       "source": "power",
       "sourceHandle": "p_fb00000009",
       "target": "control",
@@ -114,7 +114,7 @@
       ]
     },
     {
-      "id": "w37",
+      "id": "w36",
       "source": "control",
       "sourceHandle": "p_fb00000005",
       "target": "power",
@@ -191,18 +191,18 @@
   ],
   "nets": [
     {
-      "id": "net_flyback_13",
+      "id": "net_flyback_12",
       "anchor": "power.p_fb00000009",
       "wireIds": [
-        "w31"
+        "w30"
       ],
       "hidden": true
     },
     {
-      "id": "net_flyback_19",
+      "id": "net_flyback_18",
       "anchor": "control.p_fb00000005",
       "wireIds": [
-        "w37"
+        "w36"
       ],
       "hidden": true
     }
@@ -217,26 +217,32 @@
           "definition": {
             "kind": "ramp",
             "name": "Soft start",
-            "symbol": "ramp",
+            "description": "Rises linearly from 0 to Height over Duration after the start time, then holds.",
             "domain": "signal",
-            "description": "A linearly increasing signal after a start time.",
+            "category": "sources",
+            "symbol": "ramp",
             "ports": [
               {
                 "id": "y",
                 "name": "y",
                 "direction": "output",
                 "domain": "signal",
-                "side": "right",
-                "unit": ""
+                "side": "right"
               }
             ],
-            "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
             "parameters": [
               {
-                "id": "slope",
-                "name": "Slope",
-                "value": 20,
-                "unit": "1/s"
+                "id": "height",
+                "name": "Height",
+                "value": 1,
+                "unit": ""
+              },
+              {
+                "id": "duration",
+                "name": "Duration",
+                "value": 0.05,
+                "unit": "s",
+                "min": 0
               },
               {
                 "id": "startTime",
@@ -246,11 +252,20 @@
                 "min": 0
               }
             ],
-            "declarations": "",
+            "equations": "// Blocks.Sources.Ramp from the Modelica Standard Library 4.1.0",
             "keywords": [
               "source",
-              "reference"
-            ]
+              "reference",
+              "slope"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Sources.Ramp",
+              "modifiers": {
+                "height": "height",
+                "duration": "duration",
+                "startTime": "startTime"
+              }
+            }
           },
           "position": {
             "x": 440,
@@ -268,19 +283,22 @@
             "name": "0–1 reference",
             "description": "Clamp a signal between lower and upper limits.",
             "domain": "signal",
+            "category": "nonlinear",
             "symbol": "sat",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -297,7 +315,19 @@
                 "unit": ""
               }
             ],
-            "equations": "y = max(lower, min(upper, u));"
+            "equations": "// Blocks.Nonlinear.Limiter from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "nonlinear",
+              "limit",
+              "clamp"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Nonlinear.Limiter",
+              "modifiers": {
+                "uMin": "lower",
+                "uMax": "upper"
+              }
+            }
           },
           "position": {
             "x": 640,
@@ -315,19 +345,22 @@
             "name": "1 ms feedback filter",
             "description": "First-order continuous filter.",
             "domain": "signal",
+            "category": "continuous",
             "symbol": "1/(τs+1)",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -339,8 +372,19 @@
                 "min": 0.00001
               }
             ],
-            "declarations": "Real x(start=0, fixed=true);",
-            "equations": "der(x) = (u-x)/tau;\ny = x;"
+            "equations": "// Blocks.Continuous.FirstOrder from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "continuous",
+              "lag",
+              "pt1"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Continuous.FirstOrder",
+              "modifiers": {
+                "initType": "Modelica.Blocks.Types.Init.InitialState",
+                "T": "tau"
+              }
+            }
           },
           "position": {
             "x": 640,
@@ -358,19 +402,22 @@
             "name": "1/24 feedback",
             "description": "Multiply an input by an adjustable gain.",
             "domain": "signal",
+            "category": "math",
             "symbol": "K",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -381,7 +428,18 @@
                 "unit": ""
               }
             ],
-            "equations": "y = k*u;"
+            "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "math",
+              "multiply",
+              "scale"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Math.Gain",
+              "modifiers": {
+                "k": "k"
+              }
+            }
           },
           "position": {
             "x": 840,
@@ -397,30 +455,34 @@
           "definition": {
             "kind": "pi",
             "name": "Voltage PI",
-            "description": "Sampled PI control with output saturation and a bounded integral state.",
-            "domain": "signal",
             "symbol": "PI",
-            "controller": true,
+            "domain": "signal",
+            "description": "Sampled PI with output saturation and a bounded integral state. Every state updates at the sample instant, so exported C reproduces it exactly.",
             "ports": [
               {
                 "id": "reference",
                 "name": "ref",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "measured",
                 "name": "meas",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right",
+                "unit": ""
               }
             ],
+            "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;",
             "parameters": [
               {
                 "id": "kp",
@@ -436,10 +498,10 @@
               },
               {
                 "id": "limit",
-                "name": "Voltage limit",
+                "name": "Output limit",
                 "value": 0.18,
-                "unit": "V",
-                "min": 0.1
+                "unit": "",
+                "min": 0.001
               },
               {
                 "id": "samplePeriod",
@@ -450,7 +512,15 @@
               }
             ],
             "declarations": "discrete Real integral(start=0, fixed=true);\nReal error;",
-            "equations": "error = reference - measured;\nwhen sample(0, samplePeriod) then\n  integral = max(-limit, min(limit, pre(integral) + samplePeriod*ki*error));\n  y = max(-limit, min(limit, kp*error + integral));\nend when;"
+            "keywords": [
+              "control",
+              "regulator",
+              "discrete",
+              "sampled",
+              "export",
+              "c"
+            ],
+            "controller": true
           },
           "position": {
             "x": 1064,
@@ -468,19 +538,22 @@
             "name": "0–18% duty",
             "description": "Clamp a signal between lower and upper limits.",
             "domain": "signal",
+            "category": "nonlinear",
             "symbol": "sat",
             "ports": [
               {
                 "id": "u",
-                "name": "in",
+                "name": "u",
                 "direction": "input",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "left"
               },
               {
                 "id": "y",
-                "name": "out",
+                "name": "y",
                 "direction": "output",
-                "domain": "signal"
+                "domain": "signal",
+                "side": "right"
               }
             ],
             "parameters": [
@@ -497,7 +570,19 @@
                 "unit": ""
               }
             ],
-            "equations": "y = max(lower, min(upper, u));"
+            "equations": "// Blocks.Nonlinear.Limiter from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "nonlinear",
+              "limit",
+              "clamp"
+            ],
+            "modelica": {
+              "class": "Modelica.Blocks.Nonlinear.Limiter",
+              "modifiers": {
+                "uMin": "lower",
+                "uMax": "upper"
+              }
+            }
           },
           "position": {
             "x": 1304,
@@ -585,7 +670,7 @@
           "waypoints": []
         },
         {
-          "id": "w32",
+          "id": "w31",
           "source": "filt",
           "sourceHandle": "y",
           "target": "norm",
@@ -593,7 +678,7 @@
           "waypoints": []
         },
         {
-          "id": "w33",
+          "id": "w32",
           "source": "norm",
           "sourceHandle": "y",
           "target": "pi",
@@ -610,7 +695,7 @@
           ]
         },
         {
-          "id": "w34",
+          "id": "w33",
           "source": "start",
           "sourceHandle": "y",
           "target": "ref",
@@ -618,7 +703,7 @@
           "waypoints": []
         },
         {
-          "id": "w35",
+          "id": "w34",
           "source": "ref",
           "sourceHandle": "y",
           "target": "pi",
@@ -635,7 +720,7 @@
           ]
         },
         {
-          "id": "w36",
+          "id": "w35",
           "source": "pi",
           "sourceHandle": "y",
           "target": "duty",
@@ -654,7 +739,7 @@
       "junctions": [],
       "nets": [
         {
-          "id": "net_flyback_13",
+          "id": "net_flyback_12",
           "anchor": "p_fb00000003.y",
           "wireIds": [
             "w_fb00000004"
@@ -662,8 +747,16 @@
           "hidden": true
         },
         {
-          "id": "net_flyback_14",
+          "id": "net_flyback_13",
           "anchor": "filt.y",
+          "wireIds": [
+            "w31"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_flyback_14",
+          "anchor": "norm.y",
           "wireIds": [
             "w32"
           ],
@@ -671,7 +764,7 @@
         },
         {
           "id": "net_flyback_15",
-          "anchor": "norm.y",
+          "anchor": "start.y",
           "wireIds": [
             "w33"
           ],
@@ -679,7 +772,7 @@
         },
         {
           "id": "net_flyback_16",
-          "anchor": "start.y",
+          "anchor": "ref.y",
           "wireIds": [
             "w34"
           ],
@@ -687,7 +780,7 @@
         },
         {
           "id": "net_flyback_17",
-          "anchor": "ref.y",
+          "anchor": "pi.y",
           "wireIds": [
             "w35"
           ],
@@ -695,14 +788,6 @@
         },
         {
           "id": "net_flyback_18",
-          "anchor": "pi.y",
-          "wireIds": [
-            "w36"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_flyback_19",
           "anchor": "duty.y",
           "wireIds": [
             "w_fb00000006"
@@ -716,33 +801,39 @@
       "name": "Power stage",
       "blocks": [
         {
-          "id": "line",
+          "id": "ac",
           "definition": {
-            "kind": "sine",
+            "kind": "sineVoltage",
             "name": "480 V RMS · 60 Hz",
-            "symbol": "sine",
-            "domain": "signal",
-            "description": "A continuous sinusoid.",
+            "description": "Sinusoidal voltage: offset + V·sin(2πf·t + phase).",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "AC",
             "ports": [
               {
-                "id": "y",
-                "name": "y",
-                "direction": "output",
-                "domain": "signal",
-                "side": "right",
-                "unit": ""
-              }
-            ],
-            "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
-            "parameters": [
-              {
-                "id": "amplitude",
-                "name": "Amplitude",
-                "value": 678.8225099390856,
-                "unit": ""
+                "id": "p",
+                "name": "+",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "top"
               },
               {
-                "id": "frequency",
+                "id": "n",
+                "name": "−",
+                "direction": "physical",
+                "domain": "electrical",
+                "side": "bottom"
+              }
+            ],
+            "parameters": [
+              {
+                "id": "V",
+                "name": "Amplitude",
+                "value": 678.8225099390856,
+                "unit": "V"
+              },
+              {
+                "id": "f",
                 "name": "Frequency",
                 "value": 60,
                 "unit": "Hz",
@@ -758,65 +849,32 @@
                 "id": "offset",
                 "name": "Offset",
                 "value": 0,
-                "unit": ""
+                "unit": "V"
               }
             ],
-            "declarations": "",
+            "equations": "// Electrical.Analog.Sources.SineVoltage from the Modelica Standard Library 4.1.0",
             "keywords": [
-              "source",
-              "oscillator",
-              "wave"
-            ]
-          },
-          "position": {
-            "x": 0,
-            "y": 320
-          },
-          "size": {
-            "width": 80,
-            "height": 64
-          }
-        },
-        {
-          "id": "ac",
-          "definition": {
-            "kind": "voltage",
-            "name": "AC source",
-            "description": "An ideal voltage source driven by a control signal.",
-            "domain": "electrical",
-            "symbol": "V",
-            "ports": [
-              {
-                "id": "u",
-                "name": "in",
-                "direction": "input",
-                "domain": "signal"
-              },
-              {
-                "id": "p",
-                "name": "+",
-                "domain": "electrical",
-                "side": "right",
-                "direction": "physical"
-              },
-              {
-                "id": "n",
-                "name": "−",
-                "domain": "electrical",
-                "side": "bottom",
-                "direction": "physical"
-              }
+              "mains",
+              "grid",
+              "sine"
             ],
-            "parameters": [],
-            "equations": "v = u;"
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sources.SineVoltage",
+              "modifiers": {
+                "V": "V",
+                "f": "f",
+                "phase": "phase",
+                "offset": "offset"
+              }
+            }
           },
           "position": {
             "x": 160,
             "y": 320
           },
           "size": {
-            "width": 128,
-            "height": 96
+            "width": 48,
+            "height": 80
           }
         },
         {
@@ -824,23 +882,24 @@
           "definition": {
             "kind": "resistor",
             "name": "10 Ω inrush",
-            "symbol": "R",
-            "domain": "electrical",
             "description": "An ideal resistor between two electrical pins.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "R",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "left",
-                "direction": "physical"
+                "side": "left"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "right",
-                "direction": "physical"
+                "side": "right"
               }
             ],
             "parameters": [
@@ -852,11 +911,17 @@
                 "min": 0.000001
               }
             ],
-            "equations": "v = R*i;",
+            "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "electrical",
               "ohm"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Resistor",
+              "modifiers": {
+                "R": "R"
+              }
+            }
           },
           "position": {
             "x": 320,
@@ -949,23 +1014,24 @@
           "definition": {
             "kind": "capacitor",
             "name": "100 µF bus",
-            "symbol": "C",
-            "domain": "electrical",
             "description": "An ideal capacitor.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "C",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "bottom",
-                "direction": "physical"
+                "side": "bottom"
               }
             ],
             "parameters": [
@@ -977,10 +1043,16 @@
                 "min": 1e-12
               }
             ],
-            "equations": "i = C*der(v);",
+            "equations": "// Electrical.Analog.Basic.Capacitor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "electrical"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Capacitor",
+              "modifiers": {
+                "C": "C"
+              }
+            }
           },
           "position": {
             "x": 840,
@@ -1000,23 +1072,24 @@
           "definition": {
             "kind": "resistor",
             "name": "1 MΩ bleeder",
-            "symbol": "R",
-            "domain": "electrical",
             "description": "An ideal resistor between two electrical pins.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "R",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "bottom",
-                "direction": "physical"
+                "side": "bottom"
               }
             ],
             "parameters": [
@@ -1028,11 +1101,17 @@
                 "min": 0.000001
               }
             ],
-            "equations": "v = R*i;",
+            "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "electrical",
               "ohm"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Resistor",
+              "modifiers": {
+                "R": "R"
+              }
+            }
           },
           "position": {
             "x": 1000,
@@ -1052,23 +1131,24 @@
           "definition": {
             "kind": "resistor",
             "name": "100 MΩ reference",
-            "symbol": "R",
-            "domain": "electrical",
             "description": "An ideal resistor between two electrical pins.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "R",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "bottom",
-                "direction": "physical"
+                "side": "bottom"
               }
             ],
             "parameters": [
@@ -1080,11 +1160,17 @@
                 "min": 0.000001
               }
             ],
-            "equations": "v = R*i;",
+            "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "electrical",
               "ohm"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Resistor",
+              "modifiers": {
+                "R": "R"
+              }
+            }
           },
           "position": {
             "x": 320,
@@ -1175,23 +1261,24 @@
           "definition": {
             "kind": "inductor",
             "name": "2 mH magnetizing",
-            "symbol": "L",
-            "domain": "electrical",
             "description": "An ideal inductor.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "L",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "bottom",
-                "direction": "physical"
+                "side": "bottom"
               }
             ],
             "parameters": [
@@ -1203,10 +1290,18 @@
                 "min": 1e-12
               }
             ],
-            "equations": "v = L*der(i);",
+            "equations": "// Electrical.Analog.Basic.Inductor from the Modelica Standard Library 4.1.0",
             "keywords": [
-              "electrical"
-            ]
+              "electrical",
+              "coil",
+              "choke"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Inductor",
+              "modifiers": {
+                "L": "L"
+              }
+            }
           },
           "position": {
             "x": 1320,
@@ -1226,41 +1321,47 @@
           "definition": {
             "kind": "currentSensor",
             "name": "Primary current",
+            "description": "Measures branch current with zero series voltage drop; positive from + to −.",
             "domain": "electrical",
             "category": "electrical",
             "symbol": "A",
-            "description": "Measures branch current with zero series voltage drop; positive from + to −.",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "left"
               },
               {
                 "id": "n",
                 "name": "−",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "right"
               },
               {
                 "id": "y",
                 "name": "A",
                 "direction": "output",
-                "side": "bottom",
                 "domain": "signal",
+                "side": "bottom",
                 "unit": "A"
               }
             ],
             "parameters": [],
-            "equations": "y = p.i;\np.v = n.v;\np.i + n.i = 0;",
+            "equations": "// Electrical.Analog.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "measure",
               "ammeter",
               "probe"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sensors.CurrentSensor",
+              "ports": {
+                "y": "i"
+              }
+            }
           },
           "position": {
             "x": 1200,
@@ -1276,23 +1377,24 @@
           "definition": {
             "kind": "resistor",
             "name": "0.5 Ω winding",
-            "symbol": "R",
-            "domain": "electrical",
             "description": "An ideal resistor between two electrical pins.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "R",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "left",
-                "direction": "physical"
+                "side": "left"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "right",
-                "direction": "physical"
+                "side": "right"
               }
             ],
             "parameters": [
@@ -1304,11 +1406,17 @@
                 "min": 0.000001
               }
             ],
-            "equations": "v = R*i;",
+            "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "electrical",
               "ohm"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Resistor",
+              "modifiers": {
+                "R": "R"
+              }
+            }
           },
           "position": {
             "x": 1400,
@@ -1466,23 +1574,24 @@
           "definition": {
             "kind": "resistor",
             "name": "50 mΩ ESR",
-            "symbol": "R",
-            "domain": "electrical",
             "description": "An ideal resistor between two electrical pins.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "R",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "left",
-                "direction": "physical"
+                "side": "left"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "right",
-                "direction": "physical"
+                "side": "right"
               }
             ],
             "parameters": [
@@ -1494,11 +1603,17 @@
                 "min": 0.000001
               }
             ],
-            "equations": "v = R*i;",
+            "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "electrical",
               "ohm"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Resistor",
+              "modifiers": {
+                "R": "R"
+              }
+            }
           },
           "position": {
             "x": 1800,
@@ -1514,23 +1629,24 @@
           "definition": {
             "kind": "capacitor",
             "name": "1000 µF output",
-            "symbol": "C",
-            "domain": "electrical",
             "description": "An ideal capacitor.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "C",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "bottom",
-                "direction": "physical"
+                "side": "bottom"
               }
             ],
             "parameters": [
@@ -1542,10 +1658,16 @@
                 "min": 1e-12
               }
             ],
-            "equations": "i = C*der(v);",
+            "equations": "// Electrical.Analog.Basic.Capacitor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "electrical"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Capacitor",
+              "modifiers": {
+                "C": "C"
+              }
+            }
           },
           "position": {
             "x": 2008,
@@ -1565,23 +1687,24 @@
           "definition": {
             "kind": "resistor",
             "name": "24 Ω · 24 W load",
-            "symbol": "R",
-            "domain": "electrical",
             "description": "An ideal resistor between two electrical pins.",
+            "domain": "electrical",
+            "category": "electrical",
+            "symbol": "R",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "bottom",
-                "direction": "physical"
+                "side": "bottom"
               }
             ],
             "parameters": [
@@ -1593,11 +1716,17 @@
                 "min": 0.000001
               }
             ],
-            "equations": "v = R*i;",
+            "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "electrical",
               "ohm"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Resistor",
+              "modifiers": {
+                "R": "R"
+              }
+            }
           },
           "position": {
             "x": 2168,
@@ -1619,18 +1748,27 @@
             "name": "Primary reference",
             "description": "Electrical reference potential.",
             "domain": "electrical",
+            "category": "electrical",
             "symbol": "ground",
             "ports": [
               {
                 "id": "p",
                 "name": "0 V",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               }
             ],
             "parameters": [],
-            "equations": "p.v = 0;"
+            "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "reference",
+              "zero",
+              "earth"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Ground"
+            }
           },
           "position": {
             "x": 1080,
@@ -1648,18 +1786,27 @@
             "name": "Secondary reference",
             "description": "Electrical reference potential.",
             "domain": "electrical",
+            "category": "electrical",
             "symbol": "ground",
             "ports": [
               {
                 "id": "p",
                 "name": "0 V",
+                "direction": "physical",
                 "domain": "electrical",
-                "side": "top",
-                "direction": "physical"
+                "side": "top"
               }
             ],
             "parameters": [],
-            "equations": "p.v = 0;"
+            "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+            "keywords": [
+              "reference",
+              "zero",
+              "earth"
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Basic.Ground"
+            }
           },
           "position": {
             "x": 2168,
@@ -1675,41 +1822,47 @@
           "definition": {
             "kind": "voltageSensor",
             "name": "DC bus voltage",
+            "description": "Measures voltage between two electrical nodes without loading the circuit.",
             "domain": "electrical",
             "category": "electrical",
             "symbol": "V",
-            "description": "Measures voltage between two electrical nodes without loading the circuit.",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "bottom"
               },
               {
                 "id": "y",
                 "name": "V",
                 "direction": "output",
-                "side": "right",
                 "domain": "signal",
+                "side": "right",
                 "unit": "V"
               }
             ],
             "parameters": [],
-            "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+            "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "measure",
               "voltmeter",
               "probe"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+              "ports": {
+                "y": "v"
+              }
+            }
           },
           "position": {
             "x": 840,
@@ -1725,41 +1878,47 @@
           "definition": {
             "kind": "voltageSensor",
             "name": "Switch voltage",
+            "description": "Measures voltage between two electrical nodes without loading the circuit.",
             "domain": "electrical",
             "category": "electrical",
             "symbol": "V",
-            "description": "Measures voltage between two electrical nodes without loading the circuit.",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "bottom"
               },
               {
                 "id": "y",
                 "name": "V",
                 "direction": "output",
-                "side": "right",
                 "domain": "signal",
+                "side": "right",
                 "unit": "V"
               }
             ],
             "parameters": [],
-            "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+            "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "measure",
               "voltmeter",
               "probe"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+              "ports": {
+                "y": "v"
+              }
+            }
           },
           "position": {
             "x": 1760,
@@ -1775,41 +1934,47 @@
           "definition": {
             "kind": "voltageSensor",
             "name": "Output voltage",
+            "description": "Measures voltage between two electrical nodes without loading the circuit.",
             "domain": "electrical",
             "category": "electrical",
             "symbol": "V",
-            "description": "Measures voltage between two electrical nodes without loading the circuit.",
             "ports": [
               {
                 "id": "p",
                 "name": "+",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "top"
               },
               {
                 "id": "n",
                 "name": "−",
-                "domain": "electrical",
                 "direction": "physical",
+                "domain": "electrical",
                 "side": "bottom"
               },
               {
                 "id": "y",
                 "name": "V",
                 "direction": "output",
-                "side": "right",
                 "domain": "signal",
+                "side": "right",
                 "unit": "V"
               }
             ],
             "parameters": [],
-            "equations": "y = p.v - n.v;\np.i = 0;\nn.i = 0;",
+            "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
             "keywords": [
               "measure",
               "voltmeter",
               "probe"
-            ]
+            ],
+            "modelica": {
+              "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+              "ports": {
+                "y": "v"
+              }
+            }
           },
           "position": {
             "x": 2408,
@@ -1954,35 +2119,18 @@
       "wires": [
         {
           "id": "w0",
-          "source": "line",
-          "sourceHandle": "y",
-          "target": "ac",
-          "targetHandle": "u",
-          "waypoints": [
-            {
-              "x": 136,
-              "y": 352
-            },
-            {
-              "x": 136,
-              "y": 368
-            }
-          ]
-        },
-        {
-          "id": "w1",
           "source": "ac",
           "sourceHandle": "p",
           "target": "rin",
           "targetHandle": "p",
           "waypoints": [
             {
-              "x": 312,
-              "y": 368
+              "x": 184,
+              "y": 296
             },
             {
               "x": 296,
-              "y": 368
+              "y": 296
             },
             {
               "x": 296,
@@ -1991,7 +2139,7 @@
           ]
         },
         {
-          "id": "w2",
+          "id": "w1",
           "source": "rin",
           "sourceHandle": "n",
           "target": "bridge",
@@ -2008,7 +2156,7 @@
           ]
         },
         {
-          "id": "w3",
+          "id": "w2",
           "source": "flyback_j0",
           "sourceHandle": "node",
           "target": "bridge",
@@ -2016,7 +2164,7 @@
           "waypoints": [
             {
               "x": 496,
-              "y": 440
+              "y": 424
             },
             {
               "x": 496,
@@ -2025,7 +2173,7 @@
           ]
         },
         {
-          "id": "w4",
+          "id": "w3",
           "source": "bridge",
           "sourceHandle": "dc_p",
           "target": "flyback_j1",
@@ -2042,7 +2190,7 @@
           ]
         },
         {
-          "id": "w5",
+          "id": "w4",
           "source": "bridge",
           "sourceHandle": "dc_n",
           "target": "flyback_j2",
@@ -2059,7 +2207,7 @@
           ]
         },
         {
-          "id": "w6",
+          "id": "w5",
           "source": "flyback_j15",
           "sourceHandle": "node",
           "target": "flyback_j3",
@@ -2072,7 +2220,7 @@
           ]
         },
         {
-          "id": "w7",
+          "id": "w6",
           "source": "flyback_j14",
           "sourceHandle": "node",
           "target": "bleed",
@@ -2080,7 +2228,7 @@
           "waypoints": []
         },
         {
-          "id": "w8",
+          "id": "w7",
           "source": "flyback_j15",
           "sourceHandle": "node",
           "target": "bleed",
@@ -2088,7 +2236,7 @@
           "waypoints": []
         },
         {
-          "id": "w9",
+          "id": "w8",
           "source": "flyback_j0",
           "sourceHandle": "node",
           "target": "acref",
@@ -2096,7 +2244,7 @@
           "waypoints": []
         },
         {
-          "id": "w10",
+          "id": "w9",
           "source": "acref",
           "sourceHandle": "n",
           "target": "flyback_j3",
@@ -2117,7 +2265,7 @@
           ]
         },
         {
-          "id": "w11",
+          "id": "w10",
           "source": "flyback_j14",
           "sourceHandle": "node",
           "target": "flyback_j6",
@@ -2125,7 +2273,7 @@
           "waypoints": []
         },
         {
-          "id": "w12",
+          "id": "w11",
           "source": "flyback_j6",
           "sourceHandle": "node",
           "target": "mag",
@@ -2133,7 +2281,7 @@
           "waypoints": []
         },
         {
-          "id": "w13",
+          "id": "w12",
           "source": "flyback_j7",
           "sourceHandle": "node",
           "target": "mag",
@@ -2146,7 +2294,7 @@
           ]
         },
         {
-          "id": "w14",
+          "id": "w13",
           "source": "flyback_j7",
           "sourceHandle": "node",
           "target": "ip",
@@ -2167,7 +2315,7 @@
           ]
         },
         {
-          "id": "w15",
+          "id": "w14",
           "source": "ip",
           "sourceHandle": "n",
           "target": "rpri",
@@ -2184,7 +2332,7 @@
           ]
         },
         {
-          "id": "w16",
+          "id": "w15",
           "source": "rpri",
           "sourceHandle": "n",
           "target": "flyback_j8",
@@ -2197,7 +2345,7 @@
           ]
         },
         {
-          "id": "w17",
+          "id": "w16",
           "source": "flyback_j9",
           "sourceHandle": "node",
           "target": "flyback_j3",
@@ -2210,7 +2358,7 @@
           ]
         },
         {
-          "id": "w18",
+          "id": "w17",
           "source": "xfmr",
           "sourceHandle": "n2",
           "target": "rect",
@@ -2218,7 +2366,7 @@
           "waypoints": []
         },
         {
-          "id": "w19",
+          "id": "w18",
           "source": "rect",
           "sourceHandle": "n",
           "target": "rout",
@@ -2226,7 +2374,7 @@
           "waypoints": []
         },
         {
-          "id": "w20",
+          "id": "w19",
           "source": "rout",
           "sourceHandle": "n",
           "target": "flyback_j10",
@@ -2243,7 +2391,7 @@
           ]
         },
         {
-          "id": "w21",
+          "id": "w20",
           "source": "flyback_j13",
           "sourceHandle": "node",
           "target": "load",
@@ -2251,7 +2399,7 @@
           "waypoints": []
         },
         {
-          "id": "w22",
+          "id": "w21",
           "source": "flyback_j12",
           "sourceHandle": "node",
           "target": "load",
@@ -2259,7 +2407,7 @@
           "waypoints": []
         },
         {
-          "id": "w23",
+          "id": "w22",
           "source": "xfmr",
           "sourceHandle": "p2",
           "target": "flyback_j11",
@@ -2276,7 +2424,7 @@
           ]
         },
         {
-          "id": "w24",
+          "id": "w23",
           "source": "flyback_j12",
           "sourceHandle": "node",
           "target": "gsec",
@@ -2284,7 +2432,7 @@
           "waypoints": []
         },
         {
-          "id": "w25",
+          "id": "w24",
           "source": "flyback_j5",
           "sourceHandle": "node",
           "target": "vbus",
@@ -2301,7 +2449,7 @@
           ]
         },
         {
-          "id": "w26",
+          "id": "w25",
           "source": "flyback_j4",
           "sourceHandle": "node",
           "target": "vbus",
@@ -2318,7 +2466,7 @@
           ]
         },
         {
-          "id": "w27",
+          "id": "w26",
           "source": "flyback_j8",
           "sourceHandle": "node",
           "target": "vsw",
@@ -2335,7 +2483,7 @@
           ]
         },
         {
-          "id": "w28",
+          "id": "w27",
           "source": "flyback_j9",
           "sourceHandle": "node",
           "target": "vsw",
@@ -2348,7 +2496,7 @@
           ]
         },
         {
-          "id": "w29",
+          "id": "w28",
           "source": "flyback_j13",
           "sourceHandle": "node",
           "target": "vout",
@@ -2361,7 +2509,7 @@
           ]
         },
         {
-          "id": "w30",
+          "id": "w29",
           "source": "flyback_j12",
           "sourceHandle": "node",
           "target": "vout",
@@ -2390,7 +2538,7 @@
           "waypoints": []
         },
         {
-          "id": "w38",
+          "id": "w37",
           "source": "pwm",
           "sourceHandle": "fire",
           "target": "sw",
@@ -2411,20 +2559,20 @@
           ]
         },
         {
-          "id": "w39",
+          "id": "w38",
           "source": "ac",
           "sourceHandle": "n",
           "target": "flyback_j0",
           "targetHandle": "node",
           "waypoints": [
             {
-              "x": 224,
-              "y": 440
+              "x": 184,
+              "y": 424
             }
           ]
         },
         {
-          "id": "w40",
+          "id": "w39",
           "source": "bulk",
           "sourceHandle": "p",
           "target": "flyback_j1",
@@ -2432,7 +2580,7 @@
           "waypoints": []
         },
         {
-          "id": "w41",
+          "id": "w40",
           "source": "bulk",
           "sourceHandle": "n",
           "target": "flyback_j2",
@@ -2440,7 +2588,7 @@
           "waypoints": []
         },
         {
-          "id": "w42",
+          "id": "w41",
           "source": "gpri",
           "sourceHandle": "p",
           "target": "flyback_j3",
@@ -2448,7 +2596,7 @@
           "waypoints": []
         },
         {
-          "id": "w43",
+          "id": "w42",
           "source": "flyback_j2",
           "sourceHandle": "node",
           "target": "flyback_j4",
@@ -2456,7 +2604,7 @@
           "waypoints": []
         },
         {
-          "id": "w44",
+          "id": "w43",
           "source": "flyback_j1",
           "sourceHandle": "node",
           "target": "flyback_j5",
@@ -2464,7 +2612,7 @@
           "waypoints": []
         },
         {
-          "id": "w45",
+          "id": "w44",
           "source": "xfmr",
           "sourceHandle": "p1",
           "target": "flyback_j6",
@@ -2481,7 +2629,7 @@
           ]
         },
         {
-          "id": "w46",
+          "id": "w45",
           "source": "xfmr",
           "sourceHandle": "n1",
           "target": "flyback_j7",
@@ -2494,7 +2642,7 @@
           ]
         },
         {
-          "id": "w47",
+          "id": "w46",
           "source": "sw",
           "sourceHandle": "p",
           "target": "flyback_j8",
@@ -2502,7 +2650,7 @@
           "waypoints": []
         },
         {
-          "id": "w48",
+          "id": "w47",
           "source": "sw",
           "sourceHandle": "n",
           "target": "flyback_j9",
@@ -2515,7 +2663,7 @@
           ]
         },
         {
-          "id": "w49",
+          "id": "w48",
           "source": "cout",
           "sourceHandle": "p",
           "target": "flyback_j10",
@@ -2523,7 +2671,7 @@
           "waypoints": []
         },
         {
-          "id": "w50",
+          "id": "w49",
           "source": "cout",
           "sourceHandle": "n",
           "target": "flyback_j11",
@@ -2531,7 +2679,7 @@
           "waypoints": []
         },
         {
-          "id": "w51",
+          "id": "w50",
           "source": "flyback_j11",
           "sourceHandle": "node",
           "target": "flyback_j12",
@@ -2539,7 +2687,7 @@
           "waypoints": []
         },
         {
-          "id": "w52",
+          "id": "w51",
           "source": "flyback_j10",
           "sourceHandle": "node",
           "target": "flyback_j13",
@@ -2547,7 +2695,7 @@
           "waypoints": []
         },
         {
-          "id": "w53",
+          "id": "w52",
           "source": "flyback_j5",
           "sourceHandle": "node",
           "target": "flyback_j14",
@@ -2555,7 +2703,7 @@
           "waypoints": []
         },
         {
-          "id": "w54",
+          "id": "w53",
           "source": "flyback_j4",
           "sourceHandle": "node",
           "target": "flyback_j15",
@@ -2569,7 +2717,7 @@
           "domain": "electrical",
           "position": {
             "x": 344,
-            "y": 440
+            "y": 424
           }
         },
         {
@@ -2696,7 +2844,7 @@
       "nets": [
         {
           "id": "net_flyback_0",
-          "anchor": "line.y",
+          "anchor": "ac.p",
           "wireIds": [
             "w0"
           ],
@@ -2704,7 +2852,7 @@
         },
         {
           "id": "net_flyback_1",
-          "anchor": "ac.p",
+          "anchor": "bridge.ac_p",
           "wireIds": [
             "w1"
           ],
@@ -2712,88 +2860,88 @@
         },
         {
           "id": "net_flyback_2",
-          "anchor": "bridge.ac_p",
-          "wireIds": [
-            "w2"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_flyback_3",
           "anchor": "ac.n",
           "wireIds": [
-            "w3",
-            "w39",
-            "w9"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_flyback_4",
-          "anchor": "bleed.p",
-          "wireIds": [
-            "w11",
-            "w12",
-            "w25",
-            "w4",
-            "w40",
-            "w44",
-            "w45",
-            "w53",
-            "w7"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_flyback_5",
-          "anchor": "acref.n",
-          "wireIds": [
-            "w10",
-            "w17",
-            "w26",
-            "w28",
-            "w41",
-            "w42",
-            "w43",
-            "w48",
-            "w5",
-            "w54",
-            "w6",
+            "w2",
+            "w38",
             "w8"
           ],
           "hidden": true
         },
         {
-          "id": "net_flyback_6",
+          "id": "net_flyback_3",
+          "anchor": "bleed.p",
+          "wireIds": [
+            "w10",
+            "w11",
+            "w24",
+            "w3",
+            "w39",
+            "w43",
+            "w44",
+            "w52",
+            "w6"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_flyback_4",
+          "anchor": "acref.n",
+          "wireIds": [
+            "w16",
+            "w25",
+            "w27",
+            "w4",
+            "w40",
+            "w41",
+            "w42",
+            "w47",
+            "w5",
+            "w53",
+            "w7",
+            "w9"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_flyback_5",
           "anchor": "ip.p",
           "wireIds": [
+            "w12",
             "w13",
-            "w14",
-            "w46"
+            "w45"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_flyback_6",
+          "anchor": "ip.n",
+          "wireIds": [
+            "w14"
           ],
           "hidden": true
         },
         {
           "id": "net_flyback_7",
-          "anchor": "ip.n",
+          "anchor": "rpri.n",
           "wireIds": [
-            "w15"
+            "w15",
+            "w26",
+            "w46"
           ],
           "hidden": true
         },
         {
           "id": "net_flyback_8",
-          "anchor": "rpri.n",
+          "anchor": "rect.p",
           "wireIds": [
-            "w16",
-            "w27",
-            "w47"
+            "w17"
           ],
           "hidden": true
         },
         {
           "id": "net_flyback_9",
-          "anchor": "rect.p",
+          "anchor": "rect.n",
           "wireIds": [
             "w18"
           ],
@@ -2801,39 +2949,31 @@
         },
         {
           "id": "net_flyback_10",
-          "anchor": "rect.n",
-          "wireIds": [
-            "w19"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_flyback_11",
           "anchor": "cout.p",
           "wireIds": [
+            "w19",
             "w20",
-            "w21",
-            "w29",
-            "w49",
-            "w52"
-          ],
-          "hidden": true
-        },
-        {
-          "id": "net_flyback_12",
-          "anchor": "cout.n",
-          "wireIds": [
-            "w22",
-            "w23",
-            "w24",
-            "w30",
-            "w50",
+            "w28",
+            "w48",
             "w51"
           ],
           "hidden": true
         },
         {
-          "id": "net_flyback_13",
+          "id": "net_flyback_11",
+          "anchor": "cout.n",
+          "wireIds": [
+            "w21",
+            "w22",
+            "w23",
+            "w29",
+            "w49",
+            "w50"
+          ],
+          "hidden": true
+        },
+        {
+          "id": "net_flyback_12",
           "anchor": "vout.y",
           "wireIds": [
             "w_fb0000000a"
@@ -2841,7 +2981,7 @@
           "hidden": true
         },
         {
-          "id": "net_flyback_19",
+          "id": "net_flyback_18",
           "anchor": "p_fb0000000b.y",
           "wireIds": [
             "w_fb0000000c"
@@ -2849,10 +2989,10 @@
           "hidden": true
         },
         {
-          "id": "net_flyback_20",
+          "id": "net_flyback_19",
           "anchor": "pwm.fire",
           "wireIds": [
-            "w38"
+            "w37"
           ],
           "hidden": true
         }

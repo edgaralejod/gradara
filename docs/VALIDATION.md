@@ -33,7 +33,7 @@ Passing these checks means the diagram becomes the intended Modelica model and t
 | A grouped model (subsystems) simulates like the flat model it came from | same final speed | `tests/test_hierarchy.py` |
 | Generated C for a controller reproduces the simulated controller | matches the last run sample by sample | `tests/test_codegen.py`, `tests/test_exporter.py` |
 | A unit delay outputs the previous sample | exact | `tests/test_codegen.py` |
-| Every Modelica Standard Library block in the library compiles and runs in a working circuit | 148 blocks | `tests/test_msl_engine.py` |
+| Every Modelica Standard Library block in the library compiles and runs in a working circuit | 192 blocks | `tests/test_msl_engine.py` |
 
 ## Run them yourself
 

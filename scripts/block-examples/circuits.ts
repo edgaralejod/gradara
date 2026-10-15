@@ -123,7 +123,7 @@ const variable = merge(
         'ramp',
         'Wiper position',
         [1040, 448],
-        { slope: 1, startTime: 0 },
+        { height: 1, duration: 1, startTime: 0 },
       ],
       [
         'psrc',
@@ -628,7 +628,13 @@ export const circuits: ExampleSpec[] = [
       ['v2', 'voltageSensor', 'v ideal', [1472, 216], {}, { label: 'right' }],
       ['g2', 'ground', 'Ground (ideal)', [1000, 320]],
       ['g2b', 'ground', 'Ground (ideal out)', [1312, 320]],
-      ['ramp', 'ramp', '1 A/s', [128, 640], { slope: 1, startTime: 0 }],
+      [
+        'ramp',
+        'ramp',
+        '1 A/s',
+        [128, 640],
+        { height: 20, duration: 20, startTime: 0 },
+      ],
       [
         'is',
         'signalCurrent',
@@ -844,56 +850,22 @@ export const circuits: ExampleSpec[] = [
     title: 'Switches and a breaker',
     area: 'Electrical',
     summary:
-      'An ideal switch, closing and opening switches, a two-way switch, and a breaker that opens an inductive circuit.',
+      'A switch pulsed at 5 Hz, closing and opening switches, a two-way switch, and a breaker that opens an inductive circuit.',
     description:
-      'Each circuit is 10 V into a 10 Ω load, 1 A when closed. The ideal switch follows a 5 Hz pulse on its gate. The closing switch closes at 0.1 s and the opening switch opens then. The two-way switch moves the current from a 10 Ω load (1 A) to a 20 Ω load (0.5 A). The breaker opens a 10 Ω, 10 mH circuit at 0.1 s: its arc voltage rises from 30 V until it forces the current to zero.',
+      'Each circuit is 10 V into a 10 Ω load, 1 A when closed. The pulsed switch follows a 5 Hz Boolean pulse on its control input. The closing switch closes at 0.1 s and the opening switch opens then. The two-way switch moves the current from a 10 Ω load (1 A) to a 20 Ω load (0.5 A). The breaker opens a 10 Ω, 10 mH circuit at 0.1 s: its arc voltage rises from 30 V until it forces the current to zero.',
     duration: 0.3,
     ...merge(
-      {
-        blocks: [
-          [
-            'asrc',
-            'dcSource',
-            '10 V A',
-            [168, 232],
-            { V: 10 },
-            { label: 'left' },
-          ],
-          ['ai', 'currentSensor', 'i A', [296, 152]],
-          [
-            'aload',
-            'resistor',
-            'Load A',
-            [440, 152],
-            { R: 10 },
-            { label: 'above' },
-          ],
-          [
-            'asw',
-            'idealSwitch',
-            'Ideal switch',
-            [592, 232],
-            {},
-            { label: 'right' },
-          ],
-          [
-            'actl',
-            'pulse',
-            'Gate 5 Hz',
-            [440, 232],
-            { amplitude: 1, period: 0.2, width: 0.5 },
-          ],
-          ['agnd', 'ground', 'Ground A', [168, 336]],
+      switchCell(
+        'a',
+        [128, 32],
+        ['closingSwitch', 'Pulsed switch'],
+        [
+          'control',
+          'booleanPulse',
+          'Gate 5 Hz',
+          { width: 50, period: 0.2, startTime: 0 },
         ],
-        links: [
-          ['asrc.p', 'ai.p'],
-          ['ai.n', 'aload.p'],
-          ['aload.n', 'asw.p'],
-          ['asw.n', 'asrc.n'],
-          ['asrc.n', 'agnd.p'],
-          ['actl.y', 'asw.gate'],
-        ],
-      },
+      ),
       switchCell(
         'b',
         [832, 32],
@@ -966,7 +938,7 @@ export const circuits: ExampleSpec[] = [
       {
         label: 'Switch currents',
         series: ['ai.y', 'bi.y', 'ci.y'],
-        labels: ['Ideal switch', 'Closing switch', 'Opening switch'],
+        labels: ['Pulsed switch', 'Closing switch', 'Opening switch'],
       },
       {
         label: 'Two-way switch and breaker',
@@ -998,12 +970,6 @@ export const circuits: ExampleSpec[] = [
       },
       { signal: 'ei.y', value: 0.5, tol: 1e-3, why: 'changed over to 20 Ω' },
     ],
-    about: [
-      'idealSwitch',
-      'closingSwitch',
-      'openingSwitch',
-      'twoWaySwitch',
-      'breaker',
-    ],
+    about: ['closingSwitch', 'openingSwitch', 'twoWaySwitch', 'breaker'],
   },
 ];

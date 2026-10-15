@@ -8,7 +8,7 @@ Open **Examples**, choose **Use example** under **Servo position**, then choose 
 
 ## What the model contains
 
-The signal path is position request → **Discrete PID** → voltage drive. The motor, inertia, and ground are the same as in the [DC motor example](../../models/DC.md). An **Angle sensor** closes the loop on shaft angle instead of speed.
+The signal path is position request → **Discrete PID** → controlled voltage source. The machine, friction, current sensor, and ground are the same as in the [DC motor example](../../models/DC.md). An **Angle sensor** closes the loop on shaft angle instead of speed.
 
 | Parameter | Default |
 | --- | --- |
@@ -18,8 +18,8 @@ The signal path is position request → **Discrete PID** → voltage drive. The 
 | Output and integral limit | ±24 V |
 | Controller sample period | 1 ms (1 kHz) |
 | Armature R / L | 1.2 Ω / 20 mH |
-| Motor constant | 0.15 N·m/A |
-| Load inertia / viscous friction | 0.02 kg·m² / 0.002 N·m·s |
+| Nominal point | 24 V, 2 A, 144 rad/s (machine constant 0.15 N·m/A) |
+| Rotor inertia / viscous friction | 0.02 kg·m² / 0.002 N·m·s |
 | Stop time | 2 s |
 
 ## What to look at
@@ -52,7 +52,7 @@ when sample(0, samplePeriod) then
 end when;
 ```
 
-A continuous controller such as **PID** or **Current PI** has continuous states. Exporting it means choosing a discretization, so its C code only approximates the simulation.
+A continuous controller such as **PI (continuous)** or **PID (continuous)** has continuous states. Exporting it means choosing a discretization, so its C code only approximates the simulation.
 
 ## Limits
 

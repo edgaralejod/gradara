@@ -1,0 +1,1329 @@
+{
+  "version": 1,
+  "name": "Example: Clarke and Park transforms",
+  "exampleId": "block-space-phasors",
+  "description": "Three sines 120° apart stand for balanced phase currents. The Clarke transform turns them into α = cos ωt and β = sin ωt, a vector turning at 50 Hz. The Park transform rotates that vector by the angle θ = ωt, so in the turning frame it stands still: d = 1 and q = 0. The inverse Clarke transform (with a zero-sequence input of 0) rebuilds the three phases from α and β and drives a controlled three-phase source, the ideal model of an inverter, into a 10 Ω star load: each phase current is the phase voltage over 10 Ω.",
+  "duration": 0.04,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "ia",
+      "definition": {
+        "kind": "sine",
+        "name": "ia",
+        "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 1.5707963267948966,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ib",
+      "definition": {
+        "kind": "sine",
+        "name": "ib",
+        "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": -0.5235987755982987,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "ic",
+      "definition": {
+        "kind": "sine",
+        "name": "ic",
+        "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 50,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 3.665191429188092,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 288
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "clarke",
+      "definition": {
+        "kind": "clarke",
+        "name": "Clarke",
+        "description": "Amplitude-invariant three-phase to stationary-frame (α, β) transform.",
+        "domain": "signal",
+        "category": "control",
+        "symbol": "abc→αβ",
+        "ports": [
+          {
+            "id": "ia",
+            "name": "a",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "ib",
+            "name": "b",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "ic",
+            "name": "c",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "alpha",
+            "name": "α",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "beta",
+            "name": "β",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Machines.SpacePhasors.Blocks.ToSpacePhasor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "foc",
+          "space phasor",
+          "abc"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.ToSpacePhasor",
+          "ports": {
+            "ia": "u[1]",
+            "ib": "u[2]",
+            "ic": "u[3]",
+            "alpha": "y[1]",
+            "beta": "y[2]"
+          }
+        }
+      },
+      "position": {
+        "x": 256,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "park",
+      "definition": {
+        "kind": "park",
+        "name": "Park",
+        "description": "Rotates a stationary-frame (α, β) pair into a frame turning at the input angle: with the electrical rotor angle it gives d and q. Feed −θ to rotate back.",
+        "domain": "signal",
+        "category": "control",
+        "symbol": "αβ→dq",
+        "ports": [
+          {
+            "id": "alpha",
+            "name": "α",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "beta",
+            "name": "β",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "theta",
+            "name": "θe",
+            "direction": "input",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "rad"
+          },
+          {
+            "id": "id",
+            "name": "d",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "iq",
+            "name": "q",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Machines.SpacePhasors.Blocks.Rotator from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "foc",
+          "rotator",
+          "dq"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.Rotator",
+          "ports": {
+            "alpha": "u[1]",
+            "beta": "u[2]",
+            "theta": "angle",
+            "id": "y[1]",
+            "iq": "y[2]"
+          }
+        }
+      },
+      "position": {
+        "x": 496,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "clock",
+      "definition": {
+        "kind": "clock",
+        "name": "Time",
+        "description": "Simulation time as a signal.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "clock",
+        "ports": [
+          {
+            "id": "y",
+            "name": "t",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "s"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Sources.ContinuousClock from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "time"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.ContinuousClock"
+        }
+      },
+      "position": {
+        "x": 280,
+        "y": 400
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "w",
+      "definition": {
+        "kind": "gain",
+        "name": "θ = 2π·50·t",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 314.1592653589793,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
+      },
+      "position": {
+        "x": 520,
+        "y": 400
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "zero",
+      "definition": {
+        "kind": "constant",
+        "name": "Zero sequence 0",
+        "description": "A constant output value.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "constant",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "name": "Value",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
+      },
+      "position": {
+        "x": 776,
+        "y": 32
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": -108,
+        "y": -46
+      }
+    },
+    {
+      "id": "inv",
+      "definition": {
+        "kind": "inverseClarke",
+        "name": "Inverse Clarke",
+        "description": "Stationary-frame (α, β) pair back to three phases, with the zero-sequence input added to each.",
+        "domain": "signal",
+        "category": "control",
+        "symbol": "αβ→abc",
+        "ports": [
+          {
+            "id": "alpha",
+            "name": "α",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "beta",
+            "name": "β",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "zero",
+            "name": "0",
+            "direction": "input",
+            "domain": "signal",
+            "side": "top"
+          },
+          {
+            "id": "va",
+            "name": "a",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "vb",
+            "name": "b",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          },
+          {
+            "id": "vc",
+            "name": "c",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Machines.SpacePhasors.Blocks.FromSpacePhasor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "foc",
+          "space phasor",
+          "abc"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Machines.SpacePhasors.Blocks.FromSpacePhasor",
+          "ports": {
+            "alpha": "u[1]",
+            "beta": "u[2]",
+            "va": "y[1]",
+            "vb": "y[2]",
+            "vc": "y[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 752,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "src",
+      "definition": {
+        "kind": "threePhaseSignalVoltage",
+        "name": "Controlled 3-phase source",
+        "description": "Three phase voltages equal to the three input signals, from plug − to plug +: an ideal (averaged) voltage-source inverter.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3~ v(u)",
+        "ports": [
+          {
+            "id": "va",
+            "name": "a",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "unit": "V"
+          },
+          {
+            "id": "vb",
+            "name": "b",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "unit": "V"
+          },
+          {
+            "id": "vc",
+            "name": "c",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left",
+            "unit": "V"
+          },
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "plug_n",
+            "name": "abc−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sources.SignalVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "inverter",
+          "averaged",
+          "programmable",
+          "foc",
+          "drive"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sources.SignalVoltage",
+          "ports": {
+            "va": "v[1]",
+            "vb": "v[2]",
+            "vc": "v[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 992,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -128
+      }
+    },
+    {
+      "id": "sens",
+      "definition": {
+        "kind": "threePhaseCurrentSensor",
+        "name": "Phase currents",
+        "description": "Phase currents from plug + to plug −.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "iabc",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          },
+          {
+            "id": "ia",
+            "name": "ia",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "A"
+          },
+          {
+            "id": "ib",
+            "name": "ib",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "A"
+          },
+          {
+            "id": "ic",
+            "name": "ic",
+            "direction": "output",
+            "domain": "signal",
+            "side": "bottom",
+            "unit": "A"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Sensors.CurrentSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Sensors.CurrentSensor",
+          "ports": {
+            "ia": "i[1]",
+            "ib": "i[2]",
+            "ic": "i[3]"
+          }
+        }
+      },
+      "position": {
+        "x": 1168,
+        "y": 160
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "threePhaseResistor",
+        "name": "Load 10 Ω",
+        "description": "Resistor in each phase.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "3R",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "plug_n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance per phase",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0
+          }
+        ],
+        "equations": "// Electrical.Polyphase.Basic.Resistor from the Modelica Standard Library 4.1.0",
+        "keywords": [],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Resistor",
+          "modifiers": {
+            "R": "fill(R, 3)"
+          }
+        }
+      },
+      "position": {
+        "x": 1352,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      }
+    },
+    {
+      "id": "star",
+      "definition": {
+        "kind": "star",
+        "name": "Star point",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 1520,
+        "y": 184
+      },
+      "size": {
+        "width": 64,
+        "height": 48
+      }
+    },
+    {
+      "id": "gnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 1528,
+        "y": 304
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "srcn",
+      "definition": {
+        "kind": "star",
+        "name": "Source neutral",
+        "description": "Joins the three phases at a neutral pin.",
+        "domain": "threePhase",
+        "category": "threePhase",
+        "symbol": "Y",
+        "ports": [
+          {
+            "id": "plug_p",
+            "name": "abc",
+            "direction": "physical",
+            "domain": "threePhase",
+            "side": "left"
+          },
+          {
+            "id": "pin_n",
+            "name": "N",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Polyphase.Basic.Star from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "neutral",
+          "wye"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Polyphase.Basic.Star"
+        }
+      },
+      "position": {
+        "x": 1032,
+        "y": 296
+      },
+      "size": {
+        "width": 48,
+        "height": 64
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": -88,
+        "y": -46
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "ia",
+      "sourceHandle": "y",
+      "target": "clarke",
+      "targetHandle": "ia"
+    },
+    {
+      "id": "id0002",
+      "source": "ib",
+      "sourceHandle": "y",
+      "target": "clarke",
+      "targetHandle": "ib"
+    },
+    {
+      "id": "id0003",
+      "source": "ic",
+      "sourceHandle": "y",
+      "target": "clarke",
+      "targetHandle": "ic"
+    },
+    {
+      "id": "id0004",
+      "source": "j_id000l",
+      "sourceHandle": "node",
+      "target": "park",
+      "targetHandle": "alpha",
+      "waypoints": []
+    },
+    {
+      "id": "id0005",
+      "source": "j_id000n",
+      "sourceHandle": "node",
+      "target": "park",
+      "targetHandle": "beta",
+      "waypoints": []
+    },
+    {
+      "id": "id0006",
+      "source": "clock",
+      "sourceHandle": "y",
+      "target": "w",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0007",
+      "source": "w",
+      "sourceHandle": "y",
+      "target": "park",
+      "targetHandle": "theta"
+    },
+    {
+      "id": "id0008",
+      "source": "j_id000l",
+      "sourceHandle": "node",
+      "target": "inv",
+      "targetHandle": "alpha",
+      "waypoints": [
+        {
+          "x": 480,
+          "y": 160
+        },
+        {
+          "x": 736,
+          "y": 160
+        },
+        {
+          "x": 736,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "j_id000n",
+      "sourceHandle": "node",
+      "target": "inv",
+      "targetHandle": "beta",
+      "waypoints": [
+        {
+          "x": 480,
+          "y": 256
+        },
+        {
+          "x": 736,
+          "y": 256
+        },
+        {
+          "x": 736,
+          "y": 224
+        }
+      ]
+    },
+    {
+      "id": "id000a",
+      "source": "zero",
+      "sourceHandle": "y",
+      "target": "inv",
+      "targetHandle": "zero"
+    },
+    {
+      "id": "id000b",
+      "source": "inv",
+      "sourceHandle": "va",
+      "target": "src",
+      "targetHandle": "va"
+    },
+    {
+      "id": "id000c",
+      "source": "inv",
+      "sourceHandle": "vb",
+      "target": "src",
+      "targetHandle": "vb"
+    },
+    {
+      "id": "id000d",
+      "source": "inv",
+      "sourceHandle": "vc",
+      "target": "src",
+      "targetHandle": "vc"
+    },
+    {
+      "id": "id000e",
+      "source": "src",
+      "sourceHandle": "plug_p",
+      "target": "sens",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000f",
+      "source": "sens",
+      "sourceHandle": "plug_n",
+      "target": "load",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000g",
+      "source": "load",
+      "sourceHandle": "plug_n",
+      "target": "star",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000h",
+      "source": "star",
+      "sourceHandle": "pin_n",
+      "target": "j_id000p",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1600,
+          "y": 208
+        },
+        {
+          "x": 1600,
+          "y": 288
+        }
+      ]
+    },
+    {
+      "id": "id000i",
+      "source": "src",
+      "sourceHandle": "plug_n",
+      "target": "srcn",
+      "targetHandle": "plug_p"
+    },
+    {
+      "id": "id000j",
+      "source": "srcn",
+      "sourceHandle": "pin_n",
+      "target": "j_id000p",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1056,
+          "y": 376
+        },
+        {
+          "x": 1304,
+          "y": 376
+        },
+        {
+          "x": 1304,
+          "y": 288
+        }
+      ]
+    },
+    {
+      "id": "w_id000m",
+      "source": "clarke",
+      "sourceHandle": "alpha",
+      "target": "j_id000l",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000o",
+      "source": "clarke",
+      "sourceHandle": "beta",
+      "target": "j_id000n",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000q",
+      "source": "gnd",
+      "sourceHandle": "p",
+      "target": "j_id000p",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000l",
+      "domain": "signal",
+      "position": {
+        "x": 480,
+        "y": 192
+      }
+    },
+    {
+      "id": "j_id000n",
+      "domain": "signal",
+      "position": {
+        "x": 480,
+        "y": 224
+      }
+    },
+    {
+      "id": "j_id000p",
+      "domain": "electrical",
+      "position": {
+        "x": 1552,
+        "y": 288
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000r",
+      "anchor": "ia.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000s",
+      "anchor": "ib.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000t",
+      "anchor": "ic.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000u",
+      "anchor": "clarke.alpha",
+      "wireIds": [
+        "id0004",
+        "id0008",
+        "w_id000m"
+      ]
+    },
+    {
+      "id": "net_id000v",
+      "anchor": "clarke.beta",
+      "wireIds": [
+        "id0005",
+        "id0009",
+        "w_id000o"
+      ]
+    },
+    {
+      "id": "net_id000w",
+      "anchor": "clock.y",
+      "wireIds": [
+        "id0006"
+      ]
+    },
+    {
+      "id": "net_id000x",
+      "anchor": "w.y",
+      "wireIds": [
+        "id0007"
+      ]
+    },
+    {
+      "id": "net_id000y",
+      "anchor": "zero.y",
+      "wireIds": [
+        "id000a"
+      ]
+    },
+    {
+      "id": "net_id000z",
+      "anchor": "inv.va",
+      "wireIds": [
+        "id000b"
+      ]
+    },
+    {
+      "id": "net_id0010",
+      "anchor": "inv.vb",
+      "wireIds": [
+        "id000c"
+      ]
+    },
+    {
+      "id": "net_id0011",
+      "anchor": "inv.vc",
+      "wireIds": [
+        "id000d"
+      ]
+    },
+    {
+      "id": "net_id0012",
+      "anchor": "sens.plug_p",
+      "wireIds": [
+        "id000e"
+      ]
+    },
+    {
+      "id": "net_id0013",
+      "anchor": "load.plug_p",
+      "wireIds": [
+        "id000f"
+      ]
+    },
+    {
+      "id": "net_id0014",
+      "anchor": "load.plug_n",
+      "wireIds": [
+        "id000g"
+      ]
+    },
+    {
+      "id": "net_id0015",
+      "anchor": "gnd.p",
+      "wireIds": [
+        "id000h",
+        "id000j",
+        "w_id000q"
+      ]
+    },
+    {
+      "id": "net_id0016",
+      "anchor": "src.plug_n",
+      "wireIds": [
+        "id000i"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Stationary and rotating frames",
+      "series": [
+        "clarke.alpha",
+        "clarke.beta",
+        "park.id",
+        "park.iq"
+      ],
+      "labels": [
+        "α",
+        "β",
+        "d",
+        "q"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Phase currents",
+      "series": [
+        "sens.ia",
+        "sens.ib",
+        "sens.ic"
+      ],
+      "labels": [
+        "ia",
+        "ib",
+        "ic"
+      ]
+    }
+  ]
+}

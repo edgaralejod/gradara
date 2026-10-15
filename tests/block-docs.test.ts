@@ -2,12 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { library, RETIRED_KINDS } from '../lib/gradara/model';
 import { blockDocs } from '../lib/gradara/block-docs';
-import { readFileSync } from 'node:fs';
-import {
-  HAND_WRITTEN_KINDS,
-  blockReference,
-  mslDocsUrl,
-} from '../lib/gradara/block-reference';
+import { blockReference, mslDocsUrl } from '../lib/gradara/block-reference';
 
 void test('every library block has a reference page covering all of its ports and parameters', () => {
   const kinds = new Set(library.map((d) => d.kind));
@@ -51,11 +46,15 @@ void test('a reference page takes its structure from the definition', () => {
   assert.equal(page.terminals.length, 2);
   assert.equal(page.inputs.length, 0);
   assert.equal(page.parameters[0].value, resistor.parameters[0].value);
-  // The engine writes the resistor's Modelica by hand; its equations are a summary.
+  // A Modelica wrapper's page links the library class instead of showing source.
   assert.equal(page.source, undefined);
-  const gain = library.find((d) => d.kind === 'gain')!;
+  assert.equal(
+    page.msl?.className,
+    'Modelica.Electrical.Analog.Basic.Resistor',
+  );
+  const relay = library.find((d) => d.kind === 'relay')!;
   assert.ok(
-    blockReference(gain, blockDocs.gain, library).source?.includes('y'),
+    blockReference(relay, blockDocs.relay, library).source?.includes('y'),
   );
   assert.deepEqual(page.examples, ['Buck']);
   assert.equal(page.url, 'https://gradara.app/docs/blocks/resistor');
@@ -70,15 +69,4 @@ void test('a reference page takes its structure from the definition', () => {
     msl.msl!.url,
     /helpDymola\/Modelica_Electrical_Analog_Semiconductors\.html#Modelica\.Electrical\.Analog\.Semiconductors\.NMOS$/,
   );
-});
-
-void test('the hand-written list matches the engine', () => {
-  const engine = new Set(
-    [
-      ...readFileSync('server/modelica.py', 'utf8').matchAll(
-        /PHYSICAL\['(\w+)'\]/g,
-      ),
-    ].map((m) => m[1]),
-  );
-  assert.deepEqual([...engine].sort(), [...HAND_WRITTEN_KINDS].sort());
 });

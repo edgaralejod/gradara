@@ -11,26 +11,32 @@
       "definition": {
         "kind": "ramp",
         "name": "a = t",
-        "symbol": "ramp",
+        "description": "Rises linearly from 0 to Height over Duration after the start time, then holds.",
         "domain": "signal",
-        "description": "A linearly increasing signal after a start time.",
+        "category": "sources",
+        "symbol": "ramp",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = if time < startTime then 0 else slope*(time-startTime);",
         "parameters": [
           {
-            "id": "slope",
-            "name": "Slope",
-            "value": 1,
-            "unit": "1/s"
+            "id": "height",
+            "name": "Height",
+            "value": 4,
+            "unit": ""
+          },
+          {
+            "id": "duration",
+            "name": "Duration",
+            "value": 4,
+            "unit": "s",
+            "min": 0
           },
           {
             "id": "startTime",
@@ -40,11 +46,20 @@
             "min": 0
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Ramp from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
-          "reference"
-        ]
+          "reference",
+          "slope"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Ramp",
+          "modifiers": {
+            "height": "height",
+            "duration": "duration",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -60,20 +75,19 @@
       "definition": {
         "kind": "constant",
         "name": "b = 2",
-        "symbol": "constant",
+        "description": "A constant output value.",
         "domain": "signal",
-        "description": "Constant",
+        "category": "sources",
+        "symbol": "constant",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = value;",
         "parameters": [
           {
             "id": "value",
@@ -82,7 +96,18 @@
             "unit": ""
           }
         ],
-        "declarations": ""
+        "equations": "// Blocks.Sources.Constant from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "reference",
+          "setpoint"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Constant",
+          "modifiers": {
+            "k": "value"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -98,9 +123,10 @@
       "definition": {
         "kind": "sum",
         "name": "a + b",
-        "symbol": "sum",
+        "description": "Add two signals.",
         "domain": "signal",
-        "description": "Sum",
+        "category": "math",
+        "symbol": "sum",
         "ports": [
           {
             "id": "a",
@@ -121,13 +147,23 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = a + b;",
         "parameters": [],
-        "declarations": ""
+        "equations": "// Blocks.Math.Add from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "add",
+          "plus"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Add",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 280,
@@ -147,9 +183,10 @@
       "definition": {
         "kind": "subtract",
         "name": "a − b",
-        "symbol": "sum",
+        "description": "Subtract the second signal from the first: y = a − b.",
         "domain": "signal",
-        "description": "Subtract",
+        "category": "math",
+        "symbol": "sum",
         "ports": [
           {
             "id": "a",
@@ -170,13 +207,24 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = a - b;",
         "parameters": [],
-        "declarations": ""
+        "equations": "// Blocks.Math.Feedback from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "difference",
+          "error",
+          "compare"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Feedback",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 456,
@@ -196,9 +244,10 @@
       "definition": {
         "kind": "product",
         "name": "a · b",
-        "symbol": "×",
-        "domain": "signal",
         "description": "Multiply two signals.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "×",
         "ports": [
           {
             "id": "a",
@@ -219,17 +268,22 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = a * b;",
         "parameters": [],
-        "declarations": "",
+        "equations": "// Blocks.Math.Product from the Modelica Standard Library 4.1.0",
         "keywords": [
           "math",
           "multiply"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Product",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 616,
@@ -249,9 +303,10 @@
       "definition": {
         "kind": "divide",
         "name": "a / b",
-        "symbol": "÷",
-        "domain": "signal",
         "description": "Divide two signals: y = a / b. Keep the denominator away from zero.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "÷",
         "ports": [
           {
             "id": "a",
@@ -272,16 +327,21 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = a / b;",
         "parameters": [],
-        "declarations": "",
+        "equations": "// Blocks.Math.Division from the Modelica Standard Library 4.1.0",
         "keywords": [
           "math"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Division",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 792,
@@ -301,9 +361,10 @@
       "definition": {
         "kind": "min",
         "name": "min(a, b)",
-        "symbol": "min",
-        "domain": "signal",
         "description": "The smaller of two signals.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "min",
         "ports": [
           {
             "id": "a",
@@ -324,16 +385,21 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = min(a, b);",
         "parameters": [],
-        "declarations": "",
+        "equations": "// Blocks.Math.Min from the Modelica Standard Library 4.1.0",
         "keywords": [
           "math"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Min",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 968,
@@ -353,9 +419,10 @@
       "definition": {
         "kind": "max",
         "name": "max(a, b)",
-        "symbol": "max",
-        "domain": "signal",
         "description": "The larger of two signals.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "max",
         "ports": [
           {
             "id": "a",
@@ -376,16 +443,21 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = max(a, b);",
         "parameters": [],
-        "declarations": "",
+        "equations": "// Blocks.Math.Max from the Modelica Standard Library 4.1.0",
         "keywords": [
           "math"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Max",
+          "ports": {
+            "a": "u1",
+            "b": "u2"
+          }
+        }
       },
       "position": {
         "x": 1144,

@@ -38,28 +38,32 @@ export const docs: Record<string, BlockDoc> = {
 
   ramp: {
     description: [
-      'Outputs zero until Start time, then rises in a straight line at Slope per second without limit.',
+      'Outputs zero until Start time, then rises in a straight line to Height over Duration and holds Height from then on (the Modelica library ramp).',
     ],
     ports: {
-      y: 'Output signal: 0 before Start time, then Slope · (time − Start time).',
+      y: 'Output signal: 0 before Start time, rising to Height, then Height.',
     },
     parameters: {
-      slope: 'Rate of rise, in units per second. Negative values ramp down.',
+      height:
+        'The value reached at the end of the ramp. Negative values ramp down.',
+      duration:
+        'Time the rise takes, in seconds, so the slope is Height / Duration. 0 or more; 0 makes a step.',
       startTime: 'Time the ramp starts, in seconds. 0 or more.',
     },
     equations: [
       'y = 0 for time < startTime',
-      'y = slope · (time − startTime) for time ≥ startTime',
+      'y = height · (time − startTime) / duration for startTime ≤ time < startTime + duration',
+      'y = height for time ≥ startTime + duration',
     ],
-    limitations: [
-      'The ramp never levels off. To stop it at a value, follow it with Saturation.',
+    tips: [
+      'For a ramp that keeps rising for the whole run, set Duration to the run length and Height to slope · Duration.',
     ],
     seeAlso: ['step', 'clock', 'saturation', 'rateLimiter'],
   },
 
   sine: {
     description: [
-      'A continuous sinusoid with adjustable amplitude, frequency in hertz, phase, and offset.',
+      'A continuous sinusoid with adjustable amplitude, frequency in hertz, phase, and offset (the Modelica library sine source).',
     ],
     ports: { y: 'Output signal.' },
     parameters: {
@@ -78,32 +82,29 @@ export const docs: Record<string, BlockDoc> = {
 
   pulse: {
     description: [
-      'A periodic rectangular wave switching between Amplitude and 0. Each period starts high for Duty cycle · Period, then stays at 0 for the rest.',
-      'Start time sets where the periods are aligned: a period begins at Start time, and at every whole multiple of Period before and after it.',
+      'A periodic rectangular wave switching between Amplitude and 0 (the Modelica library pulse). From Start time on, each period starts high for Duty cycle · Period, then stays at 0 for the rest.',
     ],
     ports: { y: 'Output signal: Amplitude or 0.' },
     parameters: {
       amplitude: 'Value during the high part of each period.',
       period: 'Length of one period, in seconds. At least 0.0001 s.',
       width:
-        'Duty cycle: the high fraction of each period, from 0 to 1. 0 keeps the output at 0; 1 or more keeps it at Amplitude.',
-      startTime: 'Alignment time of the periods, in seconds. 0 or more.',
+        'Duty cycle: the high fraction of each period, from 0.001 to 1. 1 keeps the output at Amplitude.',
+      startTime:
+        'Time the first period starts, in seconds. 0 or more; the output is 0 before it.',
     },
     equations: [
-      'y = amplitude if mod(time − startTime, period) < width · period',
-      'y = 0 otherwise',
+      'y = 0 for time < startTime',
+      'y = amplitude if mod(time − startTime, period) < width · period, else 0',
     ],
-    limitations: [
-      'Start time only shifts the wave; it does not hold the output at 0 before it. The pulse is already running before Start time.',
-      'The low level is always 0.',
-    ],
+    limitations: ['The low level is always 0.'],
     tips: ['For a Boolean pulse train, use Boolean pulse instead.'],
     seeAlso: ['sine', 'step', 'booleanPulse', 'pwmSignal'],
   },
 
   clock: {
     description: [
-      'Outputs the simulation time. Use it to build time-dependent expressions from Math blocks.',
+      'Outputs the simulation time (the Modelica library continuous clock). Use it to build time-dependent expressions from Math blocks.',
     ],
     ports: { y: 'Simulation time, in seconds.' },
     equations: ['y = time'],
@@ -128,7 +129,7 @@ export const docs: Record<string, BlockDoc> = {
 
   subtract: {
     description: [
-      'Subtracts the second input from the first. Use it to form a control error: setpoint on +, measurement on −.',
+      'Subtracts the second input from the first (the Modelica library feedback block). Use it to form a control error: setpoint on +, measurement on −.',
     ],
     ports: {
       a: 'Input added (+).',
@@ -136,7 +137,7 @@ export const docs: Record<string, BlockDoc> = {
       y: 'Output signal, a − b.',
     },
     equations: ['y = a − b'],
-    seeAlso: ['sum', 'unaryMinus', 'pi', 'pid'],
+    seeAlso: ['sum', 'unaryMinus', 'pi', 'pidController'],
   },
 
   gain: {
@@ -214,18 +215,16 @@ export const docs: Record<string, BlockDoc> = {
   },
 
   sqrt: {
-    description: [
-      'Outputs the square root of its input. A negative input is treated as 0.',
-    ],
+    description: ['Outputs the square root of its input.'],
     ports: {
-      u: 'Input signal.',
-      y: 'Output signal, √u for u ≥ 0 and 0 for u < 0.',
+      u: 'Input signal, 0 or more.',
+      y: 'Output signal, √u.',
     },
-    equations: ['y = √max(0, u)'],
+    equations: ['y = √u'],
     limitations: [
-      'Negative inputs are clipped to 0 silently, with no warning.',
+      'A negative input is a model error: the square root is not real, and the run fails or produces no number. Keep the input at 0 or above, for example with Abs or Max.',
     ],
-    seeAlso: ['power', 'abs'],
+    seeAlso: ['power', 'abs', 'max'],
   },
 
   min: {
@@ -300,32 +299,54 @@ export const docs: Record<string, BlockDoc> = {
 
   integrator: {
     description: [
-      'Integrates its input, starting from 0, and stops integrating at ±Integral limit. Use it for integral action that must not wind up.',
-      'At the limit, integration stops only while the input pushes further out; an input of the other sign brings the output back immediately.',
+      'Integrates its input over time, starting from Initial value (the Modelica library integrator).',
+    ],
+    ports: {
+      u: 'Input signal, the rate of change of the output.',
+      y: 'Output signal, the integral of u.',
+    },
+    parameters: {
+      y_start: 'Value of the output at the start of the run.',
+    },
+    equations: ['dy/dt = u', 'y = y_start at time 0'],
+    limitations: [
+      'Nothing bounds the output: in a loop with a saturating actuator the integral winds up. Use Limited integrator or a PI with limits instead.',
+      'There is no reset input.',
+    ],
+    seeAlso: [
+      'limitedIntegrator',
+      'discreteIntegrator',
+      'piController',
+      'filter',
+    ],
+  },
+
+  limitedIntegrator: {
+    description: [
+      'Integrates its input and keeps the output between Lower limit and Upper limit: at a limit, integration stops while the input pushes further out, and an input of the other sign brings the output back at once (the Modelica library limited integrator). Use it for integral action that must not wind up.',
     ],
     ports: {
       u: 'Input signal, the rate of change of the output.',
       y: 'Output signal, the limited integral of u.',
     },
     parameters: {
-      limit:
-        'Symmetric bound on the output: the output stays within ±limit. At least 0.01.',
+      outMax: 'Upper limit of the output.',
+      outMin: 'Lower limit of the output. Should be below Upper limit.',
+      y_start:
+        'Value of the output at the start of the run, inside the limits.',
     },
     equations: [
-      'dx/dt = 0 if (x ≥ limit and u > 0) or (x ≤ −limit and u < 0)',
-      'dx/dt = u otherwise',
-      'y = x, with x = 0 at time 0',
+      'dy/dt = 0 if (y ≥ outMax and u > 0) or (y ≤ outMin and u < 0)',
+      'dy/dt = u otherwise',
+      'y = y_start at time 0',
     ],
-    limitations: [
-      'The limit is always active and symmetric; there is no unlimited setting. Set a large limit to approximate a plain integrator.',
-      'The initial value is always 0, and there is no reset input.',
-    ],
-    seeAlso: ['discreteIntegrator', 'pi', 'filter'],
+    limitations: ['There is no reset input.'],
+    seeAlso: ['integrator', 'piController', 'saturation'],
   },
 
   filter: {
     description: [
-      'A first-order low-pass filter with unity DC gain. The output follows the input with time constant τ, reaching about 63% of a step after τ.',
+      'A first-order low-pass filter with unity DC gain (the Modelica library first-order block). The output follows the input with time constant τ, reaching about 63% of a step after τ.',
     ],
     ports: {
       u: 'Input signal.',
@@ -335,8 +356,7 @@ export const docs: Record<string, BlockDoc> = {
       tau: 'Time constant τ, in seconds. At least 1e-5 s. The corner frequency is 1/(2π · tau) Hz.',
     },
     equations: [
-      'dx/dt = (u − x) / tau',
-      'y = x, with x = 0 at time 0',
+      'dy/dt = (u − y) / tau, with y = 0 at time 0',
       'Transfer function: 1 / (tau · s + 1)',
     ],
     limitations: [
@@ -347,7 +367,7 @@ export const docs: Record<string, BlockDoc> = {
 
   derivative: {
     description: [
-      'Approximates the time derivative of its input, filtered by a first-order lag with Filter time τ. Smaller τ comes closer to the true derivative but amplifies noise and fast edges more.',
+      'Approximates the time derivative of its input, filtered by a first-order lag with Filter time τ (the Modelica library derivative). Smaller τ comes closer to the true derivative but amplifies noise and fast edges more.',
     ],
     ports: {
       u: 'Input signal.',
@@ -355,20 +375,20 @@ export const docs: Record<string, BlockDoc> = {
     },
     parameters: { tau: 'Filter time constant τ, in seconds. At least 1e-5 s.' },
     equations: [
-      'dx/dt = (u − x) / tau, with x = 0 at time 0',
+      'dx/dt = (u − x) / tau',
       'y = (u − x) / tau',
       'Transfer function: s / (tau · s + 1)',
+      'At time 0 the state is in steady state (x = u), so the output starts at 0.',
     ],
     limitations: [
-      'The internal state starts at 0, not at the input, so a nonzero input at time 0 gives an initial spike of u(0)/tau that decays with time constant τ.',
       'A step in the input gives a spike of height step/tau rather than an impulse.',
     ],
-    seeAlso: ['filter', 'pid'],
+    seeAlso: ['filter', 'pidController'],
   },
 
   secondOrder: {
     description: [
-      'A second-order low-pass system with unity DC gain, set by natural frequency ωn and damping ratio ζ. Use it to model a sensor, actuator, or loop with an oscillatory response.',
+      'A second-order low-pass system with unity DC gain, set by natural frequency ωn and damping ratio ζ (the Modelica library second-order block). Use it to model a sensor, actuator, or loop with an oscillatory response.',
     ],
     ports: {
       u: 'Input signal.',
@@ -379,9 +399,9 @@ export const docs: Record<string, BlockDoc> = {
       zeta: 'Damping ratio ζ. 0 or more: below 1 the step response overshoots, 1 is critically damped, above 1 is overdamped, and 0 oscillates without decay.',
     },
     equations: [
-      'dx1/dt = x2',
-      'dx2/dt = wn² · (u − x1) − 2 · zeta · wn · x2',
-      'y = x1, with x1 = x2 = 0 at time 0',
+      'dy/dt = yd',
+      'dyd/dt = wn · (wn · (u − y) − 2 · zeta · yd)',
+      'y = yd = 0 at time 0',
       'Transfer function: wn² / (s² + 2 · zeta · wn · s + wn²)',
     ],
     limitations: ['Both states start at 0.'],
@@ -390,7 +410,7 @@ export const docs: Record<string, BlockDoc> = {
 
   delay: {
     description: [
-      'Delays its input by a fixed time T. Use it for transport or communication lag.',
+      'Delays its input by a fixed time T (the Modelica library fixed delay). Use it for transport or communication lag.',
     ],
     ports: {
       u: 'Input signal.',
@@ -409,7 +429,7 @@ export const docs: Record<string, BlockDoc> = {
 
   unitDelay: {
     description: [
-      'Delays its input by one sample. At each sample instant the output takes the input stored at the previous instant.',
+      'Delays any signal by one sample: at each sample instant the output takes the value the input had at the previous instant. Every state updates at the sample instant, so exported C reproduces it exactly.',
     ],
     ports: {
       u: 'Input signal, read at each sample instant.',
@@ -426,12 +446,15 @@ export const docs: Record<string, BlockDoc> = {
       'Samples are taken at fixed multiples of Ts from time 0; there is no offset or external trigger.',
       'The initial output is always 0.',
     ],
+    tips: [
+      'Unlike the Modelica library unit delay, which only delays signals that are already sampled, this block delays a continuous input too.',
+    ],
     seeAlso: ['zoh', 'delay', 'discreteIntegrator'],
   },
 
   zoh: {
     description: [
-      'Samples its input every Ts seconds and holds the value until the next sample. Use it to model an ADC or a sampled controller input.',
+      'Samples its input every Ts seconds and holds the value until the next sample (the Modelica library zero-order hold). Use it to model an ADC or a sampled controller input.',
     ],
     ports: {
       u: 'Input signal, read at each sample instant.',
@@ -477,19 +500,19 @@ export const docs: Record<string, BlockDoc> = {
 
   saturation: {
     description: [
-      'Clamps its input between a lower and an upper limit. Inside the limits the input passes unchanged.',
+      'Clamps its input between a lower and an upper limit (the Modelica library limiter). Inside the limits the input passes unchanged.',
     ],
     ports: {
       u: 'Input signal.',
       y: 'Output signal, u limited to the range from Lower limit to Upper limit.',
     },
     parameters: {
-      lower: 'Lower limit. Should not exceed Upper limit.',
-      upper: 'Upper limit. Should not be below Lower limit.',
+      lower: 'Lower limit. Must not exceed Upper limit.',
+      upper: 'Upper limit. Must not be below Lower limit.',
     },
     equations: ['y = max(lower, min(upper, u))'],
     limitations: [
-      'Limits are not checked against each other. If Lower limit exceeds Upper limit, the output is Lower limit for every input.',
+      'A lower limit above the upper limit is a model error; the run stops with a message.',
     ],
     tips: [
       'To limit an integrator itself rather than its output, use Limited integrator.',
@@ -499,7 +522,7 @@ export const docs: Record<string, BlockDoc> = {
 
   deadzone: {
     description: [
-      'Outputs zero while the input is within ±Half-width. Outside that band the output is the input shifted toward zero by Half-width, so it is continuous at the band edges.',
+      'Outputs zero while the input is within ±Half-width (the Modelica library dead zone). Outside that band the output is the input shifted toward zero by Half-width, so it is continuous at the band edges.',
     ],
     ports: {
       u: 'Input signal.',
@@ -544,7 +567,7 @@ export const docs: Record<string, BlockDoc> = {
 
   rateLimiter: {
     description: [
-      'Limits how fast its output can rise or fall. The output tracks the input, moving no faster than Rising limit upward and Falling limit downward.',
+      'Limits how fast its output can rise or fall (the Modelica library slew-rate limiter). The output tracks the input, moving no faster than Rising limit upward and Falling limit downward.',
       'Near the input the output follows it with a first-order lag of 1 ms, so it settles on the input rather than hitting it exactly.',
     ],
     ports: {
@@ -558,12 +581,10 @@ export const docs: Record<string, BlockDoc> = {
         'Largest downward rate, in units per second, as a positive number. 0 or more; 0 stops the output from falling.',
     },
     equations: [
-      'dy/dt = min(rising, 1000 · (u − y)) if u > y',
-      'dy/dt = max(−falling, 1000 · (u − y)) otherwise',
-      'y = 0 at time 0',
+      'dy/dt = min(rising, max(−falling, (u − y) / 0.001 s))',
+      'At time 0 the output equals the input (steady state).',
     ],
     limitations: [
-      'The output starts at 0, not at the input, so a nonzero input at time 0 is approached at the rate limit.',
       'Tracking uses a fixed 1 ms time constant; signals faster than that are also smoothed.',
     ],
     seeAlso: ['saturation', 'filter', 'ramp'],
@@ -699,43 +720,6 @@ export const docs: Record<string, BlockDoc> = {
   },
 
   // Sinks
-
-  terminator: {
-    description: [
-      'No longer in the block library. Models that already contain it still open and run. To show that an output is unused on purpose, right-click its block and choose Terminate unused outputs: a terminator mark caps each open output, with no block.',
-      'Caps an output you do not use, so the sheet shows it is left open on purpose. It has no effect on the simulation.',
-    ],
-    ports: { u: 'Signal to discard.' },
-    limitations: [
-      'The signal is still recorded as the driving block’s output.',
-    ],
-    seeAlso: [],
-  },
-
-  scope: {
-    description: [
-      'No longer in the block library. Models that already contain it still open and run. Results lists every block output, so no block is needed to see a signal; to record a particular wire, select it and choose Log signal.',
-      'Marks a signal you intend to inspect. It does not plot on the canvas: after a run, view the signal in the Results tab, where every block output is recorded.',
-    ],
-    ports: { u: 'Signal to inspect.' },
-    limitations: [
-      'The block has no settings and no effect on the simulation; plots, layouts, and axis ranges are set in Results.',
-    ],
-    tips: [
-      'To record a particular wire rather than a block output, select it and choose Log signal.',
-    ],
-    seeAlso: [],
-  },
-
-  display: {
-    description: [
-      'No longer in the block library. Models that already contain it still open and run. Results lists every block output, so no block is needed to see a signal; to record a particular wire, select it and choose Log signal.',
-      'Marks a signal you intend to read as a number. The block itself shows a fixed 123 symbol, not the live value; read values in Results, where Cursor values show the signal at any time.',
-    ],
-    ports: { u: 'Signal to read.' },
-    limitations: ['No effect on the simulation, and no settings.'],
-    seeAlso: [],
-  },
 
   // Ports & subsystems
 

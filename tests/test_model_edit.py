@@ -78,14 +78,20 @@ def test_parameters_rename_duration_and_removal():
     assert 'from 0.6 to 1.5' in changes[0].description
 
 
+def feedback_wire(project: Project) -> str:
+    return next(w.id for w in project.wires if w.source == 'sensor' and w.sourceHandle == 'y')
+
+
 def test_disconnect_by_wire_or_endpoints_and_nets_follow():
     before = servo()
-    edited, changes = apply(before, op('disconnect', wireId='wire7'))
-    assert 'wire7' not in {w.id for w in edited.wires}
-    assert all('wire7' not in n.wireIds for n in edited.nets)
+    feedback = feedback_wire(before)
+    edited, changes = apply(before, op('disconnect', wireId=feedback))
+    assert feedback not in {w.id for w in edited.wires}
+    assert all(feedback not in n.wireIds for n in edited.nets)
     assert len(edited.nets) == len(before.nets) - 1
-    edited, _ = apply(before, op('disconnect', source='controller', sourcePort='y', target='drive', targetPort='u'))
-    assert 'wire1' not in {w.id for w in edited.wires}
+    drive = next(w.id for w in before.wires if w.source == 'controller' and w.target == 'drive')
+    edited, _ = apply(before, op('disconnect', source='controller', sourcePort='y', target='drive', targetPort='v'))
+    assert drive not in {w.id for w in edited.wires}
     kept = [w for w in edited.wires]
     assert all(w == next(x for x in before.wires if x.id == w.id) for w in kept)
 
@@ -97,7 +103,7 @@ def test_new_wires_join_nets_so_models_with_nets_stay_valid():
                       op('add_block', libraryId='builtin:display', alias='shown'),
                       op('add_block', libraryId='builtin:step', alias='other'),
                       op('connect', source='other', sourcePort='y', target='shown', targetPort='u'))
-    feedback_net = next(n for n in edited.nets if 'wire7' in n.wireIds)
+    feedback_net = next(n for n in edited.nets if feedback_wire(before) in n.wireIds)
     assert 'w_ai_1' in feedback_net.wireIds and feedback_net.name == 'θ measured'
     fresh = next(n for n in edited.nets if 'w_ai_2' in n.wireIds)
     assert fresh.wireIds == ['w_ai_2'] and fresh.id.startswith('net_ai_')
@@ -108,8 +114,8 @@ def test_new_wires_join_nets_so_models_with_nets_stay_valid():
 def test_log_signal_marks_the_net_for_the_data_inspector():
     before = servo()
     edited, changes = apply(before, op('log_signal', blockId='sensor', sourcePort='y'))
-    net = next(n for n in edited.nets if 'wire7' in n.wireIds)
-    assert net.logged and changes[0].op == 'log_signal' and changes[0].wireIds == ['wire7']
+    net = next(n for n in edited.nets if feedback_wire(before) in n.wireIds)
+    assert net.logged and changes[0].op == 'log_signal' and changes[0].wireIds == [feedback_wire(before)]
     assert 'Data Inspector' in changes[0].description
     # A sensor added in the same edit can be connected and logged at once.
     edited, _ = apply(before, op('add_block', libraryId='builtin:step', alias='probe'),
@@ -120,7 +126,7 @@ def test_log_signal_marks_the_net_for_the_data_inspector():
 
 
 @pytest.mark.parametrize('operation, message', [
-    (op('log_signal', blockId='motor', sourcePort='p'), 'not a signal output'),
+    (op('log_signal', blockId='motor', sourcePort='pin_ap'), 'not a signal output'),
     (op('log_signal', blockId='controller', sourcePort='nope'), 'does not exist'),
 ])
 def test_log_signal_refuses_what_cannot_be_logged(operation, message):

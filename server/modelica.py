@@ -7,6 +7,12 @@ from .buses import array_suffix, bus_equations, is_bus_block
 from .models import BOUNDARY_KINDS, Definition, Project, flatten_connects
 from .solver import experiment_annotation
 
+# Hand-written Modelica for the physical kinds that were retired in 0.7.1 in favor of
+# Modelica Standard Library wrappers (see lib/gradara/retired-blocks.ts), and for the
+# kinds whose library definition is now a wrapper but whose instances in older documents
+# still carry the hand-written definition. A document carries its blocks' definitions,
+# so these keep every model saved before then simulating exactly as it did. Library
+# blocks no longer use any of them.
 PHYSICAL = {
  'voltage': '''model {name}
   Modelica.Blocks.Interfaces.RealInput u;
@@ -154,7 +160,7 @@ PHYSICAL['shaftLoad'] = '''model {name}
   J*der(w) = flange.tau - damping*w - loadTorque;
  end {name};'''
 
-# Standard-library components own ideal switching and sensor semantics.
+# These older kinds already delegated to standard-library components.
 PHYSICAL['dcSource'] = '''model {name}
   extends Modelica.Electrical.Analog.Sources.ConstantVoltage;
 end {name};'''

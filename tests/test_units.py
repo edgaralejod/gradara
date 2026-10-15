@@ -17,14 +17,15 @@ def test_dc_example_signals_carry_engineering_units():
     units = signal_units(load('dc.json'))
     # The sensor reads rad/s; the setpoint shares the measurement's unit; the
     # controller drives a voltage source, so its output is in volts (B03).
-    assert units['sensor.y'] == 'rad/s'
+    assert units['sensor.w'] == 'rad/s'
     assert units['reference.y'] == 'rad/s'
     assert units['controller.reference'] == units['controller.measured'] == 'rad/s'
     assert units['controller.y'] == 'V'
+    assert units['isens.y'] == 'A'
 
 
 def test_units_come_from_the_shared_table_for_older_documents():
-    project = load('dc.json')
+    project = Project.model_validate_json((ROOT/'tests'/'motor-project.json').read_text(encoding='utf-8'))
     sensor = next(b for b in project.blocks if b.id == 'sensor')
     assert all(not p.unit for p in sensor.definition.ports), 'the example predates port units'
     assert port_units()['sensor']['y'] == 'rad/s'

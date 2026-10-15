@@ -11,20 +11,19 @@
       "definition": {
         "kind": "sine",
         "name": "Sine 1 Hz",
-        "symbol": "sine",
-        "domain": "signal",
         "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
         "ports": [
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "y = offset + amplitude*sin(6.283185307179586*frequency*time + phase);",
         "parameters": [
           {
             "id": "amplitude",
@@ -52,12 +51,21 @@
             "unit": ""
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "oscillator",
           "wave"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
       },
       "position": {
         "x": 40,
@@ -73,9 +81,10 @@
       "definition": {
         "kind": "zoh",
         "name": "Hold 0.1 s",
-        "symbol": "ZOH",
-        "domain": "signal",
         "description": "Sample and hold.",
+        "domain": "signal",
+        "category": "discrete",
+        "symbol": "ZOH",
         "ports": [
           {
             "id": "u",
@@ -89,11 +98,9 @@
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "right",
-            "unit": ""
+            "side": "right"
           }
         ],
-        "equations": "when sample(0, Ts) then\n  y = u;\nend when;",
         "parameters": [
           {
             "id": "Ts",
@@ -103,11 +110,17 @@
             "min": 0.0001
           }
         ],
-        "declarations": "",
+        "equations": "// Blocks.Discrete.ZeroOrderHold from the Modelica Standard Library 4.1.0",
         "keywords": [
           "discrete",
           "sample"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Discrete.ZeroOrderHold",
+          "modifiers": {
+            "samplePeriod": "Ts"
+          }
+        }
       },
       "position": {
         "x": 392,
@@ -125,7 +138,7 @@
         "name": "Unit delay 0.1 s",
         "symbol": "z⁻¹",
         "domain": "signal",
-        "description": "One-sample delay.",
+        "description": "Delays any signal by one sample period: the output is the input as it was one sample ago. Every state updates at the sample instant, so exported C reproduces it exactly.",
         "ports": [
           {
             "id": "u",
@@ -157,7 +170,9 @@
         "keywords": [
           "discrete",
           "z",
-          "delay"
+          "delay",
+          "export",
+          "c"
         ]
       },
       "position": {
@@ -176,13 +191,15 @@
         "name": "Step",
         "description": "A step change from zero to a final value.",
         "domain": "signal",
+        "category": "sources",
         "symbol": "step",
         "ports": [
           {
             "id": "y",
-            "name": "out",
+            "name": "y",
             "direction": "output",
-            "domain": "signal"
+            "domain": "signal",
+            "side": "right"
           }
         ],
         "parameters": [
@@ -200,11 +217,18 @@
             "min": 0
           }
         ],
-        "equations": "y = if time < startTime then 0 else height;",
+        "equations": "// Blocks.Sources.Step from the Modelica Standard Library 4.1.0",
         "keywords": [
           "source",
           "reference"
-        ]
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Step",
+          "modifiers": {
+            "height": "height",
+            "startTime": "startTime"
+          }
+        }
       },
       "position": {
         "x": 40,

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -31,7 +32,6 @@ import {
   installCopyDrag,
   type CopyPreview,
 } from '../lib/gradara/copy-drag';
-import { focProject } from '../lib/gradara/foc';
 import { selfIntersects } from '../lib/gradara/routing';
 
 function block(kind: string, id: string, x: number, y: number): Block {
@@ -556,7 +556,9 @@ void test('Ctrl-click without dragging creates nothing; Ctrl-dragging an unselec
 });
 
 void test('the full FOC example preserves signal and physical connectivity through group movement and duplication', () => {
-  const p = focProject();
+  const p = JSON.parse(
+    readFileSync('models/examples/foc.json', 'utf8'),
+  ) as Project;
   const selection = all(p);
   const moved = translateSelection(p, selection, delta);
   assert.equal(semanticSignature(moved), semanticSignature(p));

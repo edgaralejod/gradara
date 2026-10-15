@@ -1,104 +1,64 @@
 import type { BlockDoc } from './types';
 
 export const docs: Record<string, BlockDoc> = {
-  pwmPair: {
-    description: [
-      'Generates two complementary gate signals at a fixed switching frequency and duty cycle. `high` is 1 for the first `duty` fraction of each period and 0 for the rest; `low` is always its complement.',
-      'Use it to drive the two switches of a half bridge, such as the high-side and low-side switches of a buck converter.',
-    ],
-    ports: {
-      high: 'High-side gate signal, 0 or 1. Starts at 1 at t = 0.',
-      low: 'Low-side gate signal, 1 − high.',
-    },
-    parameters: {
-      frequency:
-        'Switching frequency, in hertz, from 1 Hz to 1 MHz. The period is 1/frequency.',
-      duty: 'Fraction of each period that `high` is 1, from 0 to 1.',
-    },
-    equations: [
-      'T = 1/frequency',
-      'high = 1 when (t mod T) < duty · T, otherwise 0',
-      'low = 1 − high',
-    ],
-    limitations: [
-      'Both outputs switch at the same instant, with no dead time, rise time, or switching delay.',
-      'Frequency and duty are fixed during a run. For a duty cycle driven by a signal, use PWM generator.',
-      'Pulses begin at t = 0; there is no start delay or phase offset.',
-    ],
-    tips: [
-      'The pulse comes from the MSL BooleanPulse with width = 100 · duty %. That source declares a pulse width greater than 0, so duty = 0 lies outside its stated range; use a small positive duty instead.',
-      'Every edge is a simulation event. A high frequency over a long run means many events and a slower simulation.',
-    ],
-    seeAlso: ['pwmSignal', 'booleanPulse', 'idealSwitch', 'buckConverter'],
-  },
-
-  currentPI: {
-    description: [
-      'A continuous PI controller with a symmetric output limit and back-calculation anti-windup. The input is the current error; the output is a voltage command.',
-      'In the field-oriented control example, one instance regulates the d-axis current and another the q-axis current.',
-    ],
-    ports: {
-      u: 'Control error, typically current reference minus measured current, in amperes.',
-      y: 'Voltage command, in volts, limited to ±limit.',
-    },
-    parameters: {
-      kp: 'Proportional gain, in volts per unit of error.',
-      ki: 'Integral gain: the integral state rises at ki · u per second.',
-      kaw: 'Anti-windup gain, in 1/s, 0 or more. How fast the integral state is pulled back while the output is limited. 0 disables anti-windup.',
-      limit:
-        'Output limit, in volts, at least 0.1. The output is clamped to ±limit.',
-    },
-    equations: [
-      'raw = kp · u + x',
-      'y = max(−limit, min(limit, raw))',
-      'dx/dt = ki · u + kaw · (y − raw),  x(0) = 0',
-    ],
-    limitations: [
-      'Continuous time: no sampling, computation delay, or quantization.',
-      'The limit is symmetric and fixed. It does not track the available DC-bus voltage.',
-      'The integral state is not clamped directly; it is held back only through the kaw term.',
-    ],
-    tips: [
-      'While y is within ±limit, y − raw = 0 and the block is a plain PI. Once the output limits, the kaw term drives x toward the value that just brings raw back to the limit.',
-      'A starting point for kaw is ki/kp, which is the default ratio (700/2 = 350).',
-    ],
-    seeAlso: ['park', 'inversePark', 'pi', 'pid', 'discretePID', 'pmsm'],
-  },
-
   clarke: {
     description: [
-      'Converts three phase currents into the two-axis stationary frame (α, β), using the amplitude-invariant form: a balanced set of phase currents with peak Î gives α and β with the same peak Î.',
+      'Converts three phase quantities (currents or voltages) into the two-axis stationary frame (α, β), using the amplitude-invariant form of the Modelica library space-phasor transform: a balanced set with peak Â gives α and β with the same peak Â.',
       'Use it with Park transform to turn measured motor currents into d/q currents.',
     ],
     ports: {
-      ia: 'Phase a current, in amperes.',
-      ib: 'Phase b current, in amperes.',
-      ic: 'Phase c current, in amperes.',
-      alpha: 'α-axis current, in amperes, aligned with phase a.',
-      beta: 'β-axis current, in amperes, 90° ahead of α.',
+      ia: 'Phase a.',
+      ib: 'Phase b.',
+      ic: 'Phase c.',
+      alpha: 'α axis, aligned with phase a.',
+      beta: 'β axis, 90° ahead of α.',
     },
     equations: ['alpha = (2 · ia − ib − ic)/3', 'beta = (ib − ic)/√3'],
     limitations: [
-      'Any zero-sequence (common-mode) component ia + ib + ic is discarded; it does not appear in either output.',
+      'Any zero-sequence (common-mode) component (ia + ib + ic)/3 is discarded; it does not appear in either output.',
     ],
     tips: [
-      'All three currents are used. Connect ic even when the phases sum to zero; it is not reconstructed from ia and ib.',
+      'All three inputs are used. Connect ic even when the phases sum to zero; it is not reconstructed from ia and ib.',
     ],
-    seeAlso: ['park', 'inversePark', 'currentPI', 'pmsm'],
+    seeAlso: ['park', 'inverseClarke', 'piController', 'pmSyncMachine'],
+  },
+
+  inverseClarke: {
+    description: [
+      'Converts a stationary-frame (α, β) pair back into three phase quantities, adding the zero-sequence input to each phase (the Modelica library space-phasor transform in reverse). It undoes Clarke transform exactly.',
+      'In a field-oriented drive it turns the α, β voltage commands into the three phase voltages for the inverter.',
+    ],
+    ports: {
+      alpha: 'α axis, aligned with phase a.',
+      beta: 'β axis, 90° ahead of α.',
+      zero: 'Zero-sequence (common-mode) component added to every phase. Wire a Constant 0 when there is none.',
+      va: 'Phase a.',
+      vb: 'Phase b.',
+      vc: 'Phase c.',
+    },
+    equations: [
+      'va = alpha + zero',
+      'vb = −alpha/2 + (√3/2) · beta + zero',
+      'vc = −alpha/2 − (√3/2) · beta + zero',
+    ],
+    tips: [
+      'The zero input must be connected; it is how common-mode injection (third-harmonic or min–max) enters a modulator.',
+    ],
+    seeAlso: ['clarke', 'park', 'threePhaseSignalVoltage'],
   },
 
   park: {
     description: [
-      'Rotates stationary-frame (α, β) quantities into the rotor d/q frame at the electrical angle theta. With theta aligned to the rotor flux, `id` is the flux-producing current and `iq` the torque-producing current.',
-      'Uses the d-axis-aligned convention: at theta = 0, the d axis coincides with α.',
+      'Rotates a stationary-frame (α, β) pair into a frame turning at the input angle (the Modelica library rotator). With the electrical rotor angle θe, `d` is the flux-aligned component and `q` the one 90° ahead of it: for motor currents, flux-producing and torque-producing.',
+      'Uses the d-axis-aligned convention: at theta = 0, the d axis coincides with α. The same block rotates back: feed it −θe to turn d, q voltage commands into α, β.',
     ],
     ports: {
-      alpha: 'α-axis current, in amperes, typically from Clarke transform.',
-      beta: 'β-axis current, in amperes.',
+      alpha: 'α axis, typically from Clarke transform.',
+      beta: 'β axis.',
       theta:
         'Electrical rotor angle θe, in radians (mechanical angle times pole pairs).',
-      id: 'd-axis current, in amperes.',
-      iq: 'q-axis current, in amperes.',
+      id: 'd axis.',
+      iq: 'q axis.',
     },
     equations: [
       'id = alpha · cos(theta) + beta · sin(theta)',
@@ -108,37 +68,83 @@ export const docs: Record<string, BlockDoc> = {
       'Uses theta as given: no angle estimation, filtering, or sensor delay.',
     ],
     tips: [
-      'Feed theta from the PMSM’s θe output. A mechanical angle gives wrong d/q currents unless the motor has one pole pair.',
+      'Feed theta from an Angle sensor on the rotor through a Gain of the pole pairs. A mechanical angle gives wrong d/q values unless the machine has one pole pair.',
+      'For the inverse rotation, negate theta with Unary minus.',
     ],
-    seeAlso: ['clarke', 'inversePark', 'currentPI', 'pmsm'],
+    seeAlso: [
+      'clarke',
+      'inverseClarke',
+      'piController',
+      'pmSyncMachine',
+      'angleSensor',
+    ],
   },
 
-  inversePark: {
+  piController: {
     description: [
-      'Converts d/q voltage commands into three phase-voltage commands: an inverse Park rotation by theta followed by the amplitude-invariant inverse Clarke transform.',
-      'It is the exact inverse of Park transform followed by Clarke transform for a set without zero sequence, so the output amplitude equals √(vd² + vq²).',
+      'A continuous PI controller with output limits and anti-windup, from the Modelica library (LimPID with a PI structure). It forms the error between the reference and the measurement itself, so no Subtract block is needed.',
+      'When the output reaches a limit, back-calculation pulls the integral back so the controller leaves saturation without overshoot.',
     ],
     ports: {
-      vd: 'd-axis voltage command, in volts.',
-      vq: 'q-axis voltage command, in volts.',
-      theta: 'Electrical rotor angle θe, in radians.',
-      va: 'Phase a voltage command, in volts.',
-      vb: 'Phase b voltage command, in volts.',
-      vc: 'Phase c voltage command, in volts.',
+      reference: 'Setpoint.',
+      measured: 'Measured value, in the same units as the reference.',
+      y: 'Controller output, limited to the range from Lower limit to Upper limit.',
+    },
+    parameters: {
+      k: 'Gain, applied to both the proportional and the integral term. Must not be 0.',
+      Ti: 'Integral time, in seconds: the integral gain is k / Ti. Larger values mean slower integral action.',
+      yMax: 'Upper limit of the output.',
+      yMin: 'Lower limit of the output.',
     },
     equations: [
-      'alpha = vd · cos(theta) − vq · sin(theta)',
-      'beta = vd · sin(theta) + vq · cos(theta)',
-      'va = alpha',
-      'vb = −alpha/2 + (√3/2) · beta',
-      'vc = −alpha/2 − (√3/2) · beta',
+      'e = reference − measured',
+      'v = k · (e + xi)',
+      'y = max(yMin, min(yMax, v))',
+      'dxi/dt = (e + (y − v)/(k · 0.9)) / Ti, with xi = 0 at time 0',
     ],
     limitations: [
-      'The outputs always sum to zero: no common-mode injection or space-vector modulation.',
-      'No voltage limit or overmodulation handling; limit vd and vq upstream or in the inverter.',
+      'The anti-windup time constant is Ti · Ni with the library default Ni = 0.9; it is not adjustable here.',
+      'Continuous: for a fixed-rate controller that exports to C exactly, use PI (discrete).',
     ],
-    tips: ['Use the same theta as the Park transform on the measurement side.'],
-    seeAlso: ['park', 'clarke', 'inverter', 'currentPI', 'pmsm'],
+    tips: [
+      'Converting from proportional and integral gains kp, ki: k = kp and Ti = kp / ki.',
+    ],
+    seeAlso: ['pidController', 'pi', 'limitedIntegrator', 'saturation'],
+  },
+
+  pidController: {
+    description: [
+      'A continuous PID controller with a filtered derivative, output limits and anti-windup, from the Modelica library (LimPID with a PID structure). It forms the error between the reference and the measurement itself.',
+      'The derivative acts on the measurement only (set-point weight 0), so a reference step causes no derivative kick.',
+    ],
+    ports: {
+      reference: 'Setpoint.',
+      measured: 'Measured value, in the same units as the reference.',
+      y: 'Controller output, limited to the range from Lower limit to Upper limit.',
+    },
+    parameters: {
+      k: 'Gain, applied to every term. Must not be 0.',
+      Ti: 'Integral time, in seconds: the integral gain is k / Ti.',
+      Td: 'Derivative time, in seconds: the derivative gain is k · Td. 0 or more.',
+      Nd: 'Derivative filter ratio: the derivative is filtered with time constant Td / Nd. At least 1; 10 is usual.',
+      yMax: 'Upper limit of the output.',
+      yMin: 'Lower limit of the output.',
+    },
+    equations: [
+      'e = reference − measured',
+      'dxd/dt = (−measured − xd) / (Td/Nd)',
+      'v = k · (e + xi + Td · (−measured − xd) / (Td/Nd))',
+      'y = max(yMin, min(yMax, v))',
+      'dxi/dt = (e + (y − v)/(k · 0.9)) / Ti, with xi = xd = 0 at time 0',
+    ],
+    limitations: [
+      'The anti-windup time constant is Ti · Ni with the library default Ni = 0.9; the set-point weights are fixed at 1 (proportional) and 0 (derivative).',
+      'Continuous: for a fixed-rate controller that exports to C exactly, use Discrete PID.',
+    ],
+    tips: [
+      'Converting from parallel gains kp, ki, kd: k = kp, Ti = kp / ki, Td = kd / kp.',
+    ],
+    seeAlso: ['piController', 'discretePID', 'derivative', 'saturation'],
   },
 
   pi: {
@@ -155,7 +161,7 @@ export const docs: Record<string, BlockDoc> = {
       kp: 'Proportional gain.',
       ki: 'Integral gain, per second.',
       limit:
-        'Output limit, at least 0.1. Clamps both the output and the integral to ±limit. Labeled in volts, but it applies in whatever unit the output uses.',
+        'Output limit, at least 0.001, in the unit of the output. Clamps both the output and the integral to ±limit.',
       samplePeriod:
         'Sample period Ts, in seconds, at least 0.1 ms. The first sample is at t = 0.',
     },
@@ -169,51 +175,18 @@ export const docs: Record<string, BlockDoc> = {
     limitations: [
       'The integral is updated with the current error (backward Euler), so a step in error affects y at the same sample, with no computation delay.',
       'Anti-windup is a clamp on the integral at ±limit, not back-calculation. The integral can still sit at the limit while the proportional term alone saturates the output.',
-      'No derivative term. For one, use Discrete PID.',
+      'No derivative term. For one, use Discrete PID; for a continuous controller with back-calculation anti-windup, use PI (continuous).',
       'The error is read only at sample instants; nothing between samples is seen.',
     ],
     tips: [
       'Choose samplePeriod well below the loop’s time constants; each sample is a simulation event.',
     ],
-    seeAlso: ['discretePID', 'pid', 'currentPI', 'zoh', 'saturation'],
-  },
-
-  pid: {
-    description: [
-      'A continuous parallel PID controller acting on an error input. The derivative term is filtered by a first-order low-pass with time constant tf.',
-      'The block has no output limit or anti-windup.',
-    ],
-    ports: {
-      u: 'Control error, typically reference minus measurement.',
-      y: 'Controller output.',
-    },
-    parameters: {
-      kp: 'Proportional gain.',
-      ki: 'Integral gain, per second.',
-      kd: 'Derivative gain, in seconds.',
-      tf: 'Derivative filter time constant, in seconds, at least 0.1 ms. Smaller values give a purer derivative and more noise gain.',
-    },
-    equations: [
-      'dxi/dt = u,  xi(0) = 0',
-      'dxf/dt = (u − xf)/tf,  xf(0) = 0',
-      'y = kp · u + ki · xi + kd · (u − xf)/tf',
-      'Transfer function: y/u = kp + ki/s + kd · s/(tf · s + 1)',
-    ],
-    limitations: [
-      'No output saturation and no anti-windup: the integral grows without bound while the error persists.',
-      'The derivative acts on the error, so a step in the reference produces a derivative kick of kd/tf times the step.',
-      'The filter state xf starts at 0, so a nonzero error at t = 0 also gives an initial derivative kick of kd · u(0)/tf.',
-    ],
-    tips: [
-      'To limit the output, follow the block with Saturation, keeping in mind the integral still winds up.',
-    ],
     seeAlso: [
       'discretePID',
-      'pi',
-      'currentPI',
+      'pidController',
+      'piController',
+      'zoh',
       'saturation',
-      'derivative',
-      'integrator',
     ],
   },
 
@@ -255,7 +228,7 @@ export const docs: Record<string, BlockDoc> = {
     tips: [
       'The same limit bounds the integral and the output; they cannot be set separately.',
     ],
-    seeAlso: ['pi', 'pid', 'zoh', 'unitDelay', 'discreteIntegrator'],
+    seeAlso: ['pi', 'pidController', 'zoh', 'unitDelay', 'discreteIntegrator'],
   },
 
   logicAnd: {
@@ -552,7 +525,7 @@ export const docs: Record<string, BlockDoc> = {
     tips: [
       'For a Real-valued pulse, use Pulse, or convert this output with Boolean to real.',
     ],
-    seeAlso: ['pulse', 'pwmPair', 'booleanStep', 'booleanToReal'],
+    seeAlso: ['pulse', 'pwmSignal', 'booleanStep', 'booleanToReal'],
   },
 
   triggeredSampler: {
