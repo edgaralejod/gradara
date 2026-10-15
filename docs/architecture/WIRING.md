@@ -12,7 +12,7 @@ React Flow owns block views, resizing, and the viewport. `NetLayer` owns wire po
 | Wire | A saved path between ports or junctions, optionally with manual waypoints. |
 | Segment | One horizontal or vertical run of a rendered path. |
 | Vertex | A geometric bend. It has no electrical or signal meaning and no junction dot. |
-| Junction | An explicit branch connection shared by incident wires. |
+| Junction | An explicit branch connection shared by three or more incident wires. A dot left with fewer is removed (one wire: with that dangling stub) or becomes a bend (two wires); see the transaction boundary below. |
 | Net | A connected component with persistent identity and optional name/label metadata. |
 | Anchor | An alignment suggestion derived from a port or segment coordinate. |
 
@@ -95,7 +95,7 @@ Clipboard scope is the current workbench session. Operating-system clipboard exc
 
 Block instance names are unique within a model and case-sensitive: `Step`, `Step1`, `Step2`. Existing distinct names are reserved before repairing collisions; an unchanged block keeps its name when a new or renamed block requests it. Deleting a block does not renumber others. Names are bounded to 100 characters; library definitions are not mutated by instance naming.
 
-`normalizeProject` applies block naming, junction normalization, and `reconcileNets` at the transaction boundary. Net identity is determined from topology and stable endpoints/wire IDs, never from screen overlap. Signal nets anchor at their producer; physical nets retain a stable terminal anchor.
+`normalizeProject` applies block naming, junction normalization, and `reconcileNets` at the transaction boundary. On every sheet, subsystems included, it first drops wires that end on a block or junction that no longer exists, and after branch materialization prunes every junction with fewer than three wires (`pruneJunctions`), so no edit (delete, reconnect, move, group, ungroup, paste) can leave a stray dot or a wire to a deleted dot in a saved document. Pruning drops a wire that starts and ends on the same terminal, and two wires that only loop between the same two ends rather than joining them into a loop; `tests/junctions.test.ts` covers the cases a fuzz of real edits found. A wire whose block still exists but whose port is gone is kept and reported by validation, so the user decides. Net identity is determined from topology and stable endpoints/wire IDs, never from screen overlap. Signal nets anchor at their producer; physical nets retain a stable terminal anchor.
 
 - A split retains the original ID/name on the component containing its anchor. Other components receive new identities. If the anchor disappears, surviving wires and endpoints determine continuity.
 - A merge prefers the driver's identity; physical ties are deterministic. Other custom names are retained as aliases. Clearing a custom name also clears its aliases.

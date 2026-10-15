@@ -9,6 +9,7 @@ import { followJunctionsForLayout, moveJunctions } from './net-layout';
 import { snapMovedBlocks } from './placement';
 import { settleRoutes } from './router';
 import { sideToPosition } from './ports';
+import { pruneJunctions } from './project';
 import {
   routeBetween,
   simplifyPoints,
@@ -354,56 +355,25 @@ export function extractSelection(
       dots.has(w.source) ? `j:${w.source}` : `${w.source}.${w.sourceHandle}`,
     ),
   );
-  // Keep degree-two junctions temporarily: collapsing them must preserve the
-  // original rendered path, including bends on routes crossing the boundary.
-  let result: ModelFragment = structuredClone({
-    version: 1,
+  // Junctions left with fewer than three wires inside the fragment become bends or
+  // go with their stubs (pruneJunctions), following the original rendered paths,
+  // including bends on routes that crossed the selection's edge.
+  const fragmentWires = wires.map((w) => ({
+    ...w,
+    waypoints: polylineOfWire(project, w.id).slice(1, -1),
+  }));
+  const pruned = pruneJunctions({
+    ...project,
     blocks: fragmentProject.blocks,
-    junctions: fragmentProject.junctions.filter((j) =>
-      wires.some((w) => w.source === j.id || w.target === j.id),
-    ),
-    wires: wires.map((w) => ({
-      ...w,
-      waypoints: polylineOfWire(project, w.id).slice(1, -1),
-    })),
+    junctions: fragmentProject.junctions,
+    wires: fragmentWires,
   });
-  for (const j of result.junctions) {
-    const incident = result.wires.filter(
-      (w) => w.source === j.id || w.target === j.id,
-    );
-    if (incident.length !== 2) continue;
-    const [a, b] = incident;
-    const p = { ...project, ...result };
-    const pa = polylineOfWire(p, a.id),
-      pb = polylineOfWire(p, b.id);
-    const from =
-      a.source === j.id
-        ? { id: a.target, handle: a.targetHandle }
-        : { id: a.source, handle: a.sourceHandle };
-    const to =
-      b.target === j.id
-        ? { id: b.source, handle: b.sourceHandle }
-        : { id: b.target, handle: b.targetHandle };
-    const points = [
-      ...(a.source === j.id ? [...pa].reverse() : pa),
-      ...(b.target === j.id ? [...pb].reverse() : pb).slice(1),
-    ];
-    result = {
-      ...result,
-      junctions: result.junctions.filter((dot) => dot.id !== j.id),
-      wires: [
-        ...result.wires.filter((w) => w.id !== a.id && w.id !== b.id),
-        {
-          ...a,
-          source: from.id,
-          sourceHandle: from.handle,
-          target: to.id,
-          targetHandle: to.handle,
-          waypoints: simplifyPoints(points).slice(1, -1),
-        },
-      ],
-    };
-  }
+  const result: ModelFragment = structuredClone({
+    version: 1,
+    blocks: pruned.blocks,
+    junctions: pruned.junctions ?? [],
+    wires: pruned.wires,
+  });
   return {
     ...result,
     nets: reconcileNets({ ...project, ...result }, project).nets,

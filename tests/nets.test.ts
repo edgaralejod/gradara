@@ -814,9 +814,9 @@ void test('dragging a run onto another run of its net merges the carried dot and
   apart.wires = apart.wires.filter((w) => w.id !== 'wj');
   apart.junctions![1].position = { x: 320, y: 32 };
   const kept = normalizeProject(apart);
-  assert.equal(netTopology(kept).length, 2);
-  assert.equal(
-    kept.junctions!.filter((j) => j.position.x === 320).length >= 2,
-    true,
+  // Each dot is left with two wires, so it becomes a bend; the two nets stay two.
+  assert.deepEqual(
+    terminals(kept).sort(),
+    [['src.p', 'xf.p'], ['gnd.p', 'volt.p']].sort(),
   );
 });
