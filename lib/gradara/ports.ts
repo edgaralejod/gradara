@@ -43,28 +43,80 @@ export function sideLength(
   return vertical !== turned ? size.height : size.width;
 }
 
-/** Port geometry after clockwise rotation, including asymmetric offsets. */
+/**
+ * Blocks with only signal terminals keep their ports in reading order when they turn,
+ * as Simulink's default port rotation does: inputs stay numbered top to bottom (or left
+ * to right), and a half turn is drawn as a mirror image, so a feedback gain or sensor
+ * points left without anything upside down. Blocks with physical terminals turn
+ * geometrically, like a part on a schematic.
+ */
+export function readingOrder(definition: Definition) {
+  return (
+    definition.ports.length > 0 &&
+    definition.ports.every((p) => p.direction !== 'physical')
+  );
+}
+
+export type Rotation = 0 | 90 | 180 | 270;
+/** How a block is drawn: mirrored left to right (`flip`), then turned clockwise. */
+export type Orientation = { rotation: Rotation; flip: boolean };
+
+/** The drawn orientation of a block: a signal block's half turn is a mirror. */
+export function orientationOf(
+  definition: Definition,
+  rotation = 0,
+  flip = false,
+): Orientation {
+  const turn = ((((rotation ?? 0) % 360) + 360) % 360) as Rotation;
+  if (readingOrder(definition) && turn >= 180)
+    return { rotation: (turn - 180) as Rotation, flip: !flip };
+  return { rotation: turn, flip: !!flip };
+}
+
+const clockwise: Record<Side, Side> = {
+  left: 'top',
+  top: 'right',
+  right: 'bottom',
+  bottom: 'left',
+};
+const mirrored: Record<Side, Side> = {
+  left: 'right',
+  right: 'left',
+  top: 'top',
+  bottom: 'bottom',
+};
+
+/** Where a side of the unturned face ends up on the sheet. */
+export function screenSide(side: Side, o: Orientation): Side {
+  let s = o.flip ? mirrored[side] : side;
+  for (let turn = 0; turn < o.rotation / 90; turn++) s = clockwise[s];
+  return s;
+}
+
+/** Port geometry after the block's flip and clockwise rotation, including asymmetric offsets. */
 export function portPlacement(
   definition: Definition,
   port: Port,
   rotation = 0,
   size?: { width: number; height: number },
+  flip = false,
 ) {
-  let side = portSide(port);
-  let offset = portOffset(
+  const o = orientationOf(definition, rotation, flip);
+  const local = portSide(port);
+  const along = portOffset(
     definition,
     port,
-    size ? sideLength(port, size, rotation) : undefined,
+    size ? sideLength(port, size, o.rotation) : undefined,
   );
-  const clockwise: Record<Side, Side> = {
-    left: 'top',
-    top: 'right',
-    right: 'bottom',
-    bottom: 'left',
-  };
-  for (let turn = 0; turn < rotation / 90; turn++) {
-    if (side === 'left' || side === 'right') offset = 100 - offset;
-    side = clockwise[side];
+  const side = screenSide(local, o);
+  // Reading order: the first port stays at the top (or the left) of its side.
+  if (readingOrder(definition)) return { side, offset: along };
+  let offset = along;
+  if (o.flip && (local === 'top' || local === 'bottom')) offset = 100 - offset;
+  let s = o.flip ? mirrored[local] : local;
+  for (let turn = 0; turn < o.rotation / 90; turn++) {
+    if (s === 'left' || s === 'right') offset = 100 - offset;
+    s = clockwise[s];
   }
   return { side, offset };
 }
@@ -78,6 +130,7 @@ export function portPoint(block: Block, portId: string): PortPoint | undefined {
     port,
     block.rotation,
     size,
+    block.flip,
   );
   // Percent round trips leave float dust (40 / 96 · 96 ≠ 40); grid ports are whole units.
   const along = (length: number) =>

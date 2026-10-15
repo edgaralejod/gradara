@@ -533,14 +533,14 @@
             "name": "shaft",
             "direction": "physical",
             "domain": "mechanical",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "w",
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
+            "side": "right",
             "unit": "rad/s"
           }
         ],
@@ -561,7 +561,8 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "flip": true
     }
   ],
   "wires": [

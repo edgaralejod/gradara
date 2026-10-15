@@ -180,7 +180,7 @@ function wireCost(
     // feedback wire (into a bottom or top terminal) is expected to.
     if (sourcePort?.direction === 'output' && from && to && to.x < from.x) {
       const target = project.blocks.find((b) => b.id === wire.target)!;
-      const entry = portSide(portOf(target, wire.targetHandle)!);
+      const entry = portPoint(target, wire.targetHandle)?.side;
       if (entry === 'left') cost += 200;
     }
   }
@@ -288,6 +288,7 @@ export function layoutNewBlocks(project: Project, ids: string[]): Project {
           ...b,
           size: b.size ?? defaultBlockSize(b.definition),
           rotation: undefined,
+          flip: undefined,
         }
       : b,
   );
@@ -419,6 +420,7 @@ export function tidyGrid(project: Project, cell = { x: 320, y: 224 }): Project {
     ...b,
     size: b.size ?? defaultBlockSize(b.definition),
     rotation: undefined,
+    flip: undefined,
   }));
   const col = new Map(
     blocks.map((b) => [b.id, Math.round(b.position.x / cell.x)]),
@@ -617,7 +619,7 @@ export function layoutFindings(project: Project): LayoutFinding[] {
     const entry = target && portOf(target, wire.targetHandle);
     if (
       entry?.direction === 'input' &&
-      portSide(entry) === 'left' &&
+      portPoint(target!, wire.targetHandle)?.side === 'left' &&
       route[route.length - 1].x < route[0].x
     )
       findings.push({ kind: 'backward-signal', ids: [wire.id] });

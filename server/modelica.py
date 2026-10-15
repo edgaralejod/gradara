@@ -408,5 +408,6 @@ def project_key(project: Project) -> str:
         block.pop('labelOffset', None)
         block.pop('terminated', None)
         block.pop('rotation', None)
+        block.pop('flip', None)
         block['definition'].pop('name', None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:20]

@@ -51,7 +51,13 @@ A pictorial glyph (`circuitGlyphs`) is drawn once in a small design box with an 
 
 Retain the shared `domainColors` in `lib/gradara/model.ts`: signal blue, Boolean lilac, electrical amber, rotational mechanical teal, translational olive, thermal red, magnetic magenta, and 3-phase graphite. The eight are chosen to stay apart from each other (no two closer than about 23 CAM02-UCS units for normal colour vision); for colour-blind viewers the port shapes and pill glyphs carry the domain too. The body uses its owning domain. **Each terminal uses its own domain**, so an electrical machine can expose mechanical and signal terminals without ambiguity. Physical connection points retain their distinct square/cross affordance; signal terminals keep their existing wiring affordance. Color alone never replaces direction/domain metadata.
 
-Rendering must use `portSide`/`portOffset` geometry also used by `portPoint`. Do not position a visual terminal independently from its hit target or routing endpoint. Keep `data-block-id`, `data-port-id`, accessible names, and native pointer ownership intact.
+Rendering must use the `portPlacement` geometry also used by `portPoint`. Do not position a visual terminal independently from its hit target or routing endpoint. Keep `data-block-id`, `data-port-id`, accessible names, and native pointer ownership intact.
+
+**Direction.** Every library block reads left to right: inputs on the left (or on the top or bottom, for a control, a measurement or a second operand), outputs on the right (or on the top or bottom, for a measurement out of a physical part). No library block has an input on its right or an output on its left; `tests/orientation.test.ts` holds the library and every template to that. A block on a feedback path is flipped instead (`Block.flip`, ⌘/Ctrl + I), which mirrors it whole.
+
+## Rotation, flip and upright text
+
+Rotation and flip follow Simulink and schematic editors. `BlockFace` draws the outline, the symbol and the leads in a frame that turns and mirrors with the block, and turns every piece of text in it back upright (the `--upright` transform in `app/blocks.css`); port names are drawn on the sheet at the ports' turned positions, never sideways or upside down. A block with only signal terminals keeps reading order (Simulink's default port rotation): the first port of a side stays at its top or left, and a half turn is its mirror image, so a turned gain points left with its value upright and a turned step still steps up. A block with physical terminals turns geometrically (Simulink's physical port rotation; KiCad): a half-turned source has its + at the bottom. New symbols need nothing extra: text in the standard symbol classes, and SVG `text`, stays upright automatically.
 
 ## Subsystems and port pills
 

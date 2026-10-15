@@ -158,6 +158,11 @@ export type Block = {
   size?: { width: number; height: number };
   /** Clockwise quarter turns; presentation only. Size stores the rotated bounds. */
   rotation?: 0 | 90 | 180 | 270;
+  /**
+   * Mirrored left to right before the rotation, as Simulink's Flip Block; presentation
+   * only. Signal flow then reads right to left, as on a feedback path.
+   */
+  flip?: boolean;
   /** Canvas offset from the centered label below the block; never part of simulation. */
   labelOffset?: { x: number; y: number };
   /**

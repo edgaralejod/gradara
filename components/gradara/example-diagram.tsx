@@ -122,21 +122,11 @@ export function ExampleDiagram({ project }: { project: Project }) {
                 height: body.height,
               }}
             >
-              <span
-                className="diagram-turn"
-                data-turn={b.rotation || undefined}
-                style={
-                  {
-                    width:
-                      b.rotation && b.rotation % 180 ? body.height : body.width,
-                    height:
-                      b.rotation && b.rotation % 180 ? body.width : body.height,
-                    transform: `translate(-50%, -50%) rotate(${b.rotation ?? 0}deg)`,
-                  } as CSSProperties
-                }
-              >
-                <BlockPreview definition={b.definition} />
-              </span>
+              <BlockPreview
+                definition={b.definition}
+                rotation={b.rotation}
+                flip={b.flip}
+              />
             </span>
             <span
               className="diagram-name"

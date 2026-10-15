@@ -65,7 +65,7 @@ function BlockNode({
   const d = data.definition;
   const sum = d.kind === 'sum' || d.kind === 'subtract';
   const updateInternals = useUpdateNodeInternals();
-  const signature = JSON.stringify([d.ports, data.rotation]);
+  const signature = JSON.stringify([d.ports, data.rotation, data.flip]);
   useEffect(() => {
     const frame = requestAnimationFrame(() => updateInternals(id));
     return () => cancelAnimationFrame(frame);
@@ -125,28 +125,16 @@ function BlockNode({
         color="#2477b5"
         keepAspectRatio={sum}
       />
-      <div
-        className="rotated-block-face"
-        data-turn={rotation || undefined}
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          pointerEvents: 'none',
-          width: rotation % 180 ? bounds.height : bounds.width,
-          height: rotation % 180 ? bounds.width : bounds.height,
-          transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-        }}
-      >
-        <BlockFace
-          definition={d}
-          size={
-            rotation % 180
-              ? { width: bounds.height, height: bounds.width }
-              : bounds
-          }
-        />
-      </div>
+      <BlockFace
+        definition={d}
+        size={
+          rotation % 180
+            ? { width: bounds.height, height: bounds.width }
+            : bounds
+        }
+        rotation={rotation}
+        flip={data.flip}
+      />
       {d.subsystem?.variants && (
         <VariantSwitch
           id={id}
@@ -178,7 +166,13 @@ function BlockNode({
         </ViewportPortal>
       )}
       {d.ports.map((port) => {
-        const { side, offset } = portPlacement(d, port, rotation, bounds);
+        const { side, offset } = portPlacement(
+          d,
+          port,
+          rotation,
+          bounds,
+          data.flip,
+        );
         const location =
           side === 'left' || side === 'right'
             ? { top: `${offset}%` }

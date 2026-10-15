@@ -139,34 +139,8 @@ export const control: ExampleSpec[] = [
         [80, 320],
         { amplitude: 1, frequency: 50, phase: Math.PI / 2 + (2 * Math.PI) / 3 },
       ],
-      [
-        'clarke',
-        'clarke',
-        'Clarke',
-        [320, 208],
-        {},
-        {
-          ports: {
-            ia: 'left',
-            ib: 'left',
-            ic: 'left',
-            alpha: 'right',
-            beta: 'right',
-          },
-          label: 'above',
-        },
-      ],
-      [
-        'park',
-        'park',
-        'Park',
-        [560, 208],
-        {},
-        {
-          ports: { alpha: 'left', beta: 'left', id: 'right', iq: 'right' },
-          label: 'above',
-        },
-      ],
+      ['clarke', 'clarke', 'Clarke', [320, 208], {}, { label: 'above' }],
+      ['park', 'park', 'Park', [560, 208], {}, { label: 'above' }],
       ['clock', 'clock', 'Time', [320, 432]],
       ['w', 'gain', 'θ = 2π·50·t', [560, 432], { k: 2 * Math.PI * 50 }],
       [

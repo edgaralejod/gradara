@@ -34,6 +34,11 @@ export type ExampleArea =
 export type Rotation = 90 | 180 | 270;
 export type BlockOptions = {
   rotation?: Rotation;
+  /**
+   * Mirror the block (Simulink's Flip Block): inputs on the right, for a feedback or
+   * measurement path that reads right to left. Never move ports backward instead.
+   */
+  flip?: boolean;
   /** Where the name goes; a pair moves it from its place under the block. */
   label?: 'left' | 'right' | 'above' | [number, number];
   /** Move ports to another side, optionally at an offset (percent along it). */

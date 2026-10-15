@@ -147,12 +147,12 @@ B('clarke', 'Clarke transform', f'{SPB}.ToSpacePhasor', 'abc→αβ', 'control',
   'Amplitude-invariant three-phase to stationary-frame (α, β) transform.',
   ports={'ia': 'u[1]', 'ib': 'u[2]', 'ic': 'u[3]', 'alpha': 'y[1]', 'beta': 'y[2]'},
   names={'ia': 'a', 'ib': 'b', 'ic': 'c', 'alpha': 'α', 'beta': 'β'},
-  sides={'ia': 'right', 'ib': 'right', 'ic': 'right', 'alpha': 'left', 'beta': 'left'}, keywords=['foc', 'space phasor', 'abc'])
+  keywords=['foc', 'space phasor', 'abc'])
 B('park', 'Park transform', f'{SPB}.Rotator', 'αβ→dq', 'control',
   'Rotates a stationary-frame (α, β) pair into a frame turning at the input angle: with the electrical rotor angle it gives d and q. Feed −θ to rotate back.',
   ports={'alpha': 'u[1]', 'beta': 'u[2]', 'theta': 'angle', 'id': 'y[1]', 'iq': 'y[2]'},
   names={'alpha': 'α', 'beta': 'β', 'theta': 'θe', 'id': 'd', 'iq': 'q'},
-  sides={'alpha': 'right', 'beta': 'right', 'theta': 'bottom', 'id': 'left', 'iq': 'left'}, keywords=['foc', 'rotator', 'dq'])
+  sides={'theta': 'bottom'}, keywords=['foc', 'rotator', 'dq'])
 B('inverseClarke', 'Inverse Clarke transform', f'{SPB}.FromSpacePhasor', 'αβ→abc', 'control',
   'Stationary-frame (α, β) pair back to three phases, with the zero-sequence input added to each.',
   ports={'alpha': 'u[1]', 'beta': 'u[2]', 'zero': 'zero', 'va': 'y[1]', 'vb': 'y[2]', 'vc': 'y[3]'},

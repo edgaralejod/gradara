@@ -1465,35 +1465,35 @@ export const mslBlocks: Definition[] = [
         "name": "a",
         "direction": "input",
         "domain": "signal",
-        "side": "right"
+        "side": "left"
       },
       {
         "id": "ib",
         "name": "b",
         "direction": "input",
         "domain": "signal",
-        "side": "right"
+        "side": "left"
       },
       {
         "id": "ic",
         "name": "c",
         "direction": "input",
         "domain": "signal",
-        "side": "right"
+        "side": "left"
       },
       {
         "id": "alpha",
         "name": "α",
         "direction": "output",
         "domain": "signal",
-        "side": "left"
+        "side": "right"
       },
       {
         "id": "beta",
         "name": "β",
         "direction": "output",
         "domain": "signal",
-        "side": "left"
+        "side": "right"
       }
     ],
     "parameters": [],
@@ -1527,14 +1527,14 @@ export const mslBlocks: Definition[] = [
         "name": "α",
         "direction": "input",
         "domain": "signal",
-        "side": "right"
+        "side": "left"
       },
       {
         "id": "beta",
         "name": "β",
         "direction": "input",
         "domain": "signal",
-        "side": "right"
+        "side": "left"
       },
       {
         "id": "theta",
@@ -1548,14 +1548,14 @@ export const mslBlocks: Definition[] = [
         "name": "d",
         "direction": "output",
         "domain": "signal",
-        "side": "left"
+        "side": "right"
       },
       {
         "id": "iq",
         "name": "q",
         "direction": "output",
         "domain": "signal",
-        "side": "left"
+        "side": "right"
       }
     ],
     "parameters": [],

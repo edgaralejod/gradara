@@ -100,7 +100,7 @@ if (reviewDir) {
 section{background:#f8f9fc;margin:0 0 24px;padding:16px;border:1px solid #ccd}
 .diagram{position:relative;display:block}.diagram-wires{position:absolute;left:0;top:0}
 .diagram-wires polyline{fill:none;stroke-width:1.5}.diagram-wires polyline.is-bus{stroke-width:3.4}
-.diagram-block{position:absolute}.diagram-turn{position:absolute;left:50%;top:50%}.diagram-name{position:absolute;transform:translateX(-50%);font-size:12px;color:#273f50;white-space:nowrap}`;
+.diagram-block{position:absolute}.diagram-name{position:absolute;transform:translateX(-50%);font-size:12px;color:#273f50;white-space:nowrap}`;
   const body = manifest
     .map(
       (m) =>

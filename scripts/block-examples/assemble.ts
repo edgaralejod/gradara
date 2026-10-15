@@ -68,10 +68,11 @@ export function instance(
       throw new Error(`${spec.id}: ${kind} has no parameter ${key}`);
     parameter.value = value;
   }
-  const { rotation, label, ports, signals } =
+  const { rotation, flip, label, ports, signals } =
     typeof options === 'number'
       ? {
           rotation: options,
+          flip: undefined,
           label: undefined,
           ports: undefined,
           signals: undefined,
@@ -98,6 +99,13 @@ export function instance(
     const port = definition.ports.find((p) => p.id === portId);
     if (!port) throw new Error(`${spec.id}: ${kind} has no port ${portId}`);
     const [side, offset] = Array.isArray(place) ? place : [place, undefined];
+    if (
+      (port.direction === 'input' && side === 'right') ||
+      (port.direction === 'output' && side === 'left')
+    )
+      throw new Error(
+        `${spec.id}: ${id}.${portId} would point backward; flip the block instead`,
+      );
     port.side = side;
     if (offset === undefined) delete port.offset;
     else port.offset = offset;
@@ -113,6 +121,7 @@ export function instance(
     position: { x: cx - size.width / 2, y: cy - size.height / 2 },
     size,
     ...(rotation ? { rotation } : {}),
+    ...(flip ? { flip } : {}),
     ...(label ? { labelOffset: labelOffset(name, size, label) } : {}),
   };
 }
