@@ -25,6 +25,7 @@ const compactKinds = new Set([
   'step',
   'constant',
   'integrator',
+  'limitedIntegrator',
   'saturation',
   'ramp',
   'sine',
@@ -63,7 +64,17 @@ export function blockSize(block: Block) {
   if (['resistor', 'capacitor', 'inductor', 'diode'].includes(kind))
     return { width: 80, height: 48 };
   if (compactKinds.has(kind)) return { width: 64, height: 64 };
-  if (['pid', 'pi', 'filter', 'secondOrder', 'currentPI'].includes(kind))
+  if (
+    [
+      'pid',
+      'pi',
+      'piController',
+      'pidController',
+      'filter',
+      'secondOrder',
+      'currentPI',
+    ].includes(kind)
+  )
     return { width: 96, height: 64 };
   return { width: 128, height: 96 };
 }

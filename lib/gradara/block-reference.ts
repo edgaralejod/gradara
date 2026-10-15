@@ -57,26 +57,6 @@ export type BlockReference = {
   url: string;
 };
 
-/**
- * Blocks whose Modelica the engine writes by hand (`PHYSICAL` in server/modelica.py)
- * rather than from the definition's equations; their definition equations are only a
- * summary, so the page does not show them as the source.
- */
-export const HAND_WRITTEN_KINDS = new Set([
-  'angleSensor',
-  'capacitor',
-  'currentSensor',
-  'dcSource',
-  'diode',
-  'idealSwitch',
-  'inductor',
-  'pmsm',
-  'resistor',
-  'shaftLoad',
-  'springDamper',
-  'torqueSensor',
-  'voltageSensor',
-]);
 
 /** The MSL 4.1.0 documentation page for a class: one page per package, one anchor per class. */
 export function mslDocsUrl(className: string) {
@@ -139,7 +119,6 @@ export function blockReference(
       : undefined,
     source:
       !definition.modelica &&
-      !HAND_WRITTEN_KINDS.has(definition.kind) &&
       source &&
       !source.startsWith('//')
         ? [definition.declarations?.trim(), source].filter(Boolean).join('\n')

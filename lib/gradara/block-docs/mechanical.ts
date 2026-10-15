@@ -6,67 +6,6 @@ import type { BlockDoc } from './types';
 export const docs: Record<string, BlockDoc> = {
   // ── Rotational: loads and components ────────────────────────────────────────────────
 
-  shaftLoad: {
-    description: [
-      'A complete test load for a motor shaft: an inertia with viscous friction to the housing and a load torque that steps up at a set time. Use it to check how a speed or current controller rejects a load disturbance.',
-      'The load torque is also sent to the TL output, so you can plot it next to the motor torque.',
-    ],
-    ports: {
-      flange:
-        'Shaft flange. Torque into the flange drives the load in the positive direction.',
-      loadTorque: 'The load torque currently applied, in N·m (signal output).',
-    },
-    parameters: {
-      J: 'Moment of inertia of the load, in kg·m². Must be positive.',
-      damping:
-        'Viscous friction coefficient to the housing, in N·m·s. Zero or positive.',
-      initialLoad: 'Load torque before the step, in N·m.',
-      stepLoad: 'Torque added to the load at loadTime, in N·m.',
-      loadTime: 'Time of the load step, in seconds.',
-    },
-    equations: [
-      'loadTorque = initialLoad for time < loadTime, initialLoad + stepLoad afterward',
-      'J · dω/dt = flange.tau − damping · ω − loadTorque',
-      'ω = dφ/dt, with φ(0) = 0 and ω(0) = 0',
-    ],
-    limitations: [
-      'The load torque does not depend on speed or direction: it always acts in the negative direction. If the drive torque is smaller than the load, the shaft turns backward rather than stalling.',
-      'The initial angle and speed are fixed at zero. Driving the flange from a speed source, or rigidly joining another block that also fixes its initial speed, over-determines the initial conditions.',
-    ],
-    tips: [
-      'For a load with a different profile, combine Inertia (ideal) with Torque source or Torque step.',
-    ],
-    seeAlso: ['inertia', 'rotInertia', 'torqueStep', 'pmsm', 'motor'],
-  },
-
-  inertia: {
-    description: [
-      'A rotating load with inertia and viscous friction to the housing. Both flanges are rigidly attached to the same body, so the block can sit between a motor and further drivetrain parts.',
-    ],
-    ports: {
-      a: 'Shaft flange a. Torque into the flange is positive.',
-      b: 'Shaft flange b, rigidly joined to a (same angle).',
-    },
-    parameters: {
-      J: 'Moment of inertia, in kg·m². Must be positive.',
-      damping:
-        'Viscous friction coefficient to the housing, in N·m·s. Zero or positive.',
-    },
-    equations: [
-      'a.phi = b.phi = φ',
-      'ω = dφ/dt',
-      'J · dω/dt = a.tau + b.tau − damping · ω',
-    ],
-    limitations: [
-      'The body starts at rest at φ = 0; these initial conditions are fixed. Rigidly connecting it to another block that fixes its own initial angle or speed (another Inertia & load, a Speed source) over-determines the initial conditions.',
-      'Friction is purely viscous; there is no Coulomb friction or stiction.',
-    ],
-    tips: [
-      'For a lossless inertia without fixed initial conditions, use Inertia (ideal).',
-    ],
-    seeAlso: ['rotInertia', 'shaftLoad', 'rotDamper', 'motor', 'sensor'],
-  },
-
   rotInertia: {
     description: [
       'An ideal rotating mass with two flanges and no losses. Both flanges share the angle of the body. Use it for rotors, flywheels, and wheels, and add damping or friction with separate blocks.',
@@ -84,7 +23,7 @@ export const docs: Record<string, BlockDoc> = {
     limitations: [
       'No friction or damping to the housing. Add Torsion damper to Fixed (rotational) for viscous losses.',
     ],
-    seeAlso: ['inertia', 'rotDamper', 'rotSpring', 'idealGear', 'rotFixed'],
+    seeAlso: ['rotDamper', 'rotSpring', 'idealGear', 'rotFixed'],
   },
 
   rotFixed: {
@@ -98,31 +37,6 @@ export const docs: Record<string, BlockDoc> = {
     parameters: { phi0: 'The fixed angle, in radians.' },
     equations: ['flange.phi = phi0'],
     seeAlso: ['transFixed', 'rotSpring', 'rotDamper'],
-  },
-
-  springDamper: {
-    description: [
-      'A linear torsion spring and viscous damper in parallel between two shafts. Use it for a compliant coupling or a flexible shaft.',
-    ],
-    ports: {
-      a: 'Flange a. Torque into the flange is positive.',
-      b: 'Flange b. Receives the opposite torque: b.tau = −a.tau.',
-    },
-    parameters: {
-      c: 'Torsional stiffness, in N·m/rad. Zero or positive.',
-      d: 'Damping coefficient, in N·m·s. Zero or positive.',
-    },
-    equations: [
-      'τ = c · (b.phi − a.phi) + d · (dφ_b/dt − dφ_a/dt)',
-      'b.tau = τ, a.tau = −τ',
-    ],
-    limitations: [
-      'The spring is unstretched when both flanges are at the same angle; there is no offset parameter.',
-    ],
-    tips: [
-      'For an unstretched angle other than zero, use Torsion spring and Torsion damper in parallel.',
-    ],
-    seeAlso: ['rotSpring', 'rotDamper', 'rotBacklash', 'transSpringDamper'],
   },
 
   rotSpring: {
@@ -146,7 +60,7 @@ export const docs: Record<string, BlockDoc> = {
     limitations: [
       'No damping and no mass. A stiff spring between two inertias makes the model stiff; add a little damping in parallel.',
     ],
-    seeAlso: ['rotDamper', 'springDamper', 'rotBacklash', 'transSpring'],
+    seeAlso: ['rotDamper', 'rotBacklash', 'transSpring'],
   },
 
   rotDamper: {
@@ -164,7 +78,7 @@ export const docs: Record<string, BlockDoc> = {
       'flange_b.tau = τ, flange_a.tau = −τ',
     ],
     limitations: ['Purely viscous: no Coulomb friction or stiction.'],
-    seeAlso: ['rotSpring', 'springDamper', 'clutch', 'transDamper'],
+    seeAlso: ['rotSpring', 'clutch', 'transDamper'],
   },
 
   rotBacklash: {
@@ -193,7 +107,7 @@ export const docs: Record<string, BlockDoc> = {
       'During initialization the play is replaced by a linear characteristic of slope c/3 for |φ_rel| < 1.5 · b/2, so the initial state may differ slightly from the true contact state.',
       'Each contact change is a solver event; very small b with oscillating loads makes the run slow.',
     ],
-    seeAlso: ['idealGear', 'rotSpring', 'springDamper', 'hardStop'],
+    seeAlso: ['idealGear', 'rotSpring', 'hardStop'],
   },
 
   idealGear: {
@@ -344,7 +258,7 @@ export const docs: Record<string, BlockDoc> = {
     limitations: [
       'The step is instantaneous and does not depend on speed or direction.',
     ],
-    seeAlso: ['constantTorque', 'torqueSource', 'shaftLoad', 'forceStep'],
+    seeAlso: ['constantTorque', 'torqueSource', 'forceStep'],
   },
 
   speedSource: {
@@ -389,19 +303,6 @@ export const docs: Record<string, BlockDoc> = {
 
   // ── Rotational: sensors ─────────────────────────────────────────────────────────────
 
-  sensor: {
-    description: [
-      'Measures the absolute angular velocity of the flange without loading it.',
-    ],
-    ports: {
-      flange: 'Measured flange. No torque is exchanged.',
-      y: 'Angular velocity, in rad/s.',
-    },
-    equations: ['y = d(flange.phi)/dt', 'flange.tau = 0'],
-    limitations: ['Ideal: no noise, delay, or resolution limit.'],
-    seeAlso: ['rotSpeedSensor', 'angleSensor', 'relSpeedSensor'],
-  },
-
   rotSpeedSensor: {
     description: [
       'Measures the absolute angular velocity of the flange without loading it.',
@@ -412,7 +313,7 @@ export const docs: Record<string, BlockDoc> = {
     },
     equations: ['w = d(flange.phi)/dt', 'flange.tau = 0'],
     limitations: ['Ideal: no noise, delay, or resolution limit.'],
-    seeAlso: ['sensor', 'rotAccSensor', 'relSpeedSensor', 'angleSensor'],
+    seeAlso: ['rotAccSensor', 'relSpeedSensor', 'angleSensor'],
   },
 
   angleSensor: {
@@ -427,7 +328,7 @@ export const docs: Record<string, BlockDoc> = {
     limitations: [
       'Ideal: no quantization, noise, or delay, unlike a real encoder.',
     ],
-    seeAlso: ['sensor', 'rotSpeedSensor', 'resolver', 'positionSensor'],
+    seeAlso: ['rotSpeedSensor', 'resolver', 'positionSensor'],
   },
 
   rotAccSensor: {
@@ -584,7 +485,7 @@ export const docs: Record<string, BlockDoc> = {
       'f = c · (s_rel − s_rel0) + d · v_rel',
       'flange_b.f = f, flange_a.f = −f',
     ],
-    seeAlso: ['transSpring', 'transDamper', 'hardStop', 'springDamper'],
+    seeAlso: ['transSpring', 'transDamper', 'hardStop', 'rotSpring'],
   },
 
   hardStop: {

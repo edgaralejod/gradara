@@ -128,6 +128,14 @@ def _power_sensor(data):
     return blocks, wires
 
 
+def _series(data):
+    """A current sensor in series with a load across the source."""
+    blocks = [_block('dut', data), _block('src', SINE), _block('load', R(10)), _block('g', GROUND)]
+    wires = [_w(1, 'src', 'p', 'dut', 'p'), _w(2, 'dut', 'n', 'load', 'p'), _w(3, 'load', 'n', 'g', 'p'),
+             _w(4, 'src', 'n', 'g', 'p')]
+    return blocks, wires
+
+
 def _three_phase_supply(extra_blocks, extra_wires):
     blocks = [_block('src', SINE3), _block('star', STAR), _block('g', GROUND)] + extra_blocks
     wires = [_w(1, 'src', 'plug_n', 'star', 'plug_p'), _w(2, 'star', 'pin_n', 'g', 'p')] + extra_wires
@@ -160,7 +168,7 @@ def _phase_tap(data):
 
 # Blocks that only make sense inside a working circuit get one; the rest use the generic harness.
 CIRCUITS = {'vcvs': _two_port, 'vccs': _two_port, 'ccvs': _two_port, 'cccs': _two_port, 'opAmp': _op_amp,
-            'powerSensor': _power_sensor, 'delta': _delta, 'phaseA': _phase_tap, 'phaseB': _phase_tap,
+            'powerSensor': _power_sensor, 'currentSensor': _series, 'delta': _delta, 'phaseA': _phase_tap, 'phaseB': _phase_tap,
             'phaseC': _phase_tap, 'threePhaseCurrentSensor': _three_phase_through,
             'threePhaseVoltageSensor': _three_phase_through, 'threePhasePowerSensor': _three_phase_through}
 

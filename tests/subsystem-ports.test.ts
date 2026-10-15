@@ -172,7 +172,7 @@ void test('a fresh terminal takes the domain of what it is wired to', () => {
     ...view,
     blocks: [
       ...view.blocks,
-      { id: 'j', definition: def('inertia'), position: { x: 300, y: 80 } },
+      { id: 'j', definition: def('rotInertia'), position: { x: 300, y: 80 } },
     ],
   };
   const flange = view.blocks.find((b) => b.id === 'j')!.definition.ports[0];

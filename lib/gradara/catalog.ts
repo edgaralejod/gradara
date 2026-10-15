@@ -52,75 +52,25 @@ export const libraryCategories: {
   { id: 'magnetic', label: 'Magnetic', hint: 'Reluctance, windings, MMF' },
 ];
 
+// Categories of the blocks that are not Modelica wrappers (those carry their own).
 const kindCategory: Record<string, LibraryCategoryId> = {
-  constant: 'sources',
-  step: 'sources',
-  ramp: 'sources',
-  sine: 'sources',
-  pulse: 'sources',
-  clock: 'sources',
-  gain: 'math',
-  sum: 'math',
-  subtract: 'math',
-  product: 'math',
-  divide: 'math',
-  abs: 'math',
-  sign: 'math',
-  sqrt: 'math',
-  min: 'math',
-  max: 'math',
-  sineOp: 'math',
-  cosineOp: 'math',
-  unaryMinus: 'math',
   power: 'math',
-  integrator: 'continuous',
-  derivative: 'continuous',
-  filter: 'continuous',
-  secondOrder: 'continuous',
-  delay: 'continuous',
-  pid: 'control',
-  discretePID: 'control',
   pi: 'control',
-  currentPI: 'control',
-  clarke: 'control',
-  park: 'control',
-  inversePark: 'control',
+  discretePID: 'control',
   unitDelay: 'discrete',
-  zoh: 'discrete',
   discreteIntegrator: 'discrete',
-  saturation: 'nonlinear',
-  deadzone: 'nonlinear',
   relay: 'nonlinear',
-  rateLimiter: 'nonlinear',
   mux: 'routing',
   demux: 'routing',
   busCreator: 'routing',
   busSelector: 'routing',
   switch2: 'routing',
   manualSwitch: 'routing',
-  terminator: 'routing',
   subsystem: 'subsystems',
   emptySubsystem: 'subsystems',
   inport: 'subsystems',
   outport: 'subsystems',
   connport: 'subsystems',
-  scope: 'routing',
-  display: 'routing',
-  voltage: 'electrical',
-  ground: 'electrical',
-  resistor: 'electrical',
-  capacitor: 'electrical',
-  inductor: 'electrical',
-  diode: 'electrical',
-  motor: 'electrical',
-  pmsm: 'electrical',
-  inverter: 'electrical',
-  inertia: 'mechanical',
-  shaftLoad: 'mechanical',
-  sensor: 'mechanical',
-  springDamper: 'mechanical',
-  torqueSensor: 'mechanical',
-  angleSensor: 'mechanical',
 };
 
 export function categoryOf(definition: Definition): LibraryCategoryId {
@@ -167,8 +117,16 @@ function haystack(definition: Definition) {
  * first two as matches and the last apart, so a plain word finds its block.
  */
 export type MatchTier = 'name' | 'text' | 'approximate';
-export type LibraryHit = { definition: Definition; score: number; tier: MatchTier };
-const TIER_ORDER: Record<MatchTier, number> = { name: 0, text: 1, approximate: 2 };
+export type LibraryHit = {
+  definition: Definition;
+  score: number;
+  tier: MatchTier;
+};
+const TIER_ORDER: Record<MatchTier, number> = {
+  name: 0,
+  text: 1,
+  approximate: 2,
+};
 
 export function searchLibrary(
   query: string,
@@ -189,7 +147,11 @@ export function searchLibrary(
   });
   const trimmed = query.trim();
   if (!trimmed) {
-    return pool.map((definition) => ({ definition, score: 0, tier: 'name' as const }));
+    return pool.map((definition) => ({
+      definition,
+      score: 0,
+      tier: 'name' as const,
+    }));
   }
   const needle = trimmed.toLowerCase();
   return pool

@@ -685,24 +685,7 @@ export const docs: Record<string, BlockDoc> = {
     limitations: [
       'No internal resistance or current limit. The voltage follows the input instantly.',
     ],
-    seeAlso: ['voltage', 'signalCurrent', 'dcSource'],
-  },
-
-  voltage: {
-    description: [
-      'An ideal voltage source whose voltage equals its input signal. It behaves the same as Controlled voltage, with the input on the left.',
-    ],
-    ports: {
-      u: 'Commanded voltage p.v − n.v, in volts.',
-      p: 'Positive terminal.',
-      n: 'Negative terminal.',
-    },
-    equations: ['p.v − n.v = u', 'p.i + n.i = 0'],
-    limitations: [
-      'No internal resistance or current limit. The voltage follows the input instantly.',
-    ],
-    tips: ['Typical use: a controller output driving DC motor.'],
-    seeAlso: ['signalVoltage', 'motor', 'dcSource'],
+    seeAlso: ['signalCurrent', 'dcSource'],
   },
 
   signalCurrent: {
@@ -783,53 +766,6 @@ export const docs: Record<string, BlockDoc> = {
 
   // Switches and semiconductors
 
-  idealSwitch: {
-    description: [
-      'An ideal bidirectional switch controlled by a real-valued gate signal. A gate above 0.5 closes it into a short circuit; otherwise it is an open circuit.',
-    ],
-    ports: {
-      p: 'Positive pin. Current into p is counted as positive.',
-      n: 'Negative pin.',
-      gate: 'Gate signal. Closed while gate > 0.5, open otherwise; 0/1 PWM signals work directly.',
-    },
-    equations: [
-      'p.i + n.i = 0',
-      'closed (gate > 0.5): p.v = n.v',
-      'open: p.i = 0',
-    ],
-    limitations: [
-      'Zero on-resistance and zero off-conductance (MSL IdealClosingSwitch with Ron = 0 and Goff = 0). No losses, dead time, or switching transients.',
-      'Current flows in either direction when closed.',
-    ],
-    tips: [
-      'Opening it in series with an inductor, or closing it across a charged capacitor or a voltage source, has no finite solution. Provide a freewheeling diode or a small resistance.',
-    ],
-    seeAlso: ['closingSwitch', 'openingSwitch', 'diode', 'pwmPair'],
-  },
-
-  diode: {
-    description: [
-      'A simple diode: a very small resistance when forward biased and an open circuit when reverse biased. There is no forward voltage drop.',
-    ],
-    ports: {
-      p: 'Anode. Forward current flows into p.',
-      n: 'Cathode.',
-    },
-    equations: [
-      'v = p.v − n.v, p.i + n.i = 0',
-      'p.i = v / 1e−4 for v > 0 (0.1 mΩ on-resistance)',
-      'p.i = 0 for v ≤ 0',
-    ],
-    limitations: [
-      'Fixed 0.1 mΩ on-resistance and zero reverse current; no threshold voltage, reverse recovery, junction capacitance, or temperature effects.',
-      'The change between states is not handled as an event, so the solver steps across the corner at v = 0 by itself.',
-    ],
-    tips: [
-      'For an adjustable on-resistance and off-conductance use Ideal diode; for a realistic forward drop use Diode (exponential).',
-    ],
-    seeAlso: ['idealDiode', 'diodeShockley', 'idealSwitch', 'diodeBridge'],
-  },
-
   // Sensors
 
   voltageSensor: {
@@ -889,115 +825,4 @@ export const docs: Record<string, BlockDoc> = {
   },
 
   // Machines and drives
-
-  motor: {
-    description: [
-      'A permanent-magnet DC motor: armature resistance and inductance in series with a back-EMF proportional to shaft speed. The same constant k gives torque per ampere.',
-    ],
-    ports: {
-      p: 'Positive armature terminal. Current into p is the armature current i.',
-      n: 'Negative armature terminal.',
-      flange:
-        'Rotor shaft. The motor applies torque k · i to what is connected; w is its speed.',
-    },
-    parameters: {
-      R: 'Armature resistance, in ohms.',
-      L: 'Armature inductance, in henries.',
-      k: 'Motor constant: torque per ampere in N·m/A, equal to back-EMF per rad/s in V·s/rad.',
-    },
-    equations: [
-      'v = p.v − n.v, i = p.i, p.i + n.i = 0',
-      'w = d(flange.phi)/dt',
-      'L · di/dt = v − R · i − k · w, i(0) = 0',
-      'torque on the load = k · i (flange.tau = −k · i)',
-    ],
-    limitations: [
-      'No rotor inertia, friction, brush drop, or saturation. Connect an inertia to the shaft; without one the shaft has no mass.',
-      'The armature starts with zero current.',
-    ],
-    seeAlso: ['dcPmMachine', 'inertia', 'shaftLoad', 'voltage'],
-  },
-
-  inverter: {
-    description: [
-      'An averaged three-phase inverter for control studies. It takes three phase-voltage commands, adds min–max common-mode injection, and clips each phase to the DC bus. The outputs are the phase voltages averaged over a switching period, as signals.',
-      'Min–max injection extends the linear range: balanced sinusoidal commands pass without clipping up to an amplitude of Vdc / √3.',
-    ],
-    ports: {
-      ua: 'Phase a voltage command, in volts.',
-      ub: 'Phase b voltage command, in volts.',
-      uc: 'Phase c voltage command, in volts.',
-      va: 'Phase a output voltage, in volts, relative to the DC-bus midpoint.',
-      vb: 'Phase b output voltage, in volts, relative to the DC-bus midpoint.',
-      vc: 'Phase c output voltage, in volts, relative to the DC-bus midpoint.',
-    },
-    parameters: {
-      Vdc: 'DC bus voltage, in volts. At least 1 V. Each output is limited to ±Vdc/2.',
-    },
-    equations: [
-      'offset = (max(ua, ub, uc) + min(ua, ub, uc)) / 2',
-      'va = max(−Vdc/2, min(Vdc/2, ua − offset))',
-      'vb = max(−Vdc/2, min(Vdc/2, ub − offset))',
-      'vc = max(−Vdc/2, min(Vdc/2, uc − offset))',
-    ],
-    limitations: [
-      'Signal-level model: no switching ripple, dead time, or device losses, and it draws no current from a DC source.',
-      'The DC bus is an ideal constant; it does not sag with load.',
-    ],
-    tips: [
-      'The injected common-mode offset does not affect a machine’s d/q currents, since the Park transform removes it.',
-    ],
-    seeAlso: ['pmsm', 'inversePark', 'threePhaseInverter', 'pwmSignal'],
-  },
-
-  pmsm: {
-    description: [
-      'A three-phase permanent-magnet synchronous motor modeled in the rotor d/q frame. Phase voltages come in as signals, are transformed to d/q using the rotor’s electrical angle, and drive the d/q current equations. Torque acts on the mechanical shaft.',
-      'It also outputs the phase currents, electrical angle, speed, and torque as ideal measurements, ready for field-oriented control.',
-    ],
-    ports: {
-      va: 'Phase a voltage, in volts.',
-      vb: 'Phase b voltage, in volts.',
-      vc: 'Phase c voltage, in volts.',
-      flange: 'Rotor shaft. The motor applies torque Te to what is connected.',
-      ia: 'Phase a current, in amperes.',
-      ib: 'Phase b current, in amperes.',
-      ic: 'Phase c current, in amperes.',
-      theta:
-        'Electrical rotor angle, in radians: polePairs times the shaft angle. It is not wrapped to one turn.',
-      wm: 'Mechanical shaft speed, in rad/s.',
-      rpm: 'Mechanical shaft speed, in revolutions per minute.',
-      torque: 'Electromagnetic torque Te, in N·m.',
-    },
-    parameters: {
-      R: 'Stator phase resistance, in ohms.',
-      Ld: 'd-axis inductance, in henries.',
-      Lq: 'q-axis inductance, in henries. Ld = Lq gives a surface-mount machine with no reluctance torque.',
-      psi: 'Permanent-magnet flux linkage, in webers.',
-      polePairs: 'Number of pole pairs.',
-    },
-    equations: [
-      'theta = polePairs · flange.phi, wm = d(flange.phi)/dt, we = polePairs · wm',
-      'vd = (2/3) · Σ vk · cos(theta − θk), vq = −(2/3) · Σ vk · sin(theta − θk), θk = 0, 2π/3, −2π/3 for a, b, c',
-      'Ld · did/dt = vd − R · id + we · Lq · iq',
-      'Lq · diq/dt = vq − R · iq − we · (Ld · id + psi)',
-      'torque = 1.5 · polePairs · (psi · iq + (Ld − Lq) · id · iq), flange.tau = −torque',
-      'ia = id · cos(theta) − iq · sin(theta), and likewise for b and c',
-      'rpm = wm · 60 / (2π)',
-    ],
-    limitations: [
-      'The phase voltages are signals, not pins: the motor draws no power from an electrical circuit. Drive it from Three-phase inverter or voltage commands.',
-      'Sinusoidal back-EMF, constant inductances; no saturation, iron losses, cogging, or zero-sequence current.',
-      'No rotor inertia or friction; connect an inertia to the shaft. The d/q currents start at 0.',
-    ],
-    seeAlso: [
-      'inverter',
-      'park',
-      'clarke',
-      'inversePark',
-      'currentPI',
-      'pmSyncMachine',
-      'inertia',
-    ],
-  },
 };

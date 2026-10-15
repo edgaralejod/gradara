@@ -86,7 +86,11 @@ export function BlockSymbol({
         {formatBlockValue(d.parameters[0]?.value ?? 0)}
       </span>
     );
-  if (kind === 'integrator' || kind === 'discreteIntegrator')
+  if (
+    kind === 'integrator' ||
+    kind === 'limitedIntegrator' ||
+    kind === 'discreteIntegrator'
+  )
     return (
       <span className="transfer-symbol">
         <span>{kind === 'discreteIntegrator' ? 'Ts·z' : '1'}</span>
@@ -131,8 +135,14 @@ export function BlockSymbol({
         <span>z</span>
       </span>
     );
-  if (kind === 'pid' || kind === 'pi' || kind === 'currentPI')
-    return <span className="pid-symbol">{kind === 'pid' ? 'PID' : 'PI'}</span>;
+  if (
+    ['pid', 'pidController', 'pi', 'piController', 'currentPI'].includes(kind)
+  )
+    return (
+      <span className="pid-symbol">
+        {kind === 'pid' || kind === 'pidController' ? 'PID' : 'PI'}
+      </span>
+    );
   if (kind === 'discretePID') return <span className="pid-symbol">PID(z)</span>;
   if (kind === 'step') return <Icon path="M5 35H26V9H55" />;
   if (kind === 'ramp') return <Icon path="M6 36H20L54 8" />;
@@ -326,7 +336,7 @@ export function BlockSymbol({
     return <span className="math-op">J</span>;
   if (kind === 'sensor') return <span className="math-op">ω</span>;
   if (kind === 'angleSensor') return <span className="math-op">θ</span>;
-  if (['clarke', 'park', 'inversePark'].includes(kind)) {
+  if (['clarke', 'park', 'inversePark', 'inverseClarke'].includes(kind)) {
     const [a, b] = d.symbol.split('→');
     return (
       <span className="transform-symbol">

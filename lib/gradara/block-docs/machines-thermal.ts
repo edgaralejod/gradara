@@ -47,9 +47,8 @@ export const docs: Record<string, BlockDoc> = {
     seeAlso: [
       'dcShuntMachine',
       'dcSeriesMachine',
-      'motor',
       'hBridge',
-      'shaftLoad',
+      'torqueStep',
       'rotSpeedSensor',
     ],
   },
@@ -78,17 +77,18 @@ export const docs: Record<string, BlockDoc> = {
       IeNominal: 'Field current at the nominal operating point, in amperes.',
       Ra: 'Armature resistance, in ohms.',
       La: 'Armature inductance, in henries.',
+      Re: 'Field winding resistance, in ohms. With the defaults, 100 V across the field gives the nominal 1 A.',
+      Le: 'Field winding inductance, in henries.',
       Jr: 'Rotor moment of inertia, in kg·m².',
     },
     equations: [
       'kΦN = (VaNominal − Ra · IaNominal) / wNominal',
-      'pin_ep.v − pin_en.v = Re · ie + Le · die/dt, with Re = 100 Ω and Le = 1 H',
+      'pin_ep.v − pin_en.v = Re · ie + Le · die/dt',
       'pin_ap.v − pin_an.v = Ra · ia + La · dia/dt + kΦN · (ie / IeNominal) · ω',
       'τe = kΦN · (ie / IeNominal) · ia',
       'Jr · dω/dt = τe + flange.τ',
     ],
     limitations: [
-      'The field resistance (100 Ω) and inductance (1 H) are fixed and not exposed, so IeNominal is reached at 100 V · IeNominal across the field.',
       'Linear magnetics: no saturation or armature reaction.',
       'No friction, core, stray-load, or brush losses. Temperatures are fixed at 20 °C.',
     ],
@@ -96,7 +96,7 @@ export const docs: Record<string, BlockDoc> = {
       'With no field current the machine produces no torque and no back EMF. Energize the field before, or together with, the armature.',
       'For shunt operation with the defaults, a 100 V supply gives the nominal 1 A field current.',
     ],
-    seeAlso: ['dcPmMachine', 'dcSeriesMachine', 'dcSource', 'shaftLoad'],
+    seeAlso: ['dcPmMachine', 'dcSeriesMachine', 'dcSource', 'torqueStep'],
   },
 
   dcSeriesMachine: {
@@ -116,24 +116,25 @@ export const docs: Record<string, BlockDoc> = {
     },
     parameters: {
       VaNominal:
-        'Terminal voltage at the nominal operating point, in volts. Must exceed (Ra + 0.01 Ω) · IaNominal.',
+        'Terminal voltage at the nominal operating point, in volts. Must exceed (Ra + Re) · IaNominal.',
       IaNominal:
         'Current at the nominal operating point, in amperes; also the nominal field current.',
       wNominal:
         'Speed at the nominal operating point, in rad/s (default 1425 rpm).',
       Ra: 'Armature resistance, in ohms.',
       La: 'Armature inductance, in henries.',
+      Re: 'Field winding resistance, in ohms.',
+      Le: 'Field winding inductance, in henries.',
       Jr: 'Rotor moment of inertia, in kg·m².',
     },
     equations: [
-      'kΦN = (VaNominal − (Ra + Re) · IaNominal) / wNominal, with Re = 0.01 Ω',
-      'pin_ep.v − pin_en.v = Re · ie + Le · die/dt, with Le = 0.5 mH',
+      'kΦN = (VaNominal − (Ra + Re) · IaNominal) / wNominal',
+      'pin_ep.v − pin_en.v = Re · ie + Le · die/dt',
       'pin_ap.v − pin_an.v = Ra · ia + La · dia/dt + kΦN · (ie / IaNominal) · ω',
       'τe = kΦN · (ie / IaNominal) · ia, so τe = kΦN · ia² / IaNominal when ie = ia',
       'Jr · dω/dt = τe + flange.τ',
     ],
     limitations: [
-      'The field resistance (0.01 Ω) and inductance (0.5 mH) are fixed and not exposed.',
       'Linear magnetics: the flux keeps rising with current, with no saturation.',
       'No friction, core, stray-load, or brush losses. Temperatures are fixed at 20 °C.',
     ],
@@ -141,13 +142,13 @@ export const docs: Record<string, BlockDoc> = {
       'The field is not connected internally. For series operation, wire pin_an to pin_ep and supply the machine between pin_ap and pin_en.',
       'Unloaded, a series machine speeds up without bound. Always attach a load.',
     ],
-    seeAlso: ['dcPmMachine', 'dcShuntMachine', 'shaftLoad', 'rotSpeedSensor'],
+    seeAlso: ['dcPmMachine', 'dcShuntMachine', 'torqueStep', 'rotSpeedSensor'],
   },
 
   inductionMachine: {
     description: [
-      'A three-phase squirrel-cage induction machine, modeled with space phasors: stator resistance and leakage, a main-field inductance, and a rotor cage referred to the stator. It develops torque from slip, the difference between the field speed 2π · f / p and the rotor speed.',
-      'Only resistances and inertia are exposed. The inductances are fixed as reactances at fsNominal, so changing fsNominal rescales them.',
+      'A three-phase squirrel-cage induction machine from the Modelica library, modeled with space phasors: stator resistance and leakage, a main-field inductance, and a rotor cage referred to the stator. It develops torque from slip, the difference between the field speed 2π · f / p and the rotor speed.',
+      'The defaults are the library’s 100 V, 100 A per-phase reference machine at 50 Hz; enter your own resistances and inductances for another machine.',
     ],
     ports: {
       plug_sp:
@@ -160,17 +161,20 @@ export const docs: Record<string, BlockDoc> = {
     parameters: {
       p: 'Number of pole pairs, an integer ≥ 1. Synchronous speed is 2π · fsNominal / p.',
       fsNominal:
-        'Nominal supply frequency, in hertz. Sets the inductances from fixed reactances.',
+        'Nominal supply frequency, in hertz: the frequency the nominal data refer to. It does not change the inductances.',
       Rs: 'Stator resistance per phase, in ohms.',
+      Lssigma: 'Stator stray (leakage) inductance per phase, in henries.',
+      Lm: 'Main-field (magnetizing) inductance per phase, in henries.',
+      Lrsigma:
+        'Rotor stray (leakage) inductance per phase, referred to the stator, in henries.',
       Rr: 'Rotor resistance per phase, referred to the stator, in ohms. Sets the slip at a given torque.',
       Jr: 'Rotor moment of inertia, in kg·m².',
     },
     equations: [
-      'vs = Rs · is + Lsσ · dis/dt + dψm/dt (stator space phasors)',
-      '0 = Rr · ir + Lrσ · dir/dt + dψm/dt (rotor, in rotor coordinates)',
+      'vs = Rs · is + Lssigma · dis/dt + dψm/dt (stator space phasors)',
+      '0 = Rr · ir + Lrsigma · dir/dt + dψm/dt (rotor, in rotor coordinates)',
       'ψm = Lm · (is + ir)',
       'τe = (3/2) · p · (ψm,α · is,β − ψm,β · is,α)',
-      'Lm = 2.898 Ω / (2π · fsNominal), Lsσ = Lrσ = 0.102 Ω / (2π · fsNominal)',
     ],
     limitations: [
       'Linear magnetics: no saturation of the main or leakage paths.',
@@ -178,7 +182,7 @@ export const docs: Record<string, BlockDoc> = {
       'Single cage: no deep-bar or double-cage effects.',
     ],
     tips: [
-      'The fixed reactances correspond to the library’s 100 V, 100 A per-phase reference machine. Supply about 100 V RMS per phase at fsNominal for sensible currents.',
+      'With the default inductances, supply about 100 V RMS per phase at 50 Hz for sensible currents.',
       'Started direct on line from a Three-phase source, the machine draws a large inrush current before it reaches its slip speed.',
     ],
     seeAlso: [
@@ -194,7 +198,7 @@ export const docs: Record<string, BlockDoc> = {
   pmSyncMachine: {
     description: [
       'A three-phase permanent-magnet synchronous machine with a damper cage on the rotor, from the Modelica library. The magnets give a fixed rotor flux; torque comes from the stator current in quadrature with it.',
-      'The back EMF is fixed at 112.3 V RMS per phase at fsNominal. Inductances are fixed as reactances at fsNominal, so changing fsNominal rescales them and the magnet flux.',
+      'The magnet is entered as the open-circuit (back-EMF) voltage per phase at the nominal frequency; the inductances are entered directly. The defaults are the library’s 100 V, 100 A reference machine at 50 Hz.',
     ],
     ports: {
       plug_sp:
@@ -207,30 +211,34 @@ export const docs: Record<string, BlockDoc> = {
     parameters: {
       p: 'Number of pole pairs, an integer ≥ 1. Synchronous speed is 2π · f / p.',
       fsNominal:
-        'Nominal frequency, in hertz. The open-circuit voltage 112.3 V RMS is reached at this frequency.',
+        'Nominal frequency, in hertz: the frequency at which the open-circuit voltage is stated.',
+      VsOpenCircuit:
+        'Open-circuit (back-EMF) voltage per phase, RMS, at fsNominal, in volts. Sets the magnet flux: ψPM = √2 · VsOpenCircuit / (2π · fsNominal).',
       Rs: 'Stator resistance per phase, in ohms.',
+      Lssigma: 'Stator stray (leakage) inductance per phase, in henries.',
+      Lmd: 'd-axis main inductance, in henries. Ld = Lssigma + Lmd.',
+      Lmq: 'q-axis main inductance, in henries. Lq = Lssigma + Lmq; set it above Lmd for an interior-magnet rotor with reluctance torque.',
       Jr: 'Rotor moment of inertia, in kg·m².',
     },
     equations: [
-      'ψPM = √2 · 112.3 V / (2π · fsNominal) (peak, rotor d axis)',
-      'vs = Rs · is + Lsσ · dis/dt + dψm/dt (stator space phasors)',
+      'ψPM = √2 · VsOpenCircuit / (2π · fsNominal) (peak, rotor d axis)',
+      'vs = Rs · is + Lssigma · dis/dt + dψm/dt (stator space phasors)',
       'ψm,d = Lmd · (is,d + ir,d) + ψPM, ψm,q = Lmq · (is,q + ir,q)',
-      'τe = (3/2) · p · (ψm,α · is,β − ψm,β · is,α) = (3/2) · p · ψPM · is,q in steady state',
-      'Lmd = Lmq = 0.3 Ω / (2π · fsNominal), Lsσ = 0.1 Ω / (2π · fsNominal)',
+      'τe = (3/2) · p · (ψm,α · is,β − ψm,β · is,α) = (3/2) · p · (ψPM · is,q + (Lmd − Lmq) · is,d · is,q) in steady state',
     ],
     limitations: [
-      'Surface-magnet rotor (Lmd = Lmq), so there is no reluctance torque.',
       'Linear magnetics: no saturation, no demagnetization, no cogging.',
       'No iron, magnet, friction, or stray-load losses. Temperatures are fixed at 20 °C.',
-      'The damper cage (0.04 Ω per axis) is always present. It damps transients but is not found in most inverter-fed PM machines.',
+      'The damper cage (the library default: 0.04 Ω and 0.05 Ω / (2π · 50 Hz) per axis) is always present. It lets the machine start on line and damps transients; most inverter-fed PM machines have none, and under field-oriented control its effect is small.',
     ],
     tips: [
-      'Drive it from an inverter with field-oriented control, taking the rotor angle from Electrical angle sensor or Resolver.',
-      'For a simpler PMSM with directly entered dq parameters, see PMSM.',
+      'Drive it from a Controlled 3-phase voltage with field-oriented control, taking the rotor angle from an Angle sensor times the pole pairs; the FOC template shows the whole loop.',
+      'From a datasheet flux linkage ψ in V·s (peak): VsOpenCircuit = ψ · 2π · fsNominal / √2.',
     ],
     seeAlso: [
-      'pmsm',
+      'threePhaseSignalVoltage',
       'threePhaseInverter',
+      'angleSensor',
       'hallSensor',
       'resolver',
       'park',
@@ -240,8 +248,8 @@ export const docs: Record<string, BlockDoc> = {
 
   reluctanceMachine: {
     description: [
-      'A three-phase synchronous reluctance machine with a damper cage. The rotor has no magnets or windings; torque comes from the difference between its d-axis and q-axis inductances.',
-      'Inductances are fixed as reactances at fsNominal (d axis 2.9 Ω, q axis 0.9 Ω), so changing fsNominal rescales them.',
+      'A three-phase synchronous reluctance machine with a damper cage, from the Modelica library. The rotor has no magnets or windings; torque comes from the difference between its d-axis and q-axis inductances.',
+      'The inductances are entered directly. The defaults are the library’s reference machine at 50 Hz.',
     ],
     ports: {
       plug_sp:
@@ -254,20 +262,22 @@ export const docs: Record<string, BlockDoc> = {
     parameters: {
       p: 'Number of pole pairs, an integer ≥ 1. Synchronous speed is 2π · f / p.',
       fsNominal:
-        'Nominal frequency, in hertz. Sets the inductances from fixed reactances.',
+        'Nominal frequency, in hertz: the frequency the nominal data refer to. It does not change the inductances.',
       Rs: 'Stator resistance per phase, in ohms.',
+      Lssigma: 'Stator stray (leakage) inductance per phase, in henries.',
+      Lmd: 'd-axis main inductance, in henries (the larger one).',
+      Lmq: 'q-axis main inductance, in henries. The torque grows with Lmd − Lmq.',
       Jr: 'Rotor moment of inertia, in kg·m².',
     },
     equations: [
-      'vs = Rs · is + Lsσ · dis/dt + dψm/dt (stator space phasors)',
+      'vs = Rs · is + Lssigma · dis/dt + dψm/dt (stator space phasors)',
       'ψm,d = Lmd · (is,d + ir,d), ψm,q = Lmq · (is,q + ir,q)',
       'τe = (3/2) · p · (Lmd − Lmq) · is,d · is,q in steady state',
-      'Lmd = 2.9 Ω / (2π · fsNominal), Lmq = 0.9 Ω / (2π · fsNominal), Lsσ = 0.1 Ω / (2π · fsNominal)',
     ],
     limitations: [
       'Linear magnetics: no saturation or cross-coupling between axes.',
       'No iron, friction, or stray-load losses. Temperatures are fixed at 20 °C.',
-      'The damper cage (0.04 Ω per axis) is always present; it lets the machine start on line and pull into step.',
+      'The damper cage (library default resistances and leakages) is always present; it lets the machine start on line and pull into step.',
     ],
     seeAlso: ['pmSyncMachine', 'inductionMachine', 'threePhaseSource', 'star'],
   },
