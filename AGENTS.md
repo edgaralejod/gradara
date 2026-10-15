@@ -17,7 +17,7 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | Block examples | `scripts/block-examples/`, `scripts/build-block-examples.tsx`, `lib/gradara/block-examples.ts`, `models/examples/blocks/` | `docs/blocks/EXAMPLES.md`. Rebuild with `npm run examples:blocks`, then `npm run docs:blocks`. |
 | Block reference (Help and gradara.app/docs/blocks) | `lib/gradara/block-docs/`, `lib/gradara/block-reference.ts`, `components/gradara/block-help-dialog.tsx`, `scripts/build-block-docs.tsx` | `docs/blocks/AGENT_BLOCK_GUIDE.md`. Regenerate the site pages with `npm run docs:blocks`. |
 | Wiring / selection / routing | `lib/gradara/net-*.ts`, `routing.ts`, `selection.ts`, `grid.ts`, canvas/net components | `docs/architecture/WIRING.md`, model format, browser acceptance checks. |
-| Definitions and physical blocks | `lib/gradara/*blocks.ts`, `model.ts`, `server/modelica.py` | Block guide and simulation execution guide. |
+| Definitions and physical blocks | `scripts/msl-blocks.py` (generates `lib/gradara/msl-blocks.ts`), `lib/gradara/extra-blocks.ts`, `retired-blocks.ts`, `model.ts`, `server/modelica.py` | Block guide and simulation execution guide. |
 | Save/load and API | `server/workspace.py`, `server/app.py`, `lib/gradara/api.ts` | Model format and API guide. |
 | Simulation settings | `server/solver.py`, `lib/gradara/solver.ts`, `lib/gradara/solver-docs.ts` (all in-app and guide text), `components/gradara/simulation-settings.tsx`, `components/gradara/solver-help-dialog.tsx` | `docs/SOLVER.md` (generated; `npm run docs:solver`), execution guide. |
 | Simulation engines | `server/engine.py`, `server/engines.py` (bundled, native, and Docker backends), `packaging/engine/` (built-in engine builds and the macOS VM agent), `safety.py`, `processes.py` | `server/AGENTS.md`, execution guide, `SECURITY.md`. |
@@ -27,7 +27,7 @@ Gradara is a local graphical multidomain simulator. The usability goal is a resp
 | Desktop app and installers | `desktop/`, `packaging/`, `vite.desktop.config.ts`, `.github/workflows/release.yml` | Distribution guide, release checklist. |
 | Gradara AI service | `cloud/` (gateway, sign-in pages, `deploy.sh`) | `cloud/README.md`, `docs/PRIVACY.md`. Privacy rules are enforced by its tests. |
 | Website | `site/` | `site/README.md`. Keep claims in step with `docs/PRIVACY.md` and the code. |
-| Templates | `models/examples/`, `scripts/style-examples.ts`, `scripts/grid-examples.ts`, buck/flyback/datacenter builders | Example notes, block design, template tests. |
+| Templates | `models/examples/`, `scripts/build-*-example.ts` (dc, foc, servo, buck on `scripts/block-examples/assemble.ts`; ev, flyback, datacenter), `scripts/grid-examples.ts` | Example notes, block design, template tests. |
 
 ## Invariants
 

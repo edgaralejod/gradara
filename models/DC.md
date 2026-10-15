@@ -8,7 +8,7 @@ Open **Examples**, choose **Use example** under **DC motor**, then choose **Run*
 
 ## What the model contains
 
-The signal path is speed reference → sampled PI controller → controlled voltage source. The physical part has the motor's armature resistance and inductance, the electromechanical coupling, the rotating inertia with friction, an ideal speed sensor, and an electrical ground. The speed sensor closes the feedback loop.
+The signal path is speed reference → sampled PI controller → controlled voltage source. The physical part is the Modelica Standard Library's permanent-magnet DC machine (armature resistance and inductance, the electromechanical coupling, and the rotor inertia), a current sensor in the armature circuit, viscous friction to the housing, an ideal speed sensor, and an electrical ground. The speed sensor closes the feedback loop.
 
 | Parameter | Default |
 | --- | --- |
@@ -17,8 +17,8 @@ The signal path is speed reference → sampled PI controller → controlled volt
 | Controller sample period | 1 ms |
 | Drive voltage limit | ±24 V |
 | Armature R / L | 1.2 Ω / 20 mH |
-| Motor constant | 0.15 N·m/A |
-| Load inertia | 0.02 kg·m² |
+| Nominal point | 24 V, 2 A, 144 rad/s, so the machine constant is (24 − 1.2 · 2) / 144 = 0.15 N·m/A |
+| Rotor inertia | 0.02 kg·m² |
 | Viscous friction | 0.002 N·m·s |
 | Stop time | 4 s |
 
@@ -35,4 +35,4 @@ The drive is an ideal controlled voltage source, not a switching inverter. The m
 
 ## For contributors
 
-The template is [dc.json](examples/dc.json). Physical component wrappers are in [server/modelica.py](../server/modelica.py), and the real-engine motor checks are in [tests/test_modelica.py](../tests/test_modelica.py). `npx tsx scripts/style-examples.ts` reproduces the DC and FOC template layouts without touching saved models.
+The template is [dc.json](examples/dc.json), built by `scripts/build-dc-example.ts` from library blocks with the block examples' assembler (`scripts/block-examples/assemble.ts`); `lib/gradara/model.ts` builds the same loop as the new-model starting point. The real-engine motor checks are in [tests/test_modelica.py](../tests/test_modelica.py).

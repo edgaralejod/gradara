@@ -21,14 +21,14 @@ A 24 V DC source feeds a high-side and a low-side ideal switch that open and clo
 | Stop time | 20 ms |
 | Initial inductor current / capacitor voltage | 0 A / 0 V |
 
-Both switches are the Modelica Standard Library's ideal closing switch with zero on-resistance and zero off-conductance. A pulse generator drives the high-side gate between 0 and 1; the low-side gate is its complement. This is a switched circuit, not an averaged duty-to-voltage model. See the [Modelica Standard Library ideal-switch documentation](https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_Analog_Ideal.html).
+Both switches are the Modelica Standard Library's ideal closing switch with zero on-resistance and zero off-conductance. A Duty constant feeds the library's PWM generator, whose fire output drives the high-side switch and whose complement drives the low-side one. This is a switched circuit, not an averaged duty-to-voltage model. See the [Modelica Standard Library ideal-switch documentation](https://doc.modelica.org/Modelica%204.1.0/Resources/helpDymola/Modelica_Electrical_Analog_Ideal.html).
 
 ## What to look at
 
 - Results opens with **Output voltage** and **Inductor current**. Choose the 2×2 layout to see **Switch gates** too.
 - Box-zoom the last millisecond to see the switching ripple, then **Fit both** to see startup again.
 - Startup overshoots to about **19.3 V** before settling near 12 V. This is expected: the circuit starts with no stored energy, has no soft start, and runs at a fixed duty cycle. It is not a regulated supply.
-- Double-click **Gate drive**, change **Duty cycle** to 0.25, and run again. The output settles near 6 V.
+- Double-click **Duty 50 %**, change **Value** to 0.25, and run again. The output settles near 6 V.
 
 In steady state, approximately: `Vout = duty × Vin`, `Iout = Vout / R`, and inductor ripple `ΔIL = Vin × (1 − duty) × duty / (L × frequency)`. Measured over the last ten switching cycles of a full-resolution run:
 
@@ -48,9 +48,8 @@ This is an ideal **synchronous** buck: no diode, no dead time, no switching or c
 ## For contributors
 
 - `models/examples/buck.json`: the template and its layout.
-- `scripts/build-buck-example.ts`: the template builder. Run `npx tsx scripts/build-buck-example.ts` after editing the example.
-- `lib/gradara/power-blocks.ts`: the five reusable library definitions used here.
-- `server/modelica.py`: the physical component wrappers.
+- `scripts/build-buck-example.ts`: the template builder, on the block examples' assembler. Run `npx tsx scripts/build-buck-example.ts` after editing the example.
+- `lib/gradara/msl-blocks.ts`: every block here wraps a Modelica Standard Library class (the PWM generator, the ideal closing switches, and the passives).
 - `tests/test_buck.py`: real-engine checks for two duty cycles, complementary gates, startup conditions, steady-state voltage and current, and switching ripple.
 
 The reference values above come from time-weighted integration over the final ten switching cycles of the full CSV output.
