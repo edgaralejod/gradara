@@ -13,11 +13,11 @@ Open **Examples**, choose **Use example** under **AC motor · FOC**, then choose
 3. Two more continuous PIs, limited to ±27 V, regulate the d and q currents and produce the d/q voltage commands.
 4. The Park transform fed −θe rotates the d/q voltages back into the stationary frame, and the inverse Clarke transform (with a zero-sequence input of 0) turns them into three phase voltages. A controlled three-phase voltage source, the ideal model of an inverter, applies them to the machine.
 5. The Modelica PMSM (four pole pairs, 0.35 Ω, 1 mH, a magnet voltage of 15.6 V rms per phase at 100 Hz, 0.002 kg·m²) drives a torque sensor, viscous friction to the housing, and a torque step that raises the load from 0.05 to 0.40 N·m at 0.45 s.
-6. A three-phase current sensor feeds the Clarke and Park transforms, which return the measured d/q currents. An angle sensor times the pole pairs gives the electrical angle θe; a speed sensor closes the speed loop and, through a gain, shows rpm.
+6. A three-phase current sensor feeds the Clarke and Park transforms, which return the measured d/q currents. An angle sensor times the pole pairs gives the electrical angle θe; a speed sensor closes the speed loop. The speed, the angle sensor and its pole-pair gain, and the Clarke and Park transforms on the feedback path are flipped, so the measurement reads right to left back to the controllers.
 
 ## What to look at
 
-- Results opens with speed and the d/q currents. Choose the 3×2 layout to also see phase currents, shaft torque, and the d/q voltages.
+- Results opens with speed (rotor speed and the command, both in rad/s: 1500 rpm is 157 rad/s) and the d/q currents. Choose the 3×2 layout to also see phase currents, shaft torque, and the d/q voltages.
 - Box-zoom the phase currents to see individual cycles; **Fit X** shows the whole run again.
 - Watch the speed dip and recover when the load steps up at 0.45 s.
 - **Export CSV** in Results downloads every output point.
@@ -30,4 +30,4 @@ The example does not model the DC supply or its voltage limit, PWM switching rip
 
 ## For contributors
 
-`scripts/build-foc-example.ts` builds the template, `models/examples/foc.json`, from library blocks with the same assembler as the block examples (`scripts/block-examples/assemble.ts`): it places the blocks and the workbench's router draws the wires. Every block is a Modelica Standard Library wrapper (`lib/gradara/msl-blocks.ts`). Layout, routing, notes, and plot groups are presentation data and do not enter the Modelica equations. The real-engine checks (speed tracking, load rejection, d-axis current, balanced phases) are in `tests/test_modelica.py`.
+`scripts/build-foc-example.ts` builds the template, `models/examples/foc.json`, from library blocks with the same assembler as the block examples (`scripts/block-examples/assemble.ts`): it places each block where its input meets the output that feeds it, so the forward path and the shaft run straight, flips the feedback blocks, and the workbench's router draws the wires. Every block is a Modelica Standard Library wrapper (`lib/gradara/msl-blocks.ts`). Layout, routing, notes, and plot groups are presentation data and do not enter the Modelica equations. The real-engine checks (speed tracking within 3 rpm, overshoot, load rejection, d-axis current, balanced phases) are in `tests/test_modelica.py`.

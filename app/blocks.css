@@ -149,14 +149,31 @@
   bottom: 4px;
   transform: translateX(-50%);
 }
-/* A block turned half round keeps its text upright, as Simulink draws a flipped gain. */
-[data-turn='180'] .block-face .gain-value,
-[data-turn='180'] .block-face .value-symbol,
-[data-turn='180'] .block-face .math-op,
-[data-turn='180'] .block-face .pid-symbol,
-[data-turn='180'] .block-face .transfer-symbol,
-[data-turn='180'] .block-face .port-label {
-  rotate: 180deg;
+/*
+ * A turned or flipped block turns and mirrors its drawing in this frame; text inside it
+ * is turned back by --upright, so it always reads left to right, right side up.
+ */
+.block-face .block-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+.block-frame :is(
+    .gain-value,
+    .value-symbol,
+    .math-op,
+    .pid-symbol,
+    .transfer-symbol,
+    .transform-symbol,
+    .custom-symbol,
+    .display-glyph,
+    .boundary-name,
+    .boundary-glyph
+  ),
+.block-frame .block-symbol svg text {
+  transform: var(--upright, none);
+  transform-box: fill-box;
+  transform-origin: center;
 }
 .block-face.has-signal-names .port-label {
   max-width: none;

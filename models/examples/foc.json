@@ -54,8 +54,8 @@
         }
       },
       "position": {
-        "x": 32,
-        "y": 80
+        "x": 40,
+        "y": 128
       },
       "size": {
         "width": 80,
@@ -109,8 +109,8 @@
         }
       },
       "position": {
-        "x": 176,
-        "y": 80
+        "x": 184,
+        "y": 128
       },
       "size": {
         "width": 80,
@@ -202,7 +202,7 @@
       },
       "position": {
         "x": 328,
-        "y": 64
+        "y": 112
       },
       "size": {
         "width": 128,
@@ -297,8 +297,8 @@
         }
       },
       "position": {
-        "x": 536,
-        "y": 64
+        "x": 504,
+        "y": 112
       },
       "size": {
         "width": 128,
@@ -349,8 +349,8 @@
         }
       },
       "position": {
-        "x": 280,
-        "y": 272
+        "x": 328,
+        "y": 304
       },
       "size": {
         "width": 80,
@@ -441,8 +441,8 @@
         }
       },
       "position": {
-        "x": 456,
-        "y": 256
+        "x": 504,
+        "y": 288
       },
       "size": {
         "width": 128,
@@ -520,7 +520,7 @@
       },
       "position": {
         "x": 744,
-        "y": 160
+        "y": 96
       },
       "size": {
         "width": 128,
@@ -571,16 +571,17 @@
         }
       },
       "position": {
-        "x": 768,
-        "y": 32
+        "x": 1000,
+        "y": -24
       },
       "size": {
-        "width": 80,
-        "height": 64
+        "width": 64,
+        "height": 80
       },
+      "rotation": 90,
       "labelOffset": {
-        "x": 0,
-        "y": -96
+        "x": -100,
+        "y": -54
       }
     },
     {
@@ -598,24 +599,22 @@
             "name": "α",
             "direction": "input",
             "domain": "signal",
-            "side": "left",
-            "offset": 33.333333333333336
+            "side": "left"
           },
           {
             "id": "beta",
             "name": "β",
             "direction": "input",
             "domain": "signal",
-            "side": "left",
-            "offset": 66.66666666666667
+            "side": "left"
           },
           {
             "id": "zero",
             "name": "0",
             "direction": "input",
             "domain": "signal",
-            "side": "left",
-            "offset": 91.67
+            "side": "top",
+            "offset": 75
           },
           {
             "id": "va",
@@ -659,15 +658,11 @@
       },
       "position": {
         "x": 936,
-        "y": 160
+        "y": 96
       },
       "size": {
         "width": 128,
         "height": 96
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -128
       }
     },
     {
@@ -739,7 +734,7 @@
       },
       "position": {
         "x": 1144,
-        "y": 160
+        "y": 96
       },
       "size": {
         "width": 128,
@@ -813,7 +808,7 @@
       },
       "position": {
         "x": 1320,
-        "y": 160
+        "y": 96
       },
       "size": {
         "width": 128,
@@ -940,7 +935,7 @@
       },
       "position": {
         "x": 1496,
-        "y": 160
+        "y": 96
       },
       "size": {
         "width": 128,
@@ -988,7 +983,7 @@
       },
       "position": {
         "x": 1536,
-        "y": 304
+        "y": 272
       },
       "size": {
         "width": 48,
@@ -1031,7 +1026,7 @@
       },
       "position": {
         "x": 1536,
-        "y": 424
+        "y": 368
       },
       "size": {
         "width": 48,
@@ -1088,7 +1083,7 @@
       },
       "position": {
         "x": 1680,
-        "y": 176
+        "y": 112
       },
       "size": {
         "width": 80,
@@ -1146,16 +1141,12 @@
         }
       },
       "position": {
-        "x": 1824,
-        "y": 184
+        "x": 1872,
+        "y": 120
       },
       "size": {
         "width": 80,
         "height": 48
-      },
-      "labelOffset": {
-        "x": 0,
-        "y": -80
       }
     },
     {
@@ -1198,7 +1189,7 @@
         }
       },
       "position": {
-        "x": 1952,
+        "x": 1976,
         "y": 184
       },
       "size": {
@@ -1260,17 +1251,17 @@
         }
       },
       "position": {
-        "x": 1800,
-        "y": 288
+        "x": 1784,
+        "y": -24
       },
       "size": {
-        "width": 128,
-        "height": 96
+        "width": 96,
+        "height": 128
       },
-      "rotation": 180,
+      "rotation": 90,
       "labelOffset": {
-        "x": 192,
-        "y": -62
+        "x": 176,
+        "y": -78
       }
     },
     {
@@ -1288,14 +1279,14 @@
             "name": "shaft",
             "direction": "physical",
             "domain": "mechanical",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "w",
             "name": "ω",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
+            "side": "right",
             "unit": "rad/s"
           }
         ],
@@ -1311,75 +1302,16 @@
       },
       "position": {
         "x": 1656,
-        "y": 528
+        "y": 416
       },
       "size": {
         "width": 128,
         "height": 96
       },
+      "flip": true,
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
-    },
-    {
-      "id": "rpm",
-      "definition": {
-        "kind": "gain",
-        "name": "rad/s → rpm",
-        "description": "Multiply an input by an adjustable gain.",
-        "domain": "signal",
-        "category": "math",
-        "symbol": "K",
-        "ports": [
-          {
-            "id": "u",
-            "name": "u",
-            "direction": "input",
-            "domain": "signal",
-            "side": "top"
-          },
-          {
-            "id": "y",
-            "name": "y",
-            "direction": "output",
-            "domain": "signal",
-            "side": "left",
-            "unit": "rpm"
-          }
-        ],
-        "parameters": [
-          {
-            "id": "k",
-            "name": "Gain",
-            "value": 9.549296585513721,
-            "unit": ""
-          }
-        ],
-        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
-        "keywords": [
-          "math",
-          "multiply",
-          "scale"
-        ],
-        "modelica": {
-          "class": "Modelica.Blocks.Math.Gain",
-          "modifiers": {
-            "k": "k"
-          }
-        }
-      },
-      "position": {
-        "x": 1680,
-        "y": 656
-      },
-      "size": {
-        "width": 80,
-        "height": 64
-      },
-      "labelOffset": {
-        "x": 92,
-        "y": -46
       }
     },
     {
@@ -1397,14 +1329,14 @@
             "name": "shaft",
             "direction": "physical",
             "domain": "mechanical",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "y",
             "name": "θ",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
+            "side": "right",
             "unit": "rad"
           }
         ],
@@ -1424,12 +1356,13 @@
       },
       "position": {
         "x": 1656,
-        "y": 768
+        "y": 552
       },
       "size": {
         "width": 128,
         "height": 96
       },
+      "flip": true,
       "labelOffset": {
         "x": 0,
         "y": -128
@@ -1450,14 +1383,14 @@
             "name": "u",
             "direction": "input",
             "domain": "signal",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "left",
+            "side": "right",
             "unit": "rad"
           }
         ],
@@ -1483,13 +1416,14 @@
         }
       },
       "position": {
-        "x": 1520,
-        "y": 784
+        "x": 1456,
+        "y": 568
       },
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "flip": true
     },
     {
       "id": "minus",
@@ -1506,14 +1440,14 @@
             "name": "u",
             "direction": "input",
             "domain": "signal",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "y",
             "name": "y",
             "direction": "output",
             "domain": "signal",
-            "side": "top"
+            "side": "right"
           }
         ],
         "parameters": [],
@@ -1531,12 +1465,17 @@
         }
       },
       "position": {
-        "x": 768,
-        "y": 560
+        "x": 776,
+        "y": 488
       },
       "size": {
-        "width": 80,
-        "height": 64
+        "width": 64,
+        "height": 80
+      },
+      "rotation": 270,
+      "labelOffset": {
+        "x": -52,
+        "y": -54
       }
     },
     {
@@ -1554,35 +1493,35 @@
             "name": "a",
             "direction": "input",
             "domain": "signal",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "ib",
             "name": "b",
             "direction": "input",
             "domain": "signal",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "ic",
             "name": "c",
             "direction": "input",
             "domain": "signal",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "alpha",
             "name": "α",
             "direction": "output",
             "domain": "signal",
-            "side": "left"
+            "side": "right"
           },
           {
             "id": "beta",
             "name": "β",
             "direction": "output",
             "domain": "signal",
-            "side": "left"
+            "side": "right"
           }
         ],
         "parameters": [],
@@ -1605,12 +1544,13 @@
       },
       "position": {
         "x": 1144,
-        "y": 432
+        "y": 392
       },
       "size": {
         "width": 128,
         "height": 96
       },
+      "flip": true,
       "labelOffset": {
         "x": 0,
         "y": -128
@@ -1631,14 +1571,14 @@
             "name": "α",
             "direction": "input",
             "domain": "signal",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "beta",
             "name": "β",
             "direction": "input",
             "domain": "signal",
-            "side": "right"
+            "side": "left"
           },
           {
             "id": "theta",
@@ -1653,14 +1593,14 @@
             "name": "d",
             "direction": "output",
             "domain": "signal",
-            "side": "left"
+            "side": "right"
           },
           {
             "id": "iq",
             "name": "q",
             "direction": "output",
             "domain": "signal",
-            "side": "left"
+            "side": "right"
           }
         ],
         "parameters": [],
@@ -1683,12 +1623,13 @@
       },
       "position": {
         "x": 936,
-        "y": 432
+        "y": 392
       },
       "size": {
         "width": 128,
         "height": 96
       },
+      "flip": true,
       "labelOffset": {
         "x": 0,
         "y": -128
@@ -1798,7 +1739,7 @@
       "id": "id000f",
       "source": "motor",
       "sourceHandle": "plug_sn",
-      "target": "j_id0012",
+      "target": "j_id0011",
       "targetHandle": "node",
       "waypoints": []
     },
@@ -1806,12 +1747,12 @@
       "id": "id000g",
       "source": "inverter",
       "sourceHandle": "plug_n",
-      "target": "j_id0012",
+      "target": "j_id0011",
       "targetHandle": "node",
       "waypoints": [
         {
           "x": 1208,
-          "y": 280
+          "y": 232
         }
       ]
     },
@@ -1831,7 +1772,7 @@
     },
     {
       "id": "id000j",
-      "source": "j_id001c",
+      "source": "j_id0013",
       "sourceHandle": "node",
       "target": "damper",
       "targetHandle": "flange_a",
@@ -1846,20 +1787,15 @@
     },
     {
       "id": "id000l",
-      "source": "j_id0014",
+      "source": "j_id0013",
       "sourceHandle": "node",
       "target": "load",
       "targetHandle": "flange",
-      "waypoints": [
-        {
-          "x": 1784,
-          "y": 336
-        }
-      ]
+      "waypoints": []
     },
     {
       "id": "id000m",
-      "source": "j_id0016",
+      "source": "j_id0015",
       "sourceHandle": "node",
       "target": "speed",
       "targetHandle": "flange",
@@ -1867,472 +1803,410 @@
     },
     {
       "id": "id000n",
-      "source": "j_id0016",
+      "source": "j_id0015",
       "sourceHandle": "node",
       "target": "angle",
       "targetHandle": "flange",
       "waypoints": [
         {
           "x": 1800,
-          "y": 664
-        },
-        {
-          "x": 1864,
-          "y": 664
-        },
-        {
-          "x": 1864,
-          "y": 816
+          "y": 600
         }
       ]
     },
     {
       "id": "id000o",
-      "source": "j_id0018",
-      "sourceHandle": "node",
-      "target": "rpm",
-      "targetHandle": "u",
-      "waypoints": [
-        {
-          "x": 1640,
-          "y": 640
-        },
-        {
-          "x": 1720,
-          "y": 640
-        }
-      ]
+      "source": "speed",
+      "sourceHandle": "w",
+      "target": "speedPI",
+      "targetHandle": "measured"
     },
     {
       "id": "id000p",
-      "source": "j_id0018",
-      "sourceHandle": "node",
-      "target": "speedPI",
-      "targetHandle": "measured",
-      "waypoints": [
-        {
-          "x": 1464,
-          "y": 576
-        },
-        {
-          "x": 1464,
-          "y": 256
-        },
-        {
-          "x": 392,
-          "y": 256
-        }
-      ]
-    },
-    {
-      "id": "id000q",
       "source": "angle",
       "sourceHandle": "y",
       "target": "poles",
       "targetHandle": "u"
     },
     {
-      "id": "id000r",
-      "source": "j_id001a",
+      "id": "id000q",
+      "source": "j_id0017",
       "sourceHandle": "node",
       "target": "park",
       "targetHandle": "theta",
-      "waypoints": [
-        {
-          "x": 1000,
-          "y": 816
-        }
-      ]
+      "waypoints": []
     },
     {
-      "id": "id000s",
-      "source": "j_id001a",
+      "id": "id000r",
+      "source": "j_id0017",
       "sourceHandle": "node",
       "target": "minus",
       "targetHandle": "u",
       "waypoints": [
         {
-          "x": 1184,
-          "y": 592
+          "x": 808,
+          "y": 600
         }
       ]
     },
     {
-      "id": "id000t",
+      "id": "id000s",
       "source": "minus",
       "sourceHandle": "y",
       "target": "inversePark",
       "targetHandle": "theta"
     },
     {
-      "id": "id000u",
+      "id": "id000t",
       "source": "isens",
       "sourceHandle": "ia",
       "target": "clarke",
       "targetHandle": "ia"
     },
     {
-      "id": "id000v",
+      "id": "id000u",
       "source": "isens",
       "sourceHandle": "ib",
       "target": "clarke",
       "targetHandle": "ib"
     },
     {
-      "id": "id000w",
+      "id": "id000v",
       "source": "isens",
       "sourceHandle": "ic",
       "target": "clarke",
       "targetHandle": "ic"
     },
     {
-      "id": "id000x",
+      "id": "id000w",
       "source": "clarke",
       "sourceHandle": "alpha",
       "target": "park",
       "targetHandle": "alpha"
     },
     {
-      "id": "id000y",
+      "id": "id000x",
       "source": "clarke",
       "sourceHandle": "beta",
       "target": "park",
       "targetHandle": "beta"
     },
     {
-      "id": "id000z",
+      "id": "id000y",
       "source": "park",
       "sourceHandle": "id",
       "target": "dPI",
       "targetHandle": "measured"
     },
     {
-      "id": "id0010",
+      "id": "id000z",
       "source": "park",
       "sourceHandle": "iq",
       "target": "qPI",
       "targetHandle": "measured"
     },
     {
-      "id": "w_id0013",
+      "id": "w_id0012",
       "source": "neutral",
       "sourceHandle": "plug_p",
-      "target": "j_id0012",
+      "target": "j_id0011",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "w_id0015",
-      "source": "torque",
-      "sourceHandle": "b",
-      "target": "j_id0014",
-      "targetHandle": "node",
-      "waypoints": []
-    },
-    {
-      "id": "w_id0017",
-      "source": "j_id001c",
+      "id": "w_id0014",
+      "source": "j_id0019",
       "sourceHandle": "node",
-      "target": "j_id0016",
+      "target": "j_id0013",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "w_id0019",
-      "source": "speed",
-      "sourceHandle": "w",
-      "target": "j_id0018",
+      "id": "w_id0016",
+      "source": "j_id0019",
+      "sourceHandle": "node",
+      "target": "j_id0015",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "w_id001b",
+      "id": "w_id0018",
       "source": "poles",
       "sourceHandle": "y",
-      "target": "j_id001a",
+      "target": "j_id0017",
       "targetHandle": "node",
       "waypoints": []
     },
     {
-      "id": "w_id001d",
-      "source": "j_id0014",
-      "sourceHandle": "node",
-      "target": "j_id001c",
+      "id": "w_id001a",
+      "source": "torque",
+      "sourceHandle": "b",
+      "target": "j_id0019",
       "targetHandle": "node",
       "waypoints": []
     }
   ],
   "junctions": [
     {
-      "id": "j_id0012",
+      "id": "j_id0011",
       "domain": "threePhase",
       "position": {
         "x": 1560,
-        "y": 280
+        "y": 232
       }
     },
     {
-      "id": "j_id0014",
+      "id": "j_id0013",
       "domain": "mechanical",
       "position": {
-        "x": 1784,
-        "y": 208
+        "x": 1832,
+        "y": 144
       }
     },
     {
-      "id": "j_id0016",
-      "domain": "mechanical",
-      "position": {
-        "x": 1800,
-        "y": 576
-      }
-    },
-    {
-      "id": "j_id0018",
-      "domain": "signal",
-      "position": {
-        "x": 1640,
-        "y": 576
-      }
-    },
-    {
-      "id": "j_id001a",
-      "domain": "signal",
-      "position": {
-        "x": 1184,
-        "y": 816
-      }
-    },
-    {
-      "id": "j_id001c",
+      "id": "j_id0015",
       "domain": "mechanical",
       "position": {
         "x": 1800,
-        "y": 208
+        "y": 464
+      }
+    },
+    {
+      "id": "j_id0017",
+      "domain": "signal",
+      "position": {
+        "x": 1000,
+        "y": 600
+      }
+    },
+    {
+      "id": "j_id0019",
+      "domain": "mechanical",
+      "position": {
+        "x": 1800,
+        "y": 144
       }
     }
   ],
   "nets": [
     {
-      "id": "net_id001e",
+      "id": "net_id001b",
       "anchor": "reference.y",
       "wireIds": [
         "id0001"
       ]
     },
     {
-      "id": "net_id001f",
+      "id": "net_id001c",
       "anchor": "units.y",
       "wireIds": [
         "id0002"
       ]
     },
     {
-      "id": "net_id001g",
+      "id": "net_id001d",
       "anchor": "speedPI.y",
       "wireIds": [
         "id0003"
       ]
     },
     {
-      "id": "net_id001h",
+      "id": "net_id001e",
       "anchor": "dReference.y",
       "wireIds": [
         "id0004"
       ]
     },
     {
-      "id": "net_id001i",
+      "id": "net_id001f",
       "anchor": "dPI.y",
       "wireIds": [
         "id0005"
       ]
     },
     {
-      "id": "net_id001j",
+      "id": "net_id001g",
       "anchor": "qPI.y",
       "wireIds": [
         "id0006"
       ]
     },
     {
-      "id": "net_id001k",
+      "id": "net_id001h",
       "anchor": "inversePark.id",
       "wireIds": [
         "id0007"
       ]
     },
     {
-      "id": "net_id001l",
+      "id": "net_id001i",
       "anchor": "inversePark.iq",
       "wireIds": [
         "id0008"
       ]
     },
     {
-      "id": "net_id001m",
+      "id": "net_id001j",
       "anchor": "zero.y",
       "wireIds": [
         "id0009"
       ]
     },
     {
-      "id": "net_id001n",
+      "id": "net_id001k",
       "anchor": "inverseClarke.va",
       "wireIds": [
         "id000a"
       ]
     },
     {
-      "id": "net_id001o",
+      "id": "net_id001l",
       "anchor": "inverseClarke.vb",
       "wireIds": [
         "id000b"
       ]
     },
     {
-      "id": "net_id001p",
+      "id": "net_id001m",
       "anchor": "inverseClarke.vc",
       "wireIds": [
         "id000c"
       ]
     },
     {
-      "id": "net_id001q",
+      "id": "net_id001n",
       "anchor": "inverter.plug_p",
       "wireIds": [
         "id000d"
       ]
     },
     {
-      "id": "net_id001r",
+      "id": "net_id001o",
       "anchor": "isens.plug_n",
       "wireIds": [
         "id000e"
       ]
     },
     {
-      "id": "net_id001s",
+      "id": "net_id001p",
       "anchor": "inverter.plug_n",
       "wireIds": [
         "id000f",
         "id000g",
-        "w_id0013"
+        "w_id0012"
       ]
     },
     {
-      "id": "net_id001t",
+      "id": "net_id001q",
       "anchor": "ground.p",
       "wireIds": [
         "id000h"
       ]
     },
     {
-      "id": "net_id001u",
+      "id": "net_id001r",
       "anchor": "motor.flange",
       "wireIds": [
         "id000i"
       ]
     },
     {
-      "id": "net_id001v",
+      "id": "net_id001s",
       "anchor": "angle.flange",
       "wireIds": [
         "id000j",
         "id000l",
         "id000m",
         "id000n",
-        "w_id0015",
-        "w_id0017",
-        "w_id001d"
+        "w_id0014",
+        "w_id0016",
+        "w_id001a"
       ]
     },
     {
-      "id": "net_id001w",
+      "id": "net_id001t",
       "anchor": "damper.flange_b",
       "wireIds": [
         "id000k"
       ]
     },
     {
-      "id": "net_id001x",
+      "id": "net_id001u",
       "anchor": "speed.w",
       "wireIds": [
-        "id000o",
-        "id000p",
-        "w_id0019"
+        "id000o"
+      ]
+    },
+    {
+      "id": "net_id001v",
+      "anchor": "angle.y",
+      "wireIds": [
+        "id000p"
+      ]
+    },
+    {
+      "id": "net_id001w",
+      "anchor": "poles.y",
+      "wireIds": [
+        "id000q",
+        "id000r",
+        "w_id0018"
+      ]
+    },
+    {
+      "id": "net_id001x",
+      "anchor": "minus.y",
+      "wireIds": [
+        "id000s"
       ]
     },
     {
       "id": "net_id001y",
-      "anchor": "angle.y",
-      "wireIds": [
-        "id000q"
-      ]
-    },
-    {
-      "id": "net_id001z",
-      "anchor": "poles.y",
-      "wireIds": [
-        "id000r",
-        "id000s",
-        "w_id001b"
-      ]
-    },
-    {
-      "id": "net_id0020",
-      "anchor": "minus.y",
+      "anchor": "isens.ia",
       "wireIds": [
         "id000t"
       ]
     },
     {
-      "id": "net_id0021",
-      "anchor": "isens.ia",
+      "id": "net_id001z",
+      "anchor": "isens.ib",
       "wireIds": [
         "id000u"
       ]
     },
     {
-      "id": "net_id0022",
-      "anchor": "isens.ib",
+      "id": "net_id0020",
+      "anchor": "isens.ic",
       "wireIds": [
         "id000v"
       ]
     },
     {
-      "id": "net_id0023",
-      "anchor": "isens.ic",
+      "id": "net_id0021",
+      "anchor": "clarke.alpha",
       "wireIds": [
         "id000w"
       ]
     },
     {
-      "id": "net_id0024",
-      "anchor": "clarke.alpha",
+      "id": "net_id0022",
+      "anchor": "clarke.beta",
       "wireIds": [
         "id000x"
       ]
     },
     {
-      "id": "net_id0025",
-      "anchor": "clarke.beta",
+      "id": "net_id0023",
+      "anchor": "park.id",
       "wireIds": [
         "id000y"
       ]
     },
     {
-      "id": "net_id0026",
-      "anchor": "park.id",
-      "wireIds": [
-        "id000z"
-      ]
-    },
-    {
-      "id": "net_id0027",
+      "id": "net_id0024",
       "anchor": "park.iq",
       "wireIds": [
-        "id0010"
+        "id000z"
       ]
     }
   ],
@@ -2357,13 +2231,13 @@
     },
     {
       "x": 920,
-      "y": 336,
+      "y": 288,
       "text": "CURRENT FEEDBACK",
       "detail": "abc → αβ → dq"
     },
     {
-      "x": 1480,
-      "y": 896,
+      "x": 1384,
+      "y": 696,
       "text": "θe  ·  ELECTRICAL ANGLE",
       "detail": "p · φ from the angle sensor"
     }
@@ -2373,12 +2247,12 @@
       "id": "plot1",
       "label": "Speed",
       "series": [
-        "rpm.y",
-        "reference.y"
+        "speed.w",
+        "units.y"
       ],
       "labels": [
-        "Rotor speed",
-        "Speed command"
+        "Rotor speed (rad/s)",
+        "Speed command (rad/s)"
       ]
     },
     {

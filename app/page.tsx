@@ -1,5 +1,5 @@
 'use client';
-import { rotateBlocks } from '@/lib/gradara/rotation';
+import { flipBlocks, rotateBlocks } from '@/lib/gradara/rotation';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
 import NoteLayer from '@/components/gradara/note-layer';
@@ -67,6 +67,7 @@ import {
   Settings as SettingsIcon,
   AlertCircle,
   RotateCw,
+  FlipHorizontal2,
   Settings2,
   Code2,
   ArrowUpRight,
@@ -1657,6 +1658,15 @@ function Workbench() {
             commit((p) => rotateBlocks(p, selectionRef.current.blockIds)),
         },
         {
+          id: 'flip',
+          label: 'Flip',
+          icon: <FlipHorizontal2 size={13} />,
+          shortcut: '⌘I',
+          disabled: !blocks.length,
+          run: () =>
+            commit((p) => flipBlocks(p, selectionRef.current.blockIds)),
+        },
+        {
           id: 'terminate',
           label: 'Terminate unused outputs',
           icon: <Unplug size={13} />,
@@ -2402,6 +2412,14 @@ function Workbench() {
       } else if (command && e.key === 'Enter') {
         e.preventDefault();
         void runRef.current();
+      } else if (
+        command &&
+        e.key.toLowerCase() === 'i' &&
+        selectionRef.current.blockIds.length
+      ) {
+        e.preventDefault();
+        if (!e.repeat)
+          commit((p) => flipBlocks(p, selectionRef.current.blockIds));
       } else if (command && e.key.toLowerCase() === 'j') {
         e.preventDefault();
         toggleDockRef.current();
@@ -3952,8 +3970,17 @@ function Workbench() {
                     >
                       Rotate 90° · R
                     </button>
+                    <button
+                      type="button"
+                      className="standard-block-size"
+                      onClick={() => commit((p) => flipBlocks(p, [active.id]))}
+                    >
+                      Flip · ⌘I
+                    </button>
                     <p className="size-hint">
-                      Drag a corner or edge to resize. Press R to rotate.
+                      Drag a corner or edge to resize. Press R to rotate, ⌘I
+                      (Ctrl+I) to flip, for a feedback path that reads right to
+                      left.
                     </p>
                   </div>
                   <div className="inspector-section">
@@ -4324,6 +4351,7 @@ function Workbench() {
                 ['Finish redrawing', 'Click destination / Enter'],
                 ['Remove last bend / cancel', 'Backspace / Escape'],
                 ['Rotate selected blocks clockwise', 'R'],
+                ['Flip selected blocks (inputs to the other side)', '⌘ / Ctrl + I'],
                 ['Restore auto route (wires only)', 'R'],
                 ['Name a signal / net', 'Double-click wire / F2'],
                 ['Move a signal label', 'Drag along its net'],

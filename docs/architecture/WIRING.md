@@ -138,7 +138,7 @@ Waypoints, junction positions, names, and label placement are presentation metad
 | Selection and copy gestures | [selection.ts](../../lib/gradara/selection.ts), [copy-drag.ts](../../lib/gradara/copy-drag.ts) |
 | Topology, identity, and naming | [net.ts](../../lib/gradara/net.ts), [net-registry.ts](../../lib/gradara/net-registry.ts), [names.ts](../../lib/gradara/names.ts) |
 
-Geometry and graph regressions live in `tests/wiring.test.ts`, `tests/selection.test.ts`, `tests/nets.test.ts`, `tests/drag.test.ts`, `tests/arrange.test.ts`, and `tests/names.test.ts`. Combine them with the [browser acceptance checks](../development/TESTING.md); coordinate tests alone do not establish smooth interaction. Block rotation is implemented; a rotated block's wires are routed afresh. Edge-pan, insertion into wires, flip, lane assignment for parallel wires of different nets, and measured large-diagram performance remain roadmap work.
+Geometry and graph regressions live in `tests/wiring.test.ts`, `tests/selection.test.ts`, `tests/nets.test.ts`, `tests/drag.test.ts`, `tests/arrange.test.ts`, and `tests/names.test.ts`. Combine them with the [browser acceptance checks](../development/TESTING.md); coordinate tests alone do not establish smooth interaction. Block rotation and flip are implemented (see [model format](MODEL_FORMAT.md#block-rotation-and-flip)); a turned or flipped block's wires are routed afresh. Edge-pan, insertion into wires, lane assignment for parallel wires of different nets, and measured large-diagram performance remain roadmap work.
 
 ### Shared terminal runs
 

@@ -80,14 +80,7 @@ const spec: ExampleSpec = {
     ],
     ['housing', 'rotFixed', 'Housing', [920, 240]],
     ['ground', 'ground', 'Ground', [528, 352]],
-    [
-      'sensor',
-      'angleSensor',
-      'Angle sensor',
-      [680, 376],
-      {},
-      { ports: { flange: 'right', y: 'left' } },
-    ],
+    ['sensor', 'angleSensor', 'Angle sensor', [680, 376], {}, { flip: true }],
   ],
   links: [
     ['reference.y', 'controller.reference'],

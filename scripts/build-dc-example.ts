@@ -81,7 +81,7 @@ const spec: ExampleSpec = {
       'Speed sensor',
       [680, 376],
       {},
-      { ports: { flange: 'right', w: 'left' } },
+      { flip: true },
     ],
   ],
   links: [

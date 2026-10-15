@@ -15,7 +15,7 @@ MAX_CREATED = 2
 MAX_GENERATED = 3
 OPS = ('add_block', 'create_block', 'revise_definition', 'remove_block', 'rename_block', 'set_parameter',
        'connect', 'disconnect', 'set_duration', 'log_signal')
-LAYOUT = ('position', 'size', 'rotation', 'labelOffset')
+LAYOUT = ('position', 'size', 'rotation', 'flip', 'labelOffset')
 
 
 class Operation(Strict):

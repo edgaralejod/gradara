@@ -92,9 +92,10 @@ def test_foc_tracks_speed_rejects_load_and_keeps_phases_balanced():
             block,port=signal.split('.')
             key=f'{block}.{msl.connector(next(x for x in baseline.blocks if x.id==block).definition,port)}'
             return next(s['values'] for s in r['series'] if s['key']==key)
-        assert abs(trace(a,'rpm.y')[-1]-1500)<3
-        assert abs(trace(b,'rpm.y')[-1]-1000)<3
-        assert max(trace(a,'rpm.y'))<1660
+        rpm=lambda r:[w*30/3.141592653589793 for w in trace(r,'speed.w')]
+        assert abs(rpm(a)[-1]-1500)<3
+        assert abs(rpm(b)[-1]-1000)<3
+        assert max(rpm(a))<1660
         assert max(abs(v) for t,v in zip(a['time'],trace(a,'park.id')) if t>.6)<.02
         assert max(abs(x+y+z) for x,y,z in zip(trace(a,'isens.ia'),trace(a,'isens.ib'),trace(a,'isens.ic')))<1e-4
         # The load torque steps from 0.05 N·m to 0.4 N·m at 0.45 s; the shaft also drives 0.001 N·m·s of friction.
