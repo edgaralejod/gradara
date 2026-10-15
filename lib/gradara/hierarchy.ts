@@ -798,7 +798,22 @@ export function ungroupSubsystem(
   const outer = view.wires.filter(
     (w) => w.source !== instanceId && w.target !== instanceId,
   );
+  const insideOf = (portId: string) =>
+    sub.wires
+      .filter((w) => w.source === portId || w.target === portId)
+      .map((w) =>
+        w.source === portId
+          ? { id: rename.get(w.target) ?? w.target, handle: w.targetHandle }
+          : { id: rename.get(w.source) ?? w.source, handle: w.sourceHandle },
+      )
+      // A feed-through to another port of this subsystem has no block to land on.
+      .filter((end) => !boundaryIds.has(end.id));
+  const done = new Set<string>();
   for (const port of inner) {
+    done.add(port.id);
+    // A wire outside from this port back into another port of the same instance
+    // continues inside that port: its inside ends take the instance's place, once
+    // for the pair.
     const outside = view.wires
       .filter(
         (w) =>
@@ -809,14 +824,15 @@ export function ungroupSubsystem(
         w.source === instanceId
           ? { id: w.target, handle: w.targetHandle }
           : { id: w.source, handle: w.sourceHandle },
+      )
+      .flatMap((end) =>
+        end.id !== instanceId
+          ? [end]
+          : done.has(end.handle)
+            ? []
+            : insideOf(end.handle),
       );
-    const insideEnds = sub.wires
-      .filter((w) => w.source === port.id || w.target === port.id)
-      .map((w) =>
-        w.source === port.id
-          ? { id: rename.get(w.target) ?? w.target, handle: w.targetHandle }
-          : { id: rename.get(w.source) ?? w.source, handle: w.sourceHandle },
-      );
+    const insideEnds = insideOf(port.id);
     if (!outside.length || !insideEnds.length) continue;
     const kind = port.definition.kind as BoundaryKind;
     if (kind === 'outport') {
@@ -839,15 +855,15 @@ export function ungroupSubsystem(
           target: i.id,
           targetHandle: i.handle,
         });
+      // Every end outside was on this port's one net; they stay on one net.
       for (const o of outside.slice(1))
-        if (kind === 'connport')
-          wires.push({
-            id: newId('w_'),
-            source: hub.id,
-            sourceHandle: hub.handle,
-            target: o.id,
-            targetHandle: o.handle,
-          });
+        wires.push({
+          id: newId('w_'),
+          source: hub.id,
+          sourceHandle: hub.handle,
+          target: o.id,
+          targetHandle: o.handle,
+        });
     }
   }
   const junctions = [

@@ -156,12 +156,27 @@ export function removeSelection(
   });
 }
 /** Removing a branch also removes its dangling stub; degree-two junctions become bends. */
+/**
+ * Junctions only exist where three or more wires meet. A dot left with no wire goes; one
+ * with a single wire goes with that dangling stub; one with two becomes a bend in one
+ * wire (keeping `preferredWireId` when given). A wire that starts and ends on the same
+ * terminal connects nothing and goes too, and two wires that only loop between the same
+ * two ends are dropped rather than joined into a loop: every merge then points at ends
+ * that still exist. Each pass removes a dot, so this always finishes.
+ */
 export function pruneJunctions(
   project: Project,
   preferredWireId?: string,
 ): Project {
+  const same = (a: { id: string; handle: string }, b: typeof a) =>
+    a.id === b.id && a.handle === b.handle;
   let p = project;
   while (true) {
+    const loops = p.wires.filter(
+      (w) => w.source === w.target && w.sourceHandle === w.targetHandle,
+    );
+    if (loops.length)
+      p = { ...p, wires: p.wires.filter((w) => !loops.includes(w)) };
     const j = p.junctions?.find(
       (j) =>
         p.wires.filter((w) => w.source === j.id || w.target === j.id).length <
@@ -177,8 +192,6 @@ export function pruneJunctions(
         incident[1].id === preferredWireId
           ? [incident[1], incident[0]]
           : incident;
-      const pa = [...polylineOfWire(p, a.id)],
-        pb = [...polylineOfWire(p, b.id)];
       const from =
         a.source === j.id
           ? { id: a.target, handle: a.targetHandle }
@@ -187,16 +200,20 @@ export function pruneJunctions(
         b.target === j.id
           ? { id: b.source, handle: b.sourceHandle }
           : { id: b.target, handle: b.targetHandle };
-      if (a.source === j.id) pa.reverse();
-      if (b.target === j.id) pb.reverse();
-      rest.push({
-        id: a.id,
-        source: from.id,
-        sourceHandle: from.handle,
-        target: to.id,
-        targetHandle: to.handle,
-        waypoints: simplifyPoints([...pa, ...pb.slice(1)]).slice(1, -1),
-      });
+      if (!same(from, to)) {
+        const pa = [...polylineOfWire(p, a.id)],
+          pb = [...polylineOfWire(p, b.id)];
+        if (a.source === j.id) pa.reverse();
+        if (b.target === j.id) pb.reverse();
+        rest.push({
+          id: a.id,
+          source: from.id,
+          sourceHandle: from.handle,
+          target: to.id,
+          targetHandle: to.handle,
+          waypoints: simplifyPoints([...pa, ...pb.slice(1)]).slice(1, -1),
+        });
+      }
     }
     p = {
       ...p,
@@ -204,6 +221,25 @@ export function pruneJunctions(
       wires: rest,
     };
   }
+}
+
+/**
+ * Drop wires that end on nothing: a block or junction no longer in the sheet. Such a
+ * wire cannot be drawn, simulated, or saved (the service refuses it), so an older
+ * document that has one opens and saves again. Wires ending on a block whose port is
+ * gone are kept: validation reports them so the user decides.
+ */
+export function dropOrphanWires<
+  T extends Pick<Project, 'blocks' | 'wires' | 'junctions'>,
+>(sheet: T): T {
+  const ends = new Set([
+    ...sheet.blocks.map((b) => b.id),
+    ...(sheet.junctions ?? []).map((j) => j.id),
+  ]);
+  const wires = sheet.wires.filter(
+    (w) => ends.has(w.source) && ends.has(w.target),
+  );
+  return wires.length === sheet.wires.length ? sheet : { ...sheet, wires };
 }
 
 export function replaceDefinition(

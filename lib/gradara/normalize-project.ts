@@ -9,6 +9,7 @@ import { settleRoutes } from './router';
 import { gridSheet } from './grid';
 import { straightenNearRuns } from './grid-migrate';
 import { blockSize, minimumBlockSize } from './canvas';
+import { dropOrphanWires, pruneJunctions } from './project';
 import type { Block } from './model';
 
 const size = (b: Block) => blockSize(b);
@@ -35,6 +36,44 @@ function onGrid(project: Project): Project {
   return next;
 }
 
+type Sheet = Project | NonNullable<Project['subsystems']>[number];
+
+/** `step` on the top sheet and every subsystem sheet, keeping objects that did not change. */
+function everySheet(project: Project, step: <T extends Sheet>(sheet: T) => T) {
+  let next = step(project);
+  const subsystems = next.subsystems?.map((s) => step(s));
+  if (subsystems && subsystems.some((s, i) => s !== next.subsystems![i]))
+    next = { ...next, subsystems };
+  return next;
+}
+
+/**
+ * Junction hygiene on every sheet: wires that end on nothing are dropped, and a dot
+ * with fewer than three wires is removed or becomes a bend (pruneJunctions), so no edit
+ * can leave a stray dot or a wire to a deleted dot in a saved document.
+ */
+function tidyJunctions(project: Project, orphans: boolean) {
+  return everySheet(project, (sheet) => {
+    const kept = orphans ? dropOrphanWires(sheet) : sheet;
+    // A subsystem sheet is pruned in a view that has the document's subsystems, so
+    // nested instances resolve; only its own blocks, wires and dots change.
+    const view = { ...project, ...kept } as Project;
+    const pruned = kept.junctions?.length ? pruneJunctions(view) : view;
+    if (pruned === view && kept === sheet) return sheet;
+    const next = { ...kept, wires: pruned.wires, junctions: pruned.junctions };
+    // The top sheet's nets are reconciled at the end of normalizeProject; a subsystem
+    // sheet's nets follow its wires here.
+    if (sheet === project || !sheet.nets) return next;
+    return {
+      ...next,
+      nets: reconcileNets(
+        { ...project, ...next } as Project,
+        { ...project, ...sheet } as Project,
+      ).nets,
+    };
+  });
+}
+
 /** The saved document boundary: instance names, geometry, then net identity. */
 export function normalizeProject(
   project: Project,
@@ -46,7 +85,12 @@ export function normalizeProject(
     reconcileNets(
       settleRoutes(
         normalizeJunctions(
-          materializeBranches(normalizeBlockNames(project, previous)),
+          tidyJunctions(
+            materializeBranches(
+              normalizeBlockNames(tidyJunctions(project, true), previous),
+            ),
+            false,
+          ),
         ),
       ),
       previous,
