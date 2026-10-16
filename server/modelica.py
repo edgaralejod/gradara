@@ -351,6 +351,9 @@ def _emit_subsystem(subsystem, idle: dict) -> list[str]:
 
 
 def emit_project(project: Project) -> str:
+    from .tags import lower_tags
+    # Goto/From tags and connection labels become junctions and hidden subsystem ports.
+    project = lower_tags(project)
     parts = ['within;\npackage Gradara']
     for block in project.blocks:
         if block.definition.modelica is None and block.definition.subsystem is None:

@@ -10,6 +10,7 @@ import { BlockPreview } from './block-face';
 import { domainColors, type Domain, type Project } from '@/lib/gradara/model';
 import { polylineOfWire } from '@/lib/gradara/net-draw';
 import { bodyOf, labelOf } from '@/lib/gradara/router';
+import { isTagKind } from '@/lib/gradara/tag-blocks';
 import { busWireIds } from '@/lib/gradara/buses';
 import { portPoint } from '@/lib/gradara/ports';
 
@@ -128,15 +129,17 @@ export function ExampleDiagram({ project }: { project: Project }) {
                 flip={b.flip}
               />
             </span>
-            <span
-              className="diagram-name"
-              style={{
-                left: label.x - box.x + label.width / 2,
-                top: label.y - box.y,
-              }}
-            >
-              {b.definition.name}
-            </span>
+            {!isTagKind(b.definition.kind) && (
+              <span
+                className="diagram-name"
+                style={{
+                  left: label.x - box.x + label.width / 2,
+                  top: label.y - box.y,
+                }}
+              >
+                {b.definition.name}
+              </span>
+            )}
           </span>
         );
       })}

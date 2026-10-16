@@ -68,11 +68,12 @@ export function instance(
       throw new Error(`${spec.id}: ${kind} has no parameter ${key}`);
     parameter.value = value;
   }
-  const { rotation, flip, label, ports, signals } =
+  const { rotation, flip, label, ports, signals, tag } =
     typeof options === 'number'
       ? {
           rotation: options,
           flip: undefined,
+          tag: undefined,
           label: undefined,
           ports: undefined,
           signals: undefined,
@@ -109,6 +110,10 @@ export function instance(
     port.side = side;
     if (offset === undefined) delete port.offset;
     else port.offset = offset;
+  }
+  if (tag !== undefined) {
+    definition.tag = tag;
+    definition.symbol = tag;
   }
   const standard = defaultBlockSize(definition);
   const size =

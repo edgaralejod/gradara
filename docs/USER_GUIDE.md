@@ -143,7 +143,7 @@ Blocks get unique names such as Step, Step1, and Step2. Renaming a block does no
 
 ### The library
 
-The library has 208 built-in blocks in 18 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. 192 of them are components of the Modelica Standard Library 4.1.0, and their parameters map directly onto the library component; a block's Help links the library class. The rest are Gradara's own: buses, subsystems and ports, the sampled controllers and unit delay that export to C exactly, the relay, the switches, and the power function. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
+The library has 211 built-in blocks in 18 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. 192 of them are components of the Modelica Standard Library 4.1.0, and their parameters map directly onto the library component; a block's Help links the library class. The rest are Gradara's own: buses, Goto/From tags and connection labels, subsystems and ports, the sampled controllers and unit delay that export to C exactly, the relay, the switches, and the power function. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
 
 ### Ports and connections
 
@@ -165,6 +165,17 @@ A bus carries several signals on one wire, drawn heavy so it stands out. Four bl
 - **Bus Selector** picks signals out of a bus by name, wherever they are in it. Tick them under **Signals**; each becomes an output labeled with its name. Ticking a bus inside the bus (`motor`) gives all its signals as one vector.
 
 Buses pass through subsystem ports unchanged, so one wire can carry a group of signals into and out of a subsystem. Widths follow the wiring automatically. Other blocks take one signal: a bus wired into a Gain or Sum is reported as a problem that says to split it first. Results show one trace per signal of a bus, named after its element (for example `Sensors.bus.speed`), and logging a bus wire logs every signal on it. The **Mux and Demux** and **Signal buses** examples show both kinds.
+
+### Goto, From, and connection labels
+
+Tags connect without a wire, for long or crowded connections. Three blocks in **Routing**:
+
+- **Goto** takes a signal (or Boolean value) and shows its tag, such as `[ref]`. **From** gives that signal back anywhere a From with the same tag can see the Goto. Any number of From blocks can read one Goto; a sheet can have one Goto per tag.
+- **Connection label** joins physical terminals: every terminal wired to a label with the same tag is one node, as if wired together, in any physical domain. Use it for a supply rail, a ground return, or a shared shaft.
+
+Set the tag under **Tag** in the block's properties: a letter, then letters, digits, or `_`. The field suggests the tags in reach. A tag block takes the kind of the first wire you connect, and grows to fit its tag.
+
+Tags reach **down** a hierarchy, never up. A From finds the Goto with its tag on its own sheet or, failing that, on the nearest sheet above it, through any number of subsystem levels; a Goto inside a subsystem is not seen outside it (use a subsystem output for that). Labels inside a subsystem join the labels with their tag on the sheets above it; two subsystems side by side are joined only through a label above them. A From's properties name the Goto it reads and its sheet, with **Show** to open that sheet and select it; a Goto or label lists what it reaches. Problems reports a From with no Goto it can see, two Gotos with one tag on a sheet, a tag block without a tag, and one tag on different kinds of value. Results do not list a From's output separately: plot the Goto's source or a block the From feeds. Tags do not carry a bus yet. The **Goto, From, and connection labels** block example shows both kinds.
 
 ## Wire and arrange
 

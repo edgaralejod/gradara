@@ -159,6 +159,9 @@ class Definition(BaseModel):
     boundary: 'Boundary | None' = None
     # C for code generation of a custom block (see server/ctemplate.py).
     ctemplate: CTemplate | None = None
+    # The tag of a Goto, From, or connection label (server/tags.py): blocks with one tag on a
+    # sheet, or on a sheet and inside its subsystems, are one connection.
+    tag: str | None = Field(default=None, pattern=r'^[A-Za-z][A-Za-z0-9_]{0,31}$')
 
     @field_validator('equations', 'declarations')
     @classmethod

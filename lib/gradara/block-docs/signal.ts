@@ -638,6 +638,68 @@ export const docs: Record<string, BlockDoc> = {
     seeAlso: ['mux', 'busSelector'],
   },
 
+  goto: {
+    description: [
+      'Sends the signal wired to it, by tag, to every From block with the same tag, without a wire: a long or crowded connection becomes two small flags. The tag is shown on the block as [tag]; set it under Tag in the block’s properties.',
+      'A Goto is seen on its own sheet and inside every subsystem on it, at any depth. It is never seen above: a Goto inside a subsystem cannot reach a From outside it. Use a subsystem output for that.',
+    ],
+    ports: {
+      u: 'The signal (or Boolean value) to send. The block takes the kind of the first wire you connect.',
+    },
+    equations: ['every From [tag] it reaches: y = u'],
+    limitations: [
+      'One Goto per tag on a sheet; a second one is reported by model checks.',
+      'A tag is a letter, then letters, digits, or _ (up to 32).',
+      'A bus is not carried by tag yet; use a wire or a subsystem port for a bus.',
+    ],
+    tips: [
+      'The block’s properties list the From blocks that read it on this sheet, with Show to jump to each.',
+      'A Goto inside a subsystem shadows a Goto with the same tag above it, for the From blocks inside.',
+    ],
+    seeAlso: ['from', 'connectionLabel', 'subsystem'],
+  },
+
+  from: {
+    description: [
+      'Gives back the signal of the Goto block with the same tag: on its own sheet, or else on the nearest sheet above it, through any number of subsystem levels. Any number of From blocks can read one Goto.',
+      'A From never reads a Goto inside a subsystem below it or beside it; model checks report a From with no Goto it can see.',
+    ],
+    ports: {
+      y: 'The signal wired into the Goto with this tag.',
+    },
+    equations: ['y = u of the Goto [tag] it reads'],
+    limitations: [
+      'A tag is a letter, then letters, digits, or _ (up to 32).',
+      'Results do not list a From’s output separately: plot the Goto’s source or a block the From feeds.',
+    ],
+    tips: [
+      'Its properties name the Goto it reads and the sheet it is on, with Show to open that sheet and select it. The tag field suggests the Goto tags in reach.',
+    ],
+    seeAlso: ['goto', 'connectionLabel', 'subsystem'],
+  },
+
+  connectionLabel: {
+    description: [
+      'Joins physical terminals by tag: every terminal wired to a label with the same tag is one node, as if they were wired together. Use it for a supply rail, a ground return, or a shaft that many parts share. The label takes the domain of the first terminal you connect (electrical, rotational, translational, thermal, magnetic, or 3-phase).',
+      'Labels reach down a hierarchy, never up: a label inside a subsystem joins the labels with its tag on its sheet and on the sheets above it, so a rail labelled at the top reaches every subsystem that labels it. Two subsystems side by side are joined only through a label above them.',
+    ],
+    ports: {
+      p: 'A physical terminal of the label’s domain. Like a wire, the label adds no equations of its own.',
+    },
+    equations: [
+      'all terminals on labels [tag]: one node (equal potentials, flows summing to zero)',
+    ],
+    limitations: [
+      'Labels with one tag must share one domain.',
+      'A tag is a letter, then letters, digits, or _ (up to 32).',
+    ],
+    tips: [
+      'Flip a label (⌘/Ctrl + I) to put its terminal on the other side.',
+      'Its properties list the other labels it joins, here and above, with Show to jump to each.',
+    ],
+    seeAlso: ['goto', 'from', 'subsystem'],
+  },
+
   busCreator: {
     description: [
       'Bundles signals into a bus: one wire that carries them all, each under a name. The names are the input labels on the block; edit them, and add or remove inputs, under Signals in its properties.',

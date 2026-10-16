@@ -1,5 +1,8 @@
 'use client';
 import { flipBlocks, rotateBlocks } from '@/lib/gradara/rotation';
+import { isTagKind } from '@/lib/gradara/tag-blocks';
+import { tagProblems } from '@/lib/gradara/tags';
+import { TagProperties } from '@/components/gradara/tag-properties';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
 import NoteLayer from '@/components/gradara/note-layer';
@@ -721,6 +724,8 @@ function Workbench() {
       () =>
         setLiveProblems([
           ...validateProject(projectRef.current),
+          // Tags reach from the sheets above, so they are checked on the whole document.
+          ...tagProblems(docRef.current, scopeRef.current),
           // Every variant, active or not, so a broken alternative shows before anyone switches to it.
           ...variantProblems(docRef.current),
         ]),
@@ -3717,7 +3722,8 @@ function Workbench() {
                       !active.definition.modelica &&
                       !active.definition.subsystem &&
                       !isBusBlock(active.definition) &&
-                      !isBoundary(active) && (
+                      !isBoundary(active) &&
+                      !isTagKind(active.definition.kind) && (
                         <Button
                           className="refine-button"
                           variant="outline"
@@ -3739,6 +3745,46 @@ function Workbench() {
                         </Button>
                       )}
                   </div>
+                  {isTagKind(active.definition.kind) && (
+                    <TagProperties
+                      doc={doc}
+                      path={scope}
+                      block={active}
+                      onTag={(tag) =>
+                        commit((p) => ({
+                          ...p,
+                          blocks: p.blocks.map((b) => {
+                            if (b.id !== active.id) return b;
+                            const definition = {
+                              ...b.definition,
+                              tag,
+                              symbol: tag,
+                            };
+                            // The flag grows with its tag, about its center.
+                            const old = blockSize(b);
+                            const size = defaultBlockSize(definition);
+                            return {
+                              ...b,
+                              definition,
+                              size,
+                              position: snapBlockPosition(
+                                {
+                                  x: b.position.x + (old.width - size.width) / 2,
+                                  y: b.position.y + (old.height - size.height) / 2,
+                                },
+                                size,
+                              ),
+                            };
+                          }),
+                        }))
+                      }
+                      onShow={(link) => {
+                        navigate(link.path);
+                        setWorkspaceMode('diagram');
+                        setTimeout(() => selectBlocks([link.blockId]), 60);
+                      }}
+                    />
+                  )}
                   {active.definition.subsystem && (
                     <div className="inspector-section subsystem-section">
                       <div className="section-label">

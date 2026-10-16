@@ -9,6 +9,7 @@
  * so the same sheet always draws the same way: preview, commit, and reload agree.
  */
 import { Position } from '@xyflow/react';
+import { isTagKind } from './tag-blocks';
 import { blockSize } from './canvas';
 import { GRID, snap } from './grid';
 import type { Block, Project, Wire } from './model';
@@ -73,7 +74,11 @@ export function sheetOf(project: Project): Sheet {
     bodies: new Map(project.blocks.map((b) => [b.id, bodyOf(b)])),
     labels: new Map(
       project.blocks
-        .filter((b) => !b.definition.kind.startsWith('subsystem'))
+        .filter(
+          (b) =>
+            !b.definition.kind.startsWith('subsystem') &&
+            !isTagKind(b.definition.kind),
+        )
         .map((b) => [b.id, labelOf(b)]),
     ),
   };
@@ -442,7 +447,8 @@ function gridRoute(
     }
   }
   let found:
-    { total: number; key: number; goal: (typeof goals)[number] } | undefined;
+    | { total: number; key: number; goal: (typeof goals)[number] }
+    | undefined;
   const settled = new Set<number>();
   while (heap.size) {
     const { f, v } = heap.pop();

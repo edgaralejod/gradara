@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Definition } from '@/lib/gradara/model';
 import { useContext } from 'react';
-import { formatBlockValue } from '@/lib/gradara/block-design';
+import { formatBlockValue, tagText } from '@/lib/gradara/block-design';
 import {
   SubsystemLookupContext,
   SubsystemThumbnail,
@@ -71,6 +71,8 @@ export function BlockSymbol({
   const vertical =
     d.ports.find((p) => p.direction === 'physical')?.side === 'top';
   if (kind === 'sum' || kind === 'subtract') return null;
+  if (kind === 'goto' || kind === 'from' || kind === 'connectionLabel')
+    return <span className="tag-name">{tagText(d)}</span>;
   if (d.subsystem) return <SubsystemFace subsystemRef={d.subsystem.ref} />;
   if (kind === 'gain') {
     const k = d.parameters.find((p) => p.id === 'k')?.value ?? 1;

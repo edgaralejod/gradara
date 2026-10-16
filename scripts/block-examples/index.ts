@@ -1,4 +1,5 @@
 import { buses } from './buses';
+import { tags } from './tags';
 import { circuits } from './circuits';
 import { control } from './control';
 import { converters } from './converters';
@@ -15,6 +16,7 @@ export type { ExampleCheck, ExampleSpec } from './types';
 export const examples: ExampleSpec[] = [
   ...signals,
   ...buses,
+  ...tags,
   ...logic,
   ...control,
   ...electrical,

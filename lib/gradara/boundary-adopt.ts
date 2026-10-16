@@ -5,6 +5,7 @@ import {
   boundaryKinds,
   type BoundaryKind,
 } from './port-blocks';
+import { isTagKind, tagDefinition, tagDomains } from './tag-blocks';
 
 type End = { id: string; handle: string };
 
@@ -21,6 +22,37 @@ export function adoptBoundaryDomain(project: Project, a: End, b: End): Project {
   ]) {
     const block = project.blocks.find((x) => x.id === pill.id);
     const d = block?.definition;
+    // A Goto, From, or connection label takes its domain the same way.
+    if (block && d && isTagKind(d.kind)) {
+      const inner = d.ports[0];
+      if (!inner || inner.id !== pill.handle) continue;
+      if (
+        project.wires.some(
+          (w) => w.source === block.id || w.target === block.id,
+        )
+      )
+        continue;
+      const target = project.blocks
+        .find((x) => x.id === other.id)
+        ?.definition.ports.find((p) => p.id === other.handle);
+      if (!target || target.domain === inner.domain) continue;
+      const wants =
+        d.kind === 'goto' ? 'output' : d.kind === 'from' ? 'input' : 'physical';
+      if (
+        target.direction !== wants ||
+        !tagDomains(d.kind).includes(target.domain)
+      )
+        continue;
+      const next = tagDefinition(d.kind, d.tag ?? '', target.domain);
+      return {
+        ...project,
+        blocks: project.blocks.map((x) =>
+          x.id === block.id
+            ? { ...x, definition: { ...next, name: d.name } }
+            : x,
+        ),
+      };
+    }
     if (!block || !d?.boundary || !(d.kind in boundaryKinds)) continue;
     const inner = d.ports[0];
     if (!inner || inner.id !== pill.handle) continue;
