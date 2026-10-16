@@ -5,6 +5,7 @@ import { compatible, portOf } from './model';
 import { connectionError, endpointPort, flattenWires, isTap } from './net';
 import { emptySelection, extractSelection, pasteSelection } from './selection';
 import { adoptBoundaryDomain } from './boundary-adopt';
+import { setTag } from './tag-edit';
 import { signature as settingsSignature } from './solver';
 function sheetSemantics(
   p: Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>,
@@ -265,6 +266,8 @@ export function replaceDefinition(
 }
 export type BlockEdits = {
   name?: string;
+  /** A Goto, From, or connection label's tag (tag-edit.ts). */
+  tag?: string;
   parameters?: Record<string, number>;
   equations?: string;
   declarations?: string;
@@ -272,6 +275,7 @@ export type BlockEdits = {
 
 /** Apply one dialog session; returns `p` itself when nothing changed. */
 export function applyBlockEdits(p: Project, id: string, edits: BlockEdits) {
+  if (edits.tag !== undefined) p = setTag(p, id, edits.tag);
   const block = p.blocks.find((b) => b.id === id);
   if (!block) return p;
   const d = block.definition;
