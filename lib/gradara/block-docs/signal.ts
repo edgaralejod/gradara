@@ -704,6 +704,31 @@ export const docs: Record<string, BlockDoc> = {
     seeAlso: ['goto', 'from', 'subsystem'],
   },
 
+  physicalBus: {
+    description: [
+      'Bundles named physical connections into one bus line, or splits them out again, as Simscape Bus does. Each element is a terminal with a name and a type: electrical, rotational, translational, thermal, magnetic, or 3-phase. One line can carry a motor’s abc phases, its shaft, and its thermal port together.',
+      'Wire the bus terminal to another Physical bus, directly, through junctions, or through a subsystem’s physical bus port. The elements with the same name on every bus block of one bus line become one node, whatever order they are listed in. A physical connection has no direction, so the same block bundles at one end and splits at the other: flip it so its bus terminal faces the line.',
+    ],
+    ports: {
+      e1: 'The first element (p1 by default): a physical terminal of the type set for it.',
+      e2: 'The second element (p2 by default).',
+      bus: 'The bus terminal: every element, by name.',
+    },
+    equations: [
+      'Every element named n on one bus line is one node: the potentials are equal and the flows sum to zero.',
+    ],
+    limitations: [
+      'Names are a letter, then letters, digits, or _, and must differ within one block. Elements with one name on one bus line must be the same type; model checks report it otherwise.',
+      'An element on one end with no partner on the other is simply left open.',
+      'A physical bus carries physical connections only; use a Bus Creator for signals. A connection label cannot carry a bus yet.',
+    ],
+    tips: [
+      'Edit the elements under Elements in its properties: add, rename, reorder, or set a type. An unwired element takes the type of the first terminal you connect; a wired one keeps its wire’s type.',
+      'Give a subsystem a port of type Physical bus and the bus carries into it the elements its inside uses.',
+    ],
+    seeAlso: ['connectionLabel', 'busCreator', 'subsystem'],
+  },
+
   busCreator: {
     description: [
       'Bundles signals into a bus: one wire that carries them all, each under a name. The names are the input labels on the block; edit them, and add or remove inputs, under Signals in its properties.',

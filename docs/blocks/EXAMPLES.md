@@ -6,7 +6,7 @@ Every library block has a small runnable model that shows it at work. A block's 
 
 | What | Where |
 | --- | --- |
-| Specs, by area | `scripts/block-examples/` (`signals.ts`, `buses.ts`, `logic.ts`, `control.ts`, `electrical.ts`, `circuits.ts`, `power.ts`, `converters.ts`, `physical.ts`) |
+| Specs, by area | `scripts/block-examples/` (`signals.ts`, `buses.ts`, `tags.ts`, `physical-buses.ts`, `logic.ts`, `control.ts`, `electrical.ts`, `circuits.ts`, `power.ts`, `converters.ts`, `physical.ts`) |
 | Builder | `scripts/build-block-examples.tsx` (`npm run examples:blocks`) |
 | Built models and manifest | `models/examples/blocks/<id>.json`, `models/examples/blocks/index.json` |
 | Lookup for the workbench | `lib/gradara/block-examples.ts` (`exampleForKind`) |
@@ -18,7 +18,7 @@ Every library block has a small runnable model that shows it at work. A block's 
 
 Each example is an `ExampleSpec` (`scripts/block-examples/types.ts`):
 
-- **Blocks** with their centers on the sheet. Centers on multiples of 8 keep blocks on the grid, and two-terminal parts on one row get straight wires. Options rotate or flip a block, move its name beside or above it, move a port to another side, or set a bus block's signals (`signals`: a Mux or Demux count, Bus Creator names, or the names a Bus Selector picks).
+- **Blocks** with their centers on the sheet. Centers on multiples of 8 keep blocks on the grid, and two-terminal parts on one row get straight wires. Options rotate or flip a block, move its name beside or above it, move a port to another side, set a bus block's signals (`signals`: a Mux or Demux count, Bus Creator names, or the names a Bus Selector picks), or a Physical bus's elements (`elements`: `[name, type]` pairs).
 - **Direction.** Signals read left to right. A block on a feedback or measurement path that should read right to left gets `flip: true`; a port is never moved backward (an input to the right or an output to the left), and the assembler refuses one. Place each block where its input meets the output that feeds it, port on port, so wires come out straight: the router only has to bend the wires that must turn.
 - **Links** as `block.port` pairs. The builder connects them with the workbench's own rules and saves the document through `normalizeProject` and `syncInstances` (which derives bus widths), so the router draws the wires and junctions exactly as the canvas would.
 - **Plots** that open with the model, **about** (the blocks this example teaches; a block's Help opens the example about it), and a description that says what to look for in Results.

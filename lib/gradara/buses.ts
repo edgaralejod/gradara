@@ -536,12 +536,21 @@ export function busWireIds(project: Project): Set<string> {
   const ports = new Map<string, Port>();
   for (const b of project.blocks)
     for (const p of b.definition.ports) ports.set(`${b.id}.${p.id}`, p);
+  // A physical bus line is drawn heavy too (physical-bus.ts).
+  const busJunctions = new Set(
+    (project.junctions ?? [])
+      .filter((j) => j.domain === 'physicalBus')
+      .map((j) => j.id),
+  );
+  const heavy = (id: string, handle: string) =>
+    widthOf(ports.get(`${id}.${handle}`)) > 1 ||
+    ports.get(`${id}.${handle}`)?.domain === 'physicalBus' ||
+    busJunctions.has(id);
   const wide = new Set(
     project.wires
       .filter(
         (w) =>
-          widthOf(ports.get(`${w.source}.${w.sourceHandle}`)) > 1 ||
-          widthOf(ports.get(`${w.target}.${w.targetHandle}`)) > 1,
+          heavy(w.source, w.sourceHandle) || heavy(w.target, w.targetHandle),
       )
       .map((w) => w.id),
   );

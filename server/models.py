@@ -5,7 +5,8 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 IDENTIFIER = r'^[A-Za-z][A-Za-z0-9_]*$'
-Domain = Literal['signal', 'boolean', 'electrical', 'mechanical', 'translational', 'thermal', 'magnetic', 'threePhase']
+Domain = Literal['signal', 'boolean', 'electrical', 'mechanical', 'translational', 'thermal', 'magnetic', 'threePhase',
+                 'physicalBus']
 # Domains carried by input/output ports; every other domain is a physical (acausal) connector.
 CAUSAL_DOMAINS = {'signal', 'boolean'}
 BlockType = Literal['signal', 'electrical', 'mechanical', 'translational', 'thermal', 'magnetic', 'multidomain']

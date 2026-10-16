@@ -93,7 +93,6 @@
   gap: 5px;
   font-size: var(--text-ui);
   letter-spacing: normal;
-  text-transform: capitalize;
   font-weight: 500;
 }
 .inspector-properties .component-name-input {

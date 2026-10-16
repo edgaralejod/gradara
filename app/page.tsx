@@ -214,6 +214,9 @@ import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import VariantPanel from '@/components/gradara/variant-panel';
 import { BusSignalsPanel } from '@/components/gradara/bus-signals-panel';
+import { PhysicalBusPanel } from '@/components/gradara/physical-bus-panel';
+import { isPhysicalBus } from '@/lib/gradara/physical-bus';
+import { physicalBusProblems } from '@/lib/gradara/physical-bus-problems';
 import { isBusBlock, propagateBuses } from '@/lib/gradara/buses';
 import { useVariantChecks } from '@/components/gradara/use-variant-checks';
 import { SubsystemLookupContext } from '@/components/gradara/subsystem-preview';
@@ -770,6 +773,8 @@ function Workbench() {
           ...validateProject(projectRef.current),
           // Tags reach from the sheets above, so they are checked on the whole document.
           ...tagProblems(docRef.current, scopeRef.current),
+          // Physical buses read through subsystem bus ports, so the whole document is passed.
+          ...physicalBusProblems(docRef.current, scopeRef.current),
           // Every variant, active or not, so a broken alternative shows before anyone switches to it.
           ...variantProblems(docRef.current),
         ]),
@@ -3874,6 +3879,13 @@ function Workbench() {
                       onCommit={(change) => commit(change)}
                     />
                   )}
+                  {isPhysicalBus(active.definition) && (
+                    <PhysicalBusPanel
+                      view={project}
+                      block={active}
+                      onCommit={(change) => commit(change)}
+                    />
+                  )}
                   {isBoundary(active) && (
                     <PortPillPanel
                       view={project}
@@ -4265,7 +4277,7 @@ function Workbench() {
                       borderRadius: domain === 'signal' ? '50%' : 1,
                     }}
                   />
-                  {domain}
+                  {domainTitle(domain)}
                 </span>
               ))}
           </span>
@@ -4331,6 +4343,7 @@ function Workbench() {
               key={equationBlock.id}
               block={project.blocks.find((b) => b.id === equationBlock.id)!}
               wired={isTagWired(project, equationBlock.id)}
+              view={project}
               initialTab={equationBlock.tab}
               onClose={() => setEquationBlock(null)}
               onCommit={(change) => commit(change)}

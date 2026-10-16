@@ -110,5 +110,6 @@ export const boundaryDomains = (kind: BoundaryKind): Domain[] =>
         'thermal',
         'magnetic',
         'threePhase',
+        'physicalBus',
       ]
     : ['signal', 'boolean'];

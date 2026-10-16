@@ -55,6 +55,7 @@ export const portTypes: Domain[] = [
   'thermal',
   'magnetic',
   'threePhase',
+  'physicalBus',
 ];
 const causal = (d: Domain) => d === 'signal' || d === 'boolean';
 export const roleOf = (kind: BoundaryKind, side?: Side): PortRole =>

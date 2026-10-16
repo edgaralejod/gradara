@@ -197,7 +197,7 @@ export function BlockSymbol({
   if (kind === 'power') return <span className="math-op">uⁿ</span>;
   if (kind === 'zoh') return <span className="math-op">ZOH</span>;
   if (kind === 'mux' || kind === 'demux') return null;
-  if (kind === 'busCreator')
+  if (kind === 'busCreator' || kind === 'physicalBus')
     return (
       <Icon>
         <path d="M6 8L28 22M6 22H28M6 36L28 22" />

@@ -68,6 +68,13 @@ def validate_simulation(project: Project):
             'Fix these tags before running:\n' + '\n'.join(f'• {t["message"]}' for t in tags),
             [Diagnostic(source='validation', message=t['message'], blockIds=t['blockIds'], hint=t['hint'])
              for t in tags])
+    from .physical_buses import physical_bus_problems
+    physical = physical_bus_problems(project)
+    if physical:
+        raise SimulationFailure(
+            'Fix these physical buses before running:\n' + '\n'.join(f'• {t["message"]}' for t in physical),
+            [Diagnostic(source='validation', message=t['message'], blockIds=t['blockIds'], hint=t['hint'])
+             for t in physical])
     missing = []
     for _, diagram in active_diagrams(project):
         connections = flatten_connects(diagram)

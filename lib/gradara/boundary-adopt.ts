@@ -6,6 +6,7 @@ import {
   type BoundaryKind,
 } from './port-blocks';
 import { isTagKind, tagDefinition, tagDomains } from './tag-blocks';
+import { BUS_PORT, ELEMENT_DOMAINS, isPhysicalBus } from './physical-bus';
 
 type End = { id: string; handle: string };
 
@@ -49,6 +50,45 @@ export function adoptBoundaryDomain(project: Project, a: End, b: End): Project {
         blocks: project.blocks.map((x) =>
           x.id === block.id
             ? { ...x, definition: { ...next, name: d.name } }
+            : x,
+        ),
+      };
+    }
+    // A Physical bus element takes the type of the first terminal wired to it.
+    if (block && d && isPhysicalBus(d) && pill.handle !== BUS_PORT) {
+      const inner = d.ports.find((p) => p.id === pill.handle);
+      if (!inner) continue;
+      if (
+        project.wires.some(
+          (w) =>
+            (w.source === block.id && w.sourceHandle === inner.id) ||
+            (w.target === block.id && w.targetHandle === inner.id),
+        )
+      )
+        continue;
+      const target = project.blocks
+        .find((x) => x.id === other.id)
+        ?.definition.ports.find((p) => p.id === other.handle);
+      if (
+        !target ||
+        target.domain === inner.domain ||
+        target.direction !== 'physical' ||
+        !ELEMENT_DOMAINS.includes(target.domain)
+      )
+        continue;
+      return {
+        ...project,
+        blocks: project.blocks.map((x) =>
+          x.id === block.id
+            ? {
+                ...x,
+                definition: {
+                  ...d,
+                  ports: d.ports.map((p) =>
+                    p.id === inner.id ? { ...p, domain: target.domain } : p,
+                  ),
+                },
+              }
             : x,
         ),
       };

@@ -116,9 +116,10 @@ class Unit:
 
 
 def build_unit(project: Project, path: list[str], instance_id: str | None, block_ids: list[str]) -> Unit:
+    from .physical_buses import lower_physical_buses
     from .tags import lower_tags
-    # Tags join nets as wires do (server/tags.py); the selection's tag blocks go with them.
-    project = lower_tags(project)
+    # Tags and physical buses join nets as wires do; the selection's tag and bus blocks go with them.
+    project = lower_physical_buses(lower_tags(project))
     sheet, prefix = _sheet(project, path)
     subsystems = {s.id: s for s in (project.subsystems or [])}
     union = _Union()
@@ -786,8 +787,9 @@ def _order(unit: Unit, codes: dict[str, Code]) -> list[Node]:
 
 def generate(project: Project, path: list[str], instance_id: str | None, block_ids: list[str],
              options: CodegenOptions) -> Generated:
+    from .physical_buses import lower_physical_buses
     from .tags import lower_tags
-    project = lower_tags(project)
+    project = lower_physical_buses(lower_tags(project))
     unit = build_unit(project, path, instance_id, block_ids)
     if not unit.nodes:
         raise CodegenError('There are no blocks to generate code for.')

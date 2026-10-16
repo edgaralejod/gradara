@@ -145,7 +145,7 @@ Blocks get unique names such as Step, Step1, and Step2. Renaming a block does no
 
 ### The library
 
-The library has 211 built-in blocks in 18 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. 192 of them are components of the Modelica Standard Library 4.1.0, and their parameters map directly onto the library component; a block's Help links the library class. The rest are Gradara's own: buses, Goto/From tags and connection labels, subsystems and ports, the sampled controllers and unit delay that export to C exactly, the relay, the switches, and the power function. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
+The library has 212 built-in blocks in 18 categories: Sources, Math, Continuous, Discrete, Nonlinear, Routing, Ports & subsystems, Control, Logic, Electrical, Semiconductors, Converters, Machines, 3-phase, Rotational, Translational, Thermal, and Magnetic. 192 of them are components of the Modelica Standard Library 4.1.0, and their parameters map directly onto the library component; a block's Help links the library class. The rest are Gradara's own: signal and physical buses, Goto/From tags and connection labels, subsystems and ports, the sampled controllers and unit delay that export to C exactly, the relay, the switches, and the power function. In a source checkout, a visual catalog of every block is at `/block-catalog` in the workbench.
 
 ### Ports and connections
 
@@ -184,6 +184,14 @@ Hover a Goto and a faded From appears past its tip; click it to add a From with 
 Copying or duplicating never makes a second Goto with a tag already on the sheet: the copy gets the next free tag (`ref` becomes `ref1`), and From blocks copied with it follow, so a copied pair stays a pair. A From copied on its own keeps its tag and reads the same Goto; labels keep their tags.
 
 Tags reach **down** a hierarchy, never up. A From finds the Goto with its tag on its own sheet or, failing that, on the nearest sheet above it, through any number of subsystem levels; a Goto inside a subsystem is not seen outside it (use a subsystem output for that). Labels inside a subsystem join the labels with their tag on the sheets above it; two subsystems side by side are joined only through a label above them. A From's properties name the Goto it reads and its sheet, with **Show** to open that sheet and select it; a Goto or label lists what it reaches. Problems reports a From with no Goto it can see, two Gotos with one tag on a sheet, a tag block without a tag, and one tag on different kinds of value. Results do not list a From's output separately: plot the Goto's source or a block the From feeds. Tags do not carry a bus yet. The **Goto, From, and connection labels** block example shows both kinds.
+
+### Physical buses
+
+A **Physical bus** (in **Routing**) bundles named physical connections of any type into one line, as Simscape Bus does: a motor's three phases, its shaft, and its thermal port can travel together. Each **element** is a terminal on the block with a name and a type (electrical, rotational, translational, thermal, magnetic, or 3-phase); the bus terminal carries them all. Wire the bus terminal of one Physical bus to another, directly or through junctions: elements with the same name on the two ends are one node, in whatever order the blocks list them. A physical connection has no direction, so the same block bundles at one end and splits at the other; flip it so its bus terminal faces the line.
+
+Edit the elements under **Elements** in the block's properties or its dialog: add, rename, reorder, remove, and set each one's type. An unwired element takes the type of the first terminal you connect to it; a wired one keeps its wire's type. Removing an element removes its wires. Element names are a letter, then letters, digits, or `_`, and must differ within a block. Problems reports a repeated or invalid name, and one name carried as two types on one bus line.
+
+A bus also crosses subsystem boundaries: set a subsystem port's type to **Physical bus** (or group blocks so a bus line is cut), and inside, wire the port to a Physical bus that gives the elements back. The port carries the elements its inside uses; an element on one end with no partner on the other is simply left open. Bus lines are drawn heavy, in the bus color. The **Physical bus** block example carries a supply's two rails and a heater's heat flow to a load as one line.
 
 ## Wire and arrange
 

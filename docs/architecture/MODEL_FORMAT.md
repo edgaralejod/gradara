@@ -91,6 +91,7 @@ Ports have `direction` (`input`, `output`, or `physical`), their own `domain`, o
 | `thermal` | physical | `HeatPort_a` |
 | `magnetic` | physical | FluxTubes `MagneticPort` |
 | `threePhase` | physical | Polyphase `Plug` |
+| `physicalBus` | physical | None: named elements of the other physical domains, joined by name before emission |
 
 `signal` and `boolean` are the causal domains; every other domain is a physical terminal. Validation rejects an input or output port with a physical domain and a physical port with a causal domain. Never derive connector semantics only from the block color. Offsets must agree between renderer and router. Omit unset optional geometry values in API responses: an explicit `null` can accidentally behave like zero in frontend arithmetic.
 
@@ -208,6 +209,8 @@ When adding fields, decide whether they affect physics, presentation, provenance
 ### Tags
 
 `Definition.tag` names the tag of a Goto (`kind: goto`, one input `u`), a From (`kind: from`, one output `y`), or a connection label (`kind: connectionLabel`, one physical port `p`): a letter, then up to 31 letters, digits, or `_` (the service refuses anything else). A Goto and every From with its tag on the same sheet, or a From on a sheet below it on an instance path, carry one signal; connection labels with one tag on a sheet, and labels with that tag on the sheets above, are one node. A tag never reaches up out of a subsystem. Tag blocks are ordinary blocks in the document (they keep their wires and geometry), take the domain of the first wire connected to them, and are joined only when the model is emitted (see [execution](EXECUTION.md#emission)). The tag is part of the semantic signature, since it changes connectivity.
+
+A **Physical bus** block (`kind: physicalBus`, domain `physicalBus`) has one physical port per element, IDs `e1`, `e2`, … (an element keeps its ID while it exists, so its wires stay with it), each with its element name as `name` and a physical domain other than `physicalBus`, and one port `bus` of domain `physicalBus`. Element names follow the tag rule (a letter, then up to 31 letters, digits, or `_`) and differ within a block. Ports of domain `physicalBus` connect only to each other and to junctions of that domain; a subsystem port (`connport`) may take it, and the instance port carries the elements the inside uses. Bus lines are ordinary wires and junctions in the document; the joining happens at emission (see [execution](EXECUTION.md#emission)).
 
 ### Block rotation and flip
 

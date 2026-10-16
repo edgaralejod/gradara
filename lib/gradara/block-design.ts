@@ -64,6 +64,8 @@ export function showPortLabel(d: Definition, p: Port) {
   if (commutative.has(d.kind)) return false;
   // A bus's signal names are the point of these blocks.
   if (d.kind === 'busCreator' || d.kind === 'busSelector') return true;
+  // A physical bus names its elements; its one bus terminal needs no name.
+  if (d.kind === 'physicalBus') return p.domain !== 'physicalBus';
   if (
     d.domain === 'signal' &&
     d.ports.length <= 2 &&

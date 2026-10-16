@@ -41,7 +41,10 @@ export function BlockFace({
   const turned = o.rotation % 180 !== 0;
   const sheet = turned ? { width: size.height, height: size.width } : size;
   // Bus signal names are the content of these blocks: never cut them short.
-  const named = d.kind === 'busCreator' || d.kind === 'busSelector';
+  const named =
+    d.kind === 'busCreator' ||
+    d.kind === 'busSelector' ||
+    d.kind === 'physicalBus';
   // Room for the upright names inside the body, on the side of the unturned face
   // whose terminals they name: a name across a side needs its width, along it a line.
   const inset = (side: Side) =>
