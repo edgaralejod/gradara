@@ -21,6 +21,8 @@ import { Input } from '@/components/ui/input';
 import ParameterList from './parameter-list';
 import BlockHelpDialog from './block-help-dialog';
 import { BusSignalsPanel } from './bus-signals-panel';
+import { PhysicalBusPanel } from './physical-bus-panel';
+import { isPhysicalBus } from '@/lib/gradara/physical-bus';
 import { isTagKind, TAG_PATTERN, type TagKind } from '@/lib/gradara/tag-blocks';
 import type { Domain, Project } from '@/lib/gradara/model';
 import { TagTypeSelect } from './tag-properties';
@@ -81,8 +83,11 @@ export default function BlockDialog({
   onApply,
   onCommit,
   wired = false,
+  view,
 }: {
   block: Block;
+  /** The open sheet (a Physical bus needs to know which of its elements are wired). */
+  view?: Project;
   /** A tag block with wires takes its type from them, so its Type is not chosen here. */
   wired?: boolean;
   initialTab?: BlockDialogTab;
@@ -107,10 +112,15 @@ export default function BlockDialog({
   const firstParameter = useRef<HTMLInputElement>(null);
   // A bus block's equations follow its Signals (buses.ts), so they are shown, not edited.
   const bus = isBusBlock(definition);
+  const physicalBus = isPhysicalBus(definition);
   const tagged = isTagKind(definition.kind);
   const readonly =
     !definition.generated &&
-    (definition.domain !== 'signal' || !!definition.modelica || bus || tagged);
+    (definition.domain !== 'signal' ||
+      !!definition.modelica ||
+      bus ||
+      tagged ||
+      physicalBus);
   const readOnlyMessage = bus
     ? 'These equations follow the Signals on the Properties tab.'
     : 'Built-in equations are shown for inspection and cannot be edited.';
@@ -120,11 +130,13 @@ export default function BlockDialog({
   // A tag block has no equations: tags are joined when the model is emitted.
   const showEquations =
     !tagged &&
+    !physicalBus &&
     !modelicaClassOnly(definition) &&
     !definition.subsystem &&
     (!readonly || !!definition.equations?.trim());
   const showDeclarations =
     !tagged &&
+    !physicalBus &&
     !definition.subsystem &&
     (!readonly || !!definition.declarations?.trim());
   const tagValid = !tagged || TAG_PATTERN.test(draft.tag);
@@ -318,6 +330,18 @@ export default function BlockDialog({
                 </span>
               </p>
             </section>
+            {physicalBus && onCommit && view && (
+              <section className="block-dialog-signals">
+                <PhysicalBusPanel
+                  view={view}
+                  block={block}
+                  onCommit={onCommit}
+                />
+                <p className="size-hint">
+                  Changes to the elements apply at once, each as one undo step.
+                </p>
+              </section>
+            )}
             {bus && onCommit && (
               <section className="block-dialog-signals">
                 <BusSignalsPanel block={block} onCommit={onCommit} />

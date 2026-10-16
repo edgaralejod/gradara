@@ -2,6 +2,7 @@
 import { domainLabels, type Block, type Definition, type Port } from './model';
 import { isBusBlock } from './buses';
 import { isTagKind } from './tag-blocks';
+import { isPhysicalBus } from './physical-bus';
 
 /**
  * Which sections the properties panel shows for a block, so a section never sits
@@ -22,7 +23,13 @@ export const modelicaClassOnly = (d: Definition) =>
  */
 export const hasEquations = (block: Block) => {
   const d = block.definition;
-  if (d.subsystem || d.boundary || isTagKind(d.kind) || isBusBlock(d))
+  if (
+    d.subsystem ||
+    d.boundary ||
+    isTagKind(d.kind) ||
+    isBusBlock(d) ||
+    isPhysicalBus(d)
+  )
     return false;
   if (modelicaClassOnly(d)) return false;
   return (

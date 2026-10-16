@@ -1,4 +1,4 @@
-import type { Project } from '../../lib/gradara/model';
+import type { Domain, Project } from '../../lib/gradara/model';
 
 /**
  * A result the example must produce, checked by tests/test_block_examples.py after a
@@ -50,6 +50,8 @@ export type BlockOptions = {
    * input names, or the names a Bus Selector picks.
    */
   signals?: number | string[];
+  /** A Physical bus: its elements, as [name, physical type] pairs. */
+  elements?: [string, Domain][];
 };
 export type Side = 'left' | 'right' | 'top' | 'bottom';
 

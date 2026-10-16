@@ -16,6 +16,7 @@ import {
 } from '../../lib/gradara/buses';
 import { syncInstances } from '../../lib/gradara/hierarchy';
 import { linkEnds } from '../../lib/gradara/project';
+import { physicalBusDefinition } from '../../lib/gradara/physical-bus';
 import type { ExampleSpec } from './types';
 
 // Deterministic ids, so rebuilding an unchanged spec rewrites identical files.
@@ -68,7 +69,7 @@ export function instance(
       throw new Error(`${spec.id}: ${kind} has no parameter ${key}`);
     parameter.value = value;
   }
-  const { rotation, flip, label, ports, signals, tag } =
+  const { rotation, flip, label, ports, signals, tag, elements } =
     typeof options === 'number'
       ? {
           rotation: options,
@@ -77,8 +78,16 @@ export function instance(
           label: undefined,
           ports: undefined,
           signals: undefined,
+          elements: undefined,
         }
       : (options ?? {});
+  if (elements !== undefined) {
+    if (kind !== 'physicalBus')
+      throw new Error(`${spec.id}: ${kind} is not a physical bus`);
+    definition.ports = physicalBusDefinition(
+      elements.map(([n, domain]) => ({ name: n, domain })),
+    ).ports;
+  }
   if (signals !== undefined) {
     if (!BUS_KINDS.has(kind))
       throw new Error(`${spec.id}: ${kind} is not a bus block`);

@@ -1,0 +1,796 @@
+{
+  "version": 1,
+  "name": "Example: Physical bus",
+  "exampleId": "block-physical-bus",
+  "description": "The Physical bus on the left bundles three connections: the + and − terminals of a 12 V supply as pos and neg, and the 20 W heater’s heat port as heat. One bus line carries them across the sheet to a second Physical bus, flipped so its bus terminal faces left, which gives them back by name: pos and neg feed a 6 Ω load and a voltage sensor, and heat warms a 10 J/K heat capacity. Elements with the same name on the two blocks are one node, whatever order they are listed in. The same works through a subsystem: give it a physical bus port and the bus carries the elements its inside uses. Set the elements, their names and types, in each block’s properties.",
+  "duration": 1,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "src",
+      "definition": {
+        "kind": "dcSource",
+        "name": "Supply 12 V",
+        "description": "An ideal constant DC voltage source.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 12,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
+      },
+      "position": {
+        "x": 112,
+        "y": 144
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -76,
+        "y": -54
+      }
+    },
+    {
+      "id": "gnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 112,
+        "y": 288
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "heater",
+      "definition": {
+        "kind": "fixedHeatFlow",
+        "name": "Heater 20 W",
+        "description": "Injects a constant heat flow into its port.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "Q₀",
+        "ports": [
+          {
+            "id": "port",
+            "name": "Q",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "Q_flow",
+            "name": "Heat flow",
+            "value": 20,
+            "unit": "W"
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Sources.FixedHeatFlow from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "losses",
+          "heater",
+          "dissipation"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sources.FixedHeatFlow",
+          "modifiers": {
+            "Q_flow": "Q_flow"
+          }
+        }
+      },
+      "position": {
+        "x": 96,
+        "y": 392
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": -92,
+        "y": -46
+      }
+    },
+    {
+      "id": "out",
+      "definition": {
+        "kind": "physicalBus",
+        "name": "Bus out",
+        "description": "Bundles named physical connections of any type into one bus line, or splits them out again. Elements with the same name on the bus blocks of one bus line are joined.",
+        "domain": "physicalBus",
+        "symbol": "bus",
+        "ports": [
+          {
+            "id": "e1",
+            "name": "pos",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "e2",
+            "name": "neg",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "e3",
+            "name": "heat",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "bus",
+            "name": "bus",
+            "direction": "physical",
+            "domain": "physicalBus",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "keywords": [
+          "bus",
+          "physical",
+          "bundle",
+          "simscape bus",
+          "connection",
+          "cable",
+          "harness"
+        ]
+      },
+      "position": {
+        "x": 296,
+        "y": 248
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "inb",
+      "definition": {
+        "kind": "physicalBus",
+        "name": "Bus in",
+        "description": "Bundles named physical connections of any type into one bus line, or splits them out again. Elements with the same name on the bus blocks of one bus line are joined.",
+        "domain": "physicalBus",
+        "symbol": "bus",
+        "ports": [
+          {
+            "id": "e1",
+            "name": "heat",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "e2",
+            "name": "pos",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "e3",
+            "name": "neg",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "bus",
+            "name": "bus",
+            "direction": "physical",
+            "domain": "physicalBus",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "keywords": [
+          "bus",
+          "physical",
+          "bundle",
+          "simscape bus",
+          "connection",
+          "cable",
+          "harness"
+        ]
+      },
+      "position": {
+        "x": 600,
+        "y": 248
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "flip": true
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load 6 Ω",
+        "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 6,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
+      },
+      "position": {
+        "x": 864,
+        "y": 144
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": -64,
+        "y": -54
+      }
+    },
+    {
+      "id": "vs",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "Load voltage",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "v",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+          "ports": {
+            "y": "v"
+          }
+        }
+      },
+      "position": {
+        "x": 1008,
+        "y": 144
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 80,
+        "y": -54
+      }
+    },
+    {
+      "id": "cap",
+      "definition": {
+        "kind": "heatCapacitor",
+        "name": "Heat capacity",
+        "description": "Stores heat: C·dT/dt = Q_flow.",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "C",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "C",
+            "name": "Heat capacity",
+            "value": 10,
+            "unit": "J/K",
+            "min": 0
+          },
+          {
+            "id": "T0",
+            "name": "Initial temperature",
+            "value": 293.15,
+            "unit": "K",
+            "min": 0
+          }
+        ],
+        "equations": "// Thermal.HeatTransfer.Components.HeatCapacitor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermal mass",
+          "lumped"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Components.HeatCapacitor",
+          "modifiers": {
+            "C": "C",
+            "T.start": "T0"
+          }
+        }
+      },
+      "position": {
+        "x": 848,
+        "y": 392
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": -100,
+        "y": -46
+      }
+    },
+    {
+      "id": "ts",
+      "definition": {
+        "kind": "temperatureSensor",
+        "name": "Temperature",
+        "description": "Absolute temperature of its port (K).",
+        "domain": "thermal",
+        "category": "thermal",
+        "symbol": "T",
+        "ports": [
+          {
+            "id": "port",
+            "name": "T",
+            "direction": "physical",
+            "domain": "thermal",
+            "side": "left"
+          },
+          {
+            "id": "T",
+            "name": "T",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "K"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Thermal.HeatTransfer.Sensors.TemperatureSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "thermometer",
+          "ntc"
+        ],
+        "modelica": {
+          "class": "Modelica.Thermal.HeatTransfer.Sensors.TemperatureSensor"
+        }
+      },
+      "position": {
+        "x": 992,
+        "y": 392
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 92,
+        "y": -46
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "src",
+      "sourceHandle": "p",
+      "target": "out",
+      "targetHandle": "e1"
+    },
+    {
+      "id": "id0002",
+      "source": "j_id000d",
+      "sourceHandle": "node",
+      "target": "out",
+      "targetHandle": "e2",
+      "waypoints": [
+        {
+          "x": 280,
+          "y": 272
+        },
+        {
+          "x": 280,
+          "y": 296
+        }
+      ]
+    },
+    {
+      "id": "id0003",
+      "source": "j_id000d",
+      "sourceHandle": "node",
+      "target": "gnd",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0004",
+      "source": "heater",
+      "sourceHandle": "port",
+      "target": "out",
+      "targetHandle": "e3"
+    },
+    {
+      "id": "id0005",
+      "source": "out",
+      "sourceHandle": "bus",
+      "target": "inb",
+      "targetHandle": "bus"
+    },
+    {
+      "id": "id0006",
+      "source": "inb",
+      "sourceHandle": "e2",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 744,
+          "y": 296
+        },
+        {
+          "x": 744,
+          "y": 128
+        }
+      ]
+    },
+    {
+      "id": "id0007",
+      "source": "inb",
+      "sourceHandle": "e3",
+      "target": "j_id000h",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 888,
+          "y": 320
+        }
+      ]
+    },
+    {
+      "id": "id0008",
+      "source": "vs",
+      "sourceHandle": "p",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1032,
+          "y": 128
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "vs",
+      "sourceHandle": "n",
+      "target": "j_id000h",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 1032,
+          "y": 240
+        }
+      ]
+    },
+    {
+      "id": "id000a",
+      "source": "inb",
+      "sourceHandle": "e1",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 848,
+          "y": 272
+        },
+        {
+          "x": 848,
+          "y": 472
+        }
+      ]
+    },
+    {
+      "id": "id000b",
+      "source": "ts",
+      "sourceHandle": "port",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 976,
+          "y": 424
+        },
+        {
+          "x": 976,
+          "y": 472
+        }
+      ]
+    },
+    {
+      "id": "w_id000e",
+      "source": "src",
+      "sourceHandle": "n",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000g",
+      "source": "load",
+      "sourceHandle": "p",
+      "target": "j_id000f",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000i",
+      "source": "load",
+      "sourceHandle": "n",
+      "target": "j_id000h",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000k",
+      "source": "cap",
+      "sourceHandle": "port",
+      "target": "j_id000j",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000d",
+      "domain": "electrical",
+      "position": {
+        "x": 136,
+        "y": 272
+      }
+    },
+    {
+      "id": "j_id000f",
+      "domain": "electrical",
+      "position": {
+        "x": 888,
+        "y": 128
+      }
+    },
+    {
+      "id": "j_id000h",
+      "domain": "electrical",
+      "position": {
+        "x": 888,
+        "y": 240
+      }
+    },
+    {
+      "id": "j_id000j",
+      "domain": "thermal",
+      "position": {
+        "x": 888,
+        "y": 472
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000l",
+      "anchor": "out.e1",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000m",
+      "anchor": "gnd.p",
+      "wireIds": [
+        "id0002",
+        "id0003",
+        "w_id000e"
+      ]
+    },
+    {
+      "id": "net_id000n",
+      "anchor": "heater.port",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000o",
+      "anchor": "inb.bus",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000p",
+      "anchor": "inb.e2",
+      "wireIds": [
+        "id0006",
+        "id0008",
+        "w_id000g"
+      ]
+    },
+    {
+      "id": "net_id000q",
+      "anchor": "inb.e3",
+      "wireIds": [
+        "id0007",
+        "id0009",
+        "w_id000i"
+      ]
+    },
+    {
+      "id": "net_id000r",
+      "anchor": "cap.port",
+      "wireIds": [
+        "id000a",
+        "id000b",
+        "w_id000k"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Load voltage",
+      "series": [
+        "vs.y"
+      ],
+      "labels": [
+        "pos − neg"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Heat capacity",
+      "series": [
+        "ts.T"
+      ],
+      "labels": [
+        "Temperature"
+      ]
+    }
+  ]
+}

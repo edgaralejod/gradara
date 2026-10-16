@@ -4,6 +4,7 @@ import { extraBlocks } from './extra-blocks';
 import { mslBlocks } from './msl-blocks';
 import { portBlocks } from './port-blocks';
 import { tagBlocks } from './tag-blocks';
+import { physicalBusBlocks } from './physical-bus';
 import { retiredBlocks as retired } from './retired-blocks';
 export type Domain =
   | 'signal'
@@ -13,7 +14,9 @@ export type Domain =
   | 'translational'
   | 'thermal'
   | 'magnetic'
-  | 'threePhase';
+  | 'threePhase'
+  /** Named physical connections of any domain in one line (physical-bus.ts). */
+  | 'physicalBus';
 /** Domains carried by input/output ports; every other domain is a physical terminal. */
 export const causalDomains: ReadonlySet<Domain> = new Set([
   'signal',
@@ -30,6 +33,7 @@ export const domainLabels: Record<Domain, string> = {
   thermal: 'thermal',
   magnetic: 'magnetic',
   threePhase: '3-phase',
+  physicalBus: 'physical bus',
 };
 /** A domain's name at the start of a line or in a menu: "Signal", "3-phase". */
 export const domainTitle = (domain: Domain) =>
@@ -242,6 +246,7 @@ export const domainColors: Record<Domain, string> = {
   translational: '#5a6b00',
   magnetic: '#c02a8a',
   threePhase: '#3f4650',
+  physicalBus: '#6d5a2f',
 };
 /**
  * Blocks no longer offered in the library. Models that contain them still open and
@@ -256,6 +261,7 @@ const allBlocks: Definition[] = [
   ...mslBlocks,
   ...portBlocks,
   ...tagBlocks,
+  ...physicalBusBlocks,
   ...retired,
 ];
 // Physical units of ports whose meaning the block fixes (a speed sensor reads

@@ -568,7 +568,6 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  text-transform: capitalize;
 }
 .domain-legend i {
   width: 7px;
@@ -3170,3 +3169,9 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
   .rp-bar.is-indeterminate > i { left: 0; width: 100%; opacity: 0.45; animation: none; }
   .rp-steps li.is-active .rp-dot { animation: none; }
 }
+/* A Physical bus's elements: dot, name, type, tools. */
+.physical-bus-list li { display: grid; grid-template-columns: 10px minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: 4px; }
+.physical-bus-list select { min-width: 0; width: 100%; height: 24px; font-size: 12px; padding: 0 2px 0 4px; }
+.physical-bus-list select:disabled { background: transparent; border-style: dashed; color: #41465d; opacity: 1; }
+.physical-bus-dot { width: 8px; height: 8px; border-radius: 50%; }
+.physical-bus-section .instance-ports-add { margin-top: 6px; }

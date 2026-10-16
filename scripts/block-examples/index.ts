@@ -1,5 +1,6 @@
 import { buses } from './buses';
 import { tags } from './tags';
+import { physicalBuses } from './physical-buses';
 import { circuits } from './circuits';
 import { control } from './control';
 import { converters } from './converters';
@@ -17,6 +18,7 @@ export const examples: ExampleSpec[] = [
   ...signals,
   ...buses,
   ...tags,
+  ...physicalBuses,
   ...logic,
   ...control,
   ...electrical,
