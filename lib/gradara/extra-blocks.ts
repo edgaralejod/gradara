@@ -20,7 +20,14 @@ const p = (
   unit = '',
   min?: number,
   max?: number,
-): Parameter => ({ id, name, value, unit, min, ...(max === undefined ? {} : { max }) });
+): Parameter => ({
+  id,
+  name,
+  value,
+  unit,
+  min,
+  ...(max === undefined ? {} : { max }),
+});
 const signal = (
   kind: string,
   name: string,

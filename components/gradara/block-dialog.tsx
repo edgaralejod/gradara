@@ -306,13 +306,14 @@ export default function BlockDialog({
                 </p>
               )}
               <p className="block-dialog-identity">
+                {definition.modelica?.class && (
+                  <code className="block-dialog-class">
+                    {breakAtDots(definition.modelica.class)}
+                  </code>
+                )}
                 <span>
-                  {definition.modelica?.class
-                    ? breakAtDots(definition.modelica.class)
-                    : 'Block ID'}
+                  Block ID <code>{block.id}</code>
                 </span>
-                <span>·</span>
-                <code>{block.id}</code>
               </p>
             </section>
             {bus && onCommit && (

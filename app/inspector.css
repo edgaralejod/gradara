@@ -205,7 +205,9 @@
   align-items: center;
   gap: 6px;
 }
-.inspector-properties .identity-field > span { margin: 0; }
+.inspector-properties .identity-field > span {
+  margin: 0;
+}
 
 .parameter .promoted-note {
   display: block;
@@ -456,4 +458,16 @@
   line-height: 1.45;
   overflow-wrap: normal;
   word-break: normal;
+}
+/* The block and model name fields are fields too (globals.css draws the name bare). */
+.inspector-properties .component-name-input {
+  border: 1px solid #cfd9e0 !important;
+  padding: 0 7px !important;
+  background: white;
+}
+.inspector-properties .component-name-input:hover {
+  border-color: #aebfcb !important;
+}
+.inspector-properties .component-name-input:focus {
+  border-color: var(--primary) !important;
 }

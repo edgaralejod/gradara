@@ -34,9 +34,10 @@ export const hasEquations = (block: Block) => {
 
 /** A Modelica class path broken only after its dots when it wraps. */
 export const breakAtDots = (path: string) =>
-  path.split('.').flatMap((part, i, all) =>
-    i < all.length - 1 ? [`${part}.`, '​'] : [part],
-  ).join('');
+  path
+    .split('.')
+    .flatMap((part, i, all) => (i < all.length - 1 ? [`${part}.`, '​'] : [part]))
+    .join('');
 
 /** What a port carries, as the Interface list shows it: "electrical", "input", "Boolean output". */
 export const portKindLabel = (p: Port) =>

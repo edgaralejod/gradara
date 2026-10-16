@@ -15,7 +15,6 @@ import {
 } from '@/lib/gradara/tag-blocks';
 import { isWired } from '@/lib/gradara/tag-edit';
 
-
 /**
  * What a tag block carries: a physical domain for a connection label, a signal or a
  * Boolean value for a Goto or From. It can be chosen while the block has no wires;

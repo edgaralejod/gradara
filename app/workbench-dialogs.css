@@ -597,7 +597,8 @@
 }
 .block-dialog-identity {
   display: flex;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 2px 5px;
   margin: 6px 0 0;
   font-size: var(--text-micro);
   color: #8193a0;
@@ -1185,4 +1186,27 @@
 }
 .block-dialog-properties .block-dialog-tag[aria-invalid='true'] {
   border-color: var(--destructive, #c2410c);
+}
+
+/* In the block dialog too, a field you can edit is white with a border (see inspector.css). */
+.block-dialog
+  :is(
+    input:not([type='checkbox'], [type='radio'], [readonly], :disabled),
+    select:not(:disabled)
+  ):not(.parameter input, .block-dialog-name, .block-dialog-tag) {
+  background-color: white;
+  border: 1px solid #cfd9e0;
+  border-radius: 2px;
+  color: #27333d;
+}
+.block-dialog
+  :is(
+    input:not([type='checkbox'], [type='radio'], [readonly], :disabled),
+    select:not(:disabled)
+  ):not(.parameter input, .block-dialog-name, .block-dialog-tag):focus-visible {
+  border-color: var(--primary);
+  outline: none;
+}
+.block-dialog-identity .block-dialog-class {
+  flex-basis: 100%;
 }
