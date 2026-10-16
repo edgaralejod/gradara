@@ -1596,6 +1596,48 @@ input:hover::-webkit-inner-spin-button {
   color: #989daf;
   margin-top: 10px;
 }
+.size-hint.is-error {
+  color: #b3261e;
+}
+/* The tag of a Goto, From, or connection label, and where it connects. */
+.tag-field input {
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: #fbfcff;
+  color: #41465d;
+  padding: 0 9px;
+  font: 13px var(--font-mono, ui-monospace, monospace);
+}
+.tag-field input[aria-invalid='true'] {
+  border-color: #b3261e;
+}
+.tag-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tag-link button,
+.tag-peers button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  color: #2477b5;
+  font-size: 11px;
+  padding: 0;
+  cursor: pointer;
+}
+.tag-peers {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
 /* Absolute chart content cannot push its observed flex container into a resize feedback loop. */
 .plot-body {
   position: relative;

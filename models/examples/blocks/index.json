@@ -611,6 +611,50 @@
       ]
     },
     {
+      "id": "tags",
+      "title": "Goto, From, and connection labels",
+      "area": "Signals",
+      "summary": "A signal and a supply rail carried across the sheet by tag, without wires.",
+      "about": [
+        "goto",
+        "from",
+        "connectionLabel"
+      ],
+      "kinds": [
+        "connectionLabel",
+        "dcSource",
+        "from",
+        "gain",
+        "goto",
+        "ground",
+        "resistor",
+        "sine",
+        "voltageSensor"
+      ],
+      "checks": [
+        {
+          "signal": "double.y",
+          "at": 0.25,
+          "value": 2,
+          "tol": 0.001,
+          "why": "the From gives back the sine: 2 · sin(2π · 0.25) = 2"
+        },
+        {
+          "signal": "invert.y",
+          "at": 0.25,
+          "value": -1,
+          "tol": 0.001,
+          "why": "the second From reads the same Goto"
+        },
+        {
+          "signal": "vs.y",
+          "value": 10,
+          "tol": 0.000001,
+          "why": "the two labels [VBUS] are one node: the load sees the source"
+        }
+      ]
+    },
+    {
       "id": "logic-gates",
       "title": "Logic gates",
       "area": "Logic",

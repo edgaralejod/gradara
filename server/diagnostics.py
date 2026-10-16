@@ -61,6 +61,13 @@ def validate_simulation(project: Project):
     if issues:
         raise SimulationFailure('Fix the simulation settings before running:\n' + '\n'.join(f'• {m}' for _, m, _ in issues),
                                 [Diagnostic(source='validation', message=m, hint=h) for _, m, h in issues])
+    from .tags import tag_problems
+    tags = tag_problems(project)
+    if tags:
+        raise SimulationFailure(
+            'Fix these tags before running:\n' + '\n'.join(f'• {t["message"]}' for t in tags),
+            [Diagnostic(source='validation', message=t['message'], blockIds=t['blockIds'], hint=t['hint'])
+             for t in tags])
     missing = []
     for _, diagram in active_diagrams(project):
         connections = flatten_connects(diagram)

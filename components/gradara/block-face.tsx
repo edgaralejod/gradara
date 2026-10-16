@@ -86,7 +86,15 @@ export function BlockFace({
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
         >
-          {shape === 'boundary' ? (
+          {shape === 'tag' ? (
+            d.kind === 'connectionLabel' ? (
+              <rect x="1" y="1" width="98" height="98" rx="14" ry="48" />
+            ) : d.kind === 'goto' ? (
+              <polygon points="1,1 84,1 99,50 84,99 1,99" />
+            ) : (
+              <polygon points="1,1 84,1 99,50 84,99 1,99 16,50" />
+            )
+          ) : shape === 'boundary' ? (
             <rect x="1" y="1" width="98" height="98" rx="14" ry="48" />
           ) : shape === 'subsystem' ? (
             <rect x="1" y="1" width="98" height="98" rx="3" />

@@ -1,6 +1,7 @@
 import { GRID, SIZE_STEP, snapPoint } from './grid';
 import type { Definition, Port } from './model';
 import { isPictorial, pictorialSizes } from './pictorial';
+import { isTagKind } from './tag-blocks';
 
 /** Diagram units at 100% zoom. Keep the matching typography tokens in blocks.css. */
 export const BLOCK_DESIGN = {
@@ -19,6 +20,7 @@ export type BlockShape =
   | 'physical'
   | 'ground'
   | 'boundary'
+  | 'tag'
   | 'subsystem';
 const physical = new Set([
   'resistor',
@@ -36,6 +38,7 @@ export const sideOf = (p: Port) =>
 
 export function blockShape(d: Definition): BlockShape {
   if (d.boundary) return 'boundary';
+  if (isTagKind(d.kind)) return 'tag';
   if (d.subsystem) return 'subsystem';
   if (d.kind === 'sum' || d.kind === 'subtract') return 'sum';
   if (physical.has(d.kind) || isPictorial(d.kind)) return 'physical';
@@ -43,6 +46,10 @@ export function blockShape(d: Definition): BlockShape {
     return d.kind as BlockShape;
   return 'box';
 }
+
+/** What a Goto or From shows ([A], as in Simulink) and a connection label (A). */
+export const tagText = (d: Definition) =>
+  d.kind === 'connectionLabel' ? (d.tag ?? '') : `[${d.tag ?? ''}]`;
 
 /** Show labels when they disambiguate terminals; don't repeat generic u/y on unary blocks. */
 export function showPortLabel(d: Definition, p: Port) {
@@ -77,6 +84,12 @@ export function defaultBlockSize(d: Definition) {
     // Side padding, the domain glyph, and about 8 units per character.
     return {
       width: roundGrid(Math.min(176, 56 + d.name.length * 8)),
+      height: 32,
+    };
+  if (shape === 'tag')
+    // A flag or pill as wide as its tag, like a subsystem port pill.
+    return {
+      width: roundGrid(Math.min(176, 40 + tagText(d).length * 8)),
       height: 32,
     };
   if (shape === 'sum' || shape === 'ground') return { width: 48, height: 48 };
@@ -157,7 +170,7 @@ export function defaultBlockSize(d: Definition) {
 
 export function minimumDesignedSize(d: Definition) {
   const size = defaultBlockSize(d);
-  if (['sum', 'ground', 'boundary'].includes(blockShape(d))) return size;
+  if (['sum', 'ground', 'boundary', 'tag'].includes(blockShape(d))) return size;
   if (blockShape(d) === 'box' && size.width === 80)
     return { width: 64, height: 48 };
   return size;

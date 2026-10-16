@@ -39,6 +39,8 @@ export type BlockOptions = {
    * measurement path that reads right to left. Never move ports backward instead.
    */
   flip?: boolean;
+  /** The tag of a Goto, From, or connection label. */
+  tag?: string;
   /** Where the name goes; a pair moves it from its place under the block. */
   label?: 'left' | 'right' | 'above' | [number, number];
   /** Move ports to another side, optionally at an offset (percent along it). */

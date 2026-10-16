@@ -22,6 +22,8 @@ function sheetSemantics(
       parameters: b.definition.parameters.map((x) => [x.id, x.value]),
       declarations: b.definition.declarations ?? '',
       equations: b.definition.equations,
+      // A tag joins nets as a wire does (lib/gradara/tag-blocks.ts).
+      ...(b.definition.tag !== undefined ? { tag: b.definition.tag } : {}),
       ...(b.definition.subsystem
         ? {
             subsystem: b.definition.subsystem.ref,

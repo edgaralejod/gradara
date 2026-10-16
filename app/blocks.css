@@ -168,12 +168,20 @@
     .custom-symbol,
     .display-glyph,
     .boundary-name,
-    .boundary-glyph
+    .boundary-glyph,
+    .tag-name
   ),
 .block-frame .block-symbol svg text {
   transform: var(--upright, none);
   transform-box: fill-box;
   transform-origin: center;
+}
+.block-face.shape-tag .block-symbol {
+  inset: 0 12px 0 8px;
+}
+.block-face .tag-name {
+  font: inherit;
+  white-space: nowrap;
 }
 .block-face.has-signal-names .port-label {
   max-width: none;

@@ -30,7 +30,7 @@ Systems that mix control and physics:
 - Mechanics: rotational (inertia, springs, gears) and translational (mass, spring, damper, force).
 - Thermal and magnetic networks.
 
-The library has 208 blocks, 192 of them components of the Modelica Standard Library 4.1.0: the sources, math and dynamics, the electrical, mechanical, thermal and magnetic parts, the machines, and the continuous controllers. With AI, you can also describe a new block and have it written for you. The [examples](README.md#examples) show a DC motor, a servo, an AC motor with field-oriented control, an electric vehicle, a buck converter, a flyback converter, and data center cooling.
+The library has 211 blocks, 192 of them components of the Modelica Standard Library 4.1.0: the sources, math and dynamics, the electrical, mechanical, thermal and magnetic parts, the machines, and the continuous controllers. With AI, you can also describe a new block and have it written for you. The [examples](README.md#examples) show a DC motor, a servo, an AC motor with field-oriented control, an electric vehicle, a buck converter, a flyback converter, and data center cooling.
 
 ### How is this different from a block diagram tool?
 

@@ -14,6 +14,7 @@ import {
   type BlockNodeData,
 } from '@/lib/gradara/canvas';
 import { portPlacement } from '@/lib/gradara/ports';
+import { isTagKind } from '@/lib/gradara/tag-blocks';
 import { BlockFace } from './block-face';
 import BlockLabel from './block-label';
 import { VariantSwitchContext } from './variant-switch-context';
@@ -143,7 +144,7 @@ function BlockNode({
         />
       )}
       {/* A subsystem port shows its name inside its pill. */}
-      {!d.boundary && (
+      {!d.boundary && !isTagKind(d.kind) && (
         <ViewportPortal>
           <div
             className={`block-label-anchor engineering-label notation-${sum ? 'sum' : d.kind}`}

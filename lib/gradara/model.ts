@@ -3,6 +3,7 @@ import type { SimulationSettings } from './solver';
 import { extraBlocks } from './extra-blocks';
 import { mslBlocks } from './msl-blocks';
 import { portBlocks } from './port-blocks';
+import { tagBlocks } from './tag-blocks';
 import { retiredBlocks as retired } from './retired-blocks';
 export type Domain =
   | 'signal'
@@ -103,6 +104,8 @@ export type Definition = {
   boundary?: { side?: Port['side']; order: number };
   /** C for code generation of a custom block, written once by the AI (see server/ctemplate.py). */
   ctemplate?: CTemplate;
+  /** The tag of a Goto, From, or connection label (lib/gradara/tag-blocks.ts). */
+  tag?: string;
 };
 /**
  * One alternative inside for a subsystem instance. A diagram variant has its own
@@ -249,6 +252,7 @@ const allBlocks: Definition[] = [
   ...extraBlocks,
   ...mslBlocks,
   ...portBlocks,
+  ...tagBlocks,
   ...retired,
 ];
 // Physical units of ports whose meaning the block fixes (a speed sensor reads

@@ -1,0 +1,844 @@
+{
+  "version": 1,
+  "name": "Example: Goto, From, and connection labels",
+  "exampleId": "block-tags",
+  "description": "The Goto [ref] takes the sine; both From [ref] blocks give it back on the far side of the sheet, without a wire, and the gains scale it by 2 and −1. Below, the label [VBUS] on the source joins the label [VBUS] by the load: one node, so the voltage sensor reads the 10 V of the source. The right-hand label is flipped so its terminal faces the load. Tags reach into the subsystems on a sheet, never out of them: a From inside a subsystem reads a Goto on its sheet or on any sheet above it, and a Goto inside a subsystem is not seen outside it. Set a tag in the block’s properties.",
+  "duration": 1,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "sine",
+      "definition": {
+        "kind": "sine",
+        "name": "Sine",
+        "description": "A continuous sinusoid.",
+        "domain": "signal",
+        "category": "sources",
+        "symbol": "sine",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "value": 1,
+            "unit": ""
+          },
+          {
+            "id": "frequency",
+            "name": "Frequency",
+            "value": 1,
+            "unit": "Hz",
+            "min": 0
+          },
+          {
+            "id": "phase",
+            "name": "Phase",
+            "value": 0,
+            "unit": "rad"
+          },
+          {
+            "id": "offset",
+            "name": "Offset",
+            "value": 0,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Sources.Sine from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "source",
+          "oscillator",
+          "wave"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.Sine",
+          "modifiers": {
+            "amplitude": "amplitude",
+            "f": "frequency",
+            "phase": "phase",
+            "offset": "offset"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "to",
+      "definition": {
+        "kind": "goto",
+        "name": "Goto",
+        "description": "Sends a signal to every From block with the same tag on this sheet and inside the subsystems on it, without a wire. A Goto inside a subsystem is not seen outside it.",
+        "domain": "signal",
+        "symbol": "ref",
+        "tag": "ref",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "keywords": [
+          "tag",
+          "goto",
+          "goto",
+          "from",
+          "wireless",
+          "signal"
+        ]
+      },
+      "position": {
+        "x": 200,
+        "y": 80
+      },
+      "size": {
+        "width": 80,
+        "height": 32
+      }
+    },
+    {
+      "id": "back",
+      "definition": {
+        "kind": "from",
+        "name": "From",
+        "description": "Gives back the signal of the Goto with the same tag on this sheet, or on the nearest sheet above it.",
+        "domain": "signal",
+        "symbol": "ref",
+        "tag": "ref",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "keywords": [
+          "tag",
+          "from",
+          "goto",
+          "from",
+          "wireless",
+          "signal"
+        ]
+      },
+      "position": {
+        "x": 520,
+        "y": 80
+      },
+      "size": {
+        "width": 80,
+        "height": 32
+      }
+    },
+    {
+      "id": "double",
+      "definition": {
+        "kind": "gain",
+        "name": "Gain 2",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": 2,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
+      },
+      "position": {
+        "x": 680,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "back2",
+      "definition": {
+        "kind": "from",
+        "name": "From1",
+        "description": "Gives back the signal of the Goto with the same tag on this sheet, or on the nearest sheet above it.",
+        "domain": "signal",
+        "symbol": "ref",
+        "tag": "ref",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "keywords": [
+          "tag",
+          "from",
+          "goto",
+          "from",
+          "wireless",
+          "signal"
+        ]
+      },
+      "position": {
+        "x": 520,
+        "y": 192
+      },
+      "size": {
+        "width": 80,
+        "height": 32
+      }
+    },
+    {
+      "id": "invert",
+      "definition": {
+        "kind": "gain",
+        "name": "Gain −1",
+        "description": "Multiply an input by an adjustable gain.",
+        "domain": "signal",
+        "category": "math",
+        "symbol": "K",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "signal",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "k",
+            "name": "Gain",
+            "value": -1,
+            "unit": ""
+          }
+        ],
+        "equations": "// Blocks.Math.Gain from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "math",
+          "multiply",
+          "scale"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Math.Gain",
+          "modifiers": {
+            "k": "k"
+          }
+        }
+      },
+      "position": {
+        "x": 680,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "src",
+      "definition": {
+        "kind": "dcSource",
+        "name": "DC 10 V",
+        "description": "An ideal constant DC voltage source.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "DC",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "V",
+            "name": "Voltage",
+            "value": 10,
+            "unit": "V"
+          }
+        ],
+        "equations": "// Electrical.Analog.Sources.ConstantVoltage from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "supply",
+          "battery",
+          "dc",
+          "power"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sources.ConstantVoltage",
+          "modifiers": {
+            "V": "V"
+          }
+        }
+      },
+      "position": {
+        "x": 96,
+        "y": 400
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": -60,
+        "y": -54
+      }
+    },
+    {
+      "id": "rail",
+      "definition": {
+        "kind": "connectionLabel",
+        "name": "Label",
+        "description": "Joins every physical terminal wired to a label with the same tag, on this sheet and inside the subsystems on it, as one node, without a wire.",
+        "domain": "electrical",
+        "symbol": "VBUS",
+        "tag": "VBUS",
+        "ports": [
+          {
+            "id": "p",
+            "name": "p",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "keywords": [
+          "tag",
+          "label",
+          "net",
+          "node",
+          "connection",
+          "wireless",
+          "physical"
+        ]
+      },
+      "position": {
+        "x": 216,
+        "y": 336
+      },
+      "size": {
+        "width": 80,
+        "height": 32
+      }
+    },
+    {
+      "id": "gnd",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 96,
+        "y": 536
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "rail2",
+      "definition": {
+        "kind": "connectionLabel",
+        "name": "Label1",
+        "description": "Joins every physical terminal wired to a label with the same tag, on this sheet and inside the subsystems on it, as one node, without a wire.",
+        "domain": "electrical",
+        "symbol": "VBUS",
+        "tag": "VBUS",
+        "ports": [
+          {
+            "id": "p",
+            "name": "p",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          }
+        ],
+        "parameters": [],
+        "equations": "",
+        "category": "routing",
+        "keywords": [
+          "tag",
+          "label",
+          "net",
+          "node",
+          "connection",
+          "wireless",
+          "physical"
+        ]
+      },
+      "position": {
+        "x": 464,
+        "y": 336
+      },
+      "size": {
+        "width": 80,
+        "height": 32
+      },
+      "flip": true
+    },
+    {
+      "id": "load",
+      "definition": {
+        "kind": "resistor",
+        "name": "Load 10 Ω",
+        "description": "An ideal resistor between two electrical pins.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "R",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "left"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "R",
+            "name": "Resistance",
+            "value": 10,
+            "unit": "Ω",
+            "min": 0.000001
+          }
+        ],
+        "equations": "// Electrical.Analog.Basic.Resistor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "electrical",
+          "ohm"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Resistor",
+          "modifiers": {
+            "R": "R"
+          }
+        }
+      },
+      "position": {
+        "x": 616,
+        "y": 400
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "rotation": 90,
+      "labelOffset": {
+        "x": -68,
+        "y": -54
+      }
+    },
+    {
+      "id": "gnd2",
+      "definition": {
+        "kind": "ground",
+        "name": "Ground (load)",
+        "description": "Electrical reference potential.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "ground",
+        "ports": [
+          {
+            "id": "p",
+            "name": "0 V",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Basic.Ground from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "reference",
+          "zero",
+          "earth"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Basic.Ground"
+        }
+      },
+      "position": {
+        "x": 616,
+        "y": 536
+      },
+      "size": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "vs",
+      "definition": {
+        "kind": "voltageSensor",
+        "name": "Rail voltage",
+        "description": "Measures voltage between two electrical nodes without loading the circuit.",
+        "domain": "electrical",
+        "category": "electrical",
+        "symbol": "V",
+        "ports": [
+          {
+            "id": "p",
+            "name": "+",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "top"
+          },
+          {
+            "id": "n",
+            "name": "−",
+            "direction": "physical",
+            "domain": "electrical",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "V",
+            "direction": "output",
+            "domain": "signal",
+            "side": "right",
+            "unit": "V"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Electrical.Analog.Sensors.VoltageSensor from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "measure",
+          "voltmeter",
+          "probe"
+        ],
+        "modelica": {
+          "class": "Modelica.Electrical.Analog.Sensors.VoltageSensor",
+          "ports": {
+            "y": "v"
+          }
+        }
+      },
+      "position": {
+        "x": 760,
+        "y": 400
+      },
+      "size": {
+        "width": 48,
+        "height": 80
+      },
+      "labelOffset": {
+        "x": 80,
+        "y": -54
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "sine",
+      "sourceHandle": "y",
+      "target": "to",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0002",
+      "source": "back",
+      "sourceHandle": "y",
+      "target": "double",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0003",
+      "source": "back2",
+      "sourceHandle": "y",
+      "target": "invert",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0004",
+      "source": "src",
+      "sourceHandle": "p",
+      "target": "rail",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0005",
+      "source": "src",
+      "sourceHandle": "n",
+      "target": "gnd",
+      "targetHandle": "p"
+    },
+    {
+      "id": "id0006",
+      "source": "rail2",
+      "sourceHandle": "p",
+      "target": "j_id000b",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 640,
+          "y": 352
+        }
+      ]
+    },
+    {
+      "id": "id0007",
+      "source": "j_id000d",
+      "sourceHandle": "node",
+      "target": "gnd2",
+      "targetHandle": "p",
+      "waypoints": []
+    },
+    {
+      "id": "id0008",
+      "source": "vs",
+      "sourceHandle": "p",
+      "target": "j_id000b",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 384
+        }
+      ]
+    },
+    {
+      "id": "id0009",
+      "source": "vs",
+      "sourceHandle": "n",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": [
+        {
+          "x": 784,
+          "y": 496
+        }
+      ]
+    },
+    {
+      "id": "w_id000c",
+      "source": "load",
+      "sourceHandle": "p",
+      "target": "j_id000b",
+      "targetHandle": "node",
+      "waypoints": []
+    },
+    {
+      "id": "w_id000e",
+      "source": "load",
+      "sourceHandle": "n",
+      "target": "j_id000d",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id000b",
+      "domain": "electrical",
+      "position": {
+        "x": 640,
+        "y": 384
+      }
+    },
+    {
+      "id": "j_id000d",
+      "domain": "electrical",
+      "position": {
+        "x": 640,
+        "y": 496
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000f",
+      "anchor": "sine.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000g",
+      "anchor": "back.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000h",
+      "anchor": "back2.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000i",
+      "anchor": "rail.p",
+      "wireIds": [
+        "id0004"
+      ]
+    },
+    {
+      "id": "net_id000j",
+      "anchor": "gnd.p",
+      "wireIds": [
+        "id0005"
+      ]
+    },
+    {
+      "id": "net_id000k",
+      "anchor": "load.p",
+      "wireIds": [
+        "id0006",
+        "id0008",
+        "w_id000c"
+      ]
+    },
+    {
+      "id": "net_id000l",
+      "anchor": "gnd2.p",
+      "wireIds": [
+        "id0007",
+        "id0009",
+        "w_id000e"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Signals by tag",
+      "series": [
+        "sine.y",
+        "double.y",
+        "invert.y"
+      ],
+      "labels": [
+        "Sine (Goto)",
+        "2 × From",
+        "−1 × From"
+      ]
+    },
+    {
+      "id": "plot2",
+      "label": "Rail",
+      "series": [
+        "vs.y"
+      ],
+      "labels": [
+        "VBUS"
+      ]
+    }
+  ]
+}
