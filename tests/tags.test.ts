@@ -185,3 +185,101 @@ void test('changing a tag changes what the model computes', () => {
   };
   assert.notEqual(semanticSignature(renamed), semanticSignature(doc));
 });
+
+void test('pasting a Goto never repeats a tag on the sheet; its From blocks follow, a lone From keeps its tag', async () => {
+  const { extractSelection, pasteSelection } =
+    await import('../lib/gradara/selection');
+  const { duplicateBlocks } = await import('../lib/gradara/project');
+  const doc: Project = {
+    version: 1,
+    name: 'Paste',
+    duration: 1,
+    revision: 0,
+    blocks: [
+      at('c', kind('constant')),
+      at('to', tagDefinition('goto', 'A', 'signal')),
+      at('back', tagDefinition('from', 'A', 'signal')),
+      at('to1', tagDefinition('goto', 'A1', 'signal')),
+    ],
+    wires: [
+      {
+        id: 'w',
+        source: 'c',
+        sourceHandle: 'y',
+        target: 'to',
+        targetHandle: 'u',
+      },
+    ],
+  };
+  const tagsOf = (p: Project, kind: string) =>
+    p.blocks
+      .filter((b) => b.definition.kind === kind)
+      .map((b) => b.definition.tag)
+      .sort();
+  // The Goto and its From copied together: a fresh tag (A1 is taken, so A2) for both.
+  const pair = pasteSelection(
+    doc,
+    extractSelection(doc, {
+      blockIds: ['to', 'back'],
+      wireIds: [],
+      junctionIds: [],
+    }),
+  ).project;
+  assert.deepEqual(tagsOf(pair, 'goto'), ['A', 'A1', 'A2']);
+  assert.deepEqual(tagsOf(pair, 'from'), ['A', 'A2']);
+  // A From alone keeps its tag: it reads the same Goto.
+  const lone = duplicateBlocks(doc, ['back']).project;
+  assert.deepEqual(tagsOf(lone, 'from'), ['A', 'A']);
+  // A Goto pasted where its tag is free keeps it.
+  const empty: Project = { ...doc, blocks: [], wires: [] };
+  const moved = pasteSelection(
+    empty,
+    extractSelection(doc, { blockIds: ['to'], wireIds: [], junctionIds: [] }),
+  ).project;
+  assert.deepEqual(tagsOf(moved, 'goto'), ['A']);
+});
+
+void test('a Goto’s hover action adds a From with its tag past the tip; the dialog edits the tag', async () => {
+  const { addPartner, setTag } = await import('../lib/gradara/tag-edit');
+  const { applyBlockEdits } = await import('../lib/gradara/project');
+  const goto = {
+    ...at('to', tagDefinition('goto', 'speed', 'boolean')),
+    position: { x: 96, y: 96 },
+    size: defaultBlockSize(tagDefinition('goto', 'speed', 'boolean')),
+  };
+  const doc: Project = {
+    version: 1,
+    name: 'Partner',
+    duration: 1,
+    revision: 0,
+    blocks: [goto],
+    wires: [],
+  };
+  const made = addPartner(doc, 'to')!;
+  const from = made.project.blocks.find((b) => b.id === made.id)!;
+  assert.equal(from.definition.kind, 'from');
+  assert.equal(from.definition.tag, 'speed');
+  assert.equal(from.definition.ports[0].domain, 'boolean');
+  const gotoWidth = defaultBlockSize(goto.definition).width;
+  assert.equal(from.position.x, 96 + gotoWidth + 64);
+  assert.equal(from.position.y, 96);
+  // A second one does not land on the first.
+  const again = addPartner(made.project, 'to')!;
+  const second = again.project.blocks.find((b) => b.id === again.id)!;
+  assert.ok(second.position.y > from.position.y);
+  // A flipped Goto points left: its From goes to the left.
+  const flipped = addPartner(
+    { ...doc, blocks: [{ ...goto, flip: true }] },
+    'to',
+  )!;
+  assert.ok(
+    flipped.project.blocks.find((b) => b.id === flipped.id)!.position.x < 96,
+  );
+  assert.equal(addPartner(doc, 'nothing'), undefined);
+  // The dialog's Tag and setTag: valid tags only, and the flag grows with the tag.
+  const edited = applyBlockEdits(doc, 'to', { tag: 'MotorSpeedCommand' });
+  const grown = edited.blocks[0];
+  assert.equal(grown.definition.tag, 'MotorSpeedCommand');
+  assert.ok(grown.size!.width > gotoWidth);
+  assert.equal(setTag(doc, 'to', 'not valid'), doc);
+});

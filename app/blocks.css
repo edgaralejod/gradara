@@ -33,6 +33,101 @@
   stroke: #1976b8;
   fill: #f3f9fd;
 }
+/* Blocks a selected Goto, From, or label reaches on this sheet (TagCanvasContext). */
+.engineering-block.is-tag-linked .block-outline > * {
+  stroke-width: 2.6;
+  fill: color-mix(in srgb, var(--domain) 14%, white);
+}
+.engineering-block.is-tag-linked .block-face {
+  animation: tag-linked 0.9s ease-out 2;
+}
+@keyframes tag-linked {
+  0% {
+    filter: drop-shadow(
+      0 0 0 color-mix(in srgb, var(--domain) 0%, transparent)
+    );
+  }
+  40% {
+    filter: drop-shadow(
+      0 0 6px color-mix(in srgb, var(--domain) 70%, transparent)
+    );
+  }
+  100% {
+    filter: drop-shadow(
+      0 0 0 color-mix(in srgb, var(--domain) 0%, transparent)
+    );
+  }
+}
+/* A Goto's hover action: a faded From past the tip, joined by a dashed lead. */
+.tag-partner {
+  position: absolute;
+  top: 50%;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: copy;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+.tag-partner.is-right {
+  left: calc(100% + 64px);
+  transform: translate(-14px, -50%);
+}
+.tag-partner.is-left {
+  right: calc(100% + 64px);
+  transform: translate(14px, -50%);
+}
+/* The lead doubles as a bridge, so the pointer can travel from the flag to the ghost. */
+.tag-partner::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 64px;
+  height: 24px;
+  margin-top: -12px;
+  background: repeating-linear-gradient(
+      90deg,
+      var(--domain) 0 4px,
+      transparent 4px 7px
+    )
+    center / 100% 1.4px no-repeat;
+}
+.tag-partner.is-right::before {
+  right: 100%;
+}
+.tag-partner.is-left::before {
+  left: 100%;
+}
+.engineering-block:hover .tag-partner,
+.tag-partner:focus-visible {
+  opacity: 0.5;
+  pointer-events: auto;
+  transform: translate(0, -50%);
+}
+.engineering-block:hover .tag-partner:hover,
+.tag-partner:focus-visible {
+  opacity: 1;
+}
+.tag-partner .block-outline > * {
+  stroke-dasharray: 4 3;
+  fill: color-mix(in srgb, var(--domain) 6%, white);
+}
+.tag-partner-plus {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--domain);
+  color: white;
+  font: 600 14px/18px var(--block-font);
+  text-align: center;
+}
+
 .block-face .block-symbol {
   position: absolute;
   inset: var(--well-top) var(--well-right) var(--well-bottom) var(--well-left);
@@ -158,7 +253,8 @@
   left: 50%;
   top: 50%;
 }
-.block-frame :is(
+.block-frame
+  :is(
     .gain-value,
     .value-symbol,
     .math-op,
@@ -417,9 +513,17 @@
   overflow: auto;
   max-height: 60%;
 }
-.library-part-detail strong { font-weight: 600; }
-.library-part-detail p { color: #637987; margin: 3px 0 0; }
-.legend-copy > small { font-size: var(--text-ui); color: #637987; }
+.library-part-detail strong {
+  font-weight: 600;
+}
+.library-part-detail p {
+  color: #637987;
+  margin: 3px 0 0;
+}
+.legend-copy > small {
+  font-size: var(--text-ui);
+  color: #637987;
+}
 
 /* Unboxed circuit symbols get lighter relief; labels and connection targets stay flat. */
 .block-face.shape-physical .block-symbol > svg,
@@ -457,8 +561,13 @@
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.block-face .subsystem-thumb > * { vector-effect: non-scaling-stroke; }
-.block-face .subsystem-thumb > polyline { fill: none; opacity: 0.8; }
+.block-face .subsystem-thumb > * {
+  vector-effect: non-scaling-stroke;
+}
+.block-face .subsystem-thumb > polyline {
+  fill: none;
+  opacity: 0.8;
+}
 /* Boundary blocks inside a subsystem: a pill with the port number and name. */
 .block-face.shape-boundary .block-outline > * {
   fill: color-mix(in srgb, var(--domain) 8%, white);
@@ -523,6 +632,17 @@
 }
 
 /* Pictorial schematic symbols (circuit-symbol.tsx): drawn at design size, never stretched. */
-.block-face .circuit-symbol { overflow: visible; }
-.block-face .circuit-symbol path { fill: none; stroke: var(--domain); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.block-face .circuit-symbol path.glyph-fill { fill: var(--domain); stroke: none; }
+.block-face .circuit-symbol {
+  overflow: visible;
+}
+.block-face .circuit-symbol path {
+  fill: none;
+  stroke: var(--domain);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.block-face .circuit-symbol path.glyph-fill {
+  fill: var(--domain);
+  stroke: none;
+}

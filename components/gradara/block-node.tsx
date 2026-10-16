@@ -14,7 +14,10 @@ import {
   type BlockNodeData,
 } from '@/lib/gradara/canvas';
 import { portPlacement } from '@/lib/gradara/ports';
-import { isTagKind } from '@/lib/gradara/tag-blocks';
+import { isTagKind, tagDefinition } from '@/lib/gradara/tag-blocks';
+import { partnerKind } from '@/lib/gradara/tag-edit';
+import { defaultBlockSize } from '@/lib/gradara/block-design';
+import { TagCanvasContext } from './tag-canvas-context';
 import { BlockFace } from './block-face';
 import BlockLabel from './block-label';
 import { VariantSwitchContext } from './variant-switch-context';
@@ -91,6 +94,7 @@ function BlockNode({
     : {};
   const rotation = data.rotation ?? 0;
   const min = minimumBlockSize(d, rotation);
+  const tags = useContext(TagCanvasContext);
   const bounds = {
     width:
       width ?? blockSize({ id, definition: d, position: { x: 0, y: 0 } }).width,
@@ -100,7 +104,7 @@ function BlockNode({
   };
   return (
     <div
-      className={`engineering-block notation-${sum ? 'sum' : d.kind} ${selected ? 'is-selected' : ''}`}
+      className={`engineering-block notation-${sum ? 'sum' : d.kind} ${selected ? 'is-selected' : ''}${tags?.linked.has(id) ? ' is-tag-linked' : ''}`}
       style={{ '--domain': domainColors[d.domain] } as React.CSSProperties}
       {...hover}
     >
@@ -136,6 +140,16 @@ function BlockNode({
         rotation={rotation}
         flip={data.flip}
       />
+      {tags && (
+        <TagPartner
+          id={id}
+          definition={d}
+          rotation={rotation}
+          flip={data.flip}
+          bounds={bounds}
+          onAdd={tags.addPartner}
+        />
+      )}
       {d.subsystem?.variants && (
         <VariantSwitch
           id={id}
@@ -203,6 +217,60 @@ function BlockNode({
     </div>
   );
 }
+/**
+ * Simulink's hover action on a Goto: a faded From with the same tag waits past the
+ * flag's tip, joined by a dashed lead; clicking it adds that From. A label offers another
+ * label the same way. Only for a flag that points left or right.
+ */
+function TagPartner({
+  id,
+  definition: d,
+  rotation,
+  flip,
+  bounds,
+  onAdd,
+}: {
+  id: string;
+  definition: BlockNodeData['definition'];
+  rotation: number;
+  flip?: boolean;
+  bounds: { width: number; height: number };
+  onAdd: (id: string) => void;
+}) {
+  const kind = partnerKind(d.kind);
+  const port = d.ports[0];
+  if (!kind || !d.tag || !port) return null;
+  const side = portPlacement(d, port, rotation, bounds, flip).side;
+  if (side === 'top' || side === 'bottom') return null;
+  const partner = tagDefinition(
+    kind as 'from' | 'connectionLabel',
+    d.tag,
+    port.domain,
+  );
+  const size = defaultBlockSize(partner);
+  const label = `Add a ${kind === 'from' ? 'From' : 'label'} [${d.tag}]`;
+  return (
+    <button
+      type="button"
+      className={`tag-partner nodrag nopan ${side === 'right' ? 'is-left' : 'is-right'}`}
+      style={{ width: size.width, height: size.height }}
+      title={label}
+      aria-label={label}
+      onPointerDown={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        onAdd(id);
+      }}
+    >
+      <BlockFace definition={partner} size={size} />
+      <span className="tag-partner-plus" aria-hidden="true">
+        +
+      </span>
+    </button>
+  );
+}
+
 /** Simulink's terminator, drawn on an output left open on purpose: a stub and a cap. */
 function Terminator({
   side,

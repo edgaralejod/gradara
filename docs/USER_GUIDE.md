@@ -173,7 +173,11 @@ Tags connect without a wire, for long or crowded connections. Three blocks in **
 - **Goto** takes a signal (or Boolean value) and shows its tag, such as `[ref]`. **From** gives that signal back anywhere a From with the same tag can see the Goto. Any number of From blocks can read one Goto; a sheet can have one Goto per tag.
 - **Connection label** joins physical terminals: every terminal wired to a label with the same tag is one node, as if wired together, in any physical domain. Use it for a supply rail, a ground return, or a shared shaft.
 
-Set the tag under **Tag** in the block's properties: a letter, then letters, digits, or `_`. The field suggests the tags in reach. A tag block takes the kind of the first wire you connect, and grows to fit its tag.
+Set the tag under **Tag** in the block's properties, or in the block dialog (double-click the block): a letter, then letters, digits, or `_`. The properties field suggests the tags in reach. A tag block takes the kind of the first wire you connect, and grows to fit its tag.
+
+Hover a Goto and a faded From appears past its tip; click it to add a From with the same tag and kind of signal. A connection label offers another label the same way. Selecting a Goto, From, or label highlights the blocks on the sheet that share its tag, so you can see where a signal goes.
+
+Copying or duplicating never makes a second Goto with a tag already on the sheet: the copy gets the next free tag (`ref` becomes `ref1`), and From blocks copied with it follow, so a copied pair stays a pair. A From copied on its own keeps its tag and reads the same Goto; labels keep their tags.
 
 Tags reach **down** a hierarchy, never up. A From finds the Goto with its tag on its own sheet or, failing that, on the nearest sheet above it, through any number of subsystem levels; a Goto inside a subsystem is not seen outside it (use a subsystem output for that). Labels inside a subsystem join the labels with their tag on the sheets above it; two subsystems side by side are joined only through a label above them. A From's properties name the Goto it reads and its sheet, with **Show** to open that sheet and select it; a Goto or label lists what it reaches. Problems reports a From with no Goto it can see, two Gotos with one tag on a sheet, a tag block without a tag, and one tag on different kinds of value. Results do not list a From's output separately: plot the Goto's source or a block the From feeds. Tags do not carry a bus yet. The **Goto, From, and connection labels** block example shows both kinds.
 

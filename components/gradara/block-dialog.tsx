@@ -21,12 +21,14 @@ import { Input } from '@/components/ui/input';
 import ParameterList from './parameter-list';
 import BlockHelpDialog from './block-help-dialog';
 import { BusSignalsPanel } from './bus-signals-panel';
+import { isTagKind, TAG_PATTERN } from '@/lib/gradara/tag-blocks';
 import type { Project } from '@/lib/gradara/model';
 
 export type BlockDialogTab = 'properties' | 'equations' | 'declarations';
 
 type Draft = {
   name: string;
+  tag: string;
   values: Record<string, number>;
   equations: string;
   declarations: string;
@@ -35,6 +37,7 @@ type Draft = {
 function initialDraft(definition: Definition): Draft {
   return {
     name: definition.name,
+    tag: definition.tag ?? '',
     values: Object.fromEntries(
       definition.parameters.map((p) => [p.id, p.value]),
     ),
@@ -46,6 +49,7 @@ function initialDraft(definition: Definition): Draft {
 function isDirty(definition: Definition, draft: Draft, readonly: boolean) {
   return (
     draft.name.trim() !== definition.name ||
+    (isTagKind(definition.kind) && draft.tag !== (definition.tag ?? '')) ||
     definition.parameters.some((p) => draft.values[p.id] !== p.value) ||
     (!readonly &&
       (draft.equations !== definition.equations ||
@@ -77,7 +81,9 @@ export default function BlockDialog({
   const definition = block.definition;
   const [helpOpen, setHelpOpen] = useState(false);
   // Mirrored in a ref so Enter can apply edits committed by the same keystroke.
-  const [draft, setDraftState] = useState<Draft>(() => initialDraft(definition));
+  const [draft, setDraftState] = useState<Draft>(() =>
+    initialDraft(definition),
+  );
   const draftRef = useRef<Draft>(draft);
   const setDraft = (update: Partial<Draft>) => {
     draftRef.current = { ...draftRef.current, ...update };
@@ -88,17 +94,22 @@ export default function BlockDialog({
   const firstParameter = useRef<HTMLInputElement>(null);
   // A bus block's equations follow its Signals (buses.ts), so they are shown, not edited.
   const bus = isBusBlock(definition);
+  const tagged = isTagKind(definition.kind);
   const readonly =
     !definition.generated &&
-    (definition.domain !== 'signal' || !!definition.modelica || bus);
+    (definition.domain !== 'signal' || !!definition.modelica || bus || tagged);
   const readOnlyMessage = bus
     ? 'These equations follow the Signals on the Properties tab.'
     : 'Built-in equations are shown for inspection and cannot be edited.';
   const defaults = libraryDefaults(definition);
   // Show only what this block has: code tabs for blocks defined by equations you
   // can read or edit, and a Parameters section only when there are parameters.
-  const showEquations = !readonly || !!definition.equations?.trim();
-  const showDeclarations = !readonly || !!definition.declarations?.trim();
+  // A tag block has no equations: tags are joined when the model is emitted.
+  const showEquations =
+    !tagged && (!readonly || !!definition.equations?.trim());
+  const showDeclarations =
+    !tagged && (!readonly || !!definition.declarations?.trim());
+  const tagValid = !tagged || TAG_PATTERN.test(draft.tag);
   const activeTab: BlockDialogTab =
     (tab === 'equations' && !showEquations) ||
     (tab === 'declarations' && !showDeclarations)
@@ -109,8 +120,10 @@ export default function BlockDialog({
   const apply = () => {
     const current = draftRef.current;
     if (!isDirty(definition, current, readonly)) return;
+    if (tagged && !TAG_PATTERN.test(current.tag)) return;
     onApply({
       name: current.name,
+      ...(tagged ? { tag: current.tag } : {}),
       parameters: current.values,
       ...(readonly
         ? {}
@@ -162,7 +175,11 @@ export default function BlockDialog({
       ? draft.equations
       : draft.declarations;
   const setCode = (value: string) =>
-    setDraft(activeTab === 'equations' ? { equations: value } : { declarations: value });
+    setDraft(
+      activeTab === 'equations'
+        ? { equations: value }
+        : { declarations: value },
+    );
 
   return (
     <Dialog
@@ -183,13 +200,18 @@ export default function BlockDialog({
         <DialogTitle>{definition.name}</DialogTitle>
         <DialogDescription>
           {activeTab === 'properties'
-            ? 'Edit the name and parameters of this block. Apply saves all changes as one undo step.'
+            ? tagged
+              ? 'Edit the name and tag of this block. Apply saves all changes as one undo step.'
+              : 'Edit the name and parameters of this block. Apply saves all changes as one undo step.'
             : readonly
               ? 'Built-in physical equations are shown for inspection. Parameters stay editable on the Properties tab.'
               : 'Edit the component definition. Changes become part of your saved model.'}
         </DialogDescription>
         {(showEquations || showDeclarations) && (
-          <Tabs value={activeTab} onValueChange={(v) => setTab(v as BlockDialogTab)}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setTab(v as BlockDialogTab)}
+          >
             <TabsList variant="line">
               <TabsTrigger value="properties">Properties</TabsTrigger>
               {showEquations && (
@@ -217,6 +239,34 @@ export default function BlockDialog({
                   if (e.key === 'Enter') apply();
                 }}
               />
+              {tagged && (
+                <>
+                  <div className="section-label block-dialog-tag-label">
+                    Tag
+                  </div>
+                  <Input
+                    className="block-dialog-tag"
+                    aria-label="Tag"
+                    aria-invalid={!tagValid}
+                    maxLength={32}
+                    spellCheck={false}
+                    value={draft.tag}
+                    onChange={(e) => setDraft({ tag: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') apply();
+                    }}
+                  />
+                  <p className={`size-hint${tagValid ? '' : ' is-error'}`}>
+                    {tagValid
+                      ? definition.kind === 'goto'
+                        ? 'Every From with this tag, on this sheet or inside a subsystem on it, gives this signal back.'
+                        : definition.kind === 'from'
+                          ? 'Reads the Goto with this tag on this sheet or the nearest sheet above.'
+                          : 'Joins every label with this tag here, above, and inside the subsystems on this sheet.'
+                      : 'A letter, then letters, digits, or _ (up to 32).'}
+                  </p>
+                </>
+              )}
               {definition.description && (
                 <p className="block-dialog-description">
                   {definition.description}
@@ -237,25 +287,27 @@ export default function BlockDialog({
               </section>
             )}
             {definition.parameters.length > 0 && (
-            <section>
-              <div className="section-label">
-                Parameters<span>{definition.parameters.length}</span>
-              </div>
-              <ParameterList
-                blockId={block.id}
-                parameters={definition.parameters.map((p) => ({
-                  ...p,
-                  value: draft.values[p.id],
-                }))}
-                defaults={defaults}
-                firstInputRef={firstParameter}
-                live
-                onEnter={apply}
-                onChange={(id, value) =>
-                  setDraft({ values: { ...draftRef.current.values, [id]: value } })
-                }
-              />
-            </section>
+              <section>
+                <div className="section-label">
+                  Parameters<span>{definition.parameters.length}</span>
+                </div>
+                <ParameterList
+                  blockId={block.id}
+                  parameters={definition.parameters.map((p) => ({
+                    ...p,
+                    value: draft.values[p.id],
+                  }))}
+                  defaults={defaults}
+                  firstInputRef={firstParameter}
+                  live
+                  onEnter={apply}
+                  onChange={(id, value) =>
+                    setDraft({
+                      values: { ...draftRef.current.values, [id]: value },
+                    })
+                  }
+                />
+              </section>
             )}
             <section>
               <div className="section-label">Interface</div>
@@ -312,11 +364,18 @@ export default function BlockDialog({
           </div>
         )}
         <div className="dialog-actions">
-          <Button variant="ghost" className="dialog-help" onClick={() => setHelpOpen(true)}>
+          <Button
+            variant="ghost"
+            className="dialog-help"
+            onClick={() => setHelpOpen(true)}
+          >
             Help
           </Button>
           {helpOpen && (
-            <BlockHelpDialog definition={definition} onClose={() => setHelpOpen(false)} />
+            <BlockHelpDialog
+              definition={definition}
+              onClose={() => setHelpOpen(false)}
+            />
           )}
           {dirty && (
             <output className="block-dialog-dirty">
@@ -327,7 +386,7 @@ export default function BlockDialog({
           <Button variant="outline" onClick={onClose}>
             {dirty ? 'Cancel' : 'Close'}
           </Button>
-          <Button disabled={!dirty} onClick={apply}>
+          <Button disabled={!dirty || !tagValid} onClick={apply}>
             Apply
           </Button>
         </div>

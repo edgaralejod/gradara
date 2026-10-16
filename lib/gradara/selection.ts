@@ -10,6 +10,7 @@ import { snapMovedBlocks } from './placement';
 import { settleRoutes } from './router';
 import { sideToPosition } from './ports';
 import { pruneJunctions } from './project';
+import { freshPastedTags } from './tag-edit';
 import {
   routeBetween,
   simplifyPoints,
@@ -391,11 +392,15 @@ export function pasteSelection(
     ...fragment.blocks.map((b) => [b.id, id('b')] as const),
     ...fragment.junctions.map((j) => [j.id, id('j')] as const),
   ]);
-  const blocks = fragment.blocks.map((b) => ({
-    ...structuredClone(b),
-    id: remap.get(b.id)!,
-    position: offset(b.position, delta),
-  }));
+  // A pasted Goto never repeats a Goto's tag on this sheet (tag-edit.ts).
+  const blocks = freshPastedTags(
+    project.blocks,
+    fragment.blocks.map((b) => ({
+      ...structuredClone(b),
+      id: remap.get(b.id)!,
+      position: offset(b.position, delta),
+    })),
+  );
   const junctions = fragment.junctions.map((j) => ({
     ...structuredClone(j),
     id: remap.get(j.id)!,

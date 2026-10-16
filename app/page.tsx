@@ -3,6 +3,8 @@ import { flipBlocks, rotateBlocks } from '@/lib/gradara/rotation';
 import { isTagKind } from '@/lib/gradara/tag-blocks';
 import { tagProblems } from '@/lib/gradara/tags';
 import { TagProperties } from '@/components/gradara/tag-properties';
+import { TagCanvasContext } from '@/components/gradara/tag-canvas-context';
+import { addPartner as addTagPartner, setTag } from '@/lib/gradara/tag-edit';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
 import NoteLayer from '@/components/gradara/note-layer';
@@ -691,6 +693,36 @@ function Workbench() {
     setProject(restored);
   }, [future]);
   const active = project.blocks.find((b) => b.id === selectedIds[0]);
+  // Selecting a tag block highlights what it reaches on this sheet (TagCanvasContext).
+  const tagCanvas = useMemo(() => {
+    const linked = new Set<string>();
+    const chosen = new Set(selectedIds);
+    for (const id of selectedIds) {
+      const b = project.blocks.find((x) => x.id === id);
+      const tag = b?.definition.tag;
+      if (!b || !tag || !isTagKind(b.definition.kind)) continue;
+      const kinds =
+        b.definition.kind === 'connectionLabel'
+          ? ['connectionLabel']
+          : ['goto', 'from'];
+      for (const other of project.blocks)
+        if (
+          !chosen.has(other.id) &&
+          other.definition.tag === tag &&
+          kinds.includes(other.definition.kind)
+        )
+          linked.add(other.id);
+    }
+    return {
+      linked,
+      addPartner: (id: string) => {
+        const made = addTagPartner(projectRef.current, id);
+        if (!made) return;
+        commit(made.project);
+        select({ ...emptySelection(), blockIds: [made.id] });
+      },
+    };
+  }, [project.blocks, selectedIds, commit, select]);
   const nets = useMemo(() => describeNets(project), [project]);
   const activeNet = nets.find(({ net }) =>
     net.wireIds.includes(selectedEdges[0]),
@@ -3199,6 +3231,7 @@ function Workbench() {
                 {ready && (
                   <SubsystemLookupContext.Provider value={lookupSubsystem}>
                     <VariantSwitchContext.Provider value={switchVariantOnSheet}>
+                     <TagCanvasContext.Provider value={tagCanvas}>
                       <ModelCanvas
                         sheet={scope.join('/')}
                         key={project.modelId ?? 'workspace'}
@@ -3370,6 +3403,7 @@ function Workbench() {
                           onArrange={arrange}
                         />
                       </ModelCanvas>
+                     </TagCanvasContext.Provider>
                     </VariantSwitchContext.Provider>
                   </SubsystemLookupContext.Provider>
                 )}
@@ -3750,34 +3784,7 @@ function Workbench() {
                       doc={doc}
                       path={scope}
                       block={active}
-                      onTag={(tag) =>
-                        commit((p) => ({
-                          ...p,
-                          blocks: p.blocks.map((b) => {
-                            if (b.id !== active.id) return b;
-                            const definition = {
-                              ...b.definition,
-                              tag,
-                              symbol: tag,
-                            };
-                            // The flag grows with its tag, about its center.
-                            const old = blockSize(b);
-                            const size = defaultBlockSize(definition);
-                            return {
-                              ...b,
-                              definition,
-                              size,
-                              position: snapBlockPosition(
-                                {
-                                  x: b.position.x + (old.width - size.width) / 2,
-                                  y: b.position.y + (old.height - size.height) / 2,
-                                },
-                                size,
-                              ),
-                            };
-                          }),
-                        }))
-                      }
+                      onTag={(tag) => commit((p) => setTag(p, active.id, tag))}
                       onShow={(link) => {
                         navigate(link.path);
                         setWorkspaceMode('diagram');

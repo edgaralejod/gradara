@@ -640,7 +640,7 @@ export const docs: Record<string, BlockDoc> = {
 
   goto: {
     description: [
-      'Sends the signal wired to it, by tag, to every From block with the same tag, without a wire: a long or crowded connection becomes two small flags. The tag is shown on the block as [tag]; set it under Tag in the block’s properties.',
+      'Sends the signal wired to it, by tag, to every From block with the same tag, without a wire: a long or crowded connection becomes two small flags. The tag is shown on the block as [tag]; set it under Tag in the block’s properties or its dialog.',
       'A Goto is seen on its own sheet and inside every subsystem on it, at any depth. It is never seen above: a Goto inside a subsystem cannot reach a From outside it. Use a subsystem output for that.',
     ],
     ports: {
@@ -653,7 +653,9 @@ export const docs: Record<string, BlockDoc> = {
       'A bus is not carried by tag yet; use a wire or a subsystem port for a bus.',
     ],
     tips: [
-      'The block’s properties list the From blocks that read it on this sheet, with Show to jump to each.',
+      'Hover the Goto and click the faded From past its tip to add a From with its tag.',
+      'Select it to highlight the From blocks on the sheet that read it; its properties list them, with Show to jump to each.',
+      'A copied Goto gets the next free tag (ref becomes ref1); From blocks copied with it follow.',
       'A Goto inside a subsystem shadows a Goto with the same tag above it, for the From blocks inside.',
     ],
     seeAlso: ['from', 'connectionLabel', 'subsystem'],
@@ -674,6 +676,7 @@ export const docs: Record<string, BlockDoc> = {
     ],
     tips: [
       'Its properties name the Goto it reads and the sheet it is on, with Show to open that sheet and select it. The tag field suggests the Goto tags in reach.',
+      'Select it to highlight its Goto and the other From blocks with its tag on the sheet.',
     ],
     seeAlso: ['goto', 'connectionLabel', 'subsystem'],
   },
@@ -695,7 +698,8 @@ export const docs: Record<string, BlockDoc> = {
     ],
     tips: [
       'Flip a label (⌘/Ctrl + I) to put its terminal on the other side.',
-      'Its properties list the other labels it joins, here and above, with Show to jump to each.',
+      'Its properties list the other labels it joins, here and above, with Show to jump to each. Select it to highlight the labels with its tag on the sheet.',
+      'Hover a label and click the faded label past it to add another with the same tag.',
     ],
     seeAlso: ['goto', 'from', 'subsystem'],
   },
