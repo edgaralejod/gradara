@@ -96,7 +96,7 @@
           },
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "right"
@@ -129,7 +129,7 @@
       "definition": {
         "kind": "massStops",
         "name": "Mass with stops",
-        "description": "Mass with Coulomb and viscous friction and hard end stops.",
+        "description": "Mass with viscous, Coulomb and Stribeck friction and inelastic end stops.",
         "domain": "translational",
         "category": "translational",
         "symbol": "m⊣⊢",
@@ -185,7 +185,7 @@
           },
           {
             "id": "F_Stribeck",
-            "name": "Stribeck friction",
+            "name": "Stribeck excess (added to Coulomb)",
             "value": 10,
             "unit": "N",
             "min": 0
@@ -242,7 +242,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "left"
@@ -291,7 +291,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "right"
@@ -391,7 +391,7 @@
       "definition": {
         "kind": "hardStop",
         "name": "Elastic stop",
-        "description": "Spring and damper that act only when the gap closes (contact).",
+        "description": "Spring and damper that push the flanges apart while b − a is below the contact distance.",
         "domain": "translational",
         "category": "translational",
         "symbol": "gap",
@@ -428,7 +428,7 @@
           },
           {
             "id": "s_rel0",
-            "name": "Gap",
+            "name": "Contact distance (b − a)",
             "value": -0.05,
             "unit": "m"
           }
@@ -473,7 +473,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "top"
@@ -482,7 +482,7 @@
         "parameters": [
           {
             "id": "s0",
-            "name": "Position",
+            "name": "Fixed position",
             "value": 0.1,
             "unit": "m"
           }
@@ -525,7 +525,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "left"
@@ -630,7 +630,7 @@
           },
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "right"
@@ -740,7 +740,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "left"
@@ -866,7 +866,7 @@
           },
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "right"
@@ -976,7 +976,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "left"

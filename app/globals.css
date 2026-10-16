@@ -25,7 +25,8 @@
 }
 :root {
   /* Shared UI and drawing typography. System fonts keep the app fully offline. */
-  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-ui:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-code: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --font-geist-sans: var(--font-ui);
   --text-micro: 10px;
@@ -1610,6 +1611,43 @@ input:hover::-webkit-inner-spin-button {
   padding: 0 9px;
   font: 13px var(--font-mono, ui-monospace, monospace);
 }
+.tag-type-label {
+  margin-top: 12px;
+}
+.tag-type-field,
+.block-dialog-type-field {
+  position: relative;
+  display: block;
+}
+.tag-type-swatch {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.tag-type-field select {
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background-color: #fbfcff;
+  color: #41465d;
+  padding: 0 9px 0 24px;
+  font: 13px var(--font-ui, inherit);
+}
+.tag-type-field select:disabled,
+.block-dialog-type-field select:disabled {
+  /* Set by its wire: read, not chosen. Text stays dark so it reads as a value. */
+  background-color: transparent;
+  border-style: dashed;
+  color: #41465d;
+  opacity: 1;
+  cursor: default;
+}
 .tag-field input[aria-invalid='true'] {
   border-color: #b3261e;
 }
@@ -1667,7 +1705,14 @@ input:hover::-webkit-inner-spin-button {
 .inspector-actions + button {
   margin-left: 3px !important;
 }
-.model-draft-diagram { width: 100%; height: 220px; margin-top: 12px; border: 1px solid #e4e6ed; border-radius: 6px; background: #fafbfc; }
+.model-draft-diagram {
+  width: 100%;
+  height: 220px;
+  margin-top: 12px;
+  border: 1px solid #e4e6ed;
+  border-radius: 6px;
+  background: #fafbfc;
+}
 
 /* A field whose text is not a usable value (stop time, export step): what is allowed. */
 .field-error {
@@ -1675,5 +1720,10 @@ input:hover::-webkit-inner-spin-button {
   font-size: var(--text-micro);
   line-height: 1.3;
 }
-label > .field-error { margin-left: 6px; white-space: nowrap; }
-.model-duration-field + .field-error { margin: -4px 0 8px; }
+label > .field-error {
+  margin-left: 6px;
+  white-space: nowrap;
+}
+.model-duration-field + .field-error {
+  margin: -4px 0 8px;
+}

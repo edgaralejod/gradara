@@ -11,7 +11,7 @@
       "definition": {
         "kind": "threePhaseSource",
         "name": "100 V 50 Hz",
-        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "description": "Balanced three-phase sinusoidal voltages from abc− to abc; a Star on abc− gives the neutral.",
         "domain": "threePhase",
         "category": "threePhase",
         "symbol": "3~ AC",
@@ -282,35 +282,35 @@
         "parameters": [
           {
             "id": "n",
-            "name": "Ratio",
+            "name": "Voltage ratio HV/LV (line-to-line)",
             "value": 2,
             "unit": "",
             "min": 0
           },
           {
             "id": "R1",
-            "name": "Primary resistance per phase",
+            "name": "HV resistance per phase",
             "value": 0.01,
             "unit": "Ω",
             "min": 0
           },
           {
             "id": "L1sigma",
-            "name": "Primary stray inductance",
+            "name": "HV stray inductance per phase",
             "value": 0.001,
             "unit": "H",
             "min": 0
           },
           {
             "id": "R2",
-            "name": "Secondary resistance per phase",
+            "name": "LV resistance per phase",
             "value": 0.01,
             "unit": "Ω",
             "min": 0
           },
           {
             "id": "L2sigma",
-            "name": "Secondary stray inductance",
+            "name": "LV stray inductance per phase",
             "value": 0.001,
             "unit": "H",
             "min": 0

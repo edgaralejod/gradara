@@ -11,7 +11,7 @@
       "definition": {
         "kind": "threePhaseSource",
         "name": "100 V rms IM",
-        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "description": "Balanced three-phase sinusoidal voltages from abc− to abc; a Star on abc− gives the neutral.",
         "domain": "threePhase",
         "category": "threePhase",
         "symbol": "3~ AC",
@@ -252,7 +252,7 @@
       "definition": {
         "kind": "inductionMachine",
         "name": "Induction",
-        "description": "Three-phase squirrel-cage induction machine (star-connected stator terminals).",
+        "description": "Three-phase squirrel-cage induction machine. The stator winding ends are on n: connect a Star to n for a star connection.",
         "domain": "threePhase",
         "category": "machines",
         "symbol": "IM",
@@ -428,7 +428,7 @@
       "definition": {
         "kind": "threePhaseSource",
         "name": "112.3 V rms PMSM",
-        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "description": "Balanced three-phase sinusoidal voltages from abc− to abc; a Star on abc− gives the neutral.",
         "domain": "threePhase",
         "category": "threePhase",
         "symbol": "3~ AC",
@@ -713,7 +713,7 @@
           },
           {
             "id": "VsOpenCircuit",
-            "name": "Open-circuit voltage at fsNominal",
+            "name": "Open-circuit voltage (RMS per phase)",
             "value": 112.3,
             "unit": "V",
             "min": 0
@@ -845,7 +845,7 @@
       "definition": {
         "kind": "threePhaseSource",
         "name": "100 V rms SynRM",
-        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "description": "Balanced three-phase sinusoidal voltages from abc− to abc; a Star on abc− gives the neutral.",
         "domain": "threePhase",
         "category": "threePhase",
         "symbol": "3~ AC",

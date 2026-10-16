@@ -143,7 +143,7 @@
       "definition": {
         "kind": "hallSensor",
         "name": "Hall sensor",
-        "description": "Electrical rotor angle for p pole pairs, as a Hall or encoder sensor reports it (0…2π).",
+        "description": "Electrical rotor angle for p pole pairs (0…2π), aligned like MSL machines: it reads π at shaft angle 0.",
         "domain": "mechanical",
         "category": "machines",
         "symbol": "Hall",

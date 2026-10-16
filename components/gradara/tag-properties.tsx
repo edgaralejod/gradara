@@ -1,8 +1,69 @@
 'use client';
 import { useEffect, useId, useState } from 'react';
 import { Crosshair } from 'lucide-react';
-import type { Block, Project } from '@/lib/gradara/model';
-import { TAG_PATTERN } from '@/lib/gradara/tag-blocks';
+import {
+  domainColors,
+  domainTitle,
+  type Block,
+  type Domain,
+  type Project,
+} from '@/lib/gradara/model';
+import {
+  tagDomains,
+  TAG_PATTERN,
+  type TagKind,
+} from '@/lib/gradara/tag-blocks';
+
+/**
+ * What a tag block carries: a physical domain for a connection label, a signal or a
+ * Boolean value for a Goto or From. It can be chosen while the block has no wires;
+ * once wired, it follows its first wire.
+ */
+export function TagTypeSelect({
+  kind,
+  value,
+  wired,
+  onChange,
+  className = 'tag-type',
+}: {
+  kind: TagKind;
+  value: Domain;
+  wired: boolean;
+  onChange: (domain: Domain) => void;
+  className?: string;
+}) {
+  return (
+    <>
+      <label className={`${className}-field`}>
+        <span
+          className="tag-type-swatch"
+          style={{ background: domainColors[value] }}
+          aria-hidden
+        />
+        <select
+          className={className}
+          aria-label="Type"
+          value={value}
+          disabled={wired}
+          onChange={(e) => onChange(e.target.value as Domain)}
+        >
+          {tagDomains(kind).map((d) => (
+            <option key={d} value={d}>
+              {domainTitle(d)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <p className="size-hint">
+        {wired
+          ? 'Set by its wire. Remove its wires to choose another type.'
+          : kind === 'connectionLabel'
+            ? 'Or wire it first: it takes the type of the first terminal you connect.'
+            : 'Or wire it first: it takes the type of the first wire you connect.'}
+      </p>
+    </>
+  );
+}
 import { tagLinks, tagsInScope, type TagLink } from '@/lib/gradara/tags';
 
 /**
@@ -14,13 +75,18 @@ export function TagProperties({
   doc,
   path,
   block,
+  wired,
   onTag,
+  onType,
   onShow,
 }: {
   doc: Project;
   path: string[];
   block: Block;
+  /** Whether the block has wires on its own sheet (it then follows its wire's type). */
+  wired: boolean;
   onTag: (tag: string) => void;
+  onType: (domain: Domain) => void;
   onShow: (link: TagLink) => void;
 }) {
   const kind = block.definition.kind;
@@ -71,6 +137,13 @@ export function TagProperties({
           A letter, then letters, digits, or _ (up to 32).
         </p>
       )}
+      <div className="section-label tag-type-label">Type</div>
+      <TagTypeSelect
+        kind={kind as TagKind}
+        value={block.definition.ports[0]?.domain ?? 'signal'}
+        wired={wired}
+        onChange={onType}
+      />
       {kind === 'from' ? (
         source ? (
           <p className="size-hint tag-link">

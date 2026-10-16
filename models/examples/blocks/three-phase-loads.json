@@ -11,7 +11,7 @@
       "definition": {
         "kind": "threePhaseSource",
         "name": "10 V 50 Hz",
-        "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+        "description": "Balanced three-phase sinusoidal voltages from abc− to abc; a Star on abc− gives the neutral.",
         "domain": "threePhase",
         "category": "threePhase",
         "symbol": "3~ AC",
@@ -1076,7 +1076,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -1136,7 +1136,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -1196,7 +1196,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

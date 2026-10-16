@@ -249,7 +249,7 @@
         "ports": [
           {
             "id": "Phi",
-            "name": "Phi",
+            "name": "Φ",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -448,7 +448,7 @@
         "ports": [
           {
             "id": "V_m",
-            "name": "V_m",
+            "name": "Vm",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -709,7 +709,7 @@
         "ports": [
           {
             "id": "Phi",
-            "name": "Phi",
+            "name": "Φ",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -983,7 +983,7 @@
         "ports": [
           {
             "id": "Phi",
-            "name": "Phi",
+            "name": "Φ",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -1206,7 +1206,7 @@
         "ports": [
           {
             "id": "V_m",
-            "name": "V_m",
+            "name": "Vm",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",

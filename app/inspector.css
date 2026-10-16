@@ -205,7 +205,9 @@
   align-items: center;
   gap: 6px;
 }
-.inspector-properties .identity-field > span { margin: 0; }
+.inspector-properties .identity-field > span {
+  margin: 0;
+}
 
 .parameter .promoted-note {
   display: block;
@@ -409,4 +411,89 @@
 }
 .solver-table tr.is-marked td {
   background: #fff4d6;
+}
+
+/*
+ * Every field you can edit in the properties panel looks editable: white, with a
+ * border. Read-only and disabled fields keep the panel's grey, so the two never look
+ * alike. Parameter values sit in their own white box with a unit, so they keep it.
+ */
+.inspector-properties
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
+    select:not(:disabled),
+    textarea:not([readonly], :disabled)
+  ):not(.parameter input) {
+  background-color: white;
+  border: 1px solid #cfd9e0;
+  color: #27333d;
+}
+.inspector-properties
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
+    select:not(:disabled),
+    textarea:not([readonly], :disabled)
+  ):not(.parameter input):hover {
+  border-color: #aebfcb;
+}
+.inspector-properties
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
+    select:not(:disabled),
+    textarea:not([readonly], :disabled)
+  ):not(.parameter input):focus-visible {
+  border-color: var(--primary);
+  outline: none;
+}
+.inspector-properties .parameter > div {
+  border: 1px solid #cfd9e0;
+}
+.inspector-properties .modelica-class {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 3px;
+  background: #f0f3f5;
+  color: #3e5566;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+/* The block and model name fields are fields too (globals.css draws the name bare). */
+.inspector-properties .component-name-input {
+  border: 1px solid #cfd9e0 !important;
+  padding: 0 7px !important;
+  background: white;
+}
+.inspector-properties .component-name-input:hover {
+  border-color: #aebfcb !important;
+}
+.inspector-properties .component-name-input:focus {
+  border-color: var(--primary) !important;
+}
+/* A parameter set per instance (promoted) is read here, not edited: no white box. */
+.inspector-properties .parameter > div:has(input:disabled) {
+  background: transparent;
+  border-style: dashed;
 }

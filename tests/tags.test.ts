@@ -283,3 +283,44 @@ void test('a Goto’s hover action adds a From with its tag past the tip; the di
   assert.ok(grown.size!.width > gotoWidth);
   assert.equal(setTag(doc, 'to', 'not valid'), doc);
 });
+
+void test('a tag block’s type is chosen while it has no wires, and follows its wire after', async () => {
+  const { setTagDomain } = await import('../lib/gradara/tag-edit');
+  const { applyBlockEdits } = await import('../lib/gradara/project');
+  const doc: Project = {
+    version: 1,
+    name: 'Type',
+    duration: 1,
+    revision: 0,
+    blocks: [
+      at('lab', tagDefinition('connectionLabel', 'S', 'electrical')),
+      at('to', tagDefinition('goto', 'A', 'signal')),
+      at('c', kind('constant')),
+      at('wired', tagDefinition('goto', 'B', 'signal')),
+    ],
+    wires: [
+      {
+        id: 'w',
+        source: 'c',
+        sourceHandle: 'y',
+        target: 'wired',
+        targetHandle: 'u',
+      },
+    ],
+  };
+  const shaft = setTagDomain(doc, 'lab', 'mechanical');
+  const lab = shaft.blocks.find((b) => b.id === 'lab')!.definition;
+  assert.equal(lab.ports[0].domain, 'mechanical');
+  assert.equal(lab.domain, 'mechanical');
+  assert.equal(lab.tag, 'S');
+  // A label carries physical types only; a Goto signal or Boolean only.
+  assert.equal(setTagDomain(doc, 'lab', 'boolean'), doc);
+  assert.equal(setTagDomain(doc, 'to', 'thermal'), doc);
+  const bool = applyBlockEdits(doc, 'to', { tagDomain: 'boolean' });
+  assert.equal(
+    bool.blocks.find((b) => b.id === 'to')!.definition.ports[0].domain,
+    'boolean',
+  );
+  // A wired block keeps the type of its wire.
+  assert.equal(setTagDomain(doc, 'wired', 'boolean'), doc);
+});

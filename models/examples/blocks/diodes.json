@@ -248,7 +248,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -559,7 +559,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -755,7 +755,7 @@
       "definition": {
         "kind": "zenerDiode",
         "name": "Zener 5.1 V",
-        "description": "Diode with reverse breakdown at Bv.",
+        "description": "Diode with reverse breakdown at the breakdown voltage.",
         "domain": "electrical",
         "category": "semiconductors",
         "symbol": "Z",
@@ -836,7 +836,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

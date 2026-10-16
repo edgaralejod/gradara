@@ -262,7 +262,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -495,7 +495,7 @@
         "parameters": [
           {
             "id": "n",
-            "name": "Turns ratio",
+            "name": "Turns ratio N1/N2",
             "value": 2,
             "unit": "",
             "min": 0
@@ -614,7 +614,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -850,7 +850,7 @@
       "definition": {
         "kind": "saturatingInductor",
         "name": "Saturating inductor",
-        "description": "Inductance falls from Lzer toward Linf as the core saturates.",
+        "description": "Inductance falls from its zero-current value toward the saturated value as the current rises. Keep zero-current > nominal > saturated inductance.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "L(i)",
@@ -887,7 +887,7 @@
           },
           {
             "id": "Lzer",
-            "name": "Initial inductance",
+            "name": "Inductance at zero current",
             "value": 2,
             "unit": "H",
             "min": 0
@@ -955,7 +955,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

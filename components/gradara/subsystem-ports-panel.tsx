@@ -1,6 +1,6 @@
 'use client';
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react';
-import { domainColors, domainLabels } from '@/lib/gradara/model';
+import { domainColors, domainLabels, domainTitle } from '@/lib/gradara/model';
 import type { Block, Domain, Project } from '@/lib/gradara/model';
 import { boundaryBlocks, type BoundaryKind } from '@/lib/gradara/hierarchy';
 import {
@@ -70,7 +70,7 @@ function TypeSelect({
     >
       {portTypes.map((d) => (
         <option key={d} value={d}>
-          {domainLabels[d]}
+          {domainTitle(d)}
         </option>
       ))}
     </select>

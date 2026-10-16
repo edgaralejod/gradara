@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { Block, Project } from './model';
+import type { Block, Domain, Project } from './model';
 import { blockSize } from './canvas';
 import { defaultBlockSize, snapBlockPosition } from './block-design';
 import { portPlacement } from './ports';
-import { isTagKind, tagDefinition, TAG_PATTERN } from './tag-blocks';
+import {
+  isTagKind,
+  tagDefinition,
+  tagDomains,
+  TAG_PATTERN,
+} from './tag-blocks';
 
 /** A tag block with a new tag: its face grows or shrinks with the tag, about its center. */
 export function retagged(block: Block, tag: string): Block {
@@ -138,5 +143,48 @@ export function addPartner(
   return {
     project: { ...project, blocks: [...project.blocks, created] },
     id: ident,
+  };
+}
+
+/** Whether a block has a wire on it: a wired tag block takes its type from the wire. */
+export const isWired = (project: Project, id: string) =>
+  project.wires.some((w) => w.source === id || w.target === id);
+
+/**
+ * Set the type a tag block carries (a physical domain for a label, signal or Boolean
+ * for a Goto or From); `project` itself when the type is not one it can carry, it is
+ * already that type, or the block has wires (it then follows its first wire).
+ */
+export function setTagDomain(
+  project: Project,
+  id: string,
+  domain: Domain,
+): Project {
+  const block = project.blocks.find((b) => b.id === id);
+  const d = block?.definition;
+  if (
+    !block ||
+    !d ||
+    !isTagKind(d.kind) ||
+    !tagDomains(d.kind).includes(domain) ||
+    d.ports[0]?.domain === domain ||
+    isWired(project, id)
+  )
+    return project;
+  const next = tagDefinition(d.kind, d.tag ?? '', domain);
+  return {
+    ...project,
+    blocks: project.blocks.map((b) =>
+      b.id === id
+        ? {
+            ...b,
+            definition: {
+              ...next,
+              name: d.name,
+              description: d.description,
+            },
+          }
+        : b,
+    ),
   };
 }

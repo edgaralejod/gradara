@@ -27,13 +27,13 @@
         "parameters": [
           {
             "id": "stepTorque",
-            "name": "Step",
+            "name": "Step height",
             "value": 1,
             "unit": "N·m"
           },
           {
             "id": "offsetTorque",
-            "name": "Offset",
+            "name": "Initial torque",
             "value": 0,
             "unit": "N·m"
           },
@@ -156,7 +156,7 @@
         "parameters": [
           {
             "id": "ratio",
-            "name": "Ratio",
+            "name": "Gear ratio φa/φb",
             "value": 2,
             "unit": ""
           }
@@ -506,7 +506,7 @@
         "parameters": [
           {
             "id": "phi0",
-            "name": "Angle",
+            "name": "Fixed angle",
             "value": 0,
             "unit": "rad"
           }

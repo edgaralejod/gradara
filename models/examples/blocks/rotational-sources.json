@@ -215,13 +215,13 @@
           },
           {
             "id": "cgeo",
-            "name": "Geometry constant",
+            "name": "Geometry constant (effective radius)",
             "value": 1,
-            "unit": ""
+            "unit": "m"
           },
           {
             "id": "peak",
-            "name": "Stiction peak",
+            "name": "Static/kinetic friction ratio",
             "value": 1.1,
             "unit": "",
             "min": 1
@@ -496,7 +496,7 @@
       "definition": {
         "kind": "rotBacklash",
         "name": "Backlash 0.1 rad",
-        "description": "Spring and damper in series with a free play of b.",
+        "description": "Spring and damper in series with a total free play (backlash) between the flanges.",
         "domain": "mechanical",
         "category": "mechanical",
         "symbol": "b",
@@ -1036,7 +1036,7 @@
         "parameters": [
           {
             "id": "phi0",
-            "name": "Angle",
+            "name": "Fixed angle",
             "value": 0,
             "unit": "rad"
           }
@@ -1298,7 +1298,7 @@
         "parameters": [
           {
             "id": "phi0",
-            "name": "Angle",
+            "name": "Fixed angle",
             "value": 0,
             "unit": "rad"
           }
@@ -1346,13 +1346,13 @@
         "parameters": [
           {
             "id": "stepTorque",
-            "name": "Step",
+            "name": "Step height",
             "value": -0.35,
             "unit": "N·m"
           },
           {
             "id": "offsetTorque",
-            "name": "Offset",
+            "name": "Initial torque",
             "value": -0.05,
             "unit": "N·m"
           },

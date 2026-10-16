@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="preload" as="image" href="/assets/icon.svg"/>
 <title>PMOS transistor · Gradara</title>
-<meta name="description" content="Shichman–Hodges P-channel MOSFET."/>
+<meta name="description" content="Shichman–Hodges P-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 2.1 µm, so keep W above 2.5 µm and L above 2.1 µm."/>
 <meta name="theme-color" content="#0a0e13"/>
 <link rel="canonical" href="https://gradara.app/docs/blocks/pmos"/>
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
@@ -25,7 +25,7 @@
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/docs/blocks">Block reference</a><span aria-hidden="true">/</span><a href="/docs/blocks#semiconductors">Semiconductors</a></nav>
 <header class="block-head">
 <h1>PMOS transistor</h1>
-<p class="lede">Shichman–Hodges P-channel MOSFET.</p>
+<p class="lede">Shichman–Hodges P-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 2.1 µm, so keep W above 2.5 µm and L above 2.1 µm.</p>
 <ul class="chips" aria-label="At a glance">
 <li class="chip"><span class="port electrical" aria-hidden="true"></span>electrical</li>
 <li class="chip">Modelica Standard Library</li>
@@ -66,12 +66,12 @@
 <h2 id="parameters"><a class="anchor" href="#parameters">Parameters</a></h2>
 <ul class="entries params">
 <li class="entry">
-<div class="entry-head"><strong>Width</strong><code class="id">W</code><span class="value">0.00002<span class="unit"> m</span></span></div>
-<p class="range">≥ 0</p>
+<div class="entry-head"><strong>Channel width</strong><code class="id">W</code><span class="value">0.00002<span class="unit"> m</span></span></div>
+<p class="range">≥ 0.0000026</p>
 <p>Channel width, in meters. Must exceed 2.5 µm, since the effective width is W − 2.5 µm.</p></li>
 <li class="entry">
-<div class="entry-head"><strong>Length</strong><code class="id">L</code><span class="value">0.000006<span class="unit"> m</span></span></div>
-<p class="range">≥ 0</p>
+<div class="entry-head"><strong>Channel length</strong><code class="id">L</code><span class="value">0.000006<span class="unit"> m</span></span></div>
+<p class="range">≥ 0.0000022</p>
 <p>Channel length, in meters. Must exceed 2.1 µm, since the effective length is L − 2.1 µm.</p></li></ul></section>
 <section class="doc-section">
 <h2 id="equations"><a class="anchor" href="#equations">Equations</a></h2>
@@ -95,7 +95,7 @@ Fixed: Beta = 10.5 µA/V², Vt = −1 V, K2 = 0.41, K5 = 0.839, dW = −2.5 µm,
 <section class="doc-section">
 <h2 id="see-also"><a class="anchor" href="#see-also">See also</a></h2>
 <ul class="cards related">
-<li><a class="card" href="/docs/blocks/nmos"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-bff8db76" aria-hidden="true"><span class="block-preview-body f-76c15041"><span class="block-face shape-physical f-eb9b825f" aria-hidden="true"><span class="block-frame f-4b2d9802"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg class="circuit-symbol" viewBox="0 0 64 80" width="100%" height="100%"><path d="M32 0V18" class="f-663cf397"></path><path d="M0 40H14" class="f-663cf397"></path><path d="M32 80V62" class="f-663cf397"></path><path d="M64 40H50" class="f-663cf397"></path><g transform="translate(14 18)"><path d="M0 22H5M5 12V32M10 8V16M10 18V26M10 28V36M10 12H18V0M10 32H18V44M18 22H36M18 32V22"></path><path class="glyph-fill" d="M11 22L17 18.5V25.5Z"></path></g></svg></span></span></span><span class="preview-terminal terminal-top is-physical f-74296371"></span><span class="preview-terminal terminal-left is-physical f-d26444a6"></span><span class="preview-terminal terminal-bottom is-physical f-74296371"></span><span class="preview-terminal terminal-right is-physical f-d26444a6"></span></span></span></span><span class="card-text"><strong>NMOS transistor</strong><span>Shichman–Hodges N-channel MOSFET.</span></span></a></li>
+<li><a class="card" href="/docs/blocks/nmos"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-bff8db76" aria-hidden="true"><span class="block-preview-body f-76c15041"><span class="block-face shape-physical f-eb9b825f" aria-hidden="true"><span class="block-frame f-4b2d9802"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg class="circuit-symbol" viewBox="0 0 64 80" width="100%" height="100%"><path d="M32 0V18" class="f-663cf397"></path><path d="M0 40H14" class="f-663cf397"></path><path d="M32 80V62" class="f-663cf397"></path><path d="M64 40H50" class="f-663cf397"></path><g transform="translate(14 18)"><path d="M0 22H5M5 12V32M10 8V16M10 18V26M10 28V36M10 12H18V0M10 32H18V44M18 22H36M18 32V22"></path><path class="glyph-fill" d="M11 22L17 18.5V25.5Z"></path></g></svg></span></span></span><span class="preview-terminal terminal-top is-physical f-74296371"></span><span class="preview-terminal terminal-left is-physical f-d26444a6"></span><span class="preview-terminal terminal-bottom is-physical f-74296371"></span><span class="preview-terminal terminal-right is-physical f-d26444a6"></span></span></span></span><span class="card-text"><strong>NMOS transistor</strong><span>Shichman–Hodges N-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 1.5 µm, so keep W above 2.5 µm and L above 1.5 µm.</span></span></a></li>
 <li><a class="card" href="/docs/blocks/pnp"><span class="thumb" aria-hidden="true"><span class="block-preview is-miniature f-bff8db76" aria-hidden="true"><span class="block-preview-body f-76c15041"><span class="block-face shape-physical f-eb9b825f" aria-hidden="true"><span class="block-frame f-4b2d9802"><svg class="block-outline" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><span class="block-symbol"><svg class="circuit-symbol" viewBox="0 0 64 80" width="100%" height="100%"><path d="M32 80V62" class="f-663cf397"></path><path d="M0 40H14" class="f-663cf397"></path><path d="M32 0V18" class="f-663cf397"></path><g transform="translate(14 18)"><path d="M0 22H9M9 12V32M9 17L18 11V0M9 27L18 33V44M34 22A16 16 0 1 1 34 21.9"></path><path class="glyph-fill" d="M9.5 16.5L13.5 11.5L15.5 15.5Z"></path></g></svg></span></span></span><span class="preview-terminal terminal-bottom is-physical f-74296371"></span><span class="preview-terminal terminal-left is-physical f-d26444a6"></span><span class="preview-terminal terminal-top is-physical f-74296371"></span></span></span></span><span class="card-text"><strong>PNP transistor</strong><span>Ebers–Moll PNP bipolar transistor.</span></span></a></li></ul></section>
 <p class="offline-hint">Select a block in Gradara and press <kbd>F1</kbd> to open its page offline.</p>
 <nav class="pager" aria-label="More in Semiconductors"><a class="prev" href="/docs/blocks/nmos"><small>Previous</small>NMOS transistor</a><a class="next" href="/docs/blocks/npn"><small>Next</small>NPN transistor</a></nav></article></main>

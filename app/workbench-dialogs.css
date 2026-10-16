@@ -500,8 +500,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
   gap: 4px 22px;
-  max-height: 380px;
+  /* Long port lists (inverters, bridges) scroll with a visible bar, not off the end. */
+  max-height: min(62vh, 620px);
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
   padding: 2px 2px 4px;
 }
 .block-dialog-properties > section:nth-child(2) {
@@ -573,7 +576,8 @@
   color: #c3ccd3;
   cursor: default;
 }
-.block-dialog-properties .block-dialog-name {
+.block-dialog-properties .block-dialog-name,
+.block-dialog-properties .block-dialog-tag {
   height: 28px;
   border: 1px solid #cfd9e0;
   border-radius: 2px;
@@ -582,7 +586,8 @@
   color: #27333d;
   font-weight: 500;
 }
-.block-dialog-properties .block-dialog-name:focus-visible {
+.block-dialog-properties .block-dialog-name:focus-visible,
+.block-dialog-properties .block-dialog-tag:focus-visible {
   border-color: var(--primary);
 }
 .block-dialog-description {
@@ -592,7 +597,8 @@
 }
 .block-dialog-identity {
   display: flex;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 2px 5px;
   margin: 6px 0 0;
   font-size: var(--text-micro);
   color: #8193a0;
@@ -1161,6 +1167,60 @@
 .block-dialog-tag-label {
   margin-top: 12px;
 }
-.block-dialog-tag {
+.block-dialog-properties .block-dialog-tag {
   font-family: var(--font-mono, ui-monospace, monospace);
+}
+.block-dialog-type-field select {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #cfd9e0;
+  border-radius: 2px;
+  background-color: white;
+  color: #27333d;
+  padding: 3px 7px 3px 24px;
+  font: inherit;
+}
+.block-dialog-type-field select:focus-visible {
+  border-color: var(--primary);
+  outline: none;
+}
+.block-dialog-properties .block-dialog-tag[aria-invalid='true'] {
+  border-color: var(--destructive, #c2410c);
+}
+
+/* In the block dialog too, a field you can edit is white with a border (see inspector.css). */
+.block-dialog
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
+    select:not(:disabled)
+  ):not(.parameter input, .block-dialog-name, .block-dialog-tag) {
+  background-color: white;
+  border: 1px solid #cfd9e0;
+  border-radius: 2px;
+  color: #27333d;
+}
+.block-dialog
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
+    select:not(:disabled)
+  ):not(.parameter input, .block-dialog-name, .block-dialog-tag):focus-visible {
+  border-color: var(--primary);
+  outline: none;
+}
+.block-dialog-identity .block-dialog-class {
+  flex-basis: 100%;
 }

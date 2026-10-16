@@ -303,7 +303,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "top"
@@ -312,7 +312,7 @@
         "parameters": [
           {
             "id": "s0",
-            "name": "Position",
+            "name": "Fixed position",
             "value": 0,
             "unit": "m"
           }
@@ -351,7 +351,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "left"
@@ -561,7 +561,7 @@
         "ports": [
           {
             "id": "flange",
-            "name": "shaft",
+            "name": "flange",
             "direction": "physical",
             "domain": "translational",
             "side": "left"

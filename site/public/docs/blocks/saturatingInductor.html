@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="preload" as="image" href="/assets/icon.svg"/>
 <title>Saturating inductor · Gradara</title>
-<meta name="description" content="Inductance falls from Lzer toward Linf as the core saturates."/>
+<meta name="description" content="Inductance falls from its zero-current value toward the saturated value as the current rises. Keep zero-current &gt; nominal &gt; saturated inductance."/>
 <meta name="theme-color" content="#0a0e13"/>
 <link rel="canonical" href="https://gradara.app/docs/blocks/saturatingInductor"/>
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
@@ -25,7 +25,7 @@
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/docs/blocks">Block reference</a><span aria-hidden="true">/</span><a href="/docs/blocks#electrical">Electrical</a></nav>
 <header class="block-head">
 <h1>Saturating inductor</h1>
-<p class="lede">Inductance falls from Lzer toward Linf as the core saturates.</p>
+<p class="lede">Inductance falls from its zero-current value toward the saturated value as the current rises. Keep zero-current &gt; nominal &gt; saturated inductance.</p>
 <ul class="chips" aria-label="At a glance">
 <li class="chip"><span class="port electrical" aria-hidden="true"></span>electrical</li>
 <li class="chip">Modelica Standard Library</li>
@@ -67,7 +67,7 @@
 <p class="range">≥ 0</p>
 <p>Inductance at Inom (flux linkage divided by current), in henries. Must lie strictly between Linf and Lzer.</p></li>
 <li class="entry">
-<div class="entry-head"><strong>Initial inductance</strong><code class="id">Lzer</code><span class="value">2<span class="unit"> H</span></span></div>
+<div class="entry-head"><strong>Inductance at zero current</strong><code class="id">Lzer</code><span class="value">2<span class="unit"> H</span></span></div>
 <p class="range">≥ 0</p>
 <p>Inductance near zero current, in henries. Must be greater than Lnom.</p></li>
 <li class="entry">

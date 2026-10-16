@@ -162,7 +162,7 @@ B('inverseClarke', 'Inverse Clarke transform', f'{SPB}.FromSpacePhasor', 'αβ�
 
 # ----------------------------------------------------------------- rotational
 B('rotFixed', 'Fixed (rotational)', f'{ROT}.Components.Fixed', '⏚', 'mechanical',
-  'A flange fixed in the housing at a constant angle.', [P('phi0', 'Angle', 0, 'rad', modifier='phi0')],
+  'A flange fixed in the housing at a constant angle.', [P('phi0', 'Fixed angle', 0, 'rad', modifier='phi0')],
   sides={'flange': 'top'}, keywords=['ground', 'reference', 'housing'])
 B('rotSpring', 'Torsion spring', f'{ROT}.Components.Spring', 'c', 'mechanical',
   'Linear torsion spring: τ = c·(φ_rel − φ_rel0).', [P('c', 'Stiffness', 1e4, 'N·m/rad', 0), P('phi_rel0', 'Unstretched angle', 0, 'rad')],
@@ -170,16 +170,16 @@ B('rotSpring', 'Torsion spring', f'{ROT}.Components.Spring', 'c', 'mechanical',
 B('rotDamper', 'Torsion damper', f'{ROT}.Components.Damper', 'd', 'mechanical',
   'Linear rotational damper: τ = d·ω_rel.', [P('d', 'Damping', 1, 'N·m·s/rad', 0)], keywords=['viscous', 'friction'])
 B('rotBacklash', 'Backlash', f'{ROT}.Components.ElastoBacklash', 'b', 'mechanical',
-  'Spring and damper in series with a free play of b.',
+  'Spring and damper in series with a total free play (backlash) between the flanges.',
   [P('b', 'Total backlash', 0.01, 'rad', 0), P('c', 'Stiffness', 1e5, 'N·m/rad', 0), P('d', 'Damping', 10, 'N·m·s/rad', 0)],
   keywords=['gap', 'play', 'gear'])
 B('rotInertia', 'Inertia (ideal)', f'{ROT}.Components.Inertia', 'J', 'mechanical',
   'Rotating mass with two flanges and no losses.', [P('J', 'Inertia', 0.01, 'kg·m²', 0)], keywords=['mass', 'flywheel', 'rotor'])
 B('idealGear', 'Ideal gear', f'{ROT}.Components.IdealGear', 'i', 'mechanical',
-  'Lossless gear: φ_a = ratio·φ_b.', [P('ratio', 'Ratio', 2, '')], keywords=['gearbox', 'transmission', 'reduction'])
+  'Lossless gear: φ_a = ratio·φ_b.', [P('ratio', 'Gear ratio φa/φb', 2, '')], keywords=['gearbox', 'transmission', 'reduction'])
 B('clutch', 'Clutch', f'{ROT}.Components.Clutch', 'clutch', 'mechanical',
   'Friction clutch; the normalized normal force f_n (0…1) engages it.',
-  [P('fn_max', 'Maximum normal force', 1000, 'N', 0), P('cgeo', 'Geometry constant', 1, ''), P('peak', 'Stiction peak', 1.1, '', 1)],
+  [P('fn_max', 'Maximum normal force', 1000, 'N', 0), P('cgeo', 'Geometry constant (effective radius)', 1, 'm'), P('peak', 'Static/kinetic friction ratio', 1.1, '', 1)],
   names={'f_normalized': 'fn'}, sides={'f_normalized': 'top'}, keywords=['friction', 'engage', 'coupling'])
 B('rollingWheel', 'Rolling wheel', f'{ROT}.Components.IdealRollingWheel', 'wheel', 'mechanical',
   'Converts rotation to translation without slip: v = r·ω.', [P('radius', 'Radius', 0.3, 'm', 0)],
@@ -195,7 +195,7 @@ B('constantTorque', 'Constant torque', f'{ROT}.Sources.ConstantTorque', 'τ₀',
   'A constant torque, independent of speed.', [P('tau_constant', 'Torque', 1, 'N·m')], sides={'flange': 'right'},
   keywords=['load'])
 B('torqueStep', 'Torque step', f'{ROT}.Sources.TorqueStep', 'τ step', 'mechanical',
-  'A torque step at a given time.', [P('stepTorque', 'Step', 1, 'N·m'), P('offsetTorque', 'Offset', 0, 'N·m'), P('startTime', 'Step time', 0.5, 's', 0)],
+  'A torque step at a given time.', [P('stepTorque', 'Step height', 1, 'N·m'), P('offsetTorque', 'Initial torque', 0, 'N·m'), P('startTime', 'Step time', 0.5, 's', 0)],
   sides={'flange': 'right'}, keywords=['load', 'disturbance'])
 B('speedSource', 'Speed source', f'{ROT}.Sources.Speed', 'ω', 'mechanical',
   'Forces the flange to follow the input speed, filtered by a critical frequency.',
@@ -220,7 +220,7 @@ B('relSpeedSensor', 'Relative speed sensor', f'{ROT}.Sensors.RelSpeedSensor', '�
 
 # -------------------------------------------------------------- translational
 B('transFixed', 'Fixed (translational)', f'{TRANS}.Components.Fixed', '⏚', 'translational',
-  'A translational flange fixed at a constant position.', [P('s0', 'Position', 0, 'm')], sides={'flange': 'top'},
+  'A translational flange fixed at a constant position.', [P('s0', 'Fixed position', 0, 'm')], sides={'flange': 'top'},
   keywords=['ground', 'wall', 'reference'])
 B('mass', 'Mass', f'{TRANS}.Components.Mass', 'm', 'translational',
   'A sliding mass with two flanges: m·a = f_a + f_b.', [P('m', 'Mass', 1, 'kg', 0)], keywords=['inertia', 'body', 'load'])
@@ -233,14 +233,14 @@ B('transSpringDamper', 'Spring-damper', f'{TRANS}.Components.SpringDamper', 'k,b
   'Spring and damper in parallel.', [P('c', 'Stiffness', 1000, 'N/m', 0), P('d', 'Damping', 10, 'N·s/m', 0), P('s_rel0', 'Unstretched length', 0, 'm')],
   keywords=['suspension'])
 B('hardStop', 'Hard stop', f'{TRANS}.Components.ElastoGap', 'gap', 'translational',
-  'Spring and damper that act only when the gap closes (contact).',
-  [P('c', 'Contact stiffness', 1e6, 'N/m', 0), P('d', 'Contact damping', 100, 'N·s/m', 0), P('s_rel0', 'Gap', 0.01, 'm')],
+  'Spring and damper that push the flanges apart while b − a is below the contact distance.',
+  [P('c', 'Contact stiffness', 1e6, 'N/m', 0), P('d', 'Contact damping', 100, 'N·s/m', 0), P('s_rel0', 'Contact distance (b − a)', 0, 'm')],
   keywords=['contact', 'end stop', 'impact'])
 B('massStops', 'Mass with stops', f'{TRANS}.Components.MassWithStopAndFriction', 'm⊣⊢', 'translational',
-  'Mass with Coulomb and viscous friction and hard end stops.',
+  'Mass with viscous, Coulomb and Stribeck friction and inelastic end stops.',
   [P('m', 'Mass', 1, 'kg', 0), P('smax', 'Upper stop', 0.5, 'm'), P('smin', 'Lower stop', -0.5, 'm'),
    P('F_prop', 'Viscous friction', 1, 'N·s/m', 0), P('F_Coulomb', 'Coulomb friction', 5, 'N', 0),
-   P('F_Stribeck', 'Stribeck friction', 10, 'N', 0), P('fexp', 'Stribeck decay', 2, 's/m', 0)],
+   P('F_Stribeck', 'Stribeck excess (added to Coulomb)', 10, 'N', 0), P('fexp', 'Stribeck decay', 2, 's/m', 0)],
   keywords=['friction', 'stiction', 'limit'])
 B('forceSource', 'Force source', f'{TRANS}.Sources.Force', 'F', 'translational',
   'Applies the input signal as force to the flange.', names={'f': 'F'}, sides={'f': 'left', 'flange': 'right'},
@@ -248,7 +248,7 @@ B('forceSource', 'Force source', f'{TRANS}.Sources.Force', 'F', 'translational',
 B('constantForce', 'Constant force', f'{TRANS}.Sources.ConstantForce', 'F₀', 'translational',
   'A constant force.', [P('f_constant', 'Force', 1, 'N')], sides={'flange': 'right'}, keywords=['gravity', 'load'])
 B('forceStep', 'Force step', f'{TRANS}.Sources.ForceStep', 'F step', 'translational',
-  'A force step at a given time.', [P('stepForce', 'Step', 1, 'N'), P('offsetForce', 'Offset', 0, 'N'), P('startTime', 'Step time', 0.5, 's', 0)],
+  'A force step at a given time.', [P('stepForce', 'Step height', 1, 'N'), P('offsetForce', 'Initial force', 0, 'N'), P('startTime', 'Step time', 0.5, 's', 0)],
   sides={'flange': 'right'})
 B('transSpeedSource', 'Velocity source', f'{TRANS}.Sources.Speed', 'v', 'translational',
   'Forces the flange to follow the input velocity.', [P('f_crit', 'Filter frequency', 50, 'Hz', 0)],
@@ -322,9 +322,9 @@ B('signalMmfSource', 'Controlled MMF source', f'{MAG}.Sources.SignalMagneticPote
 B('fluxSource', 'Flux source', f'{MAG}.Sources.ConstantMagneticFlux', 'Φ', 'magnetic',
   'A constant magnetic flux.', [P('Phi', 'Flux', 1e-3, 'Wb')])
 B('fluxSensor', 'Flux sensor', f'{MAG}.Sensors.MagneticFluxSensor', 'Φ', 'magnetic',
-  'Magnetic flux through the sensor.', sides={'Phi': 'bottom'})
+  'Magnetic flux through the sensor.', names={'Phi': 'Φ'}, sides={'Phi': 'bottom'})
 B('mmfSensor', 'MMF sensor', f'{MAG}.Sensors.MagneticPotentialDifferenceSensor', 'Vm', 'magnetic',
-  'Magnetic potential difference between its ports.', sides={'V_m': 'bottom'})
+  'Magnetic potential difference between its ports.', names={'V_m': 'Vm'}, sides={'V_m': 'bottom'})
 
 # --------------------------------------------------------- electrical passive
 B('ground', 'Ground', f'{ANALOG}.Basic.Ground', 'ground', 'electrical', 'Electrical reference potential.',
@@ -339,7 +339,7 @@ B('conductor', 'Conductor', f'{ANALOG}.Basic.Conductor', 'G', 'electrical',
   'Linear conductance: i = G·v.', [P('G', 'Conductance', 1, 'S', 0)], keywords=['admittance'])
 B('heatingResistor', 'Resistor (thermal)', f'{ANALOG}.Basic.Resistor', 'R(T)', 'electrical',
   'Resistor whose losses heat its thermal port and whose resistance changes with its temperature.',
-  [P('R', 'Resistance at T_ref', 1, 'Ω', 0), P('T_ref', 'Reference temperature', 300.15, 'K', 0), P('alpha', 'Temperature coefficient', 0.0039, '1/K')],
+  [P('R', 'Resistance at reference temperature', 1, 'Ω', 0), P('T_ref', 'Reference temperature', 300.15, 'K', 0), P('alpha', 'Temperature coefficient', 0.0039, '1/K')],
   modifiers={'useHeatPort': 'true'}, sides={'heatPort': 'bottom'}, keywords=['losses', 'self-heating', 'copper'])
 B('variableResistor', 'Variable resistor', f'{ANALOG}.Basic.VariableResistor', 'R(u)', 'electrical',
   'Resistance set by the input signal.', sides={'R': 'top'}, keywords=['rheostat'])
@@ -352,8 +352,8 @@ B('potentiometer', 'Potentiometer', f'{ANALOG}.Basic.Potentiometer', 'pot', 'ele
   modifiers={'useRinput': 'true'}, include={'r'}, names={'pin_p': '+', 'pin_n': '−', 'contact': 'w', 'r': 'pos'},
   sides={'pin_p': 'left', 'pin_n': 'right', 'contact': 'bottom', 'r': 'top'}, keywords=['wiper', 'divider'])
 B('saturatingInductor', 'Saturating inductor', f'{ANALOG}.Basic.SaturatingInductor', 'L(i)', 'electrical',
-  'Inductance falls from Lzer toward Linf as the core saturates.',
-  [P('Inom', 'Nominal current', 1, 'A', 0), P('Lnom', 'Nominal inductance', 1, 'H', 0), P('Lzer', 'Initial inductance', 2, 'H', 0), P('Linf', 'Saturated inductance', 0.5, 'H', 0)],
+  'Inductance falls from its zero-current value toward the saturated value as the current rises. Keep zero-current > nominal > saturated inductance.',
+  [P('Inom', 'Nominal current', 1, 'A', 0), P('Lnom', 'Nominal inductance', 1, 'H', 0), P('Lzer', 'Inductance at zero current', 2, 'H', 0), P('Linf', 'Saturated inductance', 0.5, 'H', 0)],
   keywords=['core', 'nonlinear'])
 B('mutualInductor', 'Transformer (coupled)', f'{ANALOG}.Basic.Transformer', 'L1:L2', 'electrical',
   'Two coupled inductors with mutual inductance M.',
@@ -361,7 +361,7 @@ B('mutualInductor', 'Transformer (coupled)', f'{ANALOG}.Basic.Transformer', 'L1:
   names={'p1': '1+', 'n1': '1−', 'p2': '2+', 'n2': '2−'}, sides={'p1': 'left', 'n1': 'left', 'p2': 'right', 'n2': 'right'},
   keywords=['coupling', 'mutual'])
 B('idealTransformer', 'Ideal transformer', f'{ANALOG}.Ideal.IdealTransformer', 'n:1', 'electrical',
-  'Ideal transformer with turns ratio n: v1 = n·v2 and i2 = −n·i1, with no magnetizing inductance.', [P('n', 'Turns ratio', 2, '', 0)],
+  'Ideal transformer with turns ratio n: v1 = n·v2 and i2 = −n·i1, with no magnetizing inductance.', [P('n', 'Turns ratio N1/N2', 2, '', 0)],
   # Lm1 is unused without magnetization; a value keeps OpenModelica from warning about it.
   modifiers={'considerMagnetization': 'false', 'Lm1': '1'},
   names={'p1': '1+', 'n1': '1−', 'p2': '2+', 'n2': '2−'}, sides={'p1': 'left', 'n1': 'left', 'p2': 'right', 'n2': 'right'},
@@ -370,10 +370,10 @@ B('gyrator', 'Gyrator', f'{ANALOG}.Basic.Gyrator', 'gyr', 'electrical',
   'Ideal gyrator: i1 = G2·v2, i2 = −G1·v1.', [P('G1', 'Gyration conductance 1', 1, 'S'), P('G2', 'Gyration conductance 2', 1, 'S')],
   names={'p1': '1+', 'n1': '1−', 'p2': '2+', 'n2': '2−'}, sides={'p1': 'left', 'n1': 'left', 'p2': 'right', 'n2': 'right'})
 for kind, name, cls, symbol, desc, param in [
-    ('vcvs', 'Voltage-controlled voltage source', 'VCV', 'VCVS', 'v2 = gain·v1', P('gain', 'Gain', 1, '')),
+    ('vcvs', 'Voltage-controlled voltage source', 'VCV', 'VCVS', 'v2 = gain·v1', P('gain', 'Voltage gain', 1, '')),
     ('vccs', 'Voltage-controlled current source', 'VCC', 'VCCS', 'i2 = G·v1', P('transConductance', 'Transconductance', 1, 'S')),
     ('ccvs', 'Current-controlled voltage source', 'CCV', 'CCVS', 'v2 = R·i1', P('transResistance', 'Transresistance', 1, 'Ω')),
-    ('cccs', 'Current-controlled current source', 'CCC', 'CCCS', 'i2 = gain·i1', P('gain', 'Gain', 1, ''))]:
+    ('cccs', 'Current-controlled current source', 'CCC', 'CCCS', 'i2 = gain·i1', P('gain', 'Current gain', 1, ''))]:
     B(kind, name, f'{ANALOG}.Basic.{cls}', symbol, 'electrical', f'Linear controlled source: {desc}.', [param],
       names={'p1': '1+', 'n1': '1−', 'p2': '2+', 'n2': '2−'}, sides={'p1': 'left', 'n1': 'left', 'p2': 'right', 'n2': 'right'},
       keywords=['dependent source', 'amplifier'])
@@ -400,7 +400,7 @@ B('sineCurrent', 'AC current', f'{ANALOG}.Sources.SineCurrent', 'AC i', 'electri
 B('dcCurrent', 'DC current', f'{ANALOG}.Sources.ConstantCurrent', 'I', 'electrical',
   'An ideal constant current source.', [P('I', 'Current', 1, 'A')], sides={'p': 'top', 'n': 'bottom'})
 B('stepVoltage', 'Step voltage', f'{ANALOG}.Sources.StepVoltage', 'V step', 'electrical',
-  'Voltage step at a given time.', [P('V', 'Step', 12, 'V'), P('offset', 'Offset', 0, 'V'), P('startTime', 'Step time', 0.01, 's', 0)],
+  'Voltage step at a given time.', [P('V', 'Step height', 12, 'V'), P('offset', 'Initial voltage', 0, 'V'), P('startTime', 'Step time', 0.01, 's', 0)],
   sides={'p': 'top', 'n': 'bottom'})
 B('rampVoltage', 'Ramp voltage', f'{ANALOG}.Sources.RampVoltage', 'V ramp', 'electrical',
   'Voltage ramp from offset to offset + V.', [P('V', 'Height', 12, 'V'), P('duration', 'Duration', 1, 's', 0), P('offset', 'Offset', 0, 'V'), P('startTime', 'Start time', 0, 's', 0)],
@@ -426,12 +426,12 @@ B('supercap', 'Supercapacitor', 'Modelica.Electrical.Batteries.BatteryStacks.Sup
   sides={'p': 'top', 'n': 'bottom'}, keywords=['ultracapacitor', 'storage'])
 B('voltageSensor', 'Voltage sensor', f'{ANALOG}.Sensors.VoltageSensor', 'V', 'electrical',
   'Measures voltage between two electrical nodes without loading the circuit.', ports={'p': 'p', 'n': 'n', 'y': 'v'},
-  names={'y': 'V'}, sides={'p': 'top', 'n': 'bottom', 'y': 'right'}, keywords=['measure', 'voltmeter', 'probe'])
+  names={'y': 'v'}, sides={'p': 'top', 'n': 'bottom', 'y': 'right'}, keywords=['measure', 'voltmeter', 'probe'])
 B('currentSensor', 'Current sensor', f'{ANALOG}.Sensors.CurrentSensor', 'A', 'electrical',
   'Measures branch current with zero series voltage drop; positive from + to −.', ports={'p': 'p', 'n': 'n', 'y': 'i'},
-  names={'y': 'A'}, sides={'p': 'left', 'n': 'right', 'y': 'bottom'}, keywords=['measure', 'ammeter', 'probe'])
+  names={'y': 'i'}, sides={'p': 'left', 'n': 'right', 'y': 'bottom'}, keywords=['measure', 'ammeter', 'probe'])
 B('powerSensor', 'Power sensor', f'{ANALOG}.Sensors.PowerSensor', 'P', 'electrical',
-  'Instantaneous power: current path pc→nc, voltage across pv–nv.',
+  'Instantaneous power: current flows from i+ to i−, voltage is measured across v+ and v−.',
   names={'pc': 'i+', 'nc': 'i−', 'pv': 'v+', 'nv': 'v−', 'power': 'P'},
   sides={'pc': 'left', 'nc': 'right', 'pv': 'top', 'nv': 'bottom', 'power': 'right'}, keywords=['watt meter'])
 
@@ -444,20 +444,20 @@ B('diodeShockley', 'Diode (exponential)', f'{ANALOG}.Semiconductors.Diode', 'D',
   'Shockley diode with saturation current and thermal voltage.',
   [P('Ids', 'Saturation current', 1e-6, 'A', 0), P('Vt', 'Thermal voltage', 0.04, 'V', 0), P('R', 'Parallel resistance', 1e8, 'Ω', 0)])
 B('zenerDiode', 'Zener diode', f'{ANALOG}.Semiconductors.ZDiode', 'Z', 'semiconductors',
-  'Diode with reverse breakdown at Bv.', [P('Bv', 'Breakdown voltage', 5.1, 'V', 0)], keywords=['reference', 'clamp'])
+  'Diode with reverse breakdown at the breakdown voltage.', [P('Bv', 'Breakdown voltage', 5.1, 'V', 0)], keywords=['reference', 'clamp'])
 B('idealThyristor', 'Thyristor', f'{ANALOG}.Ideal.IdealThyristor', 'SCR', 'semiconductors',
-  'Ideal thyristor: turns on at a fire pulse when forward biased, off when current reverses.',
+  'Ideal thyristor: turns on at a gate (g) pulse when forward biased, off when the current reverses.',
   [P('Ron', 'On resistance', 1e-5, 'Ω', 0), P('Goff', 'Off conductance', 1e-5, 'S', 0)],
   names={'p': 'A', 'n': 'K', 'fire': 'g'}, sides={'fire': 'bottom'}, keywords=['scr', 'phase control'])
 B('idealGTO', 'GTO thyristor', f'{ANALOG}.Ideal.IdealGTOThyristor', 'GTO', 'semiconductors',
-  'Gate turn-off thyristor: conducts while fire is true and forward biased.',
+  'Gate turn-off thyristor: conducts while the gate (g) is true and it is forward biased.',
   [P('Ron', 'On resistance', 1e-5, 'Ω', 0), P('Goff', 'Off conductance', 1e-5, 'S', 0)],
   names={'p': 'A', 'n': 'K', 'fire': 'g'}, sides={'fire': 'bottom'}, keywords=['igbt', 'switch'])
 B('nmos', 'NMOS transistor', f'{ANALOG}.Semiconductors.NMOS', 'Nch', 'semiconductors',
-  'Shichman–Hodges N-channel MOSFET.', [P('W', 'Width', 20e-6, 'm', 0), P('L', 'Length', 6e-6, 'm', 0)],
+  'Shichman–Hodges N-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 1.5 µm, so keep W above 2.5 µm and L above 1.5 µm.', [P('W', 'Channel width', 20e-6, 'm', 2.6e-6), P('L', 'Channel length', 6e-6, 'm', 1.6e-6)],
   sides={'D': 'top', 'G': 'left', 'S': 'bottom', 'B': 'right'}, keywords=['mosfet', 'fet'])
 B('pmos', 'PMOS transistor', f'{ANALOG}.Semiconductors.PMOS', 'Pch', 'semiconductors',
-  'Shichman–Hodges P-channel MOSFET.', [P('W', 'Width', 20e-6, 'm', 0), P('L', 'Length', 6e-6, 'm', 0)],
+  'Shichman–Hodges P-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 2.1 µm, so keep W above 2.5 µm and L above 2.1 µm.', [P('W', 'Channel width', 20e-6, 'm', 2.6e-6), P('L', 'Channel length', 6e-6, 'm', 2.2e-6)],
   sides={'D': 'bottom', 'G': 'left', 'S': 'top', 'B': 'right'}, keywords=['mosfet', 'fet'])
 B('npn', 'NPN transistor', f'{ANALOG}.Semiconductors.NPN', 'NPN', 'semiconductors',
   'Ebers–Moll NPN bipolar transistor.', [P('Bf', 'Forward beta', 50, '', 0)], sides={'C': 'top', 'B': 'left', 'E': 'bottom'},
@@ -474,7 +474,7 @@ B('openingSwitch', 'Opening switch', f'{ANALOG}.Ideal.IdealOpeningSwitch', 'S̄'
   [P('Ron', 'On resistance', 1e-5, 'Ω', 0), P('Goff', 'Off conductance', 1e-5, 'S', 0)], sides={'control': 'top'},
   names={'control': 'off'}, keywords=['fault', 'disconnect'])
 B('twoWaySwitch', 'Changeover switch', f'{ANALOG}.Ideal.IdealTwoWaySwitch', 'SPDT', 'semiconductors',
-  'Connects p to n2 while control is true, otherwise to n1.',
+  'Connects + to n2 while sel is true, otherwise to n1.',
   [P('Ron', 'On resistance', 1e-5, 'Ω', 0), P('Goff', 'Off conductance', 1e-5, 'S', 0)],
   sides={'p': 'left', 'n1': 'right', 'n2': 'right', 'control': 'top'}, names={'control': 'sel'}, keywords=['spdt', 'selector'])
 B('breaker', 'Breaker (with arc)', f'{ANALOG}.Ideal.OpenerWithArc', 'CB', 'semiconductors',
@@ -497,13 +497,13 @@ B('boostConverter', 'Boost converter', f'{PC}.DCDC.ChopperStepUp', 'boost', 'con
   sides={'dc_p1': 'left', 'dc_n1': 'left', 'dc_p2': 'right', 'dc_n2': 'right', 'fire_p': 'bottom'},
   keywords=['chopper', 'step-up', 'dc-dc'])
 B('buckBoostConverter', 'Buck-boost converter', f'{PC}.DCDC.ChopperBuckBoost', 'b-b', 'converters',
-  'Bidirectional half-bridge: port 1 is the switch node (add a series inductor); fire_p drives the low-side switch, stepping up from port 1 to port 2, and fire_n the high-side switch, stepping down from port 2 to port 1.',
+  'Bidirectional half-bridge: port 1 is the switch node (add a series inductor); lo drives the low-side switch, stepping up from port 1 to port 2, and hi the high-side switch, stepping down from port 2 to port 1.',
   [P('RonTransistor', 'Transistor on resistance', 1e-5, 'Ω', 0), P('RonDiode', 'Diode on resistance', 1e-5, 'Ω', 0)],
   names={'dc_p1': '1+', 'dc_n1': '1−', 'dc_p2': '2+', 'dc_n2': '2−', 'fire_p': 'lo', 'fire_n': 'hi'},
   sides={'dc_p1': 'left', 'dc_n1': 'left', 'dc_p2': 'right', 'dc_n2': 'right', 'fire_p': 'bottom', 'fire_n': 'bottom'},
   keywords=['dc-dc', 'four-switch'])
 B('hBridge', 'H-bridge', f'{PC}.DCDC.HBridge', 'H', 'converters',
-  'Four-quadrant DC chopper: fire_p switches out+ and fire_n switches out− between the input rails; drive fire_n with the complement of fire_p for bipolar switching.',
+  'Four-quadrant DC chopper: f+ switches out+ and f− switches out− between the input rails; drive f− with the complement of f+ for bipolar switching.',
   [P('RonTransistor', 'Transistor on resistance', 1e-5, 'Ω', 0), P('RonDiode', 'Diode on resistance', 1e-5, 'Ω', 0)],
   names={'dc_p1': 'in+', 'dc_n1': 'in−', 'dc_p2': 'out+', 'dc_n2': 'out−', 'fire_p': 'f+', 'fire_n': 'f−'},
   sides={'dc_p1': 'left', 'dc_n1': 'left', 'dc_p2': 'right', 'dc_n2': 'right', 'fire_p': 'bottom', 'fire_n': 'bottom'},
@@ -568,7 +568,7 @@ B('dcSeriesMachine', 'DC machine (series)', f'{MACH}.BasicMachines.DCMachines.DC
   sides={'pin_ap': 'left', 'pin_an': 'left', 'pin_ep': 'top', 'pin_en': 'top', 'flange': 'right'}, domain='electrical',
   keywords=['traction', 'series', 'dc motor'])
 B('inductionMachine', 'Induction machine', f'{MACH}.BasicMachines.InductionMachines.IM_SquirrelCage', 'IM', 'machines',
-  'Three-phase squirrel-cage induction machine (star-connected stator terminals).',
+  'Three-phase squirrel-cage induction machine. The stator winding ends are on n: connect a Star to n for a star connection.',
   [P('p', 'Pole pairs', 2, '', 1), P('fsNominal', 'Nominal frequency', 50, 'Hz', 0), P('Rs', 'Stator resistance', 0.03, 'Ω', 0),
    P('Lssigma', 'Stator stray inductance', round(3 * (1 - (1 - 0.0667) ** 0.5) / TWO_PI_50, 7), 'H', 0),
    P('Lm', 'Main inductance', round(3 / TWO_PI_50, 7), 'H', 0),
@@ -580,7 +580,7 @@ B('inductionMachine', 'Induction machine', f'{MACH}.BasicMachines.InductionMachi
 B('pmSyncMachine', 'PMSM', f'{MACH}.BasicMachines.SynchronousMachines.SM_PermanentMagnet', 'PMSM', 'machines',
   'Three-phase permanent-magnet synchronous machine with a damper cage on the rotor.',
   [P('p', 'Pole pairs', 2, '', 1), P('fsNominal', 'Nominal frequency', 50, 'Hz', 0),
-   P('VsOpenCircuit', 'Open-circuit voltage at fsNominal', 112.3, 'V', 0), P('Rs', 'Stator resistance', 0.03, 'Ω', 0),
+   P('VsOpenCircuit', 'Open-circuit voltage (RMS per phase)', 112.3, 'V', 0), P('Rs', 'Stator resistance', 0.03, 'Ω', 0),
    P('Lssigma', 'Stator stray inductance', round(0.1 / TWO_PI_50, 7), 'H', 0),
    P('Lmd', 'd-axis main inductance', round(0.3 / TWO_PI_50, 7), 'H', 0),
    P('Lmq', 'q-axis main inductance', round(0.3 / TWO_PI_50, 7), 'H', 0),
@@ -598,7 +598,7 @@ B('reluctanceMachine', 'Reluctance machine', f'{MACH}.BasicMachines.SynchronousM
   names={'plug_sp': 'abc', 'plug_sn': 'n', 'flange': 'shaft'}, sides={'plug_sp': 'left', 'plug_sn': 'bottom', 'flange': 'right'},
   exclude={'damperCageLossPower'}, domain='threePhase', keywords=['synrm', 'motor'])
 B('hallSensor', 'Electrical angle sensor', f'{MACH}.Sensors.HallSensor', 'Hall', 'machines',
-  'Electrical rotor angle for p pole pairs, as a Hall or encoder sensor reports it (0…2π).', [P('p', 'Pole pairs', 2, '', 1)],
+  'Electrical rotor angle for p pole pairs (0…2π), aligned like MSL machines: it reads π at shaft angle 0.', [P('p', 'Pole pairs', 2, '', 1)],
   names={'y': 'θe'}, sides={'flange': 'left', 'y': 'right'}, domain='mechanical', keywords=['hall', 'commutation', 'bldc', 'encoder'])
 B('resolver', 'Resolver', f'{MACH}.Sensors.SinCosResolver', 'R', 'machines',
   'Sine–cosine resolver: the sine and cosine of the electrical angle p·φ, and their negatives.', [P('p', 'Pole pairs', 1, '', 1)],
@@ -612,11 +612,11 @@ B('resolver', 'Resolver', f'{MACH}.Sensors.SinCosResolver', 'R', 'machines',
 
 # ---------------------------------------------------------------------- 3-phase
 B('threePhaseSource', '3-phase AC source', f'{POLY}.Sources.SineVoltage', '3~ AC', 'threePhase',
-  'Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.',
+  'Balanced three-phase sinusoidal voltages from abc− to abc; a Star on abc− gives the neutral.',
   [P('V', 'Phase amplitude', 325, 'V'), P('f', 'Frequency', 50, 'Hz', 0)], modifiers={'V': 'fill(V, 3)', 'f': 'fill(f, 3)'},
   sides={'plug_p': 'right', 'plug_n': 'bottom'}, names={'plug_p': 'abc', 'plug_n': 'abc−'}, keywords=['grid', 'mains', 'three phase'])
 B('threePhaseSignalVoltage', 'Controlled 3-phase voltage', f'{POLY}.Sources.SignalVoltage', '3~ v(u)', 'threePhase',
-  'Three phase voltages equal to the three input signals, from plug − to plug +: an ideal (averaged) voltage-source inverter.',
+  'Three phase voltages equal to the three input signals, from abc− to abc: an ideal (averaged) voltage-source inverter.',
   ports={'va': 'v[1]', 'vb': 'v[2]', 'vc': 'v[3]', 'plug_p': 'plug_p', 'plug_n': 'plug_n'},
   names={'va': 'a', 'vb': 'b', 'vc': 'c', 'plug_p': 'abc', 'plug_n': 'abc−'},
   sides={'va': 'left', 'vb': 'left', 'vc': 'left', 'plug_p': 'right', 'plug_n': 'bottom'}, domain='threePhase',
@@ -639,8 +639,8 @@ for k, label in [(1, 'a'), (2, 'b'), (3, 'c')]:
       keywords=['splitter', 'pin'])
 B('threePhaseTransformer', '3-phase transformer (Dy)', f'{MACH}.BasicMachines.Transformers.Dy.Dy01', 'Dy', 'threePhase',
   'Three-phase delta–star transformer with a nominal ratio and winding resistance and stray inductance on each side.',
-  [P('n', 'Ratio', 1, '', 0), P('R1', 'Primary resistance per phase', 0.01, 'Ω', 0), P('L1sigma', 'Primary stray inductance', 0.001, 'H', 0),
-   P('R2', 'Secondary resistance per phase', 0.01, 'Ω', 0), P('L2sigma', 'Secondary stray inductance', 0.001, 'H', 0)],
+  [P('n', 'Voltage ratio HV/LV (line-to-line)', 1, '', 0), P('R1', 'HV resistance per phase', 0.01, 'Ω', 0), P('L1sigma', 'HV stray inductance per phase', 0.001, 'H', 0),
+   P('R2', 'LV resistance per phase', 0.01, 'Ω', 0), P('L2sigma', 'LV stray inductance per phase', 0.001, 'H', 0)],
   modifiers={'T1Ref': '293.15', 'T2Ref': '293.15', 'T1Operational': '293.15', 'T2Operational': '293.15'},
   names={'plug1': 'HV', 'plug2': 'LV', 'starpoint2': 'N'}, sides={'plug1': 'left', 'plug2': 'right', 'starpoint2': 'bottom'},
   exclude={'starpoint1'}, domain='threePhase', keywords=['delta-wye', 'distribution'])
@@ -669,16 +669,16 @@ B('greater', 'Greater than', f'{BLK}.Logical.Greater', 'u1>u2', 'logic', 'True w
   keywords=['compare', 'comparator'])
 B('less', 'Less than', f'{BLK}.Logical.Less', 'u1<u2', 'logic', 'True while u1 < u2.', domain='boolean', keywords=['compare'])
 B('boolHysteresis', 'Hysteresis', f'{BLK}.Logical.Hysteresis', '⊏⊐', 'logic',
-  'True above uHigh, false below uLow, unchanged in between.', [P('uLow', 'Lower threshold', 0, ''), P('uHigh', 'Upper threshold', 1, '')],
+  'True above the upper threshold, false below the lower threshold, unchanged in between.', [P('uLow', 'Lower threshold', 0, ''), P('uHigh', 'Upper threshold', 1, '')],
   modifiers={'pre_y_start': 'false'}, domain='boolean', keywords=['schmitt', 'bang-bang', 'thermostat'])
 B('onOffController', 'On-off controller', f'{BLK}.Logical.OnOffController', 'on/off', 'logic',
   'True while the measurement is below the reference minus half the bandwidth; false above plus half.',
   [P('bandwidth', 'Bandwidth', 0.1, '', 0)], modifiers={'pre_y_start': 'false'}, names={'reference': 'ref', 'u': 'meas'},
   domain='boolean', keywords=['thermostat', 'bang-bang'])
 B('logicSwitch', 'Switch (logic)', f'{BLK}.Logical.Switch', 'sw', 'logic',
-  'Outputs u1 while u2 is true, otherwise u3.', names={'u1': 'true', 'u2': 'sel', 'u3': 'false'},
+  'Outputs the true input while sel is true, otherwise the false input.', names={'u1': 'true', 'u2': 'sel', 'u3': 'false'},
   sides={'u2': 'left'}, keywords=['select', 'mux'])
-B('rsFlipFlop', 'RS flip-flop', f'{BLK}.Logical.RSFlipFlop', 'RS', 'logic', 'Set/reset latch.',
+B('rsFlipFlop', 'RS flip-flop', f'{BLK}.Logical.RSFlipFlop', 'RS', 'logic', 'Set/reset latch: S sets Q true, R resets it to false; Q̄ is its complement.',
   modifiers={'Qini': 'false'}, sides={'S': 'left', 'R': 'left', 'Q': 'right', 'QI': 'right'}, names={'QI': 'Q̄'}, domain='boolean', keywords=['latch', 'memory'])
 B('timer', 'Timer', f'{BLK}.Logical.Timer', 't', 'logic', 'Time since the input became true (0 while false).',
   keywords=['elapsed', 'stopwatch'])
@@ -761,7 +761,9 @@ def build(spec: dict) -> dict:
             else:
                 side = 'left' if physical_seen % 2 == 0 else 'right'
                 physical_seen += 1
-        name = spec['names'].get(port_id) or CAPTIONS.get(port_id) or port_id
+        # A one-flange rotational part has a shaft; a translational one, a flange.
+        caption = 'flange' if port_id == 'flange' and domain == 'translational' else CAPTIONS.get(port_id)
+        name = spec['names'].get(port_id) or caption or port_id
         port = {'id': port_id, 'name': name, 'direction': direction, 'domain': domain, 'side': side}
         ports.append(port)
     domains = [p['domain'] for p in ports if p['direction'] == 'physical']

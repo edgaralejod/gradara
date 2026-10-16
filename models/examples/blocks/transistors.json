@@ -229,7 +229,7 @@
       "definition": {
         "kind": "pmos",
         "name": "PMOS",
-        "description": "Shichman–Hodges P-channel MOSFET.",
+        "description": "Shichman–Hodges P-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 2.1 µm, so keep W above 2.5 µm and L above 2.1 µm.",
         "domain": "electrical",
         "category": "semiconductors",
         "symbol": "Pch",
@@ -266,17 +266,17 @@
         "parameters": [
           {
             "id": "W",
-            "name": "Width",
+            "name": "Channel width",
             "value": 0.00002,
             "unit": "m",
-            "min": 0
+            "min": 0.0000026
           },
           {
             "id": "L",
-            "name": "Length",
+            "name": "Channel length",
             "value": 0.000006,
             "unit": "m",
-            "min": 0
+            "min": 0.0000022
           }
         ],
         "equations": "// Electrical.Analog.Semiconductors.PMOS from the Modelica Standard Library 4.1.0",
@@ -310,7 +310,7 @@
       "definition": {
         "kind": "nmos",
         "name": "NMOS",
-        "description": "Shichman–Hodges N-channel MOSFET.",
+        "description": "Shichman–Hodges N-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 1.5 µm, so keep W above 2.5 µm and L above 1.5 µm.",
         "domain": "electrical",
         "category": "semiconductors",
         "symbol": "Nch",
@@ -347,17 +347,17 @@
         "parameters": [
           {
             "id": "W",
-            "name": "Width",
+            "name": "Channel width",
             "value": 0.00002,
             "unit": "m",
-            "min": 0
+            "min": 0.0000026
           },
           {
             "id": "L",
-            "name": "Length",
+            "name": "Channel length",
             "value": 0.000006,
             "unit": "m",
-            "min": 0
+            "min": 0.0000016
           }
         ],
         "equations": "// Electrical.Analog.Semiconductors.NMOS from the Modelica Standard Library 4.1.0",
@@ -450,7 +450,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -988,7 +988,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -1526,7 +1526,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

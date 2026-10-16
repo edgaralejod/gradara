@@ -929,7 +929,7 @@
         "parameters": [
           {
             "id": "phi0",
-            "name": "Angle",
+            "name": "Fixed angle",
             "value": 0,
             "unit": "rad"
           }

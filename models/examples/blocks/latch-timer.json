@@ -288,7 +288,7 @@
       "definition": {
         "kind": "rsFlipFlop",
         "name": "Running",
-        "description": "Set/reset latch.",
+        "description": "Set/reset latch: S sets Q true, R resets it to false; Q̄ is its complement.",
         "domain": "boolean",
         "category": "logic",
         "symbol": "RS",
@@ -512,7 +512,7 @@
       "definition": {
         "kind": "logicSwitch",
         "name": "Gated sine",
-        "description": "Outputs u1 while u2 is true, otherwise u3.",
+        "description": "Outputs the true input while sel is true, otherwise the false input.",
         "domain": "signal",
         "category": "logic",
         "symbol": "sw",

@@ -21,14 +21,21 @@ import { Input } from '@/components/ui/input';
 import ParameterList from './parameter-list';
 import BlockHelpDialog from './block-help-dialog';
 import { BusSignalsPanel } from './bus-signals-panel';
-import { isTagKind, TAG_PATTERN } from '@/lib/gradara/tag-blocks';
-import type { Project } from '@/lib/gradara/model';
+import { isTagKind, TAG_PATTERN, type TagKind } from '@/lib/gradara/tag-blocks';
+import type { Domain, Project } from '@/lib/gradara/model';
+import { TagTypeSelect } from './tag-properties';
+import {
+  breakAtDots,
+  modelicaClassOnly,
+  portKindLabel,
+} from '@/lib/gradara/inspector-sections';
 
 export type BlockDialogTab = 'properties' | 'equations' | 'declarations';
 
 type Draft = {
   name: string;
   tag: string;
+  tagDomain: Domain;
   values: Record<string, number>;
   equations: string;
   declarations: string;
@@ -38,6 +45,7 @@ function initialDraft(definition: Definition): Draft {
   return {
     name: definition.name,
     tag: definition.tag ?? '',
+    tagDomain: definition.ports[0]?.domain ?? 'signal',
     values: Object.fromEntries(
       definition.parameters.map((p) => [p.id, p.value]),
     ),
@@ -49,7 +57,9 @@ function initialDraft(definition: Definition): Draft {
 function isDirty(definition: Definition, draft: Draft, readonly: boolean) {
   return (
     draft.name.trim() !== definition.name ||
-    (isTagKind(definition.kind) && draft.tag !== (definition.tag ?? '')) ||
+    (isTagKind(definition.kind) &&
+      (draft.tag !== (definition.tag ?? '') ||
+        draft.tagDomain !== definition.ports[0]?.domain)) ||
     definition.parameters.some((p) => draft.values[p.id] !== p.value) ||
     (!readonly &&
       (draft.equations !== definition.equations ||
@@ -70,8 +80,11 @@ export default function BlockDialog({
   onClose,
   onApply,
   onCommit,
+  wired = false,
 }: {
   block: Block;
+  /** A tag block with wires takes its type from them, so its Type is not chosen here. */
+  wired?: boolean;
   initialTab?: BlockDialogTab;
   onClose: () => void;
   onApply: (edits: BlockEdits) => void;
@@ -106,9 +119,14 @@ export default function BlockDialog({
   // can read or edit, and a Parameters section only when there are parameters.
   // A tag block has no equations: tags are joined when the model is emitted.
   const showEquations =
-    !tagged && (!readonly || !!definition.equations?.trim());
+    !tagged &&
+    !modelicaClassOnly(definition) &&
+    !definition.subsystem &&
+    (!readonly || !!definition.equations?.trim());
   const showDeclarations =
-    !tagged && (!readonly || !!definition.declarations?.trim());
+    !tagged &&
+    !definition.subsystem &&
+    (!readonly || !!definition.declarations?.trim());
   const tagValid = !tagged || TAG_PATTERN.test(draft.tag);
   const activeTab: BlockDialogTab =
     (tab === 'equations' && !showEquations) ||
@@ -123,7 +141,12 @@ export default function BlockDialog({
     if (tagged && !TAG_PATTERN.test(current.tag)) return;
     onApply({
       name: current.name,
-      ...(tagged ? { tag: current.tag } : {}),
+      ...(tagged
+        ? {
+            tag: current.tag,
+            ...(wired ? {} : { tagDomain: current.tagDomain }),
+          }
+        : {}),
       parameters: current.values,
       ...(readonly
         ? {}
@@ -201,8 +224,10 @@ export default function BlockDialog({
         <DialogDescription>
           {activeTab === 'properties'
             ? tagged
-              ? 'Edit the name and tag of this block. Apply saves all changes as one undo step.'
-              : 'Edit the name and parameters of this block. Apply saves all changes as one undo step.'
+              ? 'Edit the name, tag, and type of this block. Apply saves all changes as one undo step.'
+              : definition.parameters.length
+                ? 'Edit the name and parameters of this block. Apply saves all changes as one undo step.'
+                : 'Edit the name of this block. It has no parameters.'
             : readonly
               ? 'Built-in physical equations are shown for inspection. Parameters stay editable on the Properties tab.'
               : 'Edit the component definition. Changes become part of your saved model.'}
@@ -265,6 +290,16 @@ export default function BlockDialog({
                           : 'Joins every label with this tag here, above, and inside the subsystems on this sheet.'
                       : 'A letter, then letters, digits, or _ (up to 32).'}
                   </p>
+                  <div className="section-label block-dialog-tag-label">
+                    Type
+                  </div>
+                  <TagTypeSelect
+                    kind={definition.kind as TagKind}
+                    value={draft.tagDomain}
+                    wired={wired}
+                    className="block-dialog-type"
+                    onChange={(tagDomain) => setDraft({ tagDomain })}
+                  />
                 </>
               )}
               {definition.description && (
@@ -273,9 +308,14 @@ export default function BlockDialog({
                 </p>
               )}
               <p className="block-dialog-identity">
-                <span>{definition.kind}</span>
-                <span>·</span>
-                <code>{block.id}</code>
+                {definition.modelica?.class && (
+                  <code className="block-dialog-class">
+                    {breakAtDots(definition.modelica.class)}
+                  </code>
+                )}
+                <span>
+                  Block ID <code>{block.id}</code>
+                </span>
               </p>
             </section>
             {bus && onCommit && (
@@ -318,9 +358,7 @@ export default function BlockDialog({
                     style={{ background: domainColors[p.domain] }}
                   />
                   <span>{p.name}</span>
-                  <code>
-                    {p.direction === 'physical' ? p.domain : p.direction}
-                  </code>
+                  <code>{portKindLabel(p)}</code>
                 </div>
               ))}
             </section>

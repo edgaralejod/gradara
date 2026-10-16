@@ -221,7 +221,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -513,7 +513,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -887,7 +887,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -1183,7 +1183,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

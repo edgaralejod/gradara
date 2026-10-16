@@ -263,7 +263,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -802,7 +802,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -1340,7 +1340,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -1537,7 +1537,7 @@
       "definition": {
         "kind": "buckBoostConverter",
         "name": "Half-bridge",
-        "description": "Bidirectional half-bridge: port 1 is the switch node (add a series inductor); fire_p drives the low-side switch, stepping up from port 1 to port 2, and fire_n the high-side switch, stepping down from port 2 to port 1.",
+        "description": "Bidirectional half-bridge: port 1 is the switch node (add a series inductor); lo drives the low-side switch, stepping up from port 1 to port 2, and hi the high-side switch, stepping down from port 2 to port 1.",
         "domain": "electrical",
         "category": "converters",
         "symbol": "b-b",
