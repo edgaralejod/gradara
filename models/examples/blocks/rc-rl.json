@@ -34,13 +34,13 @@
         "parameters": [
           {
             "id": "V",
-            "name": "Step",
+            "name": "Step height",
             "value": 10,
             "unit": "V"
           },
           {
             "id": "offset",
-            "name": "Offset",
+            "name": "Initial voltage",
             "value": 0,
             "unit": "V"
           },
@@ -216,7 +216,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -316,13 +316,13 @@
         "parameters": [
           {
             "id": "V",
-            "name": "Step",
+            "name": "Step height",
             "value": 10,
             "unit": "V"
           },
           {
             "id": "offset",
-            "name": "Offset",
+            "name": "Initial voltage",
             "value": 0,
             "unit": "V"
           },
@@ -438,7 +438,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",

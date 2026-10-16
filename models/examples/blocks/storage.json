@@ -113,7 +113,7 @@
       "definition": {
         "kind": "powerSensor",
         "name": "Power",
-        "description": "Instantaneous power: current path pc→nc, voltage across pv–nv.",
+        "description": "Instantaneous power: current flows from i+ to i−, voltage is measured across v+ and v−.",
         "domain": "electrical",
         "category": "electrical",
         "symbol": "P",
@@ -212,7 +212,7 @@
         "parameters": [
           {
             "id": "R",
-            "name": "Resistance at T_ref",
+            "name": "Resistance at reference temperature",
             "value": 4,
             "unit": "Ω",
             "min": 0
@@ -570,7 +570,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

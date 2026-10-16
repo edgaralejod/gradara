@@ -200,7 +200,7 @@
         "name": "Relay",
         "symbol": "relay",
         "domain": "signal",
-        "description": "A two-level relay.",
+        "description": "Two-level switch with one switch level, no hysteresis: On value at or above the switch level, Off value below it.",
         "ports": [
           {
             "id": "u",

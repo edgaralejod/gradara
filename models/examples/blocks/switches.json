@@ -92,7 +92,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -442,7 +442,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -776,7 +776,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -1169,7 +1169,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -1527,7 +1527,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -1562,7 +1562,7 @@
       "definition": {
         "kind": "twoWaySwitch",
         "name": "Two-way switch",
-        "description": "Connects p to n2 while control is true, otherwise to n1.",
+        "description": "Connects + to n2 while sel is true, otherwise to n1.",
         "domain": "electrical",
         "category": "semiconductors",
         "symbol": "SPDT",

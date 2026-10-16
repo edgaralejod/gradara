@@ -500,8 +500,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
   gap: 4px 22px;
-  max-height: 380px;
+  /* Long port lists (inverters, bridges) scroll with a visible bar, not off the end. */
+  max-height: min(62vh, 620px);
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
   padding: 2px 2px 4px;
 }
 .block-dialog-properties > section:nth-child(2) {
@@ -1165,6 +1168,20 @@
 }
 .block-dialog-properties .block-dialog-tag {
   font-family: var(--font-mono, ui-monospace, monospace);
+}
+.block-dialog-type-field select {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #cfd9e0;
+  border-radius: 2px;
+  background-color: white;
+  color: #27333d;
+  padding: 3px 7px 3px 24px;
+  font: inherit;
+}
+.block-dialog-type-field select:focus-visible {
+  border-color: var(--primary);
+  outline: none;
 }
 .block-dialog-properties .block-dialog-tag[aria-invalid='true'] {
   border-color: var(--destructive, #c2410c);

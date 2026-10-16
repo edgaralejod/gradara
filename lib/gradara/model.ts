@@ -31,6 +31,9 @@ export const domainLabels: Record<Domain, string> = {
   magnetic: 'magnetic',
   threePhase: '3-phase',
 };
+/** A domain's name at the start of a line or in a menu: "Signal", "3-phase". */
+export const domainTitle = (domain: Domain) =>
+  domainLabels[domain].charAt(0).toUpperCase() + domainLabels[domain].slice(1);
 /** A built-in block that instantiates a Modelica Standard Library class (see server/msl.py). */
 export type ModelicaWrapper = {
   class: string;

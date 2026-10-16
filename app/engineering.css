@@ -2669,7 +2669,7 @@
 .instance-port-tools button:disabled { opacity: .35; cursor: default; }
 .instance-port-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
 .instance-port-list li {
-  display: grid; grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1.3fr) minmax(68px, auto);
+  display: grid; grid-template-columns: 38px minmax(70px, 1fr) minmax(0, 1.3fr) minmax(68px, auto);
   grid-template-areas: 'badge name name side' '. type domain tools';
   align-items: center; gap: 3px 4px; padding-bottom: 4px; border-bottom: 1px solid #eef2f5;
 }
@@ -2681,6 +2681,8 @@
 .instance-port-list li > .instance-port-tools { grid-area: tools; }
 .instance-port-list input,
 .instance-port-list select { min-width: 0; width: 100%; font-size: 12px; height: 24px; }
+.instance-port-list input { padding: 0 5px; }
+.instance-port-list select { padding: 0 2px 0 4px; }
 .instance-port-badge {
   border-left: 3px solid; padding-left: 4px;
   color: #56697a; font: 600 10px/16px var(--font-ui); white-space: nowrap;

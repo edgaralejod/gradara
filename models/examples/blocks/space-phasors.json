@@ -601,7 +601,7 @@
       "definition": {
         "kind": "threePhaseSignalVoltage",
         "name": "Controlled 3-phase source",
-        "description": "Three phase voltages equal to the three input signals, from plug − to plug +: an ideal (averaged) voltage-source inverter.",
+        "description": "Three phase voltages equal to the three input signals, from abc− to abc: an ideal (averaged) voltage-source inverter.",
         "domain": "threePhase",
         "category": "threePhase",
         "symbol": "3~ v(u)",

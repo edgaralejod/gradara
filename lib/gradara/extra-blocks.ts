@@ -19,7 +19,8 @@ const p = (
   value: number,
   unit = '',
   min?: number,
-): Parameter => ({ id, name, value, unit, min });
+  max?: number,
+): Parameter => ({ id, name, value, unit, min, ...(max === undefined ? {} : { max }) });
 const signal = (
   kind: string,
   name: string,
@@ -129,7 +130,7 @@ export const extraBlocks: Definition[] = [
       p('offSwitch', 'Switch level', 0),
     ],
     '',
-    'A two-level relay.',
+    'Two-level switch with one switch level, no hysteresis: On value at or above the switch level, Off value below it.',
     ['nonlinear', 'hysteresis'],
   ),
   signal(
@@ -189,7 +190,7 @@ export const extraBlocks: Definition[] = [
     'y = if sel >= threshold then u1 else u3;',
     [p('threshold', 'Threshold', 0)],
     '',
-    'Pass u₁ when the control is above threshold, otherwise u₂.',
+    'Pass u₁ while sel ≥ Threshold, otherwise u₂.',
     ['routing', 'logic'],
   ),
   signal(
@@ -198,7 +199,7 @@ export const extraBlocks: Definition[] = [
     '1|2',
     [input('u1', '1'), input('u2', '2', 'bottom'), output('y')],
     'y = if sel >= 1.5 then u2 else u1;',
-    [p('sel', 'Select 1 or 2', 1, '', 1)],
+    [p('sel', 'Select 1 or 2', 1, '', 1, 2)],
     '',
     'Pick an input with a parameter. 1 uses the top input.',
     ['routing'],

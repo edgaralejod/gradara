@@ -4,7 +4,12 @@ import { isTagKind } from '@/lib/gradara/tag-blocks';
 import { tagProblems } from '@/lib/gradara/tags';
 import { TagProperties } from '@/components/gradara/tag-properties';
 import { TagCanvasContext } from '@/components/gradara/tag-canvas-context';
-import { addPartner as addTagPartner, setTag } from '@/lib/gradara/tag-edit';
+import {
+  addPartner as addTagPartner,
+  isWired as isTagWired,
+  setTag,
+  setTagDomain,
+} from '@/lib/gradara/tag-edit';
 import { arrangeIfBetter } from '@/lib/gradara/arrange';
 import GridBackground from '@/components/gradara/grid-background';
 import NoteLayer from '@/components/gradara/note-layer';
@@ -232,6 +237,7 @@ import SettingsDialog, {
 import {
   library,
   domainColors,
+  domainTitle,
   type Project,
   type Definition,
   type SubsystemDefinition,
@@ -239,6 +245,12 @@ import {
   portOf,
 } from '@/lib/gradara/model';
 import { matchingPort } from '@/lib/gradara/catalog';
+import {
+  breakAtDots,
+  hasEquations,
+  modelicaClassOnly,
+  portKindLabel,
+} from '@/lib/gradara/inspector-sections';
 import { placeAligned, placeAtDrop } from '@/lib/gradara/placement';
 import { resetWireRoute } from '@/lib/gradara/wires';
 import NetLayer from '@/components/gradara/net-layer';
@@ -3724,7 +3736,7 @@ function Workbench() {
                       ) : active.definition.controller ? (
                         'Controller'
                       ) : (
-                        active.definition.domain
+                        domainTitle(active.definition.domain)
                       )}
                     </span>
                     <NameField
@@ -3785,6 +3797,9 @@ function Workbench() {
                       path={scope}
                       block={active}
                       onTag={(tag) => commit((p) => setTag(p, active.id, tag))}
+                      onType={(domain) =>
+                        commit((p) => setTagDomain(p, active.id, domain))
+                      }
                       onShow={(link) => {
                         navigate(link.path);
                         setWorkspaceMode('diagram');
@@ -3869,9 +3884,7 @@ function Workbench() {
                   {/* A bus block's equations follow its Signals; there is nothing else to edit. */}
                   {!isBoundary(active) &&
                     !isBusBlock(active.definition) &&
-                    (active.definition.parameters.length > 0 ||
-                      !!active.definition.equations?.trim() ||
-                      !!active.definition.declarations?.trim()) && (
+                    active.definition.parameters.length > 0 && (
                       <div className="inspector-section">
                         <div className="section-label">
                           Parameters
@@ -4012,7 +4025,7 @@ function Workbench() {
                         ])
                       }
                     >
-                      Use standard size
+                      Standard size
                     </button>
                     <button
                       type="button"
@@ -4021,7 +4034,7 @@ function Workbench() {
                         commit((p) => rotateBlocks(p, [active.id]))
                       }
                     >
-                      Rotate 90° · R
+                      Rotate · R
                     </button>
                     <button
                       type="button"
@@ -4045,12 +4058,25 @@ function Workbench() {
                           style={{ background: domainColors[p.domain] }}
                         />
                         <span>{p.name}</span>
-                        <code>
-                          {p.direction === 'physical' ? p.domain : p.direction}
-                        </code>
+                        <code>{portKindLabel(p)}</code>
                       </div>
                     ))}
                   </div>
+                  {modelicaClassOnly(active.definition) ? (
+                    <div className="inspector-section">
+                      <div className="section-label">
+                        <Code2 size={13} />
+                        Modelica class
+                      </div>
+                      <code className="modelica-class">
+                        {breakAtDots(active.definition.modelica!.class)}
+                      </code>
+                      <p className="size-hint">
+                        Modelica Standard Library 4.1.0. Help describes its
+                        equations and links the class.
+                      </p>
+                    </div>
+                  ) : hasEquations(active) ? (
                   <div className="inspector-section">
                     <div className="section-label">
                       <Code2 size={13} />
@@ -4068,7 +4094,10 @@ function Workbench() {
                       {active.definition.equations}
                     </pre>
                   </div>
-                  {active.definition.domain === 'signal' && (
+                  ) : null}
+                  {active.definition.domain === 'signal' &&
+                    !isTagKind(active.definition.kind) &&
+                    !isBoundary(active) && (
                     <div className="inspector-section">
                       <div className="section-label">Implementation</div>
                       {active.definition.controller ? (
@@ -4300,6 +4329,7 @@ function Workbench() {
             <BlockDialog
               key={equationBlock.id}
               block={project.blocks.find((b) => b.id === equationBlock.id)!}
+              wired={isTagWired(project, equationBlock.id)}
               initialTab={equationBlock.tab}
               onClose={() => setEquationBlock(null)}
               onCommit={(change) => commit(change)}

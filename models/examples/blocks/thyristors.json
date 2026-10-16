@@ -92,7 +92,7 @@
       "definition": {
         "kind": "idealThyristor",
         "name": "Thyristor",
-        "description": "Ideal thyristor: turns on at a fire pulse when forward biased, off when current reverses.",
+        "description": "Ideal thyristor: turns on at a gate (g) pulse when forward biased, off when the current reverses.",
         "domain": "electrical",
         "category": "semiconductors",
         "symbol": "SCR",
@@ -243,7 +243,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -401,7 +401,7 @@
       "definition": {
         "kind": "idealGTO",
         "name": "GTO",
-        "description": "Gate turn-off thyristor: conducts while fire is true and forward biased.",
+        "description": "Gate turn-off thyristor: conducts while the gate (g) is true and it is forward biased.",
         "domain": "electrical",
         "category": "semiconductors",
         "symbol": "GTO",
@@ -552,7 +552,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

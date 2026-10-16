@@ -221,7 +221,7 @@
       "definition": {
         "kind": "hBridge",
         "name": "H-bridge",
-        "description": "Four-quadrant DC chopper: fire_p switches out+ and fire_n switches out− between the input rails; drive fire_n with the complement of fire_p for bipolar switching.",
+        "description": "Four-quadrant DC chopper: f+ switches out+ and f− switches out− between the input rails; drive f− with the complement of f+ for bipolar switching.",
         "domain": "electrical",
         "category": "converters",
         "symbol": "H",
@@ -457,7 +457,7 @@
           },
           {
             "id": "y",
-            "name": "A",
+            "name": "i",
             "direction": "output",
             "domain": "signal",
             "side": "bottom",
@@ -991,7 +991,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

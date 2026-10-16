@@ -260,7 +260,7 @@
       "definition": {
         "kind": "boolHysteresis",
         "name": "Hysteresis ±0.5",
-        "description": "True above uHigh, false below uLow, unchanged in between.",
+        "description": "True above the upper threshold, false below the lower threshold, unchanged in between.",
         "domain": "boolean",
         "category": "logic",
         "symbol": "⊏⊐",

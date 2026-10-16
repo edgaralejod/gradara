@@ -108,7 +108,7 @@
         "parameters": [
           {
             "id": "gain",
-            "name": "Gain",
+            "name": "Voltage gain",
             "value": 2,
             "unit": ""
           }
@@ -224,7 +224,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -552,7 +552,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -939,7 +939,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -1210,7 +1210,7 @@
         "parameters": [
           {
             "id": "gain",
-            "name": "Gain",
+            "name": "Current gain",
             "value": 3,
             "unit": ""
           }
@@ -1326,7 +1326,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",
@@ -1658,7 +1658,7 @@
           },
           {
             "id": "y",
-            "name": "V",
+            "name": "v",
             "direction": "output",
             "domain": "signal",
             "side": "right",

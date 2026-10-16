@@ -1664,7 +1664,7 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "phi0",
-        "name": "Angle",
+        "name": "Fixed angle",
         "value": 0,
         "unit": "rad"
       }
@@ -1781,7 +1781,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "rotBacklash",
     "name": "Backlash",
-    "description": "Spring and damper in series with a free play of b.",
+    "description": "Spring and damper in series with a total free play (backlash) between the flanges.",
     "domain": "mechanical",
     "category": "mechanical",
     "symbol": "b",
@@ -1910,7 +1910,7 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "ratio",
-        "name": "Ratio",
+        "name": "Gear ratio φa/φb",
         "value": 2,
         "unit": ""
       }
@@ -1968,13 +1968,13 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "cgeo",
-        "name": "Geometry constant",
+        "name": "Geometry constant (effective radius)",
         "value": 1,
-        "unit": ""
+        "unit": "m"
       },
       {
         "id": "peak",
-        "name": "Stiction peak",
+        "name": "Static/kinetic friction ratio",
         "value": 1.1,
         "unit": "",
         "min": 1
@@ -2171,13 +2171,13 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "stepTorque",
-        "name": "Step",
+        "name": "Step height",
         "value": 1,
         "unit": "N·m"
       },
       {
         "id": "offsetTorque",
-        "name": "Offset",
+        "name": "Initial torque",
         "value": 0,
         "unit": "N·m"
       },
@@ -2512,7 +2512,7 @@ export const mslBlocks: Definition[] = [
     "ports": [
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "top"
@@ -2521,7 +2521,7 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "s0",
-        "name": "Position",
+        "name": "Fixed position",
         "value": 0,
         "unit": "m"
       }
@@ -2740,7 +2740,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "hardStop",
     "name": "Hard stop",
-    "description": "Spring and damper that act only when the gap closes (contact).",
+    "description": "Spring and damper that push the flanges apart while b − a is below the contact distance.",
     "domain": "translational",
     "category": "translational",
     "symbol": "gap",
@@ -2777,8 +2777,8 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "s_rel0",
-        "name": "Gap",
-        "value": 0.01,
+        "name": "Contact distance (b − a)",
+        "value": 0,
         "unit": "m"
       }
     ],
@@ -2800,7 +2800,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "massStops",
     "name": "Mass with stops",
-    "description": "Mass with Coulomb and viscous friction and hard end stops.",
+    "description": "Mass with viscous, Coulomb and Stribeck friction and inelastic end stops.",
     "domain": "translational",
     "category": "translational",
     "symbol": "m⊣⊢",
@@ -2856,7 +2856,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "F_Stribeck",
-        "name": "Stribeck friction",
+        "name": "Stribeck excess (added to Coulomb)",
         "value": 10,
         "unit": "N",
         "min": 0
@@ -2905,7 +2905,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "right"
@@ -2930,7 +2930,7 @@ export const mslBlocks: Definition[] = [
     "ports": [
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "right"
@@ -2966,7 +2966,7 @@ export const mslBlocks: Definition[] = [
     "ports": [
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "right"
@@ -2975,13 +2975,13 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "stepForce",
-        "name": "Step",
+        "name": "Step height",
         "value": 1,
         "unit": "N"
       },
       {
         "id": "offsetForce",
-        "name": "Offset",
+        "name": "Initial force",
         "value": 0,
         "unit": "N"
       },
@@ -3021,7 +3021,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "right"
@@ -3063,7 +3063,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "right"
@@ -3098,7 +3098,7 @@ export const mslBlocks: Definition[] = [
     "ports": [
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "left"
@@ -3131,7 +3131,7 @@ export const mslBlocks: Definition[] = [
     "ports": [
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "left"
@@ -3163,7 +3163,7 @@ export const mslBlocks: Definition[] = [
     "ports": [
       {
         "id": "flange",
-        "name": "shaft",
+        "name": "flange",
         "direction": "physical",
         "domain": "translational",
         "side": "left"
@@ -4056,7 +4056,7 @@ export const mslBlocks: Definition[] = [
     "ports": [
       {
         "id": "Phi",
-        "name": "Phi",
+        "name": "Φ",
         "direction": "output",
         "domain": "signal",
         "side": "bottom"
@@ -4093,7 +4093,7 @@ export const mslBlocks: Definition[] = [
     "ports": [
       {
         "id": "V_m",
-        "name": "V_m",
+        "name": "Vm",
         "direction": "output",
         "domain": "signal",
         "side": "bottom"
@@ -4355,7 +4355,7 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "R",
-        "name": "Resistance at T_ref",
+        "name": "Resistance at reference temperature",
         "value": 1,
         "unit": "Ω",
         "min": 0
@@ -4587,7 +4587,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "saturatingInductor",
     "name": "Saturating inductor",
-    "description": "Inductance falls from Lzer toward Linf as the core saturates.",
+    "description": "Inductance falls from its zero-current value toward the saturated value as the current rises. Keep zero-current > nominal > saturated inductance.",
     "domain": "electrical",
     "category": "electrical",
     "symbol": "L(i)",
@@ -4624,7 +4624,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "Lzer",
-        "name": "Initial inductance",
+        "name": "Inductance at zero current",
         "value": 2,
         "unit": "H",
         "min": 0
@@ -4766,7 +4766,7 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "n",
-        "name": "Turns ratio",
+        "name": "Turns ratio N1/N2",
         "value": 2,
         "unit": "",
         "min": 0
@@ -4887,7 +4887,7 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "gain",
-        "name": "Gain",
+        "name": "Voltage gain",
         "value": 1,
         "unit": ""
       }
@@ -5058,7 +5058,7 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "gain",
-        "name": "Gain",
+        "name": "Current gain",
         "value": 1,
         "unit": ""
       }
@@ -5420,13 +5420,13 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "V",
-        "name": "Step",
+        "name": "Step height",
         "value": 12,
         "unit": "V"
       },
       {
         "id": "offset",
-        "name": "Offset",
+        "name": "Initial voltage",
         "value": 0,
         "unit": "V"
       },
@@ -5838,7 +5838,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "y",
-        "name": "V",
+        "name": "v",
         "direction": "output",
         "domain": "signal",
         "side": "right"
@@ -5882,7 +5882,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "y",
-        "name": "A",
+        "name": "i",
         "direction": "output",
         "domain": "signal",
         "side": "bottom"
@@ -5905,7 +5905,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "powerSensor",
     "name": "Power sensor",
-    "description": "Instantaneous power: current path pc→nc, voltage across pv–nv.",
+    "description": "Instantaneous power: current flows from i+ to i−, voltage is measured across v+ and v−.",
     "domain": "electrical",
     "category": "electrical",
     "symbol": "P",
@@ -6075,7 +6075,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "zenerDiode",
     "name": "Zener diode",
-    "description": "Diode with reverse breakdown at Bv.",
+    "description": "Diode with reverse breakdown at the breakdown voltage.",
     "domain": "electrical",
     "category": "semiconductors",
     "symbol": "Z",
@@ -6119,7 +6119,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "idealThyristor",
     "name": "Thyristor",
-    "description": "Ideal thyristor: turns on at a fire pulse when forward biased, off when current reverses.",
+    "description": "Ideal thyristor: turns on at a gate (g) pulse when forward biased, off when the current reverses.",
     "domain": "electrical",
     "category": "semiconductors",
     "symbol": "SCR",
@@ -6178,7 +6178,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "idealGTO",
     "name": "GTO thyristor",
-    "description": "Gate turn-off thyristor: conducts while fire is true and forward biased.",
+    "description": "Gate turn-off thyristor: conducts while the gate (g) is true and it is forward biased.",
     "domain": "electrical",
     "category": "semiconductors",
     "symbol": "GTO",
@@ -6237,7 +6237,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "nmos",
     "name": "NMOS transistor",
-    "description": "Shichman–Hodges N-channel MOSFET.",
+    "description": "Shichman–Hodges N-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 1.5 µm, so keep W above 2.5 µm and L above 1.5 µm.",
     "domain": "electrical",
     "category": "semiconductors",
     "symbol": "Nch",
@@ -6274,17 +6274,17 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "W",
-        "name": "Width",
+        "name": "Channel width",
         "value": 2e-05,
         "unit": "m",
-        "min": 0
+        "min": 2.6e-06
       },
       {
         "id": "L",
-        "name": "Length",
+        "name": "Channel length",
         "value": 6e-06,
         "unit": "m",
-        "min": 0
+        "min": 1.6e-06
       }
     ],
     "equations": "// Electrical.Analog.Semiconductors.NMOS from the Modelica Standard Library 4.1.0",
@@ -6303,7 +6303,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "pmos",
     "name": "PMOS transistor",
-    "description": "Shichman–Hodges P-channel MOSFET.",
+    "description": "Shichman–Hodges P-channel MOSFET. The model narrows the channel by 2.5 µm and shortens it by 2.1 µm, so keep W above 2.5 µm and L above 2.1 µm.",
     "domain": "electrical",
     "category": "semiconductors",
     "symbol": "Pch",
@@ -6340,17 +6340,17 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "W",
-        "name": "Width",
+        "name": "Channel width",
         "value": 2e-05,
         "unit": "m",
-        "min": 0
+        "min": 2.6e-06
       },
       {
         "id": "L",
-        "name": "Length",
+        "name": "Channel length",
         "value": 6e-06,
         "unit": "m",
-        "min": 0
+        "min": 2.2e-06
       }
     ],
     "equations": "// Electrical.Analog.Semiconductors.PMOS from the Modelica Standard Library 4.1.0",
@@ -6588,7 +6588,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "twoWaySwitch",
     "name": "Changeover switch",
-    "description": "Connects p to n2 while control is true, otherwise to n1.",
+    "description": "Connects + to n2 while sel is true, otherwise to n1.",
     "domain": "electrical",
     "category": "semiconductors",
     "symbol": "SPDT",
@@ -6887,7 +6887,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "buckBoostConverter",
     "name": "Buck-boost converter",
-    "description": "Bidirectional half-bridge: port 1 is the switch node (add a series inductor); fire_p drives the low-side switch, stepping up from port 1 to port 2, and fire_n the high-side switch, stepping down from port 2 to port 1.",
+    "description": "Bidirectional half-bridge: port 1 is the switch node (add a series inductor); lo drives the low-side switch, stepping up from port 1 to port 2, and hi the high-side switch, stepping down from port 2 to port 1.",
     "domain": "electrical",
     "category": "converters",
     "symbol": "b-b",
@@ -6967,7 +6967,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "hBridge",
     "name": "H-bridge",
-    "description": "Four-quadrant DC chopper: fire_p switches out+ and fire_n switches out− between the input rails; drive fire_n with the complement of fire_p for bipolar switching.",
+    "description": "Four-quadrant DC chopper: f+ switches out+ and f− switches out− between the input rails; drive f− with the complement of f+ for bipolar switching.",
     "domain": "electrical",
     "category": "converters",
     "symbol": "H",
@@ -7786,7 +7786,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "inductionMachine",
     "name": "Induction machine",
-    "description": "Three-phase squirrel-cage induction machine (star-connected stator terminals).",
+    "description": "Three-phase squirrel-cage induction machine. The stator winding ends are on n: connect a Star to n for a star connection.",
     "domain": "threePhase",
     "category": "machines",
     "symbol": "IM",
@@ -7942,7 +7942,7 @@ export const mslBlocks: Definition[] = [
       },
       {
         "id": "VsOpenCircuit",
-        "name": "Open-circuit voltage at fsNominal",
+        "name": "Open-circuit voltage (RMS per phase)",
         "value": 112.3,
         "unit": "V",
         "min": 0
@@ -8113,7 +8113,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "hallSensor",
     "name": "Electrical angle sensor",
-    "description": "Electrical rotor angle for p pole pairs, as a Hall or encoder sensor reports it (0…2π).",
+    "description": "Electrical rotor angle for p pole pairs (0…2π), aligned like MSL machines: it reads π at shaft angle 0.",
     "domain": "mechanical",
     "category": "machines",
     "symbol": "Hall",
@@ -8232,7 +8232,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "threePhaseSource",
     "name": "3-phase AC source",
-    "description": "Balanced three-phase sinusoidal voltages from plug − to plug +; a Star point on plug − gives the neutral.",
+    "description": "Balanced three-phase sinusoidal voltages from abc− to abc; a Star on abc− gives the neutral.",
     "domain": "threePhase",
     "category": "threePhase",
     "symbol": "3~ AC",
@@ -8284,7 +8284,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "threePhaseSignalVoltage",
     "name": "Controlled 3-phase voltage",
-    "description": "Three phase voltages equal to the three input signals, from plug − to plug +: an ideal (averaged) voltage-source inverter.",
+    "description": "Three phase voltages equal to the three input signals, from abc− to abc: an ideal (averaged) voltage-source inverter.",
     "domain": "threePhase",
     "category": "threePhase",
     "symbol": "3~ v(u)",
@@ -8675,35 +8675,35 @@ export const mslBlocks: Definition[] = [
     "parameters": [
       {
         "id": "n",
-        "name": "Ratio",
+        "name": "Voltage ratio HV/LV (line-to-line)",
         "value": 1,
         "unit": "",
         "min": 0
       },
       {
         "id": "R1",
-        "name": "Primary resistance per phase",
+        "name": "HV resistance per phase",
         "value": 0.01,
         "unit": "Ω",
         "min": 0
       },
       {
         "id": "L1sigma",
-        "name": "Primary stray inductance",
+        "name": "HV stray inductance per phase",
         "value": 0.001,
         "unit": "H",
         "min": 0
       },
       {
         "id": "R2",
-        "name": "Secondary resistance per phase",
+        "name": "LV resistance per phase",
         "value": 0.01,
         "unit": "Ω",
         "min": 0
       },
       {
         "id": "L2sigma",
-        "name": "Secondary stray inductance",
+        "name": "LV stray inductance per phase",
         "value": 0.001,
         "unit": "H",
         "min": 0
@@ -9296,7 +9296,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "boolHysteresis",
     "name": "Hysteresis",
-    "description": "True above uHigh, false below uLow, unchanged in between.",
+    "description": "True above the upper threshold, false below the lower threshold, unchanged in between.",
     "domain": "boolean",
     "category": "logic",
     "symbol": "⊏⊐",
@@ -9400,7 +9400,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "logicSwitch",
     "name": "Switch (logic)",
-    "description": "Outputs u1 while u2 is true, otherwise u3.",
+    "description": "Outputs the true input while sel is true, otherwise the false input.",
     "domain": "signal",
     "category": "logic",
     "symbol": "sw",
@@ -9447,7 +9447,7 @@ export const mslBlocks: Definition[] = [
   {
     "kind": "rsFlipFlop",
     "name": "RS flip-flop",
-    "description": "Set/reset latch.",
+    "description": "Set/reset latch: S sets Q true, R resets it to false; Q̄ is its complement.",
     "domain": "boolean",
     "category": "logic",
     "symbol": "RS",
