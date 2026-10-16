@@ -56,13 +56,19 @@
 }
 @keyframes tag-linked {
   0% {
-    filter: drop-shadow(0 0 0 color-mix(in srgb, var(--domain) 0%, transparent));
+    filter: drop-shadow(
+      0 0 0 color-mix(in srgb, var(--domain) 0%, transparent)
+    );
   }
   40% {
-    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--domain) 70%, transparent));
+    filter: drop-shadow(
+      0 0 6px color-mix(in srgb, var(--domain) 70%, transparent)
+    );
   }
   100% {
-    filter: drop-shadow(0 0 0 color-mix(in srgb, var(--domain) 0%, transparent));
+    filter: drop-shadow(
+      0 0 0 color-mix(in srgb, var(--domain) 0%, transparent)
+    );
   }
 }
 /* A Goto's hover action: a faded From past the tip, joined by a dashed lead. */
@@ -260,7 +266,8 @@
   left: 50%;
   top: 50%;
 }
-.block-frame :is(
+.block-frame
+  :is(
     .gain-value,
     .value-symbol,
     .math-op,
@@ -519,9 +526,17 @@
   overflow: auto;
   max-height: 60%;
 }
-.library-part-detail strong { font-weight: 600; }
-.library-part-detail p { color: #637987; margin: 3px 0 0; }
-.legend-copy > small { font-size: var(--text-ui); color: #637987; }
+.library-part-detail strong {
+  font-weight: 600;
+}
+.library-part-detail p {
+  color: #637987;
+  margin: 3px 0 0;
+}
+.legend-copy > small {
+  font-size: var(--text-ui);
+  color: #637987;
+}
 
 /* Unboxed circuit symbols get lighter relief; labels and connection targets stay flat. */
 .block-face.shape-physical .block-symbol > svg,
@@ -559,8 +574,13 @@
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.block-face .subsystem-thumb > * { vector-effect: non-scaling-stroke; }
-.block-face .subsystem-thumb > polyline { fill: none; opacity: 0.8; }
+.block-face .subsystem-thumb > * {
+  vector-effect: non-scaling-stroke;
+}
+.block-face .subsystem-thumb > polyline {
+  fill: none;
+  opacity: 0.8;
+}
 /* Boundary blocks inside a subsystem: a pill with the port number and name. */
 .block-face.shape-boundary .block-outline > * {
   fill: color-mix(in srgb, var(--domain) 8%, white);
@@ -625,9 +645,20 @@
 }
 
 /* Pictorial schematic symbols (circuit-symbol.tsx): drawn at design size, never stretched. */
-.block-face .circuit-symbol { overflow: visible; }
-.block-face .circuit-symbol path { fill: none; stroke: var(--domain); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.block-face .circuit-symbol path.glyph-fill { fill: var(--domain); stroke: none; }
+.block-face .circuit-symbol {
+  overflow: visible;
+}
+.block-face .circuit-symbol path {
+  fill: none;
+  stroke: var(--domain);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.block-face .circuit-symbol path.glyph-fill {
+  fill: var(--domain);
+  stroke: none;
+}
 
 .f-02041461{top:66.66666666666666%!important;--port-color:#a064e0!important}
 .f-032123dc{width:176px!important;height:32px!important}
