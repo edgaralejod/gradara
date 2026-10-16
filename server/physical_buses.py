@@ -15,6 +15,7 @@ the junction above and below. Emission, code generation and the run see plain wi
 """
 from __future__ import annotations
 
+import hashlib
 import re
 
 from .models import Block, Boundary, Definition, Junction, Port, Position, Project, Wire
@@ -50,9 +51,29 @@ def has_physical_buses(project: Project) -> bool:
                for sheet in _sheets(project).values() for b in sheet.blocks)
 
 
-def hidden_id(boundary_id: str, name: str) -> str:
-    """The terminal a subsystem's physical bus port becomes for one element."""
-    return f'{boundary_id}__{name}'[:60]
+def _valid(name: str) -> bool:
+    return bool(NAME.fullmatch(name))
+
+
+def _hidden_id(taken: set[str], memo: dict, ref: str, boundary_id: str, name: str) -> str:
+    """The ID of the terminal element `name` of bus port `boundary_id` of subsystem `ref`
+    becomes, on the instance and inside alike. Readable (`<port>__<element>`) when that
+    fits in a port ID and is free on the inside sheet (whose block IDs are also the
+    instance's port IDs); otherwise a short hash, made unique there."""
+    key = (ref, boundary_id, name)
+    if key in memo:
+        return memo[key]
+    ident = f'{boundary_id}__{name}'
+    if len(ident) > 60 or ident in taken:
+        digest = hashlib.sha1(f'{boundary_id}\0{name}'.encode()).hexdigest()[:8]
+        base = f'pbus_{digest}_{name}'[:52]
+        ident, n = base, 1
+        while ident in taken:
+            n += 1
+            ident = f'{base}_{n}'
+    taken.add(ident)
+    memo[key] = ident
+    return ident
 
 
 def _bus_nets(sheet) -> list[set[tuple[str, str]]]:
@@ -105,7 +126,8 @@ class _Bundles:
         if block is None:
             return []
         if is_bus_block(block):
-            return [(p.name, p.domain, block.id) for p in _elements(block)]
+            # An invalid name joins nothing (model checks report it).
+            return [(p.name, p.domain, block.id) for p in _elements(block) if _valid(p.name)]
         ref = block.definition.subsystem.ref if block.definition.subsystem else None
         if ref is not None and ref in self.sheets and ref not in path:
             return [(n, d, block.id) for n, d in self.port(ref, handle, path + (ref,)).items()]
@@ -142,7 +164,7 @@ def physical_bus_problems(project: Project) -> list[dict]:
             if not is_bus_block(block):
                 continue
             names = [p.name for p in _elements(block)]
-            bad = [n for n in names if not NAME.match(n)]
+            bad = [n for n in names if not _valid(n)]
             # The same words as the editor (elementsError in lib/gradara/physical-bus.ts).
             problem = None
             if not names:
@@ -154,7 +176,19 @@ def physical_bus_problems(project: Project) -> list[dict]:
             if problem:
                 problems.append(dict(message=f'{block.definition.name}: {problem}', blockIds=[block.id], sheet=sheet_id,
                                      hint='Give each element its own name in the block’s properties.'))
+        blocks = {b.id: b for b in sheet.blocks}
         for net in _bus_nets(sheet):
+            # Bus ports wired straight to each other inside a subsystem carry nothing:
+            # a port carries only the elements something inside names.
+            ports = sorted(i for i, _ in net if i in blocks and blocks[i].definition.boundary is not None)
+            named = any(bundles.contribution(sheet, end, (sheet_id,)) for end in sorted(net))
+            if len(ports) > 1 and not named:
+                problems.append(dict(
+                    message=f'The bus ports {" and ".join(blocks[i].definition.name for i in ports)} are joined '
+                            f'straight through, so they carry nothing.',
+                    blockIds=ports, sheet=sheet_id,
+                    hint='A physical bus port carries only the elements a Physical bus inside the subsystem names: '
+                         'wire one between the ports.'))
             seen: dict[str, tuple[str, str]] = {}
             reported = set()
             for end in sorted(net):
@@ -193,10 +227,16 @@ def lower_physical_buses(project: Project) -> Project:
                 bundles.port(ref, block.id, (ref,))
     project = project.model_copy(deep=True)
     sheets = _sheets(project)
+    # IDs in use on each inside sheet, so hidden terminals never collide with them.
+    inside_ids = {ref: {b.id for b in s.blocks} | {j.id for j in s.junctions} | {w.id for w in s.wires}
+                  for ref, s in sheets.items() if ref is not None}
+    hidden: dict = {}
 
     for ref, sheet in sheets.items():
         blocks = {b.id: b for b in sheet.blocks}
-        taken = {b.id for b in sheet.blocks} | {j.id for j in sheet.junctions} | {w.id for w in sheet.wires}
+        # One set per inside sheet, shared with the hidden terminal IDs its instances get.
+        taken = inside_ids[ref] if ref is not None else (
+            {b.id for b in sheet.blocks} | {j.id for j in sheet.junctions} | {w.id for w in sheet.wires})
         wires = list(sheet.wires)
         junctions = list(sheet.junctions)
         new_blocks: list[Block] = []
@@ -244,12 +284,12 @@ def lower_physical_buses(project: Project) -> Project:
                         inside = bundles.port(d.subsystem.ref, handle, (d.subsystem.ref,))
                         if inside.get(name) is None:
                             continue
-                        port_id = hidden_id(handle, name)
+                        port_id = _hidden_id(inside_ids[d.subsystem.ref], hidden, d.subsystem.ref, handle, name)
                         wire(node, NODE, ident, port_id)
                         extra.setdefault(ident, []).append(
                             Port(id=port_id, name=f'{name}', direction='physical', domain=inside[name], side='left'))
                     elif d.boundary is not None:
-                        port_id = hidden_id(ident, name)
+                        port_id = _hidden_id(inside_ids[ref], hidden, ref, ident, name)
                         definition = Definition.model_construct(
                             kind='connport', name=f'{d.name}.{name}', description='Element of a physical bus port.',
                             domain=domain, symbol='', ports=[Port(id='p', name=name, direction='physical',

@@ -191,7 +191,7 @@ A **Physical bus** (in **Routing**) bundles named physical connections of any ty
 
 Edit the elements under **Elements** in the block's properties or its dialog: add, rename, reorder, remove, and set each one's type. An unwired element takes the type of the first terminal you connect to it; a wired one keeps its wire's type. Removing an element removes its wires. Element names are a letter, then letters, digits, or `_`, and must differ within a block. Problems reports a repeated or invalid name, and one name carried as two types on one bus line.
 
-A bus also crosses subsystem boundaries: set a subsystem port's type to **Physical bus** (or group blocks so a bus line is cut), and inside, wire the port to a Physical bus that gives the elements back. The port carries the elements its inside uses; an element on one end with no partner on the other is simply left open. Bus lines are drawn heavy, in the bus color. The **Physical bus** block example carries a supply's two rails and a heater's heat flow to a load as one line.
+A bus also crosses subsystem boundaries: set a subsystem port's type to **Physical bus** (or group blocks so a bus line is cut), and inside, wire the port to a Physical bus that gives the elements back. The port carries the elements a Physical bus inside it names, so wiring two bus ports straight to each other inside carries nothing (Problems reports it); an element on one end with no partner on the other is simply left open. Bus lines are drawn heavy, in the bus color. The **Physical bus** block example carries a supply's two rails and a heater's heat flow to a load as one line.
 
 ## Wire and arrange
 

@@ -773,7 +773,7 @@ function Workbench() {
           ...validateProject(projectRef.current),
           // Tags reach from the sheets above, so they are checked on the whole document.
           ...tagProblems(docRef.current, scopeRef.current),
-          // Physical buses read through subsystem bus ports, so the whole document is passed.
+          // The open sheet's physical buses; the document is passed to read through subsystem bus ports.
           ...physicalBusProblems(docRef.current, scopeRef.current),
           // Every variant, active or not, so a broken alternative shows before anyone switches to it.
           ...variantProblems(docRef.current),

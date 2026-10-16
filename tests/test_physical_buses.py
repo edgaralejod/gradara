@@ -155,3 +155,61 @@ def test_engine_runs_a_circuit_and_a_heat_port_through_a_bus():
 def test_engine_runs_a_load_through_a_subsystem_bus_port():
     result = asyncio.run(simulate(Project.model_validate(nested_document()), 'pbusnest' + uuid.uuid4().hex[:12]))
     assert _series(result, 'load.vs.v')[-1] == pytest.approx(10)
+
+
+def _harness(boundary_a='hin', boundary_b='hout'):
+    """A subsystem whose two bus ports are wired straight to each other."""
+    def port(ident, name, order):
+        return at(ident, {'kind': 'connport', 'name': name, 'description': '', 'domain': 'physicalBus', 'symbol': '⊙',
+                          'equations': '', 'parameters': [], 'category': 'routing', 'boundary': {'order': order},
+                          'ports': [{'id': 'p', 'name': name, 'direction': 'physical', 'domain': 'physicalBus',
+                                     'side': 'right'}]})
+    inside = {'id': 'harness', 'name': 'Harness', 'blocks': [port(boundary_a, 'in', 0), port(boundary_b, 'out', 1)],
+              'wires': [wire('w', boundary_a, 'p', boundary_b, 'p')]}
+    instance = {'kind': 'subsystem', 'name': 'Harness', 'description': '', 'domain': 'electrical', 'symbol': '',
+                'equations': '', 'parameters': [], 'subsystem': {'ref': 'harness'},
+                'ports': [{'id': boundary_a, 'name': 'in', 'direction': 'physical', 'domain': 'physicalBus', 'side': 'left'},
+                          {'id': boundary_b, 'name': 'out', 'direction': 'physical', 'domain': 'physicalBus',
+                           'side': 'right'}]}
+    return {'version': 2, 'name': 'Harness', 'duration': 0.1, 'revision': 0, 'subsystems': [inside],
+            'blocks': [at('src', SOURCE), at('gnd', GROUND), at('b1', bus(('pos', E), ('neg', E))), at('h', instance),
+                       at('b2', bus(('pos', E), ('neg', E))), at('r', RESISTOR)],
+            'wires': [wire('a', 'src', 'p', 'b1', 'e1'), wire('b', 'src', 'n', 'b1', 'e2'), wire('c', 'src', 'n', 'gnd', 'p'),
+                      wire('d', 'b1', 'bus', 'h', boundary_a), wire('e', 'h', boundary_b, 'b2', 'bus'),
+                      wire('f', 'b2', 'e1', 'r', 'p'), wire('g', 'b2', 'e2', 'r', 'n')]}
+
+
+def test_bus_ports_joined_straight_through_are_a_problem_not_an_open_circuit():
+    problems = physical_bus_problems(Project.model_validate(_harness()))
+    assert [p['message'] for p in problems] == ['The bus ports in and out are joined straight through, so they carry nothing.']
+    assert problems[0]['blockIds'] == ['hin', 'hout'] and problems[0]['sheet'] == 'harness'
+
+
+def test_hidden_terminals_never_collide_with_each_other_or_existing_ids():
+    # A bus port whose readable hidden IDs would be cut to the same 60 characters.
+    long_id = 'p' + 'x' * 58
+    doc = nested_document()
+    inside = doc['subsystems'][0]
+    inside['blocks'][0]['id'] = long_id
+    inside['wires'][0]['source'] = long_id
+    inside['blocks'][1]['definition'] = bus(('alpha_one', E), ('alpha_two', E))
+    doc['blocks'][2]['definition'] = bus(('alpha_one', E), ('alpha_two', E), ('spare', 'thermal'))
+    doc['blocks'][3]['definition']['ports'][0]['id'] = long_id
+    doc['wires'][-1]['targetHandle'] = long_id
+    source = emit_project(Project.model_validate(doc))
+    inside_src = source[source.index('model Sub_load'):source.index('end Sub_load;')]
+    pins = [line for line in inside_src.splitlines() if 'Interfaces.Pin' in line]
+    assert len(pins) == 2 and len(set(pins)) == 2
+    # A readable hidden ID already in use inside gets another.
+    doc = nested_document()
+    doc['subsystems'][0]['blocks'].append(at('port__pos', GROUND, 300))
+    source = emit_project(Project.model_validate(doc))
+    assert source.count('Interfaces.Pin port__pos;') == 0
+    assert 'connect(load.port__pos' not in source
+
+
+def test_a_name_with_a_trailing_newline_is_invalid():
+    doc = flat_document()
+    doc['blocks'][2]['definition'] = bus(('pos\n', E), ('neg', E), ('heat', 'thermal'))
+    messages = [p['message'] for p in physical_bus_problems(Project.model_validate(doc))]
+    assert messages and 'is not a valid name' in messages[0]

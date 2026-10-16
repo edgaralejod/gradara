@@ -210,3 +210,66 @@ void test('one name carried as two types on a bus line is a problem, read throug
 void test('a physical bus line is drawn heavy', () => {
   assert.deepEqual([...busWireIds(doc())], ['c']);
 });
+
+void test('the editor words conflicts as the service does, whatever order the wires were drawn in', () => {
+  const p: Project = {
+    version: 1,
+    name: 'Order',
+    duration: 1,
+    revision: 0,
+    blocks: [
+      at('z9', bus(['heat', 'electrical'])),
+      at('a1', bus(['heat', 'thermal'])),
+    ],
+    wires: [
+      {
+        id: 'w',
+        source: 'z9',
+        sourceHandle: 'bus',
+        target: 'a1',
+        targetHandle: 'bus',
+      },
+    ],
+  };
+  assert.deepEqual(
+    physicalBusIssues(p, () => undefined).map((i) => i.message),
+    [
+      'The physical bus carries heat as thermal on one end and electrical on the other.',
+    ],
+  );
+});
+
+void test('bus ports joined straight through inside a subsystem are a problem', () => {
+  const port = (id: string, name: string, order: number) =>
+    at(id, {
+      ...kind('inport'),
+      kind: 'connport',
+      name,
+      ports: [{ id: 'p', name, direction: 'physical', domain: 'physicalBus' }],
+      boundary: { order },
+    });
+  const inside = {
+    blocks: [port('hin', 'in', 0), port('hout', 'out', 1)],
+    wires: [
+      {
+        id: 'w',
+        source: 'hin',
+        sourceHandle: 'p',
+        target: 'hout',
+        targetHandle: 'p',
+      },
+    ],
+  };
+  assert.deepEqual(
+    physicalBusIssues(inside, () => undefined).map((i) => [
+      i.message,
+      i.blockIds,
+    ]),
+    [
+      [
+        'The bus ports in and out are joined straight through, so they carry nothing.',
+        ['hin', 'hout'],
+      ],
+    ],
+  );
+});

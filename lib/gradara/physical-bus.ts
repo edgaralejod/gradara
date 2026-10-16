@@ -214,7 +214,18 @@ export function busLines(sheet: Sheet): { id: string; handle: string }[][] {
     const root = find(k);
     groups.set(root, [...(groups.get(root) ?? []), { id, handle }]);
   }
-  return [...groups.values()];
+  // Ends in (id, handle) order, as the service walks them, so messages match.
+  const order = (a: { id: string; handle: string }, b: typeof a) =>
+    a.id < b.id
+      ? -1
+      : a.id > b.id
+        ? 1
+        : a.handle < b.handle
+          ? -1
+          : a.handle > b.handle
+            ? 1
+            : 0;
+  return [...groups.values()].map((g) => g.sort(order));
 }
 
 /**
@@ -233,7 +244,8 @@ export function carried(
   if (!block) return out;
   if (isPhysicalBus(block.definition)) {
     for (const p of elementPorts(block.definition))
-      if (!out.has(p.name)) out.set(p.name, p.domain);
+      if (ELEMENT_PATTERN.test(p.name) && !out.has(p.name))
+        out.set(p.name, p.domain);
     return out;
   }
   const inside = block.definition.subsystem ? insideOf(block) : undefined;
@@ -264,6 +276,24 @@ export function physicalBusIssues(
       });
   }
   for (const line of busLines(sheet)) {
+    // Bus ports wired straight to each other carry nothing (as server/physical_buses.py).
+    const ports = [
+      ...new Set(
+        line
+          .map((e) => sheet.blocks.find((b) => b.id === e.id))
+          .filter((b): b is Block => !!b?.definition.boundary)
+          .map((b) => b.id),
+      ),
+    ].sort();
+    const named = line.some((e) => carried(sheet, e, insideOf).size > 0);
+    if (ports.length > 1 && !named)
+      issues.push({
+        message: `The bus ports ${ports
+          .map((id) => sheet.blocks.find((b) => b.id === id)!.definition.name)
+          .join(' and ')} are joined straight through, so they carry nothing.`,
+        blockIds: ports,
+        hint: 'A physical bus port carries only the elements a Physical bus inside the subsystem names: wire one between the ports.',
+      });
     const seen = new Map<string, { domain: Domain; at: string }>();
     const reported = new Set<string>();
     for (const end of line)
