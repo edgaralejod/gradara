@@ -573,7 +573,8 @@
   color: #c3ccd3;
   cursor: default;
 }
-.block-dialog-properties .block-dialog-name {
+.block-dialog-properties .block-dialog-name,
+.block-dialog-properties .block-dialog-tag {
   height: 28px;
   border: 1px solid #cfd9e0;
   border-radius: 2px;
@@ -582,7 +583,8 @@
   color: #27333d;
   font-weight: 500;
 }
-.block-dialog-properties .block-dialog-name:focus-visible {
+.block-dialog-properties .block-dialog-name:focus-visible,
+.block-dialog-properties .block-dialog-tag:focus-visible {
   border-color: var(--primary);
 }
 .block-dialog-description {
@@ -1161,6 +1163,9 @@
 .block-dialog-tag-label {
   margin-top: 12px;
 }
-.block-dialog-tag {
+.block-dialog-properties .block-dialog-tag {
   font-family: var(--font-mono, ui-monospace, monospace);
+}
+.block-dialog-properties .block-dialog-tag[aria-invalid='true'] {
+  border-color: var(--destructive, #c2410c);
 }
