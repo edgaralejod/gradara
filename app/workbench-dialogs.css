@@ -1191,7 +1191,14 @@
 /* In the block dialog too, a field you can edit is white with a border (see inspector.css). */
 .block-dialog
   :is(
-    input:not([type='checkbox'], [type='radio'], [readonly], :disabled),
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
     select:not(:disabled)
   ):not(.parameter input, .block-dialog-name, .block-dialog-tag) {
   background-color: white;
@@ -1201,7 +1208,14 @@
 }
 .block-dialog
   :is(
-    input:not([type='checkbox'], [type='radio'], [readonly], :disabled),
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
     select:not(:disabled)
   ):not(.parameter input, .block-dialog-name, .block-dialog-tag):focus-visible {
   border-color: var(--primary);

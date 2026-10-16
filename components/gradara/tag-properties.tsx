@@ -13,7 +13,6 @@ import {
   TAG_PATTERN,
   type TagKind,
 } from '@/lib/gradara/tag-blocks';
-import { isWired } from '@/lib/gradara/tag-edit';
 
 /**
  * What a tag block carries: a physical domain for a connection label, a signal or a
@@ -76,6 +75,7 @@ export function TagProperties({
   doc,
   path,
   block,
+  wired,
   onTag,
   onType,
   onShow,
@@ -83,6 +83,8 @@ export function TagProperties({
   doc: Project;
   path: string[];
   block: Block;
+  /** Whether the block has wires on its own sheet (it then follows its wire's type). */
+  wired: boolean;
   onTag: (tag: string) => void;
   onType: (domain: Domain) => void;
   onShow: (link: TagLink) => void;
@@ -139,7 +141,7 @@ export function TagProperties({
       <TagTypeSelect
         kind={kind as TagKind}
         value={block.definition.ports[0]?.domain ?? 'signal'}
-        wired={isWired(doc, block.id)}
+        wired={wired}
         onChange={onType}
       />
       {kind === 'from' ? (

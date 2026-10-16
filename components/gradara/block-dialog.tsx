@@ -124,7 +124,9 @@ export default function BlockDialog({
     !definition.subsystem &&
     (!readonly || !!definition.equations?.trim());
   const showDeclarations =
-    !tagged && (!readonly || !!definition.declarations?.trim());
+    !tagged &&
+    !definition.subsystem &&
+    (!readonly || !!definition.declarations?.trim());
   const tagValid = !tagged || TAG_PATTERN.test(draft.tag);
   const activeTab: BlockDialogTab =
     (tab === 'equations' && !showEquations) ||

@@ -3796,6 +3796,7 @@ function Workbench() {
                       doc={doc}
                       path={scope}
                       block={active}
+                      wired={isTagWired(project, active.id)}
                       onTag={(tag) => commit((p) => setTag(p, active.id, tag))}
                       onType={(domain) =>
                         commit((p) => setTagDomain(p, active.id, domain))

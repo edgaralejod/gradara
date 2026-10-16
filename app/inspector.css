@@ -420,7 +420,14 @@
  */
 .inspector-properties
   :is(
-    input:not([type='checkbox'], [type='radio'], [readonly], :disabled),
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
     select:not(:disabled),
     textarea:not([readonly], :disabled)
   ):not(.parameter input) {
@@ -430,7 +437,14 @@
 }
 .inspector-properties
   :is(
-    input:not([type='checkbox'], [type='radio'], [readonly], :disabled),
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
     select:not(:disabled),
     textarea:not([readonly], :disabled)
   ):not(.parameter input):hover {
@@ -438,7 +452,14 @@
 }
 .inspector-properties
   :is(
-    input:not([type='checkbox'], [type='radio'], [readonly], :disabled),
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [readonly],
+      :disabled,
+      [aria-invalid='true'],
+      [aria-invalid='']
+    ),
     select:not(:disabled),
     textarea:not([readonly], :disabled)
   ):not(.parameter input):focus-visible {
@@ -470,4 +491,9 @@
 }
 .inspector-properties .component-name-input:focus {
   border-color: var(--primary) !important;
+}
+/* A parameter set per instance (promoted) is read here, not edited: no white box. */
+.inspector-properties .parameter > div:has(input:disabled) {
+  background: transparent;
+  border-style: dashed;
 }
