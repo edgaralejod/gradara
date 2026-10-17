@@ -7,6 +7,7 @@ import {
 } from './port-blocks';
 import { isTagKind, tagDefinition, tagDomains } from './tag-blocks';
 import { BUS_PORT, ELEMENT_DOMAINS, isPhysicalBus } from './physical-bus';
+import { BUS_DOMAINS, busDomain, isBusBlock, withBusDomain } from './buses';
 
 type End = { id: string; handle: string };
 
@@ -50,6 +51,37 @@ export function adoptBoundaryDomain(project: Project, a: End, b: End): Project {
         blocks: project.blocks.map((x) =>
           x.id === block.id
             ? { ...x, definition: { ...next, name: d.name } }
+            : x,
+        ),
+      };
+    }
+    // A Mux, Demux, Bus Creator, or Bus Selector with no wires yet takes the kind
+    // of signal, Real or Boolean, of the first wire, on every port.
+    if (block && d && isBusBlock(d)) {
+      const inner = d.ports.find((p) => p.id === pill.handle);
+      if (!inner) continue;
+      if (
+        project.wires.some(
+          (w) => w.source === block.id || w.target === block.id,
+        )
+      )
+        continue;
+      const target = project.blocks
+        .find((x) => x.id === other.id)
+        ?.definition.ports.find((p) => p.id === other.handle);
+      if (
+        !target ||
+        target.domain === busDomain(d) ||
+        !BUS_DOMAINS.includes(target.domain) ||
+        target.direction === inner.direction ||
+        target.direction === 'physical'
+      )
+        continue;
+      return {
+        ...project,
+        blocks: project.blocks.map((x) =>
+          x.id === block.id
+            ? { ...x, definition: withBusDomain(d, target.domain) }
             : x,
         ),
       };

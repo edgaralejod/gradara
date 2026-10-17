@@ -154,4 +154,66 @@ export const buses: ExampleSpec[] = [
     ],
     about: ['busCreator', 'busSelector'],
   },
+  {
+    id: 'boolean-bus',
+    title: 'Boolean bus',
+    area: 'Signals',
+    summary:
+      'Gate commands bundled on one Boolean bus with a Bus Creator and picked out by name with a Bus Selector.',
+    description:
+      'Two Boolean pulse trains, the gate commands of a half bridge, are bundled by a Boolean Bus Creator into one bus named by signal (high, low) and carried across the sheet on a single heavy Boolean wire. The Bus Selector picks low by name and the NOT inverts it; AND checks that both gates are never on together, so it stays false. A bus carries one kind of signal: set the type under Signals before wiring a bus block, or wire it and it takes the kind of the first wire. Results shows a Boolean bus element by element as 0 or 1.',
+    duration: 2,
+    blocks: [
+      ['high', 'booleanPulse', 'High gate', [col(0), row(0)], { width: 50, period: 1 }],
+      [
+        'low',
+        'booleanPulse',
+        'Low gate',
+        [col(0), row(1)],
+        { width: 50, period: 1, startTime: 0.5 },
+      ],
+      [
+        'gates',
+        'busCreator',
+        'Gates',
+        [col(1) + 56, row(0) + 56],
+        {},
+        { type: 'boolean', signals: ['high', 'low'] },
+      ],
+      [
+        'pick',
+        'busSelector',
+        'Pick',
+        [col(3), row(0) + 56],
+        {},
+        { type: 'boolean', signals: ['low', 'high'] },
+      ],
+      ['inv', 'logicNot', 'NOT low', [col(4) + 32, row(0)]],
+      ['both', 'logicAnd', 'Both on', [col(4) + 32, row(1) + 16], {}, { ports: { u1: 'top', u2: 'bottom' }, label: 'right' }],
+    ],
+    links: [
+      ['high.y', 'gates.u1'],
+      ['low.y', 'gates.u2'],
+      ['gates.y', 'pick.u'],
+      ['pick.y1', 'inv.u'],
+      ['pick.y2', 'both.u1'],
+      ['pick.y1', 'both.u2'],
+    ],
+    plots: [
+      {
+        label: 'Gates',
+        series: ['pick.y2', 'pick.y1', 'inv.y', 'both.y'],
+        labels: ['high', 'low', 'NOT low', 'both on'],
+      },
+    ],
+    checks: [
+      { signal: 'pick.y2', at: 0.25, value: 1, why: 'high: on for the first half of each second' },
+      { signal: 'pick.y1', at: 0.25, value: 0, why: 'low: off while high is on' },
+      { signal: 'pick.y1', at: 0.75, value: 1, why: 'low: on for the second half' },
+      { signal: 'inv.y', at: 0.75, value: 0, why: 'NOT low' },
+      { signal: 'both.y', at: 0.25, value: 0, why: 'never both on' },
+      { signal: 'both.y', at: 0.75, value: 0, why: 'never both on' },
+    ],
+    about: [],
+  },
 ];

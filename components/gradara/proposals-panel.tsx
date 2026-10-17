@@ -16,6 +16,7 @@ const SUGGESTIONS = [
   'Add a speed sensor on the load shaft',
   'Increase the controller gain by 20%',
   'Replace the step reference with a ramp',
+  'Group the power stage into a subsystem',
 ];
 
 /**

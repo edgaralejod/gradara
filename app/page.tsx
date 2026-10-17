@@ -1049,6 +1049,8 @@ function Workbench() {
   };
   const applyProposal = (entry: Extract<Entry, { kind: 'proposal' }>) => {
     const { proposal, baseRevision } = entry;
+    // A proposal is made for the top level; merging it into a subsystem sheet would misplace it.
+    if (topLevelOnly()) return false;
     const current = projectRef.current;
     if (current.revision !== baseRevision) {
       notify('The model changed since this proposal. Ask again.');
@@ -3915,6 +3917,7 @@ function Workbench() {
                   {isBusBlock(active.definition) && (
                     <BusSignalsPanel
                       block={active}
+                      view={project}
                       onCommit={(change) => commit(change)}
                     />
                   )}

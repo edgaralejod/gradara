@@ -1,7 +1,16 @@
 'use client';
 import { ArrowDown, ArrowUp, Minus, Plus, X } from 'lucide-react';
-import type { Block, Port, Project } from '@/lib/gradara/model';
 import {
+  domainColors,
+  domainTitle,
+  type Block,
+  type Domain,
+  type Port,
+  type Project,
+} from '@/lib/gradara/model';
+import {
+  BUS_DOMAINS,
+  busDomain,
   busPortCount,
   busPortsWithCount,
   ELEMENT_NAME,
@@ -11,6 +20,7 @@ import {
   renamedBusInput,
   selectedIndices,
   selectorPorts,
+  setBusDomain,
   widthOf,
   withBusPorts,
 } from '@/lib/gradara/buses';
@@ -19,15 +29,19 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /**
  * The Signals section for Mux, Demux, Bus Creator, and Bus Selector, as their
- * Simulink dialogs: how many signals a Mux joins or a Demux splits, the names a
- * Bus Creator gives, and the signals a Bus Selector picks. Every change is one
- * undoable edit; widths then follow the wiring (lib/gradara/buses.ts).
+ * Simulink dialogs: the kind of signal the bus carries (Real or Boolean), how many
+ * signals a Mux joins or a Demux splits, the names a Bus Creator gives, and the
+ * signals a Bus Selector picks. Every change is one undoable edit; widths then
+ * follow the wiring (lib/gradara/buses.ts).
  */
 export function BusSignalsPanel({
   block,
+  view,
   onCommit,
 }: {
   block: Block;
+  /** The open sheet: a wired bus block takes its type from its wires. */
+  view?: Project;
   onCommit: (change: (p: Project) => Project) => void;
 }) {
   const d = block.definition;
@@ -35,9 +49,17 @@ export function BusSignalsPanel({
   const outputs = d.ports.filter((p) => p.direction === 'output');
   const apply = (ports: Port[]) =>
     onCommit((p) => withBusPorts(p, block.id, ports));
+  const wired =
+    !!view &&
+    view.wires.some((w) => w.source === block.id || w.target === block.id);
   return (
     <div className="inspector-section bus-section">
       <div className="section-label">Signals</div>
+      <BusTypeSelect
+        value={busDomain(d)}
+        wired={wired}
+        onChange={(domain) => onCommit((p) => setBusDomain(p, block.id, domain))}
+      />
       {d.kind === 'mux' || d.kind === 'demux' ? (
         <CountPanel
           block={block}
@@ -50,6 +72,51 @@ export function BusSignalsPanel({
       ) : (
         <SelectorPanel block={block} onPorts={apply} />
       )}
+    </div>
+  );
+}
+
+/**
+ * The kind of signal a bus carries, Real or Boolean, chosen while the block has no
+ * wires; once wired, it follows its first wire (as a Goto or a subsystem port does).
+ */
+function BusTypeSelect({
+  value,
+  wired,
+  onChange,
+}: {
+  value: Domain;
+  wired: boolean;
+  onChange: (domain: Domain) => void;
+}) {
+  return (
+    <div className="field-row">
+      <span>Type</span>
+      <label className="tag-type-field">
+        <span
+          className="tag-type-swatch"
+          style={{ background: domainColors[value] }}
+          aria-hidden
+        />
+        <select
+          className="tag-type"
+          aria-label="Type"
+          value={value}
+          disabled={wired}
+          title={
+            wired
+              ? 'Set by its wires. Remove them to choose another type.'
+              : 'The kind of signal every port of this block carries.'
+          }
+          onChange={(e) => onChange(e.target.value as Domain)}
+        >
+          {BUS_DOMAINS.map((domain) => (
+            <option key={domain} value={domain}>
+              {domainTitle(domain)}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }

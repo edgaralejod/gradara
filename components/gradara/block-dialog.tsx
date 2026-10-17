@@ -344,7 +344,11 @@ export default function BlockDialog({
             )}
             {bus && onCommit && (
               <section className="block-dialog-signals">
-                <BusSignalsPanel block={block} onCommit={onCommit} />
+                <BusSignalsPanel
+                  block={block}
+                  view={view}
+                  onCommit={onCommit}
+                />
                 <p className="size-hint">
                   Changes to the signals apply at once, each as one undo step.
                 </p>

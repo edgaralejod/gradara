@@ -6,7 +6,7 @@ the bus blocks' equations are generated from the ports rather than taken from
 the document. `bus_problems` refuses a document whose widths disagree, with the
 same messages the editor shows.
 """
-from .models import Definition, Port, flatten_connects
+from .models import CAUSAL_DOMAINS, Definition, Port, flatten_connects
 
 BUS_KINDS = {'mux', 'demux', 'busCreator', 'busSelector'}
 
@@ -103,7 +103,7 @@ def bus_problems(diagram) -> list[dict]:
     for a, b, c, d in flatten_connects(diagram):
         source, target = port[(a, b)], port[(c, d)]
         connected.add((c, d))
-        if source.direction != 'output' or target.domain != 'signal':
+        if source.direction != 'output' or target.domain not in CAUSAL_DOMAINS:
             continue
         w, here = width(source), width(target)
         if w == here:
@@ -120,6 +120,12 @@ def bus_problems(diagram) -> list[dict]:
         if not is_bus_block(d):
             continue
         ins, outs = _inputs(d), _outputs(d)
+        kinds = {p.domain for p in d.ports}
+        if len(kinds) > 1:
+            problems.append(dict(blockId=block.id, portId=None,
+                                 message=f'{d.name} mixes Real and Boolean signals; a bus carries one kind.',
+                                 hint='Use one bus for Real signals and another for Boolean ones.'))
+            continue
         u = ins[0] if ins else None
         if d.kind == 'demux' and u is not None and (block.id, u.id) in connected:
             w, n = width(u), len(outs)

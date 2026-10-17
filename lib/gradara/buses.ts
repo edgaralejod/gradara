@@ -15,16 +15,30 @@
  * Every other port carries one signal. A bus that reaches one is a model error
  * (`busProblems`), reported with the block that would fix it.
  *
- * In Modelica a bus is an array connector (`RealOutput y[3]`); the bus blocks'
- * equations are generated from their ports here and, authoritatively, in
- * server/buses.py.
+ * A bus carries one kind of signal, Real or Boolean: the type of a bus block is
+ * the domain of its ports (`busDomain`), chosen in its properties while it has no
+ * wires and taken from the first wire otherwise, as a Goto or a subsystem port
+ * does. A Boolean Mux joins Boolean signals into a Boolean vector.
+ *
+ * In Modelica a bus is an array connector (`RealOutput y[3]`, `BooleanOutput
+ * y[3]`); the bus blocks' equations are generated from their ports here and,
+ * authoritatively, in server/buses.py.
  */
-import type { Block, Definition, Port, Project } from './model';
+import {
+  isCausal,
+  type Block,
+  type Definition,
+  type Domain,
+  type Port,
+  type Project,
+} from './model';
 import { netComponents } from './net';
 import { reconcileNets } from './net-registry';
 import { defaultBlockSize } from './block-design';
 
 export const BUS_KINDS = new Set(['mux', 'demux', 'busCreator', 'busSelector']);
+/** The kinds of signal a bus can carry. */
+export const BUS_DOMAINS: readonly Domain[] = ['signal', 'boolean'];
 /** Most inputs a Mux or Bus Creator takes, or outputs a Demux or Bus Selector gives. */
 export const MAX_BUS_PORTS = 32;
 export const MIN_BUS_PORTS = 2;
@@ -55,13 +69,18 @@ const port = (
   id: string,
   name: string,
   direction: 'input' | 'output',
+  domain: Domain = 'signal',
 ): Port => ({
   id,
   name,
   direction,
-  domain: 'signal',
+  domain,
   side: direction === 'input' ? 'left' : 'right',
 });
+
+/** The kind of signal a bus block carries: the domain of its ports (Real unless Boolean). */
+export const busDomain = (d: Pick<Definition, 'ports'>): Domain =>
+  d.ports[0]?.domain === 'boolean' ? 'boolean' : 'signal';
 
 /** How many signals a bus block joins or splits: its inputs (Mux, Bus Creator) or outputs. */
 export function busPortCount(d: Definition) {
@@ -71,26 +90,28 @@ export function busPortCount(d: Definition) {
 }
 
 /**
- * The ports of a bus block with `n` signal ports. Existing ports keep their IDs
- * (and so their wires); ports are added or removed at the end.
+ * The ports of a bus block with `n` signal ports, of the kind the block carries.
+ * Existing ports keep their IDs (and so their wires); ports are added or removed
+ * at the end.
  */
 export function busPortsWithCount(d: Definition, n: number): Port[] {
   n = Math.max(
     d.kind === 'busSelector' ? 1 : MIN_BUS_PORTS,
     Math.min(MAX_BUS_PORTS, Math.round(n)),
   );
+  const domain = busDomain(d);
   if (d.kind === 'mux')
     return [
       ...Array.from({ length: n }, (_, i) =>
-        port(`u${i + 1}`, String(i + 1), 'input'),
+        port(`u${i + 1}`, String(i + 1), 'input', domain),
       ),
-      port('y', 'y', 'output'),
+      port('y', 'y', 'output', domain),
     ];
   if (d.kind === 'demux')
     return [
-      port('u', 'u', 'input'),
+      port('u', 'u', 'input', domain),
       ...Array.from({ length: n }, (_, i) =>
-        port(`y${i + 1}`, String(i + 1), 'output'),
+        port(`y${i + 1}`, String(i + 1), 'output', domain),
       ),
     ];
   if (d.kind === 'busCreator') {
@@ -101,18 +122,19 @@ export function busPortsWithCount(d: Definition, n: number): Port[] {
       const id = `u${k}`,
         name = `signal${k}`;
       if (ids.has(id) || names.has(name)) continue;
-      kept.push(port(id, name, 'input'));
+      kept.push(port(id, name, 'input', domain));
       ids.add(id);
       names.add(name);
     }
-    return [...kept, outputs(d)[0] ?? port('y', 'bus', 'output')];
+    return [...kept, outputs(d)[0] ?? port('y', 'bus', 'output', domain)];
   }
   const kept = outputs(d).slice(0, n);
-  return [inputs(d)[0] ?? port('u', 'bus', 'input'), ...kept];
+  return [inputs(d)[0] ?? port('u', 'bus', 'input', domain), ...kept];
 }
 
 /** Bus Selector outputs for `names`, in that order; a name already selected keeps its port ID. */
 export function selectorPorts(d: Definition, names: string[]): Port[] {
+  const domain = busDomain(d);
   const byName = new Map(outputs(d).map((p) => [p.name, p]));
   const used = new Set<string>();
   const ids = new Set(outputs(d).map((p) => p.id));
@@ -127,9 +149,51 @@ export function selectorPorts(d: Definition, names: string[]): Port[] {
     if (used.has(name)) continue;
     used.add(name);
     const old = byName.get(name);
-    out.push(old ? { ...old } : port(freshId(), name, 'output'));
+    out.push(old ? { ...old } : port(freshId(), name, 'output', domain));
   }
-  return [inputs(d)[0] ?? port('u', 'bus', 'input'), ...out];
+  return [inputs(d)[0] ?? port('u', 'bus', 'input', domain), ...out];
+}
+
+/** Whether a block has a wire on it: a wired bus block takes its type from the wire. */
+const isWired = (project: Project, id: string) =>
+  project.wires.some((w) => w.source === id || w.target === id);
+
+/** A bus block's definition carrying `domain` on every port (and as its own domain). */
+export function withBusDomain(d: Definition, domain: Domain): Definition {
+  return {
+    ...d,
+    domain,
+    ports: d.ports.map((p) => ({ ...p, domain })),
+  };
+}
+
+/**
+ * Set the kind of signal a bus block carries, Real or Boolean; `project` itself
+ * when the block is not a bus block, already carries that kind, or has wires (it
+ * then follows its first wire, see boundary-adopt.ts).
+ */
+export function setBusDomain(
+  project: Project,
+  id: string,
+  domain: Domain,
+): Project {
+  const block = project.blocks.find((b) => b.id === id);
+  const d = block?.definition;
+  if (
+    !block ||
+    !d ||
+    !isBusBlock(d) ||
+    !BUS_DOMAINS.includes(domain) ||
+    busDomain(d) === domain ||
+    isWired(project, id)
+  )
+    return project;
+  return {
+    ...project,
+    blocks: project.blocks.map((b) =>
+      b.id === id ? { ...b, definition: withBusDomain(d, domain) } : b,
+    ),
+  };
 }
 
 /** Bus Creator inputs renamed: `name` for the input `portId`. */
@@ -375,7 +439,7 @@ export function propagateBuses(project: Project): Project {
       for (const boundary of sub.blocks) {
         if (!boundary.definition.boundary) continue;
         const inner = boundary.definition.ports[0];
-        if (!inner || inner.domain !== 'signal') continue;
+        if (!inner || !isCausal(inner.domain)) continue;
         let signal: Signal;
         if (boundary.definition.kind === 'inport') {
           const fed = instances
@@ -441,7 +505,7 @@ export function busProblems(project: Project): BusProblem[] {
     const i = key.lastIndexOf('.');
     const block = blocks.get(key.slice(0, i));
     const p = block?.definition.ports.find((q) => q.id === key.slice(i + 1));
-    if (!block || !p || p.direction !== 'input' || p.domain !== 'signal')
+    if (!block || !p || p.direction !== 'input' || !isCausal(p.domain))
       continue;
     const w = widthOf(driver),
       here = widthOf(p);
@@ -465,6 +529,16 @@ export function busProblems(project: Project): BusProblem[] {
   for (const block of project.blocks) {
     const def = block.definition;
     if (!isBusBlock(def)) continue;
+    const kind = busDomain(def);
+    const odd = def.ports.find((p) => p.domain !== kind);
+    if (odd)
+      out.push({
+        id: `bus-mixed-${block.id}`,
+        message: `${def.name} mixes Real and Boolean signals; a bus carries one kind.`,
+        blockIds: [block.id],
+        ports: [{ blockId: block.id, portId: odd.id }],
+        hint: 'Use one bus for Real signals and another for Boolean ones.',
+      });
     const u = inputs(def)[0];
     const connected = !!u && !!d.get(`${block.id}.${u.id}`);
     if (def.kind === 'demux' && connected) {

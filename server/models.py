@@ -30,8 +30,8 @@ class Port(BaseModel):
                 raise ValueError(f'Port {self.id} names {len(self.elements)} bus elements but carries {self.width or 1} signals.')
             if any(not e or len(e) > 200 for e in self.elements):
                 raise ValueError(f'Port {self.id} has an empty or overlong bus element name.')
-        if self.width is not None and self.domain != 'signal':
-            raise ValueError(f'Port {self.id}: only signal ports can carry a bus.')
+        if self.width is not None and self.domain not in CAUSAL_DOMAINS:
+            raise ValueError(f'Port {self.id}: only signal and Boolean ports can carry a bus.')
         return self
 
 class Parameter(BaseModel):

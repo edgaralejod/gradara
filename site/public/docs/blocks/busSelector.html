@@ -9,12 +9,12 @@
 <meta name="theme-color" content="#0a0e13"/>
 <link rel="canonical" href="https://gradara.app/docs/blocks/busSelector"/>
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
-<link rel="stylesheet" href="/assets/site.css"/>
-<link rel="stylesheet" href="/assets/block-faces.css"/>
-<link rel="stylesheet" href="/assets/docs.css"/>
-<link rel="stylesheet" href="/assets/examples/block-buses.css"/>
-<script src="/assets/site.js" defer=""></script>
-<script src="/assets/docs.js" defer=""></script></head>
+<link rel="stylesheet" href="/assets/site.css?v=f9a456c31b"/>
+<link rel="stylesheet" href="/assets/block-faces.css?v=9aa08a1f14"/>
+<link rel="stylesheet" href="/assets/docs.css?v=776a3e1084"/>
+<link rel="stylesheet" href="/assets/examples/block-buses.css?v=d139aafe7e"/>
+<script src="/assets/site.js?v=60fd02c070" defer=""></script>
+<script src="/assets/docs.js?v=9987c8746e" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
 <nav class="nav wrap docs-wrap" aria-label="Main"><a class="brand" href="/"><img src="/assets/icon.svg" alt="" width="28" height="28"/>Gradara</a><button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
@@ -36,7 +36,8 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Picks signals out of a bus by name. Under Signals in its properties it lists everything on the incoming bus; each signal you tick becomes an output, labeled with its name, in the order you choose.</p>
-<p>Selecting the name of a bus inside the bus (motor, when the bus holds motor.speed and motor.current) gives all of its signals as one vector.</p></section>
+<p>Selecting the name of a bus inside the bus (motor, when the bus holds motor.speed and motor.current) gives all of its signals as one vector.</p>
+<p>A Bus Selector carries the kind of signal of its bus, Real or Boolean: choose the type under Signals while it has no wires, or let the first wire set it.</p></section>
 <section class="doc-section">
 <h2 id="example"><a class="anchor" href="#example">Example</a></h2>
 <p class="example-title"><strong>Signal buses</strong> Named signals bundled into a bus with a Bus Creator, and picked out by name with a Bus Selector.</p>

@@ -1,0 +1,502 @@
+{
+  "version": 1,
+  "name": "Example: Boolean bus",
+  "exampleId": "block-boolean-bus",
+  "description": "Two Boolean pulse trains, the gate commands of a half bridge, are bundled by a Boolean Bus Creator into one bus named by signal (high, low) and carried across the sheet on a single heavy Boolean wire. The Bus Selector picks low by name and the NOT inverts it; AND checks that both gates are never on together, so it stays false. A bus carries one kind of signal: set the type under Signals before wiring a bus block, or wire it and it takes the kind of the first wire. Results shows a Boolean bus element by element as 0 or 1.",
+  "duration": 2,
+  "revision": 0,
+  "blocks": [
+    {
+      "id": "high",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "High gate",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 50,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 1,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "low",
+      "definition": {
+        "kind": "booleanPulse",
+        "name": "Low gate",
+        "description": "Periodic true pulses.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "⎍⎍",
+        "ports": [
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "width",
+            "name": "Width",
+            "value": 50,
+            "unit": "%",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "period",
+            "name": "Period",
+            "value": 1,
+            "unit": "s",
+            "min": 0
+          },
+          {
+            "id": "startTime",
+            "name": "Start time",
+            "value": 0.5,
+            "unit": "s"
+          }
+        ],
+        "equations": "// Blocks.Sources.BooleanPulse from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "clock",
+          "square",
+          "pwm"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Sources.BooleanPulse",
+          "modifiers": {
+            "width": "width",
+            "period": "period",
+            "startTime": "startTime"
+          }
+        }
+      },
+      "position": {
+        "x": 40,
+        "y": 176
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      }
+    },
+    {
+      "id": "gates",
+      "definition": {
+        "kind": "busCreator",
+        "name": "Gates",
+        "symbol": "bus",
+        "domain": "boolean",
+        "description": "Bundles named signals into one bus wire. Each input is named in its properties; a bus can carry another bus.",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "high",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "u2",
+            "name": "low",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "bus",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right",
+            "unit": "",
+            "width": 2,
+            "elements": [
+              "high",
+              "low"
+            ]
+          }
+        ],
+        "equations": "y = {u1, u2};",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "routing",
+          "bus",
+          "bundle",
+          "named",
+          "signals"
+        ]
+      },
+      "position": {
+        "x": 248,
+        "y": 104
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      }
+    },
+    {
+      "id": "pick",
+      "definition": {
+        "kind": "busSelector",
+        "name": "Pick",
+        "symbol": "select",
+        "domain": "boolean",
+        "description": "Picks signals out of a bus by name. Choose the signals in its properties; each becomes an output.",
+        "ports": [
+          {
+            "id": "u",
+            "name": "bus",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left",
+            "width": 2,
+            "elements": [
+              "high",
+              "low"
+            ]
+          },
+          {
+            "id": "y1",
+            "name": "low",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          },
+          {
+            "id": "y2",
+            "name": "high",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "equations": "y1 = u[2];\ny2 = u[1];",
+        "parameters": [],
+        "declarations": "",
+        "keywords": [
+          "routing",
+          "bus",
+          "select",
+          "named",
+          "signals"
+        ]
+      },
+      "position": {
+        "x": 544,
+        "y": 104
+      },
+      "size": {
+        "width": 128,
+        "height": 96
+      },
+      "logged": [
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "id": "inv",
+      "definition": {
+        "kind": "logicNot",
+        "name": "NOT low",
+        "description": "Boolean negation.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "¬",
+        "ports": [
+          {
+            "id": "u",
+            "name": "u",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "left"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.Not from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "invert"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.Not"
+        }
+      },
+      "position": {
+        "x": 776,
+        "y": 64
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "logged": [
+        "y"
+      ]
+    },
+    {
+      "id": "both",
+      "definition": {
+        "kind": "logicAnd",
+        "name": "Both on",
+        "description": "Boolean AND of two inputs.",
+        "domain": "boolean",
+        "category": "logic",
+        "symbol": "&",
+        "ports": [
+          {
+            "id": "u1",
+            "name": "u1",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "top"
+          },
+          {
+            "id": "u2",
+            "name": "u2",
+            "direction": "input",
+            "domain": "boolean",
+            "side": "bottom"
+          },
+          {
+            "id": "y",
+            "name": "y",
+            "direction": "output",
+            "domain": "boolean",
+            "side": "right"
+          }
+        ],
+        "parameters": [],
+        "equations": "// Blocks.Logical.And from the Modelica Standard Library 4.1.0",
+        "keywords": [
+          "gate",
+          "logic",
+          "boolean"
+        ],
+        "modelica": {
+          "class": "Modelica.Blocks.Logical.And"
+        }
+      },
+      "position": {
+        "x": 776,
+        "y": 192
+      },
+      "size": {
+        "width": 80,
+        "height": 64
+      },
+      "labelOffset": {
+        "x": 76,
+        "y": -46
+      },
+      "logged": [
+        "y"
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "id": "id0001",
+      "source": "high",
+      "sourceHandle": "y",
+      "target": "gates",
+      "targetHandle": "u1"
+    },
+    {
+      "id": "id0002",
+      "source": "low",
+      "sourceHandle": "y",
+      "target": "gates",
+      "targetHandle": "u2"
+    },
+    {
+      "id": "id0003",
+      "source": "gates",
+      "sourceHandle": "y",
+      "target": "pick",
+      "targetHandle": "u"
+    },
+    {
+      "id": "id0004",
+      "source": "j_id0008",
+      "sourceHandle": "node",
+      "target": "inv",
+      "targetHandle": "u",
+      "waypoints": [
+        {
+          "x": 728,
+          "y": 136
+        },
+        {
+          "x": 728,
+          "y": 96
+        }
+      ]
+    },
+    {
+      "id": "id0005",
+      "source": "pick",
+      "sourceHandle": "y2",
+      "target": "both",
+      "targetHandle": "u1"
+    },
+    {
+      "id": "id0006",
+      "source": "j_id0008",
+      "sourceHandle": "node",
+      "target": "both",
+      "targetHandle": "u2",
+      "waypoints": [
+        {
+          "x": 688,
+          "y": 272
+        },
+        {
+          "x": 816,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "id": "w_id0009",
+      "source": "pick",
+      "sourceHandle": "y1",
+      "target": "j_id0008",
+      "targetHandle": "node",
+      "waypoints": []
+    }
+  ],
+  "junctions": [
+    {
+      "id": "j_id0008",
+      "domain": "boolean",
+      "position": {
+        "x": 688,
+        "y": 136
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "net_id000a",
+      "anchor": "high.y",
+      "wireIds": [
+        "id0001"
+      ]
+    },
+    {
+      "id": "net_id000b",
+      "anchor": "low.y",
+      "wireIds": [
+        "id0002"
+      ]
+    },
+    {
+      "id": "net_id000c",
+      "anchor": "gates.y",
+      "wireIds": [
+        "id0003"
+      ]
+    },
+    {
+      "id": "net_id000d",
+      "anchor": "pick.y1",
+      "wireIds": [
+        "id0004",
+        "id0006",
+        "w_id0009"
+      ]
+    },
+    {
+      "id": "net_id000e",
+      "anchor": "pick.y2",
+      "wireIds": [
+        "id0005"
+      ]
+    }
+  ],
+  "annotations": [],
+  "plots": [
+    {
+      "id": "plot1",
+      "label": "Gates",
+      "series": [
+        "pick.y2",
+        "pick.y1",
+        "inv.y",
+        "both.y"
+      ],
+      "labels": [
+        "high",
+        "low",
+        "NOT low",
+        "both on"
+      ]
+    }
+  ]
+}

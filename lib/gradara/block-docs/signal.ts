@@ -596,6 +596,7 @@ export const docs: Record<string, BlockDoc> = {
     description: [
       'Joins several signals into one vector, in order, and carries it on one wire. The wire is drawn heavy so a bundle stands out from a single signal.',
       'Set the number of inputs (2 to 32) under Signals in the block’s properties; the bar grows to fit. An input may itself be a vector, which is added in place, so Muxes can be chained. Split the vector again with a Demux, or pass it through subsystem ports unchanged.',
+      'A Mux carries one kind of signal, Real or Boolean. Choose the type under Signals while the block has no wires, or wire it: it takes the kind of the first wire you connect. A Boolean Mux joins Boolean signals (gate commands, flags) into one Boolean vector, drawn in the Boolean color.',
     ],
     ports: {
       u1: 'First signal (or vector).',
@@ -608,7 +609,7 @@ export const docs: Record<string, BlockDoc> = {
     ],
     limitations: [
       'A vector wire can go only to a Demux, a Bus Selector, a Bus Creator, another Mux, or a subsystem port. Other blocks take one signal each and report an error; element-wise math on vectors is not available yet.',
-      'Vectors are signals only, not Boolean or physical connections.',
+      'A vector is all Real or all Boolean; a Mux cannot mix the two. Physical connections travel on a Physical bus instead.',
       'Its signals have no names: in results they are numbered, as Mux.y[1], Mux.y[2]. Use a Bus Creator to name them.',
     ],
     tips: [
@@ -621,6 +622,7 @@ export const docs: Record<string, BlockDoc> = {
     description: [
       'Splits a vector into its signals, in order: the counterpart of Mux.',
       'Set the number of outputs (2 to 32) under Signals in the block’s properties. The input is cut into that many equal parts, so with 6 signals and 2 outputs each output is itself a vector of 3. Match incoming sets the outputs to one per signal.',
+      'A Demux splits a vector of the kind it carries, Real or Boolean: choose the type under Signals while it has no wires, or let the first wire set it.',
     ],
     ports: {
       u: 'A vector, usually from a Mux.',
@@ -733,6 +735,7 @@ export const docs: Record<string, BlockDoc> = {
     description: [
       'Bundles signals into a bus: one wire that carries them all, each under a name. The names are the input labels on the block; edit them, and add or remove inputs, under Signals in its properties.',
       'An input may itself be a bus. Its signals keep their names below the input’s name, so a bus named motor holding speed becomes motor.speed. Pick signals out again with a Bus Selector, anywhere downstream and through any number of subsystem ports.',
+      'A bus carries one kind of signal, Real or Boolean. Choose the type under Signals while the block has no wires, or wire it: it takes the kind of the first wire you connect. A Boolean Bus Creator bundles named Boolean signals, such as the gate commands of a converter.',
     ],
     ports: {
       u1: 'The signal named by this input (signal1 by default), or a bus.',
@@ -743,6 +746,7 @@ export const docs: Record<string, BlockDoc> = {
     limitations: [
       'Names are a letter, then letters, digits, or _, and must differ within one block.',
       'A bus is a vector of signals underneath: blocks other than Demux, Bus Selector, Mux, Bus Creator, and subsystem ports take one signal and report an error.',
+      'A bus is all Real or all Boolean; to carry both kinds, use two buses.',
     ],
     tips: [
       'Logging the bus wire records every signal on it under its name, such as Bus.speed.',
@@ -754,6 +758,7 @@ export const docs: Record<string, BlockDoc> = {
     description: [
       'Picks signals out of a bus by name. Under Signals in its properties it lists everything on the incoming bus; each signal you tick becomes an output, labeled with its name, in the order you choose.',
       'Selecting the name of a bus inside the bus (motor, when the bus holds motor.speed and motor.current) gives all of its signals as one vector.',
+      'A Bus Selector carries the kind of signal of its bus, Real or Boolean: choose the type under Signals while it has no wires, or let the first wire set it.',
     ],
     ports: {
       u: 'A bus, from a Bus Creator (or a vector from a Mux, whose signals are named signal1, signal2, …).',

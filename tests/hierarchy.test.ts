@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import type { Project } from '../lib/gradara/model';
 import { netComponents } from '../lib/gradara/net';
+import { portPoint } from '../lib/gradara/ports';
 import { normalizeProject } from '../lib/gradara/normalize-project';
 import {
   breadcrumb,
   groupIntoSubsystem,
   instancePorts,
   makeUnique,
+  placeBoundaryPorts,
   scopeView,
   subsystemsOf,
   syncInstances,
@@ -119,4 +121,31 @@ void test('a promoted parameter appears on every instance, which keeps its own v
   assert.equal(instance().definition.parameters[0].value, 1.5);
   doc = syncInstances(demoteParameter(doc, grouped.subsystemId, kp.id));
   assert.deepEqual(instance().definition.parameters, []);
+});
+
+void test('placeBoundaryPorts puts every pill in line with its port and leaves a placed sheet alone', () => {
+  const grouped = groupIntoSubsystem(example('dc'), ['drive', 'isens', 'motor'], 'Power')!;
+  const sheet = grouped.project.subsystems!.find((s) => s.id === grouped.subsystemId)!;
+  const scattered = {
+    ...sheet,
+    blocks: sheet.blocks.map((b) =>
+      b.definition.boundary ? { ...b, position: { x: -999, y: -999 } } : b,
+    ),
+    wires: sheet.wires.map((w) => ({ ...w, waypoints: [{ x: 1, y: 1 }] })),
+  };
+  const placed = placeBoundaryPorts(scattered);
+  for (const pill of placed.blocks.filter((b) => b.definition.boundary)) {
+    const wire = placed.wires.find((w) => w.source === pill.id || w.target === pill.id)!;
+    const [otherId, handle] =
+      wire.source === pill.id ? [wire.target, wire.targetHandle] : [wire.source, wire.sourceHandle];
+    const at = portPoint(placed.blocks.find((b) => b.id === otherId)!, handle)!;
+    const own = portPoint(pill, pill.definition.ports[0].id)!;
+    if (at.side === 'left' || at.side === 'right') assert.equal(own.y, at.y);
+    else assert.equal(pill.position.x + pill.size!.width / 2, at.x);
+    assert.equal(wire.waypoints, undefined); // the router redraws the pill's wire
+  }
+  // A placed sheet is left alone.
+  assert.equal(placeBoundaryPorts(placed), placed);
+  // Blocks that are not pills, and wires that do not touch one, are the same objects.
+  assert.ok(scattered.blocks.filter((b) => !b.definition.boundary).every((b) => placed.blocks.includes(b)));
 });

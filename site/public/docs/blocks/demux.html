@@ -9,12 +9,12 @@
 <meta name="theme-color" content="#0a0e13"/>
 <link rel="canonical" href="https://gradara.app/docs/blocks/demux"/>
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
-<link rel="stylesheet" href="/assets/site.css"/>
-<link rel="stylesheet" href="/assets/block-faces.css"/>
-<link rel="stylesheet" href="/assets/docs.css"/>
-<link rel="stylesheet" href="/assets/examples/block-mux-demux.css"/>
-<script src="/assets/site.js" defer=""></script>
-<script src="/assets/docs.js" defer=""></script></head>
+<link rel="stylesheet" href="/assets/site.css?v=f9a456c31b"/>
+<link rel="stylesheet" href="/assets/block-faces.css?v=9aa08a1f14"/>
+<link rel="stylesheet" href="/assets/docs.css?v=776a3e1084"/>
+<link rel="stylesheet" href="/assets/examples/block-mux-demux.css?v=7bd2bd3563"/>
+<script src="/assets/site.js?v=60fd02c070" defer=""></script>
+<script src="/assets/docs.js?v=9987c8746e" defer=""></script></head>
 <body class="docs"><a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
 <nav class="nav wrap docs-wrap" aria-label="Main"><a class="brand" href="/"><img src="/assets/icon.svg" alt="" width="28" height="28"/>Gradara</a><button class="nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menu</button>
@@ -36,7 +36,8 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Splits a vector into its signals, in order: the counterpart of Mux.</p>
-<p>Set the number of outputs (2 to 32) under Signals in the block’s properties. The input is cut into that many equal parts, so with 6 signals and 2 outputs each output is itself a vector of 3. Match incoming sets the outputs to one per signal.</p></section>
+<p>Set the number of outputs (2 to 32) under Signals in the block’s properties. The input is cut into that many equal parts, so with 6 signals and 2 outputs each output is itself a vector of 3. Match incoming sets the outputs to one per signal.</p>
+<p>A Demux splits a vector of the kind it carries, Real or Boolean: choose the type under Signals while it has no wires, or let the first wire set it.</p></section>
 <section class="doc-section">
 <h2 id="example"><a class="anchor" href="#example">Example</a></h2>
 <p class="example-title"><strong>Mux and Demux</strong> Three signals carried across the sheet on one vector wire, then split apart again.</p>

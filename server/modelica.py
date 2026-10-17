@@ -263,7 +263,9 @@ def _idle_wrapper(ref: str, ports) -> str:
             kind = 'Boolean' if port.domain == 'boolean' else 'Real'
             lines.append(f'  Modelica.Blocks.Interfaces.{kind}{"Input" if port.direction == "input" else "Output"} {port.id}{array_suffix(port)};')
             if port.direction == 'output':
-                zero = 'false' if kind == 'Boolean' else f'fill(0, {port.width})' if port.width else '0'
+                zero = 'false' if kind == 'Boolean' else '0'
+                if port.width:
+                    zero = f'fill({zero}, {port.width})'
                 equations.append(f'  {port.id} = {zero};')
     return '\n'.join(lines + (['equation'] + equations if equations else []) + [f'end {idle_class(ref, ports)};'])
 

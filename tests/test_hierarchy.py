@@ -130,3 +130,47 @@ def test_grouped_model_simulates_like_the_flat_one():
     a, b = asyncio.run(both())
     speed = lambda r: next(o for o in r['series'] if o['key'] == 'sensor.w')['values'][-1]
     assert speed(b) == pytest.approx(speed(a), rel=1e-6)
+
+
+def connectivity(project: Project) -> dict:
+    """Every sheet's connections with blocks named by ID and subsystem ports by name, so two
+    documents grouped by different tools (different port and definition IDs) can be compared."""
+    from server.models import flatten_connects
+
+    def label(sheet, block_id, port_id):
+        block = next(b for b in sheet.blocks if b.id == block_id)
+        if block.definition.boundary is not None:
+            return ('port', block.definition.name)
+        if block.definition.subsystem is not None:
+            port = next(p for p in block.definition.ports if p.id == port_id)
+            return (block.definition.name, port.name)
+        return (block_id, port_id)
+
+    sheets = {'top': project, **{s.name: s for s in project.subsystems or []}}
+    return {name: sorted(sorted({label(sheet, a, ap), label(sheet, b, bp)}) for a, ap, b, bp in flatten_connects(sheet))
+            for name, sheet in sheets.items()}
+
+
+def test_server_grouping_matches_the_workbench():
+    """`server/grouping.py` (the AI's group_into_subsystem) builds what ⌘G built in the fixture."""
+    from pathlib import Path
+    from server.grouping import group
+    flat = Project.model_validate_json((Path(__file__).parent.parent/'models'/'examples'/'dc.json').read_text(encoding='utf-8'))
+    workbench = Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
+    staged, power = group(flat, ['drive', 'isens', 'motor'], 'power', 'Power stage')
+    grouped, _ = group(staged, ['controller', power], 'drivetrain', 'Drivetrain')
+    validate_simulation(grouped)
+    assert connectivity(grouped) == connectivity(workbench)
+    # Same ports in the same order, same inner nets, same junctions left outside.
+    ports = lambda p, name: [(q.name, q.direction, q.domain) for b in p.blocks for q in b.definition.ports
+                             if b.definition.name == name]
+    assert ports(grouped, 'Drivetrain') == ports(workbench, 'Drivetrain')
+    nets = lambda p, name: sorted((n.id, n.name, len(n.wireIds)) for s in p.subsystems if s.name == name for n in s.nets)
+    for name in ('Power stage', 'Drivetrain'):
+        assert nets(grouped, name) == nets(workbench, name)
+    # The workbench's router added two routing taps to the shaft net; the original junctions stay on top.
+    assert {j.id for j in grouped.junctions} == {'j_id000c', 'j_id000e'} <= {j.id for j in workbench.junctions}
+    assert not any(s.junctions for s in grouped.subsystems)
+    # The emitted Modelica nests the same way.
+    source = emit_project(grouped)
+    assert source.count('\nmodel Sub_') == 2 and 'Sub_s_power b_power' in source and 'Sub_s_drivetrain b_drivetrain' in source

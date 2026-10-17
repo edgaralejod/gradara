@@ -6,6 +6,7 @@ import { connectionError, endpointPort, flattenWires, isTap } from './net';
 import { emptySelection, extractSelection, pasteSelection } from './selection';
 import { adoptBoundaryDomain } from './boundary-adopt';
 import { setTag, setTagDomain } from './tag-edit';
+import { setBusDomain } from './buses';
 import { signature as settingsSignature } from './solver';
 function sheetSemantics(
   p: Pick<Project, 'blocks' | 'wires' | 'junctions' | 'nets'>,
@@ -277,6 +278,8 @@ export type BlockEdits = {
   tag?: string;
   /** What an unwired tag block carries (tag-edit.ts `setTagDomain`). */
   tagDomain?: Domain;
+  /** The kind of signal an unwired bus block carries (buses.ts `setBusDomain`). */
+  busDomain?: Domain;
   parameters?: Record<string, number>;
   equations?: string;
   declarations?: string;
@@ -285,6 +288,7 @@ export type BlockEdits = {
 /** Apply one dialog session; returns `p` itself when nothing changed. */
 export function applyBlockEdits(p: Project, id: string, edits: BlockEdits) {
   if (edits.tagDomain !== undefined) p = setTagDomain(p, id, edits.tagDomain);
+  if (edits.busDomain !== undefined) p = setBusDomain(p, id, edits.busDomain);
   if (edits.tag !== undefined) p = setTag(p, id, edits.tag);
   const block = p.blocks.find((b) => b.id === id);
   if (!block) return p;

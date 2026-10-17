@@ -940,6 +940,29 @@ ${[...faceRules.keys()]
 
 for (const [path, text] of exampleCss) files.set(path, text);
 
+// Hosting caches /assets/ for a day (site/firebase.json) while pages are always
+// revalidated. Page classes are hashed from their styles, so a release that adds
+// classes to block-faces.css gives a visitor with the old stylesheet cached a page
+// whose block drawing has no rules and renders blank. Version every stylesheet and
+// script a page links by content, so the page always asks for the file it was built with.
+const versioned = (href: string) => {
+  const path = `site/public${href}`;
+  const text =
+    files.get(path) ?? (existsSync(path) ? readFileSync(path, 'utf8') : '');
+  return text
+    ? `${href}?v=${createHash('sha256').update(text).digest('hex').slice(0, 10)}`
+    : href;
+};
+for (const [path, text] of files)
+  if (path.endsWith('.html'))
+    files.set(
+      path,
+      text.replace(
+        /(href|src)="(\/assets\/[^"?]+\.(?:css|js))"/g,
+        (_, attr: string, href: string) => `${attr}="${versioned(href)}"`,
+      ),
+    );
+
 if (check) {
   const stale = [...files].filter(
     ([path, text]) => !existsSync(path) || readFileSync(path, 'utf8') !== text,
