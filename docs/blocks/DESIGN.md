@@ -33,6 +33,10 @@ A block is drawn as an unboxed schematic symbol when engineers already draw it t
 
 A pictorial glyph (`circuitGlyphs`) is drawn once in a small design box with an anchor for every port. The block draws it at design size, centered, and runs a lead from each grid port to its anchor, so the leads are straight at the standard size and only lengthen when the block is enlarged; the symbol never stretches. Anchors of a side's single port sit on the glyph's center line. Signal and Boolean leads are dashed in their domain color. `tests/circuit-symbols.test.ts` checks that every lead starts on its port and is straight at the standard size. The older primitives (resistor, capacitor, inductor, diode, DC source, ideal switch, voltage and current sensor) still stretch their SVG with non-scaling strokes.
 
+## Drawn symbols
+
+A block can carry its own drawing (`Definition.glyph`, `lib/gradara/glyph.ts`), made in the symbol editor or drawn by the AI, for an AI block whose box says less than a schematic would, or for any block the user wants drawn differently. It follows the pictorial contract above: shapes in a design box, an anchor per port, drawn at design size and centered with leads from the grid ports, so rotation, flip, upright text, the grid, and routing behave as for the built-in symbols, and every stroke uses the shared 1.6 stroke in the block's domain color. `outline` keeps the rectangle (a boxed drawing, with terminal names by default) or drops it (an unboxed schematic symbol, without names by default). The body defaults to the drawing plus a lead's room on each side with terminals, in size steps, unless the drawing sets one. Editing starts from the block's current look (`startingGlyph` in `lib/gradara/symbol-start.ts`): a built-in schematic symbol as its path, a box with its symbol text. Subsystems, their ports, tags, and buses keep their faces, which show what they hold. A drawing never changes the emitted model.
+
 ## Symbols and captions
 
 - `BlockFace` is the sole body renderer for the canvas, library, and catalog. `BlockSymbol` supplies only internal notation. Do not recreate outlines in a library-only component.
@@ -53,7 +57,7 @@ Retain the shared `domainColors` in `lib/gradara/model.ts`: signal blue, Boolean
 
 Rendering must use the `portPlacement` geometry also used by `portPoint`. Do not position a visual terminal independently from its hit target or routing endpoint. Keep `data-block-id`, `data-port-id`, accessible names, and native pointer ownership intact.
 
-**Direction.** Every library block reads left to right: inputs on the left (or on the top or bottom, for a control, a measurement or a second operand), outputs on the right (or on the top or bottom, for a measurement out of a physical part). No library block has an input on its right or an output on its left; `tests/orientation.test.ts` holds the library and every template to that. A block on a feedback path is flipped instead (`Block.flip`, ⌘/Ctrl + I), which mirrors it whole.
+**Direction.** Every library block reads left to right: inputs on the left (or on the top or bottom, for a control, a measurement or a second operand), outputs on the right (or on the top or bottom, for a measurement out of a physical part). No library block has an input on its right or an output on its left; `tests/orientation.test.ts` holds the library and every template to that. A block on a feedback path is flipped instead (`Block.flip`, ⌘/Ctrl + I), which mirrors it whole. A block whose look its user edited may place a signal port on any side; the symbol editor notes an input on the right or an output on the left and suggests flipping instead. Physical terminals go on any side.
 
 ## Rotation, flip and upright text
 
