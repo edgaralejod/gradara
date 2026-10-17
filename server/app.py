@@ -456,6 +456,29 @@ async def preview_run_explanation(request: ExplainRequest):
 async def generate(request:GenerateRequest):
     return await start_job('component',lambda i:generate_component(request.prompt,request.existing,i,request.blockType))
 
+from .symbol_agent import SymbolRequest, draw_symbol
+
+
+@app.post('/api/components/symbol')
+async def draw_block_symbol(request: SymbolRequest):
+    # Priced and limited like creating or refining a block: the same `component` job kind.
+    return await start_job('component', lambda i: draw_symbol(request, i, lambda message: JOBS[i].update(progress=message)))
+
+
+class LibrarySave(BaseModel):
+    definition: Definition
+    replaces: str | None = Field(default=None, pattern=r'^ai_[0-9a-f]{64}$')
+
+
+@app.post('/api/components/library')
+async def save_to_component_library(request: LibrarySave):
+    """Save an AI block's edited look to Library → AI blocks, replacing the entry it came from."""
+    from .component_library import replace_component
+    try:
+        return replace_component(PROJECT_DIR, request.definition, request.replaces)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
 from .models import ExportRequest
 from .exporter import export_controller
 from .paths import EXPORTS

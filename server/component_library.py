@@ -24,6 +24,28 @@ def save_component(directory: Path, definition: Definition, checked: bool = True
     return entry
 
 
+PRESENTATION = ('glyph', 'symbol', 'description', 'name', 'category', 'keywords')
+
+
+def _behavior(content: dict) -> dict:
+    """What a library check vouches for: everything but how the block looks and is named."""
+    ports = [{k: v for k, v in p.items() if k not in ('side', 'offset', 'name')} for p in content.get('ports', [])]
+    return {k: v for k, v in content.items() if k not in PRESENTATION} | {'ports': ports}
+
+
+def replace_component(directory: Path, definition: Definition, replaces: str | None = None):
+    """Save `definition` as an entry and remove the entry `replaces`, keeping its compiler check
+    when only the look changed. Entries are content-addressed, so a new look is a new entry."""
+    old_path = directory/'components'/f'{replaces}.json' if replaces else None
+    old = json.loads(old_path.read_text(encoding='utf-8')) if old_path and old_path.exists() else None
+    content = definition.model_dump(exclude_none=True)
+    checked = bool(old and old.get('checked') and _behavior(old['definition']) == _behavior(content))
+    entry = save_component(directory, definition, checked=checked)
+    if old_path is not None and old is not None and old['id'] != entry['id']:
+        old_path.unlink()
+    return entry
+
+
 def list_components(directory: Path):
     # Recover existing user-authored blocks once, without claiming a new compiler check.
     marker = directory/'components'/'.imported-models'
