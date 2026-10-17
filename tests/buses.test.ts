@@ -242,3 +242,96 @@ void test('bus block equations follow their ports', () => {
   const mux = definitionFor('mux')!;
   assert.equal(busEquations(mux), 'y = {u1, u2, u3};');
 });
+
+// A bus carries one kind of signal, Real or Boolean: the type of a bus block is the
+// domain of its ports, chosen while it has no wires and taken from the first wire otherwise.
+
+void test('a bus block carries Real signals until it is told otherwise', async () => {
+  const { busDomain, setBusDomain } = await import('../lib/gradara/buses');
+  const project = doc([block('m', 'mux'), block('k', 'booleanConstant')], []);
+  assert.equal(busDomain(project.blocks[0].definition), 'signal');
+  const typed = setBusDomain(project, 'm', 'boolean');
+  const mux = typed.blocks.find((b) => b.id === 'm')!.definition;
+  assert.equal(busDomain(mux), 'boolean');
+  assert.ok(mux.ports.every((p) => p.domain === 'boolean'));
+  assert.equal(mux.domain, 'boolean');
+  // Adding inputs or choosing selector signals keeps the kind.
+  assert.ok(busPortsWithCount(mux, 4).every((p) => p.domain === 'boolean'));
+  const selector = setBusDomain(
+    doc([block('s', 'busSelector')], []),
+    's',
+    'boolean',
+  ).blocks[0].definition;
+  assert.ok(
+    selectorPorts(selector, ['a', 'b']).every((p) => p.domain === 'boolean'),
+  );
+  // Only Real or Boolean; a block that is not a bus block is left alone.
+  assert.equal(setBusDomain(project, 'm', 'electrical'), project);
+  assert.equal(setBusDomain(project, 'k', 'boolean'), project);
+});
+
+void test('a wired bus block keeps its kind; an unwired one takes it from the first wire', async () => {
+  const { busDomain, setBusDomain } = await import('../lib/gradara/buses');
+  const { linkEnds } = await import('../lib/gradara/project');
+  const project = doc([block('k', 'booleanConstant'), block('m', 'mux')], []);
+  const wired = linkEnds(project, { id: 'k', handle: 'y' }, { id: 'm', handle: 'u1' });
+  const mux = wired.blocks.find((b) => b.id === 'm')!.definition;
+  assert.equal(busDomain(mux), 'boolean', 'adopted from the Boolean source');
+  assert.equal(wired.wires.length, 1);
+  assert.equal(setBusDomain(wired, 'm', 'signal'), wired, 'set by its wire now');
+  // A Real source then refuses, as any Real-to-Boolean connection does.
+  assert.throws(() =>
+    linkEnds(
+      { ...wired, blocks: [...wired.blocks, block('c', 'constant')] },
+      { id: 'c', handle: 'y' },
+      { id: 'm', handle: 'u2' },
+    ),
+  );
+});
+
+void test('a Boolean bus propagates its width and splits again', async () => {
+  const { busDomain, setBusDomain } = await import('../lib/gradara/buses');
+  let project = doc(
+    [block('a', 'booleanConstant'), block('b', 'booleanStep'), block('m', 'mux'), block('d', 'demux'), block('n', 'logicNot')],
+    [],
+  );
+  project = setBusDomain(project, 'm', 'boolean');
+  project = setBusDomain(project, 'd', 'boolean');
+  project = withBusPorts(project, 'm', busPortsWithCount(portOfBlock(project, 'm'), 2));
+  project = withBusPorts(project, 'd', busPortsWithCount(portOfBlock(project, 'd'), 2));
+  project = {
+    ...project,
+    wires: [
+      wire('a', 'y', 'm', 'u1'),
+      wire('b', 'y', 'm', 'u2'),
+      wire('m', 'y', 'd', 'u'),
+      wire('d', 'y1', 'n', 'u'),
+    ],
+  };
+  const out = propagateBuses(project);
+  assert.equal(portOf(out, 'm', 'y').width, 2);
+  assert.equal(portOf(out, 'd', 'u').width, 2);
+  assert.equal(portOf(out, 'd', 'y1').width, undefined);
+  assert.equal(busDomain(portOfBlock(out, 'd')), 'boolean');
+  assert.deepEqual(busProblems(out), []);
+  // Through a subsystem boundary too.
+  const grouped = syncInstances(groupIntoSubsystem(out, ['m'])!.project);
+  const inside = grouped.subsystems![0];
+  const pill = inside.blocks.find((b) => b.definition.kind === 'outport')!;
+  assert.equal(pill.definition.ports[0].domain, 'boolean');
+  assert.equal(propagateBuses(grouped).subsystems![0].blocks.find((b) => b.id === pill.id)!.definition.ports[0].width, 2);
+  assert.deepEqual(busProblems(propagateBuses(grouped)), []);
+});
+
+void test('a bus block mixing Real and Boolean ports is reported', () => {
+  const mux = block('m', 'mux');
+  mux.definition.ports = mux.definition.ports.map((p) =>
+    p.id === 'u2' ? { ...p, domain: 'boolean' } : p,
+  );
+  const [problem] = busProblems(doc([mux], []));
+  assert.match(problem.message, /mixes Real and Boolean/);
+  assert.deepEqual(problem.ports, [{ blockId: 'm', portId: 'u2' }]);
+});
+
+const portOfBlock = (p: Project, id: string) =>
+  p.blocks.find((b) => b.id === id)!.definition;

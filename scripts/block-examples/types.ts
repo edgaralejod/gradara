@@ -50,6 +50,8 @@ export type BlockOptions = {
    * input names, or the names a Bus Selector picks.
    */
   signals?: number | string[];
+  /** Bus blocks: the kind of signal the bus carries (Real unless given). */
+  type?: 'signal' | 'boolean';
   /** A Physical bus: its elements, as [name, physical type] pairs. */
   elements?: [string, Domain][];
 };

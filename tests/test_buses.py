@@ -76,8 +76,55 @@ def test_stale_widths_are_refused():
 def test_elements_must_match_the_width():
     with pytest.raises(ValueError, match='names 2 bus elements but carries 3'):
         port('y', 'output', 3, ['a', 'b'])
-    with pytest.raises(ValueError, match='only signal ports'):
-        Port(id='y', name='y', direction='output', domain='boolean', width=2)
+    with pytest.raises(ValueError, match='only signal and Boolean ports'):
+        Port(id='p', name='p', direction='physical', domain='electrical', width=2)
+    # A Boolean port carries a bus too (a Boolean Mux).
+    assert Port(id='y', name='y', direction='output', domain='boolean', width=2).width == 2
+
+
+def boolean_port(id, direction, width=None, name=None):
+    return Port(id=id, name=name or id, direction=direction, domain='boolean', width=width)
+
+
+def boolean_bus_model() -> Project:
+    """Two Boolean constants muxed into a Boolean vector, split again, and both halves logged."""
+    constant = lambda ident, value: dict(id=ident, position={'x': 0, 'y': 0}, logged=[], definition=dict(
+        kind='booleanConstant', name=ident, description='', domain='boolean', symbol='', equations='',
+        parameters=[], ports=[dict(id='y', name='y', direction='output', domain='boolean')],
+        modelica={'class': 'Modelica.Blocks.Sources.BooleanConstant', 'modifiers': {'k': value}}))
+    mux = dict(id='mux', position={'x': 0, 'y': 0}, logged=['y'], definition=dict(
+        kind='mux', name='Mux', description='', domain='boolean', symbol='mux', equations='', parameters=[],
+        ports=[dict(id='u1', name='1', direction='input', domain='boolean'), dict(id='u2', name='2', direction='input', domain='boolean'),
+               dict(id='y', name='y', direction='output', domain='boolean', width=2)]))
+    demux = dict(id='demux', position={'x': 0, 'y': 0}, logged=['y1', 'y2'], definition=dict(
+        kind='demux', name='Demux', description='', domain='boolean', symbol='demux', equations='', parameters=[],
+        ports=[dict(id='u', name='u', direction='input', domain='boolean', width=2),
+               dict(id='y1', name='1', direction='output', domain='boolean'), dict(id='y2', name='2', direction='output', domain='boolean')]))
+    wires = [dict(id='w1', source='a', sourceHandle='y', target='mux', targetHandle='u1'),
+             dict(id='w2', source='b', sourceHandle='y', target='mux', targetHandle='u2'),
+             dict(id='w3', source='mux', sourceHandle='y', target='demux', targetHandle='u')]
+    nets = [dict(id='n1', anchor='a.y', wireIds=['w1']), dict(id='n2', anchor='b.y', wireIds=['w2']),
+            dict(id='n3', anchor='mux.y', wireIds=['w3'], logged=True)]
+    return Project.model_validate(dict(id='boolbus', name='Boolean bus', revision=1, version=2, duration=1, blocks=[constant('a', 'true'), constant('b', 'false'), mux, demux],
+                                       wires=wires, nets=nets, junctions=[], annotations=[], plots=[]))
+
+
+def test_a_boolean_bus_is_a_boolean_array_connector():
+    source = emit_project(boolean_bus_model())
+    assert 'Modelica.Blocks.Interfaces.BooleanOutput y[2];' in source
+    assert 'Modelica.Blocks.Interfaces.BooleanInput u[2];' in source
+    assert 'y = {u1, u2};' in source and 'y1 = u[1];' in source
+    # A logged Boolean bus is recorded element by element as 0/1.
+    assert 'then 1.0 else 0.0 for i in 1:2}' in source
+    assert bus_problems(boolean_bus_model()) == []
+
+
+def test_a_bus_block_mixing_real_and_boolean_is_a_problem():
+    mixed = definition('mux', [port('u1', 'input'), boolean_port('u2', 'input'), port('y', 'output', 2)])
+    doc = Project.model_validate(dict(id='m', name='m', revision=1, duration=1, blocks=[dict(id='mux', position={'x': 0, 'y': 0}, definition=mixed.model_dump())],
+                                      wires=[], junctions=[], annotations=[], plots=[]))
+    [problem] = bus_problems(doc)
+    assert 'mixes Real and Boolean' in problem['message']
 
 
 def through_subsystem() -> Project:
@@ -133,6 +180,16 @@ def test_bus_results_through_a_subsystem():
     assert series['sensors.y[3]']['name'] == 'Sensors.bus.current'
     assert abs(series['scale.y']['values'][-1] - 2) < 1e-6  # 0.5 × speed 4
     assert abs(series['unpack.speed_out']['values'][-1] - 4) < 1e-6
+
+
+@pytest.mark.integration
+def test_a_boolean_bus_simulates_and_is_recorded_as_0_and_1():
+    project = boolean_bus_model()
+    # The Mux output is logged as a port and the Demux halves as ports; net n3 is the bus wire.
+    result = asyncio.run(simulate(project, f'test-boolbus-{uuid.uuid4().hex[:8]}'))
+    series = {s['key']: s for s in result['series']}
+    assert series['mux.y[1]']['values'][-1] == 1.0 and series['mux.y[2]']['values'][-1] == 0.0
+    assert series['demux.y1']['values'][-1] == 1.0 and series['demux.y2']['values'][-1] == 0.0
 
 
 def test_terminator_marks_are_kept_and_do_not_change_the_model():

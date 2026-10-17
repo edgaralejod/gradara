@@ -81,7 +81,7 @@ Subsystems, shared definitions, promoted parameters, variants, and configuration
 
 ## Expand modeling and export
 
-1. Buses: signal buses route and select signals, and physical buses carry named physical connections of mixed types, today. Next: physical buses carried by connection labels and shown element by element in Results, element-wise math on vectors (a Gain or Sum applied to a whole bus), Boolean buses, buses in C export, and sample-clock semantics.
+1. Buses: signal buses route and select signals, and physical buses carry named physical connections of mixed types, today. Next: physical buses carried by connection labels and shown element by element in Results, element-wise math on vectors (a Gain or Sum applied to a whole bus), buses mixing Real and Boolean signals in one Bus Creator (today a bus is all Real or all Boolean), buses in C export, and sample-clock semantics.
 2. Close the loop in C verification: run the generated controller against the simulated plant (co-simulation) instead of replaying recorded plant signals. Add fixed-point formats and multi-rate task scheduling.
 3. Extend physical domains through tested Modelica components and examples. Translational, magnetic, thermal, and three-phase blocks now wrap MSL 4.1.0 classes; hydraulics/fluid support is not implemented.
 4. Add HDL only with explicit clock/reset, numeric, and latency contracts and toolchain validation.

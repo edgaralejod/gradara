@@ -36,7 +36,8 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Splits a vector into its signals, in order: the counterpart of Mux.</p>
-<p>Set the number of outputs (2 to 32) under Signals in the block’s properties. The input is cut into that many equal parts, so with 6 signals and 2 outputs each output is itself a vector of 3. Match incoming sets the outputs to one per signal.</p></section>
+<p>Set the number of outputs (2 to 32) under Signals in the block’s properties. The input is cut into that many equal parts, so with 6 signals and 2 outputs each output is itself a vector of 3. Match incoming sets the outputs to one per signal.</p>
+<p>A Demux splits a vector of the kind it carries, Real or Boolean: choose the type under Signals while it has no wires, or let the first wire set it.</p></section>
 <section class="doc-section">
 <h2 id="example"><a class="anchor" href="#example">Example</a></h2>
 <p class="example-title"><strong>Mux and Demux</strong> Three signals carried across the sheet on one vector wire, then split apart again.</p>

@@ -611,6 +611,58 @@
       ]
     },
     {
+      "id": "boolean-bus",
+      "title": "Boolean bus",
+      "area": "Signals",
+      "summary": "Gate commands bundled on one Boolean bus with a Bus Creator and picked out by name with a Bus Selector.",
+      "about": [],
+      "kinds": [
+        "booleanPulse",
+        "busCreator",
+        "busSelector",
+        "logicAnd",
+        "logicNot"
+      ],
+      "checks": [
+        {
+          "signal": "pick.y2",
+          "at": 0.25,
+          "value": 1,
+          "why": "high: on for the first half of each second"
+        },
+        {
+          "signal": "pick.y1",
+          "at": 0.25,
+          "value": 0,
+          "why": "low: off while high is on"
+        },
+        {
+          "signal": "pick.y1",
+          "at": 0.75,
+          "value": 1,
+          "why": "low: on for the second half"
+        },
+        {
+          "signal": "inv.y",
+          "at": 0.75,
+          "value": 0,
+          "why": "NOT low"
+        },
+        {
+          "signal": "both.y",
+          "at": 0.25,
+          "value": 0,
+          "why": "never both on"
+        },
+        {
+          "signal": "both.y",
+          "at": 0.75,
+          "value": 0,
+          "why": "never both on"
+        }
+      ]
+    },
+    {
       "id": "tags",
       "title": "Goto, From, and connection labels",
       "area": "Signals",

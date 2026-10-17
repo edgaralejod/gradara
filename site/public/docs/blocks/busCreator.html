@@ -36,7 +36,8 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Bundles signals into a bus: one wire that carries them all, each under a name. The names are the input labels on the block; edit them, and add or remove inputs, under Signals in its properties.</p>
-<p>An input may itself be a bus. Its signals keep their names below the input’s name, so a bus named motor holding speed becomes motor.speed. Pick signals out again with a Bus Selector, anywhere downstream and through any number of subsystem ports.</p></section>
+<p>An input may itself be a bus. Its signals keep their names below the input’s name, so a bus named motor holding speed becomes motor.speed. Pick signals out again with a Bus Selector, anywhere downstream and through any number of subsystem ports.</p>
+<p>A bus carries one kind of signal, Real or Boolean. Choose the type under Signals while the block has no wires, or wire it: it takes the kind of the first wire you connect. A Boolean Bus Creator bundles named Boolean signals, such as the gate commands of a converter.</p></section>
 <section class="doc-section">
 <h2 id="example"><a class="anchor" href="#example">Example</a></h2>
 <p class="example-title"><strong>Signal buses</strong> Named signals bundled into a bus with a Bus Creator, and picked out by name with a Bus Selector.</p>
@@ -74,7 +75,8 @@
 <div class="callout-box warn">
 <ul>
 <li>Names are a letter, then letters, digits, or _, and must differ within one block.</li>
-<li>A bus is a vector of signals underneath: blocks other than Demux, Bus Selector, Mux, Bus Creator, and subsystem ports take one signal and report an error.</li></ul></div></section>
+<li>A bus is a vector of signals underneath: blocks other than Demux, Bus Selector, Mux, Bus Creator, and subsystem ports take one signal and report an error.</li>
+<li>A bus is all Real or all Boolean; to carry both kinds, use two buses.</li></ul></div></section>
 <section class="doc-section">
 <h2 id="tips"><a class="anchor" href="#tips">Tips</a></h2>
 <div class="callout-box tip">

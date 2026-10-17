@@ -3915,6 +3915,7 @@ function Workbench() {
                   {isBusBlock(active.definition) && (
                     <BusSignalsPanel
                       block={active}
+                      view={project}
                       onCommit={(change) => commit(change)}
                     />
                   )}

@@ -36,7 +36,8 @@
 <section class="doc-section prose">
 <h2 id="description"><a class="anchor" href="#description">Description</a></h2>
 <p>Joins several signals into one vector, in order, and carries it on one wire. The wire is drawn heavy so a bundle stands out from a single signal.</p>
-<p>Set the number of inputs (2 to 32) under Signals in the block’s properties; the bar grows to fit. An input may itself be a vector, which is added in place, so Muxes can be chained. Split the vector again with a Demux, or pass it through subsystem ports unchanged.</p></section>
+<p>Set the number of inputs (2 to 32) under Signals in the block’s properties; the bar grows to fit. An input may itself be a vector, which is added in place, so Muxes can be chained. Split the vector again with a Demux, or pass it through subsystem ports unchanged.</p>
+<p>A Mux carries one kind of signal, Real or Boolean. Choose the type under Signals while the block has no wires, or wire it: it takes the kind of the first wire you connect. A Boolean Mux joins Boolean signals (gate commands, flags) into one Boolean vector, drawn in the Boolean color.</p></section>
 <section class="doc-section">
 <h2 id="example"><a class="anchor" href="#example">Example</a></h2>
 <p class="example-title"><strong>Mux and Demux</strong> Three signals carried across the sheet on one vector wire, then split apart again.</p>
@@ -77,7 +78,7 @@
 <div class="callout-box warn">
 <ul>
 <li>A vector wire can go only to a Demux, a Bus Selector, a Bus Creator, another Mux, or a subsystem port. Other blocks take one signal each and report an error; element-wise math on vectors is not available yet.</li>
-<li>Vectors are signals only, not Boolean or physical connections.</li>
+<li>A vector is all Real or all Boolean; a Mux cannot mix the two. Physical connections travel on a Physical bus instead.</li>
 <li>Its signals have no names: in results they are numbered, as Mux.y[1], Mux.y[2]. Use a Bus Creator to name them.</li></ul></div></section>
 <section class="doc-section">
 <h2 id="tips"><a class="anchor" href="#tips">Tips</a></h2>

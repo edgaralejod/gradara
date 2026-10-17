@@ -166,7 +166,9 @@ A bus carries several signals on one wire, drawn heavy so it stands out. Four bl
 - **Bus Creator** bundles signals under names: each input label is the signal's name, edited under **Signals**. A bus plugged into a Bus Creator keeps its signals under that input's name, such as `motor.speed`.
 - **Bus Selector** picks signals out of a bus by name, wherever they are in it. Tick them under **Signals**; each becomes an output labeled with its name. Ticking a bus inside the bus (`motor`) gives all its signals as one vector.
 
-Buses pass through subsystem ports unchanged, so one wire can carry a group of signals into and out of a subsystem. Widths follow the wiring automatically. Other blocks take one signal: a bus wired into a Gain or Sum is reported as a problem that says to split it first. Results show one trace per signal of a bus, named after its element (for example `Sensors.bus.speed`), and logging a bus wire logs every signal on it. The **Mux and Demux** and **Signal buses** examples show both kinds.
+A bus carries one kind of signal, Real or Boolean. Each bus block has a **Type** under **Signals**: choose it while the block has no wires, or wire the block and it takes the kind of the first wire, as a Goto or a subsystem port does; once wired, its type is set by its wires. A Boolean Mux or Bus Creator bundles Boolean signals, such as the gate commands of a converter, into one Boolean bus, drawn heavy in the Boolean color; a Boolean Demux or Bus Selector takes it apart again. Real and Boolean signals cannot share one bus; use two.
+
+Buses pass through subsystem ports unchanged, so one wire can carry a group of signals into and out of a subsystem. Widths follow the wiring automatically. Other blocks take one signal: a bus wired into a Gain or Sum is reported as a problem that says to split it first. Results show one trace per signal of a bus, named after its element (for example `Sensors.bus.speed`), a Boolean one as 0 or 1, and logging a bus wire logs every signal on it. The **Mux and Demux**, **Signal buses**, and **Boolean bus** examples show all three kinds.
 
 ### Goto, From, and connection labels
 

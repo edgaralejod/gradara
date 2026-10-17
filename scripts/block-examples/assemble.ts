@@ -13,6 +13,7 @@ import {
   busPortsWithCount,
   renamedBusInput,
   selectorPorts,
+  withBusDomain,
 } from '../../lib/gradara/buses';
 import { syncInstances } from '../../lib/gradara/hierarchy';
 import { linkEnds } from '../../lib/gradara/project';
@@ -62,7 +63,7 @@ export function instance(
     throw new Error(`${spec.id}: ${id} is a Modelica keyword`);
   const found = library.find((d) => d.kind === kind);
   if (!found) throw new Error(`${spec.id}: unknown block kind ${kind}`);
-  const definition = structuredClone(found);
+  let definition = structuredClone(found);
   definition.name = name;
   for (const [key, value] of Object.entries(params)) {
     const parameter = definition.parameters.find((p) => p.id === key);
@@ -70,7 +71,7 @@ export function instance(
       throw new Error(`${spec.id}: ${kind} has no parameter ${key}`);
     parameter.value = value;
   }
-  const { rotation, flip, label, ports, signals, tag, elements } =
+  const { rotation, flip, label, ports, signals, type, tag, elements } =
     typeof options === 'number'
       ? {
           rotation: options,
@@ -79,6 +80,7 @@ export function instance(
           label: undefined,
           ports: undefined,
           signals: undefined,
+          type: undefined,
           elements: undefined,
         }
       : (options ?? {});
@@ -88,6 +90,11 @@ export function instance(
     definition.ports = physicalBusDefinition(
       elements.map(([n, domain]) => ({ name: n, domain })),
     ).ports;
+  }
+  if (type !== undefined) {
+    if (!BUS_KINDS.has(kind))
+      throw new Error(`${spec.id}: ${kind} is not a bus block`);
+    definition = withBusDomain(definition, type);
   }
   if (signals !== undefined) {
     if (!BUS_KINDS.has(kind))

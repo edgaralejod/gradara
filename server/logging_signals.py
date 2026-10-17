@@ -51,8 +51,9 @@ def logged_signals(project: Project):
             else:
                 reference = f'{prefix}{block.id}.{msl.connector(block.definition, port.id)}'
             expression = reference + ('.'+field if field else '')
-            if port.domain == 'boolean':
-                expression = f'(if {expression} then 1.0 else 0.0)'
+            if port.domain == 'boolean':  # Results shows a Boolean as 0/1; a Boolean bus element by element
+                expression = (f'{{if {expression}[i] then 1.0 else 0.0 for i in 1:{port.width}}}' if port.width
+                              else f'(if {expression} then 1.0 else 0.0)')
             name = (net.name or f'{block.definition.name}.{port.id}') + (f' · {field}' if field else '')
             entry = dict(key=variable, expression=expression, reference=reference, netId=net.id,
                          path=prefix.rstrip('.') or None,
