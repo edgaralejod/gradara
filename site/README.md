@@ -23,6 +23,8 @@ cd site/public && python3 -m http.server 8088
 
 `scripts/build-block-docs.tsx` draws each block with the workbench's own `BlockPreview`, so the pages show exactly what the canvas shows. The Content-Security-Policy allows no inline styles or scripts, so the script turns every `style` attribute React writes into a class in `public/assets/block-faces.css`, which also carries a copy of `app/blocks.css`. Change the page layout in the script and `docs.css`, never in the generated files; rerun `npm run docs:blocks` after changing a block face or `app/blocks.css`, and CI fails when the pages are stale.
 
+Hosting caches `/assets/` for a day but always revalidates pages, and the generated class names are hashed from the styles. The generator therefore links every stylesheet and script on a block page with a content hash (`/assets/block-faces.css?v=<hash>`), so a visitor who cached an older stylesheet never draws a new page with it; without that, a block added in a release showed an empty figure until the cache expired. Do not write those links by hand: rerun `npm run docs:blocks`, which also updates the hash when `docs.css`, `docs.js`, `site.css`, or `site.js` change.
+
 Each block page also draws the block's example (`models/examples/blocks/`, see `docs/blocks/EXAMPLES.md`) with `components/gradara/example-diagram.tsx`. Each example's geometry goes in its own generated stylesheet, `public/assets/examples/<template>.css`, linked only from the pages that show it. The retired Scope, Display, and Terminator pages redirect to the index.
 
 ## First deploy
