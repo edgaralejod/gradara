@@ -1,4 +1,5 @@
 import { settleTerminators } from './terminators';
+import { settleLogged } from './logging';
 import type { Project } from './model';
 import { normalizeBlockNames } from './names';
 import { materializeBranches } from './net-branches';
@@ -81,6 +82,12 @@ export function normalizeProject(
 ) {
   if (!project.modelId) project = { ...project, modelId: crypto.randomUUID() };
   project = onGrid(realizePlaceholders(project));
+  project = settleLogged(project);
+  if (project.subsystems?.some((s) => s.blocks.some((b) => b.logged)))
+    project = {
+      ...project,
+      subsystems: project.subsystems.map((s) => settleLogged(s)),
+    };
   return settleTerminators(
     reconcileNets(
       settleRoutes(

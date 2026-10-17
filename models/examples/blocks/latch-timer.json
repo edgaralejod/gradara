@@ -342,7 +342,10 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "Q"
+      ]
     },
     {
       "id": "timer",
@@ -387,7 +390,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "sine",
@@ -563,7 +569,10 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "clock",
@@ -662,7 +671,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

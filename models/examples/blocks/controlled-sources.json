@@ -256,7 +256,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "agnd",
@@ -584,7 +587,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "bgnd",
@@ -971,7 +977,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "cgnd",
@@ -1358,7 +1367,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "dgnd",
@@ -1690,7 +1702,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "egnd",
@@ -2704,11 +2719,11 @@
       "id": "plot1",
       "label": "Load voltages",
       "series": [
-        "av.y",
-        "bv.y",
-        "cv.y",
-        "dv.y",
-        "ev.y"
+        "av.v",
+        "bv.v",
+        "cv.v",
+        "dv.v",
+        "ev.v"
       ],
       "labels": [
         "VCVS",

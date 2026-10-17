@@ -5,6 +5,7 @@
  * `npx tsx scripts/build-buck-example.ts`.
  */
 import { writeFileSync } from 'node:fs';
+import { logPlotted } from '../lib/gradara/logging';
 import type { Project } from '../lib/gradara/model';
 import { assemble } from './block-examples/assemble';
 import type { ExampleSpec } from './block-examples/types';
@@ -180,5 +181,5 @@ for (const net of project.nets ?? []) {
 
 writeFileSync(
   'models/examples/buck.json',
-  JSON.stringify(project, null, 2) + '\n',
+  JSON.stringify(logPlotted(project), null, 2) + '\n',
 );

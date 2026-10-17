@@ -184,7 +184,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "agnd",
@@ -397,7 +400,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "bgnd",
@@ -636,7 +642,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "cgnd",
@@ -871,7 +880,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "dgnd",
@@ -1107,7 +1119,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "egnd",
@@ -1347,7 +1362,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "fgnd",
@@ -1632,7 +1650,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ggnd",
@@ -1895,7 +1916,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "hgnd",
@@ -2960,9 +2984,9 @@
       "id": "plot1",
       "label": "Constant sources",
       "series": [
-        "av.y",
-        "bv.y",
-        "hv.y"
+        "av.v",
+        "bv.v",
+        "hv.v"
       ],
       "labels": [
         "DC 12 V",
@@ -2974,11 +2998,11 @@
       "id": "plot2",
       "label": "Waveforms",
       "series": [
-        "cv.y",
-        "dv.y",
-        "ev.y",
-        "fv.y",
-        "gv.y"
+        "cv.v",
+        "dv.v",
+        "ev.v",
+        "fv.v",
+        "gv.v"
       ],
       "labels": [
         "Sine voltage",

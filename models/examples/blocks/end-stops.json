@@ -277,7 +277,10 @@
       "labelOffset": {
         "x": 136,
         "y": -62
-      }
+      },
+      "logged": [
+        "s"
+      ]
     },
     {
       "id": "push",
@@ -560,7 +563,10 @@
       "labelOffset": {
         "x": 164,
         "y": -62
-      }
+      },
+      "logged": [
+        "s"
+      ]
     },
     {
       "id": "vref",
@@ -774,7 +780,10 @@
       "labelOffset": {
         "x": 164,
         "y": -62
-      }
+      },
+      "logged": [
+        "v"
+      ]
     },
     {
       "id": "sref",
@@ -1011,7 +1020,10 @@
       "labelOffset": {
         "x": 176,
         "y": -62
-      }
+      },
+      "logged": [
+        "s"
+      ]
     }
   ],
   "wires": [

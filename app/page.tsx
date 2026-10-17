@@ -101,6 +101,7 @@ import {
   Group,
   Ungroup,
   Unplug,
+  Radio,
   Scissors,
   Plus,
   CopyPlus,
@@ -217,6 +218,11 @@ import { BusSignalsPanel } from '@/components/gradara/bus-signals-panel';
 import { PhysicalBusPanel } from '@/components/gradara/physical-bus-panel';
 import { isPhysicalBus } from '@/lib/gradara/physical-bus';
 import { physicalBusProblems } from '@/lib/gradara/physical-bus-problems';
+import {
+  isOutputLogged,
+  logAllOutputs,
+  setOutputsLogged,
+} from '@/lib/gradara/logging';
 import { isBusBlock, propagateBuses } from '@/lib/gradara/buses';
 import { useVariantChecks } from '@/components/gradara/use-variant-checks';
 import { SubsystemLookupContext } from '@/components/gradara/subsystem-preview';
@@ -1670,6 +1676,20 @@ function Workbench() {
         ).length > 0,
     );
     const terminated = picked.some((b) => b.terminated?.length);
+    // Subsystem ports and tags are joined into wires: log the wire instead.
+    const withOutputs = picked.filter(
+      (b) =>
+        !b.definition.boundary &&
+        !isTagKind(b.definition.kind) &&
+        b.definition.ports.some((x) => x.direction === 'output'),
+    );
+    const allLogged =
+      withOutputs.length > 0 &&
+      withOutputs.every((b) =>
+        b.definition.ports
+          .filter((x) => x.direction === 'output')
+          .every((x) => isOutputLogged(projectRef.current, b, x.id)),
+      );
     if (anything) {
       items.push(
         {
@@ -1729,6 +1749,21 @@ function Workbench() {
           run: () =>
             commit((p) =>
               terminateOpenOutputs(p, selectionRef.current.blockIds),
+            ),
+        },
+        {
+          id: 'log',
+          label: allLogged ? 'Stop logging outputs' : 'Log outputs',
+          icon: <Radio size={13} />,
+          disabled: !withOutputs.length,
+          hint: 'No outputs in the selection',
+          run: () =>
+            commit((p) =>
+              setOutputsLogged(
+                p,
+                withOutputs.map((b) => ({ blockId: b.id })),
+                !allLogged,
+              ),
             ),
         },
         ...(terminated
@@ -3535,6 +3570,10 @@ function Workbench() {
                   stale={!!result && signature !== resultSignature}
                   empty={!project.blocks.length}
                   dedicated
+                  onLogAll={() => {
+                    commitDoc((d) => logAllOutputs(d));
+                    notify('Every block output is logged. Run the model again.');
+                  }}
                 />
               </div>
             )}
@@ -4072,8 +4111,37 @@ function Workbench() {
                         />
                         <span>{p.name}</span>
                         <code>{portKindLabel(p)}</code>
+                        {p.direction === 'output' &&
+                          !isBoundary(active) &&
+                          !isTagKind(active.definition.kind) && (
+                          <label className="interface-log">
+                            <input
+                              type="checkbox"
+                              aria-label={`Log ${p.name}`}
+                              checked={isOutputLogged(project, active, p.id)}
+                              onChange={(e) =>
+                                commit((doc) =>
+                                  setOutputsLogged(
+                                    doc,
+                                    [{ blockId: active.id, portId: p.id }],
+                                    e.target.checked,
+                                  ),
+                                )
+                              }
+                            />
+                            Log
+                          </label>
+                        )}
                       </div>
                     ))}
+                    {active.definition.ports.some(
+                      (p) => p.direction === 'output',
+                    ) && (
+                      <p className="size-hint">
+                        Results records only what you log: check Log on an
+                        output, wired or not, or log a signal wire.
+                      </p>
+                    )}
                   </div>
                   {modelicaClassOnly(active.definition) ? (
                     <div className="inspector-section">
@@ -4178,6 +4246,31 @@ function Workbench() {
                       {STOP_TIME_MESSAGE}
                     </p>
                   )}
+                  <div className="inspector-section results-recording">
+                    <div className="section-label">Results</div>
+                    <label className="record-physical">
+                      <input
+                        type="checkbox"
+                        checked={!!doc.logPhysical}
+                        onChange={(e) =>
+                          commitDoc((d) => {
+                            const { logPhysical: _old, ...rest } = d;
+                            return e.target.checked
+                              ? { ...rest, logPhysical: true }
+                              : rest;
+                          })
+                        }
+                      />
+                      Record physical variables
+                    </label>
+                    <p className="size-hint">
+                      Results shows only what you log. With this on, each run
+                      also records the voltages, currents, speeds, and
+                      temperatures of every physical block, listed under
+                      Physical results, so you can look inside without adding
+                      sensors. Runs get larger.
+                    </p>
+                  </div>
                   <SimulationSettingsPanel
                     duration={project.duration}
                     settings={project.simulation}

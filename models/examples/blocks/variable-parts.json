@@ -249,7 +249,10 @@
       "size": {
         "width": 80,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "rgnd",
@@ -541,7 +544,10 @@
       "size": {
         "width": 80,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "lgnd",
@@ -919,7 +925,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "cgnd",
@@ -1215,7 +1224,10 @@
       "labelOffset": {
         "x": 84,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "pgnd",
@@ -1736,8 +1748,8 @@
       "id": "plot1",
       "label": "Currents",
       "series": [
-        "ri.y",
-        "li.y"
+        "ri.i",
+        "li.i"
       ],
       "labels": [
         "Variable resistor",
@@ -1748,8 +1760,8 @@
       "id": "plot2",
       "label": "Voltages",
       "series": [
-        "cv.y",
-        "pv.y"
+        "cv.v",
+        "pv.v"
       ],
       "labels": [
         "Variable capacitor",

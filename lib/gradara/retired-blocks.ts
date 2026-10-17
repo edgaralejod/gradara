@@ -72,7 +72,7 @@ const sink = (
   );
 
 export const retiredBlocks: Definition[] = [
-  // Sinks (0.6.1): Results lists every output, so they added nothing.
+  // Sinks (0.6.1): any output can be logged for Results, wired or not, so they added nothing.
   sink(
     'terminator',
     'Terminator',

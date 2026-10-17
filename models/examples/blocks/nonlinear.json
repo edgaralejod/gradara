@@ -74,7 +74,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "sat",
@@ -136,7 +139,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "dz",
@@ -191,7 +197,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "relay",
@@ -252,7 +261,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "rate",
@@ -316,7 +328,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

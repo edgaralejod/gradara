@@ -60,7 +60,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "controller",
@@ -145,7 +148,10 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "drive",
@@ -261,7 +267,10 @@
       "labelOffset": {
         "x": 0,
         "y": -80
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "motor",
@@ -562,7 +571,10 @@
         "width": 128,
         "height": 96
       },
-      "flip": true
+      "flip": true,
+      "logged": [
+        "w"
+      ]
     }
   ],
   "wires": [
@@ -801,7 +813,7 @@
       "id": "plot3",
       "label": "Armature current",
       "series": [
-        "isens.y"
+        "isens.i"
       ],
       "labels": [
         "Armature current"

@@ -9,6 +9,7 @@ from server.diagnostics import SimulationFailure, validate_simulation
 from server.hierarchy import instances
 from server.modelica import emit_project
 from server.models import Project
+from tests.recording import log_outputs
 
 
 def msl(kind, cls, ports, params=(), modifiers=None, domain='signal'):
@@ -124,8 +125,8 @@ def test_grouped_model_simulates_like_the_flat_one():
     nested = Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
 
     async def both():
-        return await asyncio.gather(simulate(flat, 'flat' + uuid.uuid4().hex[:10]),
-                                    simulate(nested, 'nest' + uuid.uuid4().hex[:10]))
+        return await asyncio.gather(simulate(log_outputs(flat), 'flat' + uuid.uuid4().hex[:10]),
+                                    simulate(log_outputs(nested), 'nest' + uuid.uuid4().hex[:10]))
     a, b = asyncio.run(both())
     speed = lambda r: next(o for o in r['series'] if o['key'] == 'sensor.w')['values'][-1]
     assert speed(b) == pytest.approx(speed(a), rel=1e-6)

@@ -115,7 +115,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "speedPI",
@@ -211,7 +214,10 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "qPI",
@@ -307,7 +313,10 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "dReference",
@@ -451,7 +460,10 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "inversePark",
@@ -817,7 +829,12 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "ia",
+        "ib",
+        "ic"
+      ]
     },
     {
       "id": "motor",
@@ -1092,7 +1109,10 @@
       "labelOffset": {
         "x": 0,
         "y": -96
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "damper",
@@ -1312,7 +1332,10 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "w"
+      ]
     },
     {
       "id": "angle",
@@ -1633,7 +1656,11 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "id",
+        "iq"
+      ]
     }
   ],
   "wires": [
@@ -2259,9 +2286,9 @@
       "id": "plot2",
       "label": "d/q currents",
       "series": [
-        "park.iq",
+        "park.y[2]",
         "speedPI.y",
-        "park.id"
+        "park.y[1]"
       ],
       "labels": [
         "iq · measured",
@@ -2273,9 +2300,9 @@
       "id": "plot3",
       "label": "Phase currents",
       "series": [
-        "isens.ia",
-        "isens.ib",
-        "isens.ic"
+        "isens.i[1]",
+        "isens.i[2]",
+        "isens.i[3]"
       ],
       "labels": [
         "Phase a",
@@ -2287,7 +2314,7 @@
       "id": "plot4",
       "label": "Shaft torque",
       "series": [
-        "torque.y"
+        "torque.tau"
       ],
       "labels": [
         "Torque to the load"

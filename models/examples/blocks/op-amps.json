@@ -308,7 +308,10 @@
       "labelOffset": {
         "x": 52,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "g1",
@@ -714,7 +717,10 @@
       "labelOffset": {
         "x": 92,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "g3",
@@ -1173,8 +1179,8 @@
       "id": "plot1",
       "label": "Amplifier outputs",
       "series": [
-        "vout.y",
-        "vout2.y"
+        "vout.v",
+        "vout2.v"
       ],
       "labels": [
         "Ideal, gain −10",

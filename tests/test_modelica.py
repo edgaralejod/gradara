@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from server.models import Project
 from server.modelica import emit_project, semantic_hash
 from server.engine import simulate
+from tests.recording import log_outputs, raw
 
 FIXTURE = Path(__file__).with_name('motor-project.json')
 
@@ -52,13 +53,13 @@ def test_real_model_parameter_changes_and_feedback():
         base=project()
         altered=project()
         altered.blocks[0].definition.parameters[0].value=60
-        a,b=await asyncio.gather(simulate(base,'test'+uuid.uuid4().hex[:12]),simulate(altered,'test'+uuid.uuid4().hex[:12]))
-        def series(r,key):return next(s['values'] for s in r['series'] if s['key']==key)
+        a,b=await asyncio.gather(simulate(log_outputs(base),'test'+uuid.uuid4().hex[:12]),simulate(log_outputs(altered),'test'+uuid.uuid4().hex[:12]))
+        def series(r,key):return raw(r,key)
         assert abs(series(a,'load.w')[-1]-100)<1
         assert abs(series(b,'load.w')[-1]-60)<1
         assert max(series(a,'controller.y'))<=24.00001
         assert len(a['time'])<a['samples']
-        assert all(len(s['values'])==len(a['time']) for s in a['series'])
+        assert a['series'] and all(len(s['values'])==len(a['time']) for s in a['series'])
         assert all(t1<=t2 for t1,t2 in zip(a['time'],a['time'][1:]))
         disconnected=project()
         disconnected.wires=[w for w in disconnected.wires if not (w.source=='sensor' and w.target=='controller')]
@@ -87,7 +88,7 @@ def test_foc_tracks_speed_rejects_load_and_keeps_phases_balanced():
         baseline=Project.model_validate_json(fixture.read_text(encoding='utf-8'))
         slower=baseline.model_copy(deep=True)
         next(b for b in slower.blocks if b.id=='reference').definition.parameters[0].value=1000
-        a,b=await asyncio.gather(simulate(baseline,'foc'+uuid.uuid4().hex[:12]),simulate(slower,'foc'+uuid.uuid4().hex[:12]))
+        a,b=await asyncio.gather(simulate(log_outputs(baseline),'foc'+uuid.uuid4().hex[:12]),simulate(log_outputs(slower),'foc'+uuid.uuid4().hex[:12]))
         def trace(r,signal):
             block,port=signal.split('.')
             key=f'{block}.{msl.connector(next(x for x in baseline.blocks if x.id==block).definition,port)}'
@@ -140,12 +141,12 @@ def test_branched_feedback_runs_in_openmodelica():
     fixture = Path(__file__).parent / 'fixtures/feedback-project.json'
     async def run():
         p = Project.model_validate_json(fixture.read_text(encoding='utf-8'))
-        result = await simulate(p, 'wiring'+uuid.uuid4().hex[:12])
+        result = await simulate(log_outputs(p), 'wiring'+uuid.uuid4().hex[:12])
         traces = {s['key']:s['values'] for s in result['series']}
         assert traces['gain.y'][-1] == pytest.approx(traces['reference.y'][-1]/3, abs=1e-6)
-        assert traces['scope.u'][-1] == pytest.approx(traces['gain.y'][-1], abs=1e-6)
-        assert traces['display.u'][-1] == pytest.approx(traces['reference.y'][-1], abs=1e-6)
-        assert next(s for s in result['series'] if s['key'] == 'scope.u')['name'] == 'Scope.u'
+        # Retired sinks record nothing of their own now; their inputs are still in the engine output.
+        assert raw(result, 'scope.u')[-1] == pytest.approx(raw(result, 'gain.y')[-1], abs=1e-6)
+        assert raw(result, 'display.u')[-1] == pytest.approx(raw(result, 'reference.y')[-1], abs=1e-6)
         import csv
         from server.engine import RUNS
         with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:

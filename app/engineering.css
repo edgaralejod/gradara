@@ -3175,3 +3175,28 @@ li.is-active .variant-dot { border-color: #2477b5; background: radial-gradient(#
 .physical-bus-list select:disabled { background: transparent; border-style: dashed; color: #41465d; opacity: 1; }
 .physical-bus-dot { width: 8px; height: 8px; border-radius: 50%; }
 .physical-bus-section .instance-ports-add { margin-top: 6px; }
+/* A logged output (logging.ts): the badge beside its wire, as Simulink marks a logged signal. */
+.port-log-badge {
+  position: absolute;
+  z-index: 3;
+  overflow: visible;
+  pointer-events: none;
+  fill: none;
+  stroke: #1f5fbf;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.port-log-badge circle {
+  fill: #1f5fbf;
+  stroke: none;
+}
+/* Physical variables (Record physical variables), apart from logged signals. */
+.di-physical { margin-top: 8px; border-top: 1px solid #e3e9ee; padding-top: 6px; }
+.di-physical > summary { cursor: pointer; font-weight: 600; color: #354b5b; font-size: var(--text-ui); padding: 4px 0; }
+.di-physical > summary small { color: #8193a0; font-weight: 500; margin-left: 4px; }
+/* A run that recorded nothing. */
+.di-nothing { padding: 8px 2px; color: #526979; font-size: var(--text-ui); line-height: 1.5; }
+.di-nothing p { margin: 0 0 8px; }
+.di-nothing button { border: 1px solid #c9d6df; border-radius: 3px; background: white; padding: 4px 9px; cursor: pointer; color: #27333d; }
+.di-nothing button:hover { background: #eef3f7; }
+.di-nothing small { display: block; margin-top: 6px; color: #8193a0; }

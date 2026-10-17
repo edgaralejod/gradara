@@ -467,7 +467,10 @@
       "size": {
         "width": 48,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "roomC",
@@ -524,7 +527,10 @@
       "size": {
         "width": 48,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "control",
@@ -1350,7 +1356,10 @@
           "labelOffset": {
             "x": 0,
             "y": -80
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "p_dc0000002o",
@@ -1895,7 +1904,10 @@
           "size": {
             "width": 80,
             "height": 64
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "p_dc0000002u",
@@ -2629,7 +2641,10 @@
           "labelOffset": {
             "x": 0,
             "y": -96
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "toWatts",
@@ -2803,7 +2818,10 @@
           "size": {
             "width": 80,
             "height": 64
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "rejected",
@@ -2863,7 +2881,10 @@
           "labelOffset": {
             "x": 0,
             "y": -80
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "p_dc00000034",

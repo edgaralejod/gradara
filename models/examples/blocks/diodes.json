@@ -280,7 +280,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ag",
@@ -591,7 +594,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "bg",
@@ -868,7 +874,10 @@
       "labelOffset": {
         "x": 60,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gz",
@@ -1332,8 +1341,8 @@
       "id": "plot1",
       "label": "Rectified",
       "series": [
-        "av.y",
-        "bv.y"
+        "av.v",
+        "bv.v"
       ],
       "labels": [
         "Ideal diode",
@@ -1344,7 +1353,7 @@
       "id": "plot2",
       "label": "Zener voltage",
       "series": [
-        "vz.y"
+        "vz.v"
       ],
       "labels": [
         "v Zener"

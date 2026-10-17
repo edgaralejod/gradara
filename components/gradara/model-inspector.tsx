@@ -237,9 +237,23 @@ export function NetProperties({
       </div>
       <div className="inspector-section net-display-options">
         <div className="section-label">Data Inspector</div>
-        <label><input type="checkbox" disabled={domain !== 'signal'} checked={!!net.logged} onChange={(e) => onLogging(e.target.checked)} />Log to Data Inspector</label>
-        <p className="size-hint">{domain === 'signal' ? 'Capture this signal on the next run.' : 'Add a sensor to choose the physical quantity, then log its signal output.'}</p>
-        <button className="text-action" onClick={onOpenData}>Open Data Inspector</button>
+        <label>
+          <input
+            type="checkbox"
+            disabled={domain !== 'signal' && domain !== 'boolean'}
+            checked={!!net.logged}
+            onChange={(e) => onLogging(e.target.checked)}
+          />
+          Log to Data Inspector
+        </label>
+        <p className="size-hint">
+          {domain === 'signal' || domain === 'boolean'
+            ? 'Record this signal on the next run. Results shows only what you log.'
+            : 'Add a sensor and log its output, or turn on Record physical variables in the model’s properties.'}
+        </p>
+        <button className="text-action" onClick={onOpenData}>
+          Open Data Inspector
+        </button>
         <div className="section-label">Label</div>
         <label>
           <input
@@ -250,8 +264,8 @@ export function NetProperties({
           Show name on diagram
         </label>
         <p className="size-hint">
-          Names are hidden until you name a wire or turn this on. Double-click
-          a wire to name it; drag its label along any branch or to either side.
+          Names are hidden until you name a wire or turn this on. Double-click a
+          wire to name it; drag its label along any branch or to either side.
         </p>
         {net.label && (
           <button className="text-action" onClick={onResetLabel}>

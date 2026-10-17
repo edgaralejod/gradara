@@ -399,7 +399,10 @@
       "labelOffset": {
         "x": 80,
         "y": 0
-      }
+      },
+      "logged": [
+        "power"
+      ]
     },
     {
       "id": "i3",
@@ -473,7 +476,10 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "ia"
+      ]
     },
     {
       "id": "r3",
@@ -659,7 +665,10 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "ia"
+      ]
     },
     {
       "id": "rl_l",
@@ -792,7 +801,10 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "ia"
+      ]
     },
     {
       "id": "cb",
@@ -1108,7 +1120,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "vb",
@@ -1168,7 +1183,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "vc",
@@ -1228,7 +1246,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "vag",
@@ -1864,9 +1885,9 @@
       "id": "plot1",
       "label": "Phase voltages",
       "series": [
-        "va.y",
-        "vb.y",
-        "vc.y"
+        "va.v",
+        "vb.v",
+        "vc.v"
       ],
       "labels": [
         "a",
@@ -1878,9 +1899,9 @@
       "id": "plot2",
       "label": "Phase a currents",
       "series": [
-        "i3.ia",
-        "il.ia",
-        "ic.ia"
+        "i3.i[1]",
+        "il.i[1]",
+        "ic.i[1]"
       ],
       "labels": [
         "R",

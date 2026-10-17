@@ -7,6 +7,7 @@ import pytest
 from server.models import Project
 from server.modelica import emit_project
 from server.engine import RUNS, simulate
+from tests.recording import log_outputs
 
 FIXTURE = Path(__file__).parents[1]/'models/examples/buck.json'
 
@@ -26,7 +27,7 @@ def test_buck_settles_to_duty_times_input_with_real_switching_ripple():
         base = buck()
         lower = buck()
         next(p for b in lower.blocks if b.id == 'duty' for p in b.definition.parameters if p.id == 'value').value = .25
-        results = await asyncio.gather(*[simulate(model,'buck'+uuid.uuid4().hex[:12]) for model in [base, lower]])
+        results = await asyncio.gather(*[simulate(log_outputs(model),'buck'+uuid.uuid4().hex[:12]) for model in [base, lower]])
         for result, duty in zip(results, [.5, .25]):
             with (RUNS/result['id']/'simulation_res.csv').open(encoding='utf-8') as stream:
                 rows = list(csv.DictReader(stream))

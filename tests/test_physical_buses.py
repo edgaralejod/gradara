@@ -11,6 +11,7 @@ from server.engine import simulate
 from server.modelica import emit_project
 from server.models import Project
 from server.physical_buses import lower_physical_buses, physical_bus_problems
+from tests.recording import log_outputs
 
 E = 'electrical'
 
@@ -146,14 +147,14 @@ def _series(result, key):
 
 @pytest.mark.integration
 def test_engine_runs_a_circuit_and_a_heat_port_through_a_bus():
-    result = asyncio.run(simulate(Project.model_validate(flat_document()), 'pbus' + uuid.uuid4().hex[:12]))
+    result = asyncio.run(simulate(log_outputs(Project.model_validate(flat_document())), 'pbus' + uuid.uuid4().hex[:12]))
     assert _series(result, 'vs.v')[-1] == pytest.approx(10)
     assert _series(result, 'ts.T')[-1] == pytest.approx(350)
 
 
 @pytest.mark.integration
 def test_engine_runs_a_load_through_a_subsystem_bus_port():
-    result = asyncio.run(simulate(Project.model_validate(nested_document()), 'pbusnest' + uuid.uuid4().hex[:12]))
+    result = asyncio.run(simulate(log_outputs(Project.model_validate(nested_document())), 'pbusnest' + uuid.uuid4().hex[:12]))
     assert _series(result, 'load.vs.v')[-1] == pytest.approx(10)
 
 

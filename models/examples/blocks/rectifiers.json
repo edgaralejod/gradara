@@ -324,7 +324,10 @@
       "labelOffset": {
         "x": 84,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "tsrc",
@@ -658,7 +661,10 @@
       "labelOffset": {
         "x": 100,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "fp",
@@ -1179,8 +1185,8 @@
       "id": "plot1",
       "label": "DC voltages",
       "series": [
-        "dv.y",
-        "tv.y"
+        "dv.v",
+        "tv.v"
       ],
       "labels": [
         "Diode bridge",

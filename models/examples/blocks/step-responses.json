@@ -59,7 +59,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "filter",
@@ -116,7 +119,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "second",
@@ -181,7 +187,10 @@
       "size": {
         "width": 160,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "int",
@@ -236,7 +245,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "lim",
@@ -306,7 +318,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "delay",
@@ -362,7 +377,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ramp",
@@ -482,7 +500,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

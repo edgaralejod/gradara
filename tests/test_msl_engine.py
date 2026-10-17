@@ -16,6 +16,7 @@ import pytest
 
 from server.engine import simulate
 from server.models import Project
+from tests.recording import log_outputs
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -195,14 +196,14 @@ def test_harness_is_valid_for_every_block():
 @pytest.mark.integration
 @pytest.mark.parametrize('data', library(), ids=lambda d: d['kind'])
 def test_block_compiles_and_runs(data):
-    result = asyncio.run(simulate(circuit(data), 'msl' + uuid.uuid4().hex[:12]))
+    result = asyncio.run(simulate(log_outputs(circuit(data)), 'msl' + uuid.uuid4().hex[:12]))
     assert result['samples'] > 1
 
 
 def _run(blocks, wires, duration):
     project = Project.model_validate({'version': 1, 'name': 'physics', 'duration': duration, 'revision': 0,
                                       'blocks': blocks, 'wires': wires})
-    result = asyncio.run(simulate(project, 'phys' + uuid.uuid4().hex[:10]))
+    result = asyncio.run(simulate(log_outputs(project), 'phys' + uuid.uuid4().hex[:10]))
     return {s['key']: s['values'] for s in result['series']}
 
 

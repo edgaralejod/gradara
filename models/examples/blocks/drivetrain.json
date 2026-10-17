@@ -240,7 +240,10 @@
       "labelOffset": {
         "x": 0,
         "y": -96
-      }
+      },
+      "logged": [
+        "power"
+      ]
     },
     {
       "id": "tq",
@@ -301,7 +304,10 @@
       "labelOffset": {
         "x": 0,
         "y": -96
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "k",
@@ -577,7 +583,10 @@
       "labelOffset": {
         "x": 144,
         "y": -62
-      }
+      },
+      "logged": [
+        "a"
+      ]
     },
     {
       "id": "dw",
@@ -630,7 +639,10 @@
       "labelOffset": {
         "x": 0,
         "y": -96
-      }
+      },
+      "logged": [
+        "w_rel"
+      ]
     },
     {
       "id": "w2",
@@ -679,7 +691,10 @@
       "labelOffset": {
         "x": 112,
         "y": -62
-      }
+      },
+      "logged": [
+        "w"
+      ]
     }
   ],
   "wires": [
@@ -960,7 +975,7 @@
       "id": "plot2",
       "label": "Shaft torque and power",
       "series": [
-        "tq.y",
+        "tq.tau",
         "pw.power"
       ],
       "labels": [

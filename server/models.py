@@ -209,6 +209,8 @@ class Block(BaseModel):
     flip: bool | None = None
     # Outputs left open on purpose, drawn with a terminator mark; presentation only.
     terminated: list[str] | None = Field(default=None, max_length=100)
+    # Output port IDs recorded for Results, wired or not (a terminated output can be logged).
+    logged: list[str] | None = Field(default=None, max_length=100)
 
 class Wire(BaseModel):
     id: str = Field(max_length=100)
@@ -305,6 +307,11 @@ class Diagram(BaseModel):
                 if 'physical' in {a.direction, b.direction}:
                     raise ValueError('Physical connectors cannot join signal ports.')
         ports = {(b.id, p.id): p for b in self.blocks for p in b.definition.ports}
+        for block in self.blocks:
+            for port_id in block.logged or []:
+                port = ports.get((block.id, port_id))
+                if port is None or port.direction != 'output':
+                    raise ValueError('Only output ports can be logged.')
         for component in net_components(self):
             directions = [ports[key].direction for key in component]
             if directions.count('output') > 1:
@@ -406,6 +413,8 @@ class Project(Diagram):
     name: str = Field(min_length=1, max_length=120)
     duration: float = Field(gt=0, le=86400, allow_inf_nan=False)
     simulation: SimulationSettings | None = None
+    # Record the physical variables of every physical block (voltages, currents, speeds…) for Results.
+    logPhysical: bool | None = None
     revision: int = Field(ge=0)
     subsystems: list[Subsystem] | None = Field(default=None, max_length=500)
     configurations: list['Configuration'] | None = Field(default=None, max_length=30)

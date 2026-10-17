@@ -358,7 +358,10 @@
       "labelOffset": {
         "x": 120,
         "y": -62
-      }
+      },
+      "logged": [
+        "w"
+      ]
     },
     {
       "id": "wref",
@@ -428,7 +431,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ss",
@@ -674,7 +680,10 @@
       "labelOffset": {
         "x": 156,
         "y": -62
-      }
+      },
+      "logged": [
+        "w"
+      ]
     },
     {
       "id": "tref",
@@ -1110,7 +1119,10 @@
       "labelOffset": {
         "x": 124,
         "y": -62
-      }
+      },
+      "logged": [
+        "w"
+      ]
     },
     {
       "id": "tc",
@@ -1434,7 +1446,10 @@
       "labelOffset": {
         "x": 112,
         "y": -62
-      }
+      },
+      "logged": [
+        "w"
+      ]
     }
   ],
   "wires": [

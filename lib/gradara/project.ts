@@ -15,6 +15,11 @@ function sheetSemantics(
       .filter((n) => n.logged)
       .map((n) => n.id)
       .sort(),
+    // What is logged decides what a run records, so a change makes results stale.
+    loggedPorts: p.blocks
+      .filter((b) => b.logged?.length)
+      .map((b) => `${b.id}:${b.logged!.join(',')}`)
+      .sort(),
     blocks: p.blocks.map((b) => ({
       id: b.id,
       kind: b.definition.kind,
@@ -44,12 +49,14 @@ function sheetSemantics(
 }
 
 export function semanticSignature(p: Project) {
-  const { loggedNets, blocks, wires } = sheetSemantics(p);
+  const { loggedNets, loggedPorts, blocks, wires } = sheetSemantics(p);
   const solver = settingsSignature(p.duration, p.simulation);
   return JSON.stringify({
     duration: p.duration,
     ...(solver ? { solver } : {}),
     loggedNets,
+    loggedPorts,
+    ...(p.logPhysical ? { logPhysical: true } : {}),
     blocks,
     wires,
     ...(p.subsystems?.length

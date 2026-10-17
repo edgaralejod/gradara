@@ -291,7 +291,11 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "alpha",
+        "beta"
+      ]
     },
     {
       "id": "park",
@@ -369,7 +373,11 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "id",
+        "iq"
+      ]
     },
     {
       "id": "clock",
@@ -744,7 +752,12 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "ia",
+        "ib",
+        "ic"
+      ]
     },
     {
       "id": "load",
@@ -1299,10 +1312,10 @@
       "id": "plot1",
       "label": "Stationary and rotating frames",
       "series": [
-        "clarke.alpha",
-        "clarke.beta",
-        "park.id",
-        "park.iq"
+        "clarke.y[1]",
+        "clarke.y[2]",
+        "park.y[1]",
+        "park.y[2]"
       ],
       "labels": [
         "α",
@@ -1315,9 +1328,9 @@
       "id": "plot2",
       "label": "Phase currents",
       "series": [
-        "sens.ia",
-        "sens.ib",
-        "sens.ic"
+        "sens.i[1]",
+        "sens.i[2]",
+        "sens.i[3]"
       ],
       "labels": [
         "ia",

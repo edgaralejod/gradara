@@ -120,7 +120,10 @@
       "size": {
         "width": 80,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "asw",
@@ -470,7 +473,10 @@
       "size": {
         "width": 80,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "bsw",
@@ -804,7 +810,10 @@
       "size": {
         "width": 80,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "csw",
@@ -1197,7 +1206,10 @@
       "size": {
         "width": 80,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "dsw",
@@ -1555,7 +1567,10 @@
       "size": {
         "width": 80,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "esw",
@@ -2418,9 +2433,9 @@
       "id": "plot1",
       "label": "Switch currents",
       "series": [
-        "ai.y",
-        "bi.y",
-        "ci.y"
+        "ai.i",
+        "bi.i",
+        "ci.i"
       ],
       "labels": [
         "Pulsed switch",
@@ -2432,8 +2447,8 @@
       "id": "plot2",
       "label": "Two-way switch and breaker",
       "series": [
-        "ei.y",
-        "di.y"
+        "ei.i",
+        "di.i"
       ],
       "labels": [
         "Two-way switch",

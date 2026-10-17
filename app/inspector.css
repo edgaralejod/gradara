@@ -496,3 +496,18 @@
   background: transparent;
   border-style: dashed;
 }
+/* Log an output for Results (logging.ts), wired or not. */
+.inspector-properties .interface-log {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #526979;
+  cursor: pointer;
+}
+.inspector-properties .record-physical {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #354b5b;
+}

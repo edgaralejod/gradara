@@ -275,7 +275,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "tg",
@@ -584,7 +587,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gg",
@@ -1077,8 +1083,8 @@
       "id": "plot1",
       "label": "Load voltages",
       "series": [
-        "tv.y",
-        "gv.y"
+        "tv.v",
+        "gv.v"
       ],
       "labels": [
         "Thyristor",

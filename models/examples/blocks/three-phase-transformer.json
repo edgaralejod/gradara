@@ -511,7 +511,12 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "va",
+        "vb",
+        "vc"
+      ]
     }
   ],
   "wires": [
@@ -693,9 +698,9 @@
       "id": "plot1",
       "label": "Output phase voltages",
       "series": [
-        "v3.va",
-        "v3.vb",
-        "v3.vc"
+        "v3.v[1]",
+        "v3.v[2]",
+        "v3.v[3]"
       ],
       "labels": [
         "a",

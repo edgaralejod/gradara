@@ -4,6 +4,8 @@ Gradara's priority is a polished, usable diagram-to-simulation workflow. This is
 
 ## Release hardening (before 1.0)
 
+Before 1.0, any part of Gradara may change, including the document format, without migrating older models, until the design is right; release notes say what changed (see [versioning](docs/architecture/MODEL_FORMAT.md#versioning-and-migration)). 1.0 is the point from which saved models stay compatible.
+
 - Run the complete new-model/run/reopen/export workflow by hand from each installer (CI install tests already simulate and verify generated C on Windows, macOS Intel, and Ubuntu; only the Apple silicon simulation is manual); record actual platform results.
 - Deploy the Gradara AI service in live mode and verify sign-in, one real purchase, a refund, and the webhook. Have the privacy notice and terms of service reviewed by counsel.
 - Sign the Windows installer (for example Azure Trusted Signing) so it opens without SmartScreen warnings; macOS builds are already signed and notarized. Auto-update runs on Windows, macOS, and the Linux AppImage.

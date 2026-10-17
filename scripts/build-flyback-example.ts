@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /** Hand-authored switching example; never reads personal projects or agent output. */
 import { writeFileSync } from 'node:fs';
+import { logPlotted } from '../lib/gradara/logging';
 import {
   library,
   type Block,
@@ -534,5 +535,5 @@ project.plots = project.plots?.map((plot) => ({
 }));
 writeFileSync(
   'models/examples/flyback.json',
-  JSON.stringify(project, null, 2) + '\n',
+  JSON.stringify(logPlotted(project), null, 2) + '\n',
 );

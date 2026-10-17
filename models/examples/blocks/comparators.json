@@ -74,7 +74,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "r",
@@ -138,7 +141,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "above",
@@ -196,7 +202,10 @@
       "labelOffset": {
         "x": 84,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "below",
@@ -253,7 +262,10 @@
       "labelOffset": {
         "x": 88,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "band",
@@ -320,7 +332,10 @@
       "labelOffset": {
         "x": 108,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gt",
@@ -375,7 +390,10 @@
       "labelOffset": {
         "x": 92,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "lt",
@@ -429,7 +447,10 @@
       "labelOffset": {
         "x": 92,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

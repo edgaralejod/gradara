@@ -12,6 +12,7 @@
  * available capacity (halved from 30 to 35 min), sets the cooling.
  */
 import { writeFileSync } from 'node:fs';
+import { logPlotted } from '../lib/gradara/logging';
 import { library, type Block, type Project } from '../lib/gradara/model';
 import { defaultBlockSize } from '../lib/gradara/block-design';
 import { linkEnds } from '../lib/gradara/project';
@@ -448,5 +449,5 @@ for (const [index, net] of (project.nets ?? []).entries()) {
 }
 writeFileSync(
   'models/examples/datacenter.json',
-  JSON.stringify(project, null, 2) + '\n',
+  JSON.stringify(logPlotted(project), null, 2) + '\n',
 );

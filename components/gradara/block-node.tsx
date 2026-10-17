@@ -211,6 +211,13 @@ function BlockNode({
             {data.terminated?.includes(port.id) && (
               <Terminator side={side} offset={offset} />
             )}
+            {data.logged?.includes(port.id) && (
+              <LogBadge
+                side={side}
+                offset={offset}
+                past={!!data.terminated?.includes(port.id)}
+              />
+            )}
           </div>
         );
       })}
@@ -300,6 +307,42 @@ function Terminator({
     >
       <title>Unused output (terminated)</title>
       <path d="M0 8H11M11 1.5V14.5M15 4.5V11.5" />
+    </svg>
+  );
+}
+
+/**
+ * A logged output, marked as Simulink marks a logged signal: a small badge beside the
+ * wire just outside the port (past the terminator mark when the output is capped).
+ */
+function LogBadge({
+  side,
+  offset,
+  past,
+}: {
+  side: 'left' | 'right' | 'top' | 'bottom';
+  offset: number;
+  past: boolean;
+}) {
+  const out = past ? 20 : 4;
+  const at = {
+    right: { left: `calc(100% + ${out}px)`, top: `calc(${offset}% - 16px)` },
+    left: { left: `calc(0% - ${out + 14}px)`, top: `calc(${offset}% - 16px)` },
+    top: { left: `calc(${offset}% + 3px)`, top: `calc(0% - ${out + 14}px)` },
+    bottom: { left: `calc(${offset}% + 3px)`, top: `calc(100% + ${out}px)` },
+  }[side];
+  return (
+    <svg
+      className="port-log-badge"
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      aria-hidden="true"
+      style={at}
+    >
+      <title>Logged for Results</title>
+      <circle cx="4" cy="10" r="1.6" />
+      <path d="M4 6.2A3.8 3.8 0 0 1 7.8 10M4 2.6A7.4 7.4 0 0 1 11.4 10" />
     </svg>
   );
 }

@@ -48,7 +48,12 @@ import {
   type RunTrace,
 } from '@/lib/gradara/run-set';
 import PlotViewport from './plot-viewport';
-import { PaneResizer, useColumns, useFractions, useSize } from './resizable-columns';
+import {
+  PaneResizer,
+  useColumns,
+  useFractions,
+  useSize,
+} from './resizable-columns';
 import InspectorPlot, { traceColors } from './inspector-plot';
 import RunCompareView from './run-compare-view';
 import RunList from './run-list';
@@ -89,10 +94,7 @@ function initial(result: SimulationResult): Config {
   };
 }
 const validRange = (r: unknown) =>
-  Array.isArray(r) &&
-  r.length === 2 &&
-  r.every(Number.isFinite) &&
-  r[1] > r[0];
+  Array.isArray(r) && r.length === 2 && r.every(Number.isFinite) && r[1] > r[0];
 /** A saved layout, including ones saved before runs could be overlaid (signals as bare keys). */
 function readConfig(value: unknown): Config | null {
   if (!value || typeof value !== 'object') return null;
@@ -131,18 +133,32 @@ function groupSignals<T extends { name: string }>(signals: T[]) {
   );
 }
 
+/** Physical variables, grouped by their block ("Drive › Load 6 Ω" for "Drive › Load 6 Ω.v"). */
+function groupByBlock<T extends { name: string }>(signals: T[]) {
+  const out = new Map<string, T[]>();
+  for (const s of signals) {
+    const dot = s.name.indexOf('.', s.name.lastIndexOf(' › ') + 1);
+    const group = dot > 0 ? s.name.slice(0, dot) : s.name;
+    out.set(group, [...(out.get(group) ?? []), s]);
+  }
+  return [...out.entries()].sort(([a], [b]) => a.localeCompare(b));
+}
+
 function InspectorSession({
   result,
   running,
   error,
   stale,
   modelId,
+  onLogAll,
 }: {
   result: SimulationResult;
   running: boolean;
   error: string;
   stale: boolean;
   modelId?: string;
+  /** Log every block output of the model (the empty run's one-click start). */
+  onLogAll?: () => void;
 }) {
   const model = modelId ?? result.snapshot?.modelId;
   const storageKey = `gradara-inspector:${modelId ?? result.snapshot?.modelId ?? 'workspace'}${result.comparison ? ':compare' : ''}`;
@@ -163,8 +179,7 @@ function InspectorSession({
     }
     return readConfig(stored) ?? initial(result);
   });
-  const [query, setQuery] = useState(''),
-    [onlyLogged, setOnlyLogged] = useState(false);
+  const [query, setQuery] = useState('');
   const [axes, setAxes] = useState<Axes>('x'),
     [mode, setMode] = useState<'pan' | 'zoom' | 'cursor'>('pan');
   const [maximized, setMaximized] = useState<number | null>(null);
@@ -174,10 +189,17 @@ function InspectorSession({
   const [summarizing, setSummarizing] = useState(false);
   const [baselineId, setBaselineId] = useState('');
   /** Evidence to show once its run's data has arrived. */
-  const [pendingFocus, setPendingFocus] = useState<Extract<InspectorCommand, { type: 'focus' }> | null>(null);
+  const [pendingFocus, setPendingFocus] = useState<Extract<
+    InspectorCommand,
+    { type: 'focus' }
+  > | null>(null);
   const signalPane = useColumns('inspector-signals', [244], 150);
   const signalStart = useRef(0);
-  const { attach: attachRuns, ...runsPane } = useSize('inspector-runs', 190, 70);
+  const { attach: attachRuns, ...runsPane } = useSize(
+    'inspector-runs',
+    190,
+    70,
+  );
   const [storageError, setStorageError] = useState('');
   useEffect(() => {
     // Debounce synchronous browser storage writes while panning.
@@ -202,17 +224,25 @@ function InspectorSession({
         id,
         data,
         color: library.colorOf(id),
-        title: overlay ? 'Configurations' : stored ? runTitle(stored) : 'Latest run',
+        title: overlay
+          ? 'Configurations'
+          : stored
+            ? runTitle(stored)
+            : 'Latest run',
       },
     ];
   });
   const openIds = entries.map((e) => e.id);
   const several = entries.length > 1;
   const signalColor = (id: string, key: string) => {
-    const at = entries.find((e) => e.id === id)?.data.series.findIndex((s) => s.key === key) ?? 0;
+    const at =
+      entries
+        .find((e) => e.id === id)
+        ?.data.series.findIndex((s) => s.key === key) ?? 0;
     return traceColors[Math.max(0, at) % traceColors.length];
   };
-  const tracesOf = (signals: Assignment[]) => plotTraces(signals, entries, signalColor);
+  const tracesOf = (signals: Assignment[]) =>
+    plotTraces(signals, entries, signalColor);
   const duration = Math.max(1e-9, ...entries.map((e) => e.data.duration));
   const time = entries[0]?.data.time ?? [];
   const plotView = (plot: Plot): PlotView => {
@@ -222,7 +252,10 @@ function InspectorSession({
       y:
         plot.view?.y ??
         fitSeries(
-          tracesOf(plot.signals).map((t) => ({ time: t.time, values: t.values })),
+          tracesOf(plot.signals).map((t) => ({
+            time: t.time,
+            values: t.values,
+          })),
           x,
         ),
     };
@@ -256,7 +289,10 @@ function InspectorSession({
             ? {
                 ...p.view,
                 y: fitSeries(
-                  tracesOf(signals).map((t) => ({ time: t.time, values: t.values })),
+                  tracesOf(signals).map((t) => ({
+                    time: t.time,
+                    values: t.values,
+                  })),
                   p.view.x,
                 ),
               }
@@ -266,7 +302,9 @@ function InspectorSession({
     }));
   /** One run's copy of a signal on or off a plot. */
   const toggle = (index: number, key: string, run: string, checked: boolean) =>
-    changeSignals(index, (list) => toggleAssignment(list, key, run, checked, openIds));
+    changeSignals(index, (list) =>
+      toggleAssignment(list, key, run, checked, openIds),
+    );
   /** A signal dropped on a plot goes on every open run that has it. */
   const place = (index: number, key: string) =>
     changeSignals(index, (list) =>
@@ -285,7 +323,10 @@ function InspectorSession({
         which === 'x'
           ? v.y
           : fitSeries(
-              tracesOf(p.signals).map((t) => ({ time: t.time, values: t.values })),
+              tracesOf(p.signals).map((t) => ({
+                time: t.time,
+                values: t.values,
+              })),
               x,
             ),
     });
@@ -303,20 +344,27 @@ function InspectorSession({
   const visible = Array.from({ length: rows * cols }, (_, i) => i);
   const displayed = maximized === null ? visible : [maximized];
   const layoutKey = config?.layout ?? '1';
-  const { attach: attachCols, ...colSplit } = useFractions(`di-grid-${layoutKey}-cols`, cols);
-  const { attach: attachRows, ...rowSplit } = useFractions(`di-grid-${layoutKey}-rows`, rows);
+  const { attach: attachCols, ...colSplit } = useFractions(
+    `di-grid-${layoutKey}-cols`,
+    cols,
+  );
+  const { attach: attachRows, ...rowSplit } = useFractions(
+    `di-grid-${layoutKey}-rows`,
+    rows,
+  );
   const matching = (entry: (typeof entries)[number]) =>
-    entry.data.series.filter(
-      (s) =>
-        (!onlyLogged || s.netId) &&
-        `${s.name} ${s.unit}`.toLowerCase().includes(query.toLowerCase()),
+    entry.data.series.filter((s) =>
+      `${s.name} ${s.unit}`.toLowerCase().includes(query.toLowerCase()),
     );
   const signalCount = entries.reduce((n, e) => n + e.data.series.length, 0);
   const shownAny = entries.some((e) => matching(e).length);
   // Parameters that differ from the run shown first, for each other run.
   const reference = entries[0];
   const differences = (entry: (typeof entries)[number]) =>
-    reference && entry !== reference && reference.data.snapshot && entry.data.snapshot
+    reference &&
+    entry !== reference &&
+    reference.data.snapshot &&
+    entry.data.snapshot
       ? parameterDifferences(entry.data.snapshot, reference.data.snapshot)
       : [];
   const canCompare = several && !overlay && !!model;
@@ -332,12 +380,15 @@ function InspectorSession({
     library.isFull(id) || overlay
       ? `${samples.toLocaleString()} samples`
       : `${samples.toLocaleString()} samples · preview`;
-  const summaryOn = summarizing && !overlay && !!model && entries.length > 0 && !compareOn;
+  const summaryOn =
+    summarizing && !overlay && !!model && entries.length > 0 && !compareOn;
 
   // What is on show, for the Ask bar: the shown runs, the active plot's signals, and its zoom.
   const activeView = entries.length ? plotView(config.plots[active]) : null;
   const zoomed =
-    !!activeView && (activeView.x[0] > duration * 1e-9 || activeView.x[1] < duration * (1 - 1e-9));
+    !!activeView &&
+    (activeView.x[0] > duration * 1e-9 ||
+      activeView.x[1] < duration * (1 - 1e-9));
   const plotted = [...new Set(activeSignals.map((a) => a.key))].slice(0, 12);
   const runContext: RunContext | null =
     !overlay && model && entries.length
@@ -351,14 +402,17 @@ function InspectorSession({
           signalNames: Object.fromEntries(
             plotted.map((key) => [
               key,
-              entries.flatMap((e) => e.data.series).find((s) => s.key === key)?.name ?? key,
+              entries.flatMap((e) => e.data.series).find((s) => s.key === key)
+                ?.name ?? key,
             ]),
           ),
         }
       : null;
   const contextKey = JSON.stringify(runContext);
   useEffect(() => {
-    publishInspectorContext(contextKey === 'null' ? null : (JSON.parse(contextKey) as RunContext));
+    publishInspectorContext(
+      contextKey === 'null' ? null : (JSON.parse(contextKey) as RunContext),
+    );
   }, [contextKey]);
   useEffect(() => () => publishInspectorContext(null), []);
 
@@ -377,7 +431,8 @@ function InspectorSession({
     }
     setComparing(false);
     setSummarizing(false);
-    if (!library.open.includes(command.runId)) library.setOpen(command.runId, true);
+    if (!library.open.includes(command.runId))
+      library.setOpen(command.runId, true);
     setPendingFocus(command);
   });
   useEffect(() => {
@@ -395,9 +450,17 @@ function InspectorSession({
     const entry = entries.find((e) => e.id === focus.runId);
     if (!entry) return; // wait for the run's data
     setPendingFocus(null);
-    const x = focus.window ? padWindow(focus.window, duration) : windowAround(focus.at ?? 0, duration);
+    const x = focus.window
+      ? padWindow(focus.window, duration)
+      : windowAround(focus.at ?? 0, duration);
     edit((c) => {
-      const signals = toggleAssignment(c.plots[c.active].signals, focus.key, focus.runId, true, openIds);
+      const signals = toggleAssignment(
+        c.plots[c.active].signals,
+        focus.key,
+        focus.runId,
+        true,
+        openIds,
+      );
       return {
         ...c,
         plots: c.plots.map((p, i) =>
@@ -408,7 +471,10 @@ function InspectorSession({
                 view: {
                   x,
                   y: fitSeries(
-                    tracesOf(signals).map((t) => ({ time: t.time, values: t.values })),
+                    tracesOf(signals).map((t) => ({
+                      time: t.time,
+                      values: t.values,
+                    })),
                     x,
                   ),
                 },
@@ -522,7 +588,13 @@ function InspectorSession({
           onFocus={(runId, key, target) => {
             setSummarizing(false);
             if (!library.open.includes(runId)) library.setOpen(runId, true);
-            setPendingFocus({ type: 'focus', modelId: model, runId, key, ...target });
+            setPendingFocus({
+              type: 'focus',
+              modelId: model,
+              runId,
+              key,
+              ...target,
+            });
           }}
         />
       ) : compareOn ? (
@@ -534,8 +606,8 @@ function InspectorSession({
         />
       ) : !config || (!entries.length && !listsRuns) ? (
         <div className="di-empty">
-          Select a signal wire → Log to Data Inspector, then run the model.
-          Sensor outputs can be logged; physical connections require a sensor.
+          Results shows only what you log. Check Log on a block output or a
+          signal wire, then run the model.
         </div>
       ) : (
         <>
@@ -657,22 +729,22 @@ function InspectorSession({
                       runsPane.stored ? { height: runsPane.size } : undefined
                     }
                   >
-                  <div className="di-pane-title">
-                    <strong>Runs</strong>
-                    <span>{library.runs?.length ?? 0}</span>
-                  </div>
-                  <RunList
-                    runs={library.runs}
-                    error={library.listError}
-                    latestId={result.id}
-                    open={library.open}
-                    colorOf={library.colorOf}
-                    onOpen={library.setOpen}
-                    onColor={library.setColor}
-                    onRename={library.rename}
-                    onRemove={library.remove}
-                  />
-                  <p>Tick up to three runs to show them together.</p>
+                    <div className="di-pane-title">
+                      <strong>Runs</strong>
+                      <span>{library.runs?.length ?? 0}</span>
+                    </div>
+                    <RunList
+                      runs={library.runs}
+                      error={library.listError}
+                      latestId={result.id}
+                      open={library.open}
+                      colorOf={library.colorOf}
+                      onOpen={library.setOpen}
+                      onColor={library.setColor}
+                      onRename={library.rename}
+                      onRemove={library.remove}
+                    />
+                    <p>Tick up to three runs to show them together.</p>
                   </div>
                   <PaneResizer
                     axis="y"
@@ -682,140 +754,234 @@ function InspectorSession({
                 </>
               )}
               <div className="di-signals-pane">
-              <div className="di-pane-title">
-                <strong>Signals</strong>
-                <span>{signalCount}</span>
-              </div>
-              <p>Assign to plot {active + 1}, or drag onto a plot.</p>
-              <input
-                aria-label="Search signals"
-                placeholder="Find a signal…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-              <label className="di-logged-filter">
+                <div className="di-pane-title">
+                  <strong>Signals</strong>
+                  <span>{signalCount}</span>
+                </div>
+                <p>Assign to plot {active + 1}, or drag onto a plot.</p>
                 <input
-                  type="checkbox"
-                  checked={onlyLogged}
-                  onChange={(e) => setOnlyLogged(e.target.checked)}
+                  aria-label="Search signals"
+                  placeholder="Find a signal…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
                 />
-                Logged nets only
-              </label>
-              {entries.map((entry) => {
-                const changes = differences(entry);
-                const groups = groupSignals(matching(entry));
-                return (
-                  <section
-                    key={entry.id}
-                    className="di-run-section"
-                    aria-label={`Signals of ${entry.title}`}
-                  >
-                    {(several || !overlay) && (
-                      <div className="di-run-head">
-                        {several ? (
-                          <input
-                            type="color"
-                            className="di-run-color"
-                            aria-label={`Colour of ${entry.title}`}
-                            title="Colour of this run on the plots"
-                            value={entry.color}
-                            onChange={(e) =>
-                              library.setColor(entry.id, e.target.value)
+                {entries.map((entry) => {
+                  const changes = differences(entry);
+                  const shown = matching(entry);
+                  const groups = groupSignals(shown.filter((s) => !s.physical));
+                  const physical = groupByBlock(
+                    shown.filter((s) => s.physical),
+                  );
+                  return (
+                    <section
+                      key={entry.id}
+                      className="di-run-section"
+                      aria-label={`Signals of ${entry.title}`}
+                    >
+                      {(several || !overlay) && (
+                        <div className="di-run-head">
+                          {several ? (
+                            <input
+                              type="color"
+                              className="di-run-color"
+                              aria-label={`Colour of ${entry.title}`}
+                              title="Colour of this run on the plots"
+                              value={entry.color}
+                              onChange={(e) =>
+                                library.setColor(entry.id, e.target.value)
+                              }
+                            />
+                          ) : null}
+                          <strong title={entry.title}>{entry.title}</strong>
+                          <small
+                            title={
+                              changes.length
+                                ? `Compared with ${reference.title}, this run differs: ${changes.join('; ')}`
+                                : undefined
                             }
-                          />
-                        ) : null}
-                        <strong title={entry.title}>{entry.title}</strong>
-                        <small
-                          title={
-                            changes.length
-                              ? `Compared with ${reference.title}, this run differs: ${changes.join('; ')}`
-                              : undefined
-                          }
-                        >
-                          {changes.length
-                            ? `${changes.length} change${changes.length === 1 ? '' : 's'}`
-                            : sampleText(entry.id, entry.data.time.length)}
-                        </small>
-                      </div>
-                    )}
-                    {groups.map(([group, signals]) => (
-                      <div key={group} className="di-group">
-                        {groups.length > 1 && (
-                          <div className="di-group-title">{group}</div>
-                        )}
-                        {signals.map((s) => {
-                          const on = isAssigned(activeSignals, s.key, entry.id, openIds);
-                          return (
-                            <div
-                              key={s.key}
-                              className={`di-signal ${on ? 'is-assigned' : ''}`}
-                            >
-                              <input
-                                type="checkbox"
-                                aria-label={`Plot ${s.name}${several ? ` of ${entry.title}` : ''} in plot ${active + 1}`}
-                                checked={on}
-                                onChange={(e) =>
-                                  toggle(active, s.key, entry.id, e.target.checked)
-                                }
-                              />
-                              <button
-                                className="di-drag-signal"
-                                draggable
-                                onDragStart={(e) => {
-                                  e.dataTransfer.setData(
-                                    'application/gradara-signal',
-                                    s.key,
-                                  );
-                                  e.dataTransfer.effectAllowed = 'copy';
-                                }}
-                                onClick={() =>
-                                  toggle(active, s.key, entry.id, !on)
-                                }
-                                title={`${s.name} · ${s.unit || 'unitless'}${s.netId ? ' · logged' : ''} — Drag onto a plot or click to toggle`}
+                          >
+                            {changes.length
+                              ? `${changes.length} change${changes.length === 1 ? '' : 's'}`
+                              : sampleText(entry.id, entry.data.time.length)}
+                          </small>
+                        </div>
+                      )}
+                      {entry.data.series.length === 0 && (
+                        <div className="di-nothing">
+                          <p>
+                            This run recorded nothing. Results shows only what
+                            you log: check <strong>Log</strong> on a block
+                            output or a signal wire, or turn on{' '}
+                            <strong>Record physical variables</strong> in the
+                            model’s properties.
+                          </p>
+                          {onLogAll && (
+                            <button type="button" onClick={onLogAll}>
+                              Log all block outputs
+                            </button>
+                          )}
+                          <small>Then run the model again.</small>
+                        </div>
+                      )}
+                      {groups.map(([group, signals]) => (
+                        <div key={group} className="di-group">
+                          {groups.length > 1 && (
+                            <div className="di-group-title">{group}</div>
+                          )}
+                          {signals.map((s) => {
+                            const on = isAssigned(
+                              activeSignals,
+                              s.key,
+                              entry.id,
+                              openIds,
+                            );
+                            return (
+                              <div
+                                key={s.key}
+                                className={`di-signal ${on ? 'is-assigned' : ''}`}
                               >
-                                <i
-                                  style={{
-                                    background: several
-                                      ? entry.color
-                                      : signalColor(entry.id, s.key),
-                                  }}
+                                <input
+                                  type="checkbox"
+                                  aria-label={`Plot ${s.name}${several ? ` of ${entry.title}` : ''} in plot ${active + 1}`}
+                                  checked={on}
+                                  onChange={(e) =>
+                                    toggle(
+                                      active,
+                                      s.key,
+                                      entry.id,
+                                      e.target.checked,
+                                    )
+                                  }
                                 />
-                                <span>{s.name}</span>
-                                <small>{s.unit || '—'}</small>
-                              </button>
+                                <button
+                                  className="di-drag-signal"
+                                  draggable
+                                  onDragStart={(e) => {
+                                    e.dataTransfer.setData(
+                                      'application/gradara-signal',
+                                      s.key,
+                                    );
+                                    e.dataTransfer.effectAllowed = 'copy';
+                                  }}
+                                  onClick={() =>
+                                    toggle(active, s.key, entry.id, !on)
+                                  }
+                                  title={`${s.name} · ${s.unit || 'unitless'}${s.netId ? ' · logged' : ''} — Drag onto a plot or click to toggle`}
+                                >
+                                  <i
+                                    style={{
+                                      background: several
+                                        ? entry.color
+                                        : signalColor(entry.id, s.key),
+                                    }}
+                                  />
+                                  <span>{s.name}</span>
+                                  <small>{s.unit || '—'}</small>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                      {physical.length > 0 && (
+                        <details className="di-physical">
+                          <summary>
+                            Physical results{' '}
+                            <small>
+                              {physical.reduce(
+                                (n, [, list]) => n + list.length,
+                                0,
+                              )}
+                            </small>
+                          </summary>
+                          {physical.map(([group, signals]) => (
+                            <div key={group} className="di-group">
+                              <div className="di-group-title">{group}</div>
+                              {signals.map((s) => {
+                                const on = isAssigned(
+                                  activeSignals,
+                                  s.key,
+                                  entry.id,
+                                  openIds,
+                                );
+                                return (
+                                  <div
+                                    key={s.key}
+                                    className={`di-signal ${on ? 'is-assigned' : ''}`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      aria-label={`Plot ${s.name}${several ? ` of ${entry.title}` : ''} in plot ${active + 1}`}
+                                      checked={on}
+                                      onChange={(e) =>
+                                        toggle(
+                                          active,
+                                          s.key,
+                                          entry.id,
+                                          e.target.checked,
+                                        )
+                                      }
+                                    />
+                                    <button
+                                      className="di-drag-signal"
+                                      draggable
+                                      onDragStart={(e) => {
+                                        e.dataTransfer.setData(
+                                          'application/gradara-signal',
+                                          s.key,
+                                        );
+                                        e.dataTransfer.effectAllowed = 'copy';
+                                      }}
+                                      onClick={() =>
+                                        toggle(active, s.key, entry.id, !on)
+                                      }
+                                      title={`${s.name} · ${s.unit || 'unitless'}${s.netId ? ' · logged' : ''} — Drag onto a plot or click to toggle`}
+                                    >
+                                      <i
+                                        style={{
+                                          background: several
+                                            ? entry.color
+                                            : signalColor(entry.id, s.key),
+                                        }}
+                                      />
+                                      <span>{s.name}</span>
+                                      <small>{s.unit || '—'}</small>
+                                    </button>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </section>
-                );
-              })}
-              {!entries.length ? (
-                <p>
+                          ))}
+                        </details>
+                      )}
+                    </section>
+                  );
+                })}
+                {!entries.length ? (
+                  <p>
+                    {loading
+                      ? 'Loading the run…'
+                      : 'No run is shown. Tick a run above to list its signals.'}
+                  </p>
+                ) : (
+                  !shownAny && <p>No matching signals.</p>
+                )}
+                {several && (
+                  <p>
+                    A signal ticked in one run is drawn for every shown run that
+                    has it; untick it in a run to hide it just there.
+                  </p>
+                )}
+                <p className="di-resolution">
                   {loading
-                    ? 'Loading the run…'
-                    : 'No run is shown. Tick a run above to list its signals.'}
+                    ? 'Loading full resolution…'
+                    : entries
+                        .map(
+                          (e) =>
+                            `${e.title}: ${sampleText(e.id, e.data.time.length)}`,
+                        )
+                        .join(' · ')}
                 </p>
-              ) : !shownAny && (
-                <p>
-                  No matching signals. Mark signal nets for logging and run
-                  again.
-                </p>
-              )}
-              {several && (
-                <p>
-                  A signal ticked in one run is drawn for every shown run that
-                  has it; untick it in a run to hide it just there.
-                </p>
-              )}
-              <p className="di-resolution">
-                {loading
-                  ? 'Loading full resolution…'
-                  : entries
-                      .map((e) => `${e.title}: ${sampleText(e.id, e.data.time.length)}`)
-                      .join(' · ')}
-              </p>
               </div>
             </aside>
             {!entries.length ? (
@@ -838,196 +1004,209 @@ function InspectorSession({
                 </div>
               </div>
             ) : (
-            <div
-              className="di-grid"
-              ref={(node) => {
-                attachCols(node);
-                attachRows(node);
-              }}
-              style={
-                maximized === null
-                  ? {
-                      gridTemplateColumns: colSplit.fractions
-                        .map((f) => `minmax(0,${f * 100}fr)`)
-                        .join(' 1px '),
-                      gridTemplateRows: rowSplit.fractions
-                        .map((f) => `minmax(180px,${f * 100}fr)`)
-                        .join(' 1px '),
-                      gap: 0,
-                    }
-                  : {
-                      gridTemplateColumns: 'minmax(0,1fr)',
-                      gridTemplateRows: 'minmax(180px,1fr)',
-                    }
-              }
-            >
-              {displayed.map((index) => {
-                const p = config.plots[index],
-                  selected: RunTrace[] = tracesOf(p.signals),
-                  v = plotView(p),
-                  missing = p.signals.filter(
-                    (a) => !entries.some((e) => e.data.series.some((s) => s.key === a.key)),
-                  );
-                return (
-                  <div
-                    role="presentation"
-                    key={index}
-                    className={`di-tile ${active === index ? 'is-active' : ''}`}
-                    style={
-                      maximized === null
-                        ? {
-                            gridColumn: (index % cols) * 2 + 1,
-                            gridRow: Math.floor(index / cols) * 2 + 1,
-                          }
-                        : undefined
-                    }
-                    onDragOver={(e) => {
-                      if (
-                        e.dataTransfer.types.includes(
-                          'application/gradara-signal',
-                        )
-                      ) {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'copy';
+              <div
+                className="di-grid"
+                ref={(node) => {
+                  attachCols(node);
+                  attachRows(node);
+                }}
+                style={
+                  maximized === null
+                    ? {
+                        gridTemplateColumns: colSplit.fractions
+                          .map((f) => `minmax(0,${f * 100}fr)`)
+                          .join(' 1px '),
+                        gridTemplateRows: rowSplit.fractions
+                          .map((f) => `minmax(180px,${f * 100}fr)`)
+                          .join(' 1px '),
+                        gap: 0,
                       }
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      const key = e.dataTransfer.getData(
-                        'application/gradara-signal',
-                      );
-                      if (entries.some((r) => r.data.series.some((s) => s.key === key))) {
-                        place(index, key);
-                        edit((c) => ({ ...c, active: index }));
+                    : {
+                        gridTemplateColumns: 'minmax(0,1fr)',
+                        gridTemplateRows: 'minmax(180px,1fr)',
                       }
-                    }}
-                  >
-                    <header>
-                      <button
-                        aria-label={`Select plot ${index + 1}`}
-                        aria-pressed={active === index}
-                        onClick={() => edit((c) => ({ ...c, active: index }))}
-                      >
-                        <span className="di-plot-number">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>{' '}
-                        Plot {index + 1}
-                      </button>
-                      <span>
-                        {[
-                          ...new Set(selected.map((s) => s.unit || 'unitless')),
-                        ].join(' / ')}
-                      </span>
-                      <button
-                        aria-label={
-                          maximized === index ? 'Restore' : 'Maximize'
-                        }
-                        title={
-                          maximized === index ? 'Restore plot' : 'Maximize plot'
-                        }
-                        onClick={() =>
-                          setMaximized(maximized === index ? null : index)
-                        }
-                      >
-                        {maximized === index ? (
-                          <Minimize2 size={13} aria-hidden="true" />
-                        ) : (
-                          <Maximize2 size={13} aria-hidden="true" />
-                        )}
-                      </button>
-                      <button
-                        aria-label={`Clear plot ${index + 1}`}
-                        title="Clear plot"
-                        onClick={() =>
-                          edit((c) => ({
-                            ...c,
-                            plots: c.plots.map((p, i) =>
-                              i === index ? { signals: [] } : p,
-                            ),
-                          }))
-                        }
-                      >
-                        <X size={14} aria-hidden="true" />
-                      </button>
-                    </header>
-                    <div className="di-chart">
-                      <PlotViewport>
-                        {({ width, height }) => (
-                          <InspectorPlot
-                            width={width}
-                            height={height}
-                            time={time}
-                            traces={selected}
-                            view={v}
-                            axes={axes}
-                            mode={mode}
-                            duration={duration}
-                            onActivate={() =>
-                              edit((c) => ({ ...c, active: index }))
+                }
+              >
+                {displayed.map((index) => {
+                  const p = config.plots[index],
+                    selected: RunTrace[] = tracesOf(p.signals),
+                    v = plotView(p),
+                    missing = p.signals.filter(
+                      (a) =>
+                        !entries.some((e) =>
+                          e.data.series.some((s) => s.key === a.key),
+                        ),
+                    );
+                  return (
+                    <div
+                      role="presentation"
+                      key={index}
+                      className={`di-tile ${active === index ? 'is-active' : ''}`}
+                      style={
+                        maximized === null
+                          ? {
+                              gridColumn: (index % cols) * 2 + 1,
+                              gridRow: Math.floor(index / cols) * 2 + 1,
                             }
-                            onView={(next) => changeView(index, next)}
-                            onFit={() => fit(index)}
-                          />
-                        )}
-                      </PlotViewport>
-                      {!selected.length && (
-                        <div className="di-drop-hint">
-                          Select signals or drop them here
-                        </div>
-                      )}
-                    </div>
-                    <div className="di-legend">
-                      {selected.map((s) => (
+                          : undefined
+                      }
+                      onDragOver={(e) => {
+                        if (
+                          e.dataTransfer.types.includes(
+                            'application/gradara-signal',
+                          )
+                        ) {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'copy';
+                        }
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const key = e.dataTransfer.getData(
+                          'application/gradara-signal',
+                        );
+                        if (
+                          entries.some((r) =>
+                            r.data.series.some((s) => s.key === key),
+                          )
+                        ) {
+                          place(index, key);
+                          edit((c) => ({ ...c, active: index }));
+                        }
+                      }}
+                    >
+                      <header>
                         <button
-                          key={s.key}
-                          title="Remove from this plot"
-                          onClick={() => toggle(index, s.signal, s.run, false)}
+                          aria-label={`Select plot ${index + 1}`}
+                          aria-pressed={active === index}
+                          onClick={() => edit((c) => ({ ...c, active: index }))}
                         >
-                          <i
-                            style={{
-                              background: s.dash?.length
-                                ? `repeating-linear-gradient(90deg, ${s.color} 0 ${s.dash[0] || 6}px, transparent ${s.dash[0] || 6}px ${(s.dash[0] || 6) + (s.dash[1] ?? 3)}px)`
-                                : s.color,
-                            }}
-                          />
-                          {several
-                            ? `${s.name} · ${entries.find((e) => e.id === s.run)?.title ?? ''}`
-                            : s.name}
-                          {s.unit ? ` (${s.unit})` : ''} ×
+                          <span className="di-plot-number">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>{' '}
+                          Plot {index + 1}
                         </button>
-                      ))}
-                      {missing.length > 0 && (
                         <span>
-                          {missing.length} assigned signal(s) unavailable in
-                          the shown runs
+                          {[
+                            ...new Set(
+                              selected.map((s) => s.unit || 'unitless'),
+                            ),
+                          ].join(' / ')}
                         </span>
-                      )}
+                        <button
+                          aria-label={
+                            maximized === index ? 'Restore' : 'Maximize'
+                          }
+                          title={
+                            maximized === index
+                              ? 'Restore plot'
+                              : 'Maximize plot'
+                          }
+                          onClick={() =>
+                            setMaximized(maximized === index ? null : index)
+                          }
+                        >
+                          {maximized === index ? (
+                            <Minimize2 size={13} aria-hidden="true" />
+                          ) : (
+                            <Maximize2 size={13} aria-hidden="true" />
+                          )}
+                        </button>
+                        <button
+                          aria-label={`Clear plot ${index + 1}`}
+                          title="Clear plot"
+                          onClick={() =>
+                            edit((c) => ({
+                              ...c,
+                              plots: c.plots.map((p, i) =>
+                                i === index ? { signals: [] } : p,
+                              ),
+                            }))
+                          }
+                        >
+                          <X size={14} aria-hidden="true" />
+                        </button>
+                      </header>
+                      <div className="di-chart">
+                        <PlotViewport>
+                          {({ width, height }) => (
+                            <InspectorPlot
+                              width={width}
+                              height={height}
+                              time={time}
+                              traces={selected}
+                              view={v}
+                              axes={axes}
+                              mode={mode}
+                              duration={duration}
+                              onActivate={() =>
+                                edit((c) => ({ ...c, active: index }))
+                              }
+                              onView={(next) => changeView(index, next)}
+                              onFit={() => fit(index)}
+                            />
+                          )}
+                        </PlotViewport>
+                        {!selected.length && (
+                          <div className="di-drop-hint">
+                            Select signals or drop them here
+                          </div>
+                        )}
+                      </div>
+                      <div className="di-legend">
+                        {selected.map((s) => (
+                          <button
+                            key={s.key}
+                            title="Remove from this plot"
+                            onClick={() =>
+                              toggle(index, s.signal, s.run, false)
+                            }
+                          >
+                            <i
+                              style={{
+                                background: s.dash?.length
+                                  ? `repeating-linear-gradient(90deg, ${s.color} 0 ${s.dash[0] || 6}px, transparent ${s.dash[0] || 6}px ${(s.dash[0] || 6) + (s.dash[1] ?? 3)}px)`
+                                  : s.color,
+                              }}
+                            />
+                            {several
+                              ? `${s.name} · ${entries.find((e) => e.id === s.run)?.title ?? ''}`
+                              : s.name}
+                            {s.unit ? ` (${s.unit})` : ''} ×
+                          </button>
+                        ))}
+                        {missing.length > 0 && (
+                          <span>
+                            {missing.length} assigned signal(s) unavailable in
+                            the shown runs
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-              {maximized === null &&
-                Array.from({ length: cols - 1 }, (_, i) => (
-                  <PaneResizer
-                    key={`col-${i}`}
-                    className="in-grid"
-                    style={{ gridColumn: i * 2 + 2, gridRow: '1 / -1' }}
-                    label={`Resize plot columns ${i + 1} and ${i + 2}`}
-                    {...colSplit.divider(i, 'x')}
-                  />
-                ))}
-              {maximized === null &&
-                Array.from({ length: rows - 1 }, (_, i) => (
-                  <PaneResizer
-                    key={`row-${i}`}
-                    axis="y"
-                    className="in-grid"
-                    style={{ gridRow: i * 2 + 2, gridColumn: '1 / -1' }}
-                    label={`Resize plot rows ${i + 1} and ${i + 2}`}
-                    {...rowSplit.divider(i, 'y')}
-                  />
-                ))}
-            </div>
+                  );
+                })}
+                {maximized === null &&
+                  Array.from({ length: cols - 1 }, (_, i) => (
+                    <PaneResizer
+                      key={`col-${i}`}
+                      className="in-grid"
+                      style={{ gridColumn: i * 2 + 2, gridRow: '1 / -1' }}
+                      label={`Resize plot columns ${i + 1} and ${i + 2}`}
+                      {...colSplit.divider(i, 'x')}
+                    />
+                  ))}
+                {maximized === null &&
+                  Array.from({ length: rows - 1 }, (_, i) => (
+                    <PaneResizer
+                      key={`row-${i}`}
+                      axis="y"
+                      className="in-grid"
+                      style={{ gridRow: i * 2 + 2, gridColumn: '1 / -1' }}
+                      label={`Resize plot rows ${i + 1} and ${i + 2}`}
+                      {...rowSplit.divider(i, 'y')}
+                    />
+                  ))}
+              </div>
             )}
           </div>
           <footer className="di-footer">
@@ -1053,6 +1232,7 @@ export default function DataInspector(props: {
   error: string;
   stale: boolean;
   modelId?: string;
+  onLogAll?: () => void;
 }) {
   if (!props.result)
     return (
@@ -1069,11 +1249,17 @@ export default function DataInspector(props: {
           </div>
         )}
         {props.running && props.progress ? (
-          <RunProgress track={props.progress} variant="panel" onStop={props.onStop} />
+          <RunProgress
+            track={props.progress}
+            variant="panel"
+            onStop={props.onStop}
+          />
         ) : (
           <div className="di-empty">
-            Select a signal wire → Log to Data Inspector, then run the model. Use
-            sensors to measure physical quantities.
+            Results shows only what you log. Check Log on a block output (in its
+            properties, or right-click → Log outputs) or on a signal wire, then
+            run the model. Turn on Record physical variables in the model’s
+            properties to see voltages, currents, and speeds without sensors.
           </div>
         )}
       </section>

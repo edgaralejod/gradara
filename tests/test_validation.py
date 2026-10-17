@@ -13,6 +13,7 @@ import pytest
 from server.engine import simulate
 from server.models import Project
 from tests.test_msl_engine import _block, _w, wrap
+from tests.recording import log_outputs
 
 E, T, TR = 'electrical', 'thermal', 'translational'
 
@@ -20,7 +21,7 @@ E, T, TR = 'electrical', 'thermal', 'translational'
 def run(blocks, wires, duration):
     project = Project.model_validate({'version': 1, 'name': 'validation', 'duration': duration, 'revision': 0,
                                       'blocks': blocks, 'wires': wires})
-    result = asyncio.run(simulate(project, 'val' + uuid.uuid4().hex[:10]))
+    result = asyncio.run(simulate(log_outputs(project), 'val' + uuid.uuid4().hex[:10]))
     series = {s['key']: s['values'] for s in result['series']}
     return result['time'], series
 

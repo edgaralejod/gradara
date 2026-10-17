@@ -486,7 +486,10 @@
         "width": 80,
         "height": 48
       },
-      "rotation": 180
+      "rotation": 180,
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "shi",
@@ -1023,7 +1026,10 @@
       "labelOffset": {
         "x": 48,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "svg",
@@ -1440,7 +1446,7 @@
       "id": "plot1",
       "label": "H-bridge load current",
       "series": [
-        "hi.y"
+        "hi.i"
       ],
       "labels": [
         "i load"
@@ -1450,7 +1456,7 @@
       "id": "plot2",
       "label": "Inverter output",
       "series": [
-        "sv.y"
+        "sv.v"
       ],
       "labels": [
         "v AC"

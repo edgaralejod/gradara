@@ -74,7 +74,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "to",
@@ -207,7 +210,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "back2",
@@ -301,7 +307,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "src",
@@ -638,7 +647,10 @@
       "labelOffset": {
         "x": 80,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [
@@ -834,7 +846,7 @@
       "id": "plot2",
       "label": "Rail",
       "series": [
-        "vs.y"
+        "vs.v"
       ],
       "labels": [
         "VBUS"

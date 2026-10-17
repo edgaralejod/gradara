@@ -303,7 +303,12 @@
       "size": {
         "width": 48,
         "height": 96
-      }
+      },
+      "logged": [
+        "y1",
+        "y2",
+        "y3"
+      ]
     },
     {
       "id": "add",
@@ -363,7 +368,10 @@
       "labelOffset": {
         "x": 0,
         "y": -80
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

@@ -32,6 +32,7 @@ function Results({
   modelId,
   progress = null,
   onStop,
+  onLogAll,
 }: {
   result: SimulationResult | null;
   running: boolean;
@@ -43,6 +44,8 @@ function Results({
   empty?: boolean;
   dedicated?: boolean;
   modelId?: string;
+  /** Log every block output of the model (a run that recorded nothing offers it). */
+  onLogAll?: () => void;
 }) {
   const [channel, setChannel] = useState('');
   const [compare, setCompare] = useState('');
@@ -108,6 +111,7 @@ function Results({
         error={error}
         stale={stale}
         modelId={modelId}
+        onLogAll={onLogAll}
       />
     );
   return (
@@ -118,9 +122,7 @@ function Results({
       <div className="results-heading">
         <div>
           <Activity size={16} />
-          <strong>
-            {dedicated ? 'Data Inspector' : 'Simulation results'}
-          </strong>
+          <strong>{dedicated ? 'Data Inspector' : 'Simulation results'}</strong>
           {running ? (
             <span className="result-status">
               <LoaderCircle className="spin" size={12} />

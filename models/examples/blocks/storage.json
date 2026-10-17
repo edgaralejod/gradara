@@ -175,7 +175,10 @@
       "labelOffset": {
         "x": 80,
         "y": 0
-      }
+      },
+      "logged": [
+        "power"
+      ]
     },
     {
       "id": "heat",
@@ -365,7 +368,10 @@
       "labelOffset": {
         "x": 112,
         "y": -46
-      }
+      },
+      "logged": [
+        "T"
+      ]
     },
     {
       "id": "gb",
@@ -602,7 +608,10 @@
       "labelOffset": {
         "x": 72,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gc",
@@ -999,7 +1008,7 @@
       "id": "plot3",
       "label": "Supercapacitor voltage",
       "series": [
-        "vcap.y"
+        "vcap.v"
       ],
       "labels": [
         "v (V)"

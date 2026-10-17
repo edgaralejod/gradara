@@ -43,7 +43,7 @@ These are reference values from testing. The app computes new results each time 
 
 This is an ideal **synchronous** buck: no diode, no dead time, no switching or conduction losses, no capacitor ESR, no inductor resistance, and no parasitics. Closed switches conduct in both directions, so the inductor current can go negative during the startup transient. There is no voltage or current control loop.
 
-**Export CSV** in Results downloads every output point. The on-screen plot is thinned out but keeps the points around each switching event.
+**Export CSV** in Results downloads every output point of the logged signals. The on-screen plot is thinned out but keeps the points around each switching event.
 
 ## For contributors
 
