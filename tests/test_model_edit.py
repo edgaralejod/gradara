@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from server import model_edit as editing
 from server.diagnostics import Diagnostic, SimulationFailure
+from server.hierarchy import boundary_blocks
 from server.models import Definition, Project
 from tests.test_workspace import feedback
 
@@ -189,6 +190,141 @@ def test_semantic_view_drops_layout():
     assert 'annotations' not in view and 'plots' not in view and 'junctions' not in view
     assert all('position' not in b and 'size' not in b for b in view['blocks'])
     assert all('waypoints' not in w for w in view['wires'])
+    # Inside subsystems too: the prompt carries behavior and connectivity only.
+    grouped = Project.model_validate_json((ROOT/'tests/fixtures/grouped-dc.json').read_text(encoding='utf-8'))
+    view = editing.semantic_view(grouped)
+    assert len(view['subsystems']) == 2
+    for sheet in [view, *view['subsystems']]:
+        assert 'junctions' not in sheet and 'annotations' not in sheet
+        for block in sheet['blocks']:
+            assert not any(key in block for key in editing.LAYOUT)
+            assert all('side' not in p and 'offset' not in p for p in block['definition']['ports'])
+        assert all('waypoints' not in w and 'junctions' not in w for w in sheet['wires'])
+        assert all('label' not in n for n in sheet.get('nets') or [])
+
+
+# ---------------------------------------------------------------- grouping
+
+def grouped_servo():
+    before = servo()
+    edited, changes = apply(before, op('group_into_subsystem', blockIds=['controller', 'drive', 'isens', 'motor'],
+                                       alias='stage', name='Motor stage'))
+    return before, edited, changes
+
+
+def test_group_into_subsystem_keeps_ids_and_makes_ports_of_cut_nets():
+    before, edited, changes = grouped_servo()
+    instance = next(b for b in edited.blocks if b.id == 'b_stage')
+    assert instance.definition.subsystem.ref == 's_stage' and instance.definition.name == 'Motor stage'
+    assert edited.version == 2
+    sub = next(s for s in edited.subsystems if s.id == 's_stage')
+    # Inner blocks keep their IDs, definitions, and positions.
+    for ident in ('controller', 'drive', 'isens', 'motor'):
+        assert next(b for b in sub.blocks if b.id == ident) == next(b for b in before.blocks if b.id == ident)
+        assert ident not in {b.id for b in edited.blocks}
+    # One port per cut net: inputs first, then outputs, then terminals, named after the inside port or the net.
+    ports = [(p.id, p.name, p.direction, p.domain) for p in instance.definition.ports]
+    assert ports == [('p_stage_ref', 'ref', 'input', 'signal'), ('p_stage_measured', 'θ measured', 'input', 'signal'),
+                     ('p_stage_a', 'a−', 'physical', 'electrical'), ('p_stage_shaft', 'shaft', 'physical', 'mechanical')]
+    pills = boundary_blocks(sub)
+    assert [b.definition.kind for b in pills] == ['inport', 'inport', 'connport', 'connport']
+    assert [b.definition.boundary.order for b in pills] == [0, 1, 2, 3]
+    assert [b.definition.symbol for b in pills[:2]] == ['1', '2']
+    assert changes[0].op == 'group_into_subsystem' and changes[0].blockIds[0] == 'b_stage'
+    assert set(changes[0].blockIds[1:]) == {'controller', 'drive', 'isens', 'motor'}
+    assert changes[0].description == 'Group 4 blocks into Motor stage'
+    assert Project.model_validate(edited.model_dump()) == edited
+
+
+def test_group_keeps_outer_wires_and_nets_and_copies_nets_inside_unlogged():
+    before = servo()
+    feedback = feedback_wire(before)
+    net_before = next(n for n in before.nets if feedback in n.wireIds)
+    net_before.logged = True
+    edited, _ = apply(before, op('group_into_subsystem', blockIds=['controller', 'drive', 'isens', 'motor'], alias='stage'))
+    # The cut feedback wire keeps its ID outside and now ends on the instance port.
+    wire = next(w for w in edited.wires if w.id == feedback)
+    assert (wire.source, wire.sourceHandle, wire.target, wire.targetHandle) == ('sensor', 'y', 'b_stage', 'p_stage_measured')
+    outer = next(n for n in edited.nets if feedback in n.wireIds)
+    assert outer.id == net_before.id and outer.name == 'θ measured' and outer.logged
+    sub = edited.subsystems[-1]
+    assert sub.name == 'Subsystem 1'
+    inner = next(n for n in sub.nets if n.id == net_before.id)
+    assert inner.name == 'θ measured' and not inner.logged
+    inner_wire = next(w for w in sub.wires if w.id in inner.wireIds)
+    assert inner.wireIds == [inner_wire.id] and inner_wire.id.startswith('w_stage_')
+    assert (inner_wire.source, inner_wire.sourceHandle, inner_wire.target, inner_wire.targetHandle) == \
+        ('p_stage_measured', 'y', 'controller', 'measured')
+    # Every wire on every sheet belongs to one net.
+    for sheet in [edited, sub]:
+        assert sorted(i for n in sheet.nets for i in n.wireIds) == sorted(w.id for w in sheet.wires)
+    # Untouched wires keep their routes.
+    kept = [w for w in edited.wires if w.source != 'b_stage' and w.target != 'b_stage']
+    assert all(w == next(x for x in before.wires if x.id == w.id) for w in kept)
+
+
+def test_later_operations_use_the_instance_and_its_ports():
+    edited, changes = apply(servo(), op('group_into_subsystem', blockIds=['controller', 'drive', 'isens', 'motor'], alias='stage'),
+                            op('add_block', libraryId='builtin:scope', alias='probe', near='stage'),
+                            op('disconnect', source='reference', sourcePort='y', target='stage', targetPort='p_stage_ref'),
+                            op('add_block', libraryId='builtin:step', alias='other'),
+                            op('connect', source='other', sourcePort='y', target='stage', targetPort='p_stage_ref'),
+                            op('rename_block', blockId='stage', name='Drive'))
+    wire = next(w for w in edited.wires if w.source == 'b_other')
+    assert (wire.target, wire.targetHandle) == ('b_stage', 'p_stage_ref')
+    assert next(b for b in edited.blocks if b.id == 'b_stage').definition.name == 'Drive'
+    assert [c.op for c in changes] == ['group_into_subsystem', 'add_block', 'disconnect', 'add_block', 'connect', 'rename_block']
+    assert sorted(i for n in edited.nets for i in n.wireIds) == sorted(w.id for w in edited.wires)
+    with pytest.raises(ValueError, match='is now inside Subsystem 1; the AI edits the top level only'):
+        apply(servo(), op('group_into_subsystem', blockIds=['controller', 'drive'], alias='g'),
+              op('set_parameter', blockId='controller', parameterId='kp', value=1))
+
+
+def goto_servo():
+    project = servo()
+    goto = catalog()['builtin:gain'].model_copy(deep=True)
+    goto.kind, goto.name, goto.tag, goto.ports = 'goto', 'Goto', 'spd', [goto.ports[0]]
+    sender = catalog()['builtin:gain'].model_copy(deep=True)
+    sender.kind, sender.name, sender.tag, sender.ports = 'from', 'From', 'spd', [sender.ports[1]]
+    data = project.model_dump(exclude_none=True)
+    data['blocks'] += [{'id': 'g1', 'definition': goto.model_dump(exclude_none=True), 'position': {'x': 0, 'y': 900}},
+                       {'id': 'f1', 'definition': sender.model_dump(exclude_none=True), 'position': {'x': 300, 'y': 900}}]
+    return Project.model_validate(data)
+
+
+@pytest.mark.parametrize('operation, message', [
+    (op('group_into_subsystem', blockIds=['controller'], alias='g'), '2 to 200 blocks'),
+    (op('group_into_subsystem', blockIds=['controller', 'nope'], alias='g'), 'Unknown block "nope"'),
+    (op('group_into_subsystem', blockIds=['controller', 'controller'], alias='g'), 'listed twice'),
+    (op('group_into_subsystem', blockIds=['controller', 'drive'], alias='9x'), 'short alias'),
+    (op('group_into_subsystem', blockIds=['controller', 'drive'], alias='g', name=''), '1 to 100 characters'),
+])
+def test_group_refuses_bad_selections(operation, message):
+    with pytest.raises(ValueError, match=message):
+        apply(servo(), operation)
+
+
+def test_group_refuses_a_goto_whose_from_stays_outside_and_blocks_inside_subsystems():
+    with pytest.raises(ValueError, match=r'Tags reach down only: group the From too, or leave the Goto outside'):
+        apply(goto_servo(), op('group_into_subsystem', blockIds=['g1', 'controller'], alias='g'))
+    edited, _ = apply(goto_servo(), op('group_into_subsystem', blockIds=['g1', 'f1'], alias='g'))
+    assert {b.id for b in edited.subsystems[-1].blocks} >= {'g1', 'f1'}
+    grouped = Project.model_validate_json((ROOT/'tests/fixtures/grouped-dc.json').read_text(encoding='utf-8'))
+    with pytest.raises(ValueError, match='"controller" is inside Drivetrain; the AI groups top-level blocks only'):
+        apply(grouped, op('group_into_subsystem', blockIds=['reference', 'controller'], alias='g'))
+    with pytest.raises(ValueError, match='subsystem port'):
+        from server import grouping
+        grouping.group(grouped.model_copy(update={'blocks': [*grouped.blocks, grouped.subsystems[0].blocks[3]]}),
+                       ['reference', grouped.subsystems[0].blocks[3].id], 'g', 'G')
+
+
+def test_group_limits():
+    groups = [op('group_into_subsystem', blockIds=['a', 'b'], alias=f'g{i}') for i in range(9)]
+    with pytest.raises(ValueError, match='at most 8'):
+        editing.check_limits(plan(*groups))
+    editing.check_limits(plan(*groups[:8]))
+    with pytest.raises(ValueError, match='needs alias and blockIds'):
+        editing.check_limits(plan(op('group_into_subsystem', alias='g')))
 
 
 # ---------------------------------------------------------------- pipeline

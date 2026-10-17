@@ -6,9 +6,9 @@
  */
 import type { Project } from '../lib/gradara/model';
 import { defaultBlockSize } from '../lib/gradara/block-design';
-import { portPoint } from '../lib/gradara/ports';
 import {
   groupIntoSubsystem,
+  placeBoundaryPorts,
   scopeView,
   syncInstances,
   writeScope,
@@ -58,30 +58,12 @@ export function namePorts(
 
 /** Every subsystem port sits level with the port it connects to, a short run away. */
 export function placePorts(project: Project, gap = 96): Project {
-  for (const sub of project.subsystems ?? [])
-    for (const b of sub.blocks) {
-      if (!b.definition.boundary) continue;
-      const w = sub.wires.find((w) => w.source === b.id || w.target === b.id);
-      if (!w) continue;
-      const [otherId, handle] =
-        w.source === b.id
-          ? [w.target, w.targetHandle]
-          : [w.source, w.sourceHandle];
-      const other = sub.blocks.find((o) => o.id === otherId);
-      const at = other && portPoint(other, handle);
-      if (!at) continue;
-      const size = b.size ?? defaultBlockSize(b.definition);
-      b.position =
-        at.side === 'left'
-          ? { x: at.x - gap - size.width, y: at.y - size.height / 2 }
-          : at.side === 'right'
-            ? { x: at.x + gap, y: at.y - size.height / 2 }
-            : at.side === 'top'
-              ? { x: at.x - size.width / 2, y: at.y - gap - size.height }
-              : { x: at.x - size.width / 2, y: at.y + gap };
-      w.waypoints = [];
-    }
-  return project;
+  return {
+    ...project,
+    subsystems: (project.subsystems ?? []).map((s) =>
+      placeBoundaryPorts(s, gap),
+    ),
+  };
 }
 
 /**

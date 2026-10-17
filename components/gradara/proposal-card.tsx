@@ -2,6 +2,7 @@
 import {
   Check,
   CircleAlert,
+  Group,
   Minus,
   PencilLine,
   Plus,
@@ -26,6 +27,7 @@ const GROUPS: { id: string; title: string; ops: string[]; icon: typeof Plus }[] 
     icon: PencilLine,
   },
   { id: 'rewired', title: 'Rewired', ops: ['connect', 'disconnect'], icon: Waypoints },
+  { id: 'grouped', title: 'Grouped into subsystems', ops: ['group_into_subsystem'], icon: Group },
 ];
 
 export default function ProposalCard({

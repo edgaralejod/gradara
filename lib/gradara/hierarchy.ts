@@ -726,6 +726,55 @@ export function groupIntoSubsystem(
   return { project: next, instanceId, subsystemId };
 }
 
+/**
+ * Put every boundary pill of a sheet in line with the port it connects to, `gap`
+ * units out from it (level with a side port, centred over or under a top or
+ * bottom one), and let the router redraw its wire. The sheet is returned
+ * unchanged when no pill moves.
+ */
+export function placeBoundaryPorts<
+  T extends { blocks: Block[]; wires: Wire[] },
+>(sheet: T, gap = 96): T {
+  const moved = new Map<string, Block>();
+  const cleared = new Set<string>();
+  for (const b of sheet.blocks) {
+    if (!isBoundary(b)) continue;
+    const w = sheet.wires.find((w) => w.source === b.id || w.target === b.id);
+    if (!w) continue;
+    const [otherId, handle] =
+      w.source === b.id
+        ? [w.target, w.targetHandle]
+        : [w.source, w.sourceHandle];
+    const other = sheet.blocks.find((o) => o.id === otherId);
+    const at = other && portPoint(other, handle);
+    if (!at) continue;
+    const size = blockSize(b);
+    const position = snapBlockPosition(
+      at.side === 'left'
+        ? { x: at.x - gap - size.width, y: at.y - size.height / 2 }
+        : at.side === 'right'
+          ? { x: at.x + gap, y: at.y - size.height / 2 }
+          : at.side === 'top'
+            ? { x: at.x - size.width / 2, y: at.y - gap - size.height }
+            : { x: at.x - size.width / 2, y: at.y + gap },
+      size,
+    );
+    if (position.x === b.position.x && position.y === b.position.y) continue;
+    moved.set(b.id, { ...b, position });
+    if (w.waypoints?.length || w.junctions?.length) cleared.add(w.id);
+  }
+  if (!moved.size) return sheet;
+  return {
+    ...sheet,
+    blocks: sheet.blocks.map((b) => moved.get(b.id) ?? b),
+    wires: sheet.wires.map((w) => {
+      if (!cleared.has(w.id)) return w;
+      const { waypoints: _route, junctions: _bends, ...rest } = w;
+      return rest;
+    }),
+  };
+}
+
 export function nextSubsystemName(project: Project) {
   const names = new Set(
     [project, ...subsystemsOf(project)].flatMap((s) =>

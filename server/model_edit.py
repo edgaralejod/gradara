@@ -6,6 +6,7 @@ from pydantic import Field, ValidationError
 from . import agent
 from .diagnostics import Diagnostic, SimulationFailure, validate_simulation
 from .engine import simulate
+from .grouping import group, next_subsystem_name
 from .llm import dispatch, structured
 from .model_agent import ParameterValue, Strict, catalog_snapshot, describe
 from .models import CAUSAL_DOMAINS, Block, BlockType, Definition, Net, Project, Wire, flatten_connects
@@ -13,14 +14,16 @@ from .paths import DATA
 
 MAX_CREATED = 2
 MAX_GENERATED = 3
+MAX_GROUPS = 8
 OPS = ('add_block', 'create_block', 'revise_definition', 'remove_block', 'rename_block', 'set_parameter',
-       'connect', 'disconnect', 'set_duration', 'log_signal')
+       'connect', 'disconnect', 'set_duration', 'log_signal', 'group_into_subsystem')
 LAYOUT = ('position', 'size', 'rotation', 'flip', 'labelOffset')
 
 
 class Operation(Strict):
     op: Literal[OPS]
     blockId: str | None = None
+    blockIds: list[str] | None = Field(default=None, max_length=200)
     alias: str | None = None
     libraryId: str | None = None
     name: str | None = None
@@ -79,17 +82,20 @@ class Unsupported(ValueError):
 def semantic_view(project: Project) -> dict:
     """The model without layout, so the prompt carries behavior and connectivity only."""
     data = project.model_dump(exclude_none=True, exclude={'annotations', 'plots', 'junctions'})
-    for block in data['blocks']:
-        for key in LAYOUT:
-            block.pop(key, None)
-        for port in block['definition']['ports']:
-            port.pop('side', None)
-            port.pop('offset', None)
-    for wire in data['wires']:
-        wire.pop('waypoints', None)
-        wire.pop('junctions', None)
-    for net in data.get('nets') or []:
-        net.pop('label', None)
+    for sheet in [data, *data.get('subsystems', [])]:
+        sheet.pop('junctions', None)
+        sheet.pop('annotations', None)
+        for block in sheet['blocks']:
+            for key in LAYOUT:
+                block.pop(key, None)
+            for port in block['definition']['ports']:
+                port.pop('side', None)
+                port.pop('offset', None)
+        for wire in sheet['wires']:
+            wire.pop('waypoints', None)
+            wire.pop('junctions', None)
+        for net in sheet.get('nets') or []:
+            net.pop('label', None)
     return data
 
 
@@ -106,6 +112,12 @@ def check_limits(plan: EditPlan):
     for o in revised:
         if not (o.blockId and o.prompt):
             raise ValueError('revise_definition needs blockId and prompt.')
+    groups = [o for o in plan.operations if o.op == 'group_into_subsystem']
+    if len(groups) > MAX_GROUPS:
+        raise ValueError(f'An edit can group blocks into at most {MAX_GROUPS} subsystems.')
+    for o in groups:
+        if not (o.alias and o.blockIds):
+            raise ValueError('group_into_subsystem needs alias and blockIds.')
 
 
 def _free_position(blocks, near, taken):
@@ -158,21 +170,28 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
     logs: list[str] = []   # a wire on each signal net to log
     counter = 0
 
+    grouped: dict[str, str] = {}   # block ID moved into a subsystem → the subsystem's name
+
     def resolve(ref: str | None, what: str = 'block') -> str:
         if ref in blocks:
             return ref
         if ref in aliases:
             return aliases[ref]
+        if ref in grouped:
+            raise ValueError(f'"{ref}" is now inside {grouped[ref]}; the AI edits the top level only.')
         raise ValueError(f'Unknown {what} "{ref}".')
 
     def name_of(block_id: str) -> str:
         return blocks[block_id].definition.name
 
-    def add_instance(op: Operation, definition: Definition):
+    def check_alias(op: Operation):
         if not op.alias or not op.alias.replace('_', 'a').isalnum() or not op.alias[0].isalpha():
             raise ValueError('New blocks need a short alias made of letters, digits, and underscores.')
         if op.alias in aliases:
             raise ValueError(f'The alias "{op.alias}" is used twice.')
+
+    def add_instance(op: Operation, definition: Definition):
+        check_alias(op)
         definition = definition.model_copy(deep=True)
         if op.name:
             definition.name = op.name
@@ -309,6 +328,27 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
             before = edited.duration
             edited.duration = op.duration
             changes.append(Change(op=op.op, description=f'Set the stop time from {before:g} s to {op.duration:g} s'))
+        elif op.op == 'group_into_subsystem':
+            check_alias(op)
+            if op.name is not None and not 1 <= len(op.name) <= 100:
+                raise ValueError('A subsystem name has 1 to 100 characters.')
+            nested = {b.id: s.name for s in edited.subsystems or [] for b in s.blocks}
+            for i in op.blockIds or []:
+                if i not in blocks and i not in aliases and i in nested:
+                    raise ValueError(f'"{i}" is inside {nested[i]}; the AI groups top-level blocks only.')
+            members = [resolve(i) for i in op.blockIds or []]
+            name = op.name or next_subsystem_name(edited)
+            # The new wires of this plan join nets first, so the grouping sees every wire on a net.
+            if edited.nets is not None and new_wires:
+                assign_nets(edited, new_wires)
+                new_wires.clear()
+            edited, ident = group(edited, members, op.alias, name)
+            blocks = {b.id: b for b in edited.blocks}
+            aliases[op.alias] = ident
+            for member in members:
+                grouped[member] = name
+            changes.append(Change(op=op.op, blockIds=[ident, *members],
+                                  description=f'Group {len(members)} blocks into {name}'))
     wire_ids = {w.id for w in edited.wires}
     if edited.nets is not None:
         for net in edited.nets:
@@ -339,6 +379,7 @@ Operations run in order:
 - connect (source, sourcePort, target, targetPort): signal connections run from an output port to an input port, and an input has one source; physical terminals connect only to the same domain. Block references may be existing IDs or aliases added earlier in this edit.
 - disconnect: wireId, or the four endpoint fields.
 - log_signal (blockId, sourcePort): record a signal output in the Data Inspector on the next run; it need not be connected. Results shows only logged outputs. To record a physical quantity (a current, a speed), add the matching sensor block, connect its measured side, then log the sensor output.
+- group_into_subsystem (blockIds, alias, name): move existing top-level blocks (2 or more) into a new subsystem; wires that cross its edge become its ports and keep their connections, and Gradara lays out the result. Use it when asked to organize, structure, tidy, or create subsystems in a model; give each group a short descriptive name. The new subsystem block is referenced by its alias; its port IDs are p_<alias>_<portName> (portName = the connected port's name, or the net's name, in letters, digits and _), so later connect operations may use them. Blocks moved inside can no longer be referenced. A Goto needs its From blocks in the same group. At most eight groups per edit.
 Prefer catalog blocks and parameter changes over new definitions. Gradara places new blocks and draws new wires in its house style, so never describe positions; give new blocks short names of 1-3 words. Keep physical references (ground) and connect every signal input you add. Set unused fields to null.
 If the request cannot be done with these operations or the supported physics (electrical including 3-phase, rotational and translational mechanical, thermal, magnetic, scalar Real and Boolean signals), explain why in unsupported and return one set_duration operation with the current stop time. Otherwise unsupported is empty.
 summary is one or two sentences for the user. assumptions are short and explicit.'''
