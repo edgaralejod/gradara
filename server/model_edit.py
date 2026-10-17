@@ -6,11 +6,12 @@ from pydantic import Field, ValidationError
 from . import agent
 from .diagnostics import Diagnostic, SimulationFailure, validate_simulation
 from .engine import simulate
-from .grouping import group, next_subsystem_name
+from .grouping import boundary_definition, group, next_subsystem_name
 from .llm import dispatch, structured
 from .model_agent import ParameterValue, Strict, catalog_snapshot, describe
-from .models import CAUSAL_DOMAINS, Block, BlockType, Definition, Net, Project, Wire, flatten_connects
+from .models import BOUNDARY_KINDS, CAUSAL_DOMAINS, Block, BlockType, Definition, Net, Project, Wire, flatten_connects
 from .paths import DATA
+from .sheets import copies, sheet_name, sheet_view, subsystem_at, sync_instances, write_sheet
 
 MAX_CREATED = 2
 MAX_GENERATED = 3
@@ -18,6 +19,9 @@ MAX_GROUPS = 8
 OPS = ('add_block', 'create_block', 'revise_definition', 'remove_block', 'rename_block', 'set_parameter',
        'connect', 'disconnect', 'set_duration', 'log_signal', 'group_into_subsystem')
 LAYOUT = ('position', 'size', 'rotation', 'flip', 'labelOffset')
+# A physical subsystem terminal for edits inside a subsystem (the library has no entry: the workbench
+# makes terminals from wires); it takes the domain of what it is first connected to.
+CONNPORT = boundary_definition('connport', 'Terminal', 'electrical', 0)
 
 
 class Operation(Strict):
@@ -58,6 +62,8 @@ class ModelEditRequest(Strict):
     context: str | None = Field(default=None, max_length=6000)
     # Set by Refine: the request then revises this proposal instead of starting over.
     previous: PreviousProposal | None = None
+    # The sheet to edit: a path of subsystem instance IDs from the top level (server/sheets.py); empty for the top level.
+    sheet: list[str] = Field(default_factory=list, max_length=20)
 
 
 class EditPlan(Strict):
@@ -159,8 +165,27 @@ def assign_nets(project: Project, new_wires: list[str]):
 
 def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Definition],
                      generated: dict[str, Definition] | None = None,
-                     revised: dict[str, Definition] | None = None) -> tuple[Project, list[Change]]:
-    """Apply every operation or none; raises ValueError with a readable reason."""
+                     revised: dict[str, Definition] | None = None,
+                     sheet: list[str] | None = None) -> tuple[Project, list[Change]]:
+    """Apply every operation or none, to the top level or to the inside of the subsystem at `sheet`
+    (a path of instance IDs, server/sheets.py); raises ValueError with a readable reason."""
+    ref = subsystem_at(project, sheet or [])
+    if ref is None:
+        return _apply(project, plan, catalog, generated, revised, validate=True)
+    view, changes = _apply(sheet_view(project, ref), plan, catalog, generated, revised, validate=False)
+    # Instances everywhere follow the edited inside: a port added or removed there is added or removed on them.
+    edited = sync_instances(write_sheet(project, ref, view))
+    try:
+        result = Project.model_validate(edited.model_dump())
+    except ValidationError as exc:
+        raise ValueError('The edited model is not valid: ' + '; '.join(e['msg'] for e in exc.errors()[:3])) from exc
+    return result, changes
+
+
+def _apply(project: Project, plan: EditPlan, catalog: dict[str, Definition],
+           generated: dict[str, Definition] | None, revised: dict[str, Definition] | None,
+           validate: bool) -> tuple[Project, list[Change]]:
+    """The operations on one sheet, given as a Project (a subsystem's inside as `sheet_view` makes it)."""
     generated, revised = generated or {}, revised or {}
     edited = project.model_copy(deep=True)
     blocks = {b.id: b for b in edited.blocks}
@@ -178,7 +203,7 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
         if ref in aliases:
             return aliases[ref]
         if ref in grouped:
-            raise ValueError(f'"{ref}" is now inside {grouped[ref]}; the AI edits the top level only.')
+            raise ValueError(f'"{ref}" is now inside {grouped[ref]}; this edit cannot change it further.')
         raise ValueError(f'Unknown {what} "{ref}".')
 
     def name_of(block_id: str) -> str:
@@ -213,6 +238,24 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
         aliases[op.alias] = ident
         return ident
 
+    def is_pill(block: Block) -> bool:
+        return block.definition.kind in BOUNDARY_KINDS and block.definition.boundary is not None
+
+    def adopt(ident: str, port, other):
+        """`port` of block `ident`, retyped to `other`'s domain when the block is an unwired subsystem port that fits."""
+        block = blocks[ident]
+        if not is_pill(block) or port.domain == other.domain or any(ident in (w.source, w.target) for w in edited.wires):
+            return port
+        kind = block.definition.kind
+        fits = (other.domain in CAUSAL_DOMAINS and other.direction == ('input' if kind == 'inport' else 'output')
+                if kind in ('inport', 'outport') else other.direction == 'physical')
+        if not fits:
+            return port
+        block.definition.domain = other.domain
+        block.definition.ports[0].domain = other.domain
+        block.definition = Definition.model_validate(block.definition.model_dump())
+        return block.definition.ports[0]
+
     def driven(block_id: str, port_id: str) -> bool:
         return any((a, b) == (block_id, port_id) or (c, d) == (block_id, port_id) for a, b, c, d in flatten_connects(edited))
 
@@ -240,10 +283,13 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
             ident = resolve(op.blockId)
             removed = [w.id for w in edited.wires if ident in (w.source, w.target)]
             name = name_of(ident)
+            pill = is_pill(blocks[ident])
             edited.blocks = [b for b in edited.blocks if b.id != ident]
             edited.wires = [w for w in edited.wires if w.id not in removed]
             del blocks[ident]
-            changes.append(Change(op=op.op, blockIds=[ident], wireIds=removed, description=f'Remove {name}'))
+            changes.append(Change(op=op.op, blockIds=[ident], wireIds=removed,
+                                  description=f'Remove the subsystem port {name} (and its wires outside)' if pill
+                                  else f'Remove {name}'))
         elif op.op == 'rename_block':
             ident = resolve(op.blockId)
             if not op.name or len(op.name) > 100:
@@ -272,6 +318,8 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
                 raise ValueError(f'Port {missing} does not exist.')
             if (a, pa.id) == (b, pb.id):
                 raise ValueError('A port cannot connect to itself.')
+            # A subsystem port with no wires yet takes the type of what it is wired to, as in the workbench.
+            pa, pb = adopt(a, pa, pb), adopt(b, pb, pa)
             if pa.domain != pb.domain:
                 raise ValueError(f'Cannot connect {pa.domain} {name_of(a)}.{pa.name} to {pb.domain} {name_of(b)}.{pb.name}.')
             if pa.domain in CAUSAL_DOMAINS:
@@ -342,7 +390,7 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
             if edited.nets is not None and new_wires:
                 assign_nets(edited, new_wires)
                 new_wires.clear()
-            edited, ident = group(edited, members, op.alias, name)
+            edited, ident = group(edited, members, op.alias, name, validate=validate)
             blocks = {b.id: b for b in edited.blocks}
             aliases[op.alias] = ident
             for member in members:
@@ -362,6 +410,8 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
             net.logged = True
     elif logs:
         raise ValueError('This model has no nets yet. Save it once in this version of Gradara, then ask again.')
+    if not validate:
+        return edited, changes
     try:
         result = Project.model_validate(edited.model_dump())
     except ValidationError as exc:
@@ -385,8 +435,15 @@ If the request cannot be done with these operations or the supported physics (el
 summary is one or two sentences for the user. assumptions are short and explicit.'''
 
 
-def edit_prompt(request: ModelEditRequest, catalog: dict[str, Definition]) -> str:
-    names = {b.id: b.definition.name for b in request.project.blocks}
+SHEET = '''
+You are editing the inside of the subsystem "{name}" (definition {ref} in "subsystems" below), not the top level.
+Every operation applies to the blocks and wires of that definition; blockId, source, and target name blocks on it. Everything else in the model is context only and cannot be changed by this edit.
+Its subsystem ports are how signals and terminals enter and leave it: an inport block gives its signal on port y, an outport block takes one on port u, and a connport block is a physical terminal p. Wire inner blocks to them. To add a port, add_block an inport, outport, or connport (libraryId builtin:inport, builtin:outport, builtin:connport) with a short name, then connect it; an unwired port takes the type of what it is first connected to. Removing a port removes it from the subsystem block and drops the wires to it outside, so do that only when asked. The name of a port block is the port's name on the subsystem block.{shared}'''
+
+
+def edit_prompt(request: ModelEditRequest, catalog: dict[str, Definition], sheet: Project | None = None) -> str:
+    """The planner prompt; `sheet` is the subsystem inside being edited (sheet_view), when not the top level."""
+    names = {b.id: b.definition.name for b in (sheet or request.project).blocks}
     selection = [f'{names[i]} ({i})' for i in request.selection if i in names]
     parts = [INSTRUCTIONS]
     if request.previous:
@@ -405,6 +462,12 @@ def edit_prompt(request: ModelEditRequest, catalog: dict[str, Definition]) -> st
         parts.append('\nSelected blocks (the request most likely concerns these):\n' + ', '.join(selection))
     if request.context:
         parts.append('\nContext from the last run:\n' + request.context[-6000:])
+    if sheet is not None:
+        ref = subsystem_at(request.project, request.sheet)
+        n = copies(request.project, ref)
+        shared = (f' This definition is used by {n} subsystem blocks; the edit changes all of them, as editing inside a '
+                  'subsystem does in the workbench.') if n > 1 else ''
+        parts.append(SHEET.format(name=sheet_name(request.project, request.sheet), ref=ref, shared=shared))
     parts.append('\nCurrent model (layout omitted):\n' + json.dumps(semantic_view(request.project)))
     parts.append('\nCatalog:\n' + describe(catalog))
     return '\n'.join(parts)
@@ -438,15 +501,23 @@ async def realize(plan: EditPlan, project: Project, job_id: str, progress, cache
 
 
 def proposal(project: Project, original: Project, plan: EditPlan, changes: list[Change], generated: dict,
-             verified: bool, diagnostics: list[Diagnostic], samples: int | None) -> dict:
+             verified: bool, diagnostics: list[Diagnostic], samples: int | None, sheet: list[str] | None = None) -> dict:
     document = project.model_dump(exclude_none=True)
-    before = {w.id for w in original.wires}
-    for wire in document['wires']:
-        # New wires carry no route, so the canvas router draws them.
-        if wire['id'] not in before:
-            wire.pop('waypoints', None)
-            wire.pop('junctions', None)
-    return dict(project=document, summary=plan.summary, assumptions=plan.assumptions,
+    before = {(s.id if s is not original else None): {w.id for w in s.wires}
+              for s in [original, *(original.subsystems or [])]}
+    for key, wires in [(None, document['wires']), *((s['id'], s['wires']) for s in document.get('subsystems', []))]:
+        for wire in wires:
+            # New wires carry no route, so the canvas router draws them.
+            if wire['id'] not in before.get(key, set()):
+                wire.pop('waypoints', None)
+                wire.pop('junctions', None)
+    assumptions = list(plan.assumptions)
+    if sheet:
+        ref = subsystem_at(original, sheet)
+        if (n := copies(original, ref)) > 1:
+            assumptions.insert(0, f'The change is inside {sheet_name(original, sheet)}, so it applies to all {n} '
+                                  'blocks that use this subsystem.')
+    return dict(project=document, summary=plan.summary, assumptions=assumptions, sheet=list(sheet or []),
                 changes=[c.model_dump() for c in changes],
                 operations=[o.model_dump(exclude_none=True) for o in plan.operations],
                 generated=[dict(alias=alias, name=d.name) for alias, d in generated.items()],
@@ -457,7 +528,14 @@ def proposal(project: Project, original: Project, plan: EditPlan, changes: list[
 
 async def edit_model(request: ModelEditRequest, job_id: str, progress=lambda message: None):
     catalog = catalog_snapshot(request, DATA)
-    prompt = edit_prompt(request, catalog)
+    ref = subsystem_at(request.project, request.sheet)
+    view = sheet_view(request.project, ref) if ref else None
+    if view is None:
+        # Subsystem ports belong inside a subsystem: the top level has no use for them.
+        catalog = {k: d for k, d in catalog.items() if d.kind not in BOUNDARY_KINDS}
+    else:
+        catalog['builtin:connport'] = CONNPORT
+    prompt = edit_prompt(request, catalog, view)
     cache: dict = {}
     for attempt in range(2):
         progress('Planning the edit' if attempt == 0 else 'Revising the edit from diagnostics')
@@ -467,8 +545,8 @@ async def edit_model(request: ModelEditRequest, job_id: str, progress=lambda mes
             if plan.unsupported:
                 raise Unsupported(plan.unsupported)
             check_limits(plan)
-            generated, revised = await realize(plan, request.project, job_id, progress, cache)
-            edited, changes = apply_operations(request.project, plan, catalog, generated, revised)
+            generated, revised = await realize(plan, view or request.project, job_id, progress, cache)
+            edited, changes = apply_operations(request.project, plan, catalog, generated, revised, request.sheet)
         except Unsupported:
             raise
         except Exception as exc:
@@ -482,10 +560,12 @@ async def edit_model(request: ModelEditRequest, job_id: str, progress=lambda mes
             if request.verify:
                 progress('Checking the edited model in OpenModelica')
                 samples = (await simulate(edited, f'{job_id}trial{attempt}'))['samples']
-            return proposal(edited, request.project, plan, changes, generated, request.verify, [], samples)
+            return proposal(edited, request.project, plan, changes, generated, request.verify, [], samples,
+                            request.sheet)
         except SimulationFailure as exc:
             if attempt == 0:
                 prompt += ('\nPrevious plan:\n' + json.dumps(data) + '\nThe edited model failed its check. '
                            'Fix these diagnostics and return a new plan:\n' + str(exc)[-6000:])
                 continue
-            return proposal(edited, request.project, plan, changes, generated, False, exc.diagnostics, None)
+            return proposal(edited, request.project, plan, changes, generated, False, exc.diagnostics, None,
+                            request.sheet)

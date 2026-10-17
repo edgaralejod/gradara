@@ -39,7 +39,6 @@ These capabilities extend the current drawing engine; keep manual route intent, 
 | Insert or remove in a connection | Insert a compatible signal block into one branch atomically, preserving other sinks and labels. Provide an explicit remove-and-heal action for unambiguous one-input/one-output cases. |
 | Lanes for parallel wires | Automatic routes already go around blocks and avoid other nets' lines where a lane exists. Assign evenly spaced lanes to parallel runs in a shared channel, and report a route that cannot avoid a body instead of drawing through it. |
 | Arrange quality on large circuits | Arranging the flyback converter or the data center twice gives the same drawing, as it already does for the other examples. Add crossing-minimizing column ordering and power/control section banding, and measure Arrange time on 100-block sheets. |
-| Flip | Mirror selected blocks through model operations, updating ports, labels, and incident routes; clockwise 90° rotation is already implemented. |
 
 ## Workbench quality at scale
 
@@ -61,7 +60,6 @@ Every installer now includes its engine (a Linux VM on macOS). Remaining:
 - Add streaming progress for long model builds, and a usage view (credits per operation) in Settings.
 - Consider subscriptions with included credits once usage patterns are known; keep prepaid packs.
 - Add local-model support (for example an OpenAI-compatible local endpoint) as another provider behind the same interface.
-- AI edits and explanations inside subsystems. Today edits, diagnosis, and fixes work on the top level of the model (the **Top level only** chip in the Ask bar).
 
 ## Personal features
 

@@ -249,6 +249,7 @@ export default function ProposalsPanel({
                     summary: revising.proposal.summary,
                     operations: revising.proposal.operations,
                   },
+                  sheet: revising.proposal.sheet ?? [],
                 }
               : undefined,
           );

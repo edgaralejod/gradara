@@ -10,6 +10,7 @@ from .model_agent import Strict
 from .model_edit import ModelEditRequest, Unsupported, edit_model, semantic_view
 from .models import Definition, Project
 from .paths import RUNS
+from .sheets import sheet_name, subsystem_at
 
 
 class DiagnoseRequest(Strict):
@@ -19,6 +20,8 @@ class DiagnoseRequest(Strict):
     catalog: list[Definition] = Field(min_length=1, max_length=300)
     question: str | None = Field(default=None, max_length=2000)
     proposeFix: bool = False
+    # The sheet open in the workbench (a path of subsystem instance IDs); a fix edits that sheet.
+    sheet: list[str] = Field(default_factory=list, max_length=20)
 
 
 class Cause(Strict):
@@ -77,6 +80,11 @@ def diagnose_prompt(request: DiagnoseRequest, context: dict | None) -> str:
     if request.question:
         parts.append('\nUser question:\n' + request.question)
     parts.append('\nProblems:\n' + json.dumps(problems))
+    if request.sheet:
+        ref = subsystem_at(request.project, request.sheet)
+        parts.append(f'\nThe user is looking at the inside of the subsystem "{sheet_name(request.project, request.sheet)}" '
+                     f'(definition {ref} in "subsystems" below). A fix edits that inside: write editPrompt about its blocks, '
+                     'and say in manualSteps when the cause is on another sheet.')
     parts.append('\nModel (layout omitted):\n' + json.dumps(semantic_view(request.project)))
     if context:
         if context.get('solver'):
@@ -87,7 +95,8 @@ def diagnose_prompt(request: DiagnoseRequest, context: dict | None) -> str:
 
 
 def clean(diagnosis: Diagnosis, request: DiagnoseRequest) -> Diagnosis:
-    blocks = {b.id for b in request.project.blocks}
+    # A cause may name a block on any sheet; the workbench shows the ones on the open sheet.
+    blocks = {b.id for sheet in [request.project, *(request.project.subsystems or [])] for b in sheet.blocks}
     ids = {d.id for d in request.diagnostics}
     for cause in diagnosis.causes:
         cause.blockIds = [i for i in cause.blockIds if i in blocks]
@@ -108,7 +117,7 @@ async def diagnose(request: DiagnoseRequest, job_id: str, progress=lambda messag
     selection = list(dict.fromkeys(i for c in diagnosis.causes for i in c.blockIds))
     evidence = '\n'.join(f'- {d.message}' + (f' (hint: {d.hint})' if d.hint else '') for d in request.diagnostics)
     edit = ModelEditRequest(prompt=diagnosis.editPrompt, project=request.project, catalog=request.catalog,
-                            selection=selection, verify=True,
+                            selection=selection, verify=True, sheet=request.sheet,
                             context=('Problems being fixed:\n' + evidence + '\n\nDiagnosis:\n' + diagnosis.summary)[-6000:])
     try:
         with dispatch.job_part('edit'):

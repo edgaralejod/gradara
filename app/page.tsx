@@ -298,6 +298,7 @@ import {
   withPastedSubsystems,
   writeScope,
   subsystemAt,
+  sheetLabel,
   promoteParameter,
   demoteParameter,
   promotedTargets,
@@ -930,26 +931,39 @@ function Workbench() {
   // Answers need room: opening Proposals for one makes the dock at least a comfortable height.
   const openProposals = () =>
     updateDock({ open: true, tab: 'proposals', height: Math.max(dock.height, 360) });
-  const topLevelOnly = () => {
-    if (!scopeRef.current.length) return false;
-    notify(
-      'The AI edits and explains the top level for now. Press ⌘↑ to go up, then ask again.',
-    );
-    return true;
+  /** The open sheet for the Ask bar: inside a subsystem, its name and how many blocks share it. */
+  const sheetContext = (): Pick<AskContext, 'sheet'> => {
+    const sheet = sheetLabel(docRef.current, scopeRef.current);
+    return sheet ? { sheet } : {};
+  };
+  /** "In Motor drive · …" for a request made inside a subsystem. */
+  const where = (path: string[], text: string) => {
+    const sheet = sheetLabel(docRef.current, path);
+    return sheet ? `In ${sheet.name} · ${text}` : text;
   };
   /** Send what the Ask bar asked for; the answer arrives as a card in Proposals. */
   const submitAsk = (request: AskSubmit, revision?: Revision) => {
     if (proposals.busy) return;
     const { action, text, context, blockType } = request;
     const current = projectRef.current;
-    const scope = revision
-      ? `Revision · ${scopeText('edit', context, blockName)}`
-      : scopeText(action, context, blockName);
+    // Edits, explanations, and fixes see the whole document and work on the open sheet
+    // (a revision on the sheet its proposal edits).
+    const sheet = revision?.sheet ?? scopeRef.current;
+    const scope = where(
+      sheet,
+      revision
+        ? `Revision · ${scopeText('edit', context, blockName)}`
+        : scopeText(action, context, blockName),
+    );
     if (action === 'edit') {
-      if (topLevelOnly()) return;
       void proposals.edit(
         text,
-        { project: current, catalog: library, selection: context.selection },
+        {
+          project: docRef.current,
+          catalog: library,
+          selection: context.selection,
+          sheet,
+        },
         scope,
         revision,
       );
@@ -971,16 +985,17 @@ function Workbench() {
       void proposals.buildModel(text);
     } else if (action === 'explain' || action === 'fix') {
       const diagnostics = (context.problems ?? []).slice(0, 50);
-      if (!diagnostics.length || topLevelOnly()) return;
+      if (!diagnostics.length) return;
       const runId =
         runFailure &&
         runFailure.modelId === current.modelId &&
-        runFailure.signature === semanticSignature(current)
+        runFailure.signature === semanticSignature(docRef.current)
           ? runFailure.runId
           : undefined;
       void proposals.diagnose(
         {
-          project: current,
+          project: docRef.current,
+          sheet,
           diagnostics,
           runId,
           catalog: library,
@@ -1005,7 +1020,7 @@ function Workbench() {
       context: {
         selection: [],
         problems: diagnostics,
-        inSubsystem: scopeRef.current.length > 0,
+        ...sheetContext(),
       },
       action: fix ? 'fix' : 'explain',
     });
@@ -1025,9 +1040,11 @@ function Workbench() {
     inspectorContext,
     () => null,
   );
+  // Rendered every frame: read the open sheet from state, not from the refs.
+  const openSheet = useMemo(() => sheetLabel(doc, scope), [doc, scope]);
   const dockContext: AskContext = {
     selection: selectedIds,
-    inSubsystem: scope.length > 0,
+    ...(openSheet ? { sheet: openSheet } : {}),
     emptySheet: !project.blocks.length && !scope.length,
     ...(workspaceMode === 'results' && shownRuns ? { runs: shownRuns } : {}),
   };
@@ -1049,18 +1066,23 @@ function Workbench() {
   };
   const applyProposal = (entry: Extract<Entry, { kind: 'proposal' }>) => {
     const { proposal, baseRevision } = entry;
-    // A proposal is made for the top level; merging it into a subsystem sheet would misplace it.
-    if (topLevelOnly()) return false;
-    const current = projectRef.current;
-    if (current.revision !== baseRevision) {
+    if (docRef.current.revision !== baseRevision) {
       notify('The model changed since this proposal. Ask again.');
       return false;
     }
+    // A proposal edits one sheet: open it, then merge the proposal's view of that sheet.
+    const sheet = proposal.sheet ?? [];
+    if (sheet.length && !subsystemAt(docRef.current, sheet)) {
+      notify('The subsystem this proposal edits is no longer in the model. Ask again.');
+      return false;
+    }
+    navigate(sheet);
+    const current = projectRef.current;
     const {
       project: next,
       added,
       changed,
-    } = mergeProposal(current, proposal.project);
+    } = mergeProposal(current, scopeView(proposal.project, sheet));
     commit(next);
     const touched = [...added, ...changed].filter((id) =>
       projectRef.current.blocks.some((b) => b.id === id),
@@ -1083,17 +1105,18 @@ function Workbench() {
     changePrompt: string,
     turn: ExplainResult,
   ) => {
-    if (proposals.busy || topLevelOnly()) return;
+    if (proposals.busy) return;
     const question = entry.turns.find((t) => t.result === turn)?.question ?? '';
     void proposals.edit(
       changePrompt,
       {
-        project: projectRef.current,
+        project: docRef.current,
+        sheet: scopeRef.current,
         catalog: library,
         selection: [],
         context: `Results discussion.\nQuestion: ${question}\nAnswer: ${turn.answer.explanation}`.slice(0, 6000),
       },
-      'From Explain results',
+      where(scopeRef.current, 'From Explain results'),
       undefined,
       { runId: entry.runIds[0], signals: entry.context.signals },
     );
@@ -1853,7 +1876,7 @@ function Workbench() {
             context: {
               selection: [],
               position: menu.point,
-              inSubsystem: scopeRef.current.length > 0,
+              ...sheetContext(),
             },
             action: 'block',
           }),
@@ -2138,11 +2161,11 @@ function Workbench() {
         selection: selectionRef.current.blockIds,
         position: newPosition(),
         emptySheet: !current.blocks.length && !scopeRef.current.length,
-        inSubsystem: scopeRef.current.length > 0,
+        ...(openSheet ? { sheet: openSheet } : {}),
       },
       action,
     });
-  }, [newPosition, workspaceMode]);
+  }, [newPosition, workspaceMode, openSheet]);
   async function runSimulation() {
     if (runController.current || switching || !ready) return;
     if (stopTimeInvalid) {
@@ -3516,7 +3539,7 @@ function Workbench() {
                           selection: [],
                           position: ctx.position,
                           ...(ctx.connection ? { connection: ctx.connection } : {}),
-                          inSubsystem: scopeRef.current.length > 0,
+                          ...sheetContext(),
                         },
                         action: 'block',
                         portDomain: ctx.connection

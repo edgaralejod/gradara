@@ -209,6 +209,24 @@ export function instanceDefinitionFor(
   };
 }
 
+/**
+ * The open sheet as the Ask bar and the proposals name it: the innermost subsystem
+ * block's name, and how many blocks use its definition (an edit inside changes them
+ * all). Undefined at the top level or for a path that no longer leads anywhere.
+ */
+export function sheetLabel(project: Project, path: string[]) {
+  const ref = path.length ? subsystemAt(project, path) : undefined;
+  if (!ref) return undefined;
+  let diagram: { blocks: Block[] } = project;
+  let name = '';
+  for (const id of path) {
+    const block = diagram.blocks.find((b) => b.id === id)!;
+    name = block.definition.name;
+    diagram = findSubsystem(project, block.definition.subsystem!.ref)!;
+  }
+  return { name, copies: usageCount(project, ref) };
+}
+
 /** Subsystem definition ID that a path of instance IDs ends in (undefined at the top). */
 export function subsystemAt(project: Project, path: string[]) {
   let diagram: { blocks: Block[] } = project;

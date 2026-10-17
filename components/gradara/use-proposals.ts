@@ -28,7 +28,12 @@ import {
 } from '@/lib/gradara/results-discussion';
 
 /** A Refine request: the proposal being revised and what to send back about it. */
-export type Revision = { entryId: string; previous: PreviousProposal };
+export type Revision = {
+  entryId: string;
+  previous: PreviousProposal;
+  /** The sheet the proposal being revised edits; the revision edits the same one. */
+  sheet?: string[];
+};
 
 export type Busy = {
   label: string;
