@@ -297,12 +297,11 @@ def apply_operations(project: Project, plan: EditPlan, catalog: dict[str, Defini
             if port.domain not in CAUSAL_DOMAINS or port.direction != 'output':
                 raise ValueError(f'{name_of(ident)}.{port.name} is not a signal output. Measure a physical quantity with a '
                                  'sensor block and log the sensor output.')
-            attached = [w.id for w in edited.wires if (ident, port.id) in ((w.source, w.sourceHandle), (w.target, w.targetHandle))]
-            if not attached:
-                raise ValueError(f'{name_of(ident)}.{port.name} is not connected. Connect it (for example to a Scope) '
-                                 'before logging it.')
-            logs.append(attached[0])
-            changes.append(Change(op=op.op, blockIds=[ident], wireIds=attached,
+            # An output is logged on its port, wired or not (Block.logged), as in the workbench.
+            target = next(b for b in edited.blocks if b.id == ident)
+            if port.id not in (target.logged or []):
+                target.logged = [*(target.logged or []), port.id]
+            changes.append(Change(op=op.op, blockIds=[ident],
                                   description=f'Log {name_of(ident)}.{port.name} in the Data Inspector'))
         elif op.op == 'set_duration':
             if op.duration is None or not 0 < op.duration <= 86400:
@@ -339,7 +338,7 @@ Operations run in order:
 - remove_block, rename_block (blockId, name), set_parameter (blockId, parameterId, value), set_duration (duration in s).
 - connect (source, sourcePort, target, targetPort): signal connections run from an output port to an input port, and an input has one source; physical terminals connect only to the same domain. Block references may be existing IDs or aliases added earlier in this edit.
 - disconnect: wireId, or the four endpoint fields.
-- log_signal (blockId, sourcePort): record a connected signal output in the Data Inspector on the next run. To record a physical quantity (a current, a speed), add the matching sensor block, connect its measured side and its output (for example to a Scope), then log the sensor output.
+- log_signal (blockId, sourcePort): record a signal output in the Data Inspector on the next run; it need not be connected. Results shows only logged outputs. To record a physical quantity (a current, a speed), add the matching sensor block, connect its measured side, then log the sensor output.
 Prefer catalog blocks and parameter changes over new definitions. Gradara places new blocks and draws new wires in its house style, so never describe positions; give new blocks short names of 1-3 words. Keep physical references (ground) and connect every signal input you add. Set unused fields to null.
 If the request cannot be done with these operations or the supported physics (electrical including 3-phase, rotational and translational mechanical, thermal, magnetic, scalar Real and Boolean signals), explain why in unsupported and return one set_duration operation with the current stop time. Otherwise unsupported is empty.
 summary is one or two sentences for the user. assumptions are short and explicit.'''

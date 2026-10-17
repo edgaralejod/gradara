@@ -138,18 +138,22 @@ def result_columns(folder: Path, rows: list[dict]):
     """Look up a variable's samples. The CSV leaves out variables that equal a
     parameter (a sensor across a DC source, a constant's output): those come from the
     alias and start values in simulation_init.xml, as a constant series."""
-    aliases, starts = {}, {}
+    aliases, starts, booleans = {}, {}, set()
     init = folder/'simulation_init.xml'
     if init.exists():
         for variable in ET.parse(init).getroot().iter('ScalarVariable'):
             name = variable.get('name')
+            value = next((child for child in variable if child.tag in ('Real', 'Integer', 'Boolean')), None)
+            if value is not None and value.tag == 'Boolean':
+                booleans.add(name)
             if variable.get('alias') in ('alias', 'negatedAlias'):
                 aliases[name] = (variable.get('aliasVariable'), variable.get('alias') == 'negatedAlias')
-            elif variable.get('variability') in ('parameter', 'constant'):
-                real = variable.find('Real')
+            elif variable.get('variability') in ('parameter', 'constant') and value is not None:
                 # Only a parameter set directly: a bound one's start may not be its value.
-                if real is not None and real.get('start') is not None and real.get('fixed') == 'true':
-                    starts[name] = float(real.get('start'))
+                start = value.get('start')
+                if start is not None and value.get('fixed') == 'true':
+                    # A Boolean is recorded as 1 or 0, as the engine writes it.
+                    starts[name] = (1.0 if start == 'true' else 0.0) if value.tag == 'Boolean' else float(start)
 
     def column(key: str, depth: int = 0):
         if key in rows[0]:
@@ -159,7 +163,10 @@ def result_columns(folder: Path, rows: list[dict]):
         if key in aliases and depth < 8:
             target, negated = aliases[key]
             values = column(target, depth + 1)
-            return None if values is None else [-v for v in values] if negated else values
+            if values is None or not negated:
+                return values
+            # The negation of a Boolean (0/1) is 1 − v; of a number, −v.
+            return [1 - v for v in values] if key in booleans else [-v for v in values]
         return None
     return column
 
@@ -199,6 +206,19 @@ async def run(project: Project, job_id: str, folder: Path, on_stage=None):
 
 
 PHYSICAL_LIMIT = 2000
+
+
+def recording_key(project: Project) -> str:
+    """What a run records (logged outputs and nets, physical recording), as a short hash:
+    a stored run is the model's latest result only when it recorded what the model logs now."""
+    import hashlib
+    sheets = [('', project), *((s.id, s) for s in (project.subsystems or []))]
+    data = {
+        'ports': sorted(f'{sid}/{b.id}:{",".join(b.logged)}' for sid, s in sheets for b in s.blocks if b.logged),
+        'nets': sorted(f'{sid}/{n.id}' for sid, s in sheets for n in (s.nets or []) if n.logged),
+        'physical': bool(project.logPhysical),
+    }
+    return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
 
 
 def _variables(folder: Path) -> list[tuple[str, str]]:
@@ -249,15 +269,21 @@ def recorded_series(project: Project, folder: Path, column) -> list[dict]:
                 add({'key': key + suffix, 'name': name, 'unit': unit, 'blockId': owner, 'values': values}, owner)
     from .logging_signals import logged_signals
     for log in logged_signals(project):
-        # A net whose driving output is logged already is listed once, as that output.
-        if log['expression'] in seen:
+        # A net whose driving output is logged already is listed once, as that output,
+        # which then carries the net's identity (bus elements and Boolean nets included).
+        kept = [s for s in outputs if s['key'] == log['reference'] or s['key'].startswith(log['reference'] + '[')]
+        if kept and not log.get('field'):
+            for series in kept:
+                series['netId'] = log['netId']
+                if log.get('path'):
+                    series['path'] = log['path']
             continue
         for suffix, name in elements_of(log, log['name'], ' · '):
             key = log['key'] + suffix
             values = column(key)
             if values is None:
                 raise run_failure(f"Logged net {name} is missing from the solver output.", log.get('blockId'))
-            add({k: v for k, v in log.items() if k not in ('expression', 'width', 'elements')}
+            add({k: v for k, v in log.items() if k not in ('expression', 'reference', 'width', 'elements')}
                 | {'key': key, 'name': name, 'values': values}, log.get('blockId'))
     if project.logPhysical:
         variables = _variables(folder)
@@ -280,7 +306,8 @@ def recorded_series(project: Project, folder: Path, column) -> list[dict]:
                 count += 1
                 seen.add(name)
                 outputs.append({'key': name, 'name': f'{label}{definition.name}.{rest}', 'unit': unit,
-                                'blockId': owner, 'physical': True, 'values': values})
+                                'blockId': owner, 'physical': True, 'group': f'{label}{definition.name}',
+                                'values': values})
     return outputs
 
 
@@ -320,7 +347,7 @@ def collect(project: Project, job_id: str, folder: Path, report: dict, started: 
     sample_indices=sorted(set(sample_indices))
     for series in outputs:
         series['values']=[series['values'][i] for i in sample_indices]
-    result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'simulation':solver.effective(project.duration, project.simulation),'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'problems':[d.model_dump() for d in warning_diagnostics(project, report.get('diagnostics',''))],'samples':len(rows)}
+    result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'recording':recording_key(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'simulation':solver.effective(project.duration, project.simulation),'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'problems':[d.model_dump() for d in warning_diagnostics(project, report.get('diagnostics',''))],'samples':len(rows)}
     (folder/'result.json').write_text(json.dumps(result, allow_nan=False), encoding='utf-8')
     return result
 

@@ -111,18 +111,16 @@ def test_new_wires_join_nets_so_models_with_nets_stay_valid():
     assert sorted(owners) == sorted(w.id for w in edited.wires)
 
 
-def test_log_signal_marks_the_net_for_the_data_inspector():
+def test_log_signal_logs_the_output_for_the_data_inspector():
     before = servo()
     edited, changes = apply(before, op('log_signal', blockId='sensor', sourcePort='y'))
-    net = next(n for n in edited.nets if feedback_wire(before) in n.wireIds)
-    assert net.logged and changes[0].op == 'log_signal' and changes[0].wireIds == [feedback_wire(before)]
+    sensor = next(b for b in edited.blocks if b.id == 'sensor')
+    assert 'y' in sensor.logged and changes[0].op == 'log_signal' and changes[0].blockIds == ['sensor']
     assert 'Data Inspector' in changes[0].description
-    # A sensor added in the same edit can be connected and logged at once.
+    # An output need not be connected: a block added in the same edit can be logged at once.
     edited, _ = apply(before, op('add_block', libraryId='builtin:step', alias='probe'),
-                      op('add_block', libraryId='builtin:scope', alias='view'),
-                      op('connect', source='probe', sourcePort='y', target='view', targetPort='u'),
                       op('log_signal', blockId='probe', sourcePort='y'))
-    assert next(n for n in edited.nets if 'w_ai_1' in n.wireIds).logged
+    assert next(b for b in edited.blocks if b.id == 'b_probe').logged == ['y']
 
 
 @pytest.mark.parametrize('operation, message', [
@@ -132,8 +130,6 @@ def test_log_signal_marks_the_net_for_the_data_inspector():
 def test_log_signal_refuses_what_cannot_be_logged(operation, message):
     with pytest.raises(ValueError, match=message):
         apply(servo(), operation)
-    with pytest.raises(ValueError, match='not connected'):
-        apply(servo(), op('add_block', libraryId='builtin:step', alias='loose'), op('log_signal', blockId='b_loose', sourcePort='y'))
 
 
 def test_revise_and_create_use_generated_definitions():

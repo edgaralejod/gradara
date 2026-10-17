@@ -115,3 +115,13 @@ void test('every example and template logs the signals its plots show', () => {
       }
   }
 });
+
+void test('a logged instance output that its inside no longer has is dropped when instances sync', async () => {
+  const { syncInstances } = await import('../lib/gradara/hierarchy');
+  const p = doc();
+  const stale: Project = {
+    ...p,
+    blocks: [{ ...p.blocks[0], logged: ['y', 'gone'] }, ...p.blocks.slice(1)],
+  };
+  assert.deepEqual(syncInstances(stale).blocks[0].logged, ['y']);
+});

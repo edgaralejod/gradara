@@ -134,11 +134,12 @@ function groupSignals<T extends { name: string }>(signals: T[]) {
 }
 
 /** Physical variables, grouped by their block ("Drive › Load 6 Ω" for "Drive › Load 6 Ω.v"). */
-function groupByBlock<T extends { name: string }>(signals: T[]) {
+function groupByBlock<T extends { name: string; group?: string }>(
+  signals: T[],
+) {
   const out = new Map<string, T[]>();
   for (const s of signals) {
-    const dot = s.name.indexOf('.', s.name.lastIndexOf(' › ') + 1);
-    const group = dot > 0 ? s.name.slice(0, dot) : s.name;
+    const group = s.group ?? s.name;
     out.set(group, [...(out.get(group) ?? []), s]);
   }
   return [...out.entries()].sort(([a], [b]) => a.localeCompare(b));

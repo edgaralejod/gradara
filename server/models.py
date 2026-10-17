@@ -308,10 +308,11 @@ class Diagram(BaseModel):
                     raise ValueError('Physical connectors cannot join signal ports.')
         ports = {(b.id, p.id): p for b in self.blocks for p in b.definition.ports}
         for block in self.blocks:
-            for port_id in block.logged or []:
-                port = ports.get((block.id, port_id))
-                if port is None or port.direction != 'output':
-                    raise ValueError('Only output ports can be logged.')
+            if block.logged:
+                # A log mark on a port that is gone or no longer an output records nothing: it is
+                # dropped, as the workbench drops it (settleLogged), rather than refusing the model.
+                kept = [i for i in block.logged if (block.id, i) in ports and ports[(block.id, i)].direction == 'output']
+                block.logged = kept or None
         for component in net_components(self):
             directions = [ports[key].direction for key in component]
             if directions.count('output') > 1:

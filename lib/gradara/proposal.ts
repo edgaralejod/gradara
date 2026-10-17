@@ -64,9 +64,17 @@ export function mergeProposal(current: Project, proposed: Project) {
       added.push(block.id);
       return { ...block, size: defaultBlockSize(block.definition) };
     }
-    if (same(existing.definition, block.definition)) return existing;
+    // An output the proposal logs (log_signal) is logged; nothing else on the block changes.
+    const logged = [
+      ...new Set([...(existing.logged ?? []), ...(block.logged ?? [])]),
+    ];
+    const withLog =
+      logged.length !== (existing.logged ?? []).length
+        ? { ...existing, logged }
+        : existing;
+    if (same(existing.definition, block.definition)) return withLog;
     changed.push(block.id);
-    return { ...existing, definition: block.definition };
+    return { ...withLog, definition: block.definition };
   });
   const nextWires: Wire[] = proposed.wires.map((wire) => {
     const existing = wires.get(wire.id);
@@ -84,11 +92,16 @@ export function mergeProposal(current: Project, proposed: Project) {
       ? [
           ...(current.nets ?? []).map((n) => ({
             ...n,
-            ...(proposedNets.get(n.id)?.logged && !n.logged ? { logged: true } : {}),
+            ...(proposedNets.get(n.id)?.logged && !n.logged
+              ? { logged: true }
+              : {}),
           })),
           ...(proposed.nets ?? []).filter((n) => !currentIds.has(n.id)),
         ]
-          .map((n) => ({ ...n, wireIds: n.wireIds.filter((id) => kept.has(id)) }))
+          .map((n) => ({
+            ...n,
+            wireIds: n.wireIds.filter((id) => kept.has(id)),
+          }))
           .filter((n) => n.wireIds.length)
       : undefined;
   const merged: Project = {

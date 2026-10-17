@@ -8,6 +8,7 @@ from server.models import Project
 from server.modelica import semantic_hash, project_key
 from server.diagnostics import validate_simulation
 from server.engine import simulate
+from server.engine import recording_key
 
 FIXTURE = Path(__file__).parent/'fixtures/feedback-project.json'
 def feedback(): return Project.model_validate_json(FIXTURE.read_text(encoding='utf-8'))
@@ -72,13 +73,18 @@ def test_latest_results_require_same_document_and_exact_equations(tmp_path, monk
     def record(run_id, snapshot, model_hash):
         folder = runs/run_id
         folder.mkdir(parents=True)
-        (folder/'result.json').write_text(json.dumps({'id':run_id,'modelHash':model_hash,'snapshot':snapshot.model_dump(exclude_none=True)}), encoding='utf-8')
+        (folder/'result.json').write_text(json.dumps({'id':run_id,'modelHash':model_hash,'recording':recording_key(snapshot),'snapshot':snapshot.model_dump(exclude_none=True)}), encoding='utf-8')
     other = model.model_copy(deep=True)
     other.modelId = 'unrelated'
     record('unrelated', other, semantic_hash(model))
     assert asyncio.run(service.latest(model.modelId)) == {'result':None}
     record('matching', model, semantic_hash(model))
     assert asyncio.run(service.latest(model.modelId))['result']['id'] == 'matching'
+    # Logging something else makes the stored run no longer the model's latest result.
+    logged = model.model_copy(deep=True)
+    logged.logPhysical = True
+    workspace.save(tmp_path, logged)
+    assert asyncio.run(service.latest(model.modelId)) == {'result':None}
     model.duration += 1
     workspace.save(tmp_path, model)
     assert asyncio.run(service.latest(model.modelId)) == {'result':None}

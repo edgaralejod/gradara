@@ -146,6 +146,8 @@ export type SimulationResult = {
     path?: string[];
     /** A physical variable recorded with Record physical variables (not a logged signal). */
     physical?: boolean;
+    /** The block a physical variable belongs to, with its instance path ("Drive › Load"). */
+    group?: string;
     values: number[];
   }[];
   diagnostics: string;

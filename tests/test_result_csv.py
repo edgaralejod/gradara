@@ -28,3 +28,20 @@ def test_csv_download_names_columns_and_the_run(monkeypatch, tmp_path):
         # Rows past the stop time (a DASSL output-grid extra) are left out; internal columns too.
         assert len(lines) == 4 and 'extra' not in response.text
         assert client.get('/api/results/nope/csv').status_code == 404
+
+
+def test_boolean_constants_and_negated_boolean_aliases_read_as_zero_and_one(tmp_path):
+    from server.engine import result_columns
+    (tmp_path/'simulation_init.xml').write_text('''<fmiModelDescription><ModelVariables>
+<ScalarVariable name="enable.k" variability="parameter"><Boolean start="true" fixed="true"/></ScalarVariable>
+<ScalarVariable name="enable.y" variability="discrete" alias="alias" aliasVariable="enable.k"><Boolean fixed="false"/></ScalarVariable>
+<ScalarVariable name="sw.on" variability="discrete"><Boolean/></ScalarVariable>
+<ScalarVariable name="sw.off" variability="discrete" alias="negatedAlias" aliasVariable="sw.on"><Boolean/></ScalarVariable>
+<ScalarVariable name="x" variability="continuous"><Real/></ScalarVariable>
+<ScalarVariable name="minus_x" variability="continuous" alias="negatedAlias" aliasVariable="x"><Real/></ScalarVariable>
+</ModelVariables></fmiModelDescription>''', encoding='utf-8')
+    rows = [{'time': '0', 'sw.on': '0', 'x': '2'}, {'time': '1', 'sw.on': '1', 'x': '3'}]
+    column = result_columns(tmp_path, rows)
+    assert column('enable.y') == [1.0, 1.0]
+    assert column('sw.off') == [1.0, 0.0]
+    assert column('minus_x') == [-2.0, -3.0]

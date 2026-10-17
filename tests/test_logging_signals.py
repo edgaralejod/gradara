@@ -98,5 +98,6 @@ def test_results_list_only_what_is_logged_and_physical_variables_on_request():
     assert physical['r.i']['values'][-1] == pytest.approx(5)
     assert 'hot.port.T' in physical and 'b1.e1' not in physical
     assert [s['key'] for s in full['series'] if not s.get('physical')] == ['vs.v']
-    with pytest.raises(Exception, match='Only output ports can be logged'):
-        Project.model_validate({**doc, 'blocks': [{**doc['blocks'][0], 'logged': ['p']}, *doc['blocks'][1:]]})
+    # A mark on a port that is not an output is dropped, not refused.
+    pruned = Project.model_validate({**doc, 'blocks': [{**doc['blocks'][0], 'logged': ['p']}, *doc['blocks'][1:]]})
+    assert pruned.blocks[0].logged is None
