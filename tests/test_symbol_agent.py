@@ -88,12 +88,13 @@ def test_saving_a_new_look_replaces_the_library_entry_and_keeps_its_check(tmp_pa
     drawn = fet().model_copy(update={'glyph': SymbolGlyph.model_validate(drawer.to_glyph(
         drawer.Drawing.model_validate(DRAWING), fet()).model_dump())})
     drawn.ports[0].side = 'bottom'
-    entry = replace_component(tmp_path, drawn, old['id'])
+    entry = replace_component(tmp_path, drawn, fet())
     assert entry['id'] != old['id'] and entry['checked'] is True
     assert [e['id'] for e in list_components(tmp_path)] == [entry['id']]
     # New behavior is not vouched for by the old check.
     changed = drawn.model_copy(update={'equations': 'd.i + s.i = 0;\nd.v = s.v;'})
-    assert replace_component(tmp_path, changed, entry['id'])['checked'] is False
+    assert replace_component(tmp_path, changed, drawn)['checked'] is False
+    assert [e['id'] for e in list_components(tmp_path)] == [replace_component(tmp_path, changed, drawn)['id']]
 
 
 def test_saving_needs_an_ai_block(monkeypatch, tmp_path):
@@ -103,7 +104,7 @@ def test_saving_needs_an_ai_block(monkeypatch, tmp_path):
     builtin = fet().model_copy(update={'generated': False}).model_dump(exclude_none=True)
     with TestClient(service.app, headers={'X-Gradara-Client': 'test'}) as client:
         assert client.post('/api/components/library', json={'definition': builtin}).status_code == 422
-        assert client.post('/api/components/library', json={'definition': builtin, 'replaces': '../x'}).status_code == 422
+        assert client.post('/api/components/library', json={'definition': builtin, 'original': {'kind': '../x'}}).status_code == 422
 
 
 def test_a_refined_block_keeps_its_drawing():

@@ -467,7 +467,8 @@ async def draw_block_symbol(request: SymbolRequest):
 
 class LibrarySave(BaseModel):
     definition: Definition
-    replaces: str | None = Field(default=None, pattern=r'^ai_[0-9a-f]{64}$')
+    # The block as it was before the edit: its library entry is the one replaced.
+    original: Definition | None = None
 
 
 @app.post('/api/components/library')
@@ -475,7 +476,7 @@ async def save_to_component_library(request: LibrarySave):
     """Save an AI block's edited look to Library → AI blocks, replacing the entry it came from."""
     from .component_library import replace_component
     try:
-        return replace_component(PROJECT_DIR, request.definition, request.replaces)
+        return replace_component(PROJECT_DIR, request.definition, request.original)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
 
