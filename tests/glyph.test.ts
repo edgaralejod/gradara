@@ -107,8 +107,17 @@ void test('editing starts from the block’s current look', () => {
   const size = defaultBlockSize(nmos);
   assert.deepEqual(circuitLayout(redrawn, size)!.leads, circuitLayout(nmos, size)!.leads);
   const gain = definitionFor('gain')!;
-  const boxed = startingGlyph(gain);
+  const triangle = startingGlyph(gain);
+  assert.equal(triangle.outline, false);
+  assert.equal(triangle.shapes[0].type, 'polygon');
+  assert.deepEqual(triangle.body, defaultBlockSize(gain));
+  assert.equal(glyphProblem(triangle, gain.ports), null);
+  // Leads of zero length: each anchor is on its terminal.
+  for (const lead of circuitLayout({ ...gain, glyph: triangle }, defaultBlockSize(gain))!.leads)
+    assert.match(lead.d, /^M(\S+) (\S+)H\1$|^M(\S+) (\S+)V\4$/);
+  const integrator = definitionFor('integrator')!;
+  const boxed = startingGlyph(integrator);
   assert.equal(boxed.outline, true);
-  assert.deepEqual(boxed.body, defaultBlockSize(gain));
-  assert.equal(glyphProblem(boxed, gain.ports), null);
+  assert.deepEqual(boxed.body, defaultBlockSize(integrator));
+  assert.equal(glyphProblem(boxed, integrator.ports), null);
 });

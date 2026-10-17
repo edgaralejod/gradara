@@ -99,6 +99,7 @@ import {
   CircleHelp,
   PanelsTopLeft,
   Group,
+  PenTool,
   Ungroup,
   Unplug,
   Radio,
@@ -215,6 +216,8 @@ import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import VariantPanel from '@/components/gradara/variant-panel';
 import { BusSignalsPanel } from '@/components/gradara/bus-signals-panel';
+import { SymbolEditorHost } from '@/components/gradara/symbol-editor-host';
+import { canEditSymbol } from '@/lib/gradara/symbol-start';
 import { PhysicalBusPanel } from '@/components/gradara/physical-bus-panel';
 import { isPhysicalBus } from '@/lib/gradara/physical-bus';
 import { physicalBusProblems } from '@/lib/gradara/physical-bus-problems';
@@ -545,6 +548,16 @@ function Workbench() {
   const [helpOpen, setHelpOpen] = useState(false);
   // The block reference page (Help), for a library entry or a placed block.
   const [helpDefinition, setHelpDefinition] = useState<Definition | null>(null);
+  /** The block whose look the symbol editor is changing, on the open sheet. */
+  const [symbolBlockId, setSymbolBlockId] = useState<string | null>(null);
+  const openSymbolEditor = useCallback(() => {
+    const ids = selectionRef.current.blockIds;
+    const block =
+      ids.length === 1
+        ? projectRef.current.blocks.find((b) => b.id === ids[0])
+        : undefined;
+    if (block && canEditSymbol(block.definition)) setSymbolBlockId(block.id);
+  }, []);
   const openBlockHelp = useCallback(() => {
     const ids = selectionRef.current.blockIds;
     const block =
@@ -1811,6 +1824,17 @@ function Workbench() {
           shortcut: 'F1',
           disabled: blocks.length !== 1,
           run: openBlockHelp,
+        },
+        {
+          id: 'symbol',
+          label: 'Edit symbol…',
+          icon: <PenTool size={13} />,
+          disabled:
+            blocks.length !== 1 ||
+            !projectRef.current.blocks.some(
+              (b) => b.id === blocks[0] && canEditSymbol(b.definition),
+            ),
+          run: openSymbolEditor,
         },
         {
           id: 'group',
@@ -3859,6 +3883,16 @@ function Workbench() {
                           Refine with AI
                         </Button>
                       )}
+                    {canEditSymbol(active.definition) && (
+                      <Button
+                        className="refine-button"
+                        variant="outline"
+                        onClick={() => setSymbolBlockId(active.id)}
+                      >
+                        <PenTool size={13} />
+                        Edit symbol…
+                      </Button>
+                    )}
                   </div>
                   {isTagKind(active.definition.kind) && (
                     <TagProperties
@@ -4550,6 +4584,35 @@ function Workbench() {
             onClose={() => setHelpDefinition(null)}
           />
         )}
+        {symbolBlockId &&
+          (() => {
+            const block = project.blocks.find((b) => b.id === symbolBlockId);
+            if (!block) return null;
+            const standard = block.definition.generated
+              ? undefined
+              : library.find((d) => d.kind === block.definition.kind);
+            return (
+              <SymbolEditorHost
+                key={block.id}
+                block={block}
+                standard={standard}
+                onClose={() => setSymbolBlockId(null)}
+                onApply={(definition, size) => {
+                  commit((p) => {
+                    const next = replaceDefinition(p, block.id, definition);
+                    return {
+                      ...next,
+                      blocks: next.blocks.map((b) =>
+                        b.id === block.id ? { ...b, size } : b,
+                      ),
+                    };
+                  });
+                  setSymbolBlockId(null);
+                  notify(`Updated the symbol of ${definition.name}. Undo with ⌘Z.`);
+                }}
+              />
+            );
+          })()}
         <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
           <DialogContent className="shortcuts-dialog" resizeKey="shortcuts">
             <DialogTitle>Make yourself at home</DialogTitle>

@@ -83,7 +83,7 @@ def test_the_symbol_api_is_a_component_job(monkeypatch):
 
 def test_saving_a_new_look_replaces_the_library_entry_and_keeps_its_check(tmp_path):
     (tmp_path/'components').mkdir()
-    (tmp_path/'components'/'.imported-models').write_text('1')
+    (tmp_path/'components'/'.imported-models').write_text('1', encoding='utf-8')
     old = save_component(tmp_path, fet(), checked=True)
     drawn = fet().model_copy(update={'glyph': SymbolGlyph.model_validate(drawer.to_glyph(
         drawer.Drawing.model_validate(DRAWING), fet()).model_dump())})
