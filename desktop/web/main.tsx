@@ -8,6 +8,7 @@ import '../../app/engineering.css';
 import '../../app/blocks.css';
 import '../../app/inspector.css';
 import '../../app/workbench-dialogs.css';
+import '../../app/symbol-editor.css';
 import Home from '../../app/page';
 
 createRoot(document.getElementById('root')!).render(
