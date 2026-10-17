@@ -416,4 +416,8 @@ def project_key(project: Project) -> str:
         block.pop('rotation', None)
         block.pop('flip', None)
         block['definition'].pop('name', None)
+        block['definition'].pop('glyph', None)   # a drawn symbol is presentation only
+    for subsystem in data.get('subsystems', []):
+        for block in subsystem['blocks']:
+            block['definition'].pop('glyph', None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:20]

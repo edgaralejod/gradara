@@ -46,6 +46,7 @@ Checkout opens in your browser and is handled by Stripe. Gradara never receives 
 | Task | Credits |
 | --- | --- |
 | Generate a block | 2 |
+| Draw a block's symbol (symbol editor) | 2 |
 | Build a complete model | 20 (covers every block it creates) |
 | Model edit | 4, plus 2 for each new or rewritten block (at most three blocks) |
 | Explain problems | 2 |

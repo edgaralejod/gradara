@@ -695,7 +695,8 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
         <span className="credit-balance">{account.balance} credits</span>
       </div>
       <p>
-        Block generation costs {account.prices.component} credits, a full model
+        Block generation, and drawing a block's symbol, cost{' '}
+        {account.prices.component} credits each, a full model
         build {account.prices.model}, and a C export {account.prices.export}.
         {account.prices.edit !== undefined && (
           <>

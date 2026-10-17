@@ -7,11 +7,17 @@ from .models import Definition
 from .workspace import atomic_write, saved_models
 
 
+def entry_id(definition: Definition) -> str:
+    """An entry's ID: a hash of its definition, so the same block is saved once."""
+    content = definition.model_dump(exclude_none=True)
+    return 'ai_' + hashlib.sha256(json.dumps(content, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+
 def save_component(directory: Path, definition: Definition, checked: bool = True):
     if not definition.generated:
         raise ValueError('Only generated definitions belong in the AI library.')
     content = definition.model_dump(exclude_none=True)
-    key = 'ai_' + hashlib.sha256(json.dumps(content, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    key = entry_id(definition)
     path = directory/'components'/f'{key}.json'
     if path.exists():
         entry = json.loads(path.read_text(encoding='utf-8'))
@@ -21,6 +27,30 @@ def save_component(directory: Path, definition: Definition, checked: bool = True
         return entry
     entry = dict(id=key, definition=content, checked=checked, createdAt=datetime.now(timezone.utc).isoformat())
     atomic_write(path, json.dumps(entry, indent=2))
+    return entry
+
+
+PRESENTATION = ('glyph', 'symbol', 'description', 'name', 'category', 'keywords')
+
+
+def _behavior(content: dict) -> dict:
+    """What a library check vouches for: everything but how the block looks and is named."""
+    ports = [{k: v for k, v in p.items() if k not in ('side', 'offset', 'name')} for p in content.get('ports', [])]
+    return {k: v for k, v in content.items() if k not in PRESENTATION} | {'ports': ports}
+
+
+def replace_component(directory: Path, definition: Definition, original: Definition | None = None):
+    """Save `definition` as an entry and remove the entry of `original` (the block as it was),
+    keeping its compiler check when only the look changed. Entries are content-addressed, so a
+    new look is a new entry."""
+    replaces = entry_id(original) if original is not None and original.generated else None
+    old_path = directory/'components'/f'{replaces}.json' if replaces else None
+    old = json.loads(old_path.read_text(encoding='utf-8')) if old_path and old_path.exists() else None
+    content = definition.model_dump(exclude_none=True)
+    checked = bool(old and old.get('checked') and _behavior(old['definition']) == _behavior(content))
+    entry = save_component(directory, definition, checked=checked)
+    if old_path is not None and old is not None and old['id'] != entry['id']:
+        old_path.unlink()
     return entry
 
 

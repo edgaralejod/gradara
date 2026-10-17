@@ -407,6 +407,18 @@ Gradara guesses the block type from your words, or from the port you started at:
 
 To change an AI block, select it and choose **Refine with AI** in the inspector. Refining keeps the block's type and terminals; **Apply changes** updates the block in this model.
 
+### Edit a block's symbol
+
+Any block's look can be changed: where its terminals sit, and the symbol drawn on it. Select the block and choose **Edit symbol…** in the inspector or the canvas menu. Subsystems, their ports, tags, and buses keep their faces, since those show what they hold.
+
+- **Terminals.** Drag a terminal along its side or onto another side, or pick its side in the **Terminals** list; it snaps to the sheet grid. A note appears when a signal input sits on the right or an output on the left: allowed, though flipping the block (⌘/Ctrl+I) is usually the better way to draw a feedback path. Physical terminals go anywhere.
+- **Drawing.** Draw with lines (L), polylines (P; Enter finishes, clicking the first point closes the shape), rectangles (R), ellipses (E), arcs (A), and short labels (T), with **Fill** for solid marks such as arrowheads and a snap step of 1, 2, 4, or 8 units. Select (V) to move shapes and drag their handles; Shift adds to a selection, arrows nudge, Delete removes, ⌘/Ctrl+D duplicates, and ⌘/Ctrl+Z undoes inside the editor. A built-in schematic symbol, a Gain's triangle, or a box with its symbol text is where the drawing starts.
+- **Leads.** Turn on **Lead** for a terminal to draw a line from it to the drawing, and drag the lead's end (a small diamond) to where the symbol's terminal is. Leads stay straight at the standard size.
+- **Body.** Set the block's width and height in 16-unit steps, choose **Boxed** to keep the rectangle around the drawing or leave it off for an unboxed schematic symbol, and **Terminal names** to show or hide the names at the terminals. **Fit design box to drawing** tightens the drawing area.
+- **Draw with AI.** Describe the symbol ("a schematic N-channel MOSFET") and choose **Draw**: the AI draws it with a lead to every terminal, priced like creating a block. The drawing replaces the current one, and undo brings the previous one back.
+
+The previews under the drawing show the block as it will look on the sheet, turned, and flipped. **Apply** changes this block as one undo step; the look is saved with the model and never changes how it simulates. For an AI block, **Save to AI blocks** also puts the new look in the library, in place of the old entry, so later insertions get it. A built-in block becomes a customized copy in this model; **Reset to standard** brings back its library look. Refining an AI block keeps the symbol you gave it.
+
 ### Reuse AI blocks
 
 Every generated block that passes its checks is saved in **Library → AI blocks**, even before you place it. Search, click, or drag it into any model. The picker that opens from an unconnected wire also offers matching AI blocks. Each insertion is an independent copy. A refined block is saved as a new entry and does not change other models. Blocks found in models you already had are added once and labeled **From saved model**. This library is stored on your computer.

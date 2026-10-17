@@ -63,7 +63,7 @@ export function BlockFace({
   const upright = `${o.flip ? 'scaleX(-1) ' : ''}rotate(${-o.rotation}deg)`;
   return (
     <span
-      className={`block-face shape-${shape}${named ? ' has-signal-names' : ''}`}
+      className={`block-face shape-${shape}${named ? ' has-signal-names' : ''}${d.glyph ? ' has-drawing' : ''}`}
       style={{ '--domain': domainColors[d.domain] } as CSSProperties}
       aria-hidden="true"
     >
@@ -122,7 +122,7 @@ export function BlockFace({
           </span>
         ) : (
           <span className="block-symbol">
-            {isPictorial(d.kind) ? (
+            {d.glyph || isPictorial(d.kind) ? (
               <CircuitSymbol definition={d} size={size} />
             ) : (
               <BlockSymbol definition={d} thumbnail={thumbnail} />

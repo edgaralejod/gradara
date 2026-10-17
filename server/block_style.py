@@ -51,6 +51,9 @@ def _sides(definition: Definition, existing: Definition | None) -> None:
 def house_style(definition: Definition, existing: Definition | None = None) -> tuple[Definition, list[str]]:
     """Return the definition with deterministic fixes and the problems left for its author."""
     definition = definition.model_copy(deep=True)
+    # A revision keeps the look the user gave the block (its drawing; anchors follow the ports).
+    if existing is not None and existing.glyph is not None and definition.glyph is None:
+        definition.glyph = existing.glyph.model_copy(deep=True)
     definition.name = INSTANCE_SUFFIX.sub('', definition.name.strip()) or definition.name.strip()
     definition.symbol = definition.symbol.strip()
     for port in definition.ports:
