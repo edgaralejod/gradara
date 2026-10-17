@@ -275,7 +275,7 @@ def test_later_operations_use_the_instance_and_its_ports():
     assert next(b for b in edited.blocks if b.id == 'b_stage').definition.name == 'Drive'
     assert [c.op for c in changes] == ['group_into_subsystem', 'add_block', 'disconnect', 'add_block', 'connect', 'rename_block']
     assert sorted(i for n in edited.nets for i in n.wireIds) == sorted(w.id for w in edited.wires)
-    with pytest.raises(ValueError, match='is now inside Subsystem 1; the AI edits the top level only'):
+    with pytest.raises(ValueError, match='is now inside Subsystem 1; this edit cannot change it further'):
         apply(servo(), op('group_into_subsystem', blockIds=['controller', 'drive'], alias='g'),
               op('set_parameter', blockId='controller', parameterId='kp', value=1))
 
@@ -464,3 +464,129 @@ def test_edit_api_is_a_job(monkeypatch, tmp_path):
         assert job['kind'] == 'edit' and job['status'] == 'complete'
         assert job['progress'] == 'Planning the edit' and job['result'] == {'verified': True}
         assert client.post('/api/models/edit', json={**body, 'prompt': 'x'}).status_code == 422
+
+
+# Edits inside a subsystem: the sheet is a path of instance IDs (server/sheets.py), the operations
+# apply to that definition, and every instance follows its ports.
+
+POWER = ['b_grp000e', 'b_grp0002']   # top level → Drivetrain → Power stage
+DRIVETRAIN = ['b_grp000e']
+
+
+def grouped_dc() -> Project:
+    return Project.model_validate_json((ROOT/'tests/fixtures/grouped-dc.json').read_text(encoding='utf-8'))
+
+
+def sheet_catalog() -> dict[str, Definition]:
+    from server.grouping import boundary_definition
+    return catalog() | {f'builtin:{k}': boundary_definition(k, k, 'signal' if k != 'connport' else 'electrical', 0)
+                        for k in ('inport', 'outport', 'connport')}
+
+
+def apply_in(project, sheet, *operations):
+    return editing.apply_operations(project, plan(*operations), sheet_catalog(), sheet=sheet)
+
+
+def subsystem(project: Project, ident: str):
+    return next(s for s in project.subsystems if s.id == ident)
+
+
+def test_an_edit_inside_a_subsystem_changes_only_that_definition():
+    before = grouped_dc()
+    edited, changes = apply_in(before, POWER, op('set_parameter', blockId='motor', parameterId='Ra', value=0.25))
+    motor_block = next(b for b in subsystem(edited, 'sub_grp0001').blocks if b.id == 'motor')
+    assert next(p.value for p in motor_block.definition.parameters if p.id == 'Ra') == 0.25
+    assert changes[0].blockIds == ['motor']
+    # The top level and the other definition are as they were.
+    assert edited.model_dump()['blocks'] == before.model_dump()['blocks']
+    assert subsystem(edited, 'sub_grp000d').model_dump() == subsystem(before, 'sub_grp000d').model_dump()
+
+
+def test_blocks_on_other_sheets_cannot_be_named():
+    with pytest.raises(ValueError, match='Unknown block "sensor"'):
+        apply_in(grouped_dc(), POWER, op('rename_block', blockId='sensor', name='Tach'))
+    with pytest.raises(ValueError, match='no longer in the model'):
+        apply_in(grouped_dc(), ['b_grp000e', 'gone'], op('set_duration', duration=2))
+
+
+def test_a_port_added_inside_appears_on_every_instance():
+    edited, changes = apply_in(grouped_dc(), POWER,
+                               op('add_block', libraryId='builtin:outport', alias='cur', name='current'),
+                               op('connect', source='isens', sourcePort='y', target='cur', targetPort='u'))
+    pill = next(b for b in subsystem(edited, 'sub_grp0001').blocks if b.id == 'b_cur')
+    assert pill.definition.kind == 'outport' and pill.definition.boundary.order == 1   # after the one input
+    instance = next(b for b in subsystem(edited, 'sub_grp000d').blocks if b.id == 'b_grp0002')
+    assert ('b_cur', 'output', 'signal') in [(p.id, p.direction, p.domain) for p in instance.definition.ports]
+    assert [c.op for c in changes] == ['add_block', 'connect']
+
+
+def test_an_unwired_port_takes_the_type_of_its_first_connection():
+    edited, _ = apply_in(grouped_dc(), POWER,
+                         op('add_block', libraryId='builtin:connport', alias='case', name='case'),
+                         op('connect', source='case', sourcePort='p', target='motor', targetPort='flange'))
+    pill = next(b for b in subsystem(edited, 'sub_grp0001').blocks if b.id == 'b_case')
+    assert pill.definition.ports[0].domain == 'mechanical'
+    instance = next(b for b in subsystem(edited, 'sub_grp000d').blocks if b.id == 'b_grp0002')
+    assert ('b_case', 'physical', 'mechanical') in [(p.id, p.direction, p.domain) for p in instance.definition.ports]
+
+
+def test_removing_a_port_inside_drops_its_wires_outside():
+    before = grouped_dc()
+    outside = [w.id for w in before.wires if w.targetHandle == 'p_grp000j']
+    assert outside
+    edited, changes = apply_in(before, DRIVETRAIN, op('remove_block', blockId='p_grp000j'))
+    assert 'subsystem port' in changes[0].description
+    instance = next(b for b in edited.blocks if b.id == 'b_grp000e')
+    assert 'p_grp000j' not in [p.id for p in instance.definition.ports]
+    assert not {w.id for w in edited.wires} & set(outside)
+    assert sorted(i for n in edited.nets for i in n.wireIds) == sorted(w.id for w in edited.wires)
+
+
+def test_blocks_inside_a_subsystem_can_be_grouped_further():
+    edited, changes = apply_in(grouped_dc(), POWER,
+                               op('group_into_subsystem', blockIds=['drive', 'isens'], alias='amp', name='Amplifier'))
+    inner = subsystem(edited, 'sub_grp0001')
+    assert 'b_amp' in [b.id for b in inner.blocks] and 'drive' not in [b.id for b in inner.blocks]
+    assert subsystem(edited, 's_amp').name == 'Amplifier'
+    assert changes[0].op == 'group_into_subsystem'
+    from server.diagnostics import validate_simulation
+    validate_simulation(edited)
+
+
+def test_the_prompt_and_proposal_name_the_sheet(monkeypatch, tmp_path):
+    plans = [{'summary': 'Lower Ra.', 'assumptions': [], 'unsupported': '',
+              'operations': [op('set_parameter', blockId='motor', parameterId='Ra', value=0.25)]}]
+    provider, _ = setup(monkeypatch, tmp_path, plans)
+    monkeypatch.setattr(editing, 'catalog_snapshot', lambda req, _: sheet_catalog())
+    edit = editing.ModelEditRequest(prompt='Lower the armature resistance', project=grouped_dc(),
+                                    catalog=list(catalog().values()), selection=['motor'], sheet=POWER)
+    result = asyncio.run(editing.edit_model(edit, 'job1'))
+    prompt = provider.call_args.args[0]
+    assert 'inside of the subsystem "Power stage" (definition sub_grp0001' in prompt
+    assert 'DC motor (motor)' in prompt and 'builtin:connport' in prompt
+    assert result['sheet'] == POWER
+    motor_block = next(b for s in result['project']['subsystems'] if s['id'] == 'sub_grp0001'
+                       for b in s['blocks'] if b['id'] == 'motor')
+    assert next(p['value'] for p in motor_block['definition']['parameters'] if p['id'] == 'Ra') == 0.25
+
+
+def test_top_level_edits_offer_no_subsystem_ports(monkeypatch, tmp_path):
+    provider, _ = setup(monkeypatch, tmp_path, [ADD_SCOPE])
+    monkeypatch.setattr(editing, 'catalog_snapshot', lambda req, _: sheet_catalog())
+    result = asyncio.run(editing.edit_model(request(), 'job1'))
+    prompt = provider.call_args.args[0]
+    assert 'builtin:inport' not in prompt and 'inside of the subsystem' not in prompt
+    assert result['sheet'] == []
+
+
+def test_a_shared_definition_is_called_out():
+    from server.sheets import copies
+    doc = grouped_dc()
+    twin = next(b for b in doc.blocks if b.id == 'b_grp000e').model_copy(deep=True)
+    twin.id = 'twin'
+    doc = Project.model_validate(doc.model_dump() | {'blocks': [*doc.model_dump()['blocks'], twin.model_dump()]})
+    assert copies(doc, 'sub_grp000d') == 2
+    plan_ = plan(op('set_duration', duration=2))
+    edited, changes = editing.apply_operations(doc, plan_, sheet_catalog(), sheet=DRIVETRAIN)
+    out = editing.proposal(edited, doc, plan_, changes, {}, False, [], None, DRIVETRAIN)
+    assert out['assumptions'][0].startswith('The change is inside Drivetrain, so it applies to all 2 blocks')

@@ -52,8 +52,8 @@ export type AskContext = {
   runs?: RunContext;
   /** The sheet has no blocks yet. */
   emptySheet?: boolean;
-  /** Inside a subsystem: the AI edits the top level only. */
-  inSubsystem?: boolean;
+  /** Inside a subsystem: the sheet an edit, explanation, or fix works on (hierarchy.ts `sheetLabel`). */
+  sheet?: { name: string; copies: number };
 };
 
 export const actionInfo: Record<

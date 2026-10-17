@@ -214,3 +214,45 @@ void test('an existing definition is never replaced by a proposal', () => {
   assert.equal(project.subsystems!.find((s) => s.id === subsystemId)!.name, 'Motor stage');
   assert.equal(project.subsystems!.length, 1);
 });
+
+// A proposal made inside a subsystem: the workbench opens that sheet and merges the
+// proposal's view of it, so the inside changes and the top level keeps its objects.
+
+void test('a proposal for a subsystem sheet merges into that sheet only', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { scopeView, writeScope, sheetLabel, findSubsystem } = await import(
+    '../lib/gradara/hierarchy'
+  );
+  const doc = JSON.parse(
+    readFileSync('tests/fixtures/grouped-dc.json', 'utf8'),
+  ) as ReturnType<typeof initialProject>;
+  const path = ['b_grp000e', 'b_grp0002'];
+  assert.deepEqual(sheetLabel(doc, path), { name: 'Power stage', copies: 1 });
+  assert.equal(sheetLabel(doc, []), undefined);
+  assert.equal(sheetLabel(doc, ['b_grp000e', 'gone']), undefined);
+  const proposed = structuredClone(doc);
+  const motor = findSubsystem(proposed, 'sub_grp0001')!.blocks.find(
+    (b) => b.id === 'motor',
+  )!;
+  motor.definition.parameters.find((p) => p.id === 'Ra')!.value = 0.25;
+  const view = scopeView(doc, path);
+  const { project, added, changed } = mergeProposal(
+    view,
+    scopeView(proposed, path),
+  );
+  assert.deepEqual(added, []);
+  assert.deepEqual(changed, ['motor']);
+  const next = writeScope(doc, path, project);
+  const inner = findSubsystem(next, 'sub_grp0001')!;
+  assert.equal(
+    inner.blocks
+      .find((b) => b.id === 'motor')!
+      .definition.parameters.find((p) => p.id === 'Ra')!.value,
+    0.25,
+  );
+  // Everything else inside keeps its objects, and the top level is untouched.
+  const before = findSubsystem(doc, 'sub_grp0001')!;
+  for (const b of inner.blocks.filter((b) => b.id !== 'motor'))
+    assert.equal(b, before.blocks.find((x) => x.id === b.id));
+  assert.deepEqual(next.blocks, doc.blocks);
+});

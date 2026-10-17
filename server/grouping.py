@@ -104,6 +104,11 @@ def _boundary_definition(kind: str, name: str, domain: str, order: int, inner: P
                       equations='', category='routing', boundary=Boundary(order=order, side=side))
 
 
+def boundary_definition(kind: str, name: str, domain: str, order: int) -> Definition:
+    """A subsystem port block's definition (inport, outport, or connport), as lib/gradara/port-blocks.ts makes it."""
+    return _boundary_definition(kind, name, domain, order, None)
+
+
 def _instance_definition(subsystem: Subsystem, name: str) -> Definition:
     ports = instance_ports(subsystem)
     physical = next((p for p in ports if p.direction == 'physical'), None)
@@ -128,11 +133,14 @@ def next_subsystem_name(project: Project) -> str:
     return f'Subsystem {n}'
 
 
-def group(project: Project, block_ids: list[str], alias: str, name: str) -> tuple[Project, str]:
+def group(project: Project, block_ids: list[str], alias: str, name: str,
+          validate: bool = True) -> tuple[Project, str]:
     """`project` with the top-level blocks `block_ids` replaced by one instance of a new subsystem.
 
     Returns the edited project and the instance's ID. Raises ValueError with a readable
-    reason when the selection cannot be grouped.
+    reason when the selection cannot be grouped. `project` may be the inside of a subsystem
+    as server/sheets.py `sheet_view` makes it; the result is then not validated here
+    (`validate=False`), since its port blocks belong inside, and is checked once written back.
     """
     if len(block_ids) != len(set(block_ids)):
         raise ValueError('A block is listed twice in the group.')
@@ -392,6 +400,8 @@ def group(project: Project, block_ids: list[str], alias: str, name: str) -> tupl
         junctions=[j for j in project.junctions if j.id not in inside_junctions],
         nets=outer_nets,
         subsystems=[*(project.subsystems or []), subsystem]))
+    if not validate:
+        return edited, instance_id
     try:
         result = Project.model_validate(edited.model_dump())
     except ValidationError as exc:

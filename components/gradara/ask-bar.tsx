@@ -7,6 +7,7 @@ import {
   Boxes,
   CircleAlert,
   Eye,
+  Layers,
   LoaderCircle,
   MousePointerSquareDashed,
   Plug,
@@ -177,12 +178,18 @@ export default function AskBar({
       });
     }
   }
-  if (context.inSubsystem && (action === 'edit' || action === 'explain' || action === 'fix'))
+  if (context.sheet && (action === 'edit' || action === 'explain' || action === 'fix'))
     chips.push({
       key: 'scope',
-      icon: <CircleAlert size={11} />,
-      text: 'Top level only',
-      title: 'The AI edits and explains the top level of the model for now.',
+      icon: <Layers size={11} />,
+      text:
+        context.sheet.copies > 1
+          ? `In ${context.sheet.name} · ${context.sheet.copies} copies`
+          : `In ${context.sheet.name}`,
+      title:
+        context.sheet.copies > 1
+          ? `Changes go inside ${context.sheet.name}, and so into all ${context.sheet.copies} blocks that use this subsystem.`
+          : `Changes go inside ${context.sheet.name}.`,
     });
   const showPreview = async () => {
     if (!onPreview || previewing) return;

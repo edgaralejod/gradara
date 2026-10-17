@@ -85,7 +85,7 @@ The generated equations are saved in your model. Reopening, sharing, and simulat
 
 ## What AI cannot do yet
 
-Generated blocks cannot have Boolean or 3-phase ports and cannot wrap Modelica Standard Library components (the built-in library already covers many of them). The model builder creates flat models without subsystems, with up to 80 blocks and four new block types per request. Edits, diagnosis, and fixes work on the top level of a model, not inside subsystems. HDL generation is not available. When a request is beyond Gradara, the answer says so and offers **Improve Gradara…**, which opens a public GitHub issue with your request.
+Generated blocks cannot have Boolean or 3-phase ports and cannot wrap Modelica Standard Library components (the built-in library already covers many of them). The model builder creates flat models without subsystems, with up to 80 blocks and four new block types per request. Edits, diagnosis, and fixes work on the sheet you have open: the top level, or the inside of a subsystem (every copy of it). HDL generation is not available. When a request is beyond Gradara, the answer says so and offers **Improve Gradara…**, which opens a public GitHub issue with your request.
 
 Changes to Gradara itself can also be built for you as [personal features](USER_GUIDE.md#personal-features). They run on the workshop repository's own AI key, not on Gradara AI credits.
 

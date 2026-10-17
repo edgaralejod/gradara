@@ -127,3 +127,23 @@ def test_a_failed_run_never_calls_the_ai(monkeypatch, tmp_path):
         ident = client.post('/api/runs', json=model.model_dump(exclude_none=True)).json()['id']
         assert client.get('/api/jobs/'+ident).json()['status'] == 'failed'
     called.assert_not_awaited()
+
+
+def test_a_fix_inside_a_subsystem_edits_that_sheet(monkeypatch, tmp_path):
+    from tests.test_model_edit import POWER, grouped_dc
+    provider, _ = setup(monkeypatch, tmp_path, DIAGNOSIS | {'causes': [
+        {'diagnosticIds': ['d1'], 'blockIds': ['motor', 'ghost'], 'explanation': 'Armature resistance too low.'}]})
+    sent = []
+    async def edit(req, job_id, progress):
+        sent.append(req)
+        return {'verified': True, 'changes': [], 'sheet': req.sheet}
+    monkeypatch.setattr(doctor, 'edit_model', edit)
+    doc = grouped_dc()
+    doc.modelId = 'doc1'
+    req = doctor.DiagnoseRequest(project=doc, diagnostics=[problem()], catalog=list(catalog().values()),
+                                 proposeFix=True, sheet=POWER)
+    result = asyncio.run(doctor.diagnose(req, 'job3'))
+    assert 'inside of the subsystem "Power stage" (definition sub_grp0001' in provider.call_args.args[0]
+    # A block inside a subsystem is a known block; the fix is asked for the same sheet.
+    assert result['diagnosis']['causes'][0]['blockIds'] == ['motor']
+    assert sent[0].sheet == POWER and sent[0].selection == ['motor']

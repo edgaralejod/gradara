@@ -61,7 +61,6 @@ Every installer now includes its engine (a Linux VM on macOS). Remaining:
 - Add streaming progress for long model builds, and a usage view (credits per operation) in Settings.
 - Consider subscriptions with included credits once usage patterns are known; keep prepaid packs.
 - Add local-model support (for example an OpenAI-compatible local endpoint) as another provider behind the same interface.
-- AI edits and explanations inside subsystems. Today edits, diagnosis, and fixes work on the top level of the model (the **Top level only** chip in the Ask bar).
 
 ## Personal features
 

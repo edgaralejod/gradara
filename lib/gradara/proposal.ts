@@ -26,6 +26,8 @@ export type EditProposal = {
   samples: number | null;
   provider: string;
   credits?: number;
+  /** The sheet the proposal edits: a path of subsystem instance IDs, empty for the top level. */
+  sheet?: string[];
 };
 
 /** What POST /api/models/edit needs to revise an unapplied proposal. */
