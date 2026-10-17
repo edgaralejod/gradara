@@ -7,6 +7,7 @@
  * user could build by hand. Run with `npx tsx scripts/build-ev-example.ts`.
  */
 import { writeFileSync } from 'node:fs';
+import { logPlotted } from '../lib/gradara/logging';
 import { defaultBlockSize } from '../lib/gradara/block-design';
 import {
   findSubsystem,
@@ -478,12 +479,18 @@ doc = {
   ],
 };
 
-writeFileSync('models/examples/ev.json', JSON.stringify(doc, null, 2) + '\n');
+writeFileSync(
+  'models/examples/ev.json',
+  JSON.stringify(logPlotted(doc), null, 2) + '\n',
+);
 // The second configuration as a document, for the engine test of both.
 writeFileSync(
   'tests/fixtures/ev-performance.json',
-  JSON.stringify(applyConfiguration(doc, doc.configurations![1]), null, 2) +
-    '\n',
+  JSON.stringify(
+    logPlotted(applyConfiguration(doc, doc.configurations![1])),
+    null,
+    2,
+  ) + '\n',
 );
 console.log(
   `ev.json: ${doc.subsystems?.length} subsystem definitions, ${variantInstances(doc).length} variant subsystems, ${doc.configurations?.length} configurations`,

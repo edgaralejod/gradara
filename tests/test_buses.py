@@ -11,6 +11,7 @@ from server.diagnostics import SimulationFailure, validate_simulation
 from server.engine import simulate
 from server.modelica import emit_project
 from server.models import Definition, Port, Project
+from tests.recording import log_outputs
 
 EXAMPLES = Path(__file__).parents[1]/'models/examples/blocks'
 
@@ -125,7 +126,7 @@ def test_a_bus_passes_through_a_subsystem_port():
 @pytest.mark.integration
 def test_bus_results_through_a_subsystem():
     project = through_subsystem()
-    result = asyncio.run(simulate(project, f'test-bus-{uuid.uuid4().hex[:8]}'))
+    result = asyncio.run(simulate(log_outputs(project), f'test-bus-{uuid.uuid4().hex[:8]}'))
     series = {s['key']: s for s in result['series']}
     # The bus output is expanded into one named series per signal.
     assert series['sensors.y[1]']['name'] == 'Sensors.bus.speed'

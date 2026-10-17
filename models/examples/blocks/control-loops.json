@@ -59,7 +59,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "c1",
@@ -150,7 +153,10 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "plant1",
@@ -266,7 +272,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ref2",
@@ -428,7 +437,10 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "plant2",
@@ -544,7 +556,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ref3",
@@ -680,7 +695,10 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "plant3",
@@ -796,7 +814,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ref4",
@@ -945,7 +966,10 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "plant4",
@@ -1061,7 +1085,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

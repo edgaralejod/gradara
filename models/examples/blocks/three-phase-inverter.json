@@ -763,7 +763,12 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "ia",
+        "ib",
+        "ic"
+      ]
     },
     {
       "id": "load",
@@ -1184,9 +1189,9 @@
       "id": "plot1",
       "label": "Phase currents",
       "series": [
-        "i3.ia",
-        "i3.ib",
-        "i3.ic"
+        "i3.i[1]",
+        "i3.i[2]",
+        "i3.i[3]"
       ],
       "labels": [
         "a",

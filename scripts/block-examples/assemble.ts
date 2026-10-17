@@ -17,6 +17,7 @@ import {
 import { syncInstances } from '../../lib/gradara/hierarchy';
 import { linkEnds } from '../../lib/gradara/project';
 import { physicalBusDefinition } from '../../lib/gradara/physical-bus';
+import { logPlotted } from '../../lib/gradara/logging';
 import type { ExampleSpec } from './types';
 
 // Deterministic ids, so rebuilding an unchanged spec rewrites identical files.
@@ -197,5 +198,6 @@ export function assemble(spec: ExampleSpec): Project {
       )
         throw new Error(`${spec.id}: plot series ${key} is not an output`);
     }
-  return doc;
+  // Results records only what is logged: an example logs what its plots show.
+  return logPlotted(doc);
 }

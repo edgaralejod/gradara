@@ -180,7 +180,11 @@
       "labelOffset": {
         "x": 0,
         "y": -128
-      }
+      },
+      "logged": [
+        "fire",
+        "notFire"
+      ]
     },
     {
       "id": "highSide",
@@ -452,7 +456,10 @@
       "labelOffset": {
         "x": 0,
         "y": -80
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "capacitor",
@@ -631,7 +638,10 @@
       "labelOffset": {
         "x": 88,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ground",
@@ -1027,7 +1037,7 @@
       "id": "plot1",
       "label": "Output voltage",
       "series": [
-        "voltageProbe.y"
+        "voltageProbe.v"
       ],
       "labels": [
         "Output voltage"
@@ -1037,7 +1047,7 @@
       "id": "plot2",
       "label": "Inductor current",
       "series": [
-        "current.y"
+        "current.i"
       ],
       "labels": [
         "Inductor current"

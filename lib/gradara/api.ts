@@ -142,6 +142,12 @@ export type SimulationResult = {
     unit: string;
     blockId: string;
     netId?: string;
+    /** The instance path of a logged net's sheet. */
+    path?: string[];
+    /** A physical variable recorded with Record physical variables (not a logged signal). */
+    physical?: boolean;
+    /** The block a physical variable belongs to, with its instance path ("Drive › Load"). */
+    group?: string;
     values: number[];
   }[];
   diagnostics: string;
@@ -152,7 +158,9 @@ export type SimulationResult = {
 };
 /** A model name as a file name part: letters, digits, dots and dashes, as the service does. */
 export function fileSlug(name: string, fallback = 'model'): string {
-  const slug = name.replace(/[^A-Za-z0-9.]+/g, '-').replace(/^[-.]+|[-.]+$/g, '');
+  const slug = name
+    .replace(/[^A-Za-z0-9.]+/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '');
   return slug.slice(0, 60) || fallback;
 }
 export function downloadText(name: string, text: string, type = 'text/plain') {

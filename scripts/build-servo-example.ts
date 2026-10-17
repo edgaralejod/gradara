@@ -4,6 +4,7 @@
  * with `npx tsx scripts/build-servo-example.ts`.
  */
 import { writeFileSync } from 'node:fs';
+import { logPlotted } from '../lib/gradara/logging';
 import type { Project } from '../lib/gradara/model';
 import { assemble } from './block-examples/assemble';
 import type { ExampleSpec } from './block-examples/types';
@@ -164,5 +165,5 @@ if (feedback) {
 
 writeFileSync(
   'models/examples/servo.json',
-  JSON.stringify(project, null, 2) + '\n',
+  JSON.stringify(logPlotted(project), null, 2) + '\n',
 );

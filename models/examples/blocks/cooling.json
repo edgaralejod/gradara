@@ -165,7 +165,10 @@
       "labelOffset": {
         "x": 0,
         "y": -96
-      }
+      },
+      "logged": [
+        "Q_flow"
+      ]
     },
     {
       "id": "rth",
@@ -601,7 +604,10 @@
       "labelOffset": {
         "x": 112,
         "y": -46
-      }
+      },
+      "logged": [
+        "T"
+      ]
     },
     {
       "id": "dT",
@@ -650,7 +656,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "T_rel"
+      ]
     },
     {
       "id": "Tset",
@@ -1015,7 +1024,10 @@
       "labelOffset": {
         "x": 112,
         "y": -46
-      }
+      },
+      "logged": [
+        "T"
+      ]
     }
   ],
   "wires": [

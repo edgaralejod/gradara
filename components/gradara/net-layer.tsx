@@ -751,14 +751,15 @@ export default function NetLayer(baseProps: Props) {
   const loggingNet = loggingWire
     ? netForWire(props.project, loggingWire.id)
     : undefined;
-  const canLog =
+  const logDomain =
     loggingWire &&
     endpointPort(
       props.project,
       loggingWire.source,
       loggingWire.sourceHandle,
       'source',
-    )?.domain === 'signal';
+    )?.domain;
+  const canLog = logDomain === 'signal' || logDomain === 'boolean';
   return (
     <>
       <ViewportPortal>

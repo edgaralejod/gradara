@@ -15,6 +15,7 @@ from server.codegen import (CodegenError, CodegenOptions, CodegenRequest, archiv
                             verify)
 from server.modelica import semantic_hash
 from server.models import Project
+from tests.recording import log_outputs
 
 ROOT = Path(__file__).resolve().parents[1]
 gcc = pytest.mark.skipif(shutil.which('gcc') is None, reason='needs a C compiler')
@@ -274,7 +275,7 @@ def test_generated_code_reproduces_the_simulation(name, ids, step, path):
     source = ROOT/'tests/fixtures/grouped-dc.json' if name == 'grouped-dc' else ROOT/'models/examples'/f'{name}.json'
     project = Project.model_validate_json(source.read_text(encoding='utf-8'))
     run_id = 'sil' + uuid.uuid4().hex[:10]
-    asyncio.run(simulate(project, run_id))
+    asyncio.run(simulate(log_outputs(project), run_id))
     # A string names a subsystem instance: the whole controller is the code unit.
     unit = {'instanceId': ids} if isinstance(ids, str) else {'blockIds': ids}
     request = CodegenRequest(project=project, path=path, runId=run_id, options=CodegenOptions(step=step), **unit)
@@ -297,7 +298,7 @@ def test_unit_delay_block_delays_by_one_sample_in_the_simulation():
     sink['definition'] |= {'declarations': 'Real unused;', 'equations': 'unused = u;'}
     project = chain(ramp, delay, sink, wire('w1', 'src', 'y', 'z', 'u'), wire('w2', 'z', 'y', 'out', 'u'))
     run_id = 'ud' + uuid.uuid4().hex[:10]
-    result = asyncio.run(simulate(project, run_id))
+    result = asyncio.run(simulate(log_outputs(project), run_id))
     series = next(s for s in result['series'] if s['key'] == 'z.y')
     at = lambda t: series['values'][max(i for i, x in enumerate(result['time']) if x <= t + 1e-9)]
     assert at(0.55) == pytest.approx(0.4) and at(0.95) == pytest.approx(0.8)

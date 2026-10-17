@@ -11,6 +11,7 @@ from server.engine import simulate
 from server.modelica import emit_project
 from server.models import Project
 from server.tags import lower_tags, tag_problems
+from tests.recording import log_outputs
 
 
 def msl(kind, cls, ports, params=(), modifiers=None, domain='signal'):
@@ -163,7 +164,7 @@ def _series(result, key):
 @pytest.mark.integration
 def test_engine_runs_signals_through_tags_down_a_hierarchy():
     project = Project.model_validate(signals_document())
-    result = asyncio.run(simulate(project, 'tags' + uuid.uuid4().hex[:12]))
+    result = asyncio.run(simulate(log_outputs(project), 'tags' + uuid.uuid4().hex[:12]))
     assert _series(result, 'g.y')[-1] == pytest.approx(10)
     assert _series(result, 'm.d.g.y')[-1] == pytest.approx(6)
 
@@ -171,5 +172,5 @@ def test_engine_runs_signals_through_tags_down_a_hierarchy():
 @pytest.mark.integration
 def test_engine_runs_a_physical_node_through_labels_into_a_subsystem():
     project = Project.model_validate(physical_document())
-    result = asyncio.run(simulate(project, 'labels' + uuid.uuid4().hex[:12]))
+    result = asyncio.run(simulate(log_outputs(project), 'labels' + uuid.uuid4().hex[:12]))
     assert _series(result, 'load.vs.v')[-1] == pytest.approx(10)

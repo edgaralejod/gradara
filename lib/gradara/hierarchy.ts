@@ -26,6 +26,7 @@ import { defaultBlockSize, snapBlockPosition } from './block-design';
 import { blockSize } from './canvas';
 import { portPoint } from './ports';
 import { propagateBuses } from './buses';
+import { settleLogged } from './logging';
 
 import {
   boundaryDefinition,
@@ -377,7 +378,16 @@ function referenced(project: Project) {
  * wiring (buses.ts), and the format version follows.
  */
 export function syncInstances(project: Project): Project {
-  return propagateBuses(syncDefinitions(project));
+  // Instance ports follow their insides, so a logged instance output may be gone.
+  return settleLoggedSheets(propagateBuses(syncDefinitions(project)));
+}
+
+function settleLoggedSheets(project: Project): Project {
+  const top = settleLogged(project);
+  const subsystems = top.subsystems?.map((s) => settleLogged(s));
+  return subsystems && subsystems.some((s, i) => s !== top.subsystems![i])
+    ? { ...top, subsystems }
+    : top;
 }
 
 function syncDefinitions(project: Project): Project {

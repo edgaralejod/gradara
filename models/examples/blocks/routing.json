@@ -256,7 +256,10 @@
       "labelOffset": {
         "x": 96,
         "y": -62
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "manual",
@@ -313,7 +316,10 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

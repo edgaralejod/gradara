@@ -136,7 +136,13 @@
       "labelOffset": {
         "x": 104,
         "y": -78
-      }
+      },
+      "logged": [
+        "sin",
+        "cos",
+        "nsin",
+        "ncos"
+      ]
     },
     {
       "id": "hall",
@@ -198,7 +204,10 @@
       "labelOffset": {
         "x": 116,
         "y": -62
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ang",
@@ -251,7 +260,10 @@
       "labelOffset": {
         "x": 116,
         "y": -62
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [
@@ -343,10 +355,10 @@
       "id": "plot1",
       "label": "Resolver",
       "series": [
-        "res.sin",
-        "res.cos",
-        "res.nsin",
-        "res.ncos"
+        "res.y[3]",
+        "res.y[1]",
+        "res.y[4]",
+        "res.y[2]"
       ],
       "labels": [
         "sin",
@@ -360,7 +372,7 @@
       "label": "Angles",
       "series": [
         "hall.y",
-        "ang.y"
+        "ang.phi"
       ],
       "labels": [
         "Hall θe",

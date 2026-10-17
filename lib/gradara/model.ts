@@ -180,6 +180,11 @@ export type Block = {
    * Simulink. Presentation only; a wire to the port removes the mark (terminators.ts).
    */
   terminated?: string[];
+  /**
+   * Output port IDs recorded for Results, wired or not: a terminated output can be
+   * logged (logging.ts). Nothing else is recorded unless a wire is logged.
+   */
+  logged?: string[];
 };
 export type Wire = {
   id: string;
@@ -229,6 +234,8 @@ export type Project = {
   duration: number;
   /** Solver settings (lib/gradara/solver.ts); absent means the defaults. */
   simulation?: SimulationSettings;
+  /** Record the physical variables of every physical block for Results (logging.ts). */
+  logPhysical?: boolean;
   revision: number;
   /** Stable saved-document identity; separate from its optional template origin. */
   modelId?: string;
@@ -251,7 +258,7 @@ export const domainColors: Record<Domain, string> = {
 /**
  * Blocks no longer offered in the library. Models that contain them still open and
  * run (a document carries its blocks' definitions). The sinks add no equations, and
- * Results already lists every block output and logged signal; the rest were
+ * Results records any output you log, wired or not; the rest were
  * duplicates of Modelica Standard Library blocks (see retired-blocks.ts).
  */
 export const RETIRED_KINDS = new Set(retired.map((d) => d.kind));

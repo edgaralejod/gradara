@@ -130,7 +130,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "wheel",
@@ -389,7 +392,10 @@
       "size": {
         "width": 128,
         "height": 96
-      }
+      },
+      "logged": [
+        "v"
+      ]
     },
     {
       "id": "b_fe54293e30",

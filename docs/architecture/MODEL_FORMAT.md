@@ -14,6 +14,7 @@ The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation li
 | `nets` | Optional legacy field; current documents reconcile stable logical nets. |
 | `duration` | Simulation stop time, in seconds. Server accepts greater than 0 and at most 86,400. Full-model agent planning retains its separate 60-second bound. |
 | `simulation` | Optional solver settings; absent means the defaults. See [simulation settings](#simulation-settings). |
+| `logPhysical` | Optional; `true` records the physical variables of every physical block for Results. See [results](EXECUTION.md#results). |
 | `revision` | Edit/undo revision. Save concurrency instead uses a separate content-hash `saveVersion` token. |
 | `exampleId` | Optional template origin, not document identity. |
 | `annotations`, `plots` | Diagram notes (`x`, `y`, a heading `text`, and an optional `detail`) and named result-series groups. Notes live on the top-level sheet; users add, edit, and move them on the canvas. |
@@ -149,6 +150,8 @@ A subsystem is a block whose inside is another diagram of the same document. [hi
 
 ## Versioning and migration
 
+**Before 1.0, compatibility is not promised.** Until Gradara 1.0, a release may change the document format, defaults, and behavior in ways that make older models open differently or not at all, without a migration, whenever that gets the design right. Release notes say what changed. From 1.0 on, documents saved by a 1.x release keep opening and running the same in later 1.x releases. For example, 0.7.8 records only what a model logs, so a model saved earlier shows nothing in Results until you log its signals.
+
 | Version | Content | Opened by |
 | --- | --- | --- |
 | `1` | Flat document: one sheet, no `subsystems`. | Every release. |
@@ -204,7 +207,7 @@ When adding fields, decide whether they affect physics, presentation, provenance
 
 ## Signal logging
 
-`Net.logged?: boolean` records a signal/control net in the next simulation. Physical nets cannot be logged directly; select the physical quantity with a sensor and log its signal output. Reconciliation retains logging with the net identity on split and enables it on a merged net if any contributing net was logged. An AI model edit can set it through its `log_signal` operation. Logging is undoable and changes observation/result identity; geometry and label edits do not. Modelica emits an output observation per logged net, while the solver continues to determine execution order. Nets inside a subsystem definition can be logged too; each instance of that definition records its own copy, keyed by the instance path (see [results](EXECUTION.md#results)).
+`Block.logged?: string[]` lists output port IDs recorded for Results, wired or not (a terminated output can be logged); the workbench drops IDs that are no longer output ports, and the service refuses others. `Project.logPhysical?: boolean` records the physical variables of every physical block (see [results](EXECUTION.md#results)). Nothing else is recorded: a run lists only logged outputs, logged nets, and, with `logPhysical`, physical variables. `Net.logged?: boolean` records a signal or Boolean net in the next simulation; it is the same as logging the output that drives it. Physical nets cannot be logged directly; select the physical quantity with a sensor and log its signal output. Reconciliation retains logging with the net identity on split and enables it on a merged net if any contributing net was logged. An AI model edit can set it through its `log_signal` operation. Logging is undoable and changes observation/result identity; geometry and label edits do not. Modelica emits an output observation per logged net, while the solver continues to determine execution order. Nets inside a subsystem definition can be logged too; each instance of that definition records its own copy, keyed by the instance path (see [results](EXECUTION.md#results)).
 
 ### Tags
 

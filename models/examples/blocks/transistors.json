@@ -482,7 +482,10 @@
       "labelOffset": {
         "x": 80,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gv",
@@ -1020,7 +1023,10 @@
       "labelOffset": {
         "x": 68,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gce",
@@ -1558,7 +1564,10 @@
       "labelOffset": {
         "x": 80,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gv2",
@@ -2152,7 +2161,7 @@
       "id": "plot1",
       "label": "CMOS inverter",
       "series": [
-        "vout.y"
+        "vout.v"
       ],
       "labels": [
         "Inverter out"
@@ -2162,8 +2171,8 @@
       "id": "plot2",
       "label": "Bipolar switches",
       "series": [
-        "vce.y",
-        "vl2.y"
+        "vce.v",
+        "vl2.v"
       ],
       "labels": [
         "NPN collector",

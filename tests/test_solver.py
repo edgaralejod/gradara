@@ -17,6 +17,7 @@ from server import engine, engines, solver
 from server.diagnostics import SimulationFailure, validate_simulation
 from server.modelica import emit_project, semantic_hash
 from server.models import Project, SimulationSettings, SolverId
+from tests.recording import log_outputs, unlogged
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = json.loads((ROOT/'tests'/'fixtures'/'solver-cases.json').read_text(encoding='utf-8'))
@@ -117,7 +118,7 @@ def test_the_run_sends_the_settings_and_records_them(tmp_path, monkeypatch):
         (folder/'simulation_res.csv').write_text('time,y\n0,0\n2,1\n4,2\n', encoding='utf-8')
         return {'result': {}, 'diagnostics': ''}
     calls = stand_in(monkeypatch, finished)
-    project = example('dc', {'solver': 'rk4', 'step': 0.01})
+    project = unlogged(example('dc', {'solver': 'rk4', 'step': 0.01}))
     result = run_project(tmp_path, project)
     assert result['simulation'] == {'solver': 'rk4', 'tolerance': 1e-6, 'points': 400, 'step': 0.01}
     assert calls[0]['simulate'] == solver.simulate_expression(4.0, project.simulation)
@@ -241,7 +242,7 @@ def at(time, values, t):
 ])
 def test_every_solver_charges_the_rc_circuit(simulation, accuracy):
     project = rc_project(simulation)
-    result = asyncio.run(engine.simulate(project, 'solver' + uuid.uuid4().hex[:10]))
+    result = asyncio.run(engine.simulate(log_outputs(project), 'solver' + uuid.uuid4().hex[:10]))
     assert result['simulation'] == solver.effective(5, project.simulation)
     series = {s['key']: s['values'] for s in result['series']}
     measured = at(result['time'], series['vc.v'], 1)
@@ -256,7 +257,7 @@ def test_a_fixed_step_too_large_for_the_model_fails_with_settings_help():
     """τ = 1 ms with a 10 ms Runge-Kutta 4 step: each step multiplies the error by about 291."""
     project = rc_project({'solver': 'rk4', 'step': 0.01}, capacitance='1e-6', duration=10)
     with pytest.raises(SimulationFailure) as failure:
-        asyncio.run(engine.simulate(project, 'solver' + uuid.uuid4().hex[:10]))
+        asyncio.run(engine.simulate(log_outputs(project), 'solver' + uuid.uuid4().hex[:10]))
     helps = {d.help for d in failure.value.diagnostics}
     print(failure.value, helps)
     assert helps & {'fixed-blows-up', 'stopped-early'}

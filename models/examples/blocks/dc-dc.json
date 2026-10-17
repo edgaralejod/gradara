@@ -295,7 +295,10 @@
       "labelOffset": {
         "x": 60,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "asrc",
@@ -834,7 +837,10 @@
       "labelOffset": {
         "x": 60,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "bsrc",
@@ -1372,7 +1378,10 @@
       "labelOffset": {
         "x": 60,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "csrc",
@@ -2458,9 +2467,9 @@
       "id": "plot1",
       "label": "Output voltages",
       "series": [
-        "av.y",
-        "bv.y",
-        "cv.y"
+        "av.v",
+        "bv.v",
+        "cv.v"
       ],
       "labels": [
         "Buck",

@@ -138,18 +138,22 @@ def result_columns(folder: Path, rows: list[dict]):
     """Look up a variable's samples. The CSV leaves out variables that equal a
     parameter (a sensor across a DC source, a constant's output): those come from the
     alias and start values in simulation_init.xml, as a constant series."""
-    aliases, starts = {}, {}
+    aliases, starts, booleans = {}, {}, set()
     init = folder/'simulation_init.xml'
     if init.exists():
         for variable in ET.parse(init).getroot().iter('ScalarVariable'):
             name = variable.get('name')
+            value = next((child for child in variable if child.tag in ('Real', 'Integer', 'Boolean')), None)
+            if value is not None and value.tag == 'Boolean':
+                booleans.add(name)
             if variable.get('alias') in ('alias', 'negatedAlias'):
                 aliases[name] = (variable.get('aliasVariable'), variable.get('alias') == 'negatedAlias')
-            elif variable.get('variability') in ('parameter', 'constant'):
-                real = variable.find('Real')
+            elif variable.get('variability') in ('parameter', 'constant') and value is not None:
                 # Only a parameter set directly: a bound one's start may not be its value.
-                if real is not None and real.get('start') is not None and real.get('fixed') == 'true':
-                    starts[name] = float(real.get('start'))
+                start = value.get('start')
+                if start is not None and value.get('fixed') == 'true':
+                    # A Boolean is recorded as 1 or 0, as the engine writes it.
+                    starts[name] = (1.0 if start == 'true' else 0.0) if value.tag == 'Boolean' else float(start)
 
     def column(key: str, depth: int = 0):
         if key in rows[0]:
@@ -159,7 +163,10 @@ def result_columns(folder: Path, rows: list[dict]):
         if key in aliases and depth < 8:
             target, negated = aliases[key]
             values = column(target, depth + 1)
-            return None if values is None else [-v for v in values] if negated else values
+            if values is None or not negated:
+                return values
+            # The negation of a Boolean (0/1) is 1 − v; of a number, −v.
+            return [1 - v for v in values] if key in booleans else [-v for v in values]
         return None
     return column
 
@@ -198,6 +205,112 @@ async def run(project: Project, job_id: str, folder: Path, on_stage=None):
     return await asyncio.to_thread(collect, project, job_id, folder, report, started)
 
 
+PHYSICAL_LIMIT = 2000
+
+
+def recording_key(project: Project) -> str:
+    """What a run records (logged outputs and nets, physical recording), as a short hash:
+    a stored run is the model's latest result only when it recorded what the model logs now."""
+    import hashlib
+    sheets = [('', project), *((s.id, s) for s in (project.subsystems or []))]
+    data = {
+        'ports': sorted(f'{sid}/{b.id}:{",".join(b.logged)}' for sid, s in sheets for b in s.blocks if b.logged),
+        'nets': sorted(f'{sid}/{n.id}' for sid, s in sheets for n in (s.nets or []) if n.logged),
+        'physical': bool(project.logPhysical),
+    }
+    return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def _variables(folder: Path) -> list[tuple[str, str]]:
+    """(name, unit) of every time-varying variable the engine reports, aliases included."""
+    init = folder/'simulation_init.xml'
+    if not init.exists():
+        return []
+    found = []
+    for variable in ET.parse(init).getroot().iter('ScalarVariable'):
+        if variable.get('variability') in ('parameter', 'constant'):
+            continue
+        real = variable.find('Real')
+        found.append((variable.get('name') or '', (real.get('unit') or '') if real is not None else ''))
+    return found
+
+
+def recorded_series(project: Project, folder: Path, column) -> list[dict]:
+    """What Results shows: only what was asked for. That is each logged output port
+    (`Block.logged`, wired or not), each logged net, and, with `logPhysical`, the physical
+    variables of every physical block. Nothing else is listed, even though the engine
+    computes (and the run folder keeps) every variable."""
+    units = signal_units(project)
+    outputs, seen = [], set()
+
+    def add(series, owner):
+        if not all(math.isfinite(value) for value in series['values']):
+            raise nonfinite_failure(project, f"{series['name']} contains non-finite results.", owner)
+        seen.add(series['key'])
+        outputs.append(series)
+
+    for prefix, label, block, owner in instances(project):
+        definition = block.definition
+        # Subsystem ports and tags are joined into wires before emission: nothing of their own to record.
+        if definition.boundary is not None or definition.kind in {'goto', 'from', 'connectionLabel'}:
+            continue
+        ports = {p.id: p for p in definition.ports}
+        for port_id in block.logged or []:
+            port = ports.get(port_id)
+            if port is None or port.direction != 'output':
+                continue
+            key = f'{prefix}{block.id}.{msl.connector(definition, port_id)}'
+            unit = units.get(f'{prefix}{block.id}.{port_id}', port.unit)
+            # A bus output is an array: one series per signal, named by its element.
+            for suffix, name in elements_of(port, f'{label}{definition.name}.{port.name}', '.'):
+                values = column(key + suffix)
+                if values is None:
+                    raise run_failure(f'Logged output {name} is missing from the solver output.', owner)
+                add({'key': key + suffix, 'name': name, 'unit': unit, 'blockId': owner, 'values': values}, owner)
+    from .logging_signals import logged_signals
+    for log in logged_signals(project):
+        # A net whose driving output is logged already is listed once, as that output,
+        # which then carries the net's identity (bus elements and Boolean nets included).
+        kept = [s for s in outputs if s['key'] == log['reference'] or s['key'].startswith(log['reference'] + '[')]
+        if kept and not log.get('field'):
+            for series in kept:
+                series['netId'] = log['netId']
+                if log.get('path'):
+                    series['path'] = log['path']
+            continue
+        for suffix, name in elements_of(log, log['name'], ' · '):
+            key = log['key'] + suffix
+            values = column(key)
+            if values is None:
+                raise run_failure(f"Logged net {name} is missing from the solver output.", log.get('blockId'))
+            add({k: v for k, v in log.items() if k not in ('expression', 'reference', 'width', 'elements')}
+                | {'key': key, 'name': name, 'values': values}, log.get('blockId'))
+    if project.logPhysical:
+        variables = _variables(folder)
+        count = 0
+        for prefix, label, block, owner in instances(project):
+            definition = block.definition
+            if definition.modelica is None or not any(p.direction == 'physical' for p in definition.ports):
+                continue
+            head = f'{prefix}{block.id}.'
+            for name, unit in variables:
+                rest = name[len(head):] if name.startswith(head) else None
+                # The block's own variables and those of its terminals (r.v, r.p.i), not internals.
+                if not rest or rest.count('.') > 1 or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.]*', rest):
+                    continue
+                if name in seen or count >= PHYSICAL_LIMIT:
+                    continue
+                values = column(name)
+                if values is None or not all(math.isfinite(v) for v in values):
+                    continue
+                count += 1
+                seen.add(name)
+                outputs.append({'key': name, 'name': f'{label}{definition.name}.{rest}', 'unit': unit,
+                                'blockId': owner, 'physical': True, 'group': f'{label}{definition.name}',
+                                'values': values})
+    return outputs
+
+
 def collect(project: Project, job_id: str, folder: Path, report: dict, started: float) -> dict:
     """Turn a finished run's CSV into result.json (and the result returned to the workbench)."""
     csv_file = folder/'simulation_res.csv'
@@ -218,34 +331,7 @@ def collect(project: Project, job_id: str, folder: Path, report: dict, started: 
     # and final values inside the requested interval; retain the raw CSV.
     rows = [row for row in rows if float(row['time']) <= project.duration + max(1e-12, project.duration * 1e-12)]
     column = result_columns(folder, rows)
-    units = signal_units(project)
-    outputs = []
-    for prefix, label, block, owner in instances(project):
-        definition = block.definition
-        candidates = [(p.id, p.name, units.get(f'{prefix}{block.id}.{p.id}', p.unit)) for p in definition.ports if p.direction == 'output' or (definition.kind in {'scope', 'display'} and p.direction == 'input')]
-        if definition.kind == 'motor': candidates += [('i','Armature current','A'),('w','Motor speed','rad/s')]
-        if definition.kind == 'inertia': candidates += [('w','Shaft speed','rad/s')]
-        widths = {p.id: p for p in definition.ports}
-        for variable,label_,unit in candidates:
-            key = f'{prefix}{block.id}.{msl.connector(definition, variable)}'
-            # A bus output is an array: one series per signal, named by its element.
-            for suffix, name in elements_of(widths.get(variable), f'{label}{definition.name}.{label_}', '.'):
-                values = column(key + suffix)
-                if values is not None:
-                    if not all(math.isfinite(value) for value in values):
-                        raise nonfinite_failure(project, f'{name} contains non-finite results.', owner)
-                    outputs.append({'key':key + suffix,'name':name, 'unit':unit,'blockId':owner,'values':values})
-    from .logging_signals import logged_signals
-    for log in logged_signals(project):
-        for suffix, name in elements_of(log, log['name'], ' · '):
-            key = log['key'] + suffix
-            values = column(key)
-            if values is None:
-                raise run_failure(f"Logged net {name} is missing from the solver output.", log.get('blockId'))
-            if not all(math.isfinite(v) for v in values):
-                raise nonfinite_failure(project, f"Logged net {name} contains non-finite values.", log.get('blockId'))
-            outputs.append({k:v for k,v in log.items() if k not in ('expression', 'width', 'elements')}
-                           | {'key': key, 'name': name, 'values': values})
+    outputs = recorded_series(project, folder, column)
     sample_indices = list(range(0,len(rows),max(1,len(rows)//1800)))
     sample_indices += [len(rows)-1]
     # Preserve switching event pairs and a dense tail for short-time ripple views.
@@ -261,7 +347,7 @@ def collect(project: Project, job_id: str, folder: Path, report: dict, started: 
     sample_indices=sorted(set(sample_indices))
     for series in outputs:
         series['values']=[series['values'][i] for i in sample_indices]
-    result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'simulation':solver.effective(project.duration, project.simulation),'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'problems':[d.model_dump() for d in warning_diagnostics(project, report.get('diagnostics',''))],'samples':len(rows)}
+    result = {'id':job_id,'engine':report.get('engine','OpenModelica 1.27.0'),'projectKey':project_key(project),'modelHash':semantic_hash(project),'recording':recording_key(project),'projectRevision':project.revision,'snapshot':project.model_dump(exclude_none=True),'duration':project.duration,'simulation':solver.effective(project.duration, project.simulation),'elapsed':round(time.monotonic()-started,2),'time':[float(rows[i]['time']) for i in sample_indices],'series':outputs,'diagnostics':report.get('diagnostics',''),'problems':[d.model_dump() for d in warning_diagnostics(project, report.get('diagnostics',''))],'samples':len(rows)}
     (folder/'result.json').write_text(json.dumps(result, allow_nan=False), encoding='utf-8')
     return result
 

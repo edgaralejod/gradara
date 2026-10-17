@@ -5,6 +5,7 @@
  * `npx tsx scripts/build-foc-example.ts`.
  */
 import { writeFileSync } from 'node:fs';
+import { logPlotted } from '../lib/gradara/logging';
 import type { Project } from '../lib/gradara/model';
 import { assemble } from './block-examples/assemble';
 import type { ExampleSpec } from './block-examples/types';
@@ -316,5 +317,5 @@ for (const [id, unit] of [
 
 writeFileSync(
   'models/examples/foc.json',
-  JSON.stringify(project, null, 2) + '\n',
+  JSON.stringify(logPlotted(project), null, 2) + '\n',
 );

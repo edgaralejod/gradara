@@ -176,7 +176,10 @@
       "labelOffset": {
         "x": 52,
         "y": -38
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "diff",
@@ -237,7 +240,10 @@
       "labelOffset": {
         "x": 52,
         "y": -38
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "prod",
@@ -296,7 +302,10 @@
       "labelOffset": {
         "x": 68,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "quot",
@@ -354,7 +363,10 @@
       "labelOffset": {
         "x": 68,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "lo",
@@ -412,7 +424,10 @@
       "labelOffset": {
         "x": 84,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "hi",
@@ -470,7 +485,10 @@
       "labelOffset": {
         "x": 84,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

@@ -142,7 +142,7 @@
       "id": "output",
       "label": "Output voltage",
       "series": [
-        "power.vout.y"
+        "power.vout.v"
       ],
       "labels": [
         "Output voltage"
@@ -152,7 +152,7 @@
       "id": "bus",
       "label": "Rectified DC bus",
       "series": [
-        "power.vbus.y"
+        "power.vbus.v"
       ],
       "labels": [
         "DC bus voltage"
@@ -162,7 +162,7 @@
       "id": "primary",
       "label": "Primary current",
       "series": [
-        "power.ip.y"
+        "power.ip.i"
       ],
       "labels": [
         "Primary current"
@@ -172,7 +172,7 @@
       "id": "switch",
       "label": "Switch voltage",
       "series": [
-        "power.vsw.y"
+        "power.vsw.v"
       ],
       "labels": [
         "Switch voltage"
@@ -591,7 +591,10 @@
           "size": {
             "width": 80,
             "height": 64
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "p_fb00000003",
@@ -1370,7 +1373,10 @@
           "size": {
             "width": 80,
             "height": 48
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "rpri",
@@ -1871,7 +1877,10 @@
           "size": {
             "width": 48,
             "height": 80
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "vsw",
@@ -1927,7 +1936,10 @@
           "size": {
             "width": 48,
             "height": 80
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "vout",
@@ -1983,7 +1995,10 @@
           "size": {
             "width": 48,
             "height": 80
-          }
+          },
+          "logged": [
+            "y"
+          ]
         },
         {
           "id": "pwm",

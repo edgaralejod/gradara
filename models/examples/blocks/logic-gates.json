@@ -69,7 +69,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "B",
@@ -134,7 +137,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gAnd",
@@ -190,7 +196,10 @@
       "labelOffset": {
         "x": 60,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gOr",
@@ -246,7 +255,10 @@
       "labelOffset": {
         "x": 60,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gXor",
@@ -302,7 +314,10 @@
       "labelOffset": {
         "x": 60,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gNand",
@@ -358,7 +373,10 @@
       "labelOffset": {
         "x": 64,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gNor",
@@ -414,7 +432,10 @@
       "labelOffset": {
         "x": 60,
         "y": -46
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "gNot",
@@ -518,7 +539,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

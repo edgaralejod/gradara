@@ -4,7 +4,7 @@ An agent-assisted workbench for graphical, multidomain simulation. Build a diagr
 
 Gradara puts the diagram first: responsive orthogonal wiring, recognizable engineering symbols, domain-colored ports, and equations you can inspect. Agents help author components; the Modelica compiler and numerical runtime execute the model.
 
-**Status: early release.** Desktop apps are available for Windows, macOS, and Linux. Every installer is built, installed on a clean machine, and run automatically, including a simulation on Windows, macOS Intel, and Ubuntu; the Apple silicon simulation is checked by hand for each release (see [supported platforms](docs/PLATFORMS.md)). Please report problems on your system. Gradara does not run MATLAB scripts or open Simulink files.
+**Status: early release.** Desktop apps are available for Windows, macOS, and Linux. Every installer is built, installed on a clean machine, and run automatically, including a simulation on Windows, macOS Intel, and Ubuntu; the Apple silicon simulation is checked by hand for each release (see [supported platforms](docs/PLATFORMS.md)). Please report problems on your system. Until 1.0, releases may change the model format and behavior without migrating older models; release notes say what changed. Gradara does not run MATLAB scripts or open Simulink files.
 
 Gradara is not certified for safety-critical use; verify results independently. [Validation](docs/VALIDATION.md) shows its results next to closed-form answers.
 

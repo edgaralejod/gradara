@@ -308,7 +308,11 @@
       "size": {
         "width": 144,
         "height": 96
-      }
+      },
+      "logged": [
+        "y1",
+        "y2"
+      ]
     },
     {
       "id": "scale",
@@ -363,7 +367,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     }
   ],
   "wires": [

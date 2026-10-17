@@ -395,7 +395,10 @@
       "labelOffset": {
         "x": 80,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "cap",
@@ -504,7 +507,10 @@
       "labelOffset": {
         "x": 92,
         "y": -46
-      }
+      },
+      "logged": [
+        "T"
+      ]
     }
   ],
   "wires": [
@@ -776,7 +782,7 @@
       "id": "plot1",
       "label": "Load voltage",
       "series": [
-        "vs.y"
+        "vs.v"
       ],
       "labels": [
         "pos − neg"

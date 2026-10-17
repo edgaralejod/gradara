@@ -294,7 +294,10 @@
       "labelOffset": {
         "x": 68,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "g1",
@@ -646,7 +649,10 @@
       "labelOffset": {
         "x": 60,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "g2",
@@ -988,7 +994,10 @@
       "labelOffset": {
         "x": 44,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "g3",
@@ -1544,8 +1553,8 @@
       "id": "plot1",
       "label": "Secondary voltages",
       "series": [
-        "v1.y",
-        "v2.y"
+        "v1.v",
+        "v2.v"
       ],
       "labels": [
         "Coupled inductors",
@@ -1556,7 +1565,7 @@
       "id": "plot2",
       "label": "Saturating inductor voltage",
       "series": [
-        "v3.y"
+        "v3.v"
       ],
       "labels": [
         "v = L(i) · di/dt"

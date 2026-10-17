@@ -180,7 +180,10 @@
       "size": {
         "width": 80,
         "height": 64
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "heater",
@@ -435,7 +438,10 @@
         "width": 80,
         "height": 64
       },
-      "rotation": 180
+      "rotation": 180,
+      "logged": [
+        "T"
+      ]
     }
   ],
   "wires": [

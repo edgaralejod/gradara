@@ -254,6 +254,8 @@ async def latest(model: str | None = None):
     project = workspace.saved_models(PROJECT_DIR).get(model) if model else workspace.load_current(PROJECT_DIR)
     if project is None: return {'result':None}
     wanted_hash = semantic_hash(project)
+    from .engine import recording_key
+    wanted_recording = recording_key(project)
     files = sorted(RUNS.glob('*/result.json'),key=lambda p:p.stat().st_mtime,reverse=True)
     for path in files:
         try:
@@ -262,7 +264,9 @@ async def latest(model: str | None = None):
             continue
         snapshot = result.get('snapshot', {})
         identity = snapshot.get('modelId') or f"legacy-{snapshot.get('exampleId') or 'workspace'}"
-        if identity == project.modelId and result.get('modelHash') == wanted_hash:
+        # The same model recording what it logs now (a run from before 0.7.8 has no `recording`).
+        if (identity == project.modelId and result.get('modelHash') == wanted_hash
+                and result.get('recording') == wanted_recording):
             return {'result':result}
     return {'result':None}
 

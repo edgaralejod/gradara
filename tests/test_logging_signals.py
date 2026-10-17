@@ -43,8 +43,20 @@ def test_physical_nets_require_sensors():
 def test_logged_signal_is_present_in_real_solver_output():
     p=circuit()
     result=asyncio.run(simulate(p,'logging'+uuid.uuid4().hex[:12]))
-    logged=next(s for s in result['series'] if s.get('netId'))
-    original=next(s for s in result['series'] if s['key']==logged_signals(p)[0]['expression'])
+    # Results lists only what is logged: the logged net, beside the outputs the template's plots log.
+    assert any(s.get('netId') for s in result['series'])
+    assert all(s.get('netId') or s['key'].split('.')[0] in {b.id for b in p.blocks if b.logged} for s in result['series'])
+    # Logging the output that drives a logged net lists it once, under the output's key.
+    expression=logged_signals(p)[0]['expression']
+    block_id, _, port = expression.partition('.')
+    for b in p.blocks:
+        if b.id == block_id:
+            b.logged=[port]
+    both=asyncio.run(simulate(p,'logging'+uuid.uuid4().hex[:12]))
+    keys=[s['key'] for s in both['series']]
+    assert expression in keys and len(keys)==len(result['series'])
+    original=next(s for s in both['series'] if s['key']==expression)
+    logged=next(s for s in result['series'] if s.get('netId')==logged_signals(p)[0]['netId'])
     assert logged['values']==original['values']
 
 
@@ -62,3 +74,30 @@ def test_full_resolution_endpoint_preserves_event_pairs(tmp_path, monkeypatch):
         assert data['time']==[0,.5,.5,1]
         assert data['series'][0]['values']==[0,0,2,2]
         assert client.get('/api/results/missing/data').status_code==404
+
+
+@pytest.mark.integration
+def test_results_list_only_what_is_logged_and_physical_variables_on_request():
+    from tests.test_physical_buses import flat_document
+    doc = flat_document()
+    # Nothing logged: the run records nothing, though it simulates everything.
+    bare = asyncio.run(simulate(Project.model_validate(doc), 'rec' + uuid.uuid4().hex[:10]))
+    assert bare['series'] == []
+    # A sensor output logged with no wire on it is recorded, and only it.
+    doc['wires'] = [w for w in doc['wires'] if w['source'] != 'vs' or w['sourceHandle'] != 'v']
+    for block in doc['blocks']:
+        if block['id'] == 'vs':
+            block['logged'] = ['v']
+    one = asyncio.run(simulate(Project.model_validate(doc), 'rec' + uuid.uuid4().hex[:10]))
+    assert [s['key'] for s in one['series']] == ['vs.v'] and one['series'][0]['values'][-1] == pytest.approx(10)
+    # Physical variables on request, apart from logged signals.
+    doc['logPhysical'] = True
+    full = asyncio.run(simulate(Project.model_validate(doc), 'rec' + uuid.uuid4().hex[:10]))
+    physical = {s['key']: s for s in full['series'] if s.get('physical')}
+    assert physical['r.v']['values'][-1] == pytest.approx(10) and physical['r.v']['unit'] == 'V'
+    assert physical['r.i']['values'][-1] == pytest.approx(5)
+    assert 'hot.port.T' in physical and 'b1.e1' not in physical
+    assert [s['key'] for s in full['series'] if not s.get('physical')] == ['vs.v']
+    # A mark on a port that is not an output is dropped, not refused.
+    pruned = Project.model_validate({**doc, 'blocks': [{**doc['blocks'][0], 'logged': ['p']}, *doc['blocks'][1:]]})
+    assert pruned.blocks[0].logged is None

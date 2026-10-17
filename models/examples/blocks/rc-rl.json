@@ -248,7 +248,10 @@
       "labelOffset": {
         "x": 100,
         "y": -54
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "ground",
@@ -466,7 +469,10 @@
       "size": {
         "width": 80,
         "height": 48
-      }
+      },
+      "logged": [
+        "y"
+      ]
     },
     {
       "id": "l",
@@ -805,7 +811,7 @@
       "id": "plot1",
       "label": "Capacitor voltage",
       "series": [
-        "vc.y"
+        "vc.v"
       ],
       "labels": [
         "v_C"
@@ -815,7 +821,7 @@
       "id": "plot2",
       "label": "Inductor current",
       "series": [
-        "il.y"
+        "il.i"
       ],
       "labels": [
         "i_L"

@@ -10,6 +10,7 @@ import pytest
 from server import engine, engines
 from server.models import Project
 from server.run_progress import last_time, message, stage
+from tests.recording import unlogged
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -58,7 +59,7 @@ def test_a_run_reports_each_stage_on_its_job(tmp_path, monkeypatch):
             f.write('2,2\n3,3\n4,4\n')
         return {'result': {}, 'diagnostics': ''}
     monkeypatch.setattr(engines, 'execute', fake)
-    project = Project.model_validate(json.loads((ROOT/'models'/'examples'/'dc.json').read_text(encoding='utf-8')))
+    project = unlogged(Project.model_validate(json.loads((ROOT/'models'/'examples'/'dc.json').read_text(encoding='utf-8'))))
     stages = []
     result = asyncio.run(engine.simulate(project, 'progress' + uuid.uuid4().hex[:8], stages.append))
     phases = [s['phase'] for s in stages]
