@@ -1,5 +1,5 @@
 name: Improve Gradara
-description: Something Gradara told you it cannot do yet. Opened from the app's "Gradara cannot do this yet" card.
+description: Something Gradara told you it cannot do yet. Opened from the app's "Gradara cannot do this yet" card or Help → Improve Gradara….
 title: "Improve Gradara: "
 labels: ["improve-gradara"]
 body:
@@ -17,7 +17,7 @@ body:
     id: reason
     attributes:
       label: What Gradara said it cannot do
-      description: Filled in from the app.
+      description: Filled in when opened from a card.
   - type: textarea
     id: outcome
     attributes:
@@ -27,4 +27,4 @@ body:
     id: environment
     attributes:
       label: Gradara version and platform
-      description: Filled in from the app.
+      description: Filled in when opened from a card; otherwise see About Gradara.

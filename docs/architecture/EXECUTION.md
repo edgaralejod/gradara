@@ -53,7 +53,7 @@ Manual models support stop times up to 86,400 simulated seconds for slow thermal
 
 The preview combines a reduced overview with event pairs, extrema, and a dense final window. All series use the same sample indices. The preview is not the full numerical output, and event-heavy models can still make it large. CSV downloads retain the full output file. OpenModelica can emit an extra grid row beyond the requested stop time; preview data excludes it. OpenModelica also leaves out of the CSV any variable that equals a parameter, such as a voltmeter across a DC source or a Constant's output; the service reads those from the alias and start values in `simulation_init.xml` and reports them as constant series (`result_columns` in `server/engine.py`), so a logged output that equals a parameter still has its series.
 
-The latest-result lookup requires matching document identity and emitted-source hash. Layout changes should leave results valid. A failed or cancelled run must not be surfaced as a successful partial result. See [testing](../development/TESTING.md) for engine regressions and [API](../API.md) for access.
+The latest-result lookup requires matching document identity, emitted-source hash, and recording (what the model logs now). Layout changes should leave results valid. A failed or cancelled run must not be surfaced as a successful partial result. See [testing](../development/TESTING.md) for engine regressions and [API](../API.md) for access.
 
 ## Component generation
 

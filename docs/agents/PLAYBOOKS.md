@@ -25,7 +25,7 @@ Reproduce before changing the policy. Fix the general rule, not a template's coo
 
 Follow the [block authoring guide](../blocks/AGENT_BLOCK_GUIDE.md) and [design contract](../blocks/DESIGN.md). Start from a neighboring library definition. Choose stable port/parameter IDs, concise labels and notation, and shared size/port rules. Do not introduce an independent canvas or library renderer.
 
-For a signal block, validate generated Modelica and meaningful parameter/state behavior. For a physical block, implement a canonical wrapper and verify connector laws with an executable model. Inspect the library specimen, canvas block, inspector, and catalog. Generate a local inventory with `npm run report:blocks` when useful. Leave saved user instances unchanged unless the task explicitly includes a migration.
+For a signal block, validate generated Modelica and meaningful parameter/state behavior. For a physical block, wrap a Modelica Standard Library class (a canonical wrapper in `server/modelica.py` only when the library has none) and verify connector laws with an executable model. Inspect the library specimen, canvas block, inspector, and catalog. Generate a local inventory with `npm run report:blocks` when useful. Leave saved user instances unchanged unless the task explicitly includes a migration.
 
 ## Persistence or API change
 

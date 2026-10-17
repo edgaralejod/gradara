@@ -164,7 +164,7 @@ It prints the block count on stderr and fails on any class, parameter, or connec
 
 ## Desktop app
 
-The desktop app is an Electron shell around a frozen copy of the local service and a static build of the workbench. See [distribution](../architecture/DISTRIBUTION.md). The frozen service carries the data files it reads at run time: `server/msl_index.json`, `lib/gradara/port-units.json`, and `lib/gradara/solver-settings.json` (`packaging/build_backend.py` fails when one is missing).
+The desktop app is an Electron shell around a frozen copy of the local service and a static build of the workbench. See [distribution](../architecture/DISTRIBUTION.md). The frozen service carries the data files it reads at run time: `server/msl_index.json`, `lib/gradara/port-units.json`, and `lib/gradara/solver-settings.json` (`packaging/build_backend.py` adds all three and fails when `msl_index.json` or `solver-settings.json` is missing from the build).
 
 ```sh
 cd desktop && npm ci && cd ..       # once: Electron and electron-builder
