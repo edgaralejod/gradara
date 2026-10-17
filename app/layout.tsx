@@ -4,6 +4,7 @@ import './engineering.css';
 import './blocks.css';
 import './inspector.css';
 import './workbench-dialogs.css';
+import './symbol-editor.css';
 export const metadata: Metadata = {
   title: 'Gradara — Modeling workspace',
   description:

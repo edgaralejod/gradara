@@ -113,6 +113,7 @@ The inspector's **Use standard size** command applies the current default dimens
 - `app/blocks.css`: authoritative typography, stroke, symbol, and library styling.
 - `components/gradara/block-node.tsx`: canvas integration, resizer, interactive terminals, movable name.
 - `lib/gradara/ports.ts`: shared terminal geometry and insertion alignment.
+- Symbol editor: `components/gradara/symbol-editor.tsx` (the dialog; props in `symbol-editor-types.ts`), `lib/gradara/symbol-edit.ts` (its pure edit operations and undo history, tested in `tests/symbol-edit.test.ts`), `app/symbol-editor.css` (its chrome only; the block itself stays on `BlockFace` and `blocks.css`). It edits `Definition.glyph` (`lib/gradara/glyph.ts`) and port `side` / `offset`, starting from `lib/gradara/symbol-start.ts`. `/symbol-editor` is its development review page.
 - [Block authoring guide](AGENT_BLOCK_GUIDE.md): procedure for agents and contributors.
 - `npm run report:blocks`: generate a local inventory at `reports/block-catalog.md`. This report is excluded from Git.
 

@@ -1,0 +1,757 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Symbol editor (components/gradara/symbol-editor.tsx): a tool window in the workbench
+ * dialog chrome (workbench-dialogs.css) around a drawing stage. The block itself is
+ * drawn by BlockFace and styled in blocks.css; nothing here restyles it.
+ */
+.symbol-editor {
+  --se-ink: #304757;
+  --se-meta: #637987;
+  --se-quiet: #8193a0;
+  --se-line: #d4dde4;
+  --se-edge: #bfcbd5;
+  --se-panel: #f8fafb;
+  --se-bar: #eef2f5;
+  --se-sheet: #fcfdfd;
+  --se-grid: #e6ecf0;
+  --se-select: #1976b8;
+  --se-error: #b3261e;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0;
+  width: min(1160px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  height: min(800px, calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--se-edge);
+  border-radius: 3px;
+  background: var(--se-panel);
+  box-shadow: 0 8px 28px #22374726;
+  color: var(--se-ink);
+  font: var(--text-ui) / 1.5 var(--font-ui);
+}
+.symbol-editor :is(button, input, select, textarea) {
+  font-size: var(--text-ui);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.symbol-editor button {
+  flex-shrink: 0;
+}
+.symbol-editor :is(input, select, textarea):focus-visible {
+  outline: 2px solid #7476e8;
+  outline-offset: 1px;
+}
+
+/* Title bar: flat, one line of hierarchy. */
+.symbol-editor .se-header {
+  padding: 12px 44px 10px 14px;
+  border-bottom: 1px solid var(--se-line);
+}
+.symbol-editor [data-slot='dialog-title'] {
+  font-size: var(--text-ui);
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+.symbol-editor [data-slot='dialog-description'] {
+  margin-top: 2px;
+  font-size: var(--text-ui);
+  color: var(--se-meta);
+}
+
+.symbol-editor .se-main {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 300px;
+  min-height: 0;
+}
+
+/* Tools */
+.symbol-editor .se-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0;
+  border-right: 1px solid var(--se-line);
+  background: var(--se-bar);
+}
+.symbol-editor .se-tool {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #47606f;
+}
+.symbol-editor .se-tool:hover {
+  background: #e2e9ee;
+}
+.symbol-editor .se-tool[aria-pressed='true'] {
+  border-color: #9bb7ca;
+  background: white;
+  color: var(--se-select);
+}
+
+/* Stage */
+.symbol-editor .se-stage-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+.symbol-editor .se-stage-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--se-line);
+  background: white;
+}
+.symbol-editor .se-hint {
+  flex: 1;
+  min-width: 0;
+  color: var(--se-meta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.symbol-editor .se-stage-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.symbol-editor .se-segmented {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.symbol-editor .se-segmented-label {
+  float: left;
+  margin-right: 6px;
+  padding: 0;
+  color: var(--se-meta);
+}
+.symbol-editor .se-segmented label {
+  position: relative;
+  display: grid;
+}
+.symbol-editor .se-segmented input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.symbol-editor .se-segmented span {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
+  margin-left: -1px;
+  border: 1px solid #cfd9e0;
+  background: white;
+  color: #47606f;
+  font-variant-numeric: tabular-nums;
+}
+.symbol-editor .se-segmented label:first-of-type span {
+  border-radius: 2px 0 0 2px;
+}
+.symbol-editor .se-segmented label:last-of-type span {
+  border-radius: 0 2px 2px 0;
+}
+.symbol-editor .se-segmented input:checked + span {
+  position: relative;
+  border-color: #9bb7ca;
+  background: #e8f1f8;
+  color: #1d5f8f;
+  font-weight: 500;
+}
+.symbol-editor .se-segmented input:focus-visible + span {
+  z-index: 1;
+  outline: 2px solid #7476e8;
+  outline-offset: 1px;
+}
+.symbol-editor .se-zoom {
+  min-width: 38px;
+  color: var(--se-quiet);
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.symbol-editor .se-icon-button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #47606f;
+}
+.symbol-editor .se-icon-button:hover:not(:disabled) {
+  background: var(--se-bar);
+}
+.symbol-editor .se-icon-button:disabled {
+  color: #c3ccd3;
+}
+
+.symbol-editor .se-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: auto;
+  background: var(--se-sheet);
+}
+.symbol-editor .se-sheet {
+  position: relative;
+  flex-shrink: 0;
+  margin: 12px;
+  outline: 1px solid #e3e9ee;
+  touch-action: none;
+  user-select: none;
+}
+.symbol-editor .se-grid,
+.symbol-editor .se-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.symbol-editor .se-grid-lines {
+  stroke: var(--se-grid);
+}
+.symbol-editor .se-face {
+  position: absolute;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.symbol-editor .se-face .block-outline > * {
+  stroke-width: calc(1.4px * var(--se-weight, 1));
+}
+.symbol-editor .se-face .circuit-symbol path {
+  stroke-width: calc(1.6px * var(--se-weight, 1));
+}
+.symbol-editor .se-overlay {
+  cursor: crosshair;
+}
+.symbol-editor .tool-select .se-overlay {
+  cursor: default;
+}
+.symbol-editor .se-overlay :is(path, rect, circle, line) {
+  vector-effect: none;
+}
+.symbol-editor .se-body {
+  fill: none;
+  stroke: #b4c3ce;
+  stroke-dasharray: 0.5 1.5;
+}
+.symbol-editor .se-dims path {
+  fill: none;
+  stroke: #a8b8c4;
+  stroke-width: calc(var(--px) * 1px);
+}
+.symbol-editor .se-dims text {
+  fill: var(--se-quiet);
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+.symbol-editor .se-snap-dots {
+  stroke: #c9d5de;
+  stroke-linecap: round;
+  fill: none;
+  pointer-events: none;
+}
+.symbol-editor .se-design-box {
+  fill: none;
+  stroke: #8fb0c6;
+  pointer-events: none;
+}
+.symbol-editor .se-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 10px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  cursor: move;
+}
+.symbol-editor .se-hit.is-area {
+  fill: transparent;
+  pointer-events: all;
+}
+.symbol-editor .se-hits.is-inert .se-hit {
+  pointer-events: none;
+}
+.symbol-editor .se-selected path {
+  fill: none;
+  stroke: var(--se-select);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.symbol-editor .se-selected-box {
+  fill: none;
+  stroke: var(--se-select);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.symbol-editor .se-handle {
+  fill: white;
+  stroke: var(--se-select);
+  cursor: grab;
+}
+.symbol-editor .se-anchor {
+  fill: white;
+  cursor: grab;
+}
+.symbol-editor .se-draft {
+  fill: none;
+  stroke: var(--se-select);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.symbol-editor .se-draft.is-filled {
+  fill: color-mix(in srgb, var(--se-select) 18%, transparent);
+}
+.symbol-editor .se-close-target {
+  fill: none;
+  stroke: var(--se-select);
+  pointer-events: none;
+}
+.symbol-editor .se-terminal {
+  cursor: grab;
+}
+.symbol-editor .se-terminal-hit {
+  fill: transparent;
+}
+.symbol-editor .se-marquee {
+  fill: color-mix(in srgb, var(--se-select) 6%, transparent);
+  stroke: var(--se-select);
+  pointer-events: none;
+}
+.symbol-editor .se-text-entry {
+  position: absolute;
+  width: 140px;
+  height: 24px;
+  padding: 2px 6px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--se-select);
+  background: white;
+  color: #27333d;
+  text-align: center;
+}
+
+/* Previews at 100% */
+.symbol-editor .se-previews {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px 40px;
+  padding: 12px 16px 10px;
+  border-top: 1px solid var(--se-line);
+  background: white;
+}
+.symbol-editor .se-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.symbol-editor .se-preview-well {
+  display: grid;
+  place-items: center;
+  min-width: 72px;
+  min-height: 72px;
+  padding: 8px;
+}
+.symbol-editor .se-preview-body {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+}
+.symbol-editor .se-preview figcaption {
+  color: var(--se-quiet);
+  font-size: var(--text-micro);
+}
+
+/* Side panel */
+.symbol-editor .se-panel {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border-left: 1px solid var(--se-line);
+  background: var(--se-panel);
+}
+.symbol-editor .se-panel > section {
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid #e3e9ee;
+}
+.symbol-editor .se-panel h3 {
+  margin: 0 0 8px;
+  color: #354b5b;
+  font-size: var(--text-ui);
+  font-weight: 600;
+}
+.symbol-editor .se-ports {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.symbol-editor .se-ports > li {
+  padding: 3px 0;
+}
+.symbol-editor .se-ports > li + li {
+  border-top: 1px solid #edf1f4;
+}
+.symbol-editor .se-port-row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) 76px auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.symbol-editor .se-ports > li.is-hover .se-port-name {
+  color: #1d5f8f;
+}
+.symbol-editor .se-swatch {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--port-color);
+}
+.symbol-editor .se-swatch.is-physical {
+  width: 8px;
+  height: 8px;
+  border-radius: 1.5px;
+  background: white;
+  box-shadow: inset 0 0 0 1.5px var(--port-color);
+}
+.symbol-editor .se-port-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.symbol-editor :is(.se-port-row select, .se-field input, .se-field select, .se-ai textarea) {
+  border: 1px solid #cfd9e0;
+  background: white;
+  color: #27333d;
+}
+.symbol-editor .se-port-row select {
+  height: 24px;
+  padding: 0 4px;
+}
+.symbol-editor .se-lead {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid #cfd9e0;
+  background: white;
+  color: var(--se-quiet);
+}
+.symbol-editor .se-lead[aria-pressed='true'] {
+  border-color: #9bb7ca;
+  background: #e8f1f8;
+  color: #1d5f8f;
+}
+.symbol-editor .se-note {
+  margin: 2px 0 4px 18px;
+  color: var(--se-meta);
+  font-size: var(--text-micro);
+  line-height: 1.45;
+}
+.symbol-editor .se-steppers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.symbol-editor .se-stepper {
+  display: inline-flex;
+  align-items: center;
+}
+.symbol-editor .se-stepper-label {
+  min-width: 42px;
+  color: var(--se-meta);
+}
+.symbol-editor .se-stepper button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #cfd9e0;
+  background: white;
+  color: #47606f;
+}
+.symbol-editor .se-stepper button:disabled {
+  color: #c3ccd3;
+}
+.symbol-editor .se-stepper output {
+  min-width: 36px;
+  height: 24px;
+  border-block: 1px solid #cfd9e0;
+  background: white;
+  font-variant-numeric: tabular-nums;
+  line-height: 22px;
+  text-align: center;
+}
+.symbol-editor .se-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+}
+.symbol-editor .se-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--se-ink);
+  white-space: nowrap;
+}
+.symbol-editor .se-check input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--se-select);
+}
+.symbol-editor .se-text-button {
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #2f6f9f;
+}
+.symbol-editor .se-text-button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+.symbol-editor .se-text-button:disabled {
+  color: #b2bec7;
+}
+.symbol-editor .se-empty,
+.symbol-editor .se-meta {
+  margin: 0;
+  color: var(--se-meta);
+}
+.symbol-editor .se-selection-name {
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+.symbol-editor .se-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+}
+.symbol-editor .se-fields-wide {
+  grid-column: 1 / -1;
+}
+.symbol-editor .se-field {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  color: var(--se-meta);
+}
+.symbol-editor .se-field input,
+.symbol-editor .se-field select {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 0 6px;
+  font-variant-numeric: tabular-nums;
+}
+.symbol-editor .se-text-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin-top: 6px;
+}
+.symbol-editor .se-field-wide {
+  grid-column: 1 / -1;
+}
+.symbol-editor .se-panel .se-check {
+  margin-top: 10px;
+}
+.symbol-editor .se-toggles .se-check {
+  margin-top: 0;
+}
+.symbol-editor .se-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 10px;
+}
+.symbol-editor .se-row-actions button {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid #cfd9e0;
+  background: white;
+  color: #47606f;
+}
+.symbol-editor :is(.se-row-actions button, .se-lead, .se-stepper button):hover:not(:disabled) {
+  border-color: #9bb7ca;
+}
+.symbol-editor .se-ai textarea {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 5px 7px;
+  resize: vertical;
+  line-height: 1.45;
+}
+.symbol-editor .se-ai textarea::placeholder {
+  color: #a3b1bb;
+}
+.symbol-editor .se-ai-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+.symbol-editor .se-ai-row .se-meta {
+  margin-right: auto;
+  font-size: var(--text-micro);
+}
+.symbol-editor .se-ai > p {
+  margin-top: 8px;
+}
+.symbol-editor .se-progress {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.symbol-editor .se-progress i {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--se-select);
+  animation: se-pulse 1.2s ease-in-out infinite;
+}
+@keyframes se-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .symbol-editor .se-progress i {
+    animation: none;
+  }
+}
+.symbol-editor .se-error {
+  margin: 0;
+  color: var(--se-error);
+}
+.symbol-editor .se-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Footer: status wraps before the buttons do. */
+.symbol-editor .se-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--se-line);
+  background: var(--se-panel);
+}
+.symbol-editor .se-actions button {
+  font-size: var(--text-ui) !important;
+}
+.symbol-editor .se-status {
+  flex: 1 1 200px;
+  min-width: 0;
+  order: 0;
+}
+.symbol-editor .se-status .block-dialog-dirty {
+  margin: 0;
+}
+
+/* Narrow windows: tools above the stage, the panel below it, all in one scroll. */
+@media (max-width: 860px) {
+  /* One column that scrolls: tools, stage, previews, then the panel. */
+  .symbol-editor .se-main {
+    display: block;
+    overflow-y: auto;
+  }
+  .symbol-editor .se-tools {
+    flex-direction: row;
+    justify-content: center;
+    padding: 4px 8px;
+    border-right: 0;
+    border-bottom: 1px solid var(--se-line);
+  }
+  .symbol-editor .se-stage-bar {
+    flex-wrap: wrap;
+  }
+  .symbol-editor .se-hint {
+    flex-basis: 100%;
+    white-space: normal;
+  }
+  .symbol-editor .se-stage-column {
+    grid-template-rows: auto auto auto;
+    min-height: auto;
+  }
+  .symbol-editor .se-stage {
+    height: min(52dvh, 400px);
+  }
+  .symbol-editor .se-panel {
+    overflow: visible;
+    border-left: 0;
+    border-top: 1px solid var(--se-line);
+  }
+}
+
+/* /symbol-editor: the development review page (app/symbol-editor/page.tsx). */
+.se-review {
+  max-width: 720px;
+  padding: 24px;
+  color: #304757;
+  font: var(--text-ui) / 1.5 var(--font-ui);
+}
+.se-review h1 {
+  margin: 0 0 4px;
+  font-size: var(--text-ui);
+  font-weight: 600;
+}
+.se-review ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+.se-review button {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #cfd9e0;
+  border-radius: 2px;
+  background: white;
+}
+.se-review pre {
+  max-height: 50vh;
+  overflow: auto;
+  font: var(--text-micro) / 1.4 var(--font-code);
+  white-space: pre-wrap;
+}
