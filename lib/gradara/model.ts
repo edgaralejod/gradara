@@ -1,3 +1,4 @@
+import type { SymbolGlyph } from './glyph';
 import portUnits from './port-units.json';
 import type { SimulationSettings } from './solver';
 import { extraBlocks } from './extra-blocks';
@@ -113,6 +114,8 @@ export type Definition = {
   ctemplate?: CTemplate;
   /** The tag of a Goto, From, or connection label (lib/gradara/tag-blocks.ts). */
   tag?: string;
+  /** The block's own drawn symbol (symbol editor or AI); presentation only (lib/gradara/glyph.ts). */
+  glyph?: SymbolGlyph;
 };
 /**
  * One alternative inside for a subsystem instance. A diagram variant has its own

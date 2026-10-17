@@ -40,6 +40,8 @@ export function blockShape(d: Definition): BlockShape {
   if (d.boundary) return 'boundary';
   if (isTagKind(d.kind)) return 'tag';
   if (d.subsystem) return 'subsystem';
+  // A drawn symbol (glyph.ts) is boxed or unboxed as its author chose.
+  if (d.glyph) return d.glyph.outline ? 'box' : 'physical';
   if (d.kind === 'sum' || d.kind === 'subtract') return 'sum';
   if (physical.has(d.kind) || isPictorial(d.kind)) return 'physical';
   if (['gain', 'mux', 'demux', 'ground'].includes(d.kind))
@@ -56,6 +58,7 @@ export function showPortLabel(d: Definition, p: Port) {
   const shape = blockShape(d);
   if (shape === 'boundary') return false;
   if (shape === 'subsystem') return true;
+  if (d.glyph) return d.glyph.captions ?? !!d.glyph.outline;
   if (shape === 'sum') return p.direction === 'input';
   // A Mux numbers its inputs and a Demux its outputs; the single side needs no name.
   if (shape === 'mux') return p.direction === 'input';
@@ -80,6 +83,22 @@ function roundGrid(n: number) {
   return Math.ceil(n / SIZE_STEP) * SIZE_STEP;
 }
 
+/**
+ * The standard body of a block with a drawn symbol: the size its author set, or the
+ * drawing plus a lead's room on each side that has terminals (a boxed drawing gets a
+ * margin all round), in size steps.
+ */
+function drawnBodySize(d: Definition) {
+  const g = d.glyph!;
+  if (g.body) return { ...g.body };
+  const has = (side: string) => d.ports.some((p) => sideOf(p) === side);
+  const room = (side: string) => (g.outline ? 16 : has(side) ? 16 : 0);
+  return {
+    width: Math.max(48, roundGrid(g.width + room('left') + room('right'))),
+    height: Math.max(48, roundGrid(g.height + room('top') + room('bottom'))),
+  };
+}
+
 export function defaultBlockSize(d: Definition) {
   const shape = blockShape(d);
   if (shape === 'boundary')
@@ -95,6 +114,7 @@ export function defaultBlockSize(d: Definition) {
       height: 32,
     };
   if (shape === 'sum' || shape === 'ground') return { width: 48, height: 48 };
+  if (d.glyph) return drawnBodySize(d);
   if (isPictorial(d.kind)) return { ...pictorialSizes[d.kind] };
   if (shape === 'physical')
     return ['top', 'bottom'].includes(

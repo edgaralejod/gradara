@@ -38,8 +38,20 @@ export function CircuitSymbol({
         />
       ))}
       <g transform={`translate(${x} ${y})`}>
-        <path d={glyph.path} />
+        {glyph.path && <path d={glyph.path} />}
         {glyph.fill && <path className="glyph-fill" d={glyph.fill} />}
+        {glyph.texts?.map((t, i) => (
+          <text
+            key={i}
+            x={t.x}
+            y={t.y}
+            textAnchor={t.anchor}
+            dominantBaseline="central"
+            className={t.size === 'small' ? 'glyph-text is-small' : 'glyph-text'}
+          >
+            {t.text}
+          </text>
+        ))}
       </g>
     </svg>
   );

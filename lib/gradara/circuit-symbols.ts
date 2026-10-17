@@ -10,6 +10,7 @@
  */
 import type { Definition, Domain } from './model';
 import { portOffset, portSide, sideLength } from './ports';
+import { compileGlyph, type CompiledGlyph } from './glyph';
 
 export type Glyph = {
   width: number;
@@ -366,7 +367,9 @@ export function circuitLayout(
   definition: Definition,
   size: { width: number; height: number },
 ) {
-  const glyph = g[definition.kind];
+  // A drawn symbol (Definition.glyph) takes the place of the built-in one.
+  const glyph: Glyph & { texts?: CompiledGlyph['texts'] } | undefined =
+    definition.glyph ? compileGlyph(definition.glyph) : g[definition.kind];
   if (!glyph) return undefined;
   const x0 = (size.width - glyph.width) / 2,
     y0 = (size.height - glyph.height) / 2;

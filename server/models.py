@@ -1,7 +1,7 @@
 """Serializable editing contract. Numerical semantics are emitted as Modelica."""
 import math
 import re
-from typing import Literal
+from typing import Annotated, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 IDENTIFIER = r'^[A-Za-z][A-Za-z0-9_]*$'
@@ -139,6 +139,104 @@ class CTemplate(BaseModel):
     notes: str = Field(default='', max_length=600)
 
 
+GLYPH_SIZE = 320
+GLYPH_MARGIN = 16
+Coordinate = Annotated[float, Field(allow_inf_nan=False, ge=-GLYPH_MARGIN, le=GLYPH_SIZE + GLYPH_MARGIN)]
+
+
+class GlyphLine(BaseModel):
+    type: Literal['line']
+    points: list[tuple[Coordinate, Coordinate]] = Field(min_length=2, max_length=400)
+
+
+class GlyphPolygon(BaseModel):
+    type: Literal['polygon']
+    points: list[tuple[Coordinate, Coordinate]] = Field(min_length=2, max_length=400)
+    fill: bool | None = None
+
+
+class GlyphRect(BaseModel):
+    type: Literal['rect']
+    x: Coordinate
+    y: Coordinate
+    width: float = Field(gt=0, le=GLYPH_SIZE + 2 * GLYPH_MARGIN, allow_inf_nan=False)
+    height: float = Field(gt=0, le=GLYPH_SIZE + 2 * GLYPH_MARGIN, allow_inf_nan=False)
+    rx: float | None = Field(default=None, ge=0, le=GLYPH_SIZE, allow_inf_nan=False)
+    fill: bool | None = None
+
+
+class GlyphEllipse(BaseModel):
+    type: Literal['ellipse']
+    cx: Coordinate
+    cy: Coordinate
+    rx: float = Field(gt=0, le=GLYPH_SIZE, allow_inf_nan=False)
+    ry: float = Field(gt=0, le=GLYPH_SIZE, allow_inf_nan=False)
+    fill: bool | None = None
+
+
+class GlyphPath(BaseModel):
+    type: Literal['path']
+    d: str = Field(min_length=1, max_length=4000, pattern=r'^[MmLlHhVvCcSsQqTtAaZz0-9.,eE\s+-]*$')
+    fill: bool | None = None
+
+
+class GlyphArc(BaseModel):
+    type: Literal['arc']
+    cx: Coordinate
+    cy: Coordinate
+    r: float = Field(gt=0, le=GLYPH_SIZE, allow_inf_nan=False)
+    start: float = Field(ge=-720, le=720, allow_inf_nan=False)
+    end: float = Field(ge=-720, le=720, allow_inf_nan=False)
+
+
+class GlyphText(BaseModel):
+    type: Literal['text']
+    x: Coordinate
+    y: Coordinate
+    text: str = Field(min_length=1, max_length=24)
+    size: Literal['normal', 'small'] | None = None
+    anchor: Literal['start', 'middle', 'end'] | None = None
+
+
+GlyphShape = Annotated[GlyphLine | GlyphPolygon | GlyphRect | GlyphEllipse | GlyphPath | GlyphArc | GlyphText,
+                       Field(discriminator='type')]
+
+
+class GlyphAnchor(BaseModel):
+    x: Coordinate
+    y: Coordinate
+
+
+class GlyphBody(BaseModel):
+    width: int = Field(ge=16, le=GLYPH_SIZE, multiple_of=16)
+    height: int = Field(ge=16, le=GLYPH_SIZE, multiple_of=16)
+
+
+class SymbolGlyph(BaseModel):
+    """A block's own drawn symbol (lib/gradara/glyph.ts): presentation only, never emitted.
+
+    Shapes in a design box, an anchor per port where its lead meets the drawing, whether the
+    block keeps its box, and an optional standard body. The same limits as `glyphProblem`.
+    """
+    width: float = Field(ge=8, le=GLYPH_SIZE, allow_inf_nan=False)
+    height: float = Field(ge=8, le=GLYPH_SIZE, allow_inf_nan=False)
+    shapes: list[GlyphShape] = Field(max_length=200)
+    anchors: dict[str, GlyphAnchor] = Field(default_factory=dict, max_length=20)
+    outline: bool | None = None
+    captions: bool | None = None
+    body: GlyphBody | None = None
+
+    @model_validator(mode='after')
+    def bounded(self):
+        if sum(len(s.points) for s in self.shapes if isinstance(s, (GlyphLine, GlyphPolygon))) > 400:
+            raise ValueError('A drawing has at most 400 points.')
+        limit = lambda v, size: -GLYPH_MARGIN <= v <= size + GLYPH_MARGIN
+        for a in self.anchors.values():
+            if not (limit(a.x, self.width) and limit(a.y, self.height)):
+                raise ValueError('A port anchor lies outside the drawing.')
+        return self
+
+
 class Definition(BaseModel):
     kind: str = Field(pattern=IDENTIFIER, max_length=80)
     name: str = Field(min_length=1, max_length=100)
@@ -163,6 +261,8 @@ class Definition(BaseModel):
     # The tag of a Goto, From, or connection label (server/tags.py): blocks with one tag on a
     # sheet, or on a sheet and inside its subsystems, are one connection.
     tag: str | None = Field(default=None, pattern=r'^[A-Za-z][A-Za-z0-9_]{0,31}$')
+    # The block's own drawn symbol (symbol editor or AI): presentation only, never emitted.
+    glyph: SymbolGlyph | None = None
 
     @field_validator('equations', 'declarations')
     @classmethod
@@ -188,6 +288,14 @@ class Definition(BaseModel):
         ids = [p.id for p in self.ports] + [p.id for p in self.parameters]
         if len(ids) != len(set(ids)):
             raise ValueError('Ports and parameters need unique names.')
+        return self
+
+    @model_validator(mode='after')
+    def live_anchors(self):
+        # A drawing's anchors follow the ports: one for a port that is gone is dropped.
+        if self.glyph is not None:
+            ids = {p.id for p in self.ports}
+            self.glyph.anchors = {k: v for k, v in self.glyph.anchors.items() if k in ids}
         return self
 
 class Position(BaseModel):

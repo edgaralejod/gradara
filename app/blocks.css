@@ -631,6 +631,24 @@
   border-radius: 0;
 }
 
+/* A drawn symbol (Definition.glyph) fills the whole body, boxed or not, like a pictorial one. */
+.block-face.has-drawing .block-symbol {
+  inset: 0;
+  overflow: visible;
+}
+.block-face.has-drawing .block-symbol > svg {
+  max-width: none;
+  max-height: none;
+}
+.block-face .circuit-symbol text.glyph-text {
+  fill: var(--domain);
+  stroke: none;
+  font: 400 14px var(--block-font);
+}
+.block-face .circuit-symbol text.glyph-text.is-small {
+  font-size: 12px;
+}
+
 /* Pictorial schematic symbols (circuit-symbol.tsx): drawn at design size, never stretched. */
 .block-face .circuit-symbol {
   overflow: visible;
