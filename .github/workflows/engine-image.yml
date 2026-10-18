@@ -1,0 +1,47 @@
+name: Engine image
+
+# Builds the Docker engine image (Dockerfile.engine: OpenModelica 1.27.0 and the
+# Modelica Standard Library 4.1.0) and publishes it to GitHub Container Registry, so
+# the OpenModelica integration workflow pulls it instead of rebuilding it, and does
+# not depend on OpenModelica's package server on every run. Runs when the image's
+# inputs change on main, and by hand.
+on:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile.engine
+      - .github/workflows/engine-image.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: engine-image
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      IMAGE: ghcr.io/edgaralejod/gradara-engine
+      TAG: '1.27.0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Build
+        run: docker build -f Dockerfile.engine -t "$IMAGE:$TAG" -t "$IMAGE:$TAG-${GITHUB_SHA::12}" .
+      - name: Check the engine and its library
+        run: |
+          docker run --rm "$IMAGE:$TAG" sh -c \
+            'printf "loadModel(Modelica, {\"4.1.0\"});\ngetErrorString();\n" > /tmp/check.mos && omc /tmp/check.mos | tee /dev/stderr | grep -q "^true"'
+      - name: Publish
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE:$TAG"
+          docker push "$IMAGE:$TAG-${GITHUB_SHA::12}"

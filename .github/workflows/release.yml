@@ -178,7 +178,25 @@ jobs:
             export CSC_IDENTITY_AUTO_DISCOVERY=false
             echo "No signing certificate configured; building unsigned"
           fi
-          npx electron-builder ${{ matrix.builder }} --publish never
+          if [ "$RUNNER_OS" = macOS ] && [ -n "${APPLE_ID:-}" ]; then
+            # Notarizing ends with stapling Apple's ticket to the app, which asks Apple's
+            # ticket service over the network. That call drops now and then (error 68,
+            # "The network connection was lost") after notarization itself succeeded,
+            # so a staple failure, and only that, is retried.
+            for attempt in 1 2 3; do
+              if npx electron-builder ${{ matrix.builder }} --publish never 2>&1 | tee "$RUNNER_TEMP/electron-builder.log"; then
+                break
+              fi
+              if [ "$attempt" -lt 3 ] && grep -q 'Failed to staple' "$RUNNER_TEMP/electron-builder.log"; then
+                echo "::warning::Stapling the notarization ticket failed (attempt $attempt); building again in 60 s"
+                sleep 60
+                continue
+              fi
+              exit 1
+            done
+          else
+            npx electron-builder ${{ matrix.builder }} --publish never
+          fi
       - name: Name macOS update metadata by architecture
         if: runner.os == 'macOS'
         shell: bash
@@ -297,7 +315,13 @@ jobs:
             # Signed builds must pass the same checks a user's Mac runs on first open.
             codesign --verify --deep --strict --verbose=2 /Applications/Gradara.app
             spctl --assess --type execute --verbose=4 /Applications/Gradara.app
-            xcrun stapler validate /Applications/Gradara.app
+            # Validation asks Apple's ticket service too; retry a dropped connection.
+            for attempt in 1 2 3 4 5; do
+              if xcrun stapler validate /Applications/Gradara.app; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              echo "::warning::stapler validate failed (attempt $attempt); retrying in 30 s"
+              sleep 30
+            done
             echo "Signed, notarized, and accepted by Gatekeeper"
           else
             echo "::notice::Unsigned macOS build: users must allow it in System Settings > Privacy & Security on first open"
