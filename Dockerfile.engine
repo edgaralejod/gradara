@@ -1,15 +1,29 @@
+# The Modelica Standard Library, when the build is given one: the Engine image workflow
+# passes the library shipped in Gradara's own Linux engine (--build-context msl=<dir>
+# with the library in <dir>/library), so the image uses the same library as the app and
+# needs no outside server. Without it this stage is an empty folder and the library is
+# downloaded below.
+FROM openmodelica/openmodelica:v1.27.0-ompython AS msl
+RUN mkdir /library
+
 FROM openmodelica/openmodelica:v1.27.0-ompython
 ARG ENGINE_UID=1000
-# The Modelica Standard Library comes from OpenModelica's package server, which is
-# sometimes unreachable; omc reports that but still exits 0, so check the library is
-# there, try a few times, and fail the build rather than ship an image without it.
-RUN printf 'installPackage(Modelica, "4.1.0");\ngetErrorString();\n' > /tmp/install.mos \
+COPY --from=msl /library /tmp/msl
+# Otherwise the library comes from OpenModelica's package server, which is sometimes
+# unreachable; omc reports that but still exits 0, so check the library is there, try a
+# few times, and fail the build rather than ship an image without it.
+RUN if ls -d "/tmp/msl/Modelica 4.1.0"* >/dev/null 2>&1; then \
+         mkdir -p /root/.openmodelica && mv /tmp/msl /root/.openmodelica/libraries; \
+       fi \
+    && printf 'installPackage(Modelica, "4.1.0");\ngetErrorString();\n' > /tmp/install.mos \
     && for attempt in 1 2 3 4 5; do \
+         if ls -d "/root/.openmodelica/libraries/Modelica 4.1.0"* >/dev/null 2>&1; then break; fi; \
          omc /tmp/install.mos; \
          if ls -d "/root/.openmodelica/libraries/Modelica 4.1.0"* >/dev/null 2>&1; then break; fi; \
          echo "Modelica library download failed (attempt $attempt)"; rm -rf /root/.openmodelica/libraries; sleep 60; \
        done \
     && ls -d "/root/.openmodelica/libraries/Modelica 4.1.0"* \
+    && rm -rf /tmp/msl /root/.openmodelica/libraries/index.json /root/.openmodelica/libraries/index.mos \
     && mv /root/.openmodelica/libraries /opt/modelica \
     && chmod -R a+rX /opt/modelica \
     && useradd --create-home --uid "$ENGINE_UID" gradara

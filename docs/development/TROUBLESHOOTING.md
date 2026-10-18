@@ -39,7 +39,7 @@ Open **Settings → Engine**. The top line says what is wrong; choose **Check ag
 
 - **"Docker is not installed"** or **"Docker is not running."** Install or start your container runtime (Docker Engine, Docker Desktop, OrbStack, or Colima), then choose **Check again**. With Colima installed on macOS, **Set up now** starts it.
 - **"Engine image not prepared."** Choose **Set up now**. The image is 1 to 2 GB.
-- **"The engine image could not be built"** with "Modelica library download failed" in the output: building the image downloads the Modelica Standard Library from OpenModelica's package server (libraries.openmodelica.org), which is sometimes unreachable. The build tries five times, a minute apart, and stops rather than make an image without the library. Choose **Set up now** again later.
+- **"The engine image could not be built"** with "Modelica library download failed" in the output: building the image on your computer downloads the Modelica Standard Library from OpenModelica's package server (libraries.openmodelica.org), which is sometimes unreachable. The build tries five times, a minute apart, and stops rather than make an image without the library. Choose **Set up now** again later.
 - **"Docker is set to Windows containers."** In Docker Desktop, switch to Linux containers, then choose **Check again**.
 
 ### A run fails
