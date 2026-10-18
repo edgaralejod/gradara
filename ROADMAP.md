@@ -51,7 +51,7 @@ Every installer now includes its engine (a Linux VM on macOS). Remaining:
 - **Apple silicon in CI:** GitHub's Apple silicon runners cannot start VMs, so that installer's simulation is checked by hand per release. Add a self-hosted Apple silicon runner, or use hosted runners once they support nested virtualization.
 - **Smaller macOS engine:** revisit native OpenModelica macOS builds or Apple's `container` tool as they mature; a native build would remove the VM.
 - **Linux without a system compiler:** bundle a C toolchain so the AppImage needs no `gcc` either.
-- Publish the engine image to GitHub Container Registry from CI. The app already tries `ghcr.io/edgaralejod/gradara-engine:1.27.0` first, but no workflow pushes it yet, so every Docker setup falls back to building the image locally.
+- Let the app use the published engine image. The Engine image workflow publishes `ghcr.io/edgaralejod/gradara-engine:1.27.0`, which CI pulls; the package is private, so the app's pull of it fails and every Docker setup builds the image locally. Before making it public, run the engine as the user's own uid (`docker run --user`, with a writable home) so the image's built-in uid 1000 cannot leave a Linux user with another uid unable to write run folders.
 - Record per-platform install results, including slow disks, proxies, non-admin accounts, and Windows installs into folders with spaces.
 
 ## AI service

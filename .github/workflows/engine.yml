@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   engine:
@@ -22,7 +23,24 @@ jobs:
           cache: pip
           cache-dependency-path: server/requirements*.txt
       - run: python -m pip install -r server/requirements-dev.txt
-      - name: Build the local numerical engine
-        run: docker build -f Dockerfile.engine --build-arg ENGINE_UID="$(id -u)" -t gradara-engine:1.27.0 .
+      # The image published by the Engine image workflow, so a run does not depend on
+      # OpenModelica's package server; built here only when it cannot be pulled.
+      - name: Get the local numerical engine
+        env:
+          REGISTRY_IMAGE: ghcr.io/edgaralejod/gradara-engine:1.27.0
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          uid=$(id -u)
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          if docker pull "$REGISTRY_IMAGE"; then
+            # The published image runs as uid 1000; give the engine user this runner's uid,
+            # so it can write in the mounted run folders. No network needed.
+            printf 'FROM %s\nUSER root\nRUN usermod -u %s gradara && chown -R %s /home/gradara\nUSER gradara\n' \
+              "$REGISTRY_IMAGE" "$uid" "$uid" | docker build -t gradara-engine:1.27.0 -
+          else
+            echo "::warning::The published engine image could not be pulled; building it"
+            docker build -f Dockerfile.engine --build-arg ENGINE_UID="$uid" -t gradara-engine:1.27.0 .
+          fi
       - name: Unit and real-engine tests
         run: python -m pytest -q
