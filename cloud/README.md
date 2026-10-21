@@ -6,7 +6,7 @@ Accounts, prepaid credits, and schema-bound AI generation for Gradara. Read [dis
 
 ```sh
 python3 -m venv .venv
-.venv/bin/pip install -r cloud/requirements.txt pytest==9.1.1 httpx2==2.13.0
+.venv/bin/pip install -r cloud/requirements.txt pytest==9.1.1 httpx2==2.13.1
 cd cloud
 ../.venv/bin/python -m pytest -q
 DATABASE_URL=sqlite:///./dev.db LLM_PROVIDER=fake AUTH_MODE=dev PUBLIC_URL=http://127.0.0.1:8900 \

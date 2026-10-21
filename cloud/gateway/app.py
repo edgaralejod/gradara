@@ -11,6 +11,7 @@ Privacy contract (see docs/PRIVACY.md):
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 import os
 import logging
@@ -412,7 +413,7 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
 
     @app.post('/internal/purge')
     async def purge(authorization: str | None = Header(default=None)):
-        if not cfg.admin_token or authorization != f'Bearer {cfg.admin_token}':
+        if not cfg.admin_token or not hmac.compare_digest(authorization or '', f'Bearer {cfg.admin_token}'):
             raise HTTPException(404, 'Not found.')
         return await asyncio.to_thread(store.purge)
 
