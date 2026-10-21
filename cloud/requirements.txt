@@ -1,7 +1,7 @@
 fastapi==0.141.1
 uvicorn[standard]==0.52.4
 httpx==0.28.1
-SQLAlchemy==2.1.1
+SQLAlchemy==2.1.5
 psycopg[binary]==3.3.6
 stripe==15.6.1
 google-auth==2.58.1
