@@ -102,7 +102,7 @@ def main() -> None:
     if not installer.exists():
         download(url, installer)
     expected = urllib.request.urlopen(url + '.md5sum', timeout=60).read().decode().split()[0].lower()
-    digest = hashlib.md5()
+    digest = hashlib.md5(usedforsecurity=False)  # OpenModelica publishes only an MD5; this is a corruption check
     with open(installer, 'rb') as f:
         for block in iter(lambda: f.read(1 << 22), b''):
             digest.update(block)

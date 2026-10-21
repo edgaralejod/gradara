@@ -5,12 +5,26 @@ Use this checklist for a source release. Engine images and desktop installers re
 ## Source-release checklist
 
 - [ ] Confirm new code and examples can be contributed under Apache-2.0 and that copied code keeps its notices. Update the [third-party inventory](../THIRD_PARTY_NOTICES.md) for new dependencies.
+- [ ] Refresh dependencies (see [dependency refresh](#dependency-refresh)) so the release carries current security fixes; a release with no other change is still worth cutting for this.
 - [ ] Check that the private reporting address in [SECURITY.md](../SECURITY.md) and [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) still receives mail.
 - [ ] Run `python3 scripts/check-repo.py --history` and review anything it reports: personal models, credentials, prompts or logs, deployment identifiers, and private paths. Rotate any exposed secret; deleting the file does not remove it from history.
 - [ ] Run the [local checks](#local-checks) from a clean checkout with no `.venv`, `node_modules`, local model data, or provider configuration.
 - [ ] Confirm Core CI is green on the release commit, and dispatch **OpenModelica integration** (`engine.yml`) and **Native OpenModelica** for it.
 - [ ] Review the final diff. Build the source archive from the tagged commit, not from a working folder; a filesystem ZIP can include ignored data.
 - [ ] Choose the tag, write release notes with known limitations, and publish.
+
+## Dependency refresh
+
+Every release, patch releases included, rolls dependencies forward within the ranges the lockfiles allow, so installed apps pick up security fixes without waiting for a feature release:
+
+```sh
+npm update && python3 scripts/check-audit.py          # root: vite, React, the workers tooling
+(cd desktop && npm update && npm audit)                 # desktop: Electron, electron-updater, electron-builder
+pip-audit -r server/requirements-dev.txt                # Python: pins in server/ and cloud/
+pip-audit -r cloud/requirements.txt
+```
+
+Electron, `electron-updater`, `electron-builder`, and the Python packages are pinned exactly, so bump them by hand to the current patch or minor of the same major (Electron patch releases carry Chromium security fixes and are the ones that matter most for installed apps). Leave major versions, the pinned React Flow version (see [patches](../patches/README.md)), and Python minors with no advisory for a deliberate upgrade with its own testing. After an Electron or `electron-builder` change, run **Desktop installers** by hand on the branch before tagging ([desktop installers](#desktop-installers)). `scripts/check-audit.py` accepts an advisory only while no patched release exists; remove the entry when one does.
 
 ## Local checks
 
@@ -35,7 +49,7 @@ Repository-wide `npm run lint` currently reports an existing backlog; record it 
 
 The repository includes PR and issue templates and GitHub Actions workflows on hosted runners. Most are read-only. Four write: **Desktop installers** creates a draft release on `v*` tags; **Website** deploys `site/` to Firebase Hosting (live on pushes to `main` and manual runs, a preview channel for pull requests) when its deploy key is configured; **Engine image** publishes the Docker engine image to GitHub Container Registry (`ghcr.io/edgaralejod/gradara-engine:1.27.0`) when `Dockerfile.engine` changes on `main`; and **Workshop** builds personal features. Workshop is the only workflow that calls an AI provider: it runs Claude Code with the `ANTHROPIC_API_KEY` secret (a spending cap per run) and signs layers with `LAYER_SIGNING_KEY`, and it pushes `workshop/*` branches, publishes `layer-<id>-v<version>` prereleases, creates the `community-feature` label, and opens draft pull requests. Steps that run a branch's code get no token. See [personal features](architecture/LAYERS.md#pipeline). No workflow pushes an engine image or sees local credentials.
 
-Keep Issues, private vulnerability reporting, and secret scanning enabled on the repository. Add a `CODEOWNERS` entry only for a confirmed maintainer. Dependency upgrades must respect the pinned React Flow patch.
+Keep Issues, private vulnerability reporting, and secret scanning enabled on the repository. `.github/secret_scanning.yml` excludes `cloud/deploy.env`, whose Firebase web API key is public by design; everything else that matches a secret pattern is a real alert. Add a `CODEOWNERS` entry only for a confirmed maintainer. Dependency upgrades must respect the pinned React Flow patch.
 
 ## Desktop installers
 
