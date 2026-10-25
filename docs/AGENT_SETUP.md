@@ -8,7 +8,8 @@ Every request starts in the **Ask bar** (press **A**), and answers arrive as car
 
 - **Create a block** from a description, such as "a first-order low-pass filter with a 50 ms time constant". Gradara guesses the block type (signal, electrical, rotational, translational, magnetic, thermal, or several domains) and you can change it.
 - **Build a complete model** from a description of a system or circuit (**Build model**).
-- **Edit the open model** (**Edit model**), for example "add a speed sensor on the load shaft".
+- **Edit the open model** (**Edit model**), for example "add a speed sensor on the load shaft". The AI shows its plan first, then carries it out.
+- **Discuss the design** (**Discuss model**): ask whether something in the model works, why it behaves as it does, or how to approach a change. Nothing changes; an answer can suggest one change you can send to Edit model.
 - **Explain or fix a failed run** (**Explain problems**, **Fix problems**), from the **Problems** tab.
 - **Explain results**: ask about stored runs, such as "why does the current overshoot?". Gradara sends a summary it computes on your computer, never the samples, and rechecks every number in the answer against the stored data.
 - **Write a C template** for a custom block, so it can be included in a C code export.
@@ -58,6 +59,7 @@ Checkout opens in your browser and is handled by Stripe. Gradara never receives 
 | Explain problems | 2 |
 | Fix problems | The explanation plus the edit |
 | Explain results question | 2 (extra measurements included) |
+| Discuss model question | 2 |
 | C template for a custom block | 2 |
 
 Automatic repair attempts are included in the price. **If a request, or a block within an edit, fails before producing output, you are not charged for it.** The Ask bar shows the cost and your balance before you send, and each answer in Proposals shows what it actually cost. C code for library blocks is generated without AI and costs nothing.
@@ -75,7 +77,7 @@ Gradara AI is provided by Virtu Services LLC under the [Terms](https://gradara.a
 Only when you use an AI feature, Gradara sends the request and the relevant part of your model to the provider you chose:
 
 - **Blocks**: your description and, when refining or repairing, the current definition and compiler messages.
-- **Model edits and diagnosis**: your request, the open model without its layout, the names of selected blocks, and the block library. Refining a proposal also sends your earlier request and the changes it proposed. A diagnosis of a failed run also sends that run's Modelica source and solver messages.
+- **Model edits, Discuss model, and diagnosis**: your request, the open model without its layout, the names of selected blocks, and the block library. Refining a proposal also sends your earlier request and the changes it proposed. A diagnosis of a failed run also sends that run's Modelica source and solver messages. Discuss model also sends up to four earlier questions and answers of that model's Proposals thread.
 - **Explain results**: your question; a summary Gradara computes on your computer from the runs on show (run names, statistics and events per signal, an outline of each signal of at most 900 points in all, the differences between the runs and their parameters, the first run's solver warnings, and the names and units of up to 60 recorded signals); the run's model without its layout; and up to four earlier questions and answers of that discussion. If the AI asks for up to four extra measurements, Gradara computes them locally and sends the results. Recorded samples and CSV files are never sent. **Show what will be sent** in the Ask bar shows the exact text.
 - **C templates**: the custom block's definition.
 
@@ -133,6 +135,6 @@ flowchart LR
 
 The AI writes bounded equations. Ordinary code packages the connections, runs the compiler, and executes the simulation. The selected block type constrains the provider's output schema and the server's validation. Physical blocks get real Modelica terminals and may also have signal ports. Refinement keeps the type and the existing terminal IDs, domains, and directions.
 
-A full-model request may call the provider several times: library planning, each missing block (with an optional repair), assembly, and one optional assembly repair. A model edit plans the change, generates any new or rewritten blocks (each with its own compile check), applies the operations locally, and runs a trial simulation, with one automatic revision. Explain results calls the provider once, or twice when it asks for measurements, and repairs an answer that does not match the schema. See the [execution contract](architecture/EXECUTION.md) and the [distribution guide](architecture/DISTRIBUTION.md).
+A full-model request may call the provider several times: library planning, each missing block (with an optional repair), assembly, and one optional assembly repair. A model edit plans the change, generates any new or rewritten blocks (each with its own compile check), applies the operations locally, and runs a trial simulation, with one automatic revision. Discuss model calls the planner once. Explain results calls the provider once, or twice when it asks for measurements, and repairs an answer that does not match the schema. See the [execution contract](architecture/EXECUTION.md) and the [distribution guide](architecture/DISTRIBUTION.md).
 
 The repository's [AGENTS.md](../AGENTS.md) and [task playbooks](agents/PLAYBOOKS.md) are instructions for coding agents that contribute to Gradara. You do not need them to use the app.

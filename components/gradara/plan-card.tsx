@@ -1,6 +1,7 @@
 'use client';
 // SPDX-License-Identifier: Apache-2.0
-import { ListChecks, LoaderCircle, MessageCircleQuestion, Square } from 'lucide-react';
+import { ListChecks, LoaderCircle, MessageCircleQuestion, PencilLine, Square } from 'lucide-react';
+import { domainColors, type Project } from '@/lib/gradara/model';
 import type { Entry, PlanPreview } from '@/lib/gradara/proposals-thread';
 
 /**
@@ -75,7 +76,21 @@ export function PlanDetails({ steps }: { steps?: string[] }) {
 }
 
 /** A question the planner answered; nothing in the model changed. */
-export function AnswerCard({ entry }: { entry: Extract<Entry, { kind: 'answer' }> }) {
+export function AnswerCard({
+  entry,
+  project,
+  busy,
+  onSelect,
+  onMakeEdit,
+}: {
+  entry: Extract<Entry, { kind: 'answer' }>;
+  project: Project;
+  busy: boolean;
+  onSelect: (blockIds: string[]) => void;
+  onMakeEdit: () => void;
+}) {
+  const blocks = new Map(project.blocks.map((b) => [b.id, b]));
+  const chips = (entry.blockIds ?? []).map((id) => blocks.get(id)).filter((b) => !!b);
   return (
     <article className="proposal-card answer-card">
       <header>
@@ -91,6 +106,27 @@ export function AnswerCard({ entry }: { entry: Extract<Entry, { kind: 'answer' }
           {paragraph}
         </p>
       ))}
+      {chips.length > 0 && (
+        <span className="problem-chips answer-blocks">
+          {chips.map((block) => (
+            <button type="button" key={block.id} className="problem-chip" onClick={() => onSelect([block.id])}>
+              <i style={{ background: domainColors[block.definition.domain] }} />
+              {block.definition.name}
+            </button>
+          ))}
+        </span>
+      )}
+      {entry.suggestedEdit && (
+        <footer className="answer-suggestion">
+          <span>
+            <strong>Suggested change</strong> {entry.suggestedEdit}
+          </span>
+          <button type="button" disabled={busy} onClick={onMakeEdit}>
+            <PencilLine size={12} />
+            Make this an edit
+          </button>
+        </footer>
+      )}
     </article>
   );
 }

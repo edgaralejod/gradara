@@ -2,7 +2,8 @@
 """Which model role answers each AI task.
 
 Gradara's AI runs two roles. The **planner** reads the model and decides: it
-writes edit and build plans, diagnoses, and answers questions. The **executor**
+writes edit and build plans, diagnoses, and answers questions (Explain
+results, Discuss model). The **executor**
 carries out a plan step that needs new text: it writes block definitions,
 symbols, assemblies, and C code. Conventional code does the rest (applying
 operations, routing, simulation).
@@ -19,6 +20,7 @@ TASK_ROLES = {
     'model-plan': 'planner',
     'diagnose': 'planner',
     'results': 'planner',
+    'discuss': 'planner',
     'component': 'executor',
     'model-assembly': 'executor',
     'export': 'executor',

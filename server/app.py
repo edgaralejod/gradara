@@ -25,6 +25,7 @@ from . import run_store
 from .run_store import run_name
 from .run_digest import DigestRequest, digest
 from .results_agent import ExplainRequest, explain as explain_results, preview as preview_explain
+from .discuss_agent import DiscussRequest, discuss as discuss_model
 from .paths import DATA, EXAMPLES, STATIC, layer_info
 from .llm import dispatch, gradara as gradara_ai
 from .llm.providers import ProviderError, verify_key
@@ -441,6 +442,10 @@ async def explain_run_results(request: ExplainRequest):
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     return await start_job('results', lambda i: explain_results(request, i, lambda message: JOBS[i].update(progress=message), loader))
+
+@app.post('/api/discuss')
+async def discuss_open_model(request: DiscussRequest):
+    return await start_job('discuss', lambda i: discuss_model(request, i, lambda message, **extra: JOBS[i].update(progress=message, **extra)))
 
 @app.post('/api/results/explain/preview')
 async def preview_run_explanation(request: ExplainRequest):

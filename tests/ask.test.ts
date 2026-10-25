@@ -39,20 +39,21 @@ const runs = {
 };
 
 void test('where you ask decides the action, with no model call', () => {
-  assert.deepEqual(availableActions(sheet), ['edit', 'block', 'model']);
-  assert.deepEqual(availableActions({ ...sheet, emptySheet: true }), ['model', 'block']);
+  assert.deepEqual(availableActions(sheet), ['edit', 'discuss', 'block', 'model']);
+  assert.deepEqual(availableActions({ ...sheet, emptySheet: true }), ['model', 'block', 'discuss']);
   assert.deepEqual(availableActions({ ...sheet, connection: { blockId: 'a', portId: 'y' } }), ['block']);
   const existing = { id: 'b', definition: definitionFor('gain')! };
-  assert.deepEqual(availableActions({ ...sheet, existing }), ['refine-block']);
+  assert.deepEqual(availableActions({ ...sheet, existing }), ['refine-block', 'discuss']);
   const problem = { id: 'd1', severity: 'error' as const, source: 'runtime' as const, message: 'Loop', detail: '', blockIds: [], ports: [], netIds: [], wireIds: [] };
-  assert.deepEqual(availableActions({ ...sheet, problems: [problem] }), ['explain', 'fix']);
-  assert.deepEqual(availableActions({ ...sheet, runs }), ['results', 'edit']);
+  assert.deepEqual(availableActions({ ...sheet, problems: [problem] }), ['explain', 'fix', 'discuss']);
+  assert.deepEqual(availableActions({ ...sheet, runs }), ['results', 'edit', 'discuss']);
 });
 
 void test('Tab cycles through the allowed actions and a removed chip falls back', () => {
   const context = { ...sheet, runs };
   assert.equal(nextAction(context, 'results'), 'edit');
-  assert.equal(nextAction(context, 'edit'), 'results');
+  assert.equal(nextAction(context, 'edit'), 'discuss');
+  assert.equal(nextAction(context, 'discuss'), 'results');
   assert.equal(resolveAction(sheet, 'results'), 'edit'); // runs chip removed
   assert.equal(resolveAction(context), 'results');
 });
@@ -61,6 +62,7 @@ void test('problems can be sent without words, other actions need a request', ()
   assert.equal(canSend('explain', ''), true);
   assert.equal(canSend('edit', 'hi'), false);
   assert.equal(canSend('results', 'Why so high?'), true);
+  assert.equal(canSend('discuss', 'Will it settle?'), true);
 });
 
 void test('block types are guessed from the request or the open port', () => {
@@ -74,6 +76,11 @@ void test('block types are guessed from the request or the open port', () => {
 });
 
 void test('the scope line says what was sent', () => {
+  assert.equal(scopeText('discuss', sheet, () => undefined), 'Discuss · Whole model');
+  assert.equal(
+    scopeText('discuss', { ...sheet, existing: { id: 'b', definition: definitionFor('gain')! } }, () => undefined),
+    'Discuss · Gain',
+  );
   assert.equal(scopeText('results', { ...sheet, runs }, () => undefined), 'Explain results · Latest run · Lower gain');
   assert.equal(
     scopeText('results', { ...sheet, runs: { ...runs, window: [0, 1] } }, () => undefined),
