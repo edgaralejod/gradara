@@ -25,7 +25,12 @@ import httpx
 
 from .schema import strict_schema
 
-DEFAULT_MODELS = {'openai': 'gpt-6-sol', 'anthropic': 'claude-sonnet-5'}
+# The model for each role when the user names none (server/llm/roles.py): a strong planner and a
+# faster executor where the vendor has a good pair.
+DEFAULT_MODELS = {
+    'openai': {'planner': 'gpt-6-sol', 'executor': 'gpt-6-sol'},
+    'anthropic': {'planner': 'claude-opus-5-5', 'executor': 'claude-sonnet-5-5'},
+}
 TIMEOUT = httpx.Timeout(connect=15.0, read=300.0, write=60.0, pool=15.0)
 MAX_OUTPUT_TOKENS = 32_000
 
@@ -157,7 +162,7 @@ class OpenAIProvider:
 
     def __init__(self, api_key: str, model: str = '', base_url: str = 'https://api.openai.com/v1',
                  client: httpx.AsyncClient | None = None):
-        self.api_key, self.model, self.base_url, self.client = api_key, model or DEFAULT_MODELS['openai'], base_url.rstrip('/'), client
+        self.api_key, self.model, self.base_url, self.client = api_key, model or DEFAULT_MODELS['openai']['planner'], base_url.rstrip('/'), client
 
     async def generate(self, prompt: str, schema: dict, *, schema_name: str = 'gradara_result') -> Generation:
         body = {
@@ -193,7 +198,7 @@ class AnthropicProvider:
 
     def __init__(self, api_key: str, model: str = '', base_url: str = 'https://api.anthropic.com/v1',
                  client: httpx.AsyncClient | None = None):
-        self.api_key, self.model, self.base_url, self.client = api_key, model or DEFAULT_MODELS['anthropic'], base_url.rstrip('/'), client
+        self.api_key, self.model, self.base_url, self.client = api_key, model or DEFAULT_MODELS['anthropic']['planner'], base_url.rstrip('/'), client
 
     async def generate(self, prompt: str, schema: dict, *, schema_name: str = 'gradara_result') -> Generation:
         body = {

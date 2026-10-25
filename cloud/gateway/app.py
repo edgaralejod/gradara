@@ -37,7 +37,8 @@ from .store import Account, InsufficientCredits, Store
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from server.llm.providers import Generation, ProviderError, Usage, make_provider  # noqa: E402
+from server.llm.providers import DEFAULT_MODELS, Generation, ProviderError, Usage, make_provider  # noqa: E402
+from server.llm.roles import ROLES, role_for  # noqa: E402
 
 PAGES = Path(__file__).parent/'pages'
 TASK_KINDS = {'component': {'component', 'model', 'edit', 'diagnose'}, 'model-plan': {'model'},
@@ -111,10 +112,18 @@ class FakeProvider:
 def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAPI:
     cfg = cfg or config_module.load()
     store = Store(connect(cfg.database_url), cfg)
-    llm = provider or (FakeProvider() if cfg.llm_provider == 'fake' else None)
-    if llm is None:
-        llm = make_provider(cfg.llm_provider, cfg.llm_api_key, cfg.llm_model)
-    if cfg.production and isinstance(llm, FakeProvider):
+    # One provider per role: the task of each request picks the role (server/llm/roles.py).
+    # Tests pass one provider for both roles, or a {role: provider} mapping.
+    fixed = provider or (FakeProvider() if cfg.llm_provider == 'fake' else None)
+    if isinstance(fixed, dict):
+        models = {role: fixed[role] for role in ROLES}
+    elif fixed is not None:
+        models = {role: fixed for role in ROLES}
+    else:
+        chosen = {'planner': cfg.llm_planner_model, 'executor': cfg.llm_executor_model}
+        models = {role: make_provider(cfg.llm_provider, cfg.llm_api_key,
+                                      chosen[role] or DEFAULT_MODELS[cfg.llm_provider][role]) for role in ROLES}
+    if cfg.production and any(isinstance(m, FakeProvider) for m in models.values()):
         raise RuntimeError('The fake provider cannot run in production.')
     _configure_logging()
     concurrency: dict[int, int] = defaultdict(int)
@@ -290,6 +299,7 @@ def create_app(cfg: config_module.Config | None = None, provider=None) -> FastAP
             raise HTTPException(422, str(exc))
         concurrency[account.id] += 1
         started = time.monotonic()
+        llm = models[role_for(body.task)]
         try:
             result = await llm.generate(body.prompt, body.schema_)
             await asyncio.to_thread(store.finish_job_call, account, call, True)

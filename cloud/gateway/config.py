@@ -49,7 +49,9 @@ class Config:
     firebase_web_api_key: str = ''
     firebase_auth_domain: str = ''
     llm_provider: str = 'anthropic'             # anthropic | openai | fake (tests only)
-    llm_model: str = ''
+    # Hosted model per role (server/llm/roles.py); empty: the provider's default for that role.
+    llm_planner_model: str = ''
+    llm_executor_model: str = ''
     llm_api_key: str = ''
     stripe_secret_key: str = ''
     stripe_webhook_secret: str = ''
@@ -126,7 +128,8 @@ def load() -> Config:
         firebase_web_api_key=os.environ.get('FIREBASE_WEB_API_KEY', ''),
         firebase_auth_domain=os.environ.get('FIREBASE_AUTH_DOMAIN', ''),
         llm_provider=provider,
-        llm_model=os.environ.get('LLM_MODEL', ''),
+        llm_planner_model=os.environ.get('LLM_PLANNER_MODEL') or os.environ.get('LLM_MODEL', ''),
+        llm_executor_model=os.environ.get('LLM_EXECUTOR_MODEL') or os.environ.get('LLM_MODEL', ''),
         llm_api_key=os.environ.get(key_var, os.environ.get('LLM_API_KEY', '')),
         stripe_secret_key=os.environ.get('STRIPE_SECRET_KEY', ''),
         stripe_webhook_secret=os.environ.get('STRIPE_WEBHOOK_SECRET', ''),

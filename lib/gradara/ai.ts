@@ -20,13 +20,18 @@ export type EngineStatus = {
 
 export type AiProvider = 'gradara' | 'openai' | 'anthropic' | 'codex' | 'off';
 
+/** The two model roles (server/llm/roles.py): the planner decides, the executor writes blocks and code. */
+export type AiRole = 'planner' | 'executor';
+export type RoleModels = Record<AiRole, string>;
+
 export type AiStatus = {
   provider: AiProvider;
   label: string;
   ready: boolean;
   keys: { openai: boolean; anthropic: boolean };
-  models: { openai: string; anthropic: string };
-  defaultModels: { openai: string; anthropic: string };
+  /** The user's model per role; '' keeps the default. */
+  models: { openai: RoleModels; anthropic: RoleModels };
+  defaultModels: { openai: RoleModels; anthropic: RoleModels };
   signedIn: boolean;
   codexAvailable: boolean;
   gateway: string;

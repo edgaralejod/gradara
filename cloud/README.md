@@ -25,6 +25,7 @@ Point a source checkout or desktop build at it with `GRADARA_GATEWAY_URL=http://
 | `AUTH_MODE` | `firebase` |
 | `FIREBASE_PROJECT_ID`, `FIREBASE_WEB_API_KEY`, `FIREBASE_AUTH_DOMAIN` | From the Firebase console (web app config; the web API key is public by design) |
 | `LLM_PROVIDER`, `LLM_MODEL` | `anthropic` + `claude-sonnet-5`, or `openai` + `gpt-6-sol` |
+| `LLM_PLANNER_MODEL`, `LLM_EXECUTOR_MODEL` | Optional model per role. The planner answers plans, diagnoses, and questions; the executor writes blocks, assemblies, and C code (`server/llm/roles.py`). Each falls back to `LLM_MODEL`, then to the provider's default for that role |
 | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` | Secret Manager |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Secret Manager |
 | `STRIPE_AUTOMATIC_TAX` | `true` after Stripe Tax registration |
