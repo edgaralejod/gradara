@@ -87,12 +87,12 @@ def test_an_empty_role_uses_that_role_default(isolated, monkeypatch):
 
 def test_one_model_setting_becomes_the_planner_model(isolated):
     settings.SETTINGS_FILE.write_text(json.dumps({'ai': {'provider': 'anthropic', 'anthropicModel': 'claude-x',
-                                                         'openaiModel': ''}}))
+                                                         'openaiModel': ''}}), encoding='utf-8')
     ai = settings.load()['ai']
     assert ai['anthropicPlannerModel'] == 'claude-x' and ai['anthropicExecutorModel'] == ''
     assert 'anthropicModel' not in ai and 'openaiModel' not in ai
     settings.update({'ai': {'anthropicExecutorModel': 'claude-y'}})
-    stored = json.loads(settings.SETTINGS_FILE.read_text())['ai']
+    stored = json.loads(settings.SETTINGS_FILE.read_text(encoding='utf-8'))['ai']
     assert stored['anthropicPlannerModel'] == 'claude-x' and 'anthropicModel' not in stored
 
 
@@ -110,7 +110,7 @@ def test_transcript_records_role_and_model(isolated, monkeypatch):
     settings.update({'ai': {'provider': 'anthropic', 'anthropicExecutorModel': 'small'}})
     record_models(monkeypatch)
     asyncio.run(dispatch.generate('p', SCHEMA, 'job7', task='component'))
-    meta = json.loads((isolated/'agent'/'job7'/'meta.json').read_text())
+    meta = json.loads((isolated/'agent'/'job7'/'meta.json').read_text(encoding='utf-8'))
     assert meta == {'task': 'component', 'role': 'executor', 'provider': 'anthropic', 'model': 'small'}
 
 
