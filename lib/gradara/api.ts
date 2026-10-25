@@ -68,6 +68,8 @@ export type Job<T> = {
   progress?: string;
   /** Simulation jobs: the stage the run has reached (lib/gradara/run-progress.ts). */
   stage?: import('./run-progress').RunStage;
+  /** Edit, fix, and build jobs: the planner's plan, while the executor carries it out. */
+  plan?: import('./proposals-thread').PlanPreview | null;
 };
 /** The last failed run of the open model, kept until the next run or model switch. */
 export type RunFailure = {

@@ -29,8 +29,19 @@ export type DiagnoseResult = {
   fixError?: string;
 };
 
+/** The planner's plan as shown while it is carried out (job field `plan`, server/model_edit.py `preview`). */
+export type PlanPreview = {
+  summary: string;
+  steps: string[];
+  assumptions: string[];
+  /** Blocks the executor writes for this plan. */
+  blocks: number;
+};
+
 export type ModelDraft = {
   project: Project;
+  /** The build plan's steps; absent on drafts made before plans were shown. */
+  steps?: string[];
   assumptions: string[];
   generated: { id: string; libraryId: string; name: string }[];
   reused: string[];
@@ -96,6 +107,16 @@ export type Entry =
   | {
       id: string;
       at: number;
+      /** A question answered by the planner; nothing in the model changed. */
+      kind: 'answer';
+      request: string;
+      text: string;
+      provider: string;
+      credits?: number;
+    }
+  | {
+      id: string;
+      at: number;
       kind: 'unsupported';
       request: string;
       reason: string;
@@ -111,6 +132,7 @@ const KINDS = new Set<EntryKind>([
   'block',
   'model',
   'results',
+  'answer',
   'unsupported',
 ]);
 
@@ -142,6 +164,8 @@ export function sanitizeEntries(raw: unknown): Entry[] {
         );
       case 'diagnosis':
         return !!(e as { result?: unknown }).result;
+      case 'answer':
+        return typeof (e as { text?: unknown }).text === 'string';
       default:
         return true;
     }

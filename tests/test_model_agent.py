@@ -142,3 +142,15 @@ def test_model_generation_api_is_a_job_and_never_saves(monkeypatch, tmp_path):
         assert job['result']['checked']
         assert client.post('/api/models/generate',json={'prompt':'x','catalog':[]}).status_code == 422
     assert not list(tmp_path.iterdir())
+
+
+def test_the_build_plan_is_shown_before_blocks_are_written(monkeypatch, tmp_path):
+    steps = ['Add a constant source.', 'Set the stop time to 0.01 s.']
+    provider, _ = setup(monkeypatch, tmp_path, [plan(steps=steps), assembly()])
+    events = []
+    result = asyncio.run(builder.generate_model(builder.ModelGenerateRequest(prompt='A source', catalog=[source()]), 'test',
+                                                lambda message, **extra: events.append((message, extra))))
+    assert ('Assembling the model', {'plan': {'summary': 'test', 'steps': steps, 'assumptions': ['Ideal'],
+                                              'blocks': 0}}) in events
+    assert result['steps'] == steps
+    assert 'ASD-STE100' in provider.call_args_list[0].args[0]

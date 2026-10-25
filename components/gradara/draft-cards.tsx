@@ -6,6 +6,7 @@ import { portPoint, sideToPosition } from '@/lib/gradara/ports';
 import { pointsToPath, routeBetween } from '@/lib/gradara/routing';
 import type { Entry } from '@/lib/gradara/proposals-thread';
 import { BlockFace } from './block-face';
+import { PlanDetails } from './plan-card';
 
 type BlockEntry = Extract<Entry, { kind: 'block' }>;
 type ModelEntry = Extract<Entry, { kind: 'model' }>;
@@ -155,6 +156,7 @@ export function ModelDraftCard({
       <p className="proposal-summary">
         <strong>{draft.project.name}</strong> — {draft.project.description}
       </p>
+      <PlanDetails steps={draft.steps} />
       <DiagramPreview project={draft.project} />
       <p className="draft-facts">
         {draft.project.blocks.length} blocks · {draft.project.wires.length} connections · {draft.project.duration} s

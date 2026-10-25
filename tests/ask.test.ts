@@ -131,8 +131,10 @@ void test('saved threads are read back defensively', () => {
     { id: 'c', kind: 'proposal' },
     'junk',
     { id: 'd', kind: 'results', runIds: ['r'], turns: [] },
+    { id: 'e', kind: 'answer', request: 'Will it settle?', text: 'Yes.', provider: 'Test', at: 2 },
+    { id: 'f', kind: 'answer', request: 'Will it settle?' },
   ]);
-  assert.deepEqual(entries.map((e) => e.id), ['a', 'd']);
+  assert.deepEqual(entries.map((e) => e.id), ['a', 'd', 'e']);
   assert.deepEqual(sanitizeEntries(null), []);
   const block = { id: 'b', at: 1, kind: 'block', status: 'pending' } as unknown as Entry;
   assert.equal((withStatus([block], 'b', 'applied')[0] as { status: string }).status, 'applied');

@@ -51,7 +51,8 @@ def test_explain_only_never_edits(monkeypatch, tmp_path):
 def test_fix_runs_the_edit_pipeline_as_a_priced_part(monkeypatch, tmp_path):
     _, editor = setup(monkeypatch, tmp_path)
     parts = []
-    async def edit(req, job_id, progress):
+    async def edit(req, job_id, progress, allow_answer=True):
+        assert not allow_answer, "a fix never turns into an answer"
         parts.append(doctor.dispatch.current_job.get())
         assert req.prompt == 'Set gain.k to 0.5.' and req.verify and req.selection == ['gain']
         assert 'algebraic loop' in req.context
@@ -134,7 +135,8 @@ def test_a_fix_inside_a_subsystem_edits_that_sheet(monkeypatch, tmp_path):
     provider, _ = setup(monkeypatch, tmp_path, DIAGNOSIS | {'causes': [
         {'diagnosticIds': ['d1'], 'blockIds': ['motor', 'ghost'], 'explanation': 'Armature resistance too low.'}]})
     sent = []
-    async def edit(req, job_id, progress):
+    async def edit(req, job_id, progress, allow_answer=True):
+        assert not allow_answer, "a fix never turns into an answer"
         sent.append(req)
         return {'verified': True, 'changes': [], 'sheet': req.sheet}
     monkeypatch.setattr(doctor, 'edit_model', edit)

@@ -19,6 +19,7 @@ import {
   type DiagnoseResult,
   type Entry,
   type ModelDraft,
+  type PlanPreview,
   type Placement,
   type ProposalOrigin,
 } from '@/lib/gradara/proposals-thread';
@@ -40,7 +41,12 @@ export type Busy = {
   progress: string;
   /** The card a follow-up belongs to; the working line shows inside it. */
   entryId?: string;
+  /** The plan being carried out, once the planner has written it. */
+  plan?: PlanPreview;
 };
+
+/** A question asked in Edit model: the planner answered it and changed nothing. */
+type EditAnswer = { answer: string; provider: string; credits?: number };
 
 /** The request line a card answers. */
 const request = (text: string, scope: string, action: AskAction) => ({
@@ -175,8 +181,8 @@ export function useProposals(
           body: JSON.stringify(body),
         });
         jobId.current = job.id;
-        const result = await waitForJob<T>(job.id, abort.signal, (progress) =>
-          setBusy({ label, progress, entryId: target }),
+        const result = await waitForJob<T>(job.id, abort.signal, (progress, job) =>
+          setBusy({ label, progress, entryId: target, plan: job.plan ?? undefined }),
         );
         done(result, baseRevision, model);
       } catch (e) {
@@ -211,12 +217,24 @@ export function useProposals(
       revision?: Revision,
       origin?: ProposalOrigin,
     ) =>
-      run<EditProposal | { unsupported: string }>(
+      run<EditProposal | { unsupported: string } | EditAnswer>(
         '/models/edit',
         { prompt, ...body, previous: revision?.previous },
         revision ? 'Revising the proposal' : 'Editing the model',
         request(prompt, scope, 'edit'),
         (result, baseRevision, model) => {
+          if ('answer' in result) {
+            add(model, {
+              id: entryId(),
+              at: Date.now(),
+              kind: 'answer',
+              request: prompt,
+              text: result.answer,
+              provider: result.provider,
+              ...(result.credits !== undefined ? { credits: result.credits } : {}),
+            });
+            return;
+          }
           if ('unsupported' in result) {
             add(model, {
               id: entryId(),
