@@ -87,6 +87,8 @@ The native and bundled backends drive `omc` with a generated `.mos` script, and 
 
 Every AI feature calls `server/llm/dispatch.generate(prompt, schema, …)`. Each call is one schema-constrained generation; conventional code validates the result, compiles it, and asks for a bounded repair when needed.
 
+Each call's task picks its role (`server/llm/roles.py`): the **planner** answers `edit-plan`, `model-plan`, `diagnose`, and `results`; the **executor** answers `component` (blocks and drawn symbols), `model-assembly`, and `export`. A call may name its role explicitly; an unknown task goes to the planner. With a key provider, the model for each role is the user's setting (`openaiPlannerModel`, `openaiExecutorModel`, `anthropicPlannerModel`, `anthropicExecutorModel`) or that provider's default for the role (`DEFAULT_MODELS` in `server/llm/providers.py`). The gateway routes the same task table to `LLM_PLANNER_MODEL` and `LLM_EXECUTOR_MODEL`, each falling back to `LLM_MODEL`; see [cloud/README.md](../../cloud/README.md). Codex uses one model for both.
+
 | Provider | Setup | Billing | Data path |
 | --- | --- | --- | --- |
 | Gradara AI | Sign in (device code in the browser) | Prepaid credits | App → Gradara AI → model vendor |

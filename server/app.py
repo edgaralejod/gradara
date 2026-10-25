@@ -568,8 +568,11 @@ async def prepare_engine():
 
 class AIChoice(BaseModel):
     provider: str | None = Field(default=None, pattern='^(gradara|openai|anthropic|codex|off)$')
-    openaiModel: str | None = Field(default=None, max_length=100)
-    anthropicModel: str | None = Field(default=None, max_length=100)
+    # Model per role (server/llm/roles.py); '' returns to the default for that role.
+    openaiPlannerModel: str | None = Field(default=None, max_length=100)
+    openaiExecutorModel: str | None = Field(default=None, max_length=100)
+    anthropicPlannerModel: str | None = Field(default=None, max_length=100)
+    anthropicExecutorModel: str | None = Field(default=None, max_length=100)
 
 class APIKey(BaseModel):
     key: str = Field(min_length=8, max_length=400)

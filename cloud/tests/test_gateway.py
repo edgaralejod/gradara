@@ -335,3 +335,32 @@ def test_health_reports_revision_and_tasks(tmp_path, monkeypatch):
     body = client.get('/health').json()
     assert body['ok'] and body['revision'] == 'abc1234'
     assert {'edit-plan', 'diagnose', 'component', 'results'} <= set(body['tasks'])
+
+
+def test_each_task_goes_to_its_role_model(tmp_path):
+    packs = [{'id': 'starter', 'credits': 100, 'amount': 1000, 'currency': 'usd', 'label': '100 credits',
+              'priceId': 'price_123'}]
+    cfg = Config(database_url=f'sqlite:///{tmp_path}/gw.db', auth_mode='dev', llm_provider='fake',
+                 public_url='https://ai.example.test', stripe_secret_key='sk_test_x',
+                 stripe_webhook_secret='whsec_x', packs=packs, free_credits=100)
+    seen = []
+
+    def responder(role):
+        return lambda prompt, schema: seen.append(role) or {'name': role}
+    app = create_app(cfg, {'planner': FakeProvider(responder('planner')),
+                           'executor': FakeProvider(responder('executor'))})
+    client = TestClient(app)
+    token = sign_in(client)
+    assert generate(client, token, job='job-0101', kind='edit', task='edit-plan').json()['data'] == {'name': 'planner'}
+    assert generate(client, token, job='job-0101', kind='edit', task='component', part='block:1').status_code == 200
+    assert generate(client, token, job='job-0102', kind='model', task='model-assembly').status_code == 200
+    assert seen == ['planner', 'executor', 'executor']
+
+
+def test_role_models_fall_back_to_llm_model(monkeypatch):
+    from gateway import config
+    monkeypatch.setenv('LLM_MODEL', 'one')
+    monkeypatch.delenv('LLM_PLANNER_MODEL', raising=False)
+    monkeypatch.setenv('LLM_EXECUTOR_MODEL', 'fast')
+    cfg = config.load()
+    assert (cfg.llm_planner_model, cfg.llm_executor_model) == ('one', 'fast')

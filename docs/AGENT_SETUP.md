@@ -24,11 +24,17 @@ Open **Settings → AI** and pick one:
 | Provider | Setup | Who bills you |
 | --- | --- | --- |
 | **Gradara AI** (recommended, the default) | Choose **Sign in**. Your browser opens a page; sign in with Google or an email link and confirm the code shown in Gradara. Gradara never sees a password. | Prepaid Gradara AI credits |
-| **OpenAI API key** | Paste your key. Gradara checks it with a free request and stores it in your system's keychain. Optionally enter a model name. | OpenAI, under your account |
+| **OpenAI API key** | Paste your key. Gradara checks it with a free request and stores it in your system's keychain. Optionally name a planner and an executor model ([below](#planner-and-executor-models)). | OpenAI, under your account |
 | **Anthropic API key** | Same as OpenAI. | Anthropic, under your account |
 | **Off** | Turns AI requests off. AI buttons stay visible and report that AI is off. | Nobody |
 
 A developer option, the Codex CLI, appears only when it is installed; see [For developers](#for-developers).
+
+## Planner and executor models
+
+Gradara's AI works in two roles. The **planner** reads your model and decides: it writes the plan for an edit or a new model, explains problems, and answers questions about results. The **executor** carries out the plan steps that need new text: it writes block equations, block symbols, the assembly of a new model, and C code. Conventional code does the rest (applying the plan, routing wires, and simulating), and checks everything the executor writes before you see it.
+
+With your own OpenAI or Anthropic key, **Settings → AI** has a **Planner model** and an **Executor model** field. Leave a field empty to use the default shown in it: for Anthropic a strong planner and a faster executor, for OpenAI the same model for both. Enter the same model in both fields to use one model for everything. Gradara AI chooses its own models for each role; the Codex CLI uses its one model for both.
 
 ## Gradara AI credits
 

@@ -158,7 +158,7 @@ Jobs are held in memory. After a service restart, an old job ID can return 404 e
 
 `agentReady` in the API means the selected provider is configured (key saved, signed in, or CLI found), not that it is reachable. Provider errors keep their HTTP meaning: 401 (key rejected), 402 (not enough Gradara AI credits), 429 (rate limit), 503 (unavailable), 422 (the Gradara AI service is older than the app).
 
-For the Codex CLI, it must be installed, signed in, and able to reach its provider. Set `GRADARA_CODEX_BIN` if it is not found. Codex runs keep prompts and logs under the data folder's `agent/` directory (`projects/agent/` in a source checkout). Other providers keep nothing unless `GRADARA_KEEP_AI_TRANSCRIPTS=1`. These files can contain proprietary model content; redact them before sharing.
+For the Codex CLI, it must be installed, signed in, and able to reach its provider. Set `GRADARA_CODEX_BIN` if it is not found. Codex runs keep prompts and logs under the data folder's `agent/` directory (`projects/agent/` in a source checkout). Other providers keep nothing unless `GRADARA_KEEP_AI_TRANSCRIPTS=1`; each kept attempt has `prompt.txt`, `response.json`, and `meta.json` (task, role, provider, model). These files can contain proprietary model content; redact them before sharing.
 
 ### Install fails at the React Flow patch
 

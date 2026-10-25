@@ -95,7 +95,7 @@ Shortcuts do not fire while you type in a text field or an equation editor.
 The gear button at the top right opens **Settings**. It has five tabs:
 
 - **Engine** shows whether the built-in engine is ready, can restart it, and lets you choose your own OpenModelica installation or Docker instead. See [The simulation engine](INSTALL.md#the-simulation-engine).
-- **AI** chooses the provider for AI features: Gradara AI (sign in and use prepaid credits), your own OpenAI or Anthropic API key, or **Off**. When you are signed in, it shows your credit balance, prices, and credit packs. See [AI features](AGENT_SETUP.md).
+- **AI** chooses the provider for AI features: Gradara AI (sign in and use prepaid credits), your own OpenAI or Anthropic API key (with a planner and an executor model), or **Off**. When you are signed in, it shows your credit balance, prices, and credit packs. See [AI features](AGENT_SETUP.md).
 - **Personal features** (installed app only) asks the workshop for features built just for you and installs them. See [Personal features](#personal-features).
 - **Privacy & data** summarizes what stays on your computer and what AI requests send. See [privacy](PRIVACY.md).
 - **Updates** shows your installed version and has **Check for updates**. See [Updates](INSTALL.md#updates).

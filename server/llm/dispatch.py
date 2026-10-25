@@ -8,7 +8,8 @@ Providers:
 * ``codex``     the user's signed-in Codex CLI (developer option)
 * ``off``       AI features disabled
 
-All AI features call :func:`generate`. A top-level operation (one block, one
+All AI features call :func:`generate`. Each call's task picks its role, planner or
+executor (:mod:`server.llm.roles`), and each role can use its own model. A top-level operation (one block, one
 model build, one C export) sets :data:`current_job` so the hosted service can
 charge once per operation, including its internal repair attempts.
 """
@@ -23,6 +24,7 @@ from .. import credentials, settings
 from ..paths import AGENT_DIR
 from .codex import codex_available
 from .providers import DEFAULT_MODELS, Generation, ProviderError, make_provider
+from .roles import ROLES, role_for
 from .schema import describe_limits
 
 current_job: contextvars.ContextVar[dict | None] = contextvars.ContextVar('gradara_job', default=None)
@@ -52,7 +54,7 @@ def job_part(part: str):
         current_job.reset(token)
 
 
-def _keep_transcript(attempt_id: str, prompt: str, generation: Generation) -> None:
+def _keep_transcript(attempt_id: str, prompt: str, generation: Generation, task: str, role: str) -> None:
     """Optional local debugging copy. Off by default; never sent anywhere."""
     if os.environ.get('GRADARA_KEEP_AI_TRANSCRIPTS') != '1':
         return
@@ -60,19 +62,27 @@ def _keep_transcript(attempt_id: str, prompt: str, generation: Generation) -> No
     folder.mkdir(parents=True, exist_ok=True)
     (folder/'prompt.txt').write_text(prompt, encoding='utf-8')
     (folder/'response.json').write_text(json.dumps(generation.data, indent=2), encoding='utf-8')
+    (folder/'meta.json').write_text(json.dumps({'task': task, 'role': role, 'provider': generation.provider,
+                                                'model': generation.model}, indent=2), encoding='utf-8')
 
 
-async def generate(prompt: str, schema: dict, attempt_id: str, *, task: str) -> dict:
+async def generate(prompt: str, schema: dict, attempt_id: str, *, task: str, role: str | None = None) -> dict:
+    """One schema-bound generation. ``role`` defaults to the task's role (server/llm/roles.py)."""
+    role = role or role_for(task)
+    if role not in ROLES:
+        raise ValueError(f'Unknown AI role: {role}')
     # Every provider path (including an older Gradara AI service) sees the limits in words.
     schema = describe_limits(schema)
     provider = settings.ai_provider()
     if provider == 'off':
         raise ProviderError('AI features are turned off. Choose a provider in Settings → AI.', 400)
     if provider == 'codex':
+        # The Codex CLI has one model; it answers both roles.
         from . import codex
         return (await codex.generate(prompt, schema, attempt_id)).data
     if provider == 'gradara':
         from . import gradara
+        # The gateway picks the hosted model for the role from the task.
         job = current_job.get() or {'id': attempt_id, 'kind': task.split('-')[0]}
         generation = await gradara.generate(prompt, schema, task=task, job=job)
         if generation.job_charged is not None:
@@ -83,11 +93,11 @@ async def generate(prompt: str, schema: dict, attempt_id: str, *, task: str) -> 
         key = credentials.get(KEY_NAMES[provider])
         if not key:
             raise ProviderError(f'Add your {LABELS[provider].split(" ")[0]} API key in Settings → AI.', 400)
-        model = settings.load()['ai'].get(f'{provider}Model') or DEFAULT_MODELS[provider]
+        model = settings.ai_model(provider, role)
         generation = await make_provider(provider, key, model).generate(prompt, schema)
     else:
         raise ProviderError(f'Unknown AI provider: {provider}', 400)
-    _keep_transcript(attempt_id, prompt, generation)
+    _keep_transcript(attempt_id, prompt, generation, task, role)
     return generation.data
 
 
@@ -104,7 +114,9 @@ def status() -> dict:
     return {
         'provider': provider, 'label': LABELS.get(provider, provider), 'ready': ready,
         'keys': {name: credentials.present(key) for name, key in KEY_NAMES.items()},
-        'models': {name: ai.get(f'{name}Model') or '' for name in KEY_NAMES},
+        # The user's choice per role ('' when they kept the default).
+        'models': {name: {role: ai.get(f'{name}{role.capitalize()}Model') or '' for role in ROLES}
+                   for name in KEY_NAMES},
         'defaultModels': DEFAULT_MODELS,
         'signedIn': credentials.present('gradara_token'),
         'codexAvailable': codex_available(),

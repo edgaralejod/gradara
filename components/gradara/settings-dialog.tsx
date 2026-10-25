@@ -31,7 +31,9 @@ import {
   openExternal,
   type Account,
   type AiProvider,
+  type AiRole,
   type AiStatus,
+  type RoleModels,
   type EngineStatus,
 } from '@/lib/gradara/ai';
 
@@ -429,6 +431,19 @@ function AiSettings() {
   );
 }
 
+const ROLE_FIELDS: { role: AiRole; label: string; hint: string }[] = [
+  {
+    role: 'planner',
+    label: 'Planner model',
+    hint: 'Reads the model and writes plans, diagnoses, and answers.',
+  },
+  {
+    role: 'executor',
+    label: 'Executor model',
+    hint: 'Writes the blocks, assemblies, and C code a plan asks for. A faster model is usually enough.',
+  },
+];
+
 function ApiKeySettings({
   ai,
   provider,
@@ -439,7 +454,7 @@ function ApiKeySettings({
   onChange: (ai: AiStatus) => void;
 }) {
   const [key, setKey] = useState('');
-  const [model, setModel] = useState(ai.models[provider]);
+  const [models, setModels] = useState<RoleModels>(ai.models[provider]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
@@ -467,11 +482,12 @@ function ApiKeySettings({
     onChange(await api<AiStatus>(`/ai/keys/${provider}`, { method: 'DELETE' }));
     notifyAiChanged();
   }
-  async function saveModel() {
+  async function saveModel(role: AiRole) {
+    const field = `${provider}${role === 'planner' ? 'Planner' : 'Executor'}Model`;
     onChange(
       await api<AiStatus>('/ai', {
         method: 'PUT',
-        body: JSON.stringify({ [`${provider}Model`]: model.trim() }),
+        body: JSON.stringify({ [field]: models[role].trim() }),
       }),
     );
   }
@@ -509,15 +525,18 @@ function ApiKeySettings({
           </Button>
         )}
       </div>
-      <label className="settings-field">
-        <span>Model</span>
-        <input
-          value={model}
-          placeholder={ai.defaultModels[provider]}
-          onChange={(e) => setModel(e.target.value)}
-          onBlur={() => void saveModel()}
-        />
-      </label>
+      {ROLE_FIELDS.map(({ role, label, hint }) => (
+        <label className="settings-field" key={role}>
+          <span>{label}</span>
+          <input
+            value={models[role]}
+            placeholder={ai.defaultModels[provider][role]}
+            onChange={(e) => setModels({ ...models, [role]: e.target.value })}
+            onBlur={() => void saveModel(role)}
+          />
+          <small className="settings-hint">{hint}</small>
+        </label>
+      ))}
       {saved && <p className="settings-ok">{saved}</p>}
       <ErrorLine text={error} />
     </div>
