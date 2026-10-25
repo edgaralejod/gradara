@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """Plan dependencies, await checked components, then assemble and simulate a draft."""
 import json
-from typing import ClassVar
+from typing import Annotated, ClassVar
 from pydantic import BaseModel, ConfigDict, Field
 from . import agent
 from .llm import structured
 from .component_library import list_components
 from .engine import simulate
 from .paths import DATA
+from .plan_style import MAX_STEPS, RULES
 from .models import BlockType, Definition, Project
 
 
@@ -29,11 +30,13 @@ class MissingBlock(Strict):
 
 
 class Plan(Strict):
-    prose: ClassVar = {'name', 'description', 'assumptions', 'unsupported'}
+    prose: ClassVar = {'name', 'description', 'steps', 'assumptions', 'unsupported'}
     name: str = Field(min_length=1, max_length=120)
     description: str = Field(max_length=1200)
     assumptions: list[str] = Field(max_length=12)
     unsupported: str = Field(max_length=1000)
+    # The plan for the user, shown while the missing blocks are written and the model is assembled.
+    steps: list[Annotated[str, Field(max_length=300)]] = Field(default_factory=list, max_length=MAX_STEPS)
     reuse: list[str] = Field(max_length=80)
     missing: list[MissingBlock] = Field(max_length=4)
 
@@ -123,11 +126,12 @@ def assemble(plan: Plan, assembly: Assembly, catalog: dict[str, Definition]) -> 
                    blocks=blocks, wires=wires, revision=0)
 
 
-async def generate_model(request: ModelGenerateRequest, job_id: str, progress=lambda message: None):
+async def generate_model(request: ModelGenerateRequest, job_id: str, progress=lambda message, **extra: None):
     catalog = catalog_snapshot(request, DATA)
     progress('Inspecting the built-in and AI libraries')
     instructions = '''You plan complete runnable models for Gradara. Return only schema JSON; do not use tools.
 Reuse catalog components whenever their behavior fits, including parameter variations. Never recreate a resistor, gain, source, sensor, etc. already available. Missing blocks are only genuinely absent behaviors; at most four. Give each missing block an alias id and a self-contained request for the existing typed component creator. No whole-circuit mega-block to bypass assembly. Supported physics: electrical (including 3-phase), rotational and translational mechanical, thermal, magnetic, scalar Real and Boolean signals, and couplings. Unsupported domains (including hydraulic and fluid connectors, vector signals, 3D multibody) must be explained in unsupported, not silently approximated. Otherwise unsupported is empty. Plan a self-contained simulation with sources, loads, references/grounds, and sensors for quantities requested. Assumptions must be concise and explicit. reuse lists exact library IDs. Missing definitions will be generated and checked BEFORE assembly.
+'''+RULES+'''
 User request:\n'''+request.prompt+'\nAvailable catalog:\n'+describe(catalog)
     plan = await structured.generate(instructions, Plan, job_id+'-plan', task='model-plan')
     if plan.unsupported:
@@ -136,6 +140,10 @@ User request:\n'''+request.prompt+'\nAvailable catalog:\n'+describe(catalog)
         raise ValueError('The plan selected a component that is not in the library. Please retry.')
     if len({item.id for item in plan.missing}) != len(plan.missing):
         raise ValueError('Missing component aliases must be unique.')
+    progress(f'Writing {len(plan.missing)} missing block{"s" if len(plan.missing) != 1 else ""}' if plan.missing
+             else 'Assembling the model',
+             plan=dict(summary=plan.description, steps=list(plan.steps), assumptions=list(plan.assumptions),
+                       blocks=len(plan.missing)))
     generated = []
     for index, item in enumerate(plan.missing):
         progress(f'Creating missing block {index+1}/{len(plan.missing)}: {item.id}')
@@ -156,7 +164,7 @@ User request:\n'''+request.prompt+'\nAvailable catalog:\n'+describe(catalog)
             for wire in document['wires']:
                 wire.pop('waypoints', None)
             used = list(dict.fromkeys(instance['libraryId'] for instance in data['instances']))
-            return dict(project=document, assumptions=plan.assumptions, generated=generated,
+            return dict(project=document, steps=list(plan.steps), assumptions=plan.assumptions, generated=generated,
                         reused=[catalog[key].name for key in used if not key.startswith('new:')],
                         checked=True, samples=result['samples'], provider=agent.provider_label())
         except Exception as exc:

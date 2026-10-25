@@ -590,3 +590,54 @@ def test_a_shared_definition_is_called_out():
     edited, changes = editing.apply_operations(doc, plan_, sheet_catalog(), sheet=DRIVETRAIN)
     out = editing.proposal(edited, doc, plan_, changes, {}, False, [], None, DRIVETRAIN)
     assert out['assumptions'][0].startswith('The change is inside Drivetrain, so it applies to all 2 blocks')
+
+
+# ------------------------------------------------------- visible plan, answers
+
+def test_the_plan_reaches_progress_before_the_executor_runs(monkeypatch, tmp_path):
+    plan = {**ADD_SCOPE, 'steps': ['Add a scope named Speed scope.', 'Connect the speed sensor output to it.']}
+    setup(monkeypatch, tmp_path, [plan])
+    events = []
+    result = asyncio.run(editing.edit_model(request(), 'job1', lambda message, **extra: events.append((message, extra))))
+    shown = [extra['plan'] for _, extra in events if extra.get('plan')]
+    assert shown == [{'summary': 'Adds a scope.', 'steps': plan['steps'], 'assumptions': [], 'blocks': 0}]
+    assert events[0] == ('Planning the edit', {'plan': None})
+    assert [m for m, _ in events].index('Applying the plan') < [m for m, _ in events].index(
+        'Checking the edited model in OpenModelica')
+    assert result['steps'] == plan['steps']
+
+
+def test_the_plan_counts_blocks_the_executor_writes(monkeypatch, tmp_path):
+    plan = {**ADD_SCOPE, 'operations': [op('create_block', alias='filt', blockType='signal', prompt='A low-pass filter.')]}
+    setup(monkeypatch, tmp_path, [plan, plan])
+    async def stop(*args, **kwargs):
+        raise RuntimeError('stop after the plan')
+    monkeypatch.setattr(editing.agent, 'generate_component', stop)
+    events = []
+    with pytest.raises(ValueError):
+        asyncio.run(editing.edit_model(request(), 'job1', lambda message, **extra: events.append((message, extra))))
+    assert ('Writing 1 block', {'plan': {'summary': 'Adds a scope.', 'steps': [], 'assumptions': [], 'blocks': 1}}) in events
+
+
+QUESTION = {'kind': 'answer', 'answer': 'Yes. The PI controller output limits at 24 V, so the motor reaches 150 rad/s.',
+            'summary': '', 'steps': [], 'assumptions': [], 'unsupported': '', 'operations': []}
+
+
+def test_a_question_is_answered_and_nothing_is_executed(monkeypatch, tmp_path):
+    provider, simulation = setup(monkeypatch, tmp_path, [QUESTION])
+    result = asyncio.run(editing.edit_model(request(), 'job1'))
+    assert result == {'answer': QUESTION['answer'], 'provider': 'Test AI'}
+    provider.assert_awaited_once()
+    simulation.assert_not_awaited()
+
+
+def test_a_fix_never_becomes_an_answer(monkeypatch, tmp_path):
+    provider, _ = setup(monkeypatch, tmp_path, [QUESTION, ADD_SCOPE])
+    result = asyncio.run(editing.edit_model(request(), 'job1', allow_answer=False))
+    assert result['verified'] and provider.await_count == 2
+    assert 'at least one operation' in provider.call_args_list[1].args[0]
+
+
+def test_the_planner_prompt_asks_for_plain_steps():
+    prompt = editing.edit_prompt(request(), catalog())
+    assert 'ASD-STE100' in prompt and 'kind to answer' in prompt

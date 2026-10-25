@@ -16,6 +16,8 @@ export type EditChange = {
 export type EditProposal = {
   project: Project;
   summary: string;
+  /** The plan for the user (ASD-STE100 style); absent on proposals made before plans were shown. */
+  steps?: string[];
   assumptions: string[];
   changes: EditChange[];
   /** The plan behind the proposal; sent back when the user asks to refine it. */

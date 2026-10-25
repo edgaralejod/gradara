@@ -106,7 +106,7 @@ def clean(diagnosis: Diagnosis, request: DiagnoseRequest) -> Diagnosis:
     return diagnosis
 
 
-async def diagnose(request: DiagnoseRequest, job_id: str, progress=lambda message: None):
+async def diagnose(request: DiagnoseRequest, job_id: str, progress=lambda message, **extra: None):
     progress('Reading the problems')
     context = run_context(request)
     diagnosis = clean(await structured.generate(diagnose_prompt(request, context), Diagnosis,
@@ -121,7 +121,7 @@ async def diagnose(request: DiagnoseRequest, job_id: str, progress=lambda messag
                             context=('Problems being fixed:\n' + evidence + '\n\nDiagnosis:\n' + diagnosis.summary)[-6000:])
     try:
         with dispatch.job_part('edit'):
-            result['proposal'] = await edit_model(edit, f'{job_id}fix', progress)
+            result['proposal'] = await edit_model(edit, f'{job_id}fix', progress, allow_answer=False)
     except (Unsupported, ValueError) as exc:
         result['fixError'] = str(exc)[-1500:]
     return with_credits(result)

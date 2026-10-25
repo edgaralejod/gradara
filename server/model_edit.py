@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Edit the open model: the agent plans bounded operations, conventional code applies and checks them."""
 import json
-from typing import ClassVar, Literal
+from typing import Annotated, ClassVar, Literal
 from pydantic import Field, ValidationError
 from . import agent
 from .diagnostics import Diagnostic, SimulationFailure, validate_simulation
@@ -11,6 +11,7 @@ from .llm import dispatch, structured
 from .model_agent import ParameterValue, Strict, catalog_snapshot, describe
 from .models import BOUNDARY_KINDS, CAUSAL_DOMAINS, Block, BlockType, Definition, Net, Project, Wire, flatten_connects
 from .paths import DATA
+from .plan_style import MAX_STEPS, RULES
 from .sheets import copies, sheet_name, sheet_view, subsystem_at, sync_instances, write_sheet
 
 MAX_CREATED = 2
@@ -67,11 +68,16 @@ class ModelEditRequest(Strict):
 
 
 class EditPlan(Strict):
-    prose: ClassVar = {'summary', 'assumptions', 'unsupported'}
+    prose: ClassVar = {'summary', 'steps', 'assumptions', 'unsupported', 'answer'}
+    # 'answer' when the request is a question about the model: the planner answers it and nothing is executed.
+    kind: Literal['proposal', 'answer'] = 'proposal'
+    answer: str = Field(default='', max_length=2000)
     summary: str = Field(max_length=600)
+    # The plan for the user, from the same call as the operations so the two cannot disagree.
+    steps: list[Annotated[str, Field(max_length=300)]] = Field(default_factory=list, max_length=MAX_STEPS)
     assumptions: list[str] = Field(max_length=8)
     unsupported: str = Field(max_length=1000)
-    operations: list[Operation] = Field(min_length=1, max_length=40)
+    operations: list[Operation] = Field(max_length=40)
 
 
 class Change(Strict):
@@ -106,6 +112,8 @@ def semantic_view(project: Project) -> dict:
 
 
 def check_limits(plan: EditPlan):
+    if not plan.operations:
+        raise ValueError('A proposal needs at least one operation. If the request is a question, use kind answer.')
     created = [o for o in plan.operations if o.op == 'create_block']
     revised = [o for o in plan.operations if o.op == 'revise_definition']
     if len(created) > MAX_CREATED:
@@ -432,7 +440,9 @@ Operations run in order:
 - group_into_subsystem (blockIds, alias, name): move existing top-level blocks (2 or more) into a new subsystem; wires that cross its edge become its ports and keep their connections, and Gradara lays out the result. Use it when asked to organize, structure, tidy, or create subsystems in a model; give each group a short descriptive name. The new subsystem block is referenced by its alias; its port IDs are p_<alias>_<portName> (portName = the connected port's name, or the net's name, in letters, digits and _), so later connect operations may use them. Blocks moved inside can no longer be referenced. A Goto needs its From blocks in the same group. At most eight groups per edit.
 Prefer catalog blocks and parameter changes over new definitions. Gradara places new blocks and draws new wires in its house style, so never describe positions; give new blocks short names of 1-3 words. Keep physical references (ground) and connect every signal input you add. Set unused fields to null.
 If the request cannot be done with these operations or the supported physics (electrical including 3-phase, rotational and translational mechanical, thermal, magnetic, scalar Real and Boolean signals), explain why in unsupported and return one set_duration operation with the current stop time. Otherwise unsupported is empty.
-summary is one or two sentences for the user. assumptions are short and explicit.'''
+If the request is a question about the model (whether something works, why, how, what a value means) and asks for no change, set kind to answer, answer it in answer (at most 6 sentences, naming blocks and values from the model), and return no steps and no operations. Otherwise kind is proposal and answer is empty.
+summary is one or two sentences for the user. assumptions are short and explicit.
+''' + RULES
 
 
 SHEET = '''
@@ -517,7 +527,8 @@ def proposal(project: Project, original: Project, plan: EditPlan, changes: list[
         if (n := copies(original, ref)) > 1:
             assumptions.insert(0, f'The change is inside {sheet_name(original, sheet)}, so it applies to all {n} '
                                   'blocks that use this subsystem.')
-    return dict(project=document, summary=plan.summary, assumptions=assumptions, sheet=list(sheet or []),
+    return dict(project=document, summary=plan.summary, steps=list(plan.steps), assumptions=assumptions,
+                sheet=list(sheet or []),
                 changes=[c.model_dump() for c in changes],
                 operations=[o.model_dump(exclude_none=True) for o in plan.operations],
                 generated=[dict(alias=alias, name=d.name) for alias, d in generated.items()],
@@ -526,7 +537,27 @@ def proposal(project: Project, original: Project, plan: EditPlan, changes: list[
                 **({'credits': credits} if (credits := dispatch.credits_for_current_job()) is not None else {}))
 
 
-async def edit_model(request: ModelEditRequest, job_id: str, progress=lambda message: None):
+def preview(plan: EditPlan) -> dict:
+    """The plan as the Proposals tab shows it while the executor works (job field `plan`)."""
+    generated = [o.alias or o.blockId for o in plan.operations if o.op in ('create_block', 'revise_definition')]
+    return dict(summary=plan.summary, steps=list(plan.steps), assumptions=list(plan.assumptions),
+                blocks=len(generated))
+
+
+def carrying_out(plan: EditPlan) -> str:
+    blocks = preview(plan)['blocks']
+    return f'Writing {blocks} block{"s" if blocks != 1 else ""}' if blocks else 'Applying the plan'
+
+
+def answer(plan: EditPlan) -> dict:
+    """A question asked in Edit model: the planner's answer, with nothing executed."""
+    return dict(answer=plan.answer.strip(), provider=agent.provider_label(),
+                **({'credits': credits} if (credits := dispatch.credits_for_current_job()) is not None else {}))
+
+
+async def edit_model(request: ModelEditRequest, job_id: str, progress=lambda message, **extra: None,
+                     allow_answer: bool = True):
+    """Plan, carry out, and check an edit. A question gets an answer instead (not inside a fix: `allow_answer`)."""
     catalog = catalog_snapshot(request, DATA)
     ref = subsystem_at(request.project, request.sheet)
     view = sheet_view(request.project, ref) if ref else None
@@ -538,13 +569,16 @@ async def edit_model(request: ModelEditRequest, job_id: str, progress=lambda mes
     prompt = edit_prompt(request, catalog, view)
     cache: dict = {}
     for attempt in range(2):
-        progress('Planning the edit' if attempt == 0 else 'Revising the edit from diagnostics')
+        progress('Planning the edit' if attempt == 0 else 'Revising the edit from diagnostics', plan=None)
         data = await agent.structured_generation(prompt, EditPlan.model_json_schema(), f'{job_id}-edit{attempt}', task='edit-plan')
         try:
             plan = structured.parse(EditPlan, data)
+            if allow_answer and plan.kind == 'answer' and plan.answer.strip():
+                return answer(plan)
             if plan.unsupported:
                 raise Unsupported(plan.unsupported)
             check_limits(plan)
+            progress(carrying_out(plan), plan=preview(plan))
             generated, revised = await realize(plan, view or request.project, job_id, progress, cache)
             edited, changes = apply_operations(request.project, plan, catalog, generated, revised, request.sheet)
         except Unsupported:

@@ -9,6 +9,7 @@ import type { Evidence, ExplainResult } from '@/lib/gradara/results-discussion';
 import AskBar, { type AskSubmit } from './ask-bar';
 import { BlockDraftCard, ModelDraftCard, UnsupportedCard } from './draft-cards';
 import ProposalCard from './proposal-card';
+import { AnswerCard, PlanCard } from './plan-card';
 import ResultsCard from './results-card';
 import type { Proposals, Revision } from './use-proposals';
 
@@ -138,6 +139,8 @@ export default function ProposalsPanel({
                   )}
                 </div>
               );
+            case 'answer':
+              return <AnswerCard key={entry.id} entry={entry} />;
             case 'diagnosis':
               return <DiagnosisCard key={entry.id} result={entry.result} project={project} onSelect={onSelect} />;
             case 'block':
@@ -205,7 +208,10 @@ export default function ProposalsPanel({
               );
           }
         })}
-        {busy && !busy.entryId && (
+        {busy && !busy.entryId && busy.plan && (
+          <PlanCard plan={busy.plan} progress={busy.progress || busy.label} onCancel={proposals.cancel} />
+        )}
+        {busy && !busy.entryId && !busy.plan && (
           <div className="assistant-working">
             <LoaderCircle size={13} className="spin" />
             <span>{busy.progress || busy.label}…</span>

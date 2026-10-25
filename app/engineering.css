@@ -2457,6 +2457,15 @@
 .proposal-summary { margin: 8px 10px 4px; line-height: 1.5; }
 .proposal-assumptions, .diagnosis-steps { margin: 0 10px 6px; padding-left: 18px; color: #526979; }
 .proposal-changes { display: grid; gap: 6px; padding: 4px 10px 8px; }
+.proposal-badge.is-plan { background: #e3eef7; color: #1d4d73; }
+.plan-card > header > svg, .answer-card > header > svg { color: var(--primary); }
+.plan-steps { margin: 2px 10px 6px; padding-left: 22px; list-style: decimal outside; line-height: 1.5; }
+.plan-steps li { padding: 1px 0; }
+.plan-steps li::marker { color: #637987; font: 600 var(--text-micro)/1 var(--font-ui); }
+.plan-card > footer.assistant-working { padding: 7px 10px; border-top: 1px solid #e8edf1; background: #fbfcfd; }
+.plan-details { margin: 0 10px 6px; color: #526979; }
+.plan-details > summary { cursor: pointer; font: 600 var(--text-micro)/1.8 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; color: #637987; }
+.plan-details .plan-steps { margin: 2px 0 4px; color: #27333d; }
 .proposal-changes h4, .diagnosis-card h4 {
   display: flex; align-items: center; gap: 5px; margin: 4px 0 2px; color: #637987;
   font: 600 var(--text-micro)/1.4 var(--font-ui); letter-spacing: .04em; text-transform: uppercase;

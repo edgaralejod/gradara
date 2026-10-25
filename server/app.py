@@ -415,13 +415,13 @@ async def component_library():
 
 @app.post('/api/models/generate')
 async def generate_full_model(request: ModelGenerateRequest):
-    return await start_job('model', lambda i: generate_model(request, i, lambda message: JOBS[i].update(progress=message)))
+    return await start_job('model', lambda i: generate_model(request, i, lambda message, **extra: JOBS[i].update(progress=message, **extra)))
 
 @app.post('/api/models/edit')
 async def edit_open_model(request: ModelEditRequest):
     async def edit(job_id):
         try:
-            return await edit_model(request, job_id, lambda message: JOBS[job_id].update(progress=message))
+            return await edit_model(request, job_id, lambda message, **extra: JOBS[job_id].update(progress=message, **extra))
         except Unsupported as exc:
             # Beyond what Gradara can do: the Proposals tab offers Improve Gradara instead of an error.
             return {'unsupported': str(exc)}
@@ -429,7 +429,7 @@ async def edit_open_model(request: ModelEditRequest):
 
 @app.post('/api/diagnose')
 async def diagnose_problems(request: DiagnoseRequest):
-    return await start_job('diagnose', lambda i: diagnose(request, i, lambda message: JOBS[i].update(progress=message)))
+    return await start_job('diagnose', lambda i: diagnose(request, i, lambda message, **extra: JOBS[i].update(progress=message, **extra)))
 
 @app.post('/api/results/explain')
 async def explain_run_results(request: ExplainRequest):

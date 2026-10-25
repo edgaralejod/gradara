@@ -14,6 +14,7 @@ import {
 import { domainColors, type Project } from '@/lib/gradara/model';
 import type { EditChange, EditProposal } from '@/lib/gradara/proposal';
 import type { ProposalStatus } from '@/lib/gradara/proposals-thread';
+import { PlanDetails } from './plan-card';
 
 export type { ProposalStatus };
 
@@ -98,6 +99,7 @@ export default function ProposalCard({
         )}
       </header>
       <p className="proposal-summary">{proposal.summary}</p>
+      <PlanDetails steps={proposal.steps} />
       {proposal.assumptions.length > 0 && (
         <ul className="proposal-assumptions">
           {proposal.assumptions.map((a) => (
