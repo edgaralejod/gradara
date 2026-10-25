@@ -2,8 +2,11 @@
 """Planner and executor roles: which model answers each task, settings, and migration."""
 from __future__ import annotations
 
+import ast
 import asyncio
 import json
+import re
+from pathlib import Path
 
 import pytest
 
@@ -33,8 +36,10 @@ def test_every_task_has_a_role():
 
 
 def test_every_gateway_task_has_a_role():
-    from cloud.gateway.app import TASK_KINDS
-    assert set(TASK_KINDS) == set(TASK_ROLES), 'the gateway and the local service route the same tasks'
+    # Read from the source: the gateway's own dependencies are not installed with the app's.
+    gateway = (Path(__file__).parents[1]/'cloud'/'gateway'/'app.py').read_text(encoding='utf-8')
+    task_kinds = ast.literal_eval(re.search(r'TASK_KINDS = (\{.*?\}\})', gateway, re.S).group(1))
+    assert set(task_kinds) == set(TASK_ROLES), 'the gateway and the local service route the same tasks'
 
 
 def test_defaults_name_a_model_for_each_role():
