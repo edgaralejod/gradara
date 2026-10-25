@@ -16,13 +16,7 @@ import sys
 BLOCKING = {'high', 'critical'}
 
 # GHSA ID -> why Gradara accepts it until a fix exists.
-ACCEPTED = {
-    'GHSA-vfj7-8cjw-p6xm': (
-        'braces <= 3.0.3 (every release; no patched version as of 2026-10-07): stack exhaustion on deeply '
-        'nested brace patterns. Reached only through fast-glob in build and component tooling (vinext, shadcn, '
-        "ts-morph), which expands the repository's own glob patterns, never user input."
-    ),
-}
+ACCEPTED: dict[str, str] = {}
 
 
 def main() -> int:
