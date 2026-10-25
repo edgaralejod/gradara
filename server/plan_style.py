@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """How the AI writes plans and answers: short, direct, ASD-STE100 style.
 
-``RULES`` goes into every planner prompt that returns text for the user (edit
-and model plans, Discuss model answers). ``problems`` checks text against the
+``RULES`` (``STYLE`` plus the rules for steps) goes into the edit and model
+planner prompts; ``STYLE`` alone into Discuss model answers. ``problems`` checks text against the
 measurable part of those rules; the tests run it over recorded planner output
 when the prompt changes. It never fails a generation at run time: the schema's
 length limits do that, and a plan that is a little wordy is still a plan.
@@ -15,13 +15,16 @@ MAX_STEPS = 8
 STEP_WORDS = 20
 TEXT_WORDS = 25
 
-RULES = f'''Write every text field for the user in ASD-STE100 Simplified Technical English style:
+STYLE = f'''Write every text field for the user in ASD-STE100 Simplified Technical English style:
 - One instruction per sentence. Start each step with a verb in the imperative: Add, Connect, Set, Replace, Rewrite, Remove, Log, Group, Create, Run.
 - Active voice, present tense. Do not use "should", "may", "might", "could", "would", or "please".
 - At most {STEP_WORDS} words in a step and {TEXT_WORDS} words in any other sentence. At most 3 nouns in a row.
 - Name blocks by their name on the canvas and parameters by name, value, and unit (Set R1 resistance to 10 ohm).
-- No filler: no "I will", "Let's", "First,", or restating the request.
-steps are the plan for the user: at most {MAX_STEPS}, in the order they happen, one per distinct change (group repeated small changes into one step). They must describe the same change as the operations.'''
+- No filler: no "I will", "Let's", "First,", or restating the request.'''
+
+STEPS = f'''steps are the plan for the user: at most {MAX_STEPS}, in the order they happen, one per distinct change (group repeated small changes into one step). They must describe the same change as the operations.'''
+
+RULES = STYLE + '\n' + STEPS
 
 MODALS = ('should', 'may', 'might', 'could', 'would', 'please')
 FILLER = ("i will", "i'll", "let's", "let us", "we will", "first,", "next,", "finally,")

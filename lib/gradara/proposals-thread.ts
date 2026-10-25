@@ -107,10 +107,14 @@ export type Entry =
   | {
       id: string;
       at: number;
-      /** A question answered by the planner; nothing in the model changed. */
+      /** A question answered by the planner (Discuss model, or a question asked in Edit); nothing changed. */
       kind: 'answer';
       request: string;
       text: string;
+      /** Blocks the answer talks about (Discuss model). */
+      blockIds?: string[];
+      /** One change the answer suggests, as a request to Edit model (Discuss model). */
+      suggestedEdit?: string;
       provider: string;
       credits?: number;
     }

@@ -4,7 +4,9 @@
  * and what each costs. Where you ask decides what is sent, so no model call is
  * needed to route a request: on an open port it makes a block, on problems it
  * explains, with runs on show it explains results, on an empty sheet it builds
- * a model, otherwise it edits. Tab moves to the next allowed action.
+ * a model, otherwise it edits. Discuss model, which answers questions and
+ * changes nothing, is offered everywhere but on an open port. Tab moves to the
+ * next allowed action.
  */
 import type { AiOperation } from './ai';
 import type { Diagnostic } from './api';
@@ -18,7 +20,8 @@ export type AskAction =
   | 'model'
   | 'explain'
   | 'fix'
-  | 'results';
+  | 'results'
+  | 'discuss';
 
 /** Runs on show in the Data Inspector, and what the user is looking at. */
 export type RunContext = {
@@ -102,16 +105,22 @@ export const actionInfo: Record<
     operation: 'results',
     send: 'Ask',
   },
+  discuss: {
+    label: 'Discuss model',
+    placeholder: 'Ask whether something in this model works, or how…',
+    operation: 'discuss',
+    send: 'Ask',
+  },
 };
 
 /** The actions a context allows, the natural one first. */
 export function availableActions(context: AskContext): AskAction[] {
-  if (context.existing) return ['refine-block'];
+  if (context.existing) return ['refine-block', 'discuss'];
   if (context.connection) return ['block'];
-  if (context.problems?.length) return ['explain', 'fix'];
-  if (context.runs?.runIds.length) return ['results', 'edit'];
-  if (context.emptySheet) return ['model', 'block'];
-  return ['edit', 'block', 'model'];
+  if (context.problems?.length) return ['explain', 'fix', 'discuss'];
+  if (context.runs?.runIds.length) return ['results', 'edit', 'discuss'];
+  if (context.emptySheet) return ['model', 'block', 'discuss'];
+  return ['edit', 'discuss', 'block', 'model'];
 }
 
 /** The action after `current` (Tab), wrapping around. */
@@ -187,6 +196,9 @@ export function scopeText(
   if (action === 'block')
     return context.connection ? 'Create block · on a port' : 'Create block';
   if (action === 'model') return 'Build model · opens as a new model';
+  if (action === 'discuss' && context.existing)
+    return `Discuss · ${context.existing.definition.name}`;
   const picked = context.selection.map(names).filter(Boolean);
-  return picked.length ? `Selection · ${picked.join(', ')}` : 'Whole model';
+  const subject = picked.length ? `Selection · ${picked.join(', ')}` : 'Whole model';
+  return action === 'discuss' ? `Discuss · ${subject}` : subject;
 }

@@ -375,14 +375,14 @@ Where you open it decides what it offers, and the first choice is already select
 
 | Opened from | Actions |
 | --- | --- |
-| The canvas | **Edit model**, **Create block**, **Build model** |
-| An empty sheet | **Build model**, **Create block** |
+| The canvas | **Edit model**, **Discuss model**, **Create block**, **Build model** |
+| An empty sheet | **Build model**, **Create block**, **Discuss model** |
 | An unconnected port or wire | **Create block** |
-| An AI block's **Refine with AI** | **Refine block** |
-| Problems | **Explain problems**, **Fix problems** |
-| Results | **Explain results**, **Edit model** |
+| An AI block's **Refine with AI** | **Refine block**, **Discuss model** |
+| Problems | **Explain problems**, **Fix problems**, **Discuss model** |
+| Results | **Explain results**, **Edit model**, **Discuss model** |
 
-Tab in the text box switches to the next action. The chips above the text show what will be sent, such as the selected blocks, the problems, or the runs and signals; remove a chip with its ×. The bar shows the price before you send. Enter sends, Shift+Enter adds a line, and Escape closes it. Inside a subsystem, edits, explanations, and fixes work on that subsystem's inside (the **In** chip names it, and adds how many blocks use it when there are several).
+Tab in the text box switches to the next action. The chips above the text show what will be sent, such as the selected blocks, the problems, or the runs and signals; remove a chip with its ×. The bar shows the price before you send. Enter sends, Shift+Enter adds a line, and Escape closes it. Inside a subsystem, edits, discussions, explanations, and fixes work on that subsystem's inside (the **In** chip names it, and adds how many blocks use it when there are several).
 
 ### The Proposals tab
 
@@ -390,11 +390,13 @@ Answers arrive as cards in the **Proposals** tab of the dock, next to Problems. 
 
 | Card | What you can do |
 | --- | --- |
+| Plan (while the AI works) | Read the steps; **Cancel** |
 | Proposed edit | **Apply**, **Refine**, **Discard** |
 | New block or refined block | **Add to model** or **Apply changes**, **Discard** |
 | New model | **Open as new model**, **Discard** |
 | Diagnosis | Read the likely causes and steps; select the blocks they name |
 | Explain results | Show the evidence on the plot, ask a follow-up, **Propose this change** |
+| Answer (Discuss model) | Select the blocks it names, **Make this an edit** |
 | Gradara cannot do this yet | **Improve Gradara…**, or **Build it as a personal feature…** |
 
 Each model keeps its own list. It is saved on this computer with the model's data (the newest 60 cards), so it is still there after you switch models or restart Gradara. **Clear this model's proposals** empties it. Deleting a run removes the results discussions about it.
@@ -436,6 +438,12 @@ Nothing changes until you choose **Apply**, which opens the sheet the proposal e
 If you ask a question instead of a change ("will the motor reach 150 rad/s?"), the AI answers it in an **Answer** card and changes nothing; it costs the same as an edit.
 
 When a request is beyond what Gradara can do, such as a domain it does not have, the card says **Gradara cannot do this yet** and why, and your model is not changed. **Improve Gradara…** opens a public GitHub issue form filled in with your request and that reason (no model or file is attached, and you can edit it before submitting). **Build it as a personal feature…** opens [Personal features](#personal-features).
+
+### Discuss the model
+
+Choose **Discuss model** and ask about the design: "will the supply handle the start-up current?", "why does this filter need a 5 ms time constant?", "would a Zener clamp work here?". With blocks selected, the **Selection** chip points the question at them; from **Refine with AI** on an AI block, the question is about that block. Inside a subsystem, the answer knows which one you are looking at.
+
+The answer arrives as an **Answer** card. It names the blocks it talks about as chips that select them, and says when a run is needed to confirm something and what to log. Nothing in the model changes. When one change would help, the card shows it under **Suggested change**; **Make this an edit** sends it to **Edit model** with the discussion as context, priced as an edit. Follow-up questions in the same model carry the last four questions and answers, so you can ask "and at twice the load?".
 
 ### Build a model
 

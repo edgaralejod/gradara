@@ -1023,6 +1023,17 @@ function Workbench() {
       );
     } else if (action === 'results' && context.runs) {
       void proposals.explainResults(context.runs, text);
+    } else if (action === 'discuss') {
+      void proposals.discuss(
+        text,
+        {
+          project: docRef.current,
+          catalog: library,
+          selection: context.existing ? [context.existing.id] : context.selection,
+          sheet,
+        },
+        scope,
+      );
     }
     setAsk(null);
     openProposals();
@@ -1111,6 +1122,22 @@ function Workbench() {
         `Applied ${proposal.changes.length} ${proposal.changes.length === 1 ? 'change' : 'changes'}. Undo with ⌘Z.`,
       );
     return true;
+  };
+  /** Send the change a Discuss model answer suggested to Edit model, with the discussion as context. */
+  const editFromAnswer = (entry: Extract<Entry, { kind: 'answer' }>) => {
+    if (proposals.busy || !entry.suggestedEdit) return;
+    void proposals.edit(
+      entry.suggestedEdit,
+      {
+        project: docRef.current,
+        sheet: scopeRef.current,
+        catalog: library,
+        selection: entry.blockIds ?? [],
+        context: `Discussion.\nQuestion: ${entry.request}\nAnswer: ${entry.text}`.slice(0, 6000),
+      },
+      where(scopeRef.current, 'From Discuss model'),
+    );
+    openProposals();
   };
   /** Propose the change a results answer suggested, as an ordinary checked edit. */
   const proposeFromResults = (
@@ -3717,6 +3744,7 @@ function Workbench() {
                   }}
                   onEvidence={showEvidence}
                   onPropose={proposeFromResults}
+                  onMakeEdit={editFromAnswer}
                   runAvailable={() => true}
                   onPreview={previewExplanation}
                 />

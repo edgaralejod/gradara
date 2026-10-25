@@ -740,6 +740,12 @@ function GradaraAccount({ onChange }: { onChange: () => void }) {
             Explaining results costs {account.prices.results} per question,
             including any follow-up measurements.
           </>
+        )}
+        {account.prices.discuss !== undefined && (
+          <>
+            {' '}
+            A Discuss model question costs {account.prices.discuss}.
+          </>
         )}{' '}
         Automatic repair attempts are included. If the AI service fails before
         returning a result, you are not charged.

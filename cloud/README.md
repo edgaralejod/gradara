@@ -30,7 +30,7 @@ Point a source checkout or desktop build at it with `GRADARA_GATEWAY_URL=http://
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Secret Manager |
 | `STRIPE_AUTOMATIC_TAX` | `true` after Stripe Tax registration |
 | `CREDIT_PACKS` | JSON list with a Stripe `priceId` per pack (below) |
-| `CREDIT_PRICES` | Optional JSON merged onto the defaults `{"component": 2, "model": 20, "export": 2, "edit": 4, "diagnose": 2, "results": 2}` |
+| `CREDIT_PRICES` | Optional JSON merged onto the defaults `{"component": 2, "model": 20, "export": 2, "edit": 4, "diagnose": 2, "results": 2, "discuss": 2}` |
 | `CREDIT_SURCHARGES` | Optional JSON, default `{"edit": {"block": 2}}`: credits per new or rewritten block in an edit or fix |
 | `FREE_CREDITS` | Welcome grant per verified identity, default 20 |
 | `RATE_PER_MINUTE`, `MAX_CONCURRENT` | Per-account limits, defaults 20 and 3 |

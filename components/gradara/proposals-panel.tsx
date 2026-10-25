@@ -42,6 +42,7 @@ export default function ProposalsPanel({
   onBuildFeature,
   onEvidence,
   onPropose,
+  onMakeEdit,
   runAvailable,
   onPreview,
 }: {
@@ -63,6 +64,8 @@ export default function ProposalsPanel({
   onBuildFeature: (entry: Extract<Entry, { kind: 'unsupported' }>) => void;
   onEvidence: (runId: string, evidence: Evidence, window: [number, number]) => void;
   onPropose: (entry: Extract<Entry, { kind: 'results' }>, changePrompt: string, turn: ExplainResult) => void;
+  /** Send a Discuss model answer's suggested change to Edit model. */
+  onMakeEdit: (entry: Extract<Entry, { kind: 'answer' }>) => void;
   runAvailable: (runId: string) => boolean;
   onPreview: (context: AskContext, question: string) => Promise<string>;
 }) {
@@ -140,7 +143,16 @@ export default function ProposalsPanel({
                 </div>
               );
             case 'answer':
-              return <AnswerCard key={entry.id} entry={entry} />;
+              return (
+                <AnswerCard
+                  key={entry.id}
+                  entry={entry}
+                  project={project}
+                  busy={!!busy}
+                  onSelect={onSelect}
+                  onMakeEdit={() => onMakeEdit(entry)}
+                />
+              );
             case 'diagnosis':
               return <DiagnosisCard key={entry.id} result={entry.result} project={project} onSelect={onSelect} />;
             case 'block':

@@ -48,6 +48,9 @@ export type Busy = {
 /** A question asked in Edit model: the planner answered it and changed nothing. */
 type EditAnswer = { answer: string; provider: string; credits?: number };
 
+/** POST /api/discuss: the answer, the blocks it talks about, and an optional change to propose. */
+type DiscussResult = EditAnswer & { blockIds: string[]; suggestedEdit: string };
+
 /** The request line a card answers. */
 const request = (text: string, scope: string, action: AskAction) => ({
   id: entryId(),
@@ -393,11 +396,41 @@ export function useProposals(
       );
   };
 
+  /** Discuss model: one question about the open design, with this model's last answers as context. */
+  const discuss = useCallback(
+    (question: string, body: Record<string, unknown>, scope: string) => {
+      const thread = (threads[key] ?? [])
+        .filter((e): e is Extract<Entry, { kind: 'answer' }> => e.kind === 'answer')
+        .slice(-4)
+        .map((e) => ({ question: e.request.slice(0, 4000), answer: e.text.slice(0, 3000) }));
+      return run<DiscussResult>(
+        '/discuss',
+        { question, thread, ...body },
+        'Thinking about the model',
+        request(question, scope, 'discuss'),
+        (result, _revision, model) =>
+          add(model, {
+            id: entryId(),
+            at: Date.now(),
+            kind: 'answer',
+            request: question,
+            text: result.answer,
+            blockIds: result.blockIds,
+            ...(result.suggestedEdit ? { suggestedEdit: result.suggestedEdit } : {}),
+            provider: result.provider,
+            ...(result.credits !== undefined ? { credits: result.credits } : {}),
+          }),
+      );
+    },
+    [run, add, threads, key],
+  );
+
   return {
     entries,
     busy,
     loadError,
     edit,
+    discuss,
     diagnose,
     createBlock,
     buildModel,

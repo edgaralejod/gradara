@@ -364,3 +364,14 @@ def test_role_models_fall_back_to_llm_model(monkeypatch):
     monkeypatch.setenv('LLM_EXECUTOR_MODEL', 'fast')
     cfg = config.load()
     assert (cfg.llm_planner_model, cfg.llm_executor_model) == ('one', 'fast')
+
+
+def test_a_discuss_question_is_one_priced_job(tmp_path):
+    client, _, _ = make(tmp_path, free_credits=10)
+    token = sign_in(client)
+    first = generate(client, token, job='disc-0001', kind='discuss', task='discuss')
+    assert first.status_code == 200 and first.json()['jobCharged'] == 2
+    assert generate(client, token, job='disc-0001', kind='discuss', task='discuss').json()['jobCharged'] == 2
+    assert generate(client, token, job='disc-0001', kind='discuss', task='discuss').status_code == 429
+    assert generate(client, token, job='disc-0002', kind='discuss', task='edit-plan').status_code == 422
+    assert client.get('/v1/account', headers=auth(token)).json()['prices']['discuss'] == 2
