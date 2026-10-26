@@ -46,6 +46,9 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GRADARA }}
           projectId: gradara-2e47a
           entryPoint: site
+          # Pinned: the action otherwise runs firebase-tools@latest. 15.34.1 started reading
+          # the Service Usage API before deploying, which the deploy account may not do (403).
+          firebaseToolsVersion: 15.34.0
           # Empty channelId means a pull-request preview channel. (Writing this as
           # `cond && '' || 'live'` would always yield 'live', because '' is falsy.)
           channelId: ${{ github.event_name != 'pull_request' && 'live' || '' }}

@@ -38,7 +38,7 @@ Each block page also draws the block's example (`models/examples/blocks/`, see `
    cd site && firebase deploy --only hosting   # add --project <firebase-project-id> to override .firebaserc
    ```
 
-3. For automatic deploys, run `firebase init hosting:github` in `site/` or create a service account with the Firebase Hosting Admin role, and store its JSON key as the repository secret `FIREBASE_SERVICE_ACCOUNT_GRADARA`. The **Website** workflow then deploys `main` and posts preview links on pull requests.
+3. For automatic deploys, run `firebase init hosting:github` in `site/` or create a service account with the Firebase Hosting Admin role, and store its JSON key as the repository secret `FIREBASE_SERVICE_ACCOUNT_GRADARA`. The **Website** workflow then deploys `main` and posts preview links on pull requests. It pins the Firebase CLI version (`firebaseToolsVersion` in `.github/workflows/site.yml`): newer CLIs also read the Service Usage API before deploying, which needs the Service Usage Consumer role on that account. Grant it before raising the pin.
 
 ## Links
 
