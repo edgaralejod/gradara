@@ -6,7 +6,9 @@ name: Desktop installers
 # clean runner, launches it in self-test mode, runs a simulation and verifies
 # generated C with the built-in engine, and uninstalls it. Tag pushes (v*)
 # attach the installers to a draft GitHub Release only when every install test
-# passes. Pull requests and manual runs build and test without releasing. Engines
+# passes. Pull requests and manual runs on a branch build and test without
+# releasing; a manual run on a tag ref (vX.Y.Z) releases like the tag push, which
+# is how to recover from a flaky tag build (docs/RELEASING.md). Engines
 # whose inputs have not changed since the last push to main come from the cache
 # that Engine cache fills (engine-cache.yml), so a tag build of an app change takes
 # minutes, not the hour the four engines take to build and test.

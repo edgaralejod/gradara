@@ -14,7 +14,7 @@ jobs:
   native:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90  # Windows: about 10 min of OpenModelica setup plus 35-55 min of tests
     strategy:
       fail-fast: false
       matrix:

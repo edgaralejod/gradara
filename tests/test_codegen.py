@@ -2,6 +2,7 @@
 """Deterministic C code generation: unit extraction, templates, compilation, and SIL verification."""
 import asyncio
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -50,7 +51,8 @@ def run_c(tmp_path, generated, rows, prefix='controller'):
     (tmp_path/'inputs.csv').write_text(''.join(','.join(repr(float(v)) for v in r) + '\n' for r in rows), encoding='utf-8')
     subprocess.run(['gcc', '-std=c11', '-Wall', '-Wextra', '-Werror', '-o', 'sil', f'{prefix}.c', 'main.c', '-lm'],
                    cwd=tmp_path, check=True, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    subprocess.run(['./sil'], cwd=tmp_path, check=True)
+    # By absolute path: Windows resolves a relative program against this process's folder, not `cwd`.
+    subprocess.run([str(tmp_path/('sil.exe' if os.name == 'nt' else 'sil'))], cwd=tmp_path, check=True)
     return parse_outputs((tmp_path/'outputs.csv').read_text(encoding='utf-8'), len(generated.outputs))
 
 
