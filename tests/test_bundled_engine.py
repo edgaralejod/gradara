@@ -16,6 +16,9 @@ import pytest
 
 from server import engines
 
+# The engine VM is the macOS backend; its socket folder uses the POSIX user ID, which Windows lacks.
+macos_vm = pytest.mark.skipif(sys.platform == 'win32', reason='the engine VM runs on macOS')
+
 POSIX = pytest.mark.skipif(os.name == 'nt', reason='stand-in tools are POSIX scripts; the agent runs in a Linux VM')
 AGENT = Path(__file__).resolve().parent.parent/'packaging'/'engine'/'guest'/'agent.py'
 
@@ -106,6 +109,7 @@ def test_bundled_is_the_default_when_present(monkeypatch, tmp_path):
     assert asyncio.run(engines.select()) is engines.DOCKER
 
 
+@macos_vm
 def test_vm_paths_map_the_data_folder(tmp_path, monkeypatch):
     root = make_bundle(tmp_path/'engine', {'platform': 'macos'})
     backend = engines.VmBackend(root)
@@ -232,6 +236,7 @@ def test_vm_errors_leave_out_vfkit_usage(tmp_path, monkeypatch):
     assert '--cpus' not in tail and 'Usage' not in tail
 
 
+@macos_vm
 def test_vm_socket_avoids_paths_vfkit_mangles(tmp_path, monkeypatch):
     # vfkit percent-encodes a space in socketURL and then binds to the encoded
     # path, so the usual macOS data folder ("Application Support") is unusable.

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Local API boundary, settings, credentials, and safety screening."""
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -59,7 +60,8 @@ def test_keys_never_leave_the_service(isolated, monkeypatch):
     assert secret not in response.text
     assert secret not in (isolated/'settings.json').read_text(encoding='utf-8') if (isolated/'settings.json').exists() else True
     assert credentials.get('openai_api_key') == secret
-    assert oct((isolated/'.credentials.json').stat().st_mode & 0o777) == '0o600'
+    if sys.platform != 'win32':  # Windows has no POSIX modes; the file inherits the data folder's ACL.
+        assert oct((isolated/'.credentials.json').stat().st_mode & 0o777) == '0o600'
     client.delete('/api/ai/keys/openai')
     assert credentials.get('openai_api_key') is None
 

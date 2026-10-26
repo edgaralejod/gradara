@@ -55,7 +55,7 @@ jobs:
           python-version: '3.12'
       - name: Look for a tested engine with these inputs
         id: cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dist-engine
           key: engine-linux-x64-om${{ env.OM_VERSION }}-msl${{ env.MSL_VERSION }}-${{ hashFiles('packaging/engine/**', '.github/workflows/engine-bundle.yml') }}
@@ -89,7 +89,7 @@ jobs:
         run: python packaging/engine/pack_bundle.py --dir build/engine --name linux-x64 --out dist-engine
       - name: Keep this tested engine for later runs
         if: steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dist-engine
           key: ${{ steps.cache.outputs.cache-primary-key }}
@@ -112,7 +112,7 @@ jobs:
           python-version: '3.12'
       - name: Look for a tested engine with these inputs
         id: cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dist-engine
           key: engine-windows-x64-om${{ env.OM_VERSION }}-msl${{ env.MSL_VERSION }}-${{ hashFiles('packaging/engine/**', '.github/workflows/engine-bundle.yml') }}
@@ -155,7 +155,7 @@ jobs:
         run: python packaging/engine/pack_bundle.py --dir build/engine --name windows-x64 --out dist-engine
       - name: Keep this tested engine for later runs
         if: steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dist-engine
           key: ${{ steps.cache.outputs.cache-primary-key }}
@@ -187,7 +187,7 @@ jobs:
           python-version: '3.12'
       - name: Look for a tested engine with these inputs
         id: cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dist-engine
           key: engine-macos-${{ matrix.arch }}-om${{ env.OM_VERSION }}-msl${{ env.MSL_VERSION }}-${{ hashFiles('packaging/engine/**', '.github/workflows/engine-bundle.yml') }}
@@ -226,7 +226,7 @@ jobs:
         run: python packaging/engine/pack_bundle.py --dir build/engine --name macos-${{ matrix.arch }} --out dist-engine
       - name: Keep this tested engine for later runs
         if: steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dist-engine
           key: ${{ steps.cache.outputs.cache-primary-key }}
@@ -266,7 +266,7 @@ jobs:
       - name: Was this image tested before?
         id: cache
         if: github.ref != 'refs/heads/main'
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dist-engine
           key: engine-macos-${{ matrix.arch }}-om${{ env.OM_VERSION }}-msl${{ env.MSL_VERSION }}-${{ hashFiles('packaging/engine/**', '.github/workflows/engine-bundle.yml') }}
