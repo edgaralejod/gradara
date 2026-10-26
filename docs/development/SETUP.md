@@ -11,7 +11,7 @@ Run commands from the repository root. This guide is for working on Gradara from
 | Node.js / npm | Node 22.13 or newer. CI uses the Node 22 line. Use the committed npm lockfile. |
 | Python | Python 3.12 is the development and CI baseline. Use a repository-local virtual environment. |
 | Simulation engine | For a source checkout: either native OpenModelica 1.27 with the Modelica Standard Library 4.1.0 (Windows, Linux), or a running Docker-compatible engine for the `gradara-engine` image (macOS default, optional elsewhere). Settings → Engine in the app sets up either one. Installed desktop apps carry their own engine instead ([built-in engine bundles](#built-in-engine-bundles)). |
-| AI provider | Optional, for block generation, model building and editing, diagnosis, explaining results, and C templates: Gradara AI (sign in), your own OpenAI or Anthropic key, or the Codex CLI. See [agent setup](../AGENT_SETUP.md). |
+| AI provider | Optional, for block generation, model building and editing, discussing the model, diagnosis, explaining results, drawing symbols, and C templates: Gradara AI (sign in), your own OpenAI or Anthropic key, or the Codex CLI. See [agent setup](../AGENT_SETUP.md). |
 
 Supported operating systems, default engines, and CI coverage are listed in [supported platforms](../PLATFORMS.md).
 

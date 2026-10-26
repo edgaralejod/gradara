@@ -71,7 +71,7 @@ Results belong to the model exactly as it ran. Changing parameters, connections,
 | "Not enough credits" | Buy credits in **Settings → AI**. Your balance updates when you return from checkout; choose **Refresh** if it does not. |
 | Credits missing after a purchase | Choose **Refresh**. If they still do not appear, email support@virtu-services.us with your account email and the Stripe receipt. |
 | "rejected the API key" | Your OpenAI or Anthropic key is wrong or revoked. Paste a new one in **Settings → AI**. |
-| "does not recognize the model" | Clear the **Model** field to use the default, or enter a model your account can use. |
+| "does not recognize the model" | Clear the **Planner model** or **Executor model** field in Settings → AI to use that role's default, or enter a model your account can use. |
 | Rate limit, or service temporarily unavailable | Wait a minute and try again. Gradara AI does not charge for requests that fail before producing output. |
 | "Could not reach …: the secure connection failed (certificate check)" | Something between you and the service inspects HTTPS traffic (a company proxy or security software). Allow `api.gradara.app`, `api.openai.com`, or `api.anthropic.com` in it, or try another network. |
 | "Could not reach …: the server name could not be resolved", "the connection was refused", "the HTTP proxy refused the connection" | Check your internet connection, firewall, or `HTTPS_PROXY`. Requests that never reached the service are repeated twice automatically before this appears. |
@@ -146,7 +146,7 @@ A source checkout has no built-in engine, so **Automatic** prefers a ready nativ
 
 - If `omc` is not on `PATH` or in a standard location, set `GRADARA_OMC` to its path.
 - On macOS, Gradara uses the `colima-gradara` Docker context when it exists, otherwise the default context when its daemon answers (OrbStack or Docker Desktop), otherwise `colima-gradara`, which it can start. Set `GRADARA_DOCKER_CONTEXT` to force a context.
-- The launcher builds or pulls the image when it is missing. The first build needs network access. The runtime must be able to mount the run folders and have enough disk and memory. On Linux, the image's `ENGINE_UID` should match the user that creates run folders. See [setup](SETUP.md) and the [manual engine build](TESTING.md).
+- The launcher builds the image when it is missing; **Settings → Engine → Set up** first tries to pull the published image, then builds. The first build needs network access. The runtime must be able to mount the run folders and have enough disk and memory. On Linux, the image's `ENGINE_UID` should match the user that creates run folders. See [setup](SETUP.md) and the [manual engine build](TESTING.md).
 
 ### Run diagnostics on disk
 

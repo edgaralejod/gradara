@@ -12,7 +12,7 @@ The TypeScript contract is [model.ts](../../lib/gradara/model.ts); validation li
 | `blocks` | Instances with embedded definitions and presentation data. |
 | `wires`, `junctions` | Connectivity and drawn route geometry. |
 | `nets` | Optional legacy field; current documents reconcile stable logical nets. |
-| `duration` | Simulation stop time, in seconds. Server accepts greater than 0 and at most 86,400. Full-model agent planning retains its separate 60-second bound. |
+| `duration` | Simulation stop time, in seconds. Server accepts greater than 0 and at most 86,400. A model built by the AI is limited to a 60 s stop time (`Assembly.duration` in `server/model_agent.py`). |
 | `simulation` | Optional solver settings; absent means the defaults. See [simulation settings](#simulation-settings). |
 | `logPhysical` | Optional; `true` records the physical variables of every physical block for Results. See [results](EXECUTION.md#results). |
 | `revision` | Edit/undo revision. Save concurrency instead uses a separate content-hash `saveVersion` token. |

@@ -14,7 +14,7 @@ Every part is a library block with its own Help page. The top level shows the ph
 - **IT load:** two **Resistor (thermal)** blocks, 600 kW and 300 kW at 800 V, whose electrical loss all leaves as heat. A **Switch (Boolean)** connects the second at 10 minutes (**Boolean step**). A **Heat flow sensor** reports the IT heat.
 - **Rack mass** and **Room** are **Heat capacitors** (20 and 10 MJ/K, starting at 30 °C and 24 °C), joined by a **Thermal conductor** of 100 kW/K.
 - **Cooling plant:** the command, limited by the available capacity (a **Pulse** takes half of it away from 30 to 35 minutes), times the 1,200 kW rating gives the heat removed. A **Heat flow source** takes it out of the room, and a **Controlled current** draws the plant's electricity, heat removed / COP 4, from the 800 V supply.
-- **Controller:** a sampled **PI controller** (1 s) on room temperature against the 24 °C setpoint, added to a base command of 0.5 that balances the starting load. Its output limit of ±0.5 keeps the command within 0–1. It is pure signal flow, so it exports to C.
+- **Controller:** a sampled **PI (discrete)** controller (1 s) on room temperature against the 24 °C setpoint, added to a base command of 0.5 that balances the starting load. Its output limit of ±0.5 keeps the command within 0–1. It is pure signal flow, so it exports to C.
 - **Temperature sensors** and a 273.15 K offset give the room and rack temperatures in °C.
 
 ## Scenario

@@ -15,7 +15,7 @@ Before 1.0, any part of Gradara may change, including the document format, witho
 
 | Task | Scope | Done when |
 | --- | --- | --- |
-| AI onboarding | Settings → AI already covers provider choice, per-provider model selection, key verification, and Gradara AI sign-in, and error cards in the Proposals tab offer **Open Settings** when setup or sign-in is missing. Remaining: in-context messages for rejected keys, exhausted credits, and vendor outages, and hiding AI controls when AI is off. | A first-time user can distinguish missing setup, sign-in, credit, and vendor failures from the Ask bar and Proposals tab. Status probes never trigger paid generations. |
+| AI onboarding | Settings → AI already covers provider choice, planner and executor model selection per provider, key verification, and Gradara AI sign-in, and error cards in the Proposals tab offer **Open Settings** when setup or sign-in is missing. Remaining: in-context messages for rejected keys, exhausted credits, and vendor outages, and hiding AI controls when AI is off. | A first-time user can distinguish missing setup, sign-in, credit, and vendor failures from the Ask bar and Proposals tab. Status probes never trigger paid generations. |
 | Keyboard and screen-reader access | Focus, discoverable actions, model dialogs, and canvas navigation. | A new user can create/open/run a model using the keyboard; assistive-technology sessions verify accessible names, focus return, and error recovery. |
 | Lint cleanup | Small groups of existing workspace, editor, and UI primitive findings. | The strict lint command passes without blanket rule suppression; interaction regressions are checked. |
 | Simulation settings | Initialization options and parameter sweeps (the solver, tolerance, maximum step, output interval, and fixed step are per-model settings with in-app help). | Settings have useful defaults, are validated and recorded with each immutable run, and expose failures clearly. |
@@ -57,7 +57,7 @@ Every installer now includes its engine (a Linux VM on macOS). Remaining:
 ## AI service
 
 - Move prompt templates server-side for Gradara AI so the gateway accepts task inputs instead of full prompts.
-- Add streaming progress for long model builds, and a usage view (credits per operation) in Settings.
+- Add a usage view (credits per operation) in Settings. (Long model builds already show their plan and per-step progress.)
 - Consider subscriptions with included credits once usage patterns are known; keep prepaid packs.
 - Add local-model support (for example an OpenAI-compatible local endpoint) as another provider behind the same interface.
 
