@@ -1,8 +1,19 @@
 import { categoryOf } from './catalog';
-import { isBoundary, isInstance } from './hierarchy';
+import { findSubsystem, isBoundary, isInstance, refsOf } from './hierarchy';
 import type { Block, LibraryCategoryId, Project } from './model';
 import { isCausal } from './model';
 import { flattenWires } from './net';
+import {
+  effective,
+  formatCount,
+  formatSeconds,
+  isFixed,
+  MAX_POINTS,
+  stepsFor,
+  type EffectiveSettings,
+  type SimulationSettings,
+  type SolverId,
+} from './solver';
 
 /** What C code is generated for: one subsystem instance, or a set of blocks on the open sheet. */
 export type CodeUnit =
@@ -10,6 +21,7 @@ export type CodeUnit =
   | { kind: 'selection'; blockIds: string[] };
 
 export type CodegenOptions = {
+  /** Absent: the model's fixed step. A value overrides it, and the code then matches no run. */
   step?: number;
   method: 'forward' | 'backward' | 'tustin';
   real: 'double' | 'float';
@@ -28,6 +40,10 @@ export type CodegenResult =
       ok: true;
       files: Record<string, string>;
       step: number;
+      /** Where the step came from: Simulation settings, or the Step field. */
+      stepSource: 'model' | 'option';
+      /** The model's effective simulation settings, as the service read them. */
+      solver: EffectiveSettings;
       inputs: CodegenPort[];
       outputs: CodegenPort[];
       blocks: string[];
@@ -176,4 +192,139 @@ export function codegenBody(
     options,
     ...(runId ? { runId } : {}),
   });
+}
+
+/** The solver names Simulation settings shows (solver-docs.ts), for the readiness lines. */
+const SOLVER_NAMES: Record<SolverId, string> = {
+  dassl: 'DASSL',
+  esdirk: 'Implicit Runge-Kutta',
+  backwardEuler: 'Backward Euler',
+  rk4: 'Runge-Kutta 4',
+};
+
+/** Most controller steps a verification replays (server/codegen.py MAX_SIL_STEPS). */
+export const MAX_SIL_STEPS = 500_000;
+
+/** The kinds whose sample period sets the rate a controller runs at. */
+const SAMPLED_PERIOD_IDS = new Set(['samplePeriod', 'Ts']);
+
+/** The blocks a unit is made of, nested subsystems included. */
+export function unitBlocks(doc: Project, sheet: Project, unit: CodeUnit): Block[] {
+  const out: Block[] = [];
+  const seen = new Set<string>();
+  const visit = (block: Block) => {
+    out.push(block);
+    if (!isInstance(block)) return;
+    for (const ref of refsOf(block.definition)) {
+      if (seen.has(ref)) continue;
+      seen.add(ref);
+      for (const inner of findSubsystem(doc, ref)?.blocks ?? []) visit(inner);
+    }
+  };
+  for (const id of unitBlockIds(unit)) {
+    const block = sheet.blocks.find((b) => b.id === id);
+    if (block) visit(block);
+  }
+  return out;
+}
+
+/**
+ * The fixed step to switch the model to for a unit: its shortest sample period,
+ * so sampled blocks run every step, or else the spacing the model records at now.
+ */
+export function suggestedFixedStep(doc: Project, sheet: Project, unit: CodeUnit): number {
+  const periods = unitBlocks(doc, sheet, unit).flatMap((b) =>
+    b.definition.parameters
+      .filter((p) => SAMPLED_PERIOD_IDS.has(p.id) && typeof p.value === 'number' && p.value > 0)
+      .map((p) => p.value as number),
+  );
+  if (periods.length) return Math.min(...periods);
+  const run = effective(doc.duration, doc.simulation);
+  return doc.duration / run.points;
+}
+
+/** The settings Use fixed step writes: Runge-Kutta 4 at the step, other fields kept. */
+export function fixedStepSettings(settings: SimulationSettings | undefined, step: number): SimulationSettings {
+  return { ...settings, solver: 'rk4', step };
+}
+
+export type TimingLine = {
+  ok: boolean;
+  text: string;
+  /** What the line's button does, when there is one. */
+  action?: 'use-fixed-step' | 'run';
+};
+
+export type Readiness = {
+  solver: TimingLine;
+  run: TimingLine;
+  /** Controller steps over the stop time, at the code's step. */
+  steps: number;
+  /** A caution that does not stop generation: too many steps to verify, or an overriding step. */
+  warning?: string;
+};
+
+/** The last run, as the readiness list needs it. */
+export type LastRun = {
+  id: string;
+  /** Absent on runs from before 0.6.9: the defaults, a variable-step solver. */
+  simulation?: EffectiveSettings;
+  /** The model changed since the run (its semantic signature differs). */
+  stale: boolean;
+};
+
+/**
+ * The Timing section of the C code flow: whether the model has a fixed step the
+ * code can take, and whether the last run is one the code can be verified against.
+ */
+export function readiness(
+  doc: Project,
+  stepOverride: number | undefined,
+  lastRun: LastRun | undefined,
+): Readiness {
+  const settings = effective(doc.duration, doc.simulation);
+  const fixed = isFixed(settings.solver);
+  const step = stepOverride ?? settings.step;
+  const solver: TimingLine = fixed
+    ? {
+        ok: true,
+        text: `${SOLVER_NAMES[settings.solver]} · step ${formatSeconds(settings.step!)} · from Simulation settings`,
+      }
+    : {
+        ok: false,
+        text: `${SOLVER_NAMES[settings.solver]} is a variable-step solver. C code steps at one fixed rate.`,
+        action: 'use-fixed-step',
+      };
+  const steps = step ? stepsFor(doc.duration, step) : 0;
+  let run: TimingLine;
+  if (!step)
+    run = { ok: false, text: 'Choose a fixed step first, then run the model to verify the code.' };
+  else if (!lastRun)
+    run = { ok: false, text: 'Run the model with this step to verify the code.', action: 'run' };
+  else if (lastRun.stale)
+    run = { ok: false, text: 'The model changed since the last run. Run it again to verify the code.', action: 'run' };
+  else {
+    const used = lastRun.simulation ?? effective(doc.duration, undefined);
+    if (!isFixed(used.solver))
+      run = {
+        ok: false,
+        text: `The last run used ${SOLVER_NAMES[used.solver]}, a variable-step solver. Run the model with the fixed step to verify the code.`,
+        action: 'run',
+      };
+    else if (Math.abs(used.step! - step) > 1e-9 * step)
+      run = {
+        ok: false,
+        text: `The last run stepped every ${formatSeconds(used.step!)}; the code steps every ${formatSeconds(step)}. Run the model again to verify the code.`,
+        action: 'run',
+      };
+    else run = { ok: true, text: `Last run matches · ${formatCount(steps)} steps of ${formatSeconds(step)}` };
+  }
+  let warning: string | undefined;
+  if (stepOverride !== undefined && fixed && Math.abs(stepOverride - settings.step!) > 1e-9 * stepOverride)
+    warning = `The code steps every ${formatSeconds(stepOverride)}, not the model's ${formatSeconds(settings.step!)}. Leave Step blank to match the model and verify.`;
+  else if (steps > MAX_SIL_STEPS)
+    warning = `Verification replays up to ${formatCount(MAX_SIL_STEPS)} steps; this run has ${formatCount(steps)}. Shorten the stop time or use a longer step.`;
+  else if (steps > MAX_POINTS)
+    warning = `A run of ${formatCount(steps)} steps is over the limit of ${formatCount(MAX_POINTS)}. Shorten the stop time or use a longer step.`;
+  return { solver, run, steps, warning };
 }

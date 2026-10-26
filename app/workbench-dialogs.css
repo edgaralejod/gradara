@@ -867,6 +867,120 @@
   font-size: var(--text-micro);
 }
 
+/* Generate C code: three numbered steps; Timing is a readiness list. */
+.codegen-dialog {
+  max-width: 640px !important;
+}
+.codegen-dialog.has-artifact {
+  max-width: 760px !important;
+}
+.codegen-dialog .codegen-step {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #d4dde4;
+  border-radius: 2px;
+  background: #eef2f5;
+}
+.codegen-dialog .codegen-step > * {
+  min-width: 0;
+}
+.codegen-dialog .codegen-step h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--text-ui);
+  font-weight: 600;
+  color: #354b5b;
+}
+.codegen-dialog .codegen-step h3 > span {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #354b5b;
+  color: white;
+  font-size: var(--text-micro);
+  font-weight: 600;
+}
+.codegen-dialog .controller-picker {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.codegen-dialog .codegen-readiness {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.codegen-dialog .codegen-readiness li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #d4dde4;
+  border-radius: 2px;
+  background: white;
+  line-height: 1.4;
+}
+.codegen-dialog .codegen-readiness li.is-ok {
+  border-color: #bfdcc5;
+}
+.codegen-dialog .codegen-mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: #637987;
+}
+.codegen-dialog .codegen-readiness li.is-ok .codegen-mark {
+  color: #2f6b3a;
+}
+.codegen-dialog .codegen-line {
+  flex: 1 1 240px;
+  min-width: 0;
+  color: #304757;
+}
+.codegen-dialog .codegen-readiness button[data-slot='button'] {
+  margin-left: auto;
+  height: 26px;
+  min-height: 26px;
+  white-space: nowrap;
+}
+.codegen-dialog :is(.codegen-caution, .codegen-pending) {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--text-micro);
+  line-height: 1.45;
+}
+.codegen-dialog .codegen-caution {
+  color: #6b4a1f;
+}
+.codegen-dialog .codegen-pending {
+  color: #637987;
+}
+.codegen-dialog :is(.codegen-caution, .codegen-pending) > svg {
+  flex: none;
+  margin-top: 2px;
+}
+.codegen-dialog .codegen-summary {
+  margin: 0;
+  color: #526979;
+}
+.codegen-dialog .export-artifact {
+  margin: 0;
+}
+.codegen-dialog .codegen-actions {
+  margin: 0;
+  flex-wrap: wrap;
+}
+
 /* Examples and Block examples: a list beside a preview of the selected one. */
 .model-browser .example-gallery {
   display: grid;

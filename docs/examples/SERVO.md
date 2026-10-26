@@ -30,9 +30,9 @@ The signal path is position request → **Discrete PID** → controlled voltage 
 
 ## Export the controller to C
 
-1. Run the model once, so there is a run to check against.
-2. Choose **Export**. Under **C code**, the **Unit** list already shows **Detected controller: Position controller (PID)**. You can also select the block first to pick it explicitly.
-3. The time step defaults to the controller's 1 ms sample period. Review `controller.h`, `controller.c`, and `README.md` in the preview. **Copy** copies the open tab.
+1. Choose **C code** in the header. Under **Unit**, the list already shows **Detected controller: Position controller (PID)**. You can also select the block first to pick it explicitly.
+2. Under **Timing**, the example runs the variable-step DASSL solver, so the first line offers **Use fixed step**. Choose it: the model switches to Runge-Kutta 4 at the controller's 1 ms sample period. The second line asks for a run at that step; choose **Run**.
+3. Once the run finishes, both lines are ticked and the code appears: `controller.h`, `controller.c`, and `README.md`, stepping every 1 ms. **Copy** copies the open tab.
 4. Choose **Verify against last run**. Gradara compiles the code and feeds it the position request and measured angle from your run, one step at a time. Because the Discrete PID is sampled, the C code matches the simulated voltage command to rounding error.
 5. **Download .zip** saves the three files.
 

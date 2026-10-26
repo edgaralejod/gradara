@@ -14,16 +14,32 @@ from server import app as service
 from server import engines
 from server.codegen import (CodegenError, CodegenOptions, CodegenRequest, archive, generate, parse_outputs, sil_main,
                             verify)
+from server import solver
 from server.modelica import semantic_hash
-from server.models import Project
+from server.models import Project, SimulationSettings
 from tests.recording import log_outputs
 
 ROOT = Path(__file__).resolve().parents[1]
 gcc = pytest.mark.skipif(shutil.which('gcc') is None, reason='needs a C compiler')
 
 
-def example(name):
+# The fixed step each example runs at for code generation: the controller's sample period, or, for the
+# flyback, a step that resolves its switching inside the run's point limit (0.3 s / 2 µs = 150,000).
+FIXED_STEP = {'dc': 1e-3, 'servo': 1e-3, 'foc': 1e-4, 'flyback': 2e-6, 'grouped-dc': 1e-3}
+
+
+def fixed(project, step):
+    """The project set to run Runge-Kutta 4 at `step`, as the C code flow's Use fixed step does."""
+    return project.model_copy(update={'simulation': SimulationSettings(solver='rk4', step=step)})
+
+
+def raw_example(name):
+    """The shipped example, which runs the default variable-step solver."""
     return Project.model_validate(json.loads((ROOT/'models/examples'/f'{name}.json').read_text(encoding='utf-8')))
+
+
+def example(name):
+    return fixed(raw_example(name), FIXED_STEP[name])
 
 
 def block(ident, kind, ports, params=(), **extra):
@@ -64,14 +80,24 @@ def test_selection_finds_its_inputs_and_outputs():
     g = generate(example('dc'), [], None, ['controller'], CodegenOptions())
     assert sorted(i['column'] for i in g.inputs) == ['reference.y', 'sensor.w']
     assert [o['column'] for o in g.outputs] == ['controller.y']
-    assert g.step == 0.001  # the PI sample period
+    assert g.step == 0.001 and g.step_source == 'model'  # the model's fixed step
     assert set(g.files) == {'controller.h', 'controller.c', 'README.md'}
     assert 'controller_step' in g.files['controller.h'] and 'controller_Params' in g.files['controller.h']
 
 
+def test_variable_step_models_are_refused_unless_a_step_is_given():
+    with pytest.raises(CodegenError, match='fixed-step model.*DASSL'):
+        generate(raw_example('dc'), [], None, ['controller'], CodegenOptions())
+    g = generate(raw_example('dc'), [], None, ['controller'], CodegenOptions(step=0.0005))
+    assert g.step == 0.0005 and g.step_source == 'option' and g.solver['solver'] == 'dassl'
+    # A fixed-step model with a blank step runs at the default number of points; the code follows it.
+    blank = raw_example('dc').model_copy(update={'simulation': SimulationSettings(solver='backwardEuler')})
+    assert generate(blank, [], None, ['controller'], CodegenOptions(step=0.001)).solver['step'] == 4 / 6000
+
+
 def test_generation_is_deterministic():
-    a = generate(example('foc'), [], None, FOC, CodegenOptions(step=1e-4))
-    b = generate(example('foc'), [], None, list(reversed(FOC)), CodegenOptions(step=1e-4))
+    a = generate(example('foc'), [], None, FOC, CodegenOptions())
+    b = generate(example('foc'), [], None, list(reversed(FOC)), CodegenOptions())
     assert a.files == b.files
     assert archive(a) == archive(b)
 
@@ -80,8 +106,8 @@ def test_generation_is_deterministic():
 @pytest.mark.parametrize('method', ['forward', 'backward', 'tustin'])
 @pytest.mark.parametrize('real', ['double', 'float'])
 def test_generated_code_compiles_cleanly(tmp_path, method, real):
-    for name, ids, step in [('dc', ['controller'], None), ('servo', ['controller'], None), ('foc', FOC, 1e-4)]:
-        g = generate(example(name), [], None, ids, CodegenOptions(method=method, real=real, step=step))
+    for name, ids in [('dc', ['controller']), ('servo', ['controller']), ('foc', FOC)]:
+        g = generate(example(name), [], None, ids, CodegenOptions(method=method, real=real))
         folder = tmp_path/name
         folder.mkdir()
         run_c(folder, g, [[0.0] * len(g.inputs)] * 3)
@@ -133,7 +159,7 @@ def test_algebraic_loop_is_reported():
                     block('b', 'gain', [('u', 'input'), ('y', 'output')], [('k', 0.5)]),
                     wire('w1', 'a', 'y', 'b', 'u'), wire('w2', 'b', 'y', 'a', 'u'))
     with pytest.raises(CodegenError, match='algebraic loop') as info:
-        generate(project, [], None, ['a', 'b'], CodegenOptions())
+        generate(fixed(project, 0.01), [], None, ['a', 'b'], CodegenOptions())
     assert sorted(info.value.block_ids) == ['a', 'b']
 
 
@@ -152,7 +178,7 @@ def test_blocks_without_a_template_are_named():
         generate(Project.model_validate(data), [], None, ['controller', 'odd'], CodegenOptions())
     assert info.value.block_ids == ['odd']
     with pytest.raises(CodegenError, match='physical') as info:
-        generate(example('foc'), [], None, FOC + ['inverter'], CodegenOptions(step=1e-4))
+        generate(example('foc'), [], None, FOC + ['inverter'], CodegenOptions())
     assert info.value.block_ids == ['inverter']
 
 
@@ -162,7 +188,7 @@ def test_sample_period_must_fit_the_step():
 
 
 def test_selection_inside_a_subsystem_uses_nested_result_names():
-    project = Project.model_validate(json.loads((ROOT/'tests/fixtures/grouped-dc.json').read_text(encoding='utf-8')))
+    project = fixed(Project.model_validate(json.loads((ROOT/'tests/fixtures/grouped-dc.json').read_text(encoding='utf-8'))), 1e-3)
     g = generate(project, ['b_grp000e'], None, ['controller'], CodegenOptions())
     assert all(i['column'].startswith('b_grp000e.p_') for i in g.inputs)
     assert [o['column'] for o in g.outputs] == ['b_grp000e.controller.y']
@@ -197,7 +223,7 @@ def controller_subsystem():
 
 @gcc
 def test_subsystem_instance_is_a_unit(tmp_path):
-    g = generate(controller_subsystem(), [], 'c1', [], CodegenOptions(prefix='ctl'))
+    g = generate(fixed(controller_subsystem(), 0.01), [], 'c1', [], CodegenOptions(prefix='ctl'))
     assert [(i['label'], i['column']) for i in g.inputs] == [('r', 'ref.y'), ('m', 'meas.y')]
     assert [o['column'] for o in g.outputs] == ['c1.u']
     out = run_c(tmp_path, g, [[1.0, 0.25], [2.0, 0.5]], prefix='ctl')
@@ -207,18 +233,19 @@ def test_subsystem_instance_is_a_unit(tmp_path):
 def fake_run(tmp_path, project, rows, header):
     folder = tmp_path/'runs'/'run1'
     folder.mkdir(parents=True)
-    (folder/'result.json').write_text(json.dumps({'modelHash': semantic_hash(project), 'duration': project.duration}), encoding='utf-8')
+    (folder/'result.json').write_text(json.dumps({'modelHash': semantic_hash(project), 'duration': project.duration,
+                                                  'simulation': solver.effective(project.duration, project.simulation)}), encoding='utf-8')
     (folder/'simulation_res.csv').write_text(','.join(header) + '\n' + ''.join(','.join(map(repr, r)) + '\n' for r in rows), encoding='utf-8')
     return tmp_path/'runs'
 
 
 @gcc
 def test_verification_replays_the_last_run(tmp_path):
-    project = controller_subsystem()
+    project = fixed(controller_subsystem(), 0.005)
     project.duration = 0.1
     rows = [[k * 0.01, 1.0 + k * 0.01, 0.25, 3 * (0.75 + k * 0.01)] for k in range(11)]
     runs = fake_run(tmp_path, project, rows, ['time', 'ref.y', 'meas.y', 'c1.u'])
-    request = CodegenRequest(project=project, instanceId='c1', runId='run1', options=CodegenOptions(step=0.005))
+    request = CodegenRequest(project=project, instanceId='c1', runId='run1')
     report = asyncio.run(verify(request, runs, engines.NATIVE.run_c))
     assert report['ok'] and report['steps'] == 21
     assert report['outputs'][0]['maxError'] < 1e-9
@@ -229,7 +256,7 @@ def test_verification_replays_the_last_run(tmp_path):
 
 
 def test_verification_needs_a_matching_run(tmp_path):
-    project = controller_subsystem()
+    project = fixed(controller_subsystem(), 0.01)
     runs = fake_run(tmp_path, project, [[0, 1, 0.25, 2.25]], ['time', 'ref.y', 'meas.y', 'c1.u'])
     changed = project.model_copy(deep=True)
     changed.blocks[0].definition.parameters[0].value = 2
@@ -237,6 +264,16 @@ def test_verification_needs_a_matching_run(tmp_path):
         asyncio.run(verify(CodegenRequest(project=changed, instanceId='c1', runId='run1'), runs, engines.NATIVE.run_c))
     with pytest.raises(CodegenError, match='Run the model first'):
         asyncio.run(verify(CodegenRequest(project=project, instanceId='c1'), runs, engines.NATIVE.run_c))
+    # The run must step at the code's step: an overridden step, or a run of the model before the step changed, is refused.
+    with pytest.raises(CodegenError, match='stepped every 0.01 s, but the code steps every 0.002 s'):
+        asyncio.run(verify(CodegenRequest(project=project, instanceId='c1', runId='run1', options=CodegenOptions(step=0.002)),
+                           runs, engines.NATIVE.run_c))
+    # A variable-step run (or one from before settings were recorded) cannot verify fixed-step code.
+    loose = controller_subsystem()
+    runs = fake_run(tmp_path/'loose', loose, [[0, 1, 0.25, 2.25]], ['time', 'ref.y', 'meas.y', 'c1.u'])
+    with pytest.raises(CodegenError, match='DASSL, a variable-step solver'):
+        asyncio.run(verify(CodegenRequest(project=loose, instanceId='c1', runId='run1', options=CodegenOptions(step=0.01)),
+                           runs, engines.NATIVE.run_c))
 
 
 def test_api_generates_and_reports_problems():
@@ -244,6 +281,9 @@ def test_api_generates_and_reports_problems():
     body = {'project': example('dc').model_dump(exclude_none=True), 'blockIds': ['controller']}
     data = client.post('/api/codegen', json=body).json()
     assert data['ok'] and 'controller.c' in data['files'] and data['step'] == 0.001
+    assert data['stepSource'] == 'model' and data['solver']['solver'] == 'rk4' and data['solver']['step'] == 0.001
+    loose = client.post('/api/codegen', json=body | {'project': raw_example('dc').model_dump(exclude_none=True)}).json()
+    assert not loose['ok'] and 'fixed-step model' in loose['error'] and loose['blockIds'] == []
     bad = client.post('/api/codegen', json=body | {'blockIds': ['controller', 'drive']}).json()
     assert not bad['ok'] and bad['blockIds'] == ['drive']
     zipped = client.post('/api/codegen/archive', json=body)
@@ -251,15 +291,17 @@ def test_api_generates_and_reports_problems():
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize('name,ids,step,path', [
-    ('dc', ['controller'], None, []),
-    ('servo', ['controller'], None, []),
-    ('foc', FOC, 1e-4, []),
-    ('grouped-dc', ['controller'], None, ['b_grp000e']),
-    ('flyback', 'control', None, []),
+@pytest.mark.parametrize('name,ids,path', [
+    ('dc', ['controller'], []),
+    ('servo', ['controller'], []),
+    ('foc', FOC, []),
+    ('grouped-dc', ['controller'], ['b_grp000e']),
+    ('flyback', 'control', []),
 ])
-def test_generated_code_reproduces_the_simulation(name, ids, step, path):
-    """Software in the loop: the compiled controller, fed the simulated plant signals, gives the simulated commands."""
+def test_generated_code_reproduces_the_simulation(name, ids, path):
+    """Software in the loop: the compiled controller, fed the simulated plant signals, gives the simulated commands.
+
+    Each model runs at the fixed step the code is generated for (`FIXED_STEP`), as the C code flow requires."""
     import os
     import platform
     import uuid
@@ -275,12 +317,12 @@ def test_generated_code_reproduces_the_simulation(name, ids, step, path):
 
     from server.engine import RUNS, simulate
     source = ROOT/'tests/fixtures/grouped-dc.json' if name == 'grouped-dc' else ROOT/'models/examples'/f'{name}.json'
-    project = Project.model_validate_json(source.read_text(encoding='utf-8'))
+    project = fixed(Project.model_validate_json(source.read_text(encoding='utf-8')), FIXED_STEP[name])
     run_id = 'sil' + uuid.uuid4().hex[:10]
     asyncio.run(simulate(log_outputs(project), run_id))
     # A string names a subsystem instance: the whole controller is the code unit.
     unit = {'instanceId': ids} if isinstance(ids, str) else {'blockIds': ids}
-    request = CodegenRequest(project=project, path=path, runId=run_id, options=CodegenOptions(step=step), **unit)
+    request = CodegenRequest(project=project, path=path, runId=run_id, **unit)
     report = asyncio.run(verify(request, RUNS, engines.run_c))
     assert report['ok'], report
 
@@ -298,7 +340,7 @@ def test_unit_delay_block_delays_by_one_sample_in_the_simulation():
                             'equations': 'when sample(0, Ts) then\n  y = pre(stored);\n  stored = u;\nend when;'}
     sink = block('out', 'terminator', [('u', 'input')])
     sink['definition'] |= {'declarations': 'Real unused;', 'equations': 'unused = u;'}
-    project = chain(ramp, delay, sink, wire('w1', 'src', 'y', 'z', 'u'), wire('w2', 'z', 'y', 'out', 'u'))
+    project = fixed(chain(ramp, delay, sink, wire('w1', 'src', 'y', 'z', 'u'), wire('w2', 'z', 'y', 'out', 'u')), 0.01)
     run_id = 'ud' + uuid.uuid4().hex[:10]
     result = asyncio.run(simulate(log_outputs(project), run_id))
     series = next(s for s in result['series'] if s['key'] == 'z.y')

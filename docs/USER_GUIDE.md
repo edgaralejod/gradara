@@ -110,7 +110,7 @@ The gear button at the top right opens **Settings**. It has five tabs:
 - **Examples** lists the complete example systems (motor drives, converters, the EV, data-center cooling), and **Block examples** the small model for each library block, grouped by area. Select one to preview its diagram and description; search block examples by any block they use. **Use example** (or double-click, or Enter) saves a new copy in My models. Changing the copy never changes the example.
 - **Trash** holds models you removed. Use the trash icon on a row to remove a model (open a different model first if it is the one you are editing). Click a model in Trash to restore it. Trash is never emptied automatically.
 
-**Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists; a file that is not a Gradara model is reported in the browser, with the reason, and nothing is added. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`), Modelica source, or C code. Gradara cannot import Modelica files.
+**Save a copy** saves your current edits as a separate model. **Import file** opens a `.gradara.json` file as a new model, even if a model with the same identity already exists; a file that is not a Gradara model is reported in the browser, with the reason, and nothing is added. Copies and imports always get a distinct name. **Export** downloads a Gradara project file (`.gradara.json`) or Modelica source; **C code** generates a controller's C ([Generate C code](#generate-c-code)). Gradara cannot import Modelica files.
 
 ### Saving
 
@@ -345,23 +345,28 @@ The **Problems** tab sits in the dock under the canvas. Open or close it from th
 
 ## Export
 
-![The Export dialog with C code for the servo example's position controller](images/export.webp)
-
 **Export** in the header offers:
 
 - **Modelica source**: the complete model as a `.mo` file, with equations, parameters, and connections. Editing the `.mo` file does not change your diagram.
 - **Gradara project**: a `.gradara.json` file with the diagram, layout, and custom blocks. Import it on another computer with **Models → Import file**.
-- **C code** for a controller.
+- **C code for a controller**, which opens [Generate C code](#generate-c-code).
 
-### C code
+## Generate C code
 
-Under **C code**, the **Unit** list offers the selected blocks or selected subsystem, the controller Gradara detected on the open sheet, and each subsystem on the sheet. The detected controller is the group of connected signal blocks between the plant's sensors and actuators, plus constants that only feed it. A group that contains a controller block such as **PI controller** is preferred.
+![Generate C code with the servo example's position controller: the unit, the timing checks, and the code](images/codegen.webp)
 
-Choose how continuous blocks are discretized (Tustin, backward Euler, or forward Euler), `double` or `float`, the time step (empty uses the fastest sample period), and a file name. The preview updates as you change them: a header with `In`, `Out`, `Params`, and `State` structs and `init` and `step` functions, the C source, and a README. **Show** selects the unit's blocks on the canvas. **Download .zip** saves the three files.
+**C code** in the header (or **Generate C code…** in the command palette) generates C for a controller in three steps. The code runs at one fixed step, the same step your model simulates with, so a run of the model can verify it.
+
+1. **Unit.** The list offers the selected blocks or selected subsystem, the controller Gradara detected on the open sheet, and each subsystem on the sheet. The detected controller is the group of connected signal blocks between the plant's sensors and actuators, plus constants that only feed it. A group that contains a controller block such as **PI controller** is preferred. **Show** selects the unit's blocks on the canvas.
+2. **Timing.** Two checks, each with its fix beside it:
+   - The model must use a fixed-step solver. The line shows the solver and step from [Simulation settings](#simulation-settings) (for example *Runge-Kutta 4 · step 1 µs*). With a variable-step solver there is no step for the code to take, so nothing is generated; **Use fixed step** switches the model to Runge-Kutta 4 at the unit's shortest sample period (or, for a continuous controller, the spacing the run records at). Change the step in Simulation settings if you want another; the code follows it.
+   - The last run must be of this model at that step. Otherwise the line says what differs (no run, the model changed, a variable-step run, or another step) and **Run** runs the model from here.
+   A caution appears when the run has more steps than verification replays (500,000) or than a run allows (200,000): shorten the stop time or use a longer step.
+3. **Code.** Choose how continuous blocks are discretized (Tustin, backward Euler, or forward Euler), `double` or `float`, and a file name. **Step (s)** is normally blank: the code takes the model's step. A value here overrides it for the download, and the code then matches no run until you run the model at that step. The preview updates as you change the options: a header with `In`, `Out`, `Params`, and `State` structs and `init` and `step` functions, the C source, and a README. **Download .zip** saves the three files.
 
 The unit must contain only signal blocks. If it contains a physical block, an algebraic loop, or a block without a C template, the dialog says so and **Show** selects the blocks involved. For a custom AI block, it offers to write a C template for that block with your AI provider. The template is checked, compiled, and saved with the block, so later exports need no AI. Editing the block's equations or ports makes the template out of date, and the dialog offers a new one.
 
-**Verify against last run** compiles the code and feeds it the inputs your last run recorded, step by step, then compares its outputs with the simulation. It needs a run of the current model and uses the built-in engine's C compiler (see [The simulation engine](INSTALL.md#the-simulation-engine)). Sampled controllers match to rounding error. Continuous controllers differ by their discretization, and a difference beyond 2% of an output's range fails the check. Verification runs the controller on its own, without the plant. It does not replace testing on your hardware. The [servo example](examples/SERVO.md) walks through it.
+**Verify against last run** is available once both Timing checks pass. It compiles the code and feeds it the inputs your last run recorded at every step, then compares its outputs with the simulation. It uses the built-in engine's C compiler (see [The simulation engine](INSTALL.md#the-simulation-engine)). Sampled controllers match to rounding error. Continuous controllers differ by their discretization, and a difference beyond 2% of an output's range fails the check. Verification runs the controller on its own, without the plant. It does not replace testing on your hardware. The [servo example](examples/SERVO.md) walks through it.
 
 ## AI features
 
@@ -498,4 +503,4 @@ Open any of these from **Examples**. Each guide describes what the model shows, 
 - Examples use illustrative parameters, not data-sheet values.
 - AI-generated blocks and edits pass compiler checks, but compiling does not make a model physically correct. Review them as you would any model.
 - Buses route signals but do not do math: a Gain, Sum, or other block takes one signal, so split a bus with a Demux or Bus Selector first. A signal bus is all Real or all Boolean, tags do not carry a bus, and C export does not accept buses. Modelica import, FMI, and HDL export are not available.
-- Exported C code is checked against the simulation, not on your target hardware.
+- Generated C code needs a fixed-step model and is checked against the simulation, not on your target hardware.

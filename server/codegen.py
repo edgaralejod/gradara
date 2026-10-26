@@ -4,9 +4,11 @@
 The unit is flattened (nested subsystems are inlined), checked to be signal-only,
 sorted by data dependency, and written as C from one small template per block
 type. Continuous states are discretized with forward Euler, backward Euler, or
-Tustin; sampled blocks run on counters derived from their sample period. The same
-model and options always give the same code. `verify` replays the unit's inputs
-from the last simulation through the compiled C and compares its outputs.
+Tustin; sampled blocks run on counters derived from their sample period. The code
+steps at the model's fixed step (a variable-step model is refused unless the
+`step` option is given). The same model and options always give the same code.
+`verify` replays the unit's inputs from the last simulation, which must be a
+fixed-step run at the code's step, through the compiled C and compares its outputs.
 """
 from __future__ import annotations
 
@@ -19,6 +21,7 @@ from typing import Callable, Literal
 
 from pydantic import BaseModel, Field
 
+from . import solver
 from .buses import BUS_KINDS
 from .models import BOUNDARY_KINDS, CAUSAL_DOMAINS, Block, Definition, Project, net_components
 
@@ -26,6 +29,7 @@ Method = Literal['forward', 'backward', 'tustin']
 
 
 class CodegenOptions(BaseModel):
+    # Absent means the model's fixed step; a value overrides it (the code then no longer matches a run).
     step: float | None = Field(default=None, gt=0, le=10)
     method: Method = 'tustin'
     real: Literal['float', 'double'] = 'double'
@@ -753,10 +757,30 @@ def template(node: Node, c: Ctx) -> Code:
 class Generated:
     files: dict[str, str]
     step: float
+    # Where the step came from: the model's fixed-step settings, or the `step` option.
+    step_source: Literal['model', 'option']
+    # The model's effective simulation settings (server/solver.py), for the workbench's readiness list.
+    solver: dict
     inputs: list[dict]
     outputs: list[dict]
     blocks: list[str]
     notes: list[str]
+
+
+def model_step(project: Project, options: CodegenOptions) -> tuple[float, Literal['model', 'option'], dict]:
+    """The step the code runs at: the `step` option, or else the model's fixed step.
+
+    A variable-step model has no step to match, so it is refused: the generated
+    code could not be verified against a run of it.
+    """
+    active = solver.effective(project.duration, project.simulation)
+    if options.step:
+        return options.step, 'option', active
+    if not solver.is_fixed(active['solver']):
+        raise CodegenError(f'Code generation needs a fixed-step model; this one uses {solver.NAMES[active["solver"]]}, '
+                           'a variable-step solver. In Simulation settings choose Runge-Kutta 4 or Backward Euler '
+                           'and the step the controller runs at.')
+    return active['step'], 'model', active
 
 
 def _order(unit: Unit, codes: dict[str, Code]) -> list[Node]:
@@ -793,14 +817,9 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
     unit = build_unit(project, path, instance_id, block_ids)
     if not unit.nodes:
         raise CodegenError('There are no blocks to generate code for.')
+    # The unit's own problems (physical blocks, buses) come first; the step is the next thing to settle.
+    h, step_source, active = model_step(project, options)
     real = options.real
-    periods = []
-    for node in unit.nodes:
-        for pid in ('samplePeriod', 'Ts'):
-            value = next((p.value for p in node.definition.parameters if p.id == pid), None)
-            if value and node.definition.kind in {'pi', 'discretePID', 'unitDelay', 'zoh', 'discreteIntegrator'}:
-                periods.append(value)
-    h = options.step or (min(periods) if periods else 1e-3)
     prefix = options.prefix
     ctype = {'signal': real, 'boolean': 'bool'}
 
@@ -900,8 +919,8 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
             if port.direction == 'output' and len(re.findall(rf'\b{name}\b', source)) == 1 + (1 if codes[node.key].period is not None else 0):
                 source = source.replace(f'  {ctype[port.domain]} {name};', f'  {ctype[port.domain]} {name}; (void){name};', 1)
     readme = _readme(project, prefix, h, options, unit, notes)
-    return Generated({f'{prefix}.h': '\n'.join(H), f'{prefix}.c': source, 'README.md': readme}, h, unit.inputs,
-                     unit.outputs, sorted({n.path + n.block_id for n in unit.nodes}), notes)
+    return Generated({f'{prefix}.h': '\n'.join(H), f'{prefix}.c': source, 'README.md': readme}, h, step_source, active,
+                     unit.inputs, unit.outputs, sorted({n.path + n.block_id for n in unit.nodes}), notes)
 
 
 def _readme(project, prefix, h, options, unit, notes) -> str:
@@ -1033,6 +1052,22 @@ def compare(expected: list[list[float]], actual: list[list[float]], outputs: lis
 SIL_TOLERANCE = 0.02
 
 
+def check_run_step(result: dict, generated: Generated) -> None:
+    """The run must step at the code's step, so the recorded signals are the ones the code would see.
+
+    Runs from before settings were recorded (0.6.9) used the defaults, a variable-step solver.
+    """
+    run = result.get('simulation') or solver.effective(float(result['duration']), None)
+    if not solver.is_fixed(run['solver']):
+        raise CodegenError(f'The last run used {solver.NAMES[run["solver"]]}, a variable-step solver, so its samples do not '
+                           f'fall on the code\'s {generated.step:g} s steps. Run the model with a fixed step of '
+                           f'{generated.step:g} s, then verify.')
+    if abs(run['step'] - generated.step) > 1e-9 * generated.step:
+        raise CodegenError(f'The last run stepped every {run["step"]:g} s, but the code steps every {generated.step:g} s. '
+                           + ('Run the model again, then verify.' if generated.step_source == 'model' else
+                              'Leave the step blank to use the model\'s step, or run the model with this step.'))
+
+
 async def verify(request: CodegenRequest, runs: Path, run_c) -> dict:
     """Replay the last run's inputs through the compiled C and compare against the outputs it recorded."""
     import json
@@ -1049,6 +1084,7 @@ async def verify(request: CodegenRequest, runs: Path, run_c) -> dict:
     if result.get('modelHash') != semantic_hash(request.project):
         raise CodegenError('The model changed since the last run. Run it again, then verify.')
     generated = generate(request.project, request.path, request.instanceId, request.blockIds, request.options)
+    check_run_step(result, generated)
     held_in, expected = replay_inputs(csv_file, generated, float(result['duration']))
     work = folder/f'sil-{uuid.uuid4().hex[:8]}'
     work.mkdir()
@@ -1083,7 +1119,8 @@ def archive(generated: Generated) -> bytes:
 
 
 def describe(generated: Generated) -> dict:
-    return {'files': generated.files, 'step': generated.step, 'inputs': [_public(i) for i in generated.inputs],
+    return {'files': generated.files, 'step': generated.step, 'stepSource': generated.step_source,
+            'solver': generated.solver, 'inputs': [_public(i) for i in generated.inputs],
             'outputs': [_public(o) for o in generated.outputs], 'blocks': generated.blocks, 'notes': generated.notes}
 
 

@@ -42,7 +42,7 @@ This is a switched model, not an averaged model, and the output is not forced to
 
 ## Controller in C
 
-The **Controller** subsystem is pure signal flow, so it exports to C. Select it, choose **Export**, and generate code: its input is the measured output voltage, its output the duty command, sampled every 100 µs. **Verify** replays the last run's measured voltage through the compiled code and compares its duty command with the simulation's. The PWM modulator stays in the power stage, as it would in the microcontroller's timer peripheral.
+The **Controller** subsystem is pure signal flow, so it generates to C. Select it and choose **C code**: its input is the measured output voltage, its output the duty command, sampled every 100 µs. Code generation needs a fixed-step model, and this plant switches every 20 µs, so set a step that resolves the switching in Simulation settings (2 µs with Runge-Kutta 4 is 150,000 steps over the 0.3 s run; **Use fixed step** would pick the controller's 100 µs, which is too coarse for the plant) and run the model. **Verify** then replays the run's measured voltage through the compiled code and compares its duty command with the simulation's. The PWM modulator stays in the power stage, as it would in the microcontroller's timer peripheral.
 
 ## Limits
 
@@ -56,4 +56,4 @@ The template is [flyback.json](../../models/examples/flyback.json). Regenerate i
 
 The builder uses library blocks only and lays the circuit out flat (bridge rectifier, DC link, primary switching stage, isolated output), then groups it into the two subsystems with the helpers in [example-hierarchy.ts](../../scripts/example-hierarchy.ts). Inside the power stage the layout runs left to right; the modulator sits below the switch.
 
-The integration test checks regulation, overshoot, ripple, switching activity, and bus pre-charge delay against full-resolution output, and the C code replay test (`tests/test_codegen.py`) requires the generated controller to reproduce the simulated duty command. The solver uses the default DASSL settings.
+The integration test checks regulation, overshoot, ripple, switching activity, and bus pre-charge delay against full-resolution output, and the C code replay test (`tests/test_codegen.py`) requires the generated controller to reproduce the simulated duty command from a Runge-Kutta 4 run at a 2 µs step. The example itself ships with the default DASSL settings.
