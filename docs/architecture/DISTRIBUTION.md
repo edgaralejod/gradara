@@ -18,7 +18,7 @@ app/, components/, lib/      Workbench UI (shared by dev server and desktop buil
 server/                      Local service (FastAPI)
   engines.py                 OpenModelica backends: built-in (bundled), native install, or Docker image
   llm/                       AI providers: gradara (hosted), openai, anthropic, codex
-    providers.py, schema.py  Dependency-light; also used by cloud/
+    providers.py, roles.py, schema.py  Dependency-light; also used by cloud/
   paths.py, settings.py,     Data folder, preferences, keychain secrets, the active layer
   credentials.py
   safety.py                  Screens definitions before any compiler sees them
@@ -33,7 +33,7 @@ cloud/                       Gradara AI gateway, sign-in pages, Dockerfile, depl
 site/                        gradara.app (static files for Firebase Hosting)
 scripts/build-layer.cjs,     Build, sign, verify, and unpack layers; the workshop's path gate, plan, and reports
   scripts/workshop_*.py
-.github/workflows/           ci, engine, engine-cache, native-engine, engine-bundle, cloud, release, site, workshop
+.github/workflows/           ci, engine, engine-cache, engine-image, native-engine, engine-bundle, cloud, release, site, workshop
 .github/workshop/            The workshop agents' instructions (scope, build, review)
 ```
 
@@ -133,4 +133,4 @@ Design decisions:
 - **Device-code sign-in.** No custom URL schemes or localhost callbacks, and no passwords in the app.
 - **One provider layer.** `server/llm/providers.py` serves both bring-your-own-key calls and the gateway, so structured-output handling is maintained once.
 
-Current defaults, all configurable on the server: block 2 credits, model build 20, C export 2, model edit 4 plus 2 per new or rewritten block (at most three), explaining problems 2 (a fix pays the explanation plus the edit), explaining results 2 per question (the measurement round included); packs of 100 credits for USD 10 and 550 credits for USD 50; 20 welcome credits per verified identity. See `cloud/README.md` for deployment and [privacy](../PRIVACY.md) for data handling.
+Current defaults, all configurable on the server: block 2 credits, model build 20, C export 2, model edit 4 plus 2 per new or rewritten block (at most three), explaining problems 2 (a fix pays the explanation plus the edit), explaining results 2 per question (the measurement round included), a Discuss model question 2; packs of 100 credits for USD 10 and 550 credits for USD 50; 20 welcome credits per verified identity. See `cloud/README.md` for deployment and [privacy](../PRIVACY.md) for data handling.

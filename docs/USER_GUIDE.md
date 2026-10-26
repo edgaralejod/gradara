@@ -46,7 +46,7 @@ Press **?** on the canvas to see this list in the app. On Windows and Linux, use
 | Add a block at the pointer | Double-click empty canvas |
 | Open a block's properties | Double-click the block |
 | Open a subsystem | Double-click it |
-| Ask AI (edit, new block, model, or about the results on show) | A |
+| Ask AI (edit, discuss, new block, model, or about the results on show) | A |
 | In the Ask bar: send / new line / next action / close | Enter / Shift + Enter / Tab / Escape |
 | Run simulation | ⌘/Ctrl + Enter |
 | Save now (edits also save automatically) | ⌘/Ctrl + S |
@@ -391,12 +391,12 @@ Answers arrive as cards in the **Proposals** tab of the dock, next to Problems. 
 | Card | What you can do |
 | --- | --- |
 | Plan (while the AI works) | Read the steps; **Cancel** |
-| Proposed edit | **Apply**, **Refine**, **Discard** |
+| Proposed edit | **Apply change** (or **Apply N changes**), **Refine**, **Discard** |
 | New block or refined block | **Add to model** or **Apply changes**, **Discard** |
 | New model | **Open as new model**, **Discard** |
 | Diagnosis | Read the likely causes and steps; select the blocks they name |
 | Explain results | Show the evidence on the plot, ask a follow-up, **Propose this change** |
-| Answer (Discuss model) | Select the blocks it names, **Make this an edit** |
+| Answer (Discuss model, or a question in Edit model) | Select the blocks it names; **Make this an edit** when it suggests a change |
 | Gradara cannot do this yet | **Improve Gradara…**, or **Build it as a personal feature…** |
 
 Each model keeps its own list. It is saved on this computer with the model's data (the newest 60 cards), so it is still there after you switch models or restart Gradara. **Clear this model's proposals** empties it. Deleting a run removes the results discussions about it.
@@ -433,7 +433,7 @@ Open a subsystem first to change its inside: the AI then edits that sheet, with 
 
 The AI can add library blocks, create up to two new blocks (and create or rewrite at most three in one edit), rewrite the equations of existing blocks (their ports stay the same), remove or rename blocks, change parameters and the stop time, connect or disconnect ports, log a signal, and group blocks into subsystems ("organize this into a power stage and a controller"). Grouping works as ⌘G does: the wires that cross the new subsystem's edge become its ports and keep their connections, and the grouped blocks keep their sizes, routes, and settings. A Goto block is grouped together with its From blocks, since tags reach down only. First the AI writes a short plan: a **Plan** card lists the steps in order, the assumptions, and how many blocks it will write, and the work line under it shows what is happening now. The plan is not a question: the AI carries it out straight away, and **Cancel** stops it. It returns a proposal instead of changing the model. The proposal keeps the plan under **Plan** and lists what it adds, removes, changes, and rewires, with chips that select the blocks involved. A badge says whether the edited model passed a trial simulation in OpenModelica. If it still fails after one automatic revision, the proposal is marked **Not verified** and shows the messages.
 
-Nothing changes until you choose **Apply**, which opens the sheet the proposal edits if you have moved elsewhere. The whole proposal is one undo step, and your wire routes, labels, and net names are kept. New blocks are placed near related blocks; you may want to move them. A new subsystem stands where its blocks were, and both sheets are tidied when that clearly helps; [**Arrange**](#wire-and-arrange) (⌘/Ctrl+Shift+A) does the same by hand. If you edit the model while a request runs, Apply is disabled and you are asked to try again. **Refine** revises a proposal you have not applied: the Ask bar shows a **Revising** chip, and what you type is sent with your earlier request and the proposed changes, so you only describe what to change ("use a 10 ms time constant instead"). The revision replaces the earlier proposal, which is marked **Revised below**, and is priced as a new edit. The × on the Revising chip goes back to asking for a new change. **Discard** dismisses the proposal.
+Nothing changes until you choose **Apply change** (**Apply N changes** for several), which opens the sheet the proposal edits if you have moved elsewhere. The whole proposal is one undo step, and your wire routes, labels, and net names are kept. New blocks are placed near related blocks; you may want to move them. A new subsystem stands where its blocks were, and both sheets are tidied when that clearly helps; [**Arrange**](#wire-and-arrange) (⌘/Ctrl+Shift+A) does the same by hand. If you edit the model while a request runs, Apply is disabled and you are asked to try again. **Refine** revises a proposal you have not applied: the Ask bar shows a **Revising** chip, and what you type is sent with your earlier request and the proposed changes, so you only describe what to change ("use a 10 ms time constant instead"). The revision replaces the earlier proposal, which is marked **Revised below**, and is priced as a new edit. The × on the Revising chip goes back to asking for a new change. **Discard** dismisses the proposal.
 
 If you ask a question instead of a change ("will the motor reach 150 rad/s?"), the AI answers it in an **Answer** card and changes nothing; it costs the same as an edit.
 

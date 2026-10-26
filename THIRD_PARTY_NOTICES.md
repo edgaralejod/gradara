@@ -14,7 +14,7 @@ Preserve these notices in redistributed source or bundles containing the corresp
 
 ## Application dependencies
 
-The complete npm resolution is recorded in [package-lock.json](package-lock.json); direct dependencies are in [package.json](package.json). The current stack includes React, React Flow, Monaco, Vinext, Vite, FastAPI, Pydantic, Uvicorn, and their dependencies. Most of the JavaScript UI stack reports MIT licensing, but review the actual license files and all transitive packages when creating a distribution. The lockfile is not a complete bundled-license report.
+The complete npm resolution is recorded in [package-lock.json](package-lock.json); direct dependencies are in [package.json](package.json). The current stack includes React, React Flow, Monaco, Recharts, Base UI, Vinext, Vite, FastAPI, Pydantic, Uvicorn, and their dependencies. Most of the JavaScript UI stack reports MIT licensing, but review the actual license files and all transitive packages when creating a distribution. The lockfile is not a complete bundled-license report.
 
 The optional Sites Vite plugin is a public dependency of the build scaffold. Its current package reports MIT licensing. No hosted-site credentials, bucket names, database bindings, or deployment IDs are required by the checked-in configuration. Optional Codex CLI installation and service use retain their own terms; the CLI is not bundled in this source repository.
 
@@ -22,7 +22,7 @@ The optional Sites Vite plugin is a public dependency of the build scaffold. Its
 
 Desktop installers bundle Electron (MIT, with Chromium's notices in `LICENSES.chromium.html` inside the app), electron-updater (MIT), a Python runtime (PSF License) frozen with PyInstaller (GPL-2.0 with the bootloader exception, which permits distributing frozen applications), and the service's Python dependencies: FastAPI, Starlette, Pydantic, Uvicorn, httpx (BSD-3-Clause), and keyring (MIT). Installers also include Gradara's example models, `engine_runner.py`, `Dockerfile.engine` (for the optional container engine), and the built-in simulation engine described below. Gradara's own license files are copied to the app's `legal/` resources, together with `THIRD_PARTY_LICENSES.txt`: the name, version, declared license, and license text of every npm and Python package the installer ships, plus the Python runtime and every component of the built-in engine. `packaging/third_party_licenses.py` generates it from the installed dependencies in every installer build.
 
-The Gradara AI service (`cloud/`) additionally uses SQLAlchemy (MIT), psycopg (LGPL-3.0, used as an unmodified library), the Stripe Python library (MIT), google-auth and firebase-admin (Apache-2.0). The service is operated, not distributed, but the container image contents should still be inventoried.
+The Gradara AI service (`cloud/`) additionally uses SQLAlchemy (MIT), psycopg (LGPL-3.0, used as an unmodified library), the Stripe Python library (MIT), google-auth, firebase-admin, and requests (Apache-2.0). The service is operated, not distributed, but the container image contents should still be inventoried.
 
 ## Numerical engine
 
@@ -36,7 +36,7 @@ Every desktop installer includes a built-in engine in `resources/engine`, built 
 
 All three include the Modelica Standard Library 4.1.0 (BSD-3-Clause, with the licenses of its bundled C libraries). OpenModelica is licensed under the OSMC Public License 1.8; Gradara redistributes it unmodified under that license's GNU AGPL version 3 mode, stated in `OSMC-USAGE-MODE.txt` beside `OSMC-License.txt` in each engine. GCC, binutils, make, the Linux kernel, and several libraries are GPL or LGPL licensed. Each engine records its package inventory (`packages.txt`, and `packages.json` for the Windows toolchain) and carries the packages' license and copyright files; `packaging/third_party_licenses.py` copies all of them into the installer's `THIRD_PARTY_LICENSES.txt`, together with a written offer of the corresponding source code for three years and links to the upstream sources (OpenModelica on GitHub, Ubuntu packages on Launchpad, MSYS2 packages at repo.msys2.org).
 
-Source checkouts contain no OpenModelica binaries. There the optional container engine pulls `ghcr.io/edgaralejod/gradara-engine:1.27.0` or builds it locally from `Dockerfile.engine`, which starts from an upstream OpenModelica image and downloads MSL. Before that image is published to the registry, inventory its contents and satisfy the same obligations.
+Source checkouts contain no OpenModelica binaries. There the optional container engine pulls `ghcr.io/edgaralejod/gradara-engine:1.27.0` or builds it locally from `Dockerfile.engine`, which starts from an upstream OpenModelica image and downloads MSL. The **Engine image** workflow publishes it (currently as a private package); before making it public, inventory its contents and satisfy the same obligations.
 
 | Component | Pinned version | Primary license source |
 | --- | --- | --- |

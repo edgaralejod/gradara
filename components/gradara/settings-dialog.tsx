@@ -388,8 +388,9 @@ function AiSettings() {
   return (
     <section className="settings-section">
       <p className="settings-lead">
-        AI creates blocks, builds and edits models, explains failed runs and
-        results, and generates C for controllers. Editing and simulating never
+        AI creates blocks, builds and edits models, answers questions about
+        your design, explains failed runs and results, and generates C for
+        controllers. Editing and simulating never
         need AI.
       </p>
       <div className="provider-list" aria-label="AI provider">

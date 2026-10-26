@@ -8,13 +8,13 @@ Every request starts in the **Ask bar** (press **A**), and answers arrive as car
 
 - **Create a block** from a description, such as "a first-order low-pass filter with a 50 ms time constant". Gradara guesses the block type (signal, electrical, rotational, translational, magnetic, thermal, or several domains) and you can change it.
 - **Build a complete model** from a description of a system or circuit (**Build model**).
-- **Edit the open model** (**Edit model**), for example "add a speed sensor on the load shaft". The AI shows its plan first, then carries it out.
+- **Edit the open model** (**Edit model**), for example "add a speed sensor on the load shaft". The AI shows its plan first, then carries it out. A question asked here instead of a change gets an Answer card and changes nothing.
 - **Discuss the design** (**Discuss model**): ask whether something in the model works, why it behaves as it does, or how to approach a change. Nothing changes; an answer can suggest one change you can send to Edit model.
 - **Explain or fix a failed run** (**Explain problems**, **Fix problems**), from the **Problems** tab.
 - **Explain results**: ask about stored runs, such as "why does the current overshoot?". Gradara sends a summary it computes on your computer, never the samples, and rechecks every number in the answer against the stored data.
 - **Write a C template** for a custom block, so it can be included in a C code export.
 
-Every AI result is checked before you see it. Generated blocks must pass OpenModelica's compiler. Model edits and full models must also pass a trial simulation. So the simulation engine must be ready (**Settings → Engine** shows its status). **Explain problems** only reads the problems and does not compile anything; **Explain results** reads stored runs and does not simulate. You always review a proposal before it changes your model. See the [user guide](USER_GUIDE.md#ai-features) for how each feature works.
+Every AI result that changes or adds to a model is checked before you see it. Generated blocks must pass OpenModelica's compiler. Full models must also finish a trial simulation. Model edits get a trial simulation too; an edit that still fails after one automatic revision is offered marked **Not verified**. **Discuss model** and questions answered in Edit model only read the model; nothing is compiled or simulated. So the simulation engine must be ready (**Settings → Engine** shows its status). **Explain problems** only reads the problems and does not compile anything; **Explain results** reads stored runs and does not simulate. You always review a proposal before it changes your model. See the [user guide](USER_GUIDE.md#ai-features) for how each feature works.
 
 Passing these checks does not make a block physically correct. Review generated equations as you would any model.
 
@@ -33,7 +33,7 @@ A developer option, the Codex CLI, appears only when it is installed; see [For d
 
 ## Planner and executor models
 
-Gradara's AI works in two roles. The **planner** reads your model and decides: it writes the plan for an edit or a new model, explains problems, and answers questions about results. The **executor** carries out the plan steps that need new text: it writes block equations, block symbols, the assembly of a new model, and C code. Conventional code does the rest (applying the plan, routing wires, and simulating), and checks everything the executor writes before you see it.
+Gradara's AI works in two roles. The **planner** reads your model and decides: it writes the plan for an edit or a new model, explains problems, and answers questions (Explain results, Discuss model, and questions asked in Edit model). The **executor** carries out the plan steps that need new text: it writes block equations, block symbols, the assembly of a new model, and C code. Conventional code does the rest (applying the plan, routing wires, and simulating), and checks everything the executor writes before you see it.
 
 With your own OpenAI or Anthropic key, **Settings → AI** has a **Planner model** and an **Executor model** field. Leave a field empty to use the default shown in it: for Anthropic a strong planner and a faster executor, for OpenAI the same model for both. Enter the same model in both fields to use one model for everything. Gradara AI chooses its own models for each role; the Codex CLI uses its one model for both.
 
@@ -94,7 +94,7 @@ The generated equations are saved in your model. Reopening, sharing, and simulat
 
 ## What AI cannot do yet
 
-Generated blocks cannot have Boolean or 3-phase ports and cannot wrap Modelica Standard Library components (the built-in library already covers many of them). The model builder creates flat models without subsystems, with up to 80 blocks and four new block types per request. Edits, diagnosis, and fixes work on the sheet you have open: the top level, or the inside of a subsystem (every copy of it). HDL generation is not available. When a request is beyond Gradara, the answer says so and offers **Improve Gradara…**, which opens a public GitHub issue with your request.
+Generated blocks cannot have Boolean or 3-phase ports and cannot wrap Modelica Standard Library components (the built-in library already covers many of them). The model builder creates flat models without subsystems, with up to 80 blocks and four new block types per request. Edits, discussions, diagnosis, and fixes work on the sheet you have open: the top level, or the inside of a subsystem (every copy of it). HDL generation is not available. When a request is beyond Gradara, the answer says so and offers **Improve Gradara…**, which opens a public GitHub issue with your request.
 
 Changes to Gradara itself can also be built for you as [personal features](USER_GUIDE.md#personal-features). They run on the workshop repository's own AI key, not on Gradara AI credits.
 

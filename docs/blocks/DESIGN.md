@@ -15,15 +15,15 @@ Enlarging a block changes the space around its symbol, not its text size. Zoom s
 | Sum / subtract | 48 × 48 | Compact circular junction; input signs belong at their terminals |
 | Multi-terminal | 128 × 96 or larger | A central symbol well plus independent terminal-caption gutters |
 | Dense terminal arrays | Computed in 16-unit steps | At least 24 units of vertical pitch; nominal 32-unit horizontal pitch |
-| PMSM | 160 × 96 | Four bottom terminals plus top measurements and mixed-domain side terminals |
 | Wide notation | 160 × 64 | Complete second-order transfer function at the normal font size |
+| Goto / From / connection label | 32 high; width 40 + 8 per tag character, rounded up to a size step, at most 176 | Sized to its tag text |
 | Mux / demux | 48 × 96, one 24-unit pitch taller per signal past three | Narrow tapered body; numbered terminals on the many-signal side, none on the bus side |
 | Bus Creator / Bus Selector | Labeled box, as wide as the signal names | Signal names are the port labels and are never cut short; bus glyph in the middle |
 | Electrical primitive | 80 × 48 horizontal; 48 × 80 vertical | Unboxed circuit symbol; leads reach the exact terminal coordinates |
 | Ground | 48 × 48 | Unboxed reference glyph with its lead at the top terminal |
 | Pictorial schematic symbols | 80 × 48 two-terminal; 48 × 80 vertical sources; 64 × 80 transistors; 64 × 48 op-amps and changeover; 64 × 64 transformers; 48 × 48 fixed points | Unboxed standard symbol (`lib/gradara/circuit-symbols.ts`) at its design size, with leads to the grid ports |
 | Subsystem port pill | 32 high; width 56 + 8 per name character, rounded up to a 16-unit step, at most 176 | A rounded pill inside a subsystem; its default size is also its minimum |
-| Subsystem | Labeled-terminal family (80 × 64 up, 128 × 96 or larger with several ports) | Always shows port captions, since they are the inside's port names |
+| Subsystem | At least 160 × 96; wider for long port captions, taller with more ports | Always shows port captions, since they are the inside's port names |
 
 These are deliberate semantic exceptions, not permission to invent dimensions for every new kind. `defaultBlockSize()` computes defaults and `minimumDesignedSize()` sets resizing limits. New registered or agent-created blocks inherit this system automatically. Generic signal blocks with one input and one output use the standard body; multiple or mixed-domain terminals reserve more room. Explicit unusual terminal offsets still need visual review for spacing.
 
@@ -31,7 +31,7 @@ These are deliberate semantic exceptions, not permission to invent dimensions fo
 
 A block is drawn as an unboxed schematic symbol when engineers already draw it that way on a schematic and its terminals map one-to-one onto the symbol's leads: diodes, thyristors, transistors, switches, sources, passive variants, op-amps, transformers, springs, dampers, and fixed points. Everything else is a box with a glyph: machines, converters, sensors with signal outputs, controllers, math and logic, and any block whose behavior a standard symbol would misstate.
 
-A pictorial glyph (`circuitGlyphs`) is drawn once in a small design box with an anchor for every port. The block draws it at design size, centered, and runs a lead from each grid port to its anchor, so the leads are straight at the standard size and only lengthen when the block is enlarged; the symbol never stretches. Anchors of a side's single port sit on the glyph's center line. Signal and Boolean leads are dashed in their domain color. `tests/circuit-symbols.test.ts` checks that every lead starts on its port and is straight at the standard size. The older primitives (resistor, capacitor, inductor, diode, DC source, ideal switch, voltage and current sensor) still stretch their SVG with non-scaling strokes.
+A pictorial glyph (`circuitGlyphs`) is drawn once in a small design box with an anchor for every port. The block draws it at design size, centered, and runs a lead from each grid port to its anchor, so the leads are straight at the standard size and only lengthen when the block is enlarged; the symbol never stretches. Anchors of a side's single port sit on the glyph's center line. Signal and Boolean leads are dashed in their domain color. `tests/circuit-symbols.test.ts` checks that every lead starts on its port and is straight at the standard size. The older primitives (resistor, capacitor, inductor, DC source, voltage and current sensor, and the retired diode and ideal switch in older documents) still stretch their SVG with non-scaling strokes.
 
 ## Drawn symbols
 
@@ -53,7 +53,7 @@ A block can carry its own drawing (`Definition.glyph`, `lib/gradara/glyph.ts`), 
 
 ## Domains and terminals
 
-Retain the shared `domainColors` in `lib/gradara/model.ts`: signal blue, Boolean lilac, electrical amber, rotational mechanical teal, translational olive, thermal red, magnetic magenta, and 3-phase graphite. The eight are chosen to stay apart from each other (no two closer than about 23 CAM02-UCS units for normal colour vision); for colour-blind viewers the port shapes and pill glyphs carry the domain too. The body uses its owning domain. **Each terminal uses its own domain**, so an electrical machine can expose mechanical and signal terminals without ambiguity. Physical connection points retain their distinct square/cross affordance; signal terminals keep their existing wiring affordance. Color alone never replaces direction/domain metadata.
+Retain the shared `domainColors` in `lib/gradara/model.ts`: signal blue, Boolean lilac, electrical amber, rotational mechanical teal, translational olive, thermal red, magnetic magenta, 3-phase graphite, and physical bus brown. The eight domain colours are chosen to stay apart from each other (no two closer than about 23 CAM02-UCS units for normal colour vision), and bus lines are also drawn heavy; for colour-blind viewers the port shapes and pill glyphs carry the domain too. The body uses its owning domain. **Each terminal uses its own domain**, so an electrical machine can expose mechanical and signal terminals without ambiguity. Physical connection points retain their distinct square/cross affordance; signal terminals keep their existing wiring affordance. Color alone never replaces direction/domain metadata.
 
 Rendering must use the `portPlacement` geometry also used by `portPoint`. Do not position a visual terminal independently from its hit target or routing endpoint. Keep `data-block-id`, `data-port-id`, accessible names, and native pointer ownership intact.
 

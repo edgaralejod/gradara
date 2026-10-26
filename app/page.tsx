@@ -4662,7 +4662,7 @@ function Workbench() {
                 ['Restore auto route (wires only)', 'R'],
                 ['Name a signal / net', 'Double-click wire / F2'],
                 ['Move a signal label', 'Drag along its net'],
-                ['Ask AI (edit, new block, model, or about the results on show)', 'A'],
+                ['Ask AI (edit, discuss, new block, model, or about the results on show)', 'A'],
                 ['Run simulation', '⌘ / Ctrl + Enter'],
                 ['Save now (edits also save automatically)', '⌘ / Ctrl + S'],
                 ['Undo', '⌘ / Ctrl + Z'],
