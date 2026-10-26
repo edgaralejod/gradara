@@ -7,7 +7,8 @@ COPY cloud/requirements.txt cloud/requirements.txt
 RUN pip install --no-cache-dir -r cloud/requirements.txt && useradd --create-home --uid 10001 gateway
 # Only the dependency-light provider layer is shared with the desktop service.
 COPY server/__init__.py server/__init__.py
-COPY server/llm/__init__.py server/llm/providers.py server/llm/schema.py server/llm/
+# Every server module the gateway imports must be listed here (cloud/tests/test_image.py checks).
+COPY server/llm/__init__.py server/llm/providers.py server/llm/roles.py server/llm/schema.py server/llm/
 COPY cloud/gateway cloud/gateway
 USER gateway
 WORKDIR /app/cloud
