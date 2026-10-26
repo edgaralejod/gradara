@@ -21,7 +21,7 @@ Passing these checks means the diagram becomes the intended Modelica model and t
 | --- | --- | --- | --- |
 | Synchronous buck, 24 V, D = 0.5 and 0.25, 1 mH, 10 kHz | mean output D · 24 V = 12 V and 6 V; inductor ripple (V_in − V_out)·D/(L·f) = 0.6 A and 0.45 A | 12.0003 V and 6.0002 V; 0.602 A and 0.451 A | `tests/test_buck.py` (±20 mV mean, ±10 % ripple) |
 | DC motor speed loop | settles at the 100 rad/s reference, and at 60 rad/s when the reference changes; controller output never exceeds its 24 V limit | within 1 rad/s | `tests/test_modelica.py` |
-| Field-oriented control of a PMSM | tracks 1500 rpm and 1000 rpm; d-axis current near zero; phase currents sum to zero | within 2 rpm; \|i_d\| < 0.02 A; \|i_a + i_b + i_c\| < 1e-8 A | `tests/test_modelica.py` |
+| Field-oriented control of a PMSM | tracks 1500 rpm and 1000 rpm; d-axis current near zero; phase currents sum to zero | 1499.5 rpm at the 1500 rpm reference (the test requires within 3 rpm at 1500 and 1000 rpm); \|i_d\| < 0.006 A after 0.6 s (test: < 0.02 A); \|i_a + i_b + i_c\| < 2e-5 A (test: < 1e-4 A) | `tests/test_modelica.py` |
 | 480 VAC flyback | regulated 24 V output; DC bus near the 679 V peak of 480 VAC | 23.9–24.1 V with < 50 mV ripple; 660–680 V | `tests/test_flyback.py` |
 | Data center cooling | stored heat in rack and room = ∫ IT heat − ∫ heat removed over the run; at every sample, electrical power = IT + cooling electricity and heat removed = COP × cooling electricity | within 2 MJ of about 3 GJ; 10 W (the load switch's own loss); 1e-6 kW | `tests/test_datacenter.py` |
 | EV drivetrain, each configuration | reaches the 5 m/s cruise speed without exceeding 6 m/s | within 5 % | `tests/test_variants.py` |
