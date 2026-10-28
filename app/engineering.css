@@ -2215,6 +2215,11 @@
 .di-heading { min-height:32px; padding:0 12px; gap:18px; background:#e9edf0; border-bottom:1px solid #c6cdd4; }
 .di-heading strong { display:flex; align-items:center; gap:7px; font-size:var(--text-heading); font-weight:600; }
 .di-heading > span { font-size:var(--text-meta); color:#65717c; }
+/* A run still going: a quiet pulse beside its progress (live-run.ts). */
+.di-heading > span.di-live { display:inline-flex; align-items:center; gap:6px; color:#1f5fbf; font-variant-numeric:tabular-nums; }
+.di-heading > span.di-live::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; animation:di-live-pulse 1.4s ease-in-out infinite; }
+@keyframes di-live-pulse { 0%,100% { opacity:1; } 50% { opacity:.25; } }
+@media (prefers-reduced-motion: reduce) { .di-heading > span.di-live::before { animation:none; } }
 .di-heading a { display:flex; align-items:center; gap:5px; height:27px; font-size:var(--text-meta); color:#425666; text-decoration:none; padding:0 6px; }
 .di-heading a:hover { background:#dae2e9; }
 /* Run comparison: two stored runs, signal by signal. */

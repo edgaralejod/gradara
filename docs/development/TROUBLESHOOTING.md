@@ -58,6 +58,10 @@ Open **Settings → Engine**. The top line says what is wrong; choose **Check ag
 
 A failed run never shows partial results as if they were complete.
 
+### Results update in bursts while a run is going
+
+Results fill in as the engine writes them, and the engine writes its result file in blocks. A model that simulates slowly and logs few signals can show nothing for a few seconds and then a stretch at once. The finished run is complete either way. If nothing appears until the run ends, check that the model logs something: Results shows only logged signals.
+
 ### Results disappear after an edit
 
 Results belong to the model exactly as it ran. Changing parameters, connections, equations, the stop time, or the simulation settings needs another run. Moving or resizing blocks does not. If moving a block alone clears your results, please report it with the model.

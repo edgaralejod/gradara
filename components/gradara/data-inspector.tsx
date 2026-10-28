@@ -4,6 +4,7 @@ import RunProgress from './run-progress';
 import type { RunTrack } from '@/lib/gradara/run-progress';
 import {
   Activity,
+  Square,
   Download,
   Hand,
   Scan,
@@ -148,6 +149,7 @@ function groupByBlock<T extends { name: string; group?: string }>(
 function InspectorSession({
   result,
   running,
+  onStop,
   error,
   stale,
   modelId,
@@ -155,6 +157,8 @@ function InspectorSession({
 }: {
   result: SimulationResult;
   running: boolean;
+  /** Stop the running simulation (shown while a live run fills the plots). */
+  onStop?: () => void;
   error: string;
   stale: boolean;
   modelId?: string;
@@ -162,6 +166,8 @@ function InspectorSession({
   onLogAll?: () => void;
 }) {
   const model = modelId ?? result.snapshot?.modelId;
+  // A run still going (live-run.ts): drawn as it arrives; the stored-run tools wait for it to finish.
+  const live = result.live;
   const storageKey = `gradara-inspector:${modelId ?? result.snapshot?.modelId ?? 'workspace'}${result.comparison ? ':compare' : ''}`;
   // An overlay of several configurations already holds full data; it is not a stored run.
   const overlay = !!result.comparison;
@@ -169,7 +175,7 @@ function InspectorSession({
     modelId: model,
     latestId: result.id,
     preview: result,
-    enabled: !overlay && !!model,
+    enabled: !overlay && !!model && !live,
   });
   const [config, setConfig] = useState<Config>(() => {
     let stored: unknown;
@@ -368,9 +374,9 @@ function InspectorSession({
     entry.data.snapshot
       ? parameterDifferences(entry.data.snapshot, reference.data.snapshot)
       : [];
-  const canCompare = several && !overlay && !!model;
+  const canCompare = several && !overlay && !!model && !live;
   // The Runs list can bring a run back, so an inspector with none shown is still worth showing.
-  const listsRuns = !overlay && !!model;
+  const listsRuns = !overlay && !!model && !live;
   const compareOn = comparing && canCompare;
   const baseline = entries.some((e) => e.id === baselineId)
     ? baselineId
@@ -378,11 +384,13 @@ function InspectorSession({
   const activeSignals = config.plots[active].signals;
   const loading = library.open.some((id) => !library.dataOf(id));
   const sampleText = (id: string, samples: number) =>
-    library.isFull(id) || overlay
+    live
+      ? `${samples.toLocaleString()} points so far · live`
+      : library.isFull(id) || overlay
       ? `${samples.toLocaleString()} samples`
       : `${samples.toLocaleString()} samples · preview`;
   const summaryOn =
-    summarizing && !overlay && !!model && entries.length > 0 && !compareOn;
+    summarizing && !overlay && !!model && entries.length > 0 && !compareOn && !live;
 
   // What is on show, for the Ask bar: the shown runs, the active plot's signals, and its zoom.
   const activeView = entries.length ? plotView(config.plots[active]) : null;
@@ -392,7 +400,7 @@ function InspectorSession({
       activeView.x[1] < duration * (1 - 1e-9));
   const plotted = [...new Set(activeSignals.map((a) => a.key))].slice(0, 12);
   const runContext: RunContext | null =
-    !overlay && model && entries.length
+    !overlay && !live && model && entries.length
       ? {
           modelId: model,
           runIds: openIds,
@@ -499,8 +507,10 @@ function InspectorSession({
         <strong>
           <Activity size={14} aria-hidden="true" /> Data Inspector
         </strong>
-        <span>
-          {running
+        <span className={live ? 'di-live' : undefined}>
+          {live
+            ? `Simulating · ${Math.round(live.fraction * 100)}%`
+            : running
             ? 'Simulating…'
             : error
               ? 'Run failed'
@@ -514,7 +524,12 @@ function InspectorSession({
                       ? `Showing ${entries.map((e) => e.title).join(' · ')}`
                       : 'Completed'}
         </span>
-        {!overlay && !!model && (
+        {live && onStop && (
+          <button type="button" className="di-compare" onClick={onStop}>
+            <Square size={11} aria-hidden="true" /> Stop
+          </button>
+        )}
+        {!overlay && !live && !!model && (
           <button
             type="button"
             className="di-compare"
@@ -533,7 +548,7 @@ function InspectorSession({
             <GitCompareArrows size={13} aria-hidden="true" /> Compare runs
           </button>
         )}
-        {!overlay && !!model && (
+        {!overlay && !live && !!model && (
           <button
             type="button"
             className="di-compare"
@@ -558,7 +573,7 @@ function InspectorSession({
             <Sparkles size={13} aria-hidden="true" /> Ask about this run
           </button>
         )}
-        {result && !result.comparison && (
+        {result && !result.comparison && !live && (
           <a href={`/api/results/${result.id}/csv`} download>
             <Download size={13} aria-hidden="true" /> Export CSV
           </a>
@@ -721,7 +736,7 @@ function InspectorSession({
               aria-label="Runs and signals"
               style={{ width: `min(${signalPane.widths[0]}px, 45%)` }}
             >
-              {!overlay && (
+              {!overlay && !live && (
                 <>
                   <div
                     className={`di-runs-pane${runsPane.stored ? ' is-sized' : ''}`}

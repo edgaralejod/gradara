@@ -16,6 +16,7 @@ import NoteLayer from '@/components/gradara/note-layer';
 import SimulationSettingsPanel from '@/components/gradara/simulation-settings';
 import RunProgress from '@/components/gradara/run-progress';
 import { advance, startTrack, statusText, type RunTrack } from '@/lib/gradara/run-progress';
+import { followLive } from '@/lib/gradara/live-run';
 import SolverHelpDialog from '@/components/gradara/solver-help-dialog';
 import BlockHelpDialog, {
   OPEN_EXAMPLE_EVENT,
@@ -610,6 +611,8 @@ function Workbench() {
   const [runError, setRunError] = useState('');
   const [runFailure, setRunFailure] = useState<RunFailure | null>(null);
   const [result, setResult] = useState<SimulationResult | null>(null);
+  // The running simulation's results so far (live-run.ts); the finished result replaces them.
+  const [liveResult, setLiveResult] = useState<SimulationResult | null>(null);
   const [resultSignature, setResultSignature] = useState('');
   const [notice, setNotice] = useState('');
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2217,6 +2220,22 @@ function Workbench() {
       action,
     });
   }, [newPosition, workspaceMode, openSheet]);
+  /** Stream a running job's results into Results; returns the function that stops it. */
+  function startLive(jobId: string, snapshot: Project, controller: AbortController) {
+    const live = new AbortController();
+    controller.signal.addEventListener('abort', () => live.abort(), { once: true });
+    let shown = false;
+    void followLive(jobId, snapshot, live.signal, (r) => {
+      if (runController.current !== controller || live.signal.aborted) return;
+      setLiveResult(r);
+      // Results opens once there is something to draw, as it does when a run finishes.
+      if (!shown) {
+        shown = true;
+        setWorkspaceMode('results');
+      }
+    });
+    return () => live.abort();
+  }
   async function runSimulation() {
     if (runController.current || switching || !ready) return;
     if (stopTimeInvalid) {
@@ -2242,6 +2261,7 @@ function Workbench() {
     const snapshot = structuredClone(docRef.current);
     const currentSignature = semanticSignature(snapshot);
     setRunTrack(startTrack(snapshot.duration));
+    let stopLive = () => {};
     try {
       // Always receive the job ID, so cancellation during submission can stop the engine too.
       const job = await api<Job<SimulationResult>>('/runs', {
@@ -2253,7 +2273,9 @@ function Workbench() {
         return;
       }
       runId.current = job.id;
+      stopLive = startLive(job.id, snapshot, controller);
       const r = await waitForJob<SimulationResult>(job.id, controller.signal, followRun, 400);
+      stopLive();
       if (
         runController.current !== controller ||
         controller.signal.aborted ||
@@ -2292,6 +2314,8 @@ function Workbench() {
         updateDock({ open: true, tab: 'problems' });
       }
     } finally {
+      stopLive();
+      setLiveResult(null);
       if (runController.current === controller) {
         runController.current = null;
         setRunning(false);
@@ -2330,6 +2354,7 @@ function Workbench() {
     const currentSignature = semanticSignature(base);
     const runs: ComparisonRun[] = [];
     let label = '';
+    let stopLive = () => {};
     try {
       for (const [i, configuration] of configurations.entries()) {
         label = configuration.name;
@@ -2345,7 +2370,10 @@ function Workbench() {
           return;
         }
         runId.current = job.id;
+        // Each configuration streams while it runs; the overlay of all of them follows at the end.
+        stopLive = startLive(job.id, snapshot, controller);
         await waitForJob<SimulationResult>(job.id, controller.signal, followRun, 400);
+        stopLive();
         const full = await api<SimulationResult>(`/results/${job.id}/data`, {
           signal: controller.signal,
         });
@@ -2378,6 +2406,8 @@ function Workbench() {
         updateDock({ open: true, tab: 'problems' });
       }
     } finally {
+      stopLive();
+      setLiveResult(null);
       if (runController.current === controller) {
         runController.current = null;
         setRunning(false);
@@ -2393,6 +2423,7 @@ function Workbench() {
     runId.current = '';
     setRunning(false);
     setRunTrack(null);
+    setLiveResult(null);
     if (id) {
       try {
         await api(`/jobs/${id}`, { method: 'DELETE' });
@@ -3638,7 +3669,7 @@ function Workbench() {
                 <Results
                   key={project.modelId ?? 'workspace'}
                   modelId={project.modelId}
-                  result={result}
+                  result={result ?? liveResult}
                   running={running}
                   progress={runTrack}
                   onStop={() => void cancelRun()}

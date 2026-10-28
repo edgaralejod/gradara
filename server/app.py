@@ -3,7 +3,7 @@ import json
 import os
 import uuid
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -238,6 +238,13 @@ async def run(project:Project):
     def stage(job_id: str):
         return lambda now: JOBS[job_id].update(stage=now, progress=run_progress.message(now))
     return await start_job('simulation', lambda i: simulate(project, i, stage(i)))
+
+@app.get('/api/runs/{job_id}/live')
+async def live_run(job_id: str, after: int = Query(default=0, ge=0)):
+    """What a running simulation has recorded since the client's `after` rows (server/live_results.py)."""
+    if not job_id.isalnum(): raise HTTPException(400, 'Invalid run ID.')
+    from . import live_results
+    return await asyncio.to_thread(live_results.read, job_id, after)
 
 @app.get('/api/jobs/{job_id}')
 async def job(job_id:str):

@@ -11,7 +11,7 @@ from .hierarchy import all_blocks, instances
 from .units import signal_units
 from .models import Project, Definition
 from .modelica import emit_project, component_source, semantic_hash, project_key
-from . import run_progress, solver
+from . import live_results, run_progress, solver
 from .runtime import IMAGE, LEGACY_IMAGE
 from .diagnostics import (Diagnostic, EngineUnavailable, SimulationFailure, explain_failure, failure_diagnostics,
                           validate_simulation, warning_diagnostics)
@@ -126,18 +126,20 @@ async def simulate(project: Project, job_id: str, on_stage=None):
                                                           hint='Open the block dialog and remove that construct from its equations.')]) from exc
     folder = RUNS/job_id
     folder.mkdir(parents=True, exist_ok=True)
+    # Results read while the engine writes them (server/live_results.py), until the run ends.
+    live_results.register(job_id, project, folder)
     try:
         return await run(project, job_id, folder, on_stage)
     except SimulationFailure as exc:
         # Kept beside model.mo so a later diagnosis request can cite this exact run.
         (folder/'diagnostics.json').write_text(json.dumps({'error': str(exc), 'diagnostics': [d.model_dump() for d in exc.diagnostics]}), encoding='utf-8')
         raise
+    finally:
+        live_results.unregister(job_id)
 
 
-def result_columns(folder: Path, rows: list[dict]):
-    """Look up a variable's samples. The CSV leaves out variables that equal a
-    parameter (a sensor across a DC source, a constant's output): those come from the
-    alias and start values in simulation_init.xml, as a constant series."""
+def init_index(folder: Path) -> tuple[dict, dict, set]:
+    """Aliases, parameter start values, and Boolean names from simulation_init.xml."""
     aliases, starts, booleans = {}, {}, set()
     init = folder/'simulation_init.xml'
     if init.exists():
@@ -154,6 +156,15 @@ def result_columns(folder: Path, rows: list[dict]):
                 if start is not None and value.get('fixed') == 'true':
                     # A Boolean is recorded as 1 or 0, as the engine writes it.
                     starts[name] = (1.0 if start == 'true' else 0.0) if value.tag == 'Boolean' else float(start)
+    return aliases, starts, booleans
+
+
+def result_columns(folder: Path, rows: list[dict], index: tuple[dict, dict, set] | None = None):
+    """Look up a variable's samples. The CSV leaves out variables that equal a
+    parameter (a sensor across a DC source, a constant's output): those come from the
+    alias and start values in simulation_init.xml, as a constant series. `index` is
+    `init_index(folder)` when the caller already has it (live results read it once)."""
+    aliases, starts, booleans = index if index is not None else init_index(folder)
 
     def column(key: str, depth: int = 0):
         if key in rows[0]:
@@ -235,16 +246,18 @@ def _variables(folder: Path) -> list[tuple[str, str]]:
     return found
 
 
-def recorded_series(project: Project, folder: Path, column) -> list[dict]:
+def recorded_series(project: Project, folder: Path, column, variables: list[tuple[str, str]] | None = None,
+                    check_finite: bool = True) -> list[dict]:
     """What Results shows: only what was asked for. That is each logged output port
     (`Block.logged`, wired or not), each logged net, and, with `logPhysical`, the physical
     variables of every physical block. Nothing else is listed, even though the engine
-    computes (and the run folder keeps) every variable."""
+    computes (and the run folder keeps) every variable. Live results pass `variables`
+    (read once) and `check_finite=False` (they drop non-finite rows themselves)."""
     units = signal_units(project)
     outputs, seen = [], set()
 
     def add(series, owner):
-        if not all(math.isfinite(value) for value in series['values']):
+        if check_finite and not all(math.isfinite(value) for value in series['values']):
             raise nonfinite_failure(project, f"{series['name']} contains non-finite results.", owner)
         seen.add(series['key'])
         outputs.append(series)
@@ -286,7 +299,7 @@ def recorded_series(project: Project, folder: Path, column) -> list[dict]:
             add({k: v for k, v in log.items() if k not in ('expression', 'reference', 'width', 'elements')}
                 | {'key': key, 'name': name, 'values': values}, log.get('blockId'))
     if project.logPhysical:
-        variables = _variables(folder)
+        variables = _variables(folder) if variables is None else variables
         count = 0
         for prefix, label, block, owner in instances(project):
             definition = block.definition
