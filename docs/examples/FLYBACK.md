@@ -42,7 +42,7 @@ This is a switched model, not an averaged model, and the output is not forced to
 
 ## Controller in C
 
-The **Controller** subsystem is pure signal flow, so it exports to C. Select it, choose **Export**, and generate code: its input is the measured output voltage, its output the duty command, sampled every 100 µs. **Verify** replays the last run's measured voltage through the compiled code and compares its duty command with the simulation's. The PWM modulator stays in the power stage, as it would in the microcontroller's timer peripheral.
+The **Controller** subsystem is pure signal flow, so it generates to C. Select it and choose **C code**: its input is the measured output voltage, its output the duty command, sampled every 100 µs. Its PI is sampled, so the code runs at that period even though the switching plant needs the variable-step solver (with ideal switches, every fixed-step solver fails on the rectifier); the 1 ms feedback filter is discretized at the same 100 µs, as the README notes. **Verify** replays the last run's measured voltage through the compiled code and compares its duty command with the simulation's. The PWM modulator stays in the power stage, as it would in the microcontroller's timer peripheral.
 
 ## Limits
 

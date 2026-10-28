@@ -71,7 +71,7 @@ def test_code_generation_uses_a_matching_template(tmp_path):
 def test_a_stale_template_is_ignored():
     changed = LAG.model_copy(update={'ctemplate': template(), 'equations': 'der(x) = (u - x)/tau;\ny = x;'})
     with pytest.raises(CodegenError, match='no C template'):
-        generate(project(changed), [], None, ['block'], CodegenOptions())
+        generate(project(changed), [], None, ['block'], CodegenOptions(step=0.01))
 
 
 @pytest.mark.skipif(shutil.which('gcc') is None, reason='needs a C compiler')

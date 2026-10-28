@@ -31,6 +31,10 @@ def solver_ids() -> tuple[str, ...]:
     return tuple(limits()['solvers'])
 
 
+# Display names, as Simulation settings shows them (lib/gradara/solver-docs.ts).
+NAMES = {'dassl': 'DASSL', 'esdirk': 'Implicit Runge-Kutta', 'backwardEuler': 'Backward Euler', 'rk4': 'Runge-Kutta 4'}
+
+
 def is_fixed(solver: str) -> bool:
     return bool(limits()['solvers'][solver]['fixed'])
 

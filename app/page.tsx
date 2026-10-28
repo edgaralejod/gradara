@@ -81,6 +81,7 @@ import {
   FlipHorizontal2,
   Settings2,
   Code2,
+  Cpu,
   ArrowUpRight,
   FolderOpen,
   FilePlus2,
@@ -215,6 +216,7 @@ import BlockDialog, {
 } from '@/components/gradara/block-dialog';
 import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
+import CodegenDialog from '@/components/gradara/codegen-dialog';
 import VariantPanel from '@/components/gradara/variant-panel';
 import { BusSignalsPanel } from '@/components/gradara/bus-signals-panel';
 import { SymbolEditorHost } from '@/components/gradara/symbol-editor-host';
@@ -490,6 +492,7 @@ function Workbench() {
     tab: BlockDialogTab;
   } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [codegenOpen, setCodegenOpen] = useState(false);
   const [libraryOpen, updateLibraryOpen] = useState(true);
   const [inspectorOpen, updateInspectorOpen] = useState(true);
   const [workspaceMode, setWorkspaceMode] = useState<
@@ -2063,6 +2066,12 @@ function Workbench() {
         run: () => setExportOpen(true),
       },
       {
+        id: 'codegen',
+        label: 'Generate C code…',
+        icon: <Cpu size={13} />,
+        run: () => setCodegenOpen(true),
+      },
+      {
         id: 'solver-help',
         label: 'Simulation settings guide',
         icon: <CircleHelp size={13} />,
@@ -2954,6 +2963,14 @@ function Workbench() {
             <Button variant="outline" onClick={() => setExportOpen(true)}>
               <ArrowUpRight />
               Export
+            </Button>
+            <Button
+              variant="outline"
+              title="Generate C code for a controller"
+              onClick={() => setCodegenOpen(true)}
+            >
+              <Cpu />
+              C code
             </Button>
             <Button
               variant="ghost"
@@ -4605,20 +4622,40 @@ function Workbench() {
         {exportOpen && (
           <ExportDialog
             doc={doc}
+            onCodegen={() => {
+              setExportOpen(false);
+              setCodegenOpen(true);
+            }}
+            onClose={() => setExportOpen(false)}
+          />
+        )}
+        {codegenOpen && (
+          <CodegenDialog
+            doc={doc}
             path={scope}
             project={project}
             selectedIds={selectedIds}
-            runId={result?.comparison ? undefined : result?.id}
+            lastRun={
+              result && !result.comparison
+                ? {
+                    id: result.id,
+                    simulation: result.simulation,
+                    stale: signature !== resultSignature,
+                  }
+                : undefined
+            }
+            running={running}
             onCommit={(change) => commit(change)}
+            onRun={() => void runRef.current()}
             onShowBlocks={(ids) => {
-              setExportOpen(false);
+              setCodegenOpen(false);
               selectBlocks(ids);
             }}
             onOpenSettings={() => {
-              setExportOpen(false);
+              setCodegenOpen(false);
               setSettingsTab('ai');
             }}
-            onClose={() => setExportOpen(false)}
+            onClose={() => setCodegenOpen(false)}
           />
         )}
         {settingsTab && (

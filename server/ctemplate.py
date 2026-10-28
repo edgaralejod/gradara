@@ -193,7 +193,8 @@ async def write_template(definition: Definition, job_id: str, progress=lambda me
             template = CTemplate.model_validate(data | {'signature': signature(definition)})
             check(definition, template)
             with_template = definition.model_copy(update={'ctemplate': template})
-            generated = generate(_probe(with_template), [], None, ['block'], CodegenOptions(prefix='probe'))
+            # The probe only has to compile; any step does.
+            generated = generate(_probe(with_template), [], None, ['block'], CodegenOptions(prefix='probe', step=1e-3))
             for name, text in generated.files.items():
                 (folder/name).write_text(text, encoding='utf-8')
             code, output = await engines.compile_c(folder, 'probe.c')

@@ -4,9 +4,11 @@
 The unit is flattened (nested subsystems are inlined), checked to be signal-only,
 sorted by data dependency, and written as C from one small template per block
 type. Continuous states are discretized with forward Euler, backward Euler, or
-Tustin; sampled blocks run on counters derived from their sample period. The same
-model and options always give the same code. `verify` replays the unit's inputs
-from the last simulation through the compiled C and compares its outputs.
+Tustin; sampled blocks run on counters derived from their sample period. The code
+steps at the model's fixed step; in a variable-step model a unit with a sampled
+block runs at its shortest sample period, and any other unit is refused. The same model and options always give the same code.
+`verify` replays the unit's inputs from the last simulation, which must be a
+fixed-step run at the code's step, through the compiled C and compares its outputs.
 """
 from __future__ import annotations
 
@@ -19,6 +21,7 @@ from typing import Callable, Literal
 
 from pydantic import BaseModel, Field
 
+from . import solver
 from .buses import BUS_KINDS
 from .models import BOUNDARY_KINDS, CAUSAL_DOMAINS, Block, Definition, Project, net_components
 
@@ -26,6 +29,7 @@ Method = Literal['forward', 'backward', 'tustin']
 
 
 class CodegenOptions(BaseModel):
+    # Absent means the model's fixed step; a value overrides it (the code then no longer matches a run).
     step: float | None = Field(default=None, gt=0, le=10)
     method: Method = 'tustin'
     real: Literal['float', 'double'] = 'double'
@@ -276,9 +280,16 @@ class Code:
 
 class Ctx:
     def __init__(self, node: Node, real: str, h: float, method: Method, value_of: Callable[[Source], str]):
-        self.node, self.real, self.h, self.method = node, real, h, method
+        self.node, self.real, self._h, self.method = node, real, h, method
         self._value_of = value_of
         self.params = {p.id: p.value for p in node.definition.parameters}
+        # Whether the block's code depends on the step (a discretized continuous state, a delay in steps).
+        self.used_h = False
+
+    @property
+    def h(self) -> float:
+        self.used_h = True
+        return self._h
 
     def u(self, port: str) -> str:
         return self._value_of(self.node.inputs[port])
@@ -719,7 +730,9 @@ def t_custom(d: Definition, c: Ctx) -> Code | None:
     names |= {f'y.{p.id}': c.y(p.id) for p in d.ports if p.direction == 'output'}
     names |= {f'p.{p.id}': c.p(p.id) for p in d.parameters}
     names |= {f'x.{s.name}': c.x(s.name) for s in tpl.state}
-    names |= {'h': c.lit(c.h), 't': 's->t'}
+    if any('{h}' in line for line in [*tpl.output, *tpl.update]):
+        names['h'] = c.lit(c.h)
+    names['t'] = 's->t'
     types = {'real': c.real, 'bool': 'bool', 'int': 'int32_t'}
     init = lambda s: ('true' if s.init else 'false') if s.type == 'bool' else repr(int(s.init) if s.type == 'int' else float(s.init))
     return Code(output=[ctemplate.render(line, names) for line in tpl.output],
@@ -749,14 +762,53 @@ def template(node: Node, c: Ctx) -> Code:
 
 # ---------------------------------------------------------------- emission
 
+StepSource = Literal['model', 'option', 'sample']
+
+
 @dataclass
 class Generated:
     files: dict[str, str]
     step: float
+    # Where the step came from: the model's fixed-step settings, the `step` option, or (a sampled
+    # controller in a variable-step model) the unit's own shortest sample period.
+    step_source: StepSource
+    # The model's effective simulation settings (server/solver.py), for the workbench's readiness list.
+    solver: dict
     inputs: list[dict]
     outputs: list[dict]
     blocks: list[str]
     notes: list[str]
+
+
+VARIABLE_STEP = ('Code generation needs a fixed-step model; this one uses {solver}, a variable-step solver, and '
+                 'no block in the unit is sampled, so nothing sets the step the code runs at{what}. In Simulation '
+                 'settings choose Runge-Kutta 4 or Backward Euler and the step the controller runs at.')
+
+
+def model_step(project: Project, options: CodegenOptions, unit: 'Unit', build) -> tuple[float, StepSource, dict, list]:
+    """The step the code runs at: the `step` option, or else the model's fixed step.
+
+    A variable-step model has no step to match, but a unit with a sampled block has
+    a base rate of its own, its shortest sample period, whatever solver the plant
+    uses (a sampled controller beside a switching plant that only runs with a
+    variable step). Its continuous blocks are discretized at that rate, and the
+    blocks that depend on the step are returned so the notes can say so. A unit
+    with no sampled block is refused: nothing sets the step it would run at.
+    `build(h, probe)` makes the unit's code at step h and reports which blocks depend on the step.
+    """
+    active = solver.effective(project.duration, project.simulation)
+    if options.step:
+        return options.step, 'option', active, []
+    if solver.is_fixed(active['solver']):
+        return active['step'], 'model', active, []
+    trial, bound = build(1.0, probe=True)
+    periods = [code.period for code in trial.values() if code.period is not None]
+    if periods:
+        return min(periods), 'sample', active, bound
+    names = [n.definition.name for n in bound][:3]
+    what = f' ({", ".join(names)} {"has" if len(names) == 1 else "have"} continuous dynamics)' if names else ''
+    raise CodegenError(VARIABLE_STEP.format(solver=solver.NAMES[active['solver']], what=what),
+                       [n.block_id for n in bound])
 
 
 def _order(unit: Unit, codes: dict[str, Code]) -> list[Node]:
@@ -794,13 +846,6 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
     if not unit.nodes:
         raise CodegenError('There are no blocks to generate code for.')
     real = options.real
-    periods = []
-    for node in unit.nodes:
-        for pid in ('samplePeriod', 'Ts'):
-            value = next((p.value for p in node.definition.parameters if p.id == pid), None)
-            if value and node.definition.kind in {'pi', 'discretePID', 'unitDelay', 'zoh', 'discreteIntegrator'}:
-                periods.append(value)
-    h = options.step or (min(periods) if periods else 1e-3)
     prefix = options.prefix
     ctype = {'signal': real, 'boolean': 'bool'}
 
@@ -809,9 +854,28 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
             return f'in->{unit.inputs[source.unit_input]["name"]}'
         return f'{source.node}_{source.port}'
 
-    codes: dict[str, Code] = {}
-    for node in unit.nodes:
-        codes[node.key] = template(node, Ctx(node, real, h, options.method, value_of))
+    def build(step: float, probe: bool = False) -> tuple[dict[str, Code], list[Node]]:
+        """The unit's code at a step, and the blocks whose code depends on it (unsampled, with state or using h).
+        When probing a variable-step model, a block that refuses the trial step (a PWM carrier needs a whole
+        number of steps per period) depends on the step too."""
+        out, bound = {}, []
+        for node in unit.nodes:
+            ctx = Ctx(node, real, step, options.method, value_of)
+            try:
+                code = template(node, ctx)
+            except CodegenError as exc:
+                if not (probe and 'choose a step' in str(exc)):
+                    raise
+                bound.append(node)
+                continue
+            out[node.key] = code
+            if code.period is None and (code.state or ctx.used_h):
+                bound.append(node)
+        return out, bound
+
+    # The unit's own problems (physical blocks, buses, templates) come first; the step is the next thing to settle.
+    h, step_source, active, continuous = model_step(project, options, unit, build)
+    codes = build(h)[0]
     order = _order(unit, codes)
     notes = []
     for node in order:
@@ -823,6 +887,10 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
                                    f'number of {h:g} s steps. Choose a step that divides it.', [node.block_id])
         if code.note:
             notes.append(f'{node.definition.name}: {code.note}.')
+    if continuous:
+        names = ', '.join(n.definition.name for n in continuous)
+        notes.insert(0, f'The model uses a variable-step solver, so the code runs at the shortest sample period, '
+                        f'{h:g} s; {names} {"is" if len(continuous) == 1 else "are"} discretized at that step.')
 
     guard = f'{prefix.upper()}_H'
     H = [f'/* Generated by Gradara from "{project.name}". Deterministic: same model and options, same code. */',
@@ -900,8 +968,8 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
             if port.direction == 'output' and len(re.findall(rf'\b{name}\b', source)) == 1 + (1 if codes[node.key].period is not None else 0):
                 source = source.replace(f'  {ctype[port.domain]} {name};', f'  {ctype[port.domain]} {name}; (void){name};', 1)
     readme = _readme(project, prefix, h, options, unit, notes)
-    return Generated({f'{prefix}.h': '\n'.join(H), f'{prefix}.c': source, 'README.md': readme}, h, unit.inputs,
-                     unit.outputs, sorted({n.path + n.block_id for n in unit.nodes}), notes)
+    return Generated({f'{prefix}.h': '\n'.join(H), f'{prefix}.c': source, 'README.md': readme}, h, step_source, active,
+                     unit.inputs, unit.outputs, sorted({n.path + n.block_id for n in unit.nodes}), notes)
 
 
 def _readme(project, prefix, h, options, unit, notes) -> str:
@@ -1033,6 +1101,26 @@ def compare(expected: list[list[float]], actual: list[list[float]], outputs: lis
 SIL_TOLERANCE = 0.02
 
 
+def check_run_step(result: dict, generated: Generated) -> None:
+    """The run must step at the code's step, so the recorded signals are the ones the code would see.
+
+    A sampled controller in a variable-step model (`sample`) holds its inputs between samples,
+    so any run of the model checks it. Runs from before settings were recorded (0.6.9) used
+    the defaults, a variable-step solver.
+    """
+    if generated.step_source == 'sample':
+        return
+    run = result.get('simulation') or solver.effective(float(result['duration']), None)
+    if not solver.is_fixed(run['solver']):
+        raise CodegenError(f'The last run used {solver.NAMES[run["solver"]]}, a variable-step solver, so its samples do not '
+                           f'fall on the code\'s {generated.step:g} s steps. Run the model with a fixed step of '
+                           f'{generated.step:g} s, then verify.')
+    if abs(run['step'] - generated.step) > 1e-9 * generated.step:
+        raise CodegenError(f'The last run stepped every {run["step"]:g} s, but the code steps every {generated.step:g} s. '
+                           + ('Run the model again, then verify.' if generated.step_source == 'model' else
+                              'Leave the step blank to use the model\'s step, or run the model with this step.'))
+
+
 async def verify(request: CodegenRequest, runs: Path, run_c) -> dict:
     """Replay the last run's inputs through the compiled C and compare against the outputs it recorded."""
     import json
@@ -1049,6 +1137,7 @@ async def verify(request: CodegenRequest, runs: Path, run_c) -> dict:
     if result.get('modelHash') != semantic_hash(request.project):
         raise CodegenError('The model changed since the last run. Run it again, then verify.')
     generated = generate(request.project, request.path, request.instanceId, request.blockIds, request.options)
+    check_run_step(result, generated)
     held_in, expected = replay_inputs(csv_file, generated, float(result['duration']))
     work = folder/f'sil-{uuid.uuid4().hex[:8]}'
     work.mkdir()
@@ -1083,7 +1172,8 @@ def archive(generated: Generated) -> bytes:
 
 
 def describe(generated: Generated) -> dict:
-    return {'files': generated.files, 'step': generated.step, 'inputs': [_public(i) for i in generated.inputs],
+    return {'files': generated.files, 'step': generated.step, 'stepSource': generated.step_source,
+            'solver': generated.solver, 'inputs': [_public(i) for i in generated.inputs],
             'outputs': [_public(o) for o in generated.outputs], 'blocks': generated.blocks, 'notes': generated.notes}
 
 
