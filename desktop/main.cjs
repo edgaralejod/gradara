@@ -593,7 +593,20 @@ function buildMenu() {
   const isMac = process.platform === 'darwin';
   const template = [
     ...(isMac ? [{ role: 'appMenu' }] : []),
-    { role: 'fileMenu' },
+    {
+      label: 'File',
+      submenu: [
+        // The workbench opens its Print dialog on this event (Ctrl/Cmd+P in a browser does the same).
+        {
+          label: 'Print…',
+          accelerator: 'CmdOrCtrl+P',
+          click: () =>
+            void mainWindow?.webContents.executeJavaScript("window.dispatchEvent(new Event('gradara:print'))"),
+        },
+        { type: 'separator' },
+        isMac ? { role: 'close' } : { role: 'quit' },
+      ],
+    },
     { role: 'editMenu' },
     {
       label: 'View',
@@ -717,6 +730,30 @@ function setUpUpdates() {
 
 // Only the workbench served by our own service may call these.
 const trusted = (event) => isLocal(event.senderFrame?.url || '');
+// Print → Save PDF: the page shows only its print layout under print media, so the
+// window's own printToPDF is the document. The user picks the file first.
+const MM_INCH = 10 / 25.4;
+ipcMain.handle('gradara:print:pdf', async (event, request) => {
+  if (!trusted(event)) return null;
+  const pageSize = request && request.paper === 'a4' ? 'A4' : 'Letter';
+  const name = String((request && request.name) || 'model').replace(/[^A-Za-z0-9._ -]+/g, '-').slice(0, 80) || 'model';
+  const owner = BrowserWindow.fromWebContents(event.sender);
+  const choice = await dialog.showSaveDialog(owner, {
+    title: 'Save PDF',
+    defaultPath: path.join(app.getPath('documents'), `${name}.pdf`),
+    filters: [{ name: 'PDF', extensions: ['pdf'] }],
+  });
+  if (choice.canceled || !choice.filePath) return { saved: false };
+  const data = await event.sender.printToPDF({
+    landscape: true,
+    pageSize,
+    printBackground: true,
+    preferCSSPageSize: true,
+    margins: { top: MM_INCH, bottom: MM_INCH, left: MM_INCH, right: MM_INCH },
+  });
+  await fs.promises.writeFile(choice.filePath, data);
+  return { saved: true, file: path.basename(choice.filePath) };
+});
 ipcMain.handle('gradara:update:state', (event) => (trusted(event) ? { ...updateState } : null));
 ipcMain.handle('gradara:update:check', async (event) => {
   if (!trusted(event)) return null;
