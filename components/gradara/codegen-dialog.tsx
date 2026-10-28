@@ -287,8 +287,8 @@ export default function CodegenDialog({
       >
         <DialogTitle>Generate C code</DialogTitle>
         <DialogDescription>
-          A controller as C: it runs at the model&apos;s fixed step, and a run at
-          that step verifies it.
+          A controller as C, at one fixed rate: the model&apos;s fixed step, or
+          a sampled controller&apos;s own period. A run of the model verifies it.
         </DialogDescription>
         {choices.length ? (
           <>
