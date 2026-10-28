@@ -61,7 +61,7 @@ export default function ExportDialog({
       >
         <DialogTitle>Export model</DialogTitle>
         <DialogDescription>
-          Save an editable model, or go on to C code for a controller.
+          Save an editable model, print it, or generate C code for a controller.
         </DialogDescription>
         <button
           className="export-option"
@@ -118,8 +118,8 @@ export default function ExportDialog({
           <div>
             <strong>C code for a controller</strong>
             <p>
-              Deterministic C at the model&apos;s fixed step, verified against
-              your last run.
+              Deterministic C at one fixed rate, verified against your last
+              run.
             </p>
           </div>
           <ArrowRight size={17} />
