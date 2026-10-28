@@ -358,6 +358,7 @@ The dialog previews every page. Choose **Letter** or **A4** (landscape; the firs
 
 - **Modelica source**: the complete model as a `.mo` file, with equations, parameters, and connections. Editing the `.mo` file does not change your diagram.
 - **Gradara project**: a `.gradara.json` file with the diagram, layout, and custom blocks. Import it on another computer with **Models → Import file**.
+- **Print or PDF**, which opens [Print](#print).
 - **C code for a controller**, which opens [Generate C code](#generate-c-code).
 
 ## Generate C code

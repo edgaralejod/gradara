@@ -4655,6 +4655,10 @@ function Workbench() {
               setExportOpen(false);
               setCodegenOpen(true);
             }}
+            onPrint={() => {
+              setExportOpen(false);
+              setPrintOpen(true);
+            }}
             onClose={() => setExportOpen(false)}
           />
         )}

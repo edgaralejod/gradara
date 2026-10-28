@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Code2, FileJson, Download, LoaderCircle, Cpu, ArrowRight } from 'lucide-react';
+import { Code2, FileJson, Download, LoaderCircle, Cpu, ArrowRight, Printer } from 'lucide-react';
 import { api, downloadText, fileSlug } from '@/lib/gradara/api';
 import type { Project } from '@/lib/gradara/model';
 
@@ -17,12 +17,15 @@ import type { Project } from '@/lib/gradara/model';
 export default function ExportDialog({
   doc,
   onCodegen,
+  onPrint,
   onClose,
 }: {
   /** The whole document, subsystems included. */
   doc: Project;
   /** Open Generate C code in place of this dialog. */
   onCodegen: () => void;
+  /** Open Print in place of this dialog. */
+  onPrint: () => void;
   onClose: () => void;
 }) {
   const [busy, setBusy] = useState('');
@@ -97,6 +100,16 @@ export default function ExportDialog({
             <p>Reopen your diagram with its layout and custom components.</p>
           </div>
           <Download size={17} />
+        </button>
+        <button className="export-option" onClick={onPrint} disabled={!!busy}>
+          <span>
+            <Printer />
+          </span>
+          <div>
+            <strong>Print or PDF</strong>
+            <p>The diagram and every subsystem, a page each.</p>
+          </div>
+          <ArrowRight size={17} />
         </button>
         <button className="export-option" onClick={onCodegen} disabled={!!busy}>
           <span>
