@@ -157,6 +157,8 @@ export type SimulationResult = {
   problems?: Diagnostic[];
   /** Set on an overlay of several configurations' runs (Run all configurations); not a stored run. */
   comparison?: { name: string; runId: string }[];
+  /** Set while the run is still going (live-run.ts): a preview the finished result replaces. */
+  live?: { fraction: number };
 };
 /** A model name as a file name part: letters, digits, dots and dashes, as the service does. */
 export function fileSlug(name: string, fallback = 'model'): string {
