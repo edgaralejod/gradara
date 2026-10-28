@@ -25,7 +25,7 @@ gcc = pytest.mark.skipif(shutil.which('gcc') is None, reason='needs a C compiler
 
 # The fixed step each example runs at for code generation: the controller's sample period. The flyback is
 # left out: its switching plant runs only with a variable step in OpenModelica (every fixed-step solver fails
-# on its rectifier around 35 ms, down to 0.5 µs), and its controller is sampled, so it generates at its own rate.
+# on its rectifier around 35 ms, down to 0.5 µs), and its controller has a sampled PI, so it runs at that rate.
 FIXED_STEP = {'dc': 1e-3, 'servo': 1e-3, 'foc': 1e-4, 'grouped-dc': 1e-3}
 
 
@@ -95,16 +95,21 @@ def integrating_chain():
 
 
 def test_variable_step_models_are_refused_unless_the_controller_is_sampled():
-    # Continuous dynamics in a variable-step model: no step to discretize at, so refused, naming the block.
-    with pytest.raises(CodegenError, match='fixed-step model.*DASSL.*int has continuous dynamics') as info:
+    # No sampled block in a variable-step model: nothing sets the step, so refused, naming continuous blocks.
+    with pytest.raises(CodegenError, match=r'fixed-step model.*DASSL.*no block in the unit is sampled.*\(int has continuous dynamics\)') as info:
         generate(integrating_chain(), [], None, ['int', 'k'], CodegenOptions())
     assert info.value.block_ids == ['int']
-    # Nothing that sets a rate (no sampled block, no state): refused too.
-    with pytest.raises(CodegenError, match='nothing in the unit sets a rate'):
+    with pytest.raises(CodegenError, match='no block in the unit is sampled, so nothing sets') as info:
         generate(integrating_chain(), [], None, ['k'], CodegenOptions())
+    assert info.value.block_ids == []
     # A sampled controller has its own rate: it generates at its sample period whatever the plant's solver.
     g = generate(raw_example('dc'), [], None, ['controller'], CodegenOptions())
     assert g.step == 0.001 and g.step_source == 'sample' and g.solver['solver'] == 'dassl'
+    assert not any('variable-step' in n for n in g.notes)
+    # Continuous blocks beside a sampled one are discretized at the sample period, and the notes say so.
+    fly = generate(raw_example('flyback'), [], 'control', [], CodegenOptions())
+    assert fly.step == 1e-4 and fly.step_source == 'sample'
+    assert 'variable-step solver' in fly.notes[0] and 'filter' in fly.notes[0] and '0.0001 s' in fly.notes[0]
     # The option overrides in every case.
     g = generate(raw_example('dc'), [], None, ['controller'], CodegenOptions(step=0.0005))
     assert g.step == 0.0005 and g.step_source == 'option'

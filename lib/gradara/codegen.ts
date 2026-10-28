@@ -308,7 +308,7 @@ export function readiness(
           text:
             stepOverride !== undefined
               ? `${SOLVER_NAMES[settings.solver]} is a variable-step solver, so no run steps at the step set here.`
-              : `${SOLVER_NAMES[settings.solver]} is a variable-step solver, and this controller has continuous dynamics. C code steps at one fixed rate.`,
+              : `${SOLVER_NAMES[settings.solver]} is a variable-step solver, and no block in this controller is sampled, so nothing sets the rate its code runs at.`,
           action: 'use-fixed-step',
         };
   const steps = step ? stepsFor(doc.duration, step) : 0;

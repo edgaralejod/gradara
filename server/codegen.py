@@ -5,8 +5,8 @@ The unit is flattened (nested subsystems are inlined), checked to be signal-only
 sorted by data dependency, and written as C from one small template per block
 type. Continuous states are discretized with forward Euler, backward Euler, or
 Tustin; sampled blocks run on counters derived from their sample period. The code
-steps at the model's fixed step; in a variable-step model only a unit with no
-continuous dynamics is generated, at its shortest sample period. The same model and options always give the same code.
+steps at the model's fixed step; in a variable-step model a unit with a sampled
+block runs at its shortest sample period, and any other unit is refused. The same model and options always give the same code.
 `verify` replays the unit's inputs from the last simulation, which must be a
 fixed-step run at the code's step, through the compiled C and compares its outputs.
 """
@@ -781,37 +781,34 @@ class Generated:
 
 
 VARIABLE_STEP = ('Code generation needs a fixed-step model; this one uses {solver}, a variable-step solver, and '
-                 '{blocks} {verb} continuous dynamics, so the step the code runs at is not defined. In Simulation '
+                 'no block in the unit is sampled, so nothing sets the step the code runs at{what}. In Simulation '
                  'settings choose Runge-Kutta 4 or Backward Euler and the step the controller runs at.')
 
 
-def model_step(project: Project, options: CodegenOptions, unit: 'Unit', build) -> tuple[float, StepSource, dict]:
+def model_step(project: Project, options: CodegenOptions, unit: 'Unit', build) -> tuple[float, StepSource, dict, list]:
     """The step the code runs at: the `step` option, or else the model's fixed step.
 
-    A variable-step model has no step to match. A unit made only of sampled blocks
-    and blocks without state still has a rate of its own, its shortest sample
-    period, and runs the same whatever solver the plant uses (a sampled controller
-    beside a switching plant that only runs with a variable step). Any other unit
-    is refused: its continuous states would be discretized at a step nothing sets.
-    `build(h)` makes the unit's code at step h and reports which blocks depend on the step.
+    A variable-step model has no step to match, but a unit with a sampled block has
+    a base rate of its own, its shortest sample period, whatever solver the plant
+    uses (a sampled controller beside a switching plant that only runs with a
+    variable step). Its continuous blocks are discretized at that rate, and the
+    blocks that depend on the step are returned so the notes can say so. A unit
+    with no sampled block is refused: nothing sets the step it would run at.
+    `build(h, probe)` makes the unit's code at step h and reports which blocks depend on the step.
     """
     active = solver.effective(project.duration, project.simulation)
     if options.step:
-        return options.step, 'option', active
+        return options.step, 'option', active, []
     if solver.is_fixed(active['solver']):
-        return active['step'], 'model', active
+        return active['step'], 'model', active, []
     trial, bound = build(1.0, probe=True)
     periods = [code.period for code in trial.values() if code.period is not None]
-    h = min(periods) if periods else None
-    if h and not bound:
-        return h, 'sample', active
+    if periods:
+        return min(periods), 'sample', active, bound
     names = [n.definition.name for n in bound][:3]
-    if not bound:  # nothing sampled and nothing with state: still no rate to run at
-        raise CodegenError(f'Code generation needs a fixed-step model; this one uses {solver.NAMES[active["solver"]]}, '
-                           'a variable-step solver, and nothing in the unit sets a rate. In Simulation settings choose '
-                           'Runge-Kutta 4 or Backward Euler and the step the controller runs at.')
-    raise CodegenError(VARIABLE_STEP.format(solver=solver.NAMES[active['solver']], blocks=', '.join(names),
-                                            verb='has' if len(names) == 1 else 'have'), [n.block_id for n in bound])
+    what = f' ({", ".join(names)} {"has" if len(names) == 1 else "have"} continuous dynamics)' if names else ''
+    raise CodegenError(VARIABLE_STEP.format(solver=solver.NAMES[active['solver']], what=what),
+                       [n.block_id for n in bound])
 
 
 def _order(unit: Unit, codes: dict[str, Code]) -> list[Node]:
@@ -877,7 +874,7 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
         return out, bound
 
     # The unit's own problems (physical blocks, buses, templates) come first; the step is the next thing to settle.
-    h, step_source, active = model_step(project, options, unit, build)
+    h, step_source, active, continuous = model_step(project, options, unit, build)
     codes = build(h)[0]
     order = _order(unit, codes)
     notes = []
@@ -890,6 +887,10 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
                                    f'number of {h:g} s steps. Choose a step that divides it.', [node.block_id])
         if code.note:
             notes.append(f'{node.definition.name}: {code.note}.')
+    if continuous:
+        names = ', '.join(n.definition.name for n in continuous)
+        notes.insert(0, f'The model uses a variable-step solver, so the code runs at the shortest sample period, '
+                        f'{h:g} s; {names} {"is" if len(continuous) == 1 else "are"} discretized at that step.')
 
     guard = f'{prefix.upper()}_H'
     H = [f'/* Generated by Gradara from "{project.name}". Deterministic: same model and options, same code. */',
