@@ -82,6 +82,7 @@ import {
   Settings2,
   Code2,
   Cpu,
+  Printer,
   ArrowUpRight,
   FolderOpen,
   FilePlus2,
@@ -217,6 +218,7 @@ import BlockDialog, {
 import ParameterList from '@/components/gradara/parameter-list';
 import ExportDialog from '@/components/gradara/export-dialog';
 import CodegenDialog from '@/components/gradara/codegen-dialog';
+import PrintDialog from '@/components/gradara/print-dialog';
 import VariantPanel from '@/components/gradara/variant-panel';
 import { BusSignalsPanel } from '@/components/gradara/bus-signals-panel';
 import { SymbolEditorHost } from '@/components/gradara/symbol-editor-host';
@@ -493,6 +495,23 @@ function Workbench() {
   } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [codegenOpen, setCodegenOpen] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
+  // Ctrl/Cmd+P anywhere, and File → Print in the desktop app, open Print instead of printing the workbench.
+  useEffect(() => {
+    const open = () => setPrintOpen(true);
+    const key = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        open();
+      }
+    };
+    window.addEventListener('keydown', key);
+    window.addEventListener('gradara:print', open);
+    return () => {
+      window.removeEventListener('keydown', key);
+      window.removeEventListener('gradara:print', open);
+    };
+  }, []);
   const [libraryOpen, updateLibraryOpen] = useState(true);
   const [inspectorOpen, updateInspectorOpen] = useState(true);
   const [workspaceMode, setWorkspaceMode] = useState<
@@ -2070,6 +2089,13 @@ function Workbench() {
         label: 'Generate C code…',
         icon: <Cpu size={13} />,
         run: () => setCodegenOpen(true),
+      },
+      {
+        id: 'print',
+        label: 'Print…',
+        icon: <Printer size={13} />,
+        shortcut: '⌘P',
+        run: () => setPrintOpen(true),
       },
       {
         id: 'solver-help',
@@ -4618,6 +4644,9 @@ function Workbench() {
             onClose={() => setCopyOpen(false)}
             onSave={saveCopy}
           />
+        )}
+        {printOpen && (
+          <PrintDialog doc={doc} onDone={notify} onClose={() => setPrintOpen(false)} />
         )}
         {exportOpen && (
           <ExportDialog

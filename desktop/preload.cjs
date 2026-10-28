@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // The only bridge between the workbench page and the desktop shell. It exposes
-// update status and actions, and personal-feature (layer) status and actions;
-// nothing else from Node or Electron reaches the page. The shell checks every
+// update status and actions, personal-feature (layer) status and actions, and
+// saving the print layout as a PDF; nothing else from Node or Electron reaches the page. The shell checks every
 // layer's signature itself, so the page can ask for an install but cannot skip the check.
 'use strict';
 
@@ -25,5 +25,9 @@ contextBridge.exposeInMainWorld('gradaraDesktop', {
     remove: () => ipcRenderer.invoke('gradara:layers:remove'),
     trust: (request) => ipcRenderer.invoke('gradara:layers:trust', request),
     restart: () => ipcRenderer.invoke('gradara:layers:restart'),
+  },
+  print: {
+    // Saves the page's print layout (the workbench's Print pages) as a PDF the user names.
+    pdf: (request) => ipcRenderer.invoke('gradara:print:pdf', request),
   },
 });

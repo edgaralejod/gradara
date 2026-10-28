@@ -73,15 +73,18 @@ export default function NetLabel(props: Props) {
       });
   };
   if (!position || (!editing && !netLabelShown(net))) return null;
+  // Placed with a transform from the origin rather than left/top, as block names are (block-node.tsx).
   const style = {
-    left: position.x,
-    top: position.y,
+    left: 0,
+    top: 0,
     color: props.color,
-    transform: position.horizontal
-      ? 'translate(-50%, -50%)'
-      : position.anchor.side === 1
-        ? 'translate(-100%, -50%)'
-        : 'translate(0, -50%)',
+    transform: `translate(${position.x}px, ${position.y}px) ${
+      position.horizontal
+        ? 'translate(-50%, -50%)'
+        : position.anchor.side === 1
+          ? 'translate(-100%, -50%)'
+          : 'translate(0, -50%)'
+    }`,
   };
   if (editing)
     return (

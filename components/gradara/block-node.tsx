@@ -162,18 +162,21 @@ function BlockNode({
         <ViewportPortal>
           <div
             className={`block-label-anchor engineering-label notation-${sum ? 'sum' : d.kind}`}
+            // A transform, not left/top: print layout (print-document.tsx) would count a
+            // left/top offset at full canvas size and shrink the whole page to fit it.
             style={{
-              left:
+              transform: `translate(${
                 positionAbsoluteX +
                 (width ??
                   blockSize({ id, definition: d, position: { x: 0, y: 0 } })
                     .width) /
-                  2,
-              top:
+                  2
+              }px, ${
                 positionAbsoluteY +
                 (height ??
                   blockSize({ id, definition: d, position: { x: 0, y: 0 } })
-                    .height),
+                    .height)
+              }px)`,
             }}
           >
             <BlockLabel id={id} name={d.name} offset={data.labelOffset} />

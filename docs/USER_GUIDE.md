@@ -50,6 +50,7 @@ Press **?** on the canvas to see this list in the app. On Windows and Linux, use
 | In the Ask bar: send / new line / next action / close | Enter / Shift + Enter / Tab / Escape |
 | Run simulation | ⌘/Ctrl + Enter |
 | Save now (edits also save automatically) | ⌘/Ctrl + S |
+| Print the design | ⌘/Ctrl + P |
 | Undo / redo | ⌘/Ctrl + Z / ⌘/Ctrl + Shift + Z |
 | Select all blocks and wires | ⌘/Ctrl + A |
 | Copy / cut / paste | ⌘/Ctrl + C / X / V |
@@ -343,6 +344,14 @@ The **Problems** tab sits in the dock under the canvas. Open or close it from th
 
 **Copy** copies every problem as text. With an AI provider set up, **Explain** and **Fix with AI** open the Ask bar on the current problems (**Explain problems** and **Fix problems**), and the ✦ button on a row opens it on that problem only. Add a question if you like, check the price, and press Enter. A failed run never calls an AI provider on its own. Answers appear in the **Proposals** tab: likely causes with block chips and steps to take, and for a fix, a proposed edit you review and apply. Linking solver messages to blocks is best effort; the expanded text is always the complete message.
 
+## Print
+
+![A printed sheet: the EV example's powertrain subsystem, with its header, legend, and run settings](images/print.webp)
+
+**Print…** (⌘/Ctrl + P, the command palette, or **File → Print…** in the desktop app) prints the whole design: the top level and every subsystem, a page each, in the order the Model Explorer lists them. Each sheet is drawn as the canvas draws it, scaled down to fit a landscape page when it is large and never enlarged, under a header with its name and where it sits ("Powertrain › Motor drive") and above a footer with a colour legend of its domains, the stop time and solver, and the date. A subsystem used in several places prints once and lists the other places. Subsystems with variants print their active variant; the dialog says how many other variants are left out, and switching the configuration prints them.
+
+The dialog previews every page. Choose **Letter** or **A4** (landscape; the first time, Gradara picks the one used where you are) and whether to add **Parameter tables**: after each sheet, a table of its blocks' parameters with their values and units. **Print…** opens the system print dialog, which can also save a PDF. In the desktop app, **Save PDF…** writes the PDF straight to a file you name. The paper and the tables setting are remembered on this computer.
+
 ## Export
 
 **Export** in the header offers:
@@ -504,3 +513,4 @@ Open any of these from **Examples**. Each guide describes what the model shows, 
 - AI-generated blocks and edits pass compiler checks, but compiling does not make a model physically correct. Review them as you would any model.
 - Buses route signals but do not do math: a Gain, Sum, or other block takes one signal, so split a bus with a Demux or Bus Selector first. A signal bus is all Real or all Boolean, tags do not carry a bus, and C export does not accept buses. Modelica import, FMI, and HDL export are not available.
 - Generated C code needs a fixed-step model unless the controller is sampled, and it is checked against the simulation, not on your target hardware.
+- Print fits each sheet on one page: a very large sheet prints small rather than across several pages. Results plots are not printed.

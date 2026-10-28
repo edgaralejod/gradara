@@ -1,0 +1,232 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Print (components/gradara/print-dialog.tsx): pages drawn with the canvas's own
+ * components. On screen the print root is laid out off to the side, so its
+ * diagrams are measured and ready; in print it is the only thing on the page.
+ */
+.print-root {
+  position: fixed;
+  left: -100000px;
+  top: 0;
+  pointer-events: none;
+}
+.print-document {
+  background: white;
+  color: #1d2a33;
+  font: 11px/1.4 var(--font-ui);
+}
+.print-page {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: white;
+}
+.print-header {
+  height: 34px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid #1d2a33;
+}
+.print-header > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.print-header strong {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.print-header span {
+  color: #5b6b77;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.print-header .print-sheet-number {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.print-diagram {
+  position: relative;
+  flex: none;
+  /* The canvas layers are translated to fit; clip them so nothing overflows the page. */
+  overflow: hidden;
+  contain: paint;
+}
+.print-diagram .react-flow {
+  background: white;
+}
+/* Nothing on a printed sheet is interactive: hide the port hit targets' hover chrome. */
+.print-diagram .react-flow__pane,
+.print-diagram .react-flow__node {
+  cursor: default;
+}
+.print-footer {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #c9d2d9;
+  color: #5b6b77;
+  font-size: 10px;
+}
+.print-legend {
+  display: flex;
+  gap: 12px;
+}
+.print-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.print-legend i {
+  width: 14px;
+  height: 3px;
+  border-radius: 1px;
+}
+.print-parameters h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid #1d2a33;
+  font-size: 15px;
+  font-weight: 650;
+}
+.print-parameters h2 span {
+  color: #5b6b77;
+  font-size: 11px;
+  font-weight: 400;
+}
+.print-parameters table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.print-parameters th {
+  text-align: left;
+  font-weight: 600;
+  color: #5b6b77;
+  border-bottom: 1px solid #c9d2d9;
+  padding: 3px 8px 3px 0;
+}
+.print-parameters td {
+  padding: 2px 8px 2px 0;
+  border-bottom: 1px solid #eef1f3;
+  vertical-align: top;
+}
+.print-parameters td:first-child {
+  font-weight: 600;
+  width: 32%;
+}
+.print-parameters td:nth-child(3) {
+  font-family: var(--font-code);
+}
+.print-parameters tr {
+  break-inside: avoid;
+}
+
+/* The dialog: options, then a strip of page previews. */
+.print-dialog {
+  max-width: 720px !important;
+}
+.print-dialog .print-options {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.print-dialog .print-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.print-dialog .print-options select {
+  height: 28px;
+  border: 1px solid #cfd9e0;
+  border-radius: 2px;
+  background: white;
+  padding: 0 6px;
+}
+.print-dialog .print-preview {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 12px;
+  border: 1px solid #d4dde4;
+  border-radius: 2px;
+  background: #e9edf0;
+  scroll-snap-type: x proximity;
+}
+.print-dialog .print-preview figure {
+  flex: none;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  scroll-snap-align: start;
+}
+.print-dialog .print-thumb {
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 1px 3px #22374733, 0 0 0 1px #22374714;
+  pointer-events: none;
+}
+.print-dialog .print-thumb .print-page {
+  padding: 0;
+}
+.print-dialog figcaption {
+  display: grid;
+  max-width: 300px;
+}
+.print-dialog figcaption strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.print-dialog figcaption span {
+  color: #637987;
+  font-size: var(--text-micro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.print-dialog .print-note {
+  margin: 0;
+  color: #637987;
+  font-size: var(--text-micro);
+}
+
+@media print {
+  html,
+  body {
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+  body > *:not(.print-root) {
+    display: none !important;
+  }
+  .print-root {
+    position: static;
+    left: auto;
+  }
+  .print-sheet > * {
+    break-after: page;
+  }
+  .print-sheet:last-child > *:last-child {
+    break-after: auto;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
