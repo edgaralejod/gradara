@@ -26,11 +26,13 @@ gcc = pytest.mark.skipif(shutil.which('gcc') is None, reason='needs a C compiler
 # The fixed step each example runs at for code generation: the controller's sample period, or, for the
 # flyback, a step that resolves its switching inside the run's point limit (0.3 s / 2 µs = 150,000).
 FIXED_STEP = {'dc': 1e-3, 'servo': 1e-3, 'foc': 1e-4, 'flyback': 2e-6, 'grouped-dc': 1e-3}
+# The switching flyback is stiff: explicit Runge-Kutta 4 fails on its rectifier at 2 µs; Backward Euler runs it.
+FIXED_SOLVER = {'flyback': 'backwardEuler'}
 
 
-def fixed(project, step):
-    """The project set to run Runge-Kutta 4 at `step`, as the C code flow's Use fixed step does."""
-    return project.model_copy(update={'simulation': SimulationSettings(solver='rk4', step=step)})
+def fixed(project, step, solver='rk4'):
+    """The project set to run a fixed-step solver at `step` (Runge-Kutta 4, as the C code flow's Use fixed step sets)."""
+    return project.model_copy(update={'simulation': SimulationSettings(solver=solver, step=step)})
 
 
 def raw_example(name):
@@ -39,7 +41,7 @@ def raw_example(name):
 
 
 def example(name):
-    return fixed(raw_example(name), FIXED_STEP[name])
+    return fixed(raw_example(name), FIXED_STEP[name], FIXED_SOLVER.get(name, 'rk4'))
 
 
 def block(ident, kind, ports, params=(), **extra):
@@ -317,7 +319,8 @@ def test_generated_code_reproduces_the_simulation(name, ids, path):
 
     from server.engine import RUNS, simulate
     source = ROOT/'tests/fixtures/grouped-dc.json' if name == 'grouped-dc' else ROOT/'models/examples'/f'{name}.json'
-    project = fixed(Project.model_validate_json(source.read_text(encoding='utf-8')), FIXED_STEP[name])
+    project = fixed(Project.model_validate_json(source.read_text(encoding='utf-8')), FIXED_STEP[name],
+                    FIXED_SOLVER.get(name, 'rk4'))
     run_id = 'sil' + uuid.uuid4().hex[:10]
     asyncio.run(simulate(log_outputs(project), run_id))
     # A string names a subsystem instance: the whole controller is the code unit.
