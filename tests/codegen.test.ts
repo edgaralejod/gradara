@@ -102,6 +102,17 @@ void test('readiness follows the solver, the step, and the last run', () => {
   assert.match(r.warning!, /not the model's 1 ms/);
   assert.equal(r.run.ok, false);
   assert.equal(readiness(fixed, 0.002, other).run.ok, true);
+  // A sampled controller in a variable-step model: its own rate, and any current run verifies it.
+  r = readiness(dc, undefined, undefined, 0.001);
+  assert.equal(r.solver.ok, true);
+  assert.match(r.solver.text, /DASSL \(variable step\) · the controller is sampled, so its code runs every 1 ms/);
+  assert.equal(r.steps, 4000);
+  assert.deepEqual([r.run.ok, r.run.action], [false, 'run']);
+  r = readiness(dc, undefined, { id: 'r0', stale: false }, 0.001);
+  assert.equal(r.run.ok, true);
+  assert.match(r.run.text, /4,000 controller steps/);
+  // An override in a variable-step model still needs a run at that step.
+  assert.equal(readiness(dc, 0.0005, { id: 'r0', stale: false }, 0.001).run.ok, false);
   // Too many steps to replay.
   const fine = { ...dc, simulation: fixedStepSettings(dc.simulation, 1e-6) };
   r = readiness(fine, undefined, undefined);

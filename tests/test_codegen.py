@@ -23,16 +23,15 @@ ROOT = Path(__file__).resolve().parents[1]
 gcc = pytest.mark.skipif(shutil.which('gcc') is None, reason='needs a C compiler')
 
 
-# The fixed step each example runs at for code generation: the controller's sample period, or, for the
-# flyback, a step that resolves its switching inside the run's point limit (0.3 s / 2 µs = 150,000).
-FIXED_STEP = {'dc': 1e-3, 'servo': 1e-3, 'foc': 1e-4, 'flyback': 2e-6, 'grouped-dc': 1e-3}
-# The switching flyback is stiff: explicit Runge-Kutta 4 fails on its rectifier at 2 µs; Backward Euler runs it.
-FIXED_SOLVER = {'flyback': 'backwardEuler'}
+# The fixed step each example runs at for code generation: the controller's sample period. The flyback is
+# left out: its switching plant runs only with a variable step in OpenModelica (every fixed-step solver fails
+# on its rectifier around 35 ms, down to 0.5 µs), and its controller is sampled, so it generates at its own rate.
+FIXED_STEP = {'dc': 1e-3, 'servo': 1e-3, 'foc': 1e-4, 'grouped-dc': 1e-3}
 
 
-def fixed(project, step, solver='rk4'):
-    """The project set to run a fixed-step solver at `step` (Runge-Kutta 4, as the C code flow's Use fixed step sets)."""
-    return project.model_copy(update={'simulation': SimulationSettings(solver=solver, step=step)})
+def fixed(project, step):
+    """The project set to run Runge-Kutta 4 at `step`, as the C code flow's Use fixed step does."""
+    return project.model_copy(update={'simulation': SimulationSettings(solver='rk4', step=step)})
 
 
 def raw_example(name):
@@ -41,7 +40,7 @@ def raw_example(name):
 
 
 def example(name):
-    return fixed(raw_example(name), FIXED_STEP[name], FIXED_SOLVER.get(name, 'rk4'))
+    return fixed(raw_example(name), FIXED_STEP[name])
 
 
 def block(ident, kind, ports, params=(), **extra):
@@ -87,11 +86,29 @@ def test_selection_finds_its_inputs_and_outputs():
     assert 'controller_step' in g.files['controller.h'] and 'controller_Params' in g.files['controller.h']
 
 
-def test_variable_step_models_are_refused_unless_a_step_is_given():
-    with pytest.raises(CodegenError, match='fixed-step model.*DASSL'):
-        generate(raw_example('dc'), [], None, ['controller'], CodegenOptions())
+def integrating_chain():
+    return chain(block('src', 'constant', [('y', 'output')], [('value', 1)]),
+                 block('int', 'integrator', [('u', 'input'), ('y', 'output')], [('limit', 100)]),
+                 block('k', 'gain', [('u', 'input'), ('y', 'output')], [('k', 2)]),
+                 block('out', 'terminator', [('u', 'input')]),
+                 wire('w1', 'src', 'y', 'int', 'u'), wire('w2', 'int', 'y', 'k', 'u'), wire('w3', 'k', 'y', 'out', 'u'))
+
+
+def test_variable_step_models_are_refused_unless_the_controller_is_sampled():
+    # Continuous dynamics in a variable-step model: no step to discretize at, so refused, naming the block.
+    with pytest.raises(CodegenError, match='fixed-step model.*DASSL.*int has continuous dynamics') as info:
+        generate(integrating_chain(), [], None, ['int', 'k'], CodegenOptions())
+    assert info.value.block_ids == ['int']
+    # Nothing that sets a rate (no sampled block, no state): refused too.
+    with pytest.raises(CodegenError, match='nothing in the unit sets a rate'):
+        generate(integrating_chain(), [], None, ['k'], CodegenOptions())
+    # A sampled controller has its own rate: it generates at its sample period whatever the plant's solver.
+    g = generate(raw_example('dc'), [], None, ['controller'], CodegenOptions())
+    assert g.step == 0.001 and g.step_source == 'sample' and g.solver['solver'] == 'dassl'
+    # The option overrides in every case.
     g = generate(raw_example('dc'), [], None, ['controller'], CodegenOptions(step=0.0005))
-    assert g.step == 0.0005 and g.step_source == 'option' and g.solver['solver'] == 'dassl'
+    assert g.step == 0.0005 and g.step_source == 'option'
+    assert generate(integrating_chain(), [], None, ['int'], CodegenOptions(step=0.01)).step_source == 'option'
     # A fixed-step model with a blank step runs at the default number of points; the code follows it.
     blank = raw_example('dc').model_copy(update={'simulation': SimulationSettings(solver='backwardEuler')})
     assert generate(blank, [], None, ['controller'], CodegenOptions(step=0.001)).solver['step'] == 4 / 6000
@@ -284,8 +301,11 @@ def test_api_generates_and_reports_problems():
     data = client.post('/api/codegen', json=body).json()
     assert data['ok'] and 'controller.c' in data['files'] and data['step'] == 0.001
     assert data['stepSource'] == 'model' and data['solver']['solver'] == 'rk4' and data['solver']['step'] == 0.001
-    loose = client.post('/api/codegen', json=body | {'project': raw_example('dc').model_dump(exclude_none=True)}).json()
-    assert not loose['ok'] and 'fixed-step model' in loose['error'] and loose['blockIds'] == []
+    sampled = client.post('/api/codegen', json=body | {'project': raw_example('dc').model_dump(exclude_none=True)}).json()
+    assert sampled['ok'] and sampled['stepSource'] == 'sample' and sampled['step'] == 0.001
+    loose = client.post('/api/codegen', json={'project': integrating_chain().model_dump(exclude_none=True),
+                                              'blockIds': ['int']}).json()
+    assert not loose['ok'] and 'fixed-step model' in loose['error'] and loose['blockIds'] == ['int']
     bad = client.post('/api/codegen', json=body | {'blockIds': ['controller', 'drive']}).json()
     assert not bad['ok'] and bad['blockIds'] == ['drive']
     zipped = client.post('/api/codegen/archive', json=body)
@@ -299,11 +319,14 @@ def test_api_generates_and_reports_problems():
     ('foc', FOC, []),
     ('grouped-dc', ['controller'], ['b_grp000e']),
     ('flyback', 'control', []),
+    ('dc-variable', ['controller'], []),
 ])
 def test_generated_code_reproduces_the_simulation(name, ids, path):
     """Software in the loop: the compiled controller, fed the simulated plant signals, gives the simulated commands.
 
-    Each model runs at the fixed step the code is generated for (`FIXED_STEP`), as the C code flow requires."""
+    Each model runs at the fixed step the code is generated for (`FIXED_STEP`), as the C code flow sets it. The
+    flyback, and the dc example as shipped, run their default variable-step solver: their controllers are sampled,
+    so the code runs at the sample period and the replay holds the run's samples."""
     import os
     import platform
     import uuid
@@ -318,9 +341,11 @@ def test_generated_code_reproduces_the_simulation(name, ids, path):
         pytest.skip('the flyback replay exceeds the 120-second limit in the nested VM on the hosted Intel Mac runner')
 
     from server.engine import RUNS, simulate
-    source = ROOT/'tests/fixtures/grouped-dc.json' if name == 'grouped-dc' else ROOT/'models/examples'/f'{name}.json'
-    project = fixed(Project.model_validate_json(source.read_text(encoding='utf-8')), FIXED_STEP[name],
-                    FIXED_SOLVER.get(name, 'rk4'))
+    source = (ROOT/'tests/fixtures/grouped-dc.json' if name == 'grouped-dc' else
+              ROOT/'models/examples'/f'{name.removesuffix("-variable")}.json')
+    project = Project.model_validate_json(source.read_text(encoding='utf-8'))
+    if name in FIXED_STEP:
+        project = fixed(project, FIXED_STEP[name])
     run_id = 'sil' + uuid.uuid4().hex[:10]
     asyncio.run(simulate(log_outputs(project), run_id))
     # A string names a subsystem instance: the whole controller is the code unit.

@@ -5,8 +5,8 @@ The unit is flattened (nested subsystems are inlined), checked to be signal-only
 sorted by data dependency, and written as C from one small template per block
 type. Continuous states are discretized with forward Euler, backward Euler, or
 Tustin; sampled blocks run on counters derived from their sample period. The code
-steps at the model's fixed step (a variable-step model is refused unless the
-`step` option is given). The same model and options always give the same code.
+steps at the model's fixed step; in a variable-step model only a unit with no
+continuous dynamics is generated, at its shortest sample period. The same model and options always give the same code.
 `verify` replays the unit's inputs from the last simulation, which must be a
 fixed-step run at the code's step, through the compiled C and compares its outputs.
 """
@@ -280,9 +280,16 @@ class Code:
 
 class Ctx:
     def __init__(self, node: Node, real: str, h: float, method: Method, value_of: Callable[[Source], str]):
-        self.node, self.real, self.h, self.method = node, real, h, method
+        self.node, self.real, self._h, self.method = node, real, h, method
         self._value_of = value_of
         self.params = {p.id: p.value for p in node.definition.parameters}
+        # Whether the block's code depends on the step (a discretized continuous state, a delay in steps).
+        self.used_h = False
+
+    @property
+    def h(self) -> float:
+        self.used_h = True
+        return self._h
 
     def u(self, port: str) -> str:
         return self._value_of(self.node.inputs[port])
@@ -723,7 +730,9 @@ def t_custom(d: Definition, c: Ctx) -> Code | None:
     names |= {f'y.{p.id}': c.y(p.id) for p in d.ports if p.direction == 'output'}
     names |= {f'p.{p.id}': c.p(p.id) for p in d.parameters}
     names |= {f'x.{s.name}': c.x(s.name) for s in tpl.state}
-    names |= {'h': c.lit(c.h), 't': 's->t'}
+    if any('{h}' in line for line in [*tpl.output, *tpl.update]):
+        names['h'] = c.lit(c.h)
+    names['t'] = 's->t'
     types = {'real': c.real, 'bool': 'bool', 'int': 'int32_t'}
     init = lambda s: ('true' if s.init else 'false') if s.type == 'bool' else repr(int(s.init) if s.type == 'int' else float(s.init))
     return Code(output=[ctemplate.render(line, names) for line in tpl.output],
@@ -753,12 +762,16 @@ def template(node: Node, c: Ctx) -> Code:
 
 # ---------------------------------------------------------------- emission
 
+StepSource = Literal['model', 'option', 'sample']
+
+
 @dataclass
 class Generated:
     files: dict[str, str]
     step: float
-    # Where the step came from: the model's fixed-step settings, or the `step` option.
-    step_source: Literal['model', 'option']
+    # Where the step came from: the model's fixed-step settings, the `step` option, or (a sampled
+    # controller in a variable-step model) the unit's own shortest sample period.
+    step_source: StepSource
     # The model's effective simulation settings (server/solver.py), for the workbench's readiness list.
     solver: dict
     inputs: list[dict]
@@ -767,20 +780,38 @@ class Generated:
     notes: list[str]
 
 
-def model_step(project: Project, options: CodegenOptions) -> tuple[float, Literal['model', 'option'], dict]:
+VARIABLE_STEP = ('Code generation needs a fixed-step model; this one uses {solver}, a variable-step solver, and '
+                 '{blocks} {verb} continuous dynamics, so the step the code runs at is not defined. In Simulation '
+                 'settings choose Runge-Kutta 4 or Backward Euler and the step the controller runs at.')
+
+
+def model_step(project: Project, options: CodegenOptions, unit: 'Unit', build) -> tuple[float, StepSource, dict]:
     """The step the code runs at: the `step` option, or else the model's fixed step.
 
-    A variable-step model has no step to match, so it is refused: the generated
-    code could not be verified against a run of it.
+    A variable-step model has no step to match. A unit made only of sampled blocks
+    and blocks without state still has a rate of its own, its shortest sample
+    period, and runs the same whatever solver the plant uses (a sampled controller
+    beside a switching plant that only runs with a variable step). Any other unit
+    is refused: its continuous states would be discretized at a step nothing sets.
+    `build(h)` makes the unit's code at step h and reports which blocks depend on the step.
     """
     active = solver.effective(project.duration, project.simulation)
     if options.step:
         return options.step, 'option', active
-    if not solver.is_fixed(active['solver']):
+    if solver.is_fixed(active['solver']):
+        return active['step'], 'model', active
+    trial, bound = build(1.0, probe=True)
+    periods = [code.period for code in trial.values() if code.period is not None]
+    h = min(periods) if periods else None
+    if h and not bound:
+        return h, 'sample', active
+    names = [n.definition.name for n in bound][:3]
+    if not bound:  # nothing sampled and nothing with state: still no rate to run at
         raise CodegenError(f'Code generation needs a fixed-step model; this one uses {solver.NAMES[active["solver"]]}, '
-                           'a variable-step solver. In Simulation settings choose Runge-Kutta 4 or Backward Euler '
-                           'and the step the controller runs at.')
-    return active['step'], 'model', active
+                           'a variable-step solver, and nothing in the unit sets a rate. In Simulation settings choose '
+                           'Runge-Kutta 4 or Backward Euler and the step the controller runs at.')
+    raise CodegenError(VARIABLE_STEP.format(solver=solver.NAMES[active['solver']], blocks=', '.join(names),
+                                            verb='has' if len(names) == 1 else 'have'), [n.block_id for n in bound])
 
 
 def _order(unit: Unit, codes: dict[str, Code]) -> list[Node]:
@@ -817,8 +848,6 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
     unit = build_unit(project, path, instance_id, block_ids)
     if not unit.nodes:
         raise CodegenError('There are no blocks to generate code for.')
-    # The unit's own problems (physical blocks, buses) come first; the step is the next thing to settle.
-    h, step_source, active = model_step(project, options)
     real = options.real
     prefix = options.prefix
     ctype = {'signal': real, 'boolean': 'bool'}
@@ -828,9 +857,28 @@ def generate(project: Project, path: list[str], instance_id: str | None, block_i
             return f'in->{unit.inputs[source.unit_input]["name"]}'
         return f'{source.node}_{source.port}'
 
-    codes: dict[str, Code] = {}
-    for node in unit.nodes:
-        codes[node.key] = template(node, Ctx(node, real, h, options.method, value_of))
+    def build(step: float, probe: bool = False) -> tuple[dict[str, Code], list[Node]]:
+        """The unit's code at a step, and the blocks whose code depends on it (unsampled, with state or using h).
+        When probing a variable-step model, a block that refuses the trial step (a PWM carrier needs a whole
+        number of steps per period) depends on the step too."""
+        out, bound = {}, []
+        for node in unit.nodes:
+            ctx = Ctx(node, real, step, options.method, value_of)
+            try:
+                code = template(node, ctx)
+            except CodegenError as exc:
+                if not (probe and 'choose a step' in str(exc)):
+                    raise
+                bound.append(node)
+                continue
+            out[node.key] = code
+            if code.period is None and (code.state or ctx.used_h):
+                bound.append(node)
+        return out, bound
+
+    # The unit's own problems (physical blocks, buses, templates) come first; the step is the next thing to settle.
+    h, step_source, active = model_step(project, options, unit, build)
+    codes = build(h)[0]
     order = _order(unit, codes)
     notes = []
     for node in order:
@@ -1055,8 +1103,12 @@ SIL_TOLERANCE = 0.02
 def check_run_step(result: dict, generated: Generated) -> None:
     """The run must step at the code's step, so the recorded signals are the ones the code would see.
 
-    Runs from before settings were recorded (0.6.9) used the defaults, a variable-step solver.
+    A sampled controller in a variable-step model (`sample`) holds its inputs between samples,
+    so any run of the model checks it. Runs from before settings were recorded (0.6.9) used
+    the defaults, a variable-step solver.
     """
+    if generated.step_source == 'sample':
+        return
     run = result.get('simulation') or solver.effective(float(result['duration']), None)
     if not solver.is_fixed(run['solver']):
         raise CodegenError(f'The last run used {solver.NAMES[run["solver"]]}, a variable-step solver, so its samples do not '

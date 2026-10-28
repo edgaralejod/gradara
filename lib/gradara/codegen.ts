@@ -40,8 +40,11 @@ export type CodegenResult =
       ok: true;
       files: Record<string, string>;
       step: number;
-      /** Where the step came from: Simulation settings, or the Step field. */
-      stepSource: 'model' | 'option';
+      /**
+       * Where the step came from: Simulation settings, the Step field, or (a sampled
+       * controller in a variable-step model) the controller's own sample period.
+       */
+      stepSource: 'model' | 'option' | 'sample';
       /** The model's effective simulation settings, as the service read them. */
       solver: EffectiveSettings;
       inputs: CodegenPort[];
@@ -276,25 +279,38 @@ export type LastRun = {
 /**
  * The Timing section of the C code flow: whether the model has a fixed step the
  * code can take, and whether the last run is one the code can be verified against.
+ * `sampled` is the step the service chose for a sampled controller in a
+ * variable-step model (its `stepSource` is `sample`): such code runs at its own
+ * rate, and any run of the model verifies it.
  */
 export function readiness(
   doc: Project,
   stepOverride: number | undefined,
   lastRun: LastRun | undefined,
+  sampled?: number,
 ): Readiness {
   const settings = effective(doc.duration, doc.simulation);
   const fixed = isFixed(settings.solver);
-  const step = stepOverride ?? settings.step;
+  const ownRate = !fixed && stepOverride === undefined && sampled !== undefined;
+  const step = stepOverride ?? (ownRate ? sampled : settings.step);
   const solver: TimingLine = fixed
     ? {
         ok: true,
         text: `${SOLVER_NAMES[settings.solver]} · step ${formatSeconds(settings.step!)} · from Simulation settings`,
       }
-    : {
-        ok: false,
-        text: `${SOLVER_NAMES[settings.solver]} is a variable-step solver. C code steps at one fixed rate.`,
-        action: 'use-fixed-step',
-      };
+    : ownRate
+      ? {
+          ok: true,
+          text: `${SOLVER_NAMES[settings.solver]} (variable step) · the controller is sampled, so its code runs every ${formatSeconds(sampled!)}`,
+        }
+      : {
+          ok: false,
+          text:
+            stepOverride !== undefined
+              ? `${SOLVER_NAMES[settings.solver]} is a variable-step solver, so no run steps at the step set here.`
+              : `${SOLVER_NAMES[settings.solver]} is a variable-step solver, and this controller has continuous dynamics. C code steps at one fixed rate.`,
+          action: 'use-fixed-step',
+        };
   const steps = step ? stepsFor(doc.duration, step) : 0;
   let run: TimingLine;
   if (!step)
@@ -303,6 +319,8 @@ export function readiness(
     run = { ok: false, text: 'Run the model with this step to verify the code.', action: 'run' };
   else if (lastRun.stale)
     run = { ok: false, text: 'The model changed since the last run. Run it again to verify the code.', action: 'run' };
+  else if (ownRate)
+    run = { ok: true, text: `Last run matches · checked at ${formatCount(steps)} controller steps` };
   else {
     const used = lastRun.simulation ?? effective(doc.duration, undefined);
     if (!isFixed(used.solver))

@@ -135,7 +135,10 @@ export default function CodegenDialog({
     ...options,
     ...(stepOverride !== undefined ? { step: stepOverride } : {}),
   };
-  const timing = readiness(doc, stepOverride, lastRun);
+  // A sampled controller in a variable-step model runs at its own rate, as generated.
+  const sampled =
+    generated?.ok && generated.stepSource === 'sample' ? generated.step : undefined;
+  const timing = readiness(doc, stepOverride, lastRun, sampled);
   const request = choice
     ? codegenBody(doc, path, choice.unit, effective, lastRun?.id)
     : '';
@@ -411,9 +414,11 @@ export default function CodegenDialog({
                     placeholder={
                       generated?.ok && generated.stepSource === 'model'
                         ? `model · ${generated.step}`
-                        : timing.solver.ok
-                          ? 'model'
-                          : '—'
+                        : generated?.ok && generated.stepSource === 'sample'
+                          ? `sample · ${generated.step}`
+                          : timing.solver.ok
+                            ? 'model'
+                            : '—'
                     }
                     onChange={(e) => setStepText(e.target.value)}
                   />
@@ -451,10 +456,18 @@ export default function CodegenDialog({
                   )}
                 </div>
               )}
-              {stepProblem && (
+              {stepProblem && failed && (
                 <p className="codegen-pending">
                   <CircleDashed size={13} />
-                  The code appears once the model has a fixed step.
+                  <span>
+                    The code appears once the model has a fixed step. {failed.error.split('. ')[0].replace(/^Code generation needs a fixed-step model; this one uses /, 'This model uses ')}.
+                  </span>
+                  {failed.blockIds.length > 0 && (
+                    <button className="codegen-link" onClick={() => onShowBlocks(failed.blockIds)}>
+                      <Crosshair size={12} />
+                      Show
+                    </button>
+                  )}
                 </p>
               )}
               {customGap && (
@@ -515,7 +528,11 @@ export default function CodegenDialog({
                       {generated.outputs.length} output
                       {generated.outputs.length === 1 ? '' : 's'} · step{' '}
                       {formatSeconds(generated.step)}
-                      {generated.stepSource === 'model' ? ' (from the model)' : ' (set here)'}
+                      {generated.stepSource === 'model'
+                        ? ' (from the model)'
+                        : generated.stepSource === 'sample'
+                          ? ' (the controller’s sample period)'
+                          : ' (set here)'}
                     </p>
                   )}
                   <div className="export-artifact">

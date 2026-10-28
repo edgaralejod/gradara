@@ -31,8 +31,8 @@ The signal path is position request → **Discrete PID** → controlled voltage 
 ## Export the controller to C
 
 1. Choose **C code** in the header. Under **Unit**, the list already shows **Detected controller: Position controller (PID)**. You can also select the block first to pick it explicitly.
-2. Under **Timing**, the example runs the variable-step DASSL solver, so the first line offers **Use fixed step**. Choose it: the model switches to Runge-Kutta 4 at the controller's 1 ms sample period. The second line asks for a run at that step; choose **Run**.
-3. Once the run finishes, both lines are ticked and the code appears: `controller.h`, `controller.c`, and `README.md`, stepping every 1 ms. **Copy** copies the open tab.
+2. Under **Timing**, the first line is ticked: the example runs the variable-step DASSL solver, but the Discrete PID is sampled, so its code runs every 1 ms, its sample period. The second line asks for a run of the model; choose **Run**.
+3. The code is already in the preview: `controller.h`, `controller.c`, and `README.md`, stepping every 1 ms. **Copy** copies the open tab.
 4. Choose **Verify against last run**. Gradara compiles the code and feeds it the position request and measured angle from your run, one step at a time. Because the Discrete PID is sampled, the C code matches the simulated voltage command to rounding error.
 5. **Download .zip** saves the three files.
 
@@ -52,7 +52,7 @@ when sample(0, samplePeriod) then
 end when;
 ```
 
-A continuous controller such as **PI (continuous)** or **PID (continuous)** has continuous states. Exporting it means choosing a discretization, so its C code only approximates the simulation.
+A continuous controller such as **PI (continuous)** or **PID (continuous)** has continuous states. Exporting it means choosing a discretization, so its C code only approximates the simulation, and it needs a fixed step to be discretized at: Timing then offers **Use fixed step**, which sets Runge-Kutta 4 in Simulation settings, and the code runs at that step.
 
 ## Limits
 
