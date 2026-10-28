@@ -4,7 +4,6 @@ import RunProgress from './run-progress';
 import type { RunTrack } from '@/lib/gradara/run-progress';
 import {
   Activity,
-  Square,
   Download,
   Hand,
   Scan,
@@ -149,7 +148,6 @@ function groupByBlock<T extends { name: string; group?: string }>(
 function InspectorSession({
   result,
   running,
-  onStop,
   error,
   stale,
   modelId,
@@ -157,8 +155,6 @@ function InspectorSession({
 }: {
   result: SimulationResult;
   running: boolean;
-  /** Stop the running simulation (shown while a live run fills the plots). */
-  onStop?: () => void;
   error: string;
   stale: boolean;
   modelId?: string;
@@ -524,11 +520,6 @@ function InspectorSession({
                       ? `Showing ${entries.map((e) => e.title).join(' · ')}`
                       : 'Completed'}
         </span>
-        {live && onStop && (
-          <button type="button" className="di-compare" onClick={onStop}>
-            <Square size={11} aria-hidden="true" /> Stop
-          </button>
-        )}
         {!overlay && !live && !!model && (
           <button
             type="button"
